@@ -4,7 +4,8 @@
 #if canImport(SwiftUI)
 import SwiftUI
 
-@main
+/// App entry point for the PocketAide iOS application.
+/// When integrating with an Xcode project, add the `@main` attribute.
 public struct PocketAideApp: App {
     public init() {}
 
