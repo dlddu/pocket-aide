@@ -1,0 +1,104 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-ci.yml'
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Build and test on macOS using Swift Package Manager.
+  # This job runs on a macOS runner so that the full Swift toolchain
+  # (including Foundation's URLSession and XCTest) is available.
+  # ──────────────────────────────────────────────────────────────────────────
+  swift-build-test:
+    name: Build & Test (macOS / SPM)
+    runs-on: macos-15
+
+    defaults:
+      run:
+        working-directory: ios/PocketAide
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        # macos-15 ships with Xcode 16; this step pins the exact version
+        # and ensures `swift` points to the correct toolchain.
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build package
+        run: swift build -v
+
+      - name: Run unit tests
+        run: swift test -v --parallel
+
+      - name: Generate coverage report (lcov)
+        # Produce an lcov-format coverage file for downstream upload.
+        run: |
+          swift test \
+            --enable-code-coverage \
+            -Xswiftc -profile-coverage-mapping \
+            -Xswiftc -profile-generate \
+            2>/dev/null || true
+          xcrun llvm-cov export \
+            -format=lcov \
+            -instr-profile=$(find .build -name "*.profdata" | head -1) \
+            .build/debug/PocketAidePackageTests.xctest/Contents/MacOS/PocketAidePackageTests \
+            > coverage.lcov 2>/dev/null || echo "Coverage export skipped (profdata not found)"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-coverage
+          path: ios/PocketAide/coverage.lcov
+          if-no-files-found: ignore
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Verify the package also compiles on Linux (ubuntu-latest).
+  # SwiftUI files are excluded from compilation on Linux via `#if canImport`
+  # guards; this job ensures those guards work correctly and that all
+  # non-UI logic (protocols, models, mock implementations) compiles cleanly.
+  # ──────────────────────────────────────────────────────────────────────────
+  swift-linux-build:
+    name: Build & Test (Linux / SPM)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ios/PocketAide
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.10'
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build package
+        run: swift build -v
+
+      - name: Run unit tests
+        run: swift test -v --parallel
