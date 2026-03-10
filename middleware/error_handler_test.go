@@ -108,11 +108,7 @@ func TestCustomErrorHandler_ResponseContentTypeIsJSON(t *testing.T) {
 	appmiddleware.CustomErrorHandler(httpErr, c)
 
 	// Assert
-	contentType := rec.Header().Get(echo.MIMEApplicationJSONCharsetUTF8)
-	if contentType == "" {
-		// Check the standard content-type header
-		contentType = rec.Header().Get("Content-Type")
-	}
+	contentType := rec.Header().Get("Content-Type")
 	if contentType == "" {
 		t.Error("expected Content-Type header to be set")
 	}
