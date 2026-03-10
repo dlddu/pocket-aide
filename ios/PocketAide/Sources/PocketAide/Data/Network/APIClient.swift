@@ -9,7 +9,7 @@ import FoundationNetworking
 
 // MARK: - APIClient
 
-public final class APIClient: APIClientProtocol {
+public final class APIClient: APIClientProtocol, @unchecked Sendable {
 
     // MARK: - Properties
 
@@ -88,7 +88,7 @@ public final class APIClient: APIClientProtocol {
     private func perform<ResponseType: Decodable>(request: URLRequest) async throws -> ResponseType {
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await session.data(for: request)
+            (data, response) = try await asyncData(for: request)
         } catch {
             throw APIClientError.networkError(error.localizedDescription)
         }
@@ -115,5 +115,24 @@ public final class APIClient: APIClientProtocol {
                 ?? HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
             throw APIClientError.httpError(statusCode: httpResponse.statusCode, message: message)
         }
+    }
+
+    private func asyncData(for request: URLRequest) async throws -> (Data, URLResponse) {
+        #if canImport(FoundationNetworking)
+        return try await withCheckedThrowingContinuation { continuation in
+            let task = session.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else if let data = data, let response = response {
+                    continuation.resume(returning: (data, response))
+                } else {
+                    continuation.resume(throwing: APIClientError.networkError("No data or response"))
+                }
+            }
+            task.resume()
+        }
+        #else
+        return try await session.data(for: request)
+        #endif
     }
 }

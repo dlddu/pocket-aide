@@ -151,7 +151,8 @@ final class AppGroupStorageTests: XCTestCase {
         let result = storage.date(forKey: .lastSyncDate)
 
         // Assert
-        XCTAssertEqual(result?.timeIntervalSince1970, second.timeIntervalSince1970, accuracy: 0.001)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result!.timeIntervalSince1970, second.timeIntervalSince1970, accuracy: 0.001)
     }
 
     // MARK: - Remove
