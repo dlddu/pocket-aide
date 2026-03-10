@@ -3,6 +3,9 @@
 // Foundation implementation (swift-corelibs-foundation).
 
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 // MARK: - APIClient
 

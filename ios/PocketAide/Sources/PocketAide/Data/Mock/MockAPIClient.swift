@@ -14,7 +14,7 @@ import Foundation
 /// mock.healthResult = .success(HealthResponse(status: "ok"))
 /// let result = try await mock.fetchHealth()
 /// ```
-public final class MockAPIClient: APIClientProtocol {
+public final class MockAPIClient: APIClientProtocol, @unchecked Sendable {
 
     // MARK: - Recorded invocations (inspect in tests)
 

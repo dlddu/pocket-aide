@@ -9,6 +9,9 @@
 // `MockURLProtocol` which is registered only for test sessions.
 
 import XCTest
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 @testable import PocketAide
 
 // MARK: - MockURLProtocol
