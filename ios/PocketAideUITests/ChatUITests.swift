@@ -9,10 +9,9 @@
 //
 // DLD-719: 3-1: AI 채팅 (텍스트) — e2e 테스트 작성 (skipped)
 //
-// NOTE: All tests in this file are skipped via `throw XCTSkip(...)` because
-// the AssistantView chat UI (message input, send button, response bubbles,
-// model selector) has not yet been implemented. Remove the XCTSkip throw in
-// each test once the corresponding UI is ready.
+// NOTE: Tests activated after DLD-719. The AssistantView chat UI
+// (message input, send button, response bubbles, model selector) is now
+// implemented.
 
 import XCTest
 
@@ -44,8 +43,6 @@ final class ChatUITests: XCTestCase {
     /// Expected flow:
     ///   TabBar visible → tap "tab_assistant" → "assistant_chat_view" appears
     func test_assistantTab_displaysChatInterface() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating")
@@ -67,8 +64,6 @@ final class ChatUITests: XCTestCase {
     /// Expected flow:
     ///   "tab_assistant" selected → "chat_input_field" exists and is enabled
     func test_chatInput_isVisibleAndEditable() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -92,8 +87,6 @@ final class ChatUITests: XCTestCase {
     ///   Type "Hello AI" → tap "send_button" → "user_message_bubble" appears
     ///   with text "Hello AI"
     func test_sendMessage_displaysUserBubble() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -127,8 +120,6 @@ final class ChatUITests: XCTestCase {
     /// Expected flow:
     ///   Message sent → "ai_response_bubble" appears within timeout
     func test_sendMessage_displaysAIResponseBubble() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -158,8 +149,6 @@ final class ChatUITests: XCTestCase {
     /// Expected flow:
     ///   Chat interface visible → "model_selector_button" exists and is hittable
     func test_modelSelector_isAccessible() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -187,8 +176,6 @@ final class ChatUITests: XCTestCase {
     ///   select second model option → picker dismisses →
     ///   "selected_model_label" shows new model name
     func test_modelSelector_changesModel() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -235,8 +222,6 @@ final class ChatUITests: XCTestCase {
     /// Expected flow:
     ///   Change model → type new message → send → AI response bubble appears
     func test_sendMessage_afterModelChange_usesNewModel() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -291,8 +276,6 @@ final class ChatUITests: XCTestCase {
     ///   Send message → AI responds → tap "tab_home" → tap "tab_assistant"
     ///   → previous user bubble and AI bubble are still visible
     func test_chatHistory_persistsAcrossTabSwitches() throws {
-        throw XCTSkip("AssistantView chat UI not yet implemented — activate after DLD-719")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
