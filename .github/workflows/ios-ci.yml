@@ -1,0 +1,99 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-ci.yml'
+
+jobs:
+  build-and-test:
+    name: Build & Test (iOS)
+    runs-on: macos-15
+
+    env:
+      SCHEME: PocketAide
+      PROJECT: ios/PocketAide.xcodeproj
+      DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=latest"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -switch /Applications/Xcode_16.2.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Show available simulators
+        run: xcrun simctl list devices available
+
+      - name: Resolve Swift Package dependencies
+        run: |
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project "${{ env.PROJECT }}" \
+            -scheme "${{ env.SCHEME }}"
+
+      - name: Build (compile check)
+        run: |
+          xcodebuild build \
+            -project "${{ env.PROJECT }}" \
+            -scheme "${{ env.SCHEME }}" \
+            -destination "${{ env.DESTINATION }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project "${{ env.PROJECT }}" \
+            -scheme "${{ env.SCHEME }}" \
+            -destination "${{ env.DESTINATION }}" \
+            -testPlan UnitTests \
+            -resultBundlePath TestResults/unit \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output TestResults/unit-results.xml
+
+      - name: Run UI tests (XCUITest)
+        run: |
+          xcodebuild test \
+            -project "${{ env.PROJECT }}" \
+            -scheme "${{ env.SCHEME }}" \
+            -destination "${{ env.DESTINATION }}" \
+            -testPlan UITests \
+            -resultBundlePath TestResults/ui \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty --color --report junit --output TestResults/ui-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-results
+          path: TestResults/
+          retention-days: 14
+
+      - name: Upload unit test result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-bundle
+          path: TestResults/unit.xcresult
+          retention-days: 7
+
+      - name: Upload UI test result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-bundle
+          path: TestResults/ui.xcresult
+          retention-days: 7
