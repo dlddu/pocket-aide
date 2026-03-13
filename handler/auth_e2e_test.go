@@ -206,7 +206,9 @@ func TestAuthHandler_Me_WithValidToken_ReturnsOK(t *testing.T) {
 	loginRec := httptest.NewRecorder()
 	e.ServeHTTP(loginRec, loginReq)
 	var loginResp map[string]interface{}
-	json.Unmarshal(loginRec.Body.Bytes(), &loginResp)
+	if err := json.Unmarshal(loginRec.Body.Bytes(), &loginResp); err != nil {
+		t.Fatalf("failed to unmarshal login response: %v", err)
+	}
 	token := loginResp["token"].(string)
 
 	req := httptest.NewRequest(http.MethodGet, "/me", nil)
