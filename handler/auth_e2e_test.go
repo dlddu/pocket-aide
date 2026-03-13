@@ -41,7 +41,7 @@ func TestAuthHandler_Register_ReturnsCreated(t *testing.T) {
 
 	body := strings.NewReader(`{"email":"new@example.com","password":"Secret1!"}`)
 	req := httptest.NewRequest(http.MethodPost, "/auth/register", body)
-	req.Header.Set(echo.MIMEApplicationJSON, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
 	// Act
@@ -84,7 +84,7 @@ func TestAuthHandler_Register_DuplicateEmail_ReturnsConflict(t *testing.T) {
 
 	body := strings.NewReader(`{"email":"exists@example.com","password":"Secret1!"}`)
 	req := httptest.NewRequest(http.MethodPost, "/auth/register", body)
-	req.Header.Set(echo.MIMEApplicationJSON, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
 	// Act
@@ -118,7 +118,7 @@ func TestAuthHandler_Login_ReturnsOKWithToken(t *testing.T) {
 
 	body := strings.NewReader(`{"email":"user@example.com","password":"Secret1!"}`)
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", body)
-	req.Header.Set(echo.MIMEApplicationJSON, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
 	// Act
@@ -160,7 +160,7 @@ func TestAuthHandler_Login_WrongPassword_ReturnsUnauthorized(t *testing.T) {
 
 	body := strings.NewReader(`{"email":"user@example.com","password":"wrongpass"}`)
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", body)
-	req.Header.Set(echo.MIMEApplicationJSON, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 
 	// Act
@@ -202,7 +202,7 @@ func TestAuthHandler_Me_WithValidToken_ReturnsOK(t *testing.T) {
 	// Obtain token
 	loginBody := strings.NewReader(`{"email":"user@example.com","password":"Secret1!"}`)
 	loginReq := httptest.NewRequest(http.MethodPost, "/auth/login", loginBody)
-	loginReq.Header.Set(echo.MIMEApplicationJSON, echo.MIMEApplicationJSON)
+	loginReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	loginRec := httptest.NewRecorder()
 	e.ServeHTTP(loginRec, loginReq)
 	var loginResp map[string]interface{}
