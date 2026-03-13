@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "AATESTPLAN_UNIT_CFG1",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverageEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:PocketAide.xcodeproj",
+      "identifier" : "AATGT_APP",
+      "name" : "PocketAide"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:PocketAide.xcodeproj",
+        "identifier" : "AATGT_TST",
+        "name" : "PocketAideTests"
+      }
+    }
+  ],
+  "version" : 1
+}
