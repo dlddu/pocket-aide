@@ -5,12 +5,7 @@
 //   App launch → Login screen → Enter credentials → Main TabBar
 //   → Logout → Return to Login screen.
 //
-// All tests are currently skipped because LoginView and the supporting
-// authentication infrastructure have not yet been implemented.
-// Remove the `throw XCTSkip(...)` line in each test to activate it once the
-// corresponding production UI is in place.
-//
-// DLD-717: 2-1: 사용자 인증 — e2e 테스트 작성 (skipped)
+// DLD-717: 2-1: 사용자 인증 — e2e 테스트
 //
 // NOTE: Authentication tests must NOT use the "--uitesting" launch argument
 // because that flag causes PocketAideApp.swift to bypass the auth flow and
@@ -42,8 +37,6 @@ final class AuthUITests: XCTestCase {
     /// On a fresh launch (no stored session), the app must show the Login
     /// screen as the root view.
     func test_appLaunch_displaysLoginScreen() throws {
-        throw XCTSkip("TODO: 인증 화면 구현 후 활성화 — DLD-717")
-
         // Arrange — app is launched without "--uitesting"
 
         // Act
@@ -58,8 +51,6 @@ final class AuthUITests: XCTestCase {
 
     /// The Login screen must contain a text field for the server address.
     func test_loginScreen_displaysServerAddressField() throws {
-        throw XCTSkip("TODO: 인증 화면 구현 후 활성화 — DLD-717")
-
         // Arrange — app is launched, Login screen is visible
         let loginView = app.otherElements["login_view"]
         XCTAssertTrue(loginView.waitForExistence(timeout: 5))
@@ -76,8 +67,6 @@ final class AuthUITests: XCTestCase {
 
     /// The Login screen must contain email and password input fields.
     func test_loginScreen_displaysEmailAndPasswordFields() throws {
-        throw XCTSkip("TODO: 인증 화면 구현 후 활성화 — DLD-717")
-
         // Arrange — app is launched, Login screen is visible
         let loginView = app.otherElements["login_view"]
         XCTAssertTrue(loginView.waitForExistence(timeout: 5))
@@ -94,8 +83,6 @@ final class AuthUITests: XCTestCase {
     /// Entering valid credentials and tapping Login must navigate the user to
     /// the main TabBar.
     func test_login_withValidCredentials_navigatesToMainTabBar() throws {
-        throw XCTSkip("TODO: 인증 화면 구현 후 활성화 — DLD-717")
-
         // Arrange
         let loginView = app.otherElements["login_view"]
         XCTAssertTrue(loginView.waitForExistence(timeout: 5))
@@ -130,8 +117,6 @@ final class AuthUITests: XCTestCase {
     /// Entering invalid credentials must display an error message on the Login
     /// screen without navigating away.
     func test_login_withInvalidCredentials_displaysErrorMessage() throws {
-        throw XCTSkip("TODO: 인증 화면 구현 후 활성화 — DLD-717")
-
         // Arrange
         let loginView = app.otherElements["login_view"]
         XCTAssertTrue(loginView.waitForExistence(timeout: 5))
@@ -168,8 +153,6 @@ final class AuthUITests: XCTestCase {
     /// After a successful login, tapping the Logout button must return the
     /// user to the Login screen.
     func test_logout_returnsToLoginScreen() throws {
-        throw XCTSkip("TODO: 인증 화면 구현 후 활성화 — DLD-717")
-
         // Arrange — perform login first
         let loginView = app.otherElements["login_view"]
         XCTAssertTrue(loginView.waitForExistence(timeout: 5))
@@ -193,9 +176,7 @@ final class AuthUITests: XCTestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 10), "Should be on TabBar before logout")
 
-        // Act — navigate to the settings/profile tab and tap Logout
-        // Exact tab identifier and logout button identifier depend on the
-        // final UI implementation; adjust as needed.
+        // Act — navigate to the settings tab and tap Logout
         let settingsTab  = tabBar.buttons["tab_settings"]
         let logoutButton = app.buttons["logout_button"]
 
