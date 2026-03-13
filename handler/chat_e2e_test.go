@@ -378,8 +378,15 @@ func TestChatHandler_Send_WithModelSelection_UsesSpecifiedModel(t *testing.T) {
 	if mockLLM.CallCount != 1 {
 		t.Errorf("expected MockProvider.CallCount == 1, got %d", mockLLM.CallCount)
 	}
-	if !strings.Contains(rec.Body.String(), "gpt-4o response") {
-		t.Errorf("expected SSE body to contain 'gpt-4o response', got: %s", rec.Body.String())
+	// SSE streaming splits the response by whitespace into tokens.
+	// "gpt-4o response" becomes two separate data: lines.
+	// Verify both tokens appear in the SSE body.
+	sseBody := rec.Body.String()
+	if !strings.Contains(sseBody, "data: gpt-4o") {
+		t.Errorf("expected SSE body to contain 'data: gpt-4o' token, got: %s", sseBody)
+	}
+	if !strings.Contains(sseBody, "response") {
+		t.Errorf("expected SSE body to contain 'response' token, got: %s", sseBody)
 	}
 }
 

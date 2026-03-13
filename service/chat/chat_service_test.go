@@ -17,7 +17,6 @@ import (
 
 	"github.com/dlddu/pocket-aide/repository"
 	"github.com/dlddu/pocket-aide/service/chat"
-	"github.com/dlddu/pocket-aide/service/llm"
 )
 
 // ---------------------------------------------------------------------------
