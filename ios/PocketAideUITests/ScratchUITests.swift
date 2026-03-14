@@ -50,8 +50,6 @@ final class ScratchUITests: XCTestCase {
     /// Expected flow:
     ///   TabBar visible → tap "tab_scratch" → "scratch_list_view" appears
     func test_scratchTab_displaysMemoList() throws {
-        throw XCTSkip("DLD-730: ScratchScreen not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating")
@@ -77,8 +75,6 @@ final class ScratchUITests: XCTestCase {
     ///   → tap "memo_save_button" → sheet dismisses
     ///   → scratch list contains "memo_row_오늘 할 일 정리"
     func test_scratchTab_addMemo_displaysInList() throws {
-        throw XCTSkip("DLD-730: ScratchScreen not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -123,8 +119,6 @@ final class ScratchUITests: XCTestCase {
     ///   → navigate to "tab_todo"
     ///   → "todo_row_운동 계획 세우기" visible in todo list
     func test_scratchTab_moveMemo_toPersonalTodo_appearsInTodoTab() throws {
-        throw XCTSkip("DLD-730: ScratchScreen not yet implemented")
-
         // Arrange — navigate to scratch tab and add a memo
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -201,8 +195,6 @@ final class ScratchUITests: XCTestCase {
     ///   → return to "tab_scratch"
     ///   → "memo_row_독서 목록 정리" no longer exists in scratch list
     func test_scratchTab_moveMemo_deletedFromScratch() throws {
-        throw XCTSkip("DLD-730: ScratchScreen not yet implemented")
-
         // Arrange — navigate to scratch tab and add a memo
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))

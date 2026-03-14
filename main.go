@@ -83,6 +83,15 @@ func main() {
 	tg.DELETE("/:id", todoHandler.Delete)
 	tg.POST("/:id/toggle", todoHandler.Toggle)
 
+	// Memo routes
+	memoHandler := handler.NewMemoHandler(database)
+	mg := e.Group("/memos", appmiddleware.JWT(jwtSecret))
+	mg.POST("", memoHandler.Create)
+	mg.GET("", memoHandler.List)
+	mg.PUT("/:id", memoHandler.Update)
+	mg.DELETE("/:id", memoHandler.Delete)
+	mg.POST("/:id/move", memoHandler.Move)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

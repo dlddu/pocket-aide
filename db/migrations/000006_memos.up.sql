@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS memos (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL,
+    content    TEXT    NOT NULL,
+    source     TEXT    NOT NULL DEFAULT 'text',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
