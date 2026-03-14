@@ -42,6 +42,41 @@ public final class APIClient {
         body: (some Encodable)? = nil,
         token: String? = nil
     ) async throws -> T {
+        let data = try await performRequest(path: path, method: method, body: body, token: token)
+
+        // JSON 디코딩
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            throw APIError.decodingError(error)
+        }
+    }
+
+    /// 주어진 경로와 메서드로 HTTP 요청을 수행합니다. 응답 본문을 디코딩하지 않습니다.
+    ///
+    /// - Parameters:
+    ///   - path: 베이스 URL에 붙일 경로 (e.g. `"/memos/1"`).
+    ///   - method: HTTP 메서드.
+    ///   - body: 요청 본문으로 직렬화할 `Encodable` 값. 기본값 `nil`.
+    ///   - token: Bearer 인증 토큰. 있으면 `Authorization` 헤더에 추가됩니다.
+    /// - Throws: ``APIError``
+    public func requestVoid(
+        path: String,
+        method: HTTPMethod,
+        body: (some Encodable)? = nil,
+        token: String? = nil
+    ) async throws {
+        _ = try await performRequest(path: path, method: method, body: body, token: token)
+    }
+
+    // MARK: Private
+
+    private func performRequest(
+        path: String,
+        method: HTTPMethod,
+        body: (some Encodable)?,
+        token: String?
+    ) async throws -> Data {
         // URL 구성
         let url: URL
         if path.isEmpty {
@@ -86,11 +121,6 @@ public final class APIClient {
             }
         }
 
-        // JSON 디코딩
-        do {
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            throw APIError.decodingError(error)
-        }
+        return data
     }
 }

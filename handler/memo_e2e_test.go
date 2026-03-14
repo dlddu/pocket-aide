@@ -62,19 +62,18 @@ func setupMemoEcho(t *testing.T, tdb *testutil.TestDB) *echo.Echo {
 	e := echo.New()
 	authHandler := handler.NewAuthHandler(tdb.DB, "test-jwt-secret")
 	e.POST("/auth/login", authHandler.Login)
-	// TODO(DLD-730): MemoHandler 구현 후 활성화
-	// memoHandler := handler.NewMemoHandler(tdb.DB)
-	// mg := e.Group("/memos", appmiddleware.JWT("test-jwt-secret"))
-	// mg.POST("",          memoHandler.Create)
-	// mg.GET("",           memoHandler.List)
-	// mg.PUT("/:id",       memoHandler.Update)
-	// mg.DELETE("/:id",    memoHandler.Delete)
-	// mg.POST("/:id/move", memoHandler.Move)
+	memoHandler := handler.NewMemoHandler(tdb.DB)
+	mg := e.Group("/memos", appmiddleware.JWT("test-jwt-secret"))
+	mg.POST("",          memoHandler.Create)
+	mg.GET("",           memoHandler.List)
+	mg.PUT("/:id",       memoHandler.Update)
+	mg.DELETE("/:id",    memoHandler.Delete)
+	mg.POST("/:id/move", memoHandler.Move)
 
 	// Todo routes needed for move verification
-	// todoHandler := handler.NewTodoHandler(tdb.DB)
-	// tg := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
-	// tg.GET("", todoHandler.List)
+	todoHandler := handler.NewTodoHandler(tdb.DB)
+	tg := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
+	tg.GET("", todoHandler.List)
 	return e
 }
 
@@ -99,8 +98,6 @@ func memoToken(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email string) s
 //	POST /memos  {"content":"장보기 목록 작성","source":"text"} + Bearer token
 //	→ 201 Created  {"id":1,"content":"장보기 목록 작성","source":"text"}
 func TestMemoHandler_Create_ReturnsCreated(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-create@example.com")
@@ -138,8 +135,6 @@ func TestMemoHandler_Create_ReturnsCreated(t *testing.T) {
 //	POST /memos  {"source":"text"} + Bearer token
 //	→ 400 Bad Request
 func TestMemoHandler_Create_MissingContent_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-nocontent@example.com")
@@ -196,8 +191,6 @@ func TestMemoHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /memos  + Bearer token
 //	→ 200 OK  JSON array with 2 elements, each having id/content/source
 func TestMemoHandler_List_ReturnsList(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-list@example.com")
@@ -241,8 +234,6 @@ func TestMemoHandler_List_ReturnsList(t *testing.T) {
 //	GET /memos  + Bearer token
 //	→ 200 OK  []
 func TestMemoHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-empty@example.com")
@@ -299,8 +290,6 @@ func TestMemoHandler_List_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	PUT /memos/<id>  {"content":"수정된 메모"} + Bearer token
 //	→ 200 OK  {"id":<id>,"content":"수정된 메모","source":"text"}
 func TestMemoHandler_Update_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-update@example.com")
@@ -351,8 +340,6 @@ func TestMemoHandler_Update_ReturnsOK(t *testing.T) {
 //	PUT /memos/99999  {"content":"없는 메모"} + Bearer token
 //	→ 404 Not Found
 func TestMemoHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-update-notfound@example.com")
@@ -383,8 +370,6 @@ func TestMemoHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
 //	DELETE /memos/<id>  + Bearer token → 204 No Content
 //	GET    /memos       + Bearer token → array does not contain the deleted id
 func TestMemoHandler_Delete_ReturnsNoContent(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-delete@example.com")
@@ -444,8 +429,6 @@ func TestMemoHandler_Delete_ReturnsNoContent(t *testing.T) {
 //	DELETE /memos/99999  + Bearer token
 //	→ 404 Not Found
 func TestMemoHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-delete-notfound@example.com")
@@ -476,8 +459,6 @@ func TestMemoHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
 //	GET /memos              + Bearer token → memo no longer in list
 //	GET /todos?type=personal + Bearer token → new todo with title matching memo content
 func TestMemoHandler_Move_ToPersonalTodo_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-move@example.com")
@@ -563,8 +544,6 @@ func TestMemoHandler_Move_ToPersonalTodo_ReturnsOK(t *testing.T) {
 //	POST /memos/99999/move  {"target":"personal_todo"} + Bearer token
 //	→ 404 Not Found
 func TestMemoHandler_Move_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-730: memo handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupMemoEcho(t, tdb)
 	token := memoToken(t, tdb, e, "memo-move-notfound@example.com")
