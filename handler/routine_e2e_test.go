@@ -54,7 +54,14 @@ func setupRoutineEcho(t *testing.T, tdb *testutil.TestDB) *echo.Echo {
 	e := echo.New()
 	authHandler := handler.NewAuthHandler(tdb.DB, "test-jwt-secret")
 	e.POST("/auth/login", authHandler.Login)
-	// TODO(DLD-723): register routine routes here once implemented.
+	routineHandler := handler.NewRoutineHandler(tdb.DB)
+	g := e.Group("/routines", appmiddleware.JWT("test-jwt-secret"))
+	g.POST("", routineHandler.Create)
+	g.GET("", routineHandler.List)
+	g.GET("/:id", routineHandler.Get)
+	g.PUT("/:id", routineHandler.Update)
+	g.DELETE("/:id", routineHandler.Delete)
+	g.POST("/:id/complete", routineHandler.Complete)
 	return e
 }
 
@@ -81,7 +88,6 @@ func routineToken(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email string
 //	→ 201 Created   {"id":1,"name":"샤워","interval_days":1,"last_done_at":"2026-03-13",
 //	                 "next_due_date":"2026-03-14","d_day":0}
 func TestRoutineHandler_Create_ReturnsCreated(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -126,7 +132,6 @@ func TestRoutineHandler_Create_ReturnsCreated(t *testing.T) {
 //	POST /routines  {"interval_days":7} + Bearer token
 //	→ 400 Bad Request
 func TestRoutineHandler_Create_MissingName_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -152,7 +157,6 @@ func TestRoutineHandler_Create_MissingName_ReturnsBadRequest(t *testing.T) {
 //	POST /routines  {"name":"운동","interval_days":2}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestRoutineHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware can reject the request
@@ -187,7 +191,6 @@ func TestRoutineHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /routines  + Bearer token
 //	→ 200 OK  JSON array with 2 elements; each element includes d_day
 func TestRoutineHandler_List_ReturnsRoutines(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -238,7 +241,6 @@ func TestRoutineHandler_List_ReturnsRoutines(t *testing.T) {
 //	GET /routines  + Bearer token
 //	→ 200 OK  []
 func TestRoutineHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -269,7 +271,6 @@ func TestRoutineHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
 //	GET /routines  (no Authorization header)
 //	→ 401 Unauthorized
 func TestRoutineHandler_List_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	e := echo.New()
 	e.GET("/routines", func(c echo.Context) error {
@@ -299,7 +300,6 @@ func TestRoutineHandler_List_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /routines/<id>  + Bearer token
 //	→ 200 OK  {"id":<id>,"name":"스트레칭","interval_days":3, ...}
 func TestRoutineHandler_Get_ReturnsSingleRoutine(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -352,7 +352,6 @@ func TestRoutineHandler_Get_ReturnsSingleRoutine(t *testing.T) {
 //	GET /routines/99999  + Bearer token
 //	→ 404 Not Found
 func TestRoutineHandler_Get_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -381,7 +380,6 @@ func TestRoutineHandler_Get_NotFound_ReturnsNotFound(t *testing.T) {
 //	PUT /routines/<id>  {"name":"스트레칭 (강화)","interval_days":2} + Bearer token
 //	→ 200 OK  {"id":<id>,"name":"스트레칭 (강화)","interval_days":2, ...}
 func TestRoutineHandler_Update_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -436,7 +434,6 @@ func TestRoutineHandler_Update_ReturnsOK(t *testing.T) {
 //	PUT /routines/99999  {"name":"없는 루틴","interval_days":1} + Bearer token
 //	→ 404 Not Found
 func TestRoutineHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -467,7 +464,6 @@ func TestRoutineHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
 //	DELETE /routines/<id>  + Bearer token → 204 No Content
 //	GET    /routines/<id>  + Bearer token → 404 Not Found
 func TestRoutineHandler_Delete_ReturnsNoContent(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -519,7 +515,6 @@ func TestRoutineHandler_Delete_ReturnsNoContent(t *testing.T) {
 //	DELETE /routines/99999  + Bearer token
 //	→ 404 Not Found
 func TestRoutineHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -547,7 +542,6 @@ func TestRoutineHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
 //	POST /routines  {"name":"세탁","interval_days":7,"last_done_at":"2026-03-07"} + Bearer token
 //	→ 201 Created   next_due_date == "2026-03-14"
 func TestRoutineHandler_Create_DDayCalculation_NextDueDateIsCorrect(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -584,7 +578,6 @@ func TestRoutineHandler_Create_DDayCalculation_NextDueDateIsCorrect(t *testing.T
 //	GET /routines  + Bearer token
 //	  → routines[0].d_day == 3   (2026-03-17 minus 2026-03-14)
 func TestRoutineHandler_List_DDayCalculation_IncludesDaysRemaining(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -643,7 +636,6 @@ func TestRoutineHandler_List_DDayCalculation_IncludesDaysRemaining(t *testing.T)
 //	  → next_due_date == "2026-03-21"
 //	  → d_day         == 7
 func TestRoutineHandler_Complete_UpdatesLastDoneAndNextDue(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -711,7 +703,6 @@ func TestRoutineHandler_Complete_UpdatesLastDoneAndNextDue(t *testing.T) {
 //	POST /routines/99999/complete  + Bearer token
 //	→ 404 Not Found
 func TestRoutineHandler_Complete_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
@@ -735,7 +726,6 @@ func TestRoutineHandler_Complete_NotFound_ReturnsNotFound(t *testing.T) {
 //	POST /routines/1/complete  (no Authorization header)
 //	→ 401 Unauthorized
 func TestRoutineHandler_Complete_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware rejects the request.
@@ -767,7 +757,6 @@ func TestRoutineHandler_Complete_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	PUT /routines/<id>  {"interval_days":3}  + Bearer token
 //	  → next_due_date recalculated: "2026-03-07" + 3 = "2026-03-10"
 func TestRoutineHandler_Update_IntervalChange_RecalculatesNextDue(t *testing.T) {
-	t.Skip("DLD-723: routine handler not yet implemented")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)

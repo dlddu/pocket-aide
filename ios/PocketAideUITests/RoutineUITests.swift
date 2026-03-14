@@ -47,8 +47,6 @@ final class RoutineUITests: XCTestCase {
     /// Expected flow:
     ///   TabBar visible → tap "tab_routine" → "routine_list_view" appears
     func test_routineTab_displaysRoutineList() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating")
@@ -73,8 +71,6 @@ final class RoutineUITests: XCTestCase {
     ///   "tab_routine" selected → "routine_list_view" visible
     ///   → "routine_section_urgent" header exists
     func test_routineTab_displaysUrgentSection() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -98,8 +94,6 @@ final class RoutineUITests: XCTestCase {
     ///   "tab_routine" selected → "routine_list_view" visible
     ///   → "routine_section_relaxed" header exists
     func test_routineTab_displaysRelaxedSection() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -129,8 +123,6 @@ final class RoutineUITests: XCTestCase {
     ///   → tap "routine_save_button" → sheet dismisses
     ///   → routine list contains a row for "샤워"
     func test_routineTab_addNewRoutine_displaysInList() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -179,8 +171,6 @@ final class RoutineUITests: XCTestCase {
     ///   Add routine "스트레칭" with interval 3
     ///   → routine row shows static text "스트레칭" and period indicator "3일"
     func test_routineTab_addRoutine_nameAndPeriodVisible() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -235,8 +225,6 @@ final class RoutineUITests: XCTestCase {
     ///   → today is 2026-03-14, so next_due_date = 2026-03-14, d_day = D-0
     ///   → routine row shows "routine_dday_label" with text "D-0" or "D+0"
     func test_routineTab_addRoutine_dDayDisplayed() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -295,8 +283,6 @@ final class RoutineUITests: XCTestCase {
     ///   → tap "complete_button"
     ///   → D-day label updates (e.g. becomes "D-1" for interval=1)
     func test_routineTab_swipeLeftToComplete_updatesDDay() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange — navigate to routine tab and add a routine with a past due date
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -366,8 +352,6 @@ final class RoutineUITests: XCTestCase {
     ///   → "세수" row disappears from urgent section
     ///   → "세수" row appears in "routine_section_relaxed"
     func test_routineTab_swipeLeftToComplete_movesRoutineToRelaxedSection() throws {
-        throw XCTSkip("DLD-723: Routine tab not yet implemented")
-
         // Arrange — navigate to routine tab and add a routine with a past due date
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))

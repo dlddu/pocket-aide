@@ -63,6 +63,16 @@ func main() {
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT(jwtSecret))
 	e.GET("/chat/history", chatHandler.History, appmiddleware.JWT(jwtSecret))
 
+	// Routine routes
+	routineHandler := handler.NewRoutineHandler(database)
+	rg := e.Group("/routines", appmiddleware.JWT(jwtSecret))
+	rg.POST("", routineHandler.Create)
+	rg.GET("", routineHandler.List)
+	rg.GET("/:id", routineHandler.Get)
+	rg.PUT("/:id", routineHandler.Update)
+	rg.DELETE("/:id", routineHandler.Delete)
+	rg.POST("/:id/complete", routineHandler.Complete)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
