@@ -70,8 +70,12 @@ struct TodoEditModal: View {
         let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
         guard !trimmedTitle.isEmpty else { return }
 
+        let trimmedMemo = memo.trimmingCharacters(in: .whitespaces)
         Task {
-            await viewModel.createTodo(title: trimmedTitle)
+            await viewModel.createTodo(
+                title: trimmedTitle,
+                note: trimmedMemo.isEmpty ? "" : trimmedMemo
+            )
             dismiss()
         }
     }

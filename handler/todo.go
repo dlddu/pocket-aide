@@ -48,6 +48,7 @@ func toTodoResponse(td *repository.Todo) todoResponse {
 type createTodoRequest struct {
 	Title string `json:"title"`
 	Type  string `json:"type"`
+	Note  string `json:"note"`
 }
 
 // updateTodoRequest is the expected JSON body for PUT /todos/:id.
@@ -75,6 +76,14 @@ func (h *TodoHandler) Create(c echo.Context) error {
 	td, err := h.repo.Create(userID, req.Title, req.Type)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	// If note is provided, update the newly created todo with it
+	if req.Note != "" {
+		td, err = h.repo.Update(td.ID, userID, repository.TodoUpdates{Note: req.Note})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to set note"})
+		}
 	}
 
 	return c.JSON(http.StatusCreated, toTodoResponse(td))

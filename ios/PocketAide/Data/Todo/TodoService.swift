@@ -11,6 +11,7 @@ final class TodoService {
     struct CreateRequest: Encodable {
         let title: String
         let type: String
+        let note: String?
     }
 
     struct UpdateRequest: Encodable {
@@ -42,12 +43,13 @@ final class TodoService {
     /// 새 투두를 생성합니다.
     func create(
         title: String,
+        note: String? = nil,
         type todoType: String = "personal",
         serverURL: String,
         token: String
     ) async throws -> Todo {
         let client = makeClient(serverURL: serverURL)
-        let body = CreateRequest(title: title, type: todoType)
+        let body = CreateRequest(title: title, type: todoType, note: note)
         return try await client.request(
             path: "/todos",
             method: .post,
@@ -118,11 +120,7 @@ final class TodoService {
     // MARK: - Private
 
     private func makeClient(serverURL: String) -> APIClient {
-        guard let baseURL = URL(string: serverURL) else {
-            // Fallback to localhost for development; in production the serverURL
-            // is always loaded from keychain by the ViewModel layer.
-            return APIClient(baseURL: URL(string: "http://localhost:8080")!)
-        }
+        let baseURL = URL(string: serverURL)!
         return APIClient(baseURL: baseURL)
     }
 }

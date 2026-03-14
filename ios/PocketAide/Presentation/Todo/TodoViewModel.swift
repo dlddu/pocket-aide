@@ -2,6 +2,7 @@
 // PocketAide
 
 import Foundation
+import SwiftUI
 
 /// 투두 화면의 상태와 비즈니스 로직을 관리하는 ViewModel.
 @MainActor
@@ -53,7 +54,7 @@ final class TodoViewModel: ObservableObject {
     }
 
     /// 새 투두를 생성합니다.
-    func createTodo(title: String) async {
+    func createTodo(title: String, note: String = "") async {
         guard let serverURL = keychainService.loadServerURL(),
               let token = keychainService.loadToken() else {
             errorMessage = "서버 주소 또는 인증 토큰이 없습니다."
@@ -67,6 +68,7 @@ final class TodoViewModel: ObservableObject {
         do {
             let created = try await todoService.create(
                 title: title,
+                note: note,
                 type: "personal",
                 serverURL: serverURL,
                 token: token
@@ -138,8 +140,10 @@ final class TodoViewModel: ObservableObject {
 
         do {
             let toggled = try await todoService.toggle(id: id, serverURL: serverURL, token: token)
-            if let idx = todos.firstIndex(where: { $0.id == id }) {
-                todos[idx] = toggled
+            withAnimation(.easeInOut(duration: 0.3)) {
+                if let idx = todos.firstIndex(where: { $0.id == id }) {
+                    todos[idx] = toggled
+                }
             }
         } catch {
             errorMessage = "투두 상태 변경에 실패했습니다."

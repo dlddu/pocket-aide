@@ -119,10 +119,8 @@ private struct TodoRow: View {
     var body: some View {
         HStack {
             Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    Task {
-                        await viewModel.toggleTodo(id: todo.id)
-                    }
+                Task {
+                    await viewModel.toggleTodo(id: todo.id)
                 }
             } label: {
                 Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
