@@ -9,13 +9,13 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Available Models
 
-    let availableModels = ["mock", "gpt-4o", "claude-3-opus", "gemini-pro"]
+    let availableModels: [String]
 
     // MARK: - Published State
 
     @Published var messages: [ChatMessage] = []
     @Published var inputText: String = ""
-    @Published var selectedModel: String = "mock"
+    @Published var selectedModel: String
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     @Published var showModelPicker: Bool = false
@@ -28,7 +28,19 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(isUITesting: Bool = CommandLine.arguments.contains("--uitesting")) {
+    init(
+        availableModels: [String] = {
+            if let modelsEnv = ProcessInfo.processInfo.environment["LLM_AVAILABLE_MODELS"],
+               !modelsEnv.isEmpty {
+                return modelsEnv.components(separatedBy: ",")
+            }
+            return ["gpt-4o", "claude-3-opus", "gemini-pro"]
+        }(),
+        defaultModel: String? = ProcessInfo.processInfo.environment["LLM_DEFAULT_MODEL"],
+        isUITesting: Bool = CommandLine.arguments.contains("--uitesting")
+    ) {
+        self.availableModels = availableModels
+        self.selectedModel = defaultModel ?? availableModels.first ?? "gpt-4o"
         self.isUITesting = isUITesting
     }
 
