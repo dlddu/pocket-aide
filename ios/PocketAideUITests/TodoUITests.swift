@@ -49,7 +49,6 @@ final class TodoUITests: XCTestCase {
     /// Expected flow:
     ///   TabBar visible → tap "tab_todo" → "todo_list_view" appears
     func test_todoTab_displaysTodoList() throws {
-        throw XCTSkip("DLD-725 구현 후 활성화: tab_todo 탭 및 todo_list_view 접근성 식별자 추가 필요")
 
         // Arrange
         let tabBar = app.tabBars.firstMatch
@@ -75,7 +74,6 @@ final class TodoUITests: XCTestCase {
     ///   "tab_todo" selected → "todo_list_view" visible
     ///   → "todo_section_pending" header exists
     func test_todoTab_displaysPendingSection() throws {
-        throw XCTSkip("DLD-725 구현 후 활성화: todo_section_pending 접근성 식별자 추가 필요")
 
         // Arrange
         let tabBar = app.tabBars.firstMatch
@@ -100,7 +98,6 @@ final class TodoUITests: XCTestCase {
     ///   "tab_todo" selected → "todo_list_view" visible
     ///   → "todo_section_completed" header exists
     func test_todoTab_displaysCompletedSection() throws {
-        throw XCTSkip("DLD-725 구현 후 활성화: todo_section_completed 접근성 식별자 추가 필요")
 
         // Arrange
         let tabBar = app.tabBars.firstMatch
@@ -129,7 +126,6 @@ final class TodoUITests: XCTestCase {
     ///   → tap "todo_save_button" → sheet dismisses
     ///   → todo list contains a row for "장보기" in the pending section
     func test_todoTab_addNewTodo_displaysInList() throws {
-        throw XCTSkip("DLD-725 구현 후 활성화: add_todo_button, todo_title_field, todo_save_button, todo_row_<title> 접근성 식별자 추가 필요")
 
         // Arrange
         let tabBar = app.tabBars.firstMatch
@@ -177,7 +173,6 @@ final class TodoUITests: XCTestCase {
     ///   → "todo_row_독서" disappears from pending section
     ///   → "todo_row_독서" appears in completed section
     func test_todoTab_tapCheckbox_movesToCompletedSection() throws {
-        throw XCTSkip("DLD-725 구현 후 활성화: todo_checkbox_<title> 접근성 식별자 및 섹션 이동 로직 추가 필요")
 
         // Arrange — navigate to todo tab and add a pending todo
         let tabBar = app.tabBars.firstMatch
@@ -245,7 +240,6 @@ final class TodoUITests: XCTestCase {
     ///   → tap delete action
     ///   → "todo_row_운동하기" no longer exists in the list
     func test_todoTab_swipeToDelete_removesFromList() throws {
-        throw XCTSkip("DLD-725 구현 후 활성화: 스와이프 삭제 액션 및 todo_row_<title> 접근성 식별자 추가 필요")
 
         // Arrange — navigate to todo tab and add a todo
         let tabBar = app.tabBars.firstMatch

@@ -73,6 +73,16 @@ func main() {
 	rg.DELETE("/:id", routineHandler.Delete)
 	rg.POST("/:id/complete", routineHandler.Complete)
 
+	// Todo routes
+	todoHandler := handler.NewTodoHandler(database)
+	tg := e.Group("/todos", appmiddleware.JWT(jwtSecret))
+	tg.POST("", todoHandler.Create)
+	tg.GET("", todoHandler.List)
+	tg.GET("/:id", todoHandler.Get)
+	tg.PUT("/:id", todoHandler.Update)
+	tg.DELETE("/:id", todoHandler.Delete)
+	tg.POST("/:id/toggle", todoHandler.Toggle)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
