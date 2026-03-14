@@ -20,11 +20,58 @@ struct SaveVoiceMemoIntent {
     private let speechRecognizer: SpeechRecognizerProtocol
     private let memoService: MemoServiceProtocol
 
+    // MARK: - Credential Strategy
+
+    /// 자격 증명 공급 전략.
+    private enum CredentialStrategy {
+        /// KeychainService에서 동적으로 로드합니다.
+        case keychain(KeychainService)
+        /// 고정된 자격 증명을 사용합니다 (테스트용).
+        case fixed(serverURL: String, token: String)
+    }
+
+    private let credentialStrategy: CredentialStrategy
+
     // MARK: - Init
 
-    init(speechRecognizer: SpeechRecognizerProtocol, memoService: MemoServiceProtocol) {
+    /// 프로덕션 초기화 — KeychainService를 통해 자격 증명을 동적으로 로드합니다.
+    init(speechRecognizer: SpeechRecognizerProtocol,
+         memoService: MemoServiceProtocol,
+         keychainService: KeychainService) {
         self.speechRecognizer = speechRecognizer
         self.memoService = memoService
+        self.credentialStrategy = .keychain(keychainService)
+    }
+
+    /// 테스트용 초기화 — 고정 자격 증명을 사용합니다.
+    ///
+    /// 테스트에서는 Keychain이 비어 있을 수 있으므로
+    /// 기본 테스트 자격 증명을 제공합니다.
+    init(speechRecognizer: SpeechRecognizerProtocol,
+         memoService: MemoServiceProtocol) {
+        self.speechRecognizer = speechRecognizer
+        self.memoService = memoService
+        self.credentialStrategy = .fixed(
+            serverURL: "https://test.example.com",
+            token: "test-token"
+        )
+    }
+
+    // MARK: - Private Helpers
+
+    /// 현재 인증 자격 증명을 반환합니다.
+    private func credentials() -> (serverURL: String, token: String)? {
+        switch credentialStrategy {
+        case .keychain(let keychainService):
+            guard let url = keychainService.loadServerURL(),
+                  let tok = keychainService.loadToken() else {
+                return nil
+            }
+            return (url, tok)
+
+        case .fixed(let serverURL, let token):
+            return (serverURL, token)
+        }
     }
 
     // MARK: - Perform
@@ -55,14 +102,15 @@ struct SaveVoiceMemoIntent {
             return IntentResult(value: "")
         }
 
-        let serverURL = "https://pocket-aide.local"
-        let token = "intent-token"
+        guard let creds = credentials() else {
+            return IntentResult(value: "서버 주소 또는 인증 토큰이 없습니다.")
+        }
 
         _ = try await memoService.create(
             content: trimmed,
             source: "voice",
-            serverURL: serverURL,
-            token: token
+            serverURL: creds.serverURL,
+            token: creds.token
         )
 
         return IntentResult(value: "음성 메모가 저장되었습니다.")

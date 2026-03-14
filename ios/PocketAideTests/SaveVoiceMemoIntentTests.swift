@@ -41,6 +41,9 @@ final class MockMemoService {
     }
 
     private(set) var createCalls: [CreateCall] = []
+    private(set) var listCallCount = 0
+    private(set) var deleteCallCount = 0
+    private(set) var moveCallCount = 0
 
     /// `create` 호출 시 throw할 에러. `nil`이면 정상 동작.
     var simulatedCreateError: Error? = nil
@@ -48,22 +51,42 @@ final class MockMemoService {
     /// `create` 호출 시 반환할 메모. 기본값은 더미 메모.
     var stubbedMemo: Memo = Memo(id: 1, content: "stub", source: "voice")
 
+    /// `list` 호출 시 반환할 메모 목록. 기본값은 빈 배열.
+    var stubbedMemos: [Memo] = []
+
     // MARK: - Reset
 
     func reset() {
         createCalls = []
+        listCallCount = 0
+        deleteCallCount = 0
+        moveCallCount = 0
         simulatedCreateError = nil
         stubbedMemo = Memo(id: 1, content: "stub", source: "voice")
+        stubbedMemos = []
     }
 }
 
 extension MockMemoService {
+    func list(serverURL: String, token: String) async throws -> [Memo] {
+        listCallCount += 1
+        return stubbedMemos
+    }
+
     func create(content: String, source: String, serverURL: String, token: String) async throws -> Memo {
         createCalls.append(CreateCall(content: content, source: source))
         if let error = simulatedCreateError {
             throw error
         }
         return stubbedMemo
+    }
+
+    func delete(id: Int, serverURL: String, token: String) async throws {
+        deleteCallCount += 1
+    }
+
+    func move(id: Int, target: String, serverURL: String, token: String) async throws {
+        moveCallCount += 1
     }
 }
 

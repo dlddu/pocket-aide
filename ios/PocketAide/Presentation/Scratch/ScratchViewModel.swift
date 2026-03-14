@@ -103,9 +103,7 @@ final class ScratchViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            if let concreteMemoService = memoService as? MemoService {
-                memos = try await concreteMemoService.list(serverURL: creds.serverURL, token: creds.token)
-            }
+            memos = try await memoService.list(serverURL: creds.serverURL, token: creds.token)
         } catch {
             errorMessage = "메모 목록을 불러오지 못했습니다."
         }
@@ -151,9 +149,7 @@ final class ScratchViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            if let concreteMemoService = memoService as? MemoService {
-                try await concreteMemoService.delete(id: id, serverURL: creds.serverURL, token: creds.token)
-            }
+            try await memoService.delete(id: id, serverURL: creds.serverURL, token: creds.token)
             memos.removeAll { $0.id == id }
         } catch {
             errorMessage = "메모를 삭제하지 못했습니다."
@@ -172,9 +168,7 @@ final class ScratchViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            if let concreteMemoService = memoService as? MemoService {
-                try await concreteMemoService.move(id: id, target: target, serverURL: creds.serverURL, token: creds.token)
-            }
+            try await memoService.move(id: id, target: target, serverURL: creds.serverURL, token: creds.token)
             memos.removeAll { $0.id == id }
         } catch {
             errorMessage = "메모를 이동하지 못했습니다."
