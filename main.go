@@ -47,13 +47,19 @@ func main() {
 	e.GET("/me", authHandler.Me, appmiddleware.JWT(jwtSecret))
 
 	// Chat routes
-	// MockProvider is used by default; replace with a real Provider in production.
+	defaultModel := os.Getenv("LLM_DEFAULT_MODEL")
+	if defaultModel == "" {
+		defaultModel = "mock"
+	}
+
+	// TODO: Replace MockProvider with a real LLM provider (e.g. OpenAI, Claude)
+	// configured via environment variables in production.
 	mockLLM := &llm.MockProvider{
 		CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 			return "Hello from AI", nil
 		},
 	}
-	chatHandler := handler.NewChatHandler(database, mockLLM)
+	chatHandler := handler.NewChatHandler(database, mockLLM, defaultModel)
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT(jwtSecret))
 	e.GET("/chat/history", chatHandler.History, appmiddleware.JWT(jwtSecret))
 

@@ -80,7 +80,7 @@ func seedUserAndLogin(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email, p
 //
 //	tdb := testutil.NewTestDB(t)
 //	mockLLM := &llm.MockProvider{CompleteFunc: returns "Hello from AI"}
-//	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+//	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 //	token := seedUserAndLogin(t, tdb, e, "chat@example.com", "Secret1!")
 //	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 func TestChatHandler_Send_ReturnsSSEStream(t *testing.T) {
@@ -93,7 +93,7 @@ func TestChatHandler_Send_ReturnsSSEStream(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "Hello from AI", nil
 	}}
-	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 
 	token := seedUserAndLogin(t, tdb, e, "chat@example.com", "Secret1!")
@@ -137,7 +137,7 @@ func TestChatHandler_Send_StreamsMultipleTokens(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "one two three", nil
 	}}
-	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 
 	token := seedUserAndLogin(t, tdb, e, "multi@example.com", "Secret1!")
@@ -185,7 +185,7 @@ func TestChatHandler_Send_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "response", nil
 	}}
-	chatHandler := handler.NewChatHandler(nil, mockLLM)
+	chatHandler := handler.NewChatHandler(nil, mockLLM, "mock")
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 
 	// Act
@@ -225,7 +225,7 @@ func TestChatHandler_History_ReturnsConversation(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "Hello from AI", nil
 	}}
-	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 	e.GET("/chat/history", chatHandler.History, appmiddleware.JWT("test-jwt-secret"))
 
@@ -280,7 +280,7 @@ func TestChatHandler_History_EmptyHistory_ReturnsEmptyList(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "response", nil
 	}}
-	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 	e.GET("/chat/history", chatHandler.History, appmiddleware.JWT("test-jwt-secret"))
 
 	token := seedUserAndLogin(t, tdb, e, "empty@example.com", "Secret1!")
@@ -321,7 +321,7 @@ func TestChatHandler_History_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "response", nil
 	}}
-	chatHandler := handler.NewChatHandler(nil, mockLLM)
+	chatHandler := handler.NewChatHandler(nil, mockLLM, "mock")
 	e.GET("/chat/history", chatHandler.History, appmiddleware.JWT("test-jwt-secret"))
 
 	// Act
@@ -357,7 +357,7 @@ func TestChatHandler_Send_WithModelSelection_UsesSpecifiedModel(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "gpt-4o response", nil
 	}}
-	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 
 	token := seedUserAndLogin(t, tdb, e, "model@example.com", "Secret1!")
@@ -408,7 +408,7 @@ func TestChatHandler_Send_DefaultModel_UsesFallback(t *testing.T) {
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
 		return "default model response", nil
 	}}
-	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM)
+	chatHandler := handler.NewChatHandler(tdb.DB, mockLLM, "mock")
 	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT("test-jwt-secret"))
 
 	token := seedUserAndLogin(t, tdb, e, "fallback@example.com", "Secret1!")

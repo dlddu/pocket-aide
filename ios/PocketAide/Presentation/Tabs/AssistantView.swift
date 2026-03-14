@@ -24,7 +24,29 @@ struct ChatScreen: View {
                 ModelSelectorBar(viewModel: viewModel)
 
                 // Message List
-                MessageList(messages: viewModel.messages)
+                MessageList(messages: viewModel.messages, isLoading: viewModel.isLoading)
+
+                // Error Banner
+                if let error = viewModel.errorMessage {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Button {
+                            viewModel.errorMessage = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
+                    .background(Color(.systemGray6))
+                    .accessibilityIdentifier("error_banner")
+                }
 
                 // Input Bar
                 ChatInputBar(viewModel: viewModel)
@@ -32,6 +54,14 @@ struct ChatScreen: View {
             .accessibilityIdentifier("assistant_chat_view")
             .navigationTitle("Assistant")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: SettingsView()) {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityIdentifier("settings_button")
+                }
+            }
         }
         .sheet(isPresented: $viewModel.showModelPicker) {
             ModelPickerSheet(viewModel: viewModel)
@@ -120,6 +150,7 @@ private struct ModelPickerSheet: View {
 private struct MessageList: View {
 
     let messages: [ChatMessage]
+    let isLoading: Bool
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -136,6 +167,11 @@ private struct MessageList: View {
                                 .id(message.id)
                         }
                     }
+
+                    if isLoading {
+                        TypingIndicator()
+                            .id("typing-indicator")
+                    }
                 }
                 .padding()
             }
@@ -147,6 +183,36 @@ private struct MessageList: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - TypingIndicator
+
+private struct TypingIndicator: View {
+
+    @State private var animating = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<3, id: \.self) { index in
+                Circle()
+                    .fill(Color(.systemGray3))
+                    .frame(width: 8, height: 8)
+                    .scaleEffect(animating ? 1.0 : 0.5)
+                    .animation(
+                        .easeInOut(duration: 0.6)
+                            .repeatForever()
+                            .delay(Double(index) * 0.2),
+                        value: animating
+                    )
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(.systemGray5))
+        .cornerRadius(16)
+        .accessibilityIdentifier("typing_indicator")
+        .onAppear { animating = true }
     }
 }
 

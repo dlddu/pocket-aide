@@ -20,11 +20,9 @@ type ChatHandler struct {
 	service *chat.ChatService
 }
 
-// NewChatHandler constructs a ChatHandler wired to the given database and
-// LLM provider.
-func NewChatHandler(db *sql.DB, llmProvider llm.Provider) *ChatHandler {
-	defaultModel := "mock"
-
+// NewChatHandler constructs a ChatHandler wired to the given database,
+// LLM provider, and default model name.
+func NewChatHandler(db *sql.DB, llmProvider llm.Provider, defaultModel string) *ChatHandler {
 	router := llm.NewRouter(defaultModel)
 	router.RegisterProvider(defaultModel, llmProvider)
 
