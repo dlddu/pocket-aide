@@ -42,8 +42,6 @@ import (
 //	POST /chat/send  {"message":"오늘 날씨 어때?"} + Bearer token
 //	→ 200 OK  Content-Type: text/event-stream, body contains "data:" line
 func TestVoiceChatHandler_Send_TranscribedText_ReturnsSSEStream(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
@@ -88,8 +86,6 @@ func TestVoiceChatHandler_Send_TranscribedText_ReturnsSSEStream(t *testing.T) {
 //	POST /chat/send  {"message":"내일 오전에 회의 일정을 잡아줘"} + Bearer token
 //	→ 200 OK  SSE stream with ≥ 3 "data:" lines
 func TestVoiceChatHandler_Send_LongTranscribedText_StreamsMultipleTokens(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
@@ -145,8 +141,6 @@ func TestVoiceChatHandler_Send_LongTranscribedText_StreamsMultipleTokens(t *test
 //	POST /chat/send  {"message":""} + Bearer token
 //	→ 400 Bad Request
 func TestVoiceChatHandler_Send_EmptyTranscription_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
@@ -190,8 +184,6 @@ func TestVoiceChatHandler_Send_EmptyTranscription_ReturnsBadRequest(t *testing.T
 //	POST /chat/send  {"message":"파이썬으로 피보나치 수열 짜줘","model":"gpt-4o"} + Bearer token
 //	→ 200 OK  SSE stream; MockProvider.CallCount == 1
 func TestVoiceChatHandler_Send_WithModelSelection_ReturnsSSEStream(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
@@ -240,8 +232,6 @@ func TestVoiceChatHandler_Send_WithModelSelection_ReturnsSSEStream(t *testing.T)
 //	GET  /chat/history  + Bearer token
 //	→ 200 OK  JSON array contains {"role":"user","content":"음성으로 보낸 메시지"}
 func TestVoiceChatHandler_History_ContainsVoiceMessage(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
@@ -308,8 +298,6 @@ func TestVoiceChatHandler_History_ContainsVoiceMessage(t *testing.T) {
 //	POST /chat/send  {"message":"인증 없이 보낸 음성 메시지"}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestVoiceChatHandler_Send_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	e := echo.New()
 	mockLLM := &llm.MockProvider{CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
@@ -347,8 +335,6 @@ func TestVoiceChatHandler_Send_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	POST /chat/send  {"message":"회의 일정 추가해줘"} + Bearer token
 //	→ 200 OK  SSE stream; MockProvider.CallCount == 1 (only one request sent)
 func TestVoiceChatHandler_Send_FinalTranscriptOnly_ReturnsSSEStream(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
@@ -401,8 +387,6 @@ func TestVoiceChatHandler_Send_FinalTranscriptOnly_ReturnsSSEStream(t *testing.T
 //	→ 200 OK  JSON array with user messages in order:
 //	  [user:"안녕하세요", assistant:…, user:"오늘 일정 알려줘", assistant:…, user:"고마워", assistant:…]
 func TestVoiceChatHandler_History_MixedVoiceAndText_InOrder(t *testing.T) {
-	t.Skip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
 	// Arrange
 	tdb := testutil.NewTestDB(t)
 	e := echo.New()
