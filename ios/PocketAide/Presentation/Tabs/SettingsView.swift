@@ -5,6 +5,16 @@ import SwiftUI
 
 struct SettingsView: View {
 
+    // MARK: - Accessibility Identifier Constants
+
+    /// Siri Shortcut 설정 안내 섹션의 accessibilityIdentifier.
+    static let shortcutSetupSectionIdentifier = "shortcut_setup_section"
+
+    /// Siri Shortcut 추가 버튼의 accessibilityIdentifier.
+    static let shortcutAddToSiriButtonIdentifier = "shortcut_add_to_siri_button"
+
+    // MARK: - Properties
+
     @EnvironmentObject var authViewModel: AuthViewModel
 
     @AppStorage("selectedSpeechEngine") private var selectedEngine: String = SpeechEngine.whisperLocal.rawValue
@@ -52,6 +62,32 @@ struct SettingsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
+
+                // Siri Shortcut Setup Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Siri Shortcut")
+                        .font(.headline)
+                    Text("음성 메모를 Siri Shortcut으로 빠르게 저장하세요.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Button(action: {
+                        // Siri Shortcut 추가 액션
+                    }) {
+                        HStack {
+                            Image(systemName: "mic.fill")
+                            Text("Add to Siri")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .foregroundColor(.primary)
+                    }
+                    .accessibilityIdentifier(SettingsView.shortcutAddToSiriButtonIdentifier)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .accessibilityIdentifier(SettingsView.shortcutSetupSectionIdentifier)
 
                 Button(action: {
                     authViewModel.logout()

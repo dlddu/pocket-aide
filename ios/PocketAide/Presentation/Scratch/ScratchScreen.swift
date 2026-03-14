@@ -104,6 +104,7 @@ private struct MemoRow: View {
             Image(systemName: sourceIcon)
                 .foregroundStyle(.secondary)
                 .font(.caption)
+                .accessibilityIdentifier("memo_source_icon_\(memo.content)")
 
             Text(memo.content)
                 .font(.body)

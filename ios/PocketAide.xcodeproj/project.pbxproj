@@ -26,10 +26,37 @@
 		AA000017 /* WhisperLocalRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100041 /* WhisperLocalRecognizer.swift */; };
 		AA000018 /* WhisperAPIRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100042 /* WhisperAPIRecognizer.swift */; };
 		AA000019 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100043 /* ChatViewModel.swift */; };
+		/* Previously missing files - now added */
+		AA000050 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100050 /* KeychainService.swift */; };
+		AA000051 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100051 /* AuthService.swift */; };
+		AA000052 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100052 /* ChatService.swift */; };
+		AA000053 /* MemoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100053 /* MemoService.swift */; };
+		AA000054 /* TodoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100054 /* TodoService.swift */; };
+		AA000055 /* RoutineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100055 /* RoutineService.swift */; };
+		AA000056 /* Memo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100056 /* Memo.swift */; };
+		AA000057 /* Todo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100057 /* Todo.swift */; };
+		AA000058 /* Routine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100058 /* Routine.swift */; };
+		AA000059 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100059 /* ChatMessage.swift */; };
+		AA000060 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100060 /* LoginView.swift */; };
+		AA000061 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100061 /* AuthViewModel.swift */; };
+		AA000062 /* RoutineViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100062 /* RoutineViewModel.swift */; };
+		AA000063 /* RoutineScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100063 /* RoutineScreen.swift */; };
+		AA000064 /* RoutineEditScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100064 /* RoutineEditScreen.swift */; };
+		AA000065 /* ScratchScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100065 /* ScratchScreen.swift */; };
+		AA000066 /* ScratchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100066 /* ScratchViewModel.swift */; };
+		AA000067 /* TodoScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100067 /* TodoScreen.swift */; };
+		AA000068 /* TodoViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100068 /* TodoViewModel.swift */; };
+		AA000069 /* TodoEditModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100069 /* TodoEditModal.swift */; };
+		AA000070 /* MemoServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100070 /* MemoServiceProtocol.swift */; };
+		AA000071 /* IntentResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100071 /* IntentResult.swift */; };
+		AA000072 /* SaveVoiceMemoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100072 /* SaveVoiceMemoIntent.swift */; };
 		/* Unit Tests */
 		AA000020 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100020 /* APIClientTests.swift */; };
 		AA000021 /* MockSpeechRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100021 /* MockSpeechRecognizerTests.swift */; };
 		AA000022 /* ChatViewModelVoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100022 /* ChatViewModelVoiceTests.swift */; };
+		AA000023 /* SaveVoiceMemoIntentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100023 /* SaveVoiceMemoIntentTests.swift */; };
+		AA000024 /* ScratchViewModelVoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100024 /* ScratchViewModelVoiceTests.swift */; };
+		AA000025 /* MockMemoServiceProtocolConformance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100025 /* MockMemoServiceProtocolConformance.swift */; };
 		/* UI Tests */
 		AA000030 /* TabBarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100030 /* TabBarUITests.swift */; };
 		AA000031 /* VoiceChatUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100031 /* VoiceChatUITests.swift */; };
@@ -57,9 +84,36 @@
 		AA100042 /* WhisperAPIRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperAPIRecognizer.swift; sourceTree = "<group>"; };
 		AA100043 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		AA100017 /* PocketAide.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PocketAide.entitlements; sourceTree = "<group>"; };
+		/* Previously missing file references - now added */
+		AA100050 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		AA100051 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		AA100052 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
+		AA100053 /* MemoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoService.swift; sourceTree = "<group>"; };
+		AA100054 /* TodoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoService.swift; sourceTree = "<group>"; };
+		AA100055 /* RoutineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineService.swift; sourceTree = "<group>"; };
+		AA100056 /* Memo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memo.swift; sourceTree = "<group>"; };
+		AA100057 /* Todo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Todo.swift; sourceTree = "<group>"; };
+		AA100058 /* Routine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Routine.swift; sourceTree = "<group>"; };
+		AA100059 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		AA100060 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		AA100061 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		AA100062 /* RoutineViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineViewModel.swift; sourceTree = "<group>"; };
+		AA100063 /* RoutineScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineScreen.swift; sourceTree = "<group>"; };
+		AA100064 /* RoutineEditScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineEditScreen.swift; sourceTree = "<group>"; };
+		AA100065 /* ScratchScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScratchScreen.swift; sourceTree = "<group>"; };
+		AA100066 /* ScratchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScratchViewModel.swift; sourceTree = "<group>"; };
+		AA100067 /* TodoScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoScreen.swift; sourceTree = "<group>"; };
+		AA100068 /* TodoViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoViewModel.swift; sourceTree = "<group>"; };
+		AA100069 /* TodoEditModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoEditModal.swift; sourceTree = "<group>"; };
+		AA100070 /* MemoServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoServiceProtocol.swift; sourceTree = "<group>"; };
+		AA100071 /* IntentResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentResult.swift; sourceTree = "<group>"; };
+		AA100072 /* SaveVoiceMemoIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVoiceMemoIntent.swift; sourceTree = "<group>"; };
 		AA100020 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		AA100021 /* MockSpeechRecognizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSpeechRecognizerTests.swift; sourceTree = "<group>"; };
 		AA100022 /* ChatViewModelVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelVoiceTests.swift; sourceTree = "<group>"; };
+		AA100023 /* SaveVoiceMemoIntentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVoiceMemoIntentTests.swift; sourceTree = "<group>"; };
+		AA100024 /* ScratchViewModelVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScratchViewModelVoiceTests.swift; sourceTree = "<group>"; };
+		AA100025 /* MockMemoServiceProtocolConformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMemoServiceProtocolConformance.swift; sourceTree = "<group>"; };
 		AA100030 /* TabBarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarUITests.swift; sourceTree = "<group>"; };
 		AA100031 /* VoiceChatUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatUITests.swift; sourceTree = "<group>"; };
 		/* Products */
@@ -97,6 +151,7 @@
 				AAGRP_APP_PRE /* Presentation */,
 				AAGRP_APP_DOM /* Domain */,
 				AAGRP_APP_DAT /* Data */,
+				AAGRP_APP_INT /* Intents */,
 				AA100016 /* Info.plist */,
 				AA100017 /* PocketAide.entitlements */,
 			);
@@ -111,14 +166,65 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		AAGRP_APP_INT /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				AA100071 /* IntentResult.swift */,
+				AA100072 /* SaveVoiceMemoIntent.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		AAGRP_APP_PRE /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
 				AAGRP_APP_TAB /* TabBar */,
 				AAGRP_APP_TBS /* Tabs */,
 				AAGRP_APP_CHA /* Chat */,
+				AAGRP_APP_AUT /* Auth */,
+				AAGRP_APP_SCR /* Scratch */,
+				AAGRP_APP_TOD /* Todo */,
+				AAGRP_APP_ROU /* Routine */,
 			);
 			path = Presentation;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_AUT /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				AA100060 /* LoginView.swift */,
+				AA100061 /* AuthViewModel.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_SCR /* Scratch */ = {
+			isa = PBXGroup;
+			children = (
+				AA100065 /* ScratchScreen.swift */,
+				AA100066 /* ScratchViewModel.swift */,
+			);
+			path = Scratch;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_TOD /* Todo */ = {
+			isa = PBXGroup;
+			children = (
+				AA100067 /* TodoScreen.swift */,
+				AA100068 /* TodoViewModel.swift */,
+				AA100069 /* TodoEditModal.swift */,
+			);
+			path = Todo;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_ROU /* Routine */ = {
+			isa = PBXGroup;
+			children = (
+				AA100062 /* RoutineViewModel.swift */,
+				AA100063 /* RoutineScreen.swift */,
+				AA100064 /* RoutineEditScreen.swift */,
+			);
+			path = Routine;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_CHA /* Chat */ = {
@@ -158,8 +264,20 @@
 				AAGRP_APP_ERR /* Errors */,
 				AAGRP_APP_MCK /* Mocks */,
 				AAGRP_APP_SPH /* Speech */,
+				AAGRP_APP_MOD /* Models */,
 			);
 			path = Domain;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_MOD /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA100056 /* Memo.swift */,
+				AA100057 /* Todo.swift */,
+				AA100058 /* Routine.swift */,
+				AA100059 /* ChatMessage.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_SPH /* Speech */ = {
@@ -176,6 +294,7 @@
 			isa = PBXGroup;
 			children = (
 				AA100013 /* SpeechRecognizerProtocol.swift */,
+				AA100070 /* MemoServiceProtocol.swift */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -200,8 +319,54 @@
 			isa = PBXGroup;
 			children = (
 				AAGRP_APP_NET /* Network */,
+				AAGRP_APP_DAT_AUT /* Auth */,
+				AAGRP_APP_DAT_MEM /* Memo */,
+				AAGRP_APP_DAT_TOD /* Todo */,
+				AAGRP_APP_DAT_ROU /* Routine */,
+				AAGRP_APP_DAT_CHA /* Chat */,
 			);
 			path = Data;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_DAT_AUT /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				AA100050 /* KeychainService.swift */,
+				AA100051 /* AuthService.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_DAT_MEM /* Memo */ = {
+			isa = PBXGroup;
+			children = (
+				AA100053 /* MemoService.swift */,
+			);
+			path = Memo;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_DAT_TOD /* Todo */ = {
+			isa = PBXGroup;
+			children = (
+				AA100054 /* TodoService.swift */,
+			);
+			path = Todo;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_DAT_ROU /* Routine */ = {
+			isa = PBXGroup;
+			children = (
+				AA100055 /* RoutineService.swift */,
+			);
+			path = Routine;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_DAT_CHA /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				AA100052 /* ChatService.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_NET /* Network */ = {
@@ -220,6 +385,9 @@
 				AA100020 /* APIClientTests.swift */,
 				AA100021 /* MockSpeechRecognizerTests.swift */,
 				AA100022 /* ChatViewModelVoiceTests.swift */,
+				AA100023 /* SaveVoiceMemoIntentTests.swift */,
+				AA100024 /* ScratchViewModelVoiceTests.swift */,
+				AA100025 /* MockMemoServiceProtocolConformance.swift */,
 			);
 			path = PocketAideTests;
 			sourceTree = "<group>";
@@ -351,6 +519,29 @@
 				AA000017 /* WhisperLocalRecognizer.swift in Sources */,
 				AA000018 /* WhisperAPIRecognizer.swift in Sources */,
 				AA000019 /* ChatViewModel.swift in Sources */,
+				AA000050 /* KeychainService.swift in Sources */,
+				AA000051 /* AuthService.swift in Sources */,
+				AA000052 /* ChatService.swift in Sources */,
+				AA000053 /* MemoService.swift in Sources */,
+				AA000054 /* TodoService.swift in Sources */,
+				AA000055 /* RoutineService.swift in Sources */,
+				AA000056 /* Memo.swift in Sources */,
+				AA000057 /* Todo.swift in Sources */,
+				AA000058 /* Routine.swift in Sources */,
+				AA000059 /* ChatMessage.swift in Sources */,
+				AA000060 /* LoginView.swift in Sources */,
+				AA000061 /* AuthViewModel.swift in Sources */,
+				AA000062 /* RoutineViewModel.swift in Sources */,
+				AA000063 /* RoutineScreen.swift in Sources */,
+				AA000064 /* RoutineEditScreen.swift in Sources */,
+				AA000065 /* ScratchScreen.swift in Sources */,
+				AA000066 /* ScratchViewModel.swift in Sources */,
+				AA000067 /* TodoScreen.swift in Sources */,
+				AA000068 /* TodoViewModel.swift in Sources */,
+				AA000069 /* TodoEditModal.swift in Sources */,
+				AA000070 /* MemoServiceProtocol.swift in Sources */,
+				AA000071 /* IntentResult.swift in Sources */,
+				AA000072 /* SaveVoiceMemoIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,6 +559,9 @@
 				AA000020 /* APIClientTests.swift in Sources */,
 				AA000021 /* MockSpeechRecognizerTests.swift in Sources */,
 				AA000022 /* ChatViewModelVoiceTests.swift in Sources */,
+				AA000023 /* SaveVoiceMemoIntentTests.swift in Sources */,
+				AA000024 /* ScratchViewModelVoiceTests.swift in Sources */,
+				AA000025 /* MockMemoServiceProtocolConformance.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

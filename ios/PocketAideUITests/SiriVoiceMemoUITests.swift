@@ -51,8 +51,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   앱 실행 → "siri_shortcut_button" 탭 (App Intent 시뮬레이션)
     ///   → "voice_memo_recording_indicator" 나타남
     func test_siriShortcut_trigger_displaysVoiceInputInterface() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before triggering App Intent")
@@ -84,8 +82,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   → MockSpeechRecognizer가 simulatedTranscript 방출
     ///   → "voice_memo_save_confirmation" 나타남 (변환된 텍스트 포함)
     func test_siriShortcut_mockSpeechRecognizer_transcribesVoiceToText() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -129,8 +125,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   → "voice_memo_save_confirmation" 나타남
     ///   → 저장 완료 후 "voice_memo_recording_indicator" 사라짐
     func test_siriShortcut_voiceMemo_savedToBackend() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -169,8 +163,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   → 메모 저장 완료 → "tab_scratch" 탭 이동
     ///   → "scratch_list_view" 표시 → "memo_row_내일 회의 준비하기" 존재
     func test_siriShortcut_savedVoiceMemo_appearsInScratchTab() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         // MockSpeechRecognizer는 "--uitesting" 모드에서 simulatedTranscript = "내일 회의 준비하기" 방출
         let tabBar = app.tabBars.firstMatch
@@ -218,8 +210,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   → "memo_row_내일 회의 준비하기" 행에
     ///     "memo_source_icon_내일 회의 준비하기" 아이콘 존재
     func test_siriShortcut_voiceMemoRow_displaysMicFillSourceIcon() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -272,8 +262,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   → 부분 전사들이 순차적으로 조합
     ///   → "voice_memo_save_confirmation" 에 최종 전사 텍스트 표시
     func test_siriShortcut_partialTranscriptions_combinedIntoFinalMemo() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -309,8 +297,6 @@ final class SiriVoiceMemoUITests: XCTestCase {
     ///   → "voice_memo_save_confirmation" 나타나지 않음
     ///   → Scratch 탭에 빈 메모 행이 추가되지 않음
     func test_siriShortcut_emptyTranscription_doesNotSaveMemo() throws {
-        throw XCTSkip("Skipped: requires Siri Shortcut App Intent implementation (DLD-732)")
-
         // Arrange
         // This test requires "--uitesting-empty-transcript" or equivalent launch arg
         // to instruct MockSpeechRecognizer to return an empty string.
