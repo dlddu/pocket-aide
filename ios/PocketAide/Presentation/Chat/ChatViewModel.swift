@@ -1,6 +1,7 @@
 // ChatViewModel.swift
 // PocketAide
 
+import Combine
 import Foundation
 
 /// 채팅 화면의 상태와 비즈니스 로직을 관리하는 ViewModel.
@@ -31,8 +32,11 @@ final class ChatViewModel: ObservableObject {
     private let chatService = ChatService()
     private let keychainService = KeychainService()
     private let isUITesting: Bool
-    private var speechRecognizer: SpeechRecognizerProtocol?
+    private let isRecognizerInjected: Bool
+    private(set) var speechRecognizer: SpeechRecognizerProtocol?
     private var transcriptTask: Task<Void, Never>?
+    private var engineCancellable: AnyCancellable?
+    private var defaultsCancellable: AnyCancellable?
 
     // MARK: - Init
 
@@ -51,16 +55,44 @@ final class ChatViewModel: ObservableObject {
         self.availableModels = availableModels
         self.selectedModel = defaultModel ?? availableModels.first ?? "gpt-4o"
         self.isUITesting = isUITesting
+        self.isRecognizerInjected = speechRecognizer != nil
+
+        // Restore persisted engine selection from UserDefaults
+        if let savedRaw = UserDefaults.standard.string(forKey: "selectedSpeechEngine"),
+           let saved = SpeechEngine(rawValue: savedRaw) {
+            self.selectedSpeechEngine = saved
+        }
 
         if let injected = speechRecognizer {
             self.speechRecognizer = injected
         } else if isUITesting {
             let mock = MockSpeechRecognizer()
-            mock.simulatedTranscript = "음성 인식 테스트 메시지"
+            mock.simulatedTranscript = UITestConstants.voiceTestMessage
             self.speechRecognizer = mock
         } else {
-            self.speechRecognizer = WhisperLocalRecognizer()
+            self.speechRecognizer = Self.makeRecognizer(for: self.selectedSpeechEngine)
         }
+
+        // Observe engine changes to persist and swap recognizer
+        engineCancellable = $selectedSpeechEngine
+            .dropFirst()
+            .sink { [weak self] newEngine in
+                self?.handleEngineChange(newEngine)
+            }
+
+        // Observe UserDefaults changes from SettingsView
+        defaultsCancellable = NotificationCenter.default
+            .publisher(for: UserDefaults.didChangeNotification)
+            .compactMap { _ -> SpeechEngine? in
+                guard let raw = UserDefaults.standard.string(forKey: "selectedSpeechEngine") else { return nil }
+                return SpeechEngine(rawValue: raw)
+            }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] engine in
+                guard let self, self.selectedSpeechEngine != engine else { return }
+                self.selectedSpeechEngine = engine
+            }
     }
 
     // MARK: - Public Methods
@@ -145,6 +177,27 @@ final class ChatViewModel: ObservableObject {
         voiceErrorMessage = nil
     }
 
+    // MARK: - Engine Management
+
+    private func handleEngineChange(_ engine: SpeechEngine) {
+        UserDefaults.standard.set(engine.rawValue, forKey: "selectedSpeechEngine")
+        guard !isRecognizerInjected else { return }
+
+        if isVoiceRecording {
+            stopVoiceInput()
+        }
+        speechRecognizer = Self.makeRecognizer(for: engine)
+    }
+
+    private static func makeRecognizer(for engine: SpeechEngine) -> SpeechRecognizerProtocol {
+        switch engine {
+        case .whisperLocal:
+            return WhisperLocalRecognizer()
+        case .whisperAPI:
+            return WhisperAPIRecognizer()
+        }
+    }
+
     // MARK: - Private Methods
 
     private func sendDummyMessage(userMessage: String) async {
@@ -193,4 +246,10 @@ final class ChatViewModel: ObservableObject {
             errorMessage = "메시지 전송에 실패했습니다."
         }
     }
+}
+
+// MARK: - Constants
+
+enum UITestConstants {
+    static let voiceTestMessage = "음성 인식 테스트 메시지"
 }

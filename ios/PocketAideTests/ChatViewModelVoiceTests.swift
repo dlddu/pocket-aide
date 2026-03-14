@@ -274,6 +274,7 @@ final class ChatViewModelVoiceTests: XCTestCase {
 
     /// Changing selectedSpeechEngine to .whisperAPI must swap the underlying
     /// recognizer so subsequent recordings use the API-based engine.
+    /// When a mock is injected, the recognizer is NOT swapped (by design).
     func test_selectedSpeechEngine_changeToWhisperAPI_updatesRecognizer() {
         // Arrange — default is .whisperLocal
 
@@ -283,6 +284,9 @@ final class ChatViewModelVoiceTests: XCTestCase {
         // Assert
         XCTAssertEqual(sut.selectedSpeechEngine, .whisperAPI,
                        "selectedSpeechEngine must update to .whisperAPI")
+        // With injected mock, recognizer stays as mock (intentional)
+        XCTAssertTrue(sut.speechRecognizer is MockSpeechRecognizer,
+                      "Injected recognizer must not be replaced")
     }
 
     /// Changing selectedSpeechEngine back to .whisperLocal must restore that
@@ -297,6 +301,43 @@ final class ChatViewModelVoiceTests: XCTestCase {
         // Assert
         XCTAssertEqual(sut.selectedSpeechEngine, .whisperLocal,
                        "selectedSpeechEngine must be restorable to .whisperLocal")
+    }
+
+    /// When no recognizer is injected, changing selectedSpeechEngine must
+    /// swap the underlying recognizer to match the selected engine.
+    func test_selectedSpeechEngine_noInjection_swapsRecognizer() {
+        // Arrange — create ViewModel without injecting a recognizer
+        let vm = ChatViewModel(speechRecognizer: nil)
+        XCTAssertTrue(vm.speechRecognizer is WhisperLocalRecognizer,
+                      "Default recognizer should be WhisperLocalRecognizer")
+
+        // Act
+        vm.selectedSpeechEngine = .whisperAPI
+
+        // Assert
+        XCTAssertTrue(vm.speechRecognizer is WhisperAPIRecognizer,
+                      "Recognizer must be swapped to WhisperAPIRecognizer")
+
+        // Act — switch back
+        vm.selectedSpeechEngine = .whisperLocal
+
+        // Assert
+        XCTAssertTrue(vm.speechRecognizer is WhisperLocalRecognizer,
+                      "Recognizer must be swapped back to WhisperLocalRecognizer")
+    }
+
+    /// When engine changes, the persisted value in UserDefaults must be updated.
+    func test_selectedSpeechEngine_change_persistsToUserDefaults() {
+        // Arrange
+        UserDefaults.standard.removeObject(forKey: "selectedSpeechEngine")
+
+        // Act
+        sut.selectedSpeechEngine = .whisperAPI
+
+        // Assert
+        let persisted = UserDefaults.standard.string(forKey: "selectedSpeechEngine")
+        XCTAssertEqual(persisted, SpeechEngine.whisperAPI.rawValue,
+                       "Engine selection must be persisted to UserDefaults")
     }
 
     // MARK: - Voice Input + Send Integration
