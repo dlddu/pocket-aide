@@ -7,6 +7,9 @@ struct SettingsView: View {
 
     @EnvironmentObject var authViewModel: AuthViewModel
 
+    @AppStorage("selectedSpeechEngine") private var selectedEngine: String = SpeechEngine.whisperLocal.rawValue
+    @State private var showEnginePicker: Bool = false
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -30,6 +33,26 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
 
+                // Speech Engine Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Speech Engine")
+                        .font(.headline)
+                    Button(action: {
+                        showEnginePicker = true
+                    }) {
+                        Text(selectedEngine)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .foregroundColor(.primary)
+                    }
+                    .accessibilityIdentifier("speech_engine_selector")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+
                 Button(action: {
                     authViewModel.logout()
                 }) {
@@ -48,5 +71,43 @@ struct SettingsView: View {
             .navigationTitle("Settings")
         }
         .accessibilityIdentifier("tab_settings_view")
+        .sheet(isPresented: $showEnginePicker) {
+            SpeechEnginePickerSheet(selectedEngine: $selectedEngine, isPresented: $showEnginePicker)
+        }
+    }
+}
+
+// MARK: - SpeechEnginePickerSheet
+
+private struct SpeechEnginePickerSheet: View {
+
+    @Binding var selectedEngine: String
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(SpeechEngine.allCases, id: \.self) { engine in
+                Button(action: {
+                    selectedEngine = engine.rawValue
+                    isPresented = false
+                }) {
+                    HStack {
+                        Text(engine.rawValue)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if selectedEngine == engine.rawValue {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                    .padding()
+                }
+                .accessibilityLabel(engine.rawValue)
+                Divider()
+            }
+            Spacer()
+        }
+        .accessibilityIdentifier("settings_speech_engine_picker")
+        .presentationDetents([.medium])
     }
 }

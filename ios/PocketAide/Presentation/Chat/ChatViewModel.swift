@@ -20,11 +20,19 @@ final class ChatViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var showModelPicker: Bool = false
 
+    // MARK: - Voice Published State
+
+    @Published var isVoiceRecording: Bool = false
+    @Published var voiceErrorMessage: String? = nil
+    @Published var selectedSpeechEngine: SpeechEngine = .whisperLocal
+
     // MARK: - Dependencies
 
     private let chatService = ChatService()
     private let keychainService = KeychainService()
     private let isUITesting: Bool
+    private var speechRecognizer: SpeechRecognizerProtocol?
+    private var transcriptTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -37,11 +45,22 @@ final class ChatViewModel: ObservableObject {
             return ["gpt-4o", "claude-3-opus", "gemini-pro"]
         }(),
         defaultModel: String? = ProcessInfo.processInfo.environment["LLM_DEFAULT_MODEL"],
-        isUITesting: Bool = CommandLine.arguments.contains("--uitesting")
+        isUITesting: Bool = CommandLine.arguments.contains("--uitesting"),
+        speechRecognizer: SpeechRecognizerProtocol? = nil
     ) {
         self.availableModels = availableModels
         self.selectedModel = defaultModel ?? availableModels.first ?? "gpt-4o"
         self.isUITesting = isUITesting
+
+        if let injected = speechRecognizer {
+            self.speechRecognizer = injected
+        } else if isUITesting {
+            let mock = MockSpeechRecognizer()
+            mock.simulatedTranscript = "음성 인식 테스트 메시지"
+            self.speechRecognizer = mock
+        } else {
+            self.speechRecognizer = WhisperLocalRecognizer()
+        }
     }
 
     // MARK: - Public Methods
@@ -68,6 +87,62 @@ final class ChatViewModel: ObservableObject {
             }
             isLoading = false
         }
+    }
+
+    // MARK: - Voice Input Methods
+
+    /// 음성 입력을 시작합니다.
+    func startVoiceInput() async throws {
+        guard let recognizer = speechRecognizer else { return }
+
+        do {
+            // 트랜스크립트 업데이트 스트림 구독
+            transcriptTask?.cancel()
+            transcriptTask = Task { [weak self] in
+                guard let self else { return }
+                for await phrase in recognizer.transcriptUpdates {
+                    if Task.isCancelled { break }
+                    self.inputText = phrase
+                }
+            }
+
+            try await recognizer.startRecording()
+            isVoiceRecording = true
+
+            // startRecording 완료 후 transcript 반영
+            let transcript = recognizer.transcript
+            if !transcript.isEmpty {
+                inputText = transcript
+            }
+        } catch {
+            isVoiceRecording = false
+            transcriptTask?.cancel()
+            transcriptTask = nil
+            voiceErrorMessage = error.localizedDescription
+            throw error
+        }
+    }
+
+    /// 음성 입력을 중지합니다.
+    func stopVoiceInput() {
+        speechRecognizer?.stopRecording()
+        isVoiceRecording = false
+        transcriptTask?.cancel()
+        transcriptTask = nil
+    }
+
+    /// 음성 입력을 토글합니다. 현재 녹음 중이면 중지, 아니면 시작합니다.
+    func toggleVoiceInput() async throws {
+        if isVoiceRecording {
+            stopVoiceInput()
+        } else {
+            try await startVoiceInput()
+        }
+    }
+
+    /// 음성 에러 메시지를 초기화합니다.
+    func clearVoiceError() {
+        voiceErrorMessage = nil
     }
 
     // MARK: - Private Methods

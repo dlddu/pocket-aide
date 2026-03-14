@@ -22,11 +22,17 @@
 		AA000013 /* SpeechRecognizerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100013 /* SpeechRecognizerProtocol.swift */; };
 		AA000014 /* SpeechRecognizerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100014 /* SpeechRecognizerError.swift */; };
 		AA000015 /* MockSpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100015 /* MockSpeechRecognizer.swift */; };
+		AA000016 /* SpeechEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100040 /* SpeechEngine.swift */; };
+		AA000017 /* WhisperLocalRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100041 /* WhisperLocalRecognizer.swift */; };
+		AA000018 /* WhisperAPIRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100042 /* WhisperAPIRecognizer.swift */; };
+		AA000019 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100043 /* ChatViewModel.swift */; };
 		/* Unit Tests */
 		AA000020 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100020 /* APIClientTests.swift */; };
 		AA000021 /* MockSpeechRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100021 /* MockSpeechRecognizerTests.swift */; };
+		AA000022 /* ChatViewModelVoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100022 /* ChatViewModelVoiceTests.swift */; };
 		/* UI Tests */
 		AA000030 /* TabBarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100030 /* TabBarUITests.swift */; };
+		AA000031 /* VoiceChatUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100031 /* VoiceChatUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,10 +52,16 @@
 		AA100014 /* SpeechRecognizerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizerError.swift; sourceTree = "<group>"; };
 		AA100015 /* MockSpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSpeechRecognizer.swift; sourceTree = "<group>"; };
 		AA100016 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA100040 /* SpeechEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechEngine.swift; sourceTree = "<group>"; };
+		AA100041 /* WhisperLocalRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperLocalRecognizer.swift; sourceTree = "<group>"; };
+		AA100042 /* WhisperAPIRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhisperAPIRecognizer.swift; sourceTree = "<group>"; };
+		AA100043 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		AA100017 /* PocketAide.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PocketAide.entitlements; sourceTree = "<group>"; };
 		AA100020 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		AA100021 /* MockSpeechRecognizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSpeechRecognizerTests.swift; sourceTree = "<group>"; };
+		AA100022 /* ChatViewModelVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelVoiceTests.swift; sourceTree = "<group>"; };
 		AA100030 /* TabBarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarUITests.swift; sourceTree = "<group>"; };
+		AA100031 /* VoiceChatUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatUITests.swift; sourceTree = "<group>"; };
 		/* Products */
 		AA200001 /* PocketAide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketAide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA200002 /* PocketAideTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketAideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -104,8 +116,17 @@
 			children = (
 				AAGRP_APP_TAB /* TabBar */,
 				AAGRP_APP_TBS /* Tabs */,
+				AAGRP_APP_CHA /* Chat */,
 			);
 			path = Presentation;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_CHA /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				AA100043 /* ChatViewModel.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_TAB /* TabBar */ = {
@@ -136,8 +157,19 @@
 				AAGRP_APP_PRO /* Protocols */,
 				AAGRP_APP_ERR /* Errors */,
 				AAGRP_APP_MCK /* Mocks */,
+				AAGRP_APP_SPH /* Speech */,
 			);
 			path = Domain;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_SPH /* Speech */ = {
+			isa = PBXGroup;
+			children = (
+				AA100040 /* SpeechEngine.swift */,
+				AA100041 /* WhisperLocalRecognizer.swift */,
+				AA100042 /* WhisperAPIRecognizer.swift */,
+			);
+			path = Speech;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_PRO /* Protocols */ = {
@@ -187,6 +219,7 @@
 			children = (
 				AA100020 /* APIClientTests.swift */,
 				AA100021 /* MockSpeechRecognizerTests.swift */,
+				AA100022 /* ChatViewModelVoiceTests.swift */,
 			);
 			path = PocketAideTests;
 			sourceTree = "<group>";
@@ -195,6 +228,7 @@
 			isa = PBXGroup;
 			children = (
 				AA100030 /* TabBarUITests.swift */,
+				AA100031 /* VoiceChatUITests.swift */,
 			);
 			path = PocketAideUITests;
 			sourceTree = "<group>";
@@ -313,6 +347,10 @@
 				AA000013 /* SpeechRecognizerProtocol.swift in Sources */,
 				AA000014 /* SpeechRecognizerError.swift in Sources */,
 				AA000015 /* MockSpeechRecognizer.swift in Sources */,
+				AA000016 /* SpeechEngine.swift in Sources */,
+				AA000017 /* WhisperLocalRecognizer.swift in Sources */,
+				AA000018 /* WhisperAPIRecognizer.swift in Sources */,
+				AA000019 /* ChatViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,6 +367,7 @@
 			files = (
 				AA000020 /* APIClientTests.swift in Sources */,
 				AA000021 /* MockSpeechRecognizerTests.swift in Sources */,
+				AA000022 /* ChatViewModelVoiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -337,6 +376,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA000030 /* TabBarUITests.swift in Sources */,
+				AA000031 /* VoiceChatUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

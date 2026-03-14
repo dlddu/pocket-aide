@@ -49,8 +49,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   TabBar visible → tap "tab_assistant" → "assistant_chat_view" appears
     ///   → "mic_button" exists and is hittable
     func test_chatInterface_displaysMicButton() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating")
@@ -79,8 +77,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   Chat interface visible → tap "mic_button"
     ///   → "voice_input_indicator" appears within timeout
     func test_micButton_tap_showsVoiceInputIndicator() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -113,8 +109,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   Tap "mic_button" → MockSpeechRecognizer emits simulatedTranscript
     ///   → "chat_input_field" contains the transcribed text
     func test_micButton_tap_voiceTranscriptionFillsInputField() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -157,8 +151,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   Tap "mic_button" → transcript fills "chat_input_field"
     ///   → tap "send_button" → "user_message_bubble" appears
     func test_voiceTranscription_send_displaysUserBubble() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -201,8 +193,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   Tap "mic_button" → transcript fills input → tap "send_button"
     ///   → "user_message_bubble" appears → "ai_response_bubble" appears
     func test_voiceTranscription_send_displaysAIResponseBubble() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -247,8 +237,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   → tap "mic_button" again → "voice_input_indicator" disappears
     ///   → "chat_input_field" still contains the partial transcript
     func test_micButton_tapAgainWhileRecording_stopsAndPreservesText() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -309,8 +297,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   "settings_speech_engine_picker" appears → select "Whisper API" →
     ///   picker dismisses → "speech_engine_selector" shows "Whisper API"
     func test_settings_speechEngine_changeFromWhisperLocalToAPI() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange — navigate to the Settings screen
         // Settings is assumed to be reachable via a tab or a button labeled "설정" / "Settings"
         let tabBar = app.tabBars.firstMatch
@@ -365,8 +351,6 @@ final class VoiceChatUITests: XCTestCase {
     ///   tap "speech_engine_selector" → select "Whisper Local" →
     ///   "speech_engine_selector" shows "Whisper Local"
     func test_settings_speechEngine_changeFromAPIToWhisperLocal() throws {
-        throw XCTSkip("DLD-721: 미구현 — 음성 채팅 e2e 테스트")
-
         // Arrange — navigate to Settings and switch to Whisper API first
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))

@@ -48,6 +48,11 @@ struct ChatScreen: View {
                     .accessibilityIdentifier("error_banner")
                 }
 
+                // Voice Input Indicator (shown when recording)
+                if viewModel.isVoiceRecording {
+                    VoiceInputIndicator()
+                }
+
                 // Input Bar
                 ChatInputBar(viewModel: viewModel)
             }
@@ -66,6 +71,19 @@ struct ChatScreen: View {
         .sheet(isPresented: $viewModel.showModelPicker) {
             ModelPickerSheet(viewModel: viewModel)
         }
+        .alert(
+            "음성 인식 오류",
+            isPresented: Binding(
+                get: { viewModel.voiceErrorMessage != nil },
+                set: { if !$0 { viewModel.clearVoiceError() } }
+            ),
+            actions: {
+                Button("확인") { viewModel.clearVoiceError() }
+            },
+            message: {
+                Text(viewModel.voiceErrorMessage ?? "")
+            }
+        )
     }
 }
 
@@ -216,6 +234,35 @@ private struct TypingIndicator: View {
     }
 }
 
+// MARK: - VoiceInputIndicator
+
+private struct VoiceInputIndicator: View {
+
+    @State private var animating = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color.red)
+                .frame(width: 12, height: 12)
+                .scaleEffect(animating ? 1.3 : 0.8)
+                .animation(
+                    .easeInOut(duration: 0.6).repeatForever(autoreverses: true),
+                    value: animating
+                )
+            Text("녹음 중...")
+                .font(.caption)
+                .foregroundColor(.red)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.red.opacity(0.1))
+        .cornerRadius(12)
+        .accessibilityIdentifier("voice_input_indicator")
+        .onAppear { animating = true }
+    }
+}
+
 // MARK: - MessageBubble
 
 private struct MessageBubble: View {
@@ -259,6 +306,19 @@ private struct ChatInputBar: View {
                     viewModel.sendMessage()
                 }
 
+            // Mic Button
+            Button(action: {
+                Task {
+                    try? await viewModel.toggleVoiceInput()
+                }
+            }) {
+                Image(systemName: viewModel.isVoiceRecording ? "mic.fill" : "mic")
+                    .font(.system(size: 24))
+                    .foregroundColor(viewModel.isVoiceRecording ? .red : .blue)
+            }
+            .accessibilityIdentifier("mic_button")
+
+            // Send Button
             Button(action: {
                 viewModel.sendMessage()
             }) {
