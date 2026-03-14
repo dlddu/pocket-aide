@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/dlddu/pocket-aide/db"
 	"github.com/dlddu/pocket-aide/handler"
 	appmiddleware "github.com/dlddu/pocket-aide/middleware"
+	"github.com/dlddu/pocket-aide/service/llm"
 )
 
 func main() {
@@ -43,6 +45,23 @@ func main() {
 	e.POST("/auth/register", authHandler.Register)
 	e.POST("/auth/login", authHandler.Login)
 	e.GET("/me", authHandler.Me, appmiddleware.JWT(jwtSecret))
+
+	// Chat routes
+	defaultModel := os.Getenv("LLM_DEFAULT_MODEL")
+	if defaultModel == "" {
+		defaultModel = "mock"
+	}
+
+	// TODO: Replace MockProvider with a real LLM provider (e.g. OpenAI, Claude)
+	// configured via environment variables in production.
+	mockLLM := &llm.MockProvider{
+		CompleteFunc: func(ctx context.Context, prompt string) (string, error) {
+			return "Hello from AI", nil
+		},
+	}
+	chatHandler := handler.NewChatHandler(database, mockLLM, defaultModel)
+	e.POST("/chat/send", chatHandler.Send, appmiddleware.JWT(jwtSecret))
+	e.GET("/chat/history", chatHandler.History, appmiddleware.JWT(jwtSecret))
 
 	port := os.Getenv("PORT")
 	if port == "" {
