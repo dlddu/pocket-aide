@@ -29,6 +29,7 @@ type todoResponse struct {
 	ID          int64   `json:"id"`
 	Title       string  `json:"title"`
 	Type        string  `json:"type"`
+	Note        string  `json:"note"`
 	CompletedAt *string `json:"completed_at"`
 }
 
@@ -38,6 +39,7 @@ func toTodoResponse(td *repository.Todo) todoResponse {
 		ID:          td.ID,
 		Title:       td.Title,
 		Type:        td.Type,
+		Note:        td.Note,
 		CompletedAt: td.CompletedAt,
 	}
 }
@@ -51,6 +53,7 @@ type createTodoRequest struct {
 // updateTodoRequest is the expected JSON body for PUT /todos/:id.
 type updateTodoRequest struct {
 	Title string `json:"title"`
+	Note  string `json:"note"`
 }
 
 // Create handles POST /todos.
@@ -144,6 +147,7 @@ func (h *TodoHandler) Update(c echo.Context) error {
 
 	updates := repository.TodoUpdates{
 		Title: req.Title,
+		Note:  req.Note,
 	}
 
 	td, err := h.repo.Update(id, userID, updates)

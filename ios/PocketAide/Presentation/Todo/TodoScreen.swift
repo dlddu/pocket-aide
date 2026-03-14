@@ -15,6 +15,7 @@ import SwiftUI
 struct TodoScreen: View {
 
     @StateObject private var viewModel = TodoViewModel()
+    @State private var isCompletedExpanded = true
 
     var body: some View {
         NavigationStack {
@@ -69,19 +70,25 @@ struct TodoScreen: View {
             }
             .accessibilityIdentifier("todo_section_pending")
 
-            Section("완료") {
-                ForEach(viewModel.completedTodos) { todo in
-                    TodoRow(todo: todo, viewModel: viewModel)
-                }
-                .onDelete { indexSet in
-                    let completed = viewModel.completedTodos
-                    for index in indexSet {
-                        Task {
-                            await viewModel.deleteTodo(id: completed[index].id)
+            DisclosureGroup(
+                isExpanded: $isCompletedExpanded,
+                content: {
+                    ForEach(viewModel.completedTodos) { todo in
+                        TodoRow(todo: todo, viewModel: viewModel)
+                    }
+                    .onDelete { indexSet in
+                        let completed = viewModel.completedTodos
+                        for index in indexSet {
+                            Task {
+                                await viewModel.deleteTodo(id: completed[index].id)
+                            }
                         }
                     }
+                },
+                label: {
+                    Text("완료")
                 }
-            }
+            )
             .accessibilityIdentifier("todo_section_completed")
         }
     }
@@ -112,8 +119,10 @@ private struct TodoRow: View {
     var body: some View {
         HStack {
             Button {
-                Task {
-                    await viewModel.toggleTodo(id: todo.id)
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    Task {
+                        await viewModel.toggleTodo(id: todo.id)
+                    }
                 }
             } label: {
                 Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")

@@ -8,10 +8,11 @@ struct Todo: Identifiable, Codable {
     let id: Int
     let title: String
     let type: String
+    let note: String?
     let completedAt: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, type
+        case id, title, type, note
         case completedAt = "completed_at"
     }
 

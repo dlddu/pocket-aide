@@ -118,7 +118,11 @@ final class TodoService {
     // MARK: - Private
 
     private func makeClient(serverURL: String) -> APIClient {
-        let baseURL = URL(string: serverURL) ?? URL(string: "http://localhost:8080")!
+        guard let baseURL = URL(string: serverURL) else {
+            // Fallback to localhost for development; in production the serverURL
+            // is always loaded from keychain by the ViewModel layer.
+            return APIClient(baseURL: URL(string: "http://localhost:8080")!)
+        }
         return APIClient(baseURL: baseURL)
     }
 }

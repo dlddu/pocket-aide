@@ -7,6 +7,8 @@ import SwiftUI
 ///
 /// AccessibilityIdentifier 목록:
 /// - todo_title_field  : 제목 입력 필드
+/// - todo_memo_field   : 메모 입력 필드
+/// - todo_date_picker  : 날짜 피커
 /// - todo_save_button  : 저장 버튼
 struct TodoEditModal: View {
 
@@ -16,6 +18,9 @@ struct TodoEditModal: View {
     // MARK: - Form State
 
     @State private var title: String = ""
+    @State private var memo: String = ""
+    @State private var dueDate: Date = Date()
+    @State private var hasDueDate: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -23,6 +28,23 @@ struct TodoEditModal: View {
                 Section("할 일 정보") {
                     TextField("제목 (예: 장보기)", text: $title)
                         .accessibilityIdentifier("todo_title_field")
+
+                    TextField("메모 (선택)", text: $memo)
+                        .accessibilityIdentifier("todo_memo_field")
+                }
+
+                Section("날짜") {
+                    Toggle("마감일 설정", isOn: $hasDueDate)
+
+                    if hasDueDate {
+                        DatePicker(
+                            "마감일",
+                            selection: $dueDate,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.graphical)
+                        .accessibilityIdentifier("todo_date_picker")
+                    }
                 }
             }
             .navigationTitle("할 일 추가")
