@@ -17,6 +17,7 @@ struct MainTabView: View {
         case history   = "tab_history"
         case widget    = "tab_widget"
         case assistant = "tab_assistant"
+        case todo      = "tab_todo"
         case routine   = "tab_routine"
         case settings  = "tab_settings"
         case profile   = "tab_profile"
@@ -28,6 +29,7 @@ struct MainTabView: View {
             case .history:   return "History"
             case .widget:    return "Widget"
             case .assistant: return "Assistant"
+            case .todo:      return "Todo"
             case .routine:   return "Routine"
             case .settings:  return "Settings"
             case .profile:   return "Profile"
@@ -41,6 +43,7 @@ struct MainTabView: View {
             case .history:   return "clock"
             case .widget:    return "square.grid.2x2"
             case .assistant: return "sparkles"
+            case .todo:      return "checkmark.square"
             case .routine:   return "arrow.clockwise"
             case .settings:  return "gearshape"
             case .profile:   return "person.circle"
@@ -84,6 +87,13 @@ struct MainTabView: View {
                 }
                 .tag(Tab.assistant)
                 .accessibilityIdentifier(Tab.assistant.rawValue)
+
+            TodoScreen()
+                .tabItem {
+                    Label(Tab.todo.title, systemImage: Tab.todo.systemImage)
+                }
+                .tag(Tab.todo)
+                .accessibilityIdentifier(Tab.todo.rawValue)
 
             RoutineScreen()
                 .tabItem {

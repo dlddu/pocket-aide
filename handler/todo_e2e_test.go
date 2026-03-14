@@ -38,31 +38,20 @@ import (
 // setupTodoEcho builds an Echo instance with the auth route and — once
 // DLD-725 is implemented — the todo routes.
 //
-// Activation checklist:
-//
-//	TODO(DLD-725): uncomment the lines below after handler.NewTodoHandler exists.
-//	  todoHandler := handler.NewTodoHandler(tdb.DB)
-//	  g := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
-//	  g.POST("",              todoHandler.Create)
-//	  g.GET("",               todoHandler.List)
-//	  g.GET("/:id",           todoHandler.Get)
-//	  g.PUT("/:id",           todoHandler.Update)
-//	  g.DELETE("/:id",        todoHandler.Delete)
-//	  g.POST("/:id/toggle",   todoHandler.Toggle)
+// All todo routes are now active.
 func setupTodoEcho(t *testing.T, tdb *testutil.TestDB) *echo.Echo {
 	t.Helper()
 	e := echo.New()
 	authHandler := handler.NewAuthHandler(tdb.DB, "test-jwt-secret")
 	e.POST("/auth/login", authHandler.Login)
-	// TODO(DLD-725): uncomment after handler.NewTodoHandler exists
-	//   todoHandler := handler.NewTodoHandler(tdb.DB)
-	//   g := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
-	//   g.POST("",            todoHandler.Create)
-	//   g.GET("",             todoHandler.List)
-	//   g.GET("/:id",         todoHandler.Get)
-	//   g.PUT("/:id",         todoHandler.Update)
-	//   g.DELETE("/:id",      todoHandler.Delete)
-	//   g.POST("/:id/toggle", todoHandler.Toggle)
+	todoHandler := handler.NewTodoHandler(tdb.DB)
+	g := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
+	g.POST("", todoHandler.Create)
+	g.GET("", todoHandler.List)
+	g.GET("/:id", todoHandler.Get)
+	g.PUT("/:id", todoHandler.Update)
+	g.DELETE("/:id", todoHandler.Delete)
+	g.POST("/:id/toggle", todoHandler.Toggle)
 	return e
 }
 
@@ -87,7 +76,6 @@ func todoToken(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email string) s
 //	POST /todos  {"title":"장보기","type":"personal"} + Bearer token
 //	→ 201 Created   {"id":1,"title":"장보기","type":"personal","completed_at":null}
 func TestTodoHandler_Create_ReturnsCreated(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -130,7 +118,6 @@ func TestTodoHandler_Create_ReturnsCreated(t *testing.T) {
 //	POST /todos  {"type":"personal"} + Bearer token
 //	→ 400 Bad Request
 func TestTodoHandler_Create_MissingTitle_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -156,7 +143,6 @@ func TestTodoHandler_Create_MissingTitle_ReturnsBadRequest(t *testing.T) {
 //	POST /todos  {"title":"운동","type":"personal"}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestTodoHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware can reject the
@@ -191,7 +177,6 @@ func TestTodoHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /todos?type=personal  + Bearer token
 //	→ 200 OK  JSON array with 2 elements
 func TestTodoHandler_List_PersonalTodos_ReturnsList(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -242,7 +227,6 @@ func TestTodoHandler_List_PersonalTodos_ReturnsList(t *testing.T) {
 //	GET /todos?type=personal  + Bearer token
 //	→ 200 OK  []
 func TestTodoHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -273,7 +257,6 @@ func TestTodoHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
 //	GET /todos  (no Authorization header)
 //	→ 401 Unauthorized
 func TestTodoHandler_List_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	e := echo.New()
 	e.GET("/todos", func(c echo.Context) error {
@@ -302,7 +285,6 @@ func TestTodoHandler_List_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /todos/<id>  + Bearer token
 //	→ 200 OK  {"id":<id>,"title":"운동하기","type":"personal","completed_at":null}
 func TestTodoHandler_Get_ReturnsSingleTodo(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -355,7 +337,6 @@ func TestTodoHandler_Get_ReturnsSingleTodo(t *testing.T) {
 //	GET /todos/99999  + Bearer token
 //	→ 404 Not Found
 func TestTodoHandler_Get_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -384,7 +365,6 @@ func TestTodoHandler_Get_NotFound_ReturnsNotFound(t *testing.T) {
 //	PUT /todos/<id>  {"title":"운동하기 (30분)"} + Bearer token
 //	→ 200 OK  {"id":<id>,"title":"운동하기 (30분)","type":"personal", ...}
 func TestTodoHandler_Update_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -436,7 +416,6 @@ func TestTodoHandler_Update_ReturnsOK(t *testing.T) {
 //	PUT /todos/99999  {"title":"없는 투두"} + Bearer token
 //	→ 404 Not Found
 func TestTodoHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -467,7 +446,6 @@ func TestTodoHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
 //	DELETE /todos/<id>  + Bearer token → 204 No Content
 //	GET    /todos/<id>  + Bearer token → 404 Not Found
 func TestTodoHandler_Delete_ReturnsNoContent(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -519,7 +497,6 @@ func TestTodoHandler_Delete_ReturnsNoContent(t *testing.T) {
 //	DELETE /todos/99999  + Bearer token
 //	→ 404 Not Found
 func TestTodoHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -548,7 +525,6 @@ func TestTodoHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
 //	POST /todos/<id>/toggle  + Bearer token → 200 OK
 //	GET  /todos/<id>         + Bearer token → completed_at is non-null
 func TestTodoHandler_Toggle_CompletesTodo(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -613,7 +589,6 @@ func TestTodoHandler_Toggle_CompletesTodo(t *testing.T) {
 //	POST /todos/<id>/toggle  (1st call) → completed_at is non-null
 //	POST /todos/<id>/toggle  (2nd call) → completed_at is null again
 func TestTodoHandler_Toggle_UncompletesTodo(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
@@ -690,7 +665,6 @@ func TestTodoHandler_Toggle_UncompletesTodo(t *testing.T) {
 //	→ 200 OK  array contains both todos; completed one has non-null completed_at,
 //	           pending one has null completed_at
 func TestTodoHandler_List_SeparatesCompletedAndPending(t *testing.T) {
-	t.Skip("DLD-725 구현 완료 후 활성화: setupTodoEcho의 TODO 주석 해제 필요")
 
 	tdb := testutil.NewTestDB(t)
 	e := setupTodoEcho(t, tdb)
