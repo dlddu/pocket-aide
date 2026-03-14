@@ -368,6 +368,109 @@ func TestTodoRepository_Toggle_NotFound(t *testing.T) {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Priority
+// ---------------------------------------------------------------------------
+
+// TestTodoRepository_Create_WithPriority verifies that Create stores the
+// priority value and returns it in the Todo struct.
+//
+// Scenario:
+//
+//	Create(userID, "긴급 버그 수정", "work") with priority="high"
+//	→ todo.Priority == "high"
+func TestTodoRepository_Create_WithPriority(t *testing.T) {
+	tdb := testutil.NewTestDB(t)
+	userID := seedUser(t, tdb, "todo-priority-create@example.com")
+	repo := repository.NewTodoRepository(tdb.DB)
+
+	todo, err := repo.CreateWithPriority(userID, "긴급 버그 수정", "work", "high")
+
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if todo == nil {
+		t.Fatal("expected non-nil todo, got nil")
+	}
+	if todo.Priority != "high" {
+		t.Errorf("expected Priority 'high', got '%s'", todo.Priority)
+	}
+	if todo.Type != "work" {
+		t.Errorf("expected Type 'work', got '%s'", todo.Type)
+	}
+}
+
+// TestTodoRepository_ListByUserIDAndType_WorkSortedByPriority verifies that
+// ListByUserIDAndType with type=work returns todos ordered by priority
+// descending: high → medium → low.
+//
+// Scenario:
+//
+//	Seed: three work todos with priorities low, high, medium (insertion order).
+//	ListByUserIDAndType(userID, "work")
+//	→ [priority="high", priority="medium", priority="low"]
+func TestTodoRepository_ListByUserIDAndType_WorkSortedByPriority(t *testing.T) {
+	tdb := testutil.NewTestDB(t)
+	userID := seedUser(t, tdb, "todo-priority-sort@example.com")
+	repo := repository.NewTodoRepository(tdb.DB)
+
+	// Insert in low → high → medium order to confirm result is by priority, not insertion order
+	for _, item := range []struct{ title, priority string }{
+		{"낮은 우선순위 업무", "low"},
+		{"높은 우선순위 업무", "high"},
+		{"중간 우선순위 업무", "medium"},
+	} {
+		if _, err := repo.CreateWithPriority(userID, item.title, "work", item.priority); err != nil {
+			t.Fatalf("setup CreateWithPriority(%q, %q): %v", item.title, item.priority, err)
+		}
+	}
+
+	todos, err := repo.ListByUserIDAndType(userID, "work")
+
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if len(todos) != 3 {
+		t.Fatalf("expected 3 todos, got %d", len(todos))
+	}
+
+	expectedOrder := []string{"high", "medium", "low"}
+	for i, expected := range expectedOrder {
+		got := todos[i].Priority
+		if got != expected {
+			t.Errorf("todos[%d]: expected priority %q, got %q (order should be high → medium → low)", i, expected, got)
+		}
+	}
+}
+
+// TestTodoRepository_Update_Priority verifies that Update applies a priority
+// change and the updated todo reflects the new value.
+//
+// Scenario:
+//
+//	Seed: one work todo with no priority set.
+//	Update(id, userID, TodoUpdates{Priority: "high"})
+//	→ updated.Priority == "high"
+func TestTodoRepository_Update_Priority(t *testing.T) {
+	tdb := testutil.NewTestDB(t)
+	userID := seedUser(t, tdb, "todo-priority-update@example.com")
+	repo := repository.NewTodoRepository(tdb.DB)
+
+	created, err := repo.Create(userID, "배포 작업", "work")
+	if err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	updated, err := repo.Update(created.ID, userID, repository.TodoUpdates{Priority: "high"})
+
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if updated.Priority != "high" {
+		t.Errorf("expected Priority 'high' after update, got '%s'", updated.Priority)
+	}
+}
+
 func TestTodoRepository_Toggle_PersistsToDatabase(t *testing.T) {
 	tdb := testutil.NewTestDB(t)
 	userID := seedUser(t, tdb, "todo-toggle-persist@example.com")

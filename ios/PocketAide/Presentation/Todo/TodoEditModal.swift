@@ -9,6 +9,7 @@ import SwiftUI
 /// - todo_title_field  : 제목 입력 필드
 /// - todo_memo_field   : 메모 입력 필드
 /// - todo_date_picker  : 날짜 피커
+/// - todo_priority_picker : 우선순위 피커
 /// - todo_save_button  : 저장 버튼
 struct TodoEditModal: View {
 
@@ -21,6 +22,15 @@ struct TodoEditModal: View {
     @State private var memo: String = ""
     @State private var dueDate: Date = Date()
     @State private var hasDueDate: Bool = false
+    @State private var priority: String = "medium"
+
+    // MARK: - Priority Options
+
+    private let priorityOptions: [(value: String, label: String, color: Color)] = [
+        ("high",   "높음",  Color(red: 1.0, green: 0.231, blue: 0.188)),   // #FF3B30
+        ("medium", "보통",  Color(red: 1.0, green: 0.584, blue: 0.0)),     // #FF9500
+        ("low",    "낮음",  Color(red: 0.0, green: 0.478, blue: 1.0)),     // #007AFF
+    ]
 
     var body: some View {
         NavigationStack {
@@ -31,6 +41,22 @@ struct TodoEditModal: View {
 
                     TextField("메모 (선택)", text: $memo)
                         .accessibilityIdentifier("todo_memo_field")
+                }
+
+                Section("우선순위") {
+                    Picker("우선순위", selection: $priority) {
+                        ForEach(priorityOptions, id: \.value) { option in
+                            HStack {
+                                Circle()
+                                    .fill(option.color)
+                                    .frame(width: 10, height: 10)
+                                Text(option.label)
+                            }
+                            .tag(option.value)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .accessibilityIdentifier("todo_priority_picker")
                 }
 
                 Section("날짜") {
@@ -74,7 +100,8 @@ struct TodoEditModal: View {
         Task {
             await viewModel.createTodo(
                 title: trimmedTitle,
-                note: trimmedMemo.isEmpty ? "" : trimmedMemo
+                note: trimmedMemo.isEmpty ? "" : trimmedMemo,
+                priority: priority
             )
             dismiss()
         }

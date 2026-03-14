@@ -18,6 +18,7 @@ type Todo struct {
 	Title       string
 	Type        string
 	Note        string
+	Priority    string
 	DueDate     *string
 	CompletedAt *string
 }
@@ -25,9 +26,10 @@ type Todo struct {
 // TodoUpdates holds the optional fields that can be updated on a Todo.
 // Zero-value fields ("") are treated as "no change".
 type TodoUpdates struct {
-	Title   string
-	Note    string
-	DueDate *string
+	Title    string
+	Note     string
+	Priority string
+	DueDate  *string
 }
 
 // TodoRepository provides database access for todo records.
@@ -41,7 +43,8 @@ func NewTodoRepository(db *sql.DB) *TodoRepository {
 }
 
 // Create inserts a new todo for the given user and returns the persisted record.
-// Returns an error if title is empty.
+// Returns an error if title is empty. The priority defaults to "medium" via the
+// DB column default.
 func (r *TodoRepository) Create(userID int64, title string, todoType string) (*Todo, error) {
 	if title == "" {
 		return nil, fmt.Errorf("title must not be empty")
@@ -63,33 +66,64 @@ func (r *TodoRepository) Create(userID int64, title string, todoType string) (*T
 		return nil, fmt.Errorf("failed to get last insert ID: %w", err)
 	}
 
-	return &Todo{
-		ID:          id,
-		UserID:      userID,
-		Title:       title,
-		Type:        todoType,
-		Note:        "",
-		DueDate:     nil,
-		CompletedAt: nil,
-	}, nil
+	return r.FindByID(id, userID)
+}
+
+// CreateWithPriority inserts a new todo with an explicit priority value.
+// If priority is empty, "medium" is used as the default.
+// Returns an error if title is empty.
+func (r *TodoRepository) CreateWithPriority(userID int64, title string, todoType string, priority string) (*Todo, error) {
+	if title == "" {
+		return nil, fmt.Errorf("title must not be empty")
+	}
+	if todoType == "" {
+		todoType = "personal"
+	}
+	if priority == "" {
+		priority = "medium"
+	}
+
+	result, err := r.db.Exec(
+		`INSERT INTO todos (user_id, title, type, priority) VALUES (?, ?, ?, ?)`,
+		userID, title, todoType, priority,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert todo: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get last insert ID: %w", err)
+	}
+
+	return r.FindByID(id, userID)
 }
 
 // ListByUserIDAndType returns all todos belonging to the given user filtered
 // by type. If todoType is empty, all types are returned.
+// When todoType is "work", results are sorted by priority (high → medium → low),
+// then by id ascending. For other types the order is by id ascending.
 // Returns a non-nil empty slice when the user has no matching todos.
 func (r *TodoRepository) ListByUserIDAndType(userID int64, todoType string) ([]*Todo, error) {
 	var rows *sql.Rows
 	var err error
 
-	if todoType != "" {
+	if todoType == "work" {
 		rows, err = r.db.Query(
-			`SELECT id, user_id, title, type, note, due_date, completed_at
+			`SELECT id, user_id, title, type, note, priority, due_date, completed_at
+			 FROM todos WHERE user_id = ? AND type = ?
+			 ORDER BY CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END ASC, id ASC`,
+			userID, todoType,
+		)
+	} else if todoType != "" {
+		rows, err = r.db.Query(
+			`SELECT id, user_id, title, type, note, priority, due_date, completed_at
 			 FROM todos WHERE user_id = ? AND type = ? ORDER BY id ASC`,
 			userID, todoType,
 		)
 	} else {
 		rows, err = r.db.Query(
-			`SELECT id, user_id, title, type, note, due_date, completed_at
+			`SELECT id, user_id, title, type, note, priority, due_date, completed_at
 			 FROM todos WHERE user_id = ? ORDER BY id ASC`,
 			userID,
 		)
@@ -117,7 +151,7 @@ func (r *TodoRepository) ListByUserIDAndType(userID int64, todoType string) ([]*
 // Returns ErrTodoNotFound when the ID does not exist or belongs to another user.
 func (r *TodoRepository) FindByID(id int64, userID int64) (*Todo, error) {
 	row := r.db.QueryRow(
-		`SELECT id, user_id, title, type, note, due_date, completed_at
+		`SELECT id, user_id, title, type, note, priority, due_date, completed_at
 		 FROM todos WHERE id = ? AND user_id = ?`,
 		id, userID,
 	)
@@ -150,10 +184,15 @@ func (r *TodoRepository) Update(id int64, userID int64, updates TodoUpdates) (*T
 		newNote = updates.Note
 	}
 
+	newPriority := current.Priority
+	if updates.Priority != "" {
+		newPriority = updates.Priority
+	}
+
 	_, err = r.db.Exec(
-		`UPDATE todos SET title = ?, note = ?, updated_at = CURRENT_TIMESTAMP
+		`UPDATE todos SET title = ?, note = ?, priority = ?, updated_at = CURRENT_TIMESTAMP
 		 WHERE id = ? AND user_id = ?`,
-		newTitle, newNote, id, userID,
+		newTitle, newNote, newPriority, id, userID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update todo: %w", err)
@@ -165,6 +204,7 @@ func (r *TodoRepository) Update(id int64, userID int64, updates TodoUpdates) (*T
 		Title:       newTitle,
 		Type:        current.Type,
 		Note:        newNote,
+		Priority:    newPriority,
 		DueDate:     current.DueDate,
 		CompletedAt: current.CompletedAt,
 	}, nil
@@ -230,6 +270,7 @@ func (r *TodoRepository) Toggle(id int64, userID int64) (*Todo, error) {
 		Title:       current.Title,
 		Type:        current.Type,
 		Note:        current.Note,
+		Priority:    current.Priority,
 		DueDate:     current.DueDate,
 		CompletedAt: newCompletedAt,
 	}, nil
@@ -239,14 +280,18 @@ func (r *TodoRepository) Toggle(id int64, userID int64) (*Todo, error) {
 func scanTodo(rows *sql.Rows) (*Todo, error) {
 	var td Todo
 	var note sql.NullString
+	var priority sql.NullString
 	var dueDate sql.NullString
 	var completedAt sql.NullString
 
-	if err := rows.Scan(&td.ID, &td.UserID, &td.Title, &td.Type, &note, &dueDate, &completedAt); err != nil {
+	if err := rows.Scan(&td.ID, &td.UserID, &td.Title, &td.Type, &note, &priority, &dueDate, &completedAt); err != nil {
 		return nil, fmt.Errorf("failed to scan todo: %w", err)
 	}
 	if note.Valid {
 		td.Note = note.String
+	}
+	if priority.Valid {
+		td.Priority = priority.String
 	}
 	if dueDate.Valid {
 		td.DueDate = &dueDate.String
@@ -261,14 +306,18 @@ func scanTodo(rows *sql.Rows) (*Todo, error) {
 func scanTodoRow(row *sql.Row) (*Todo, error) {
 	var td Todo
 	var note sql.NullString
+	var priority sql.NullString
 	var dueDate sql.NullString
 	var completedAt sql.NullString
 
-	if err := row.Scan(&td.ID, &td.UserID, &td.Title, &td.Type, &note, &dueDate, &completedAt); err != nil {
+	if err := row.Scan(&td.ID, &td.UserID, &td.Title, &td.Type, &note, &priority, &dueDate, &completedAt); err != nil {
 		return nil, err
 	}
 	if note.Valid {
 		td.Note = note.String
+	}
+	if priority.Valid {
+		td.Priority = priority.String
 	}
 	if dueDate.Valid {
 		td.DueDate = &dueDate.String
