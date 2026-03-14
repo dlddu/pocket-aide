@@ -30,6 +30,7 @@ type todoResponse struct {
 	Title       string  `json:"title"`
 	Type        string  `json:"type"`
 	Note        string  `json:"note"`
+	Priority    string  `json:"priority"`
 	CompletedAt *string `json:"completed_at"`
 }
 
@@ -40,21 +41,24 @@ func toTodoResponse(td *repository.Todo) todoResponse {
 		Title:       td.Title,
 		Type:        td.Type,
 		Note:        td.Note,
+		Priority:    td.Priority,
 		CompletedAt: td.CompletedAt,
 	}
 }
 
 // createTodoRequest is the expected JSON body for POST /todos.
 type createTodoRequest struct {
-	Title string `json:"title"`
-	Type  string `json:"type"`
-	Note  string `json:"note"`
+	Title    string `json:"title"`
+	Type     string `json:"type"`
+	Note     string `json:"note"`
+	Priority string `json:"priority"`
 }
 
 // updateTodoRequest is the expected JSON body for PUT /todos/:id.
 type updateTodoRequest struct {
-	Title string `json:"title"`
-	Note  string `json:"note"`
+	Title    string `json:"title"`
+	Note     string `json:"note"`
+	Priority string `json:"priority"`
 }
 
 // Create handles POST /todos.
@@ -73,7 +77,12 @@ func (h *TodoHandler) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "title is required"})
 	}
 
-	td, err := h.repo.Create(userID, req.Title, req.Type)
+	var td *repository.Todo
+	if req.Priority != "" {
+		td, err = h.repo.CreateWithPriority(userID, req.Title, req.Type, req.Priority)
+	} else {
+		td, err = h.repo.Create(userID, req.Title, req.Type)
+	}
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -155,8 +164,9 @@ func (h *TodoHandler) Update(c echo.Context) error {
 	}
 
 	updates := repository.TodoUpdates{
-		Title: req.Title,
-		Note:  req.Note,
+		Title:    req.Title,
+		Note:     req.Note,
+		Priority: req.Priority,
 	}
 
 	td, err := h.repo.Update(id, userID, updates)

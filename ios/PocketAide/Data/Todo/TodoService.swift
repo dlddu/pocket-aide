@@ -12,10 +12,12 @@ final class TodoService {
         let title: String
         let type: String
         let note: String?
+        let priority: String?
     }
 
     struct UpdateRequest: Encodable {
         let title: String?
+        let priority: String?
     }
 
     // MARK: - CRUD
@@ -45,11 +47,12 @@ final class TodoService {
         title: String,
         note: String? = nil,
         type todoType: String = "personal",
+        priority: String? = nil,
         serverURL: String,
         token: String
     ) async throws -> Todo {
         let client = makeClient(serverURL: serverURL)
-        let body = CreateRequest(title: title, type: todoType, note: note)
+        let body = CreateRequest(title: title, type: todoType, note: note, priority: priority)
         return try await client.request(
             path: "/todos",
             method: .post,
@@ -62,11 +65,12 @@ final class TodoService {
     func update(
         id: Int,
         title: String? = nil,
+        priority: String? = nil,
         serverURL: String,
         token: String
     ) async throws -> Todo {
         let client = makeClient(serverURL: serverURL)
-        let body = UpdateRequest(title: title)
+        let body = UpdateRequest(title: title, priority: priority)
         return try await client.request(
             path: "/todos/\(id)",
             method: .put,

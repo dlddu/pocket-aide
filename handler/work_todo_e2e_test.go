@@ -2,9 +2,9 @@
 // todo API endpoints (POST/GET/PUT/DELETE /todos, POST /todos/:id/toggle)
 // with type=work and priority support.
 //
-// DLD-727: 7-1: 회사 투두 — e2e 테스트 작성 (skipped)
+// DLD-727: 7-1: 회사 투두 — e2e 테스트 작성
 //
-// NOTE: All tests are skipped (t.Skip). Activate after DLD-727:
+// These tests require:
 //   - handler.NewTodoHandler is implemented (handler/todo.go)
 //   - db/migrations/000004_todos.up.sql migration is applied
 //   - Routes /todos, /todos/:id, /todos/:id/toggle are registered
@@ -12,11 +12,6 @@
 //   - POST /todos/:id/toggle toggles completed_at between null/now
 //   - priority column added to todos table (high/medium/low)
 //   - GET /todos?type=work returns todos sorted by priority (high → medium → low)
-//
-// When activating:
-//  1. Remove all t.Skip calls.
-//  2. Ensure priority column exists in todos table (db/migrations).
-//  3. Ensure handler/todo.go accepts and returns priority field.
 package handler_test
 
 import (
@@ -77,8 +72,6 @@ func workTodoToken(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email strin
 //	POST /todos  {"title":"기획서 작성","type":"work"} + Bearer token
 //	→ 201 Created   {"id":1,"title":"기획서 작성","type":"work","completed_at":null}
 func TestWorkTodoHandler_Create_ReturnsCreated(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-create@example.com")
@@ -120,8 +113,6 @@ func TestWorkTodoHandler_Create_ReturnsCreated(t *testing.T) {
 //	POST /todos  {"type":"work"} + Bearer token
 //	→ 400 Bad Request
 func TestWorkTodoHandler_Create_MissingTitle_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-notitle@example.com")
@@ -146,8 +137,6 @@ func TestWorkTodoHandler_Create_MissingTitle_ReturnsBadRequest(t *testing.T) {
 //	POST /todos  {"title":"회의 준비","type":"work"}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestWorkTodoHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware can reject the
 	// request before any real handler runs.
@@ -180,8 +169,6 @@ func TestWorkTodoHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /todos?type=work  + Bearer token
 //	→ 200 OK  JSON array with 2 elements; each element has type="work"
 func TestWorkTodoHandler_List_WorkTodos_ReturnsList(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-list@example.com")
@@ -231,8 +218,6 @@ func TestWorkTodoHandler_List_WorkTodos_ReturnsList(t *testing.T) {
 //	GET /todos?type=work  + Bearer token
 //	→ 200 OK  JSON array with 1 element; element has type="work"
 func TestWorkTodoHandler_List_ExcludesPersonalTodos_ReturnsWorkOnly(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-filter@example.com")
@@ -283,8 +268,6 @@ func TestWorkTodoHandler_List_ExcludesPersonalTodos_ReturnsWorkOnly(t *testing.T
 //	GET /todos?type=work  + Bearer token
 //	→ 200 OK  []
 func TestWorkTodoHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-empty@example.com")
@@ -319,8 +302,6 @@ func TestWorkTodoHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
 //	GET /todos/<id>  + Bearer token
 //	→ 200 OK  {"id":<id>,"title":"회의록 정리","type":"work","completed_at":null}
 func TestWorkTodoHandler_Get_ReturnsSingleTodo(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-get@example.com")
@@ -377,8 +358,6 @@ func TestWorkTodoHandler_Get_ReturnsSingleTodo(t *testing.T) {
 //	PUT /todos/<id>  {"title":"주간 보고서 (수정)"} + Bearer token
 //	→ 200 OK  {"id":<id>,"title":"주간 보고서 (수정)","type":"work", ...}
 func TestWorkTodoHandler_Update_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-update@example.com")
@@ -434,8 +413,6 @@ func TestWorkTodoHandler_Update_ReturnsOK(t *testing.T) {
 //	DELETE /todos/<id>  + Bearer token → 204 No Content
 //	GET    /todos/<id>  + Bearer token → 404 Not Found
 func TestWorkTodoHandler_Delete_ReturnsNoContent(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-delete@example.com")
@@ -492,8 +469,6 @@ func TestWorkTodoHandler_Delete_ReturnsNoContent(t *testing.T) {
 //	POST /todos/<id>/toggle  + Bearer token → 200 OK
 //	GET  /todos/<id>         + Bearer token → completed_at is non-null
 func TestWorkTodoHandler_Toggle_CompletesTodo(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-toggle-complete@example.com")
@@ -558,8 +533,6 @@ func TestWorkTodoHandler_Toggle_CompletesTodo(t *testing.T) {
 //	POST /todos/<id>/toggle  (1st call) → completed_at is non-null
 //	POST /todos/<id>/toggle  (2nd call) → completed_at is null again
 func TestWorkTodoHandler_Toggle_UncompletesTodo(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-toggle-uncomplete@example.com")
@@ -634,8 +607,6 @@ func TestWorkTodoHandler_Toggle_UncompletesTodo(t *testing.T) {
 //	POST /todos  {"title":"긴급 버그 수정","type":"work","priority":"high"} + Bearer token
 //	→ 201 Created   {"id":1,"title":"긴급 버그 수정","type":"work","priority":"high","completed_at":null}
 func TestWorkTodoHandler_Create_WithPriorityHigh_ReturnsPriority(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-priority-create@example.com")
@@ -674,8 +645,6 @@ func TestWorkTodoHandler_Create_WithPriorityHigh_ReturnsPriority(t *testing.T) {
 //	PUT /todos/<id>  {"priority":"high"} + Bearer token
 //	→ 200 OK  {"id":<id>,"priority":"high", ...}
 func TestWorkTodoHandler_Update_Priority_ReturnsUpdatedPriority(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-priority-update@example.com")
@@ -731,8 +700,6 @@ func TestWorkTodoHandler_Update_Priority_ReturnsUpdatedPriority(t *testing.T) {
 //	GET /todos?type=work  + Bearer token
 //	→ 200 OK  [{"priority":"high",...}, {"priority":"medium",...}, {"priority":"low",...}]
 func TestWorkTodoHandler_List_SortedByPriority_ReturnsHighMediumLow(t *testing.T) {
-	t.Skip("DLD-727: activate after work todo CRUD and priority support are implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupWorkTodoEcho(t, tdb)
 	token := workTodoToken(t, tdb, e, "work-todo-priority-sort@example.com")

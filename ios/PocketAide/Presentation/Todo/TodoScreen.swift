@@ -116,6 +116,16 @@ private struct TodoRow: View {
     let todo: Todo
     let viewModel: TodoViewModel
 
+    /// priority 값에 따른 dot 색상.
+    private var priorityColor: Color {
+        switch todo.priority {
+        case "high":   return Color(red: 1.0, green: 0.231, blue: 0.188)  // #FF3B30
+        case "medium": return Color(red: 1.0, green: 0.584, blue: 0.0)   // #FF9500
+        case "low":    return Color(red: 0.0, green: 0.478, blue: 1.0)   // #007AFF
+        default:       return .secondary
+        }
+    }
+
     var body: some View {
         HStack {
             Button {
@@ -129,6 +139,11 @@ private struct TodoRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("todo_checkbox_\(todo.title)")
+
+            // Priority dot
+            Circle()
+                .fill(priorityColor)
+                .frame(width: 8, height: 8)
 
             Text(todo.title)
                 .font(.body)

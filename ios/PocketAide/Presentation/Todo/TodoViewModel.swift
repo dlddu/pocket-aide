@@ -54,7 +54,7 @@ final class TodoViewModel: ObservableObject {
     }
 
     /// 새 투두를 생성합니다.
-    func createTodo(title: String, note: String = "") async {
+    func createTodo(title: String, note: String = "", priority: String = "medium") async {
         guard let serverURL = keychainService.loadServerURL(),
               let token = keychainService.loadToken() else {
             errorMessage = "서버 주소 또는 인증 토큰이 없습니다."
@@ -70,6 +70,7 @@ final class TodoViewModel: ObservableObject {
                 title: title,
                 note: note,
                 type: "personal",
+                priority: priority,
                 serverURL: serverURL,
                 token: token
             )
@@ -80,7 +81,7 @@ final class TodoViewModel: ObservableObject {
     }
 
     /// 투두를 수정합니다.
-    func updateTodo(id: Int, title: String) async {
+    func updateTodo(id: Int, title: String? = nil, priority: String? = nil) async {
         guard let serverURL = keychainService.loadServerURL(),
               let token = keychainService.loadToken() else {
             errorMessage = "서버 주소 또는 인증 토큰이 없습니다."
@@ -95,6 +96,7 @@ final class TodoViewModel: ObservableObject {
             let updated = try await todoService.update(
                 id: id,
                 title: title,
+                priority: priority,
                 serverURL: serverURL,
                 token: token
             )
