@@ -118,6 +118,9 @@ func (h *MemoHandler) Update(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 	}
+	if req.Content == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "content is required"})
+	}
 
 	m, err := h.repo.Update(id, userID, req.Content)
 	if err != nil {
@@ -185,12 +188,16 @@ func (h *MemoHandler) Move(c echo.Context) error {
 	}
 
 	// Map target to todo type
-	todoType := "personal"
+	var todoType string
 	switch req.Target {
 	case "personal_todo":
 		todoType = "personal"
 	case "work_todo":
 		todoType = "work"
+	case "routine":
+		todoType = "routine"
+	default:
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid target"})
 	}
 
 	_, err = h.todoRepo.Create(userID, memo.Content, todoType)
