@@ -9,11 +9,13 @@
 //   → App Group UserDefaults mock data injected via "--uitesting" and rows verified
 //   → empty state view shown when no notifications present.
 //
-// DLD-735: 11-1: 알림 모음 — e2e 테스트 작성 (skipped)
+// DLD-735: 11-1: 알림 모음 — e2e 테스트 작성
+// DLD-736: 11-2: 알림 모음 — 구현 및 e2e 테스트 활성화 (activated after DLD-736)
 //
-// NOTE: All tests are skipped (XCTSkip). Activate after DLD-736:
-//   - A "tab_notification" tab item is added to MainTabView
-//   - NotificationScreen is wired up with accessibilityIdentifier "notification_list_view"
+// NOTE: All tests are activated after DLD-736.
+//   Implemented accessibilityIdentifier contracts:
+//   - "tab_notification" tab item added to MainTabView
+//   - NotificationScreen wired up with accessibilityIdentifier "notification_list_view"
 //   - Each app group section exposes "notification_section_<appName>"
 //   - Each section header exposes a badge count label "notification_count_<appName>"
 //   - Each notification row exposes "notification_row_<appName>_msg_<n>"

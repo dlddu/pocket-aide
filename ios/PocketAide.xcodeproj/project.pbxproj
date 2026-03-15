@@ -50,6 +50,10 @@
 		AA000070 /* MemoServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100070 /* MemoServiceProtocol.swift */; };
 		AA000071 /* IntentResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100071 /* IntentResult.swift */; };
 		AA000072 /* SaveVoiceMemoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100072 /* SaveVoiceMemoIntent.swift */; };
+		/* Notification feature — App Sources */
+		AA000073 /* AppNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100073 /* AppNotification.swift */; };
+		AA000074 /* NotificationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100074 /* NotificationRepository.swift */; };
+		AA000075 /* NotificationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100075 /* NotificationsScreen.swift */; };
 		/* Unit Tests */
 		AA000020 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100020 /* APIClientTests.swift */; };
 		AA000021 /* MockSpeechRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100021 /* MockSpeechRecognizerTests.swift */; };
@@ -57,6 +61,7 @@
 		AA000023 /* SaveVoiceMemoIntentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100023 /* SaveVoiceMemoIntentTests.swift */; };
 		AA000024 /* ScratchViewModelVoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100024 /* ScratchViewModelVoiceTests.swift */; };
 		AA000025 /* MockMemoServiceProtocolConformance.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100025 /* MockMemoServiceProtocolConformance.swift */; };
+		AA000026 /* NotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100026 /* NotificationTests.swift */; };
 		/* UI Tests */
 		AA000030 /* TabBarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100030 /* TabBarUITests.swift */; };
 		AA000031 /* VoiceChatUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100031 /* VoiceChatUITests.swift */; };
@@ -108,12 +113,16 @@
 		AA100070 /* MemoServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoServiceProtocol.swift; sourceTree = "<group>"; };
 		AA100071 /* IntentResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntentResult.swift; sourceTree = "<group>"; };
 		AA100072 /* SaveVoiceMemoIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVoiceMemoIntent.swift; sourceTree = "<group>"; };
+		AA100073 /* AppNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotification.swift; sourceTree = "<group>"; };
+		AA100074 /* NotificationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRepository.swift; sourceTree = "<group>"; };
+		AA100075 /* NotificationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsScreen.swift; sourceTree = "<group>"; };
 		AA100020 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		AA100021 /* MockSpeechRecognizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSpeechRecognizerTests.swift; sourceTree = "<group>"; };
 		AA100022 /* ChatViewModelVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelVoiceTests.swift; sourceTree = "<group>"; };
 		AA100023 /* SaveVoiceMemoIntentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveVoiceMemoIntentTests.swift; sourceTree = "<group>"; };
 		AA100024 /* ScratchViewModelVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScratchViewModelVoiceTests.swift; sourceTree = "<group>"; };
 		AA100025 /* MockMemoServiceProtocolConformance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMemoServiceProtocolConformance.swift; sourceTree = "<group>"; };
+		AA100026 /* NotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationTests.swift; sourceTree = "<group>"; };
 		AA100030 /* TabBarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarUITests.swift; sourceTree = "<group>"; };
 		AA100031 /* VoiceChatUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatUITests.swift; sourceTree = "<group>"; };
 		/* Products */
@@ -185,8 +194,17 @@
 				AAGRP_APP_SCR /* Scratch */,
 				AAGRP_APP_TOD /* Todo */,
 				AAGRP_APP_ROU /* Routine */,
+				AAGRP_APP_NTF /* Notification */,
 			);
 			path = Presentation;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_NTF /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				AA100075 /* NotificationsScreen.swift */,
+			);
+			path = Notification;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_AUT /* Auth */ = {
@@ -276,6 +294,7 @@
 				AA100057 /* Todo.swift */,
 				AA100058 /* Routine.swift */,
 				AA100059 /* ChatMessage.swift */,
+				AA100073 /* AppNotification.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -324,8 +343,17 @@
 				AAGRP_APP_DAT_TOD /* Todo */,
 				AAGRP_APP_DAT_ROU /* Routine */,
 				AAGRP_APP_DAT_CHA /* Chat */,
+				AAGRP_APP_DAT_NOT /* Notification */,
 			);
 			path = Data;
+			sourceTree = "<group>";
+		};
+		AAGRP_APP_DAT_NOT /* Notification */ = {
+			isa = PBXGroup;
+			children = (
+				AA100074 /* NotificationRepository.swift */,
+			);
+			path = Notification;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_DAT_AUT /* Auth */ = {
@@ -388,6 +416,7 @@
 				AA100023 /* SaveVoiceMemoIntentTests.swift */,
 				AA100024 /* ScratchViewModelVoiceTests.swift */,
 				AA100025 /* MockMemoServiceProtocolConformance.swift */,
+				AA100026 /* NotificationTests.swift */,
 			);
 			path = PocketAideTests;
 			sourceTree = "<group>";
@@ -542,6 +571,9 @@
 				AA000070 /* MemoServiceProtocol.swift in Sources */,
 				AA000071 /* IntentResult.swift in Sources */,
 				AA000072 /* SaveVoiceMemoIntent.swift in Sources */,
+				AA000073 /* AppNotification.swift in Sources */,
+				AA000074 /* NotificationRepository.swift in Sources */,
+				AA000075 /* NotificationsScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -562,6 +594,7 @@
 				AA000023 /* SaveVoiceMemoIntentTests.swift in Sources */,
 				AA000024 /* ScratchViewModelVoiceTests.swift in Sources */,
 				AA000025 /* MockMemoServiceProtocolConformance.swift in Sources */,
+				AA000026 /* NotificationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

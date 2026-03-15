@@ -3,7 +3,7 @@
 
 import SwiftUI
 
-/// 앱의 7개 탭을 관리하는 메인 TabView.
+/// 앱의 탭을 관리하는 메인 TabView.
 ///
 /// 각 탭 버튼에는 XCUITest가 식별할 수 있도록
 /// `accessibilityIdentifier`가 설정되어 있습니다.
@@ -12,47 +12,50 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .home
 
     enum Tab: String, CaseIterable {
-        case home      = "tab_home"
-        case record    = "tab_record"
-        case history   = "tab_history"
-        case widget    = "tab_widget"
-        case assistant = "tab_assistant"
-        case todo      = "tab_todo"
-        case scratch   = "tab_scratch"
-        case routine   = "tab_routine"
-        case sentence  = "tab_sentence"
-        case settings  = "tab_settings"
-        case profile   = "tab_profile"
+        case home         = "tab_home"
+        case record       = "tab_record"
+        case history      = "tab_history"
+        case widget       = "tab_widget"
+        case assistant    = "tab_assistant"
+        case todo         = "tab_todo"
+        case scratch      = "tab_scratch"
+        case routine      = "tab_routine"
+        case sentence     = "tab_sentence"
+        case notification = "tab_notification"
+        case settings     = "tab_settings"
+        case profile      = "tab_profile"
 
         var title: String {
             switch self {
-            case .home:      return "Home"
-            case .record:    return "Record"
-            case .history:   return "History"
-            case .widget:    return "Widget"
-            case .assistant: return "Assistant"
-            case .todo:      return "Todo"
-            case .scratch:   return "Scratch"
-            case .routine:   return "Routine"
-            case .sentence:  return "Sentence"
-            case .settings:  return "Settings"
-            case .profile:   return "Profile"
+            case .home:         return "Home"
+            case .record:       return "Record"
+            case .history:      return "History"
+            case .widget:       return "Widget"
+            case .assistant:    return "Assistant"
+            case .todo:         return "Todo"
+            case .scratch:      return "Scratch"
+            case .routine:      return "Routine"
+            case .sentence:     return "Sentence"
+            case .notification: return "알림"
+            case .settings:     return "Settings"
+            case .profile:      return "Profile"
             }
         }
 
         var systemImage: String {
             switch self {
-            case .home:      return "house"
-            case .record:    return "mic"
-            case .history:   return "clock"
-            case .widget:    return "square.grid.2x2"
-            case .assistant: return "sparkles"
-            case .todo:      return "checkmark.square"
-            case .scratch:   return "note.text"
-            case .routine:   return "arrow.clockwise"
-            case .sentence:  return "text.quote"
-            case .settings:  return "gearshape"
-            case .profile:   return "person.circle"
+            case .home:         return "house"
+            case .record:       return "mic"
+            case .history:      return "clock"
+            case .widget:       return "square.grid.2x2"
+            case .assistant:    return "sparkles"
+            case .todo:         return "checkmark.square"
+            case .scratch:      return "note.text"
+            case .routine:      return "arrow.clockwise"
+            case .sentence:     return "text.quote"
+            case .notification: return "bell"
+            case .settings:     return "gearshape"
+            case .profile:      return "person.circle"
             }
         }
     }
@@ -121,6 +124,13 @@ struct MainTabView: View {
                 }
                 .tag(Tab.sentence)
                 .accessibilityIdentifier(Tab.sentence.rawValue)
+
+            NotificationsScreen()
+                .tabItem {
+                    Label(Tab.notification.title, systemImage: Tab.notification.systemImage)
+                }
+                .tag(Tab.notification)
+                .accessibilityIdentifier(Tab.notification.rawValue)
 
             SettingsView()
                 .tabItem {
