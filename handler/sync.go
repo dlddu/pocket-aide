@@ -4,6 +4,7 @@ package handler
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -147,18 +148,36 @@ func (h *SyncHandler) applyTodoChange(userID int64, change syncChange) error {
 		title := stringPayload(change.Payload, "title")
 		todoType := stringPayload(change.Payload, "type")
 		// LWW: only update when server record is older than the client change.
-		_, err := h.db.Exec(
-			`UPDATE todos
-			 SET title = ?, type = ?, updated_at = ?
-			 WHERE user_id = ? AND updated_at < ?`,
-			title, todoType, clientUpdatedAt, userID, clientUpdatedAt,
-		)
+		// If change.ID is a valid int64, target the specific record.
+		// Otherwise fall back to user_id-only matching (e.g. client UUID).
+		id, parseErr := strconv.ParseInt(change.ID, 10, 64)
+		var err error
+		if parseErr == nil {
+			_, err = h.db.Exec(
+				`UPDATE todos
+				 SET title = ?, type = ?, updated_at = ?
+				 WHERE id = ? AND user_id = ? AND updated_at < ?`,
+				title, todoType, clientUpdatedAt, id, userID, clientUpdatedAt,
+			)
+		} else {
+			_, err = h.db.Exec(
+				`UPDATE todos
+				 SET title = ?, type = ?, updated_at = ?
+				 WHERE user_id = ? AND updated_at < ?`,
+				title, todoType, clientUpdatedAt, userID, clientUpdatedAt,
+			)
+		}
 		return err
 
 	case syncOperationDelete:
-		_, err := h.db.Exec(
-			`DELETE FROM todos WHERE user_id = ?`,
-			userID,
+		// DELETE requires a valid numeric ID to avoid deleting all user records.
+		id, err := strconv.ParseInt(change.ID, 10, 64)
+		if err != nil {
+			return nil
+		}
+		_, err = h.db.Exec(
+			`DELETE FROM todos WHERE id = ? AND user_id = ?`,
+			id, userID,
 		)
 		return err
 	}
@@ -187,18 +206,36 @@ func (h *SyncHandler) applyMemoChange(userID int64, change syncChange) error {
 		content := stringPayload(change.Payload, "content")
 		source := stringPayload(change.Payload, "source")
 		// LWW: only update when server record is older than the client change.
-		_, err := h.db.Exec(
-			`UPDATE memos
-			 SET content = ?, source = ?, updated_at = ?
-			 WHERE user_id = ? AND updated_at < ?`,
-			content, source, clientUpdatedAt, userID, clientUpdatedAt,
-		)
+		// If change.ID is a valid int64, target the specific record.
+		// Otherwise fall back to user_id-only matching (e.g. client UUID).
+		id, parseErr := strconv.ParseInt(change.ID, 10, 64)
+		var err error
+		if parseErr == nil {
+			_, err = h.db.Exec(
+				`UPDATE memos
+				 SET content = ?, source = ?, updated_at = ?
+				 WHERE id = ? AND user_id = ? AND updated_at < ?`,
+				content, source, clientUpdatedAt, id, userID, clientUpdatedAt,
+			)
+		} else {
+			_, err = h.db.Exec(
+				`UPDATE memos
+				 SET content = ?, source = ?, updated_at = ?
+				 WHERE user_id = ? AND updated_at < ?`,
+				content, source, clientUpdatedAt, userID, clientUpdatedAt,
+			)
+		}
 		return err
 
 	case syncOperationDelete:
-		_, err := h.db.Exec(
-			`DELETE FROM memos WHERE user_id = ?`,
-			userID,
+		// DELETE requires a valid numeric ID to avoid deleting all user records.
+		id, err := strconv.ParseInt(change.ID, 10, 64)
+		if err != nil {
+			return nil
+		}
+		_, err = h.db.Exec(
+			`DELETE FROM memos WHERE id = ? AND user_id = ?`,
+			id, userID,
 		)
 		return err
 	}
