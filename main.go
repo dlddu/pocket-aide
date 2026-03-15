@@ -83,6 +83,10 @@ func main() {
 	tg.DELETE("/:id", todoHandler.Delete)
 	tg.POST("/:id/toggle", todoHandler.Toggle)
 
+	// Sync route
+	syncHandler := handler.NewSyncHandler(database)
+	e.POST("/sync", syncHandler.Sync, appmiddleware.JWT(jwtSecret))
+
 	// Memo routes
 	memoHandler := handler.NewMemoHandler(database)
 	mg := e.Group("/memos", appmiddleware.JWT(jwtSecret))

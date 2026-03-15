@@ -58,14 +58,12 @@ func setupSyncEcho(t *testing.T, tdb *testutil.TestDB) *echo.Echo {
 	authHandler := handler.NewAuthHandler(tdb.DB, "test-jwt-secret")
 	e.POST("/auth/login", authHandler.Login)
 
-	// TODO(DLD-739): uncomment after handler.NewSyncHandler is implemented.
-	// syncHandler := handler.NewSyncHandler(tdb.DB)
-	// e.POST("/sync", syncHandler.Sync, appmiddleware.JWT("test-jwt-secret"))
+	syncHandler := handler.NewSyncHandler(tdb.DB)
+	e.POST("/sync", syncHandler.Sync, appmiddleware.JWT("test-jwt-secret"))
 
-	// TODO(DLD-739): uncomment for server-state verification after sync.
-	// todoHandler := handler.NewTodoHandler(tdb.DB)
-	// tg := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
-	// tg.GET("", todoHandler.List)
+	todoHandler := handler.NewTodoHandler(tdb.DB)
+	tg := e.Group("/todos", appmiddleware.JWT("test-jwt-secret"))
+	tg.GET("", todoHandler.List)
 
 	return e
 }
@@ -94,8 +92,6 @@ func syncToken(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email string) s
 //	             "updated_at":"<RFC3339>"}]} + Bearer token
 //	→ 200 OK  {"server_data": {...}}
 func TestSyncHandler_Sync_UploadOfflineChanges_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-upload@example.com")
@@ -141,8 +137,6 @@ func TestSyncHandler_Sync_UploadOfflineChanges_ReturnsOK(t *testing.T) {
 //	POST /sync  {"changes":[]} + Bearer token
 //	→ 200 OK  {"server_data": {"todos": [{"title":"서버 투두", ...}]}}
 func TestSyncHandler_Sync_DownloadServerData_ReturnsTodos(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-download@example.com")
@@ -202,8 +196,6 @@ func TestSyncHandler_Sync_DownloadServerData_ReturnsTodos(t *testing.T) {
 //	→ 200 OK  서버 데이터가 클라이언트 변경사항으로 덮어써짐 (last-write-wins).
 //	   GET /todos → 클라이언트가 보낸 title이 반영되어 있음.
 func TestSyncHandler_Sync_ConflictResolution_LastWriteWins(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-conflict@example.com")
@@ -278,8 +270,6 @@ func TestSyncHandler_Sync_ConflictResolution_LastWriteWins(t *testing.T) {
 //	→ 200 OK  서버 데이터가 유지됨 (서버가 더 최신이므로).
 //	   GET /todos → 서버 원본 title이 그대로 유지됨.
 func TestSyncHandler_Sync_ConflictResolution_ServerWins_WhenServerIsNewer(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-server-wins@example.com")
@@ -350,8 +340,6 @@ func TestSyncHandler_Sync_ConflictResolution_ServerWins_WhenServerIsNewer(t *tes
 //	POST /sync  {"changes":[]} + Bearer token
 //	→ 200 OK  {"server_data": {...}}
 func TestSyncHandler_Sync_EmptyChanges_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-empty@example.com")
@@ -384,8 +372,6 @@ func TestSyncHandler_Sync_EmptyChanges_ReturnsOK(t *testing.T) {
 //	POST /sync  {"changes":[todo_change, memo_change]} + Bearer token
 //	→ 200 OK  두 변경사항 모두 서버에 반영됨.
 func TestSyncHandler_Sync_MultipleEntities_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-multi@example.com")
@@ -440,8 +426,6 @@ func TestSyncHandler_Sync_MultipleEntities_ReturnsOK(t *testing.T) {
 //	POST /sync  {"changes":[]}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestSyncHandler_Sync_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware can reject the
 	// request before any real handler runs. Replace with the real sync handler
@@ -468,8 +452,6 @@ func TestSyncHandler_Sync_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	POST /sync  (malformed JSON: "not-json") + Bearer token
 //	→ 400 Bad Request
 func TestSyncHandler_Sync_InvalidBody_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 	token := syncToken(t, tdb, e, "sync-badreq@example.com")
@@ -495,8 +477,6 @@ func TestSyncHandler_Sync_InvalidBody_ReturnsBadRequest(t *testing.T) {
 //	사용자 B로 로그인하여 POST /sync (changes: []) 요청.
 //	→ 200 OK  server_data.todos에 사용자 A의 투두가 포함되지 않음.
 func TestSyncHandler_Sync_IsolatesUserData_ReturnsOnlyOwnData(t *testing.T) {
-	t.Skip("DLD-739: 구현 전")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSyncEcho(t, tdb)
 
