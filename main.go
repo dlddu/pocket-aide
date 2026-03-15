@@ -92,6 +92,22 @@ func main() {
 	mg.DELETE("/:id", memoHandler.Delete)
 	mg.POST("/:id/move", memoHandler.Move)
 
+	// Sentence Category routes
+	scHandler := handler.NewSentenceCategoryHandler(database)
+	scg := e.Group("/sentences/categories", appmiddleware.JWT(jwtSecret))
+	scg.POST("", scHandler.Create)
+	scg.GET("", scHandler.List)
+	scg.PUT("/:id", scHandler.Update)
+	scg.DELETE("/:id", scHandler.Delete)
+
+	// Sentence routes
+	sHandler := handler.NewSentenceHandler(database)
+	sg := e.Group("/sentences", appmiddleware.JWT(jwtSecret))
+	sg.POST("", sHandler.Create)
+	sg.GET("", sHandler.List)
+	sg.PUT("/:id", sHandler.Update)
+	sg.DELETE("/:id", sHandler.Delete)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

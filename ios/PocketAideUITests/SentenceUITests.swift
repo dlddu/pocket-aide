@@ -7,18 +7,7 @@
 //
 // DLD-733: 10-1: 문장 모음 — e2e 테스트 작성 (skipped)
 //
-// NOTE: All tests are skipped (XCTSkip). Activate after DLD-734:
-//   - A "tab_sentence" tab item is added to MainTabView
-//   - SentenceListView is wired up with accessibilityIdentifier "sentence_list_view"
-//   - Category sections expose identifier "sentence_category_section_<name>"
-//   - Add-category sheet exposes: "add_category_button", "category_name_field",
-//     "category_save_button"
-//   - Add-sentence sheet exposes: "add_sentence_button", "sentence_content_field",
-//     "sentence_category_picker", "sentence_save_button"
-//   - Each sentence row exposes "sentence_row_<content>"
-//   - Edit button per row exposes "sentence_edit_button_<content>"
-//   - Edit sheet exposes: "sentence_edit_field", "sentence_update_button"
-//   - Long-press on a sentence row reveals a delete context menu action
+// NOTE: Tests activated for DLD-734.
 
 import XCTest
 
@@ -50,8 +39,6 @@ final class SentenceUITests: XCTestCase {
     /// Expected flow:
     ///   TabBar visible → tap "tab_sentence" → "sentence_list_view" appears
     func test_sentenceTab_displaysSentenceList() throws {
-        throw XCTSkip("DLD-734: SentenceScreen not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating")
@@ -75,8 +62,6 @@ final class SentenceUITests: XCTestCase {
     ///   "tab_sentence" selected → "sentence_list_view" visible
     ///   → at least one "sentence_category_section_<name>" section exists
     func test_sentenceTab_displaysCategoriesWithSentences() throws {
-        throw XCTSkip("DLD-734: SentenceScreen not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -118,8 +103,6 @@ final class SentenceUITests: XCTestCase {
     ///   → tap "category_save_button" → sheet dismisses
     ///   → sentence list contains "sentence_category_section_감사 표현"
     func test_sentenceTab_addCategory_displaysInList() throws {
-        throw XCTSkip("DLD-734: SentenceScreen not yet implemented")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -163,8 +146,6 @@ final class SentenceUITests: XCTestCase {
     ///   → tap "sentence_save_button" → sheet dismisses
     ///   → "sentence_row_안녕하세요" appears under the "인사말" section
     func test_sentenceTab_addSentence_displaysInList() throws {
-        throw XCTSkip("DLD-734: SentenceScreen not yet implemented")
-
         // Arrange — navigate to sentence tab and add a category first
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -229,8 +210,6 @@ final class SentenceUITests: XCTestCase {
     ///   → "sentence_row_안녕하세요" is gone
     ///   → "sentence_row_안녕히 가세요" appears in the list
     func test_sentenceTab_editSentence_updatesInList() throws {
-        throw XCTSkip("DLD-734: SentenceScreen not yet implemented")
-
         // Arrange — navigate to sentence tab, add category and sentence
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -321,8 +300,6 @@ final class SentenceUITests: XCTestCase {
     ///   → tap "삭제" → confirmation alert appears → confirm deletion
     ///   → "sentence_row_반갑습니다" is removed from the list
     func test_sentenceTab_longPressDeleteSentence_removedFromList() throws {
-        throw XCTSkip("DLD-734: SentenceScreen not yet implemented")
-
         // Arrange — navigate to sentence tab, add category and sentence
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
