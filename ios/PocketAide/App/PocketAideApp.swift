@@ -13,11 +13,40 @@ struct PocketAideApp: App {
     private let isUITestingEmptyNotifications: Bool =
         CommandLine.arguments.contains("--uitesting-empty-notifications")
 
+    /// 오프라인 모드 UI 테스트 여부. `--uitesting-offline` 인자가 있으면 `true`.
+    private let isUITestingOffline: Bool =
+        CommandLine.arguments.contains("--uitesting-offline")
+
+    /// 온라인 모드 UI 테스트 여부. `--uitesting-online` 인자가 있으면 `true`.
+    private let isUITestingOnline: Bool =
+        CommandLine.arguments.contains("--uitesting-online")
+
+    /// 동기화 오류 UI 테스트 여부. `--uitesting-sync-error` 인자가 있으면 `true`.
+    private let isUITestingSyncError: Bool =
+        CommandLine.arguments.contains("--uitesting-sync-error")
+
+    /// 원격 변경사항 존재 UI 테스트 여부. `--uitesting-has-remote-changes` 인자가 있으면 `true`.
+    private let isUITestingHasRemoteChanges: Bool =
+        CommandLine.arguments.contains("--uitesting-has-remote-changes")
+
+    /// 서버가 더 최신인 충돌 UI 테스트 여부. `--uitesting-conflict-server-newer` 인자가 있으면 `true`.
+    private let isUITestingConflictServerNewer: Bool =
+        CommandLine.arguments.contains("--uitesting-conflict-server-newer")
+
     @StateObject private var authViewModel = AuthViewModel()
 
     init() {
         if CommandLine.arguments.contains("--uitesting") {
             injectMockData()
+        }
+        if CommandLine.arguments.contains("--uitesting-sync-error") {
+            injectSyncErrorState()
+        }
+        if CommandLine.arguments.contains("--uitesting-has-remote-changes") {
+            injectRemoteChanges()
+        }
+        if CommandLine.arguments.contains("--uitesting-conflict-server-newer") {
+            injectConflictServerNewerState()
         }
     }
 
@@ -44,6 +73,24 @@ struct PocketAideApp: App {
     private func injectMockData() {
         injectMockNotifications()
         injectWidgetTestFlag()
+    }
+
+    private func injectSyncErrorState() {
+        let defaults = UserDefaults(suiteName: NotificationRepository.appGroupIdentifier)
+            ?? UserDefaults.standard
+        defaults.set(true, forKey: "uitesting_sync_error")
+    }
+
+    private func injectRemoteChanges() {
+        let defaults = UserDefaults(suiteName: NotificationRepository.appGroupIdentifier)
+            ?? UserDefaults.standard
+        defaults.set(true, forKey: "uitesting_has_remote_changes")
+    }
+
+    private func injectConflictServerNewerState() {
+        let defaults = UserDefaults(suiteName: NotificationRepository.appGroupIdentifier)
+            ?? UserDefaults.standard
+        defaults.set(true, forKey: "uitesting_conflict_server_newer")
     }
 
     private func injectWidgetTestFlag() {

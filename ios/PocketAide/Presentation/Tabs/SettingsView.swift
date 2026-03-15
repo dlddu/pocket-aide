@@ -3,6 +3,49 @@
 
 import SwiftUI
 
+// MARK: - SyncStatus
+
+/// 동기화 상태를 나타내는 열거형.
+enum SyncStatus {
+    case synced
+    case syncing
+    case error
+
+    var displayText: String {
+        switch self {
+        case .synced:  return "Synced"
+        case .syncing: return "Syncing..."
+        case .error:   return "Sync Error"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        switch self {
+        case .synced:  return "sync_status_synced"
+        case .syncing: return "sync_status_syncing"
+        case .error:   return "sync_status_error"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .synced:  return "checkmark.circle"
+        case .syncing: return "arrow.triangle.2.circlepath"
+        case .error:   return "exclamationmark.circle"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .synced:  return .green
+        case .syncing: return .blue
+        case .error:   return .red
+        }
+    }
+}
+
+// MARK: - SettingsView
+
 struct SettingsView: View {
 
     // MARK: - Accessibility Identifier Constants
@@ -19,6 +62,15 @@ struct SettingsView: View {
 
     @AppStorage("selectedSpeechEngine") private var selectedEngine: String = SpeechEngine.whisperLocal.rawValue
     @State private var showEnginePicker: Bool = false
+
+    /// 현재 동기화 상태. 외부에서 주입 가능 (UI 테스트 지원).
+    @State var syncStatus: SyncStatus = .synced
+
+    /// 마지막 동기화 시각.
+    @State var lastSyncDate: Date? = nil
+
+    /// 네트워크 연결 상태.
+    @State var isNetworkConnected: Bool = true
 
     var body: some View {
         NavigationStack {
@@ -88,6 +140,41 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
                 .accessibilityIdentifier(SettingsView.shortcutSetupSectionIdentifier)
+
+                // Sync Status Section
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Sync")
+                        .font(.headline)
+
+                    // 동기화 상태 표시
+                    HStack(spacing: 8) {
+                        Image(systemName: syncStatus.iconName)
+                            .foregroundColor(syncStatus.color)
+                        Text(syncStatus.displayText)
+                            .font(.body)
+                            .foregroundColor(syncStatus.color)
+                    }
+                    .accessibilityIdentifier(syncStatus.accessibilityIdentifier)
+
+                    // 마지막 동기화 시각 표시
+                    if let lastSync = lastSyncDate {
+                        Text("Last synced: \(lastSync.formatted(date: .omitted, time: .shortened))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    // 연결 상태 표시
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(isNetworkConnected ? Color.green : Color.gray)
+                            .frame(width: 8, height: 8)
+                        Text(isNetworkConnected ? "Connected" : "Offline")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
 
                 Button(action: {
                     authViewModel.logout()

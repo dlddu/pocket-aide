@@ -69,7 +69,12 @@ struct MainTabView: View {
         }
     }
 
+    /// 오프라인 모드 시뮬레이션 여부 (UI 테스트용).
+    private let isSimulatingOffline: Bool =
+        CommandLine.arguments.contains("--uitesting-offline")
+
     var body: some View {
+        ZStack(alignment: .top) {
         TabView(selection: $selectedTab) {
             HomeView()
                 .tabItem {
@@ -179,6 +184,25 @@ struct MainTabView: View {
         .onOpenURL { url in
             handleDeeplink(url)
         }
+
+        // Offline Indicator Overlay
+        if isSimulatingOffline {
+            HStack(spacing: 6) {
+                Image(systemName: "wifi.slash")
+                    .font(.caption)
+                Text("Offline")
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.orange.opacity(0.9))
+            .foregroundColor(.white)
+            .cornerRadius(16)
+            .padding(.top, 8)
+            .accessibilityIdentifier("offline_indicator")
+        }
+        } // ZStack
     }
 
     private func handleDeeplink(_ url: URL) {

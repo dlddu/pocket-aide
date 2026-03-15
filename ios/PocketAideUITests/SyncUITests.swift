@@ -56,8 +56,6 @@ final class SyncUITests: XCTestCase {
     ///   → "sync_status_synced" 인디케이터 대기
     ///   → "todo_row_오프라인 투두" 여전히 표시 (서버와 동기화 완료)
     func test_sync_offlineTodoAdd_syncedOnReconnect() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         // Launch in offline mode to simulate no network connectivity.
         app.terminate()
         app.launchArguments = ["--uitesting", "--uitesting-offline"]
@@ -128,8 +126,6 @@ final class SyncUITests: XCTestCase {
     ///   → 온라인 복귀 → "sync_status_synced" 대기
     ///   → "todo_row_편집 후 제목" 표시 확인
     func test_sync_offlineTodoEdit_syncedOnReconnect() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         // Step 1: Add a todo while online, then wait for initial sync.
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
@@ -212,8 +208,6 @@ final class SyncUITests: XCTestCase {
     ///   → "sync_status_synced" 대기
     ///   → "tab_todo" 이동 → "todo_row_다른 디바이스 투두" 표시 확인
     func test_sync_remoteChanges_reflectedAfterSync() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         // Restart the app with a flag that simulates remote changes being available
         // on the server (e.g., injected via a test API or environment variable).
         app.terminate()
@@ -251,8 +245,6 @@ final class SyncUITests: XCTestCase {
     ///   → "sync_status_syncing" 인디케이터가 잠시 표시됨
     ///   → 이후 "sync_status_synced"로 전환됨
     func test_sync_showsSyncingIndicatorDuringSync() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         // Prepare an offline change so that sync has something to do.
         app.terminate()
         app.launchArguments = ["--uitesting", "--uitesting-offline"]
@@ -306,8 +298,6 @@ final class SyncUITests: XCTestCase {
     ///   "--uitesting-offline" 모드로 앱 실행
     ///   → "offline_indicator" 접근성 요소가 화면에 표시됨
     func test_sync_offlineMode_displaysOfflineIndicator() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         app.terminate()
         app.launchArguments = ["--uitesting", "--uitesting-offline"]
         app.launch()
@@ -328,8 +318,6 @@ final class SyncUITests: XCTestCase {
     ///   → 동기화 후 서버의 최신 값 "서버 최신 제목"이 화면에 표시됨
     ///   → 로컬의 오래된 값 "로컬 오래된 제목"은 표시되지 않음
     func test_sync_conflictResolution_serverNewerWins() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         // Launch with a preconfigured conflict scenario where the server version
         // is newer than the local version of the same todo.
         app.terminate()
@@ -372,8 +360,6 @@ final class SyncUITests: XCTestCase {
     ///   "--uitesting-sync-error" 런치 인자로 서버 응답 오류 시뮬레이션
     ///   → 동기화 시도 후 "sync_status_error" 인디케이터가 표시됨
     func test_sync_serverError_displaysErrorIndicator() throws {
-        throw XCTSkip("DLD-739: 구현 전")
-
         // Launch with a simulated server error so that sync always fails.
         app.terminate()
         app.launchArguments = ["--uitesting", "--uitesting-sync-error"]
