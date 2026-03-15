@@ -7,7 +7,7 @@
 //     (캘린더 / 날씨 / 메일 / 문장 / 알림)
 //   → 위젯 섹션 딥링크 URL(pocketaide://tab/{section}) → 앱 해당 탭 진입 확인
 //
-// NOTE: All tests are skipped (XCTSkip). Activate after WidgetKit Extension 구현:
+// All tests are active. WidgetKit Extension 구현 완료 (DLD-738):
 //   - PocketAideWidget Extension 타겟 생성 (bundle ID: com.dlddu.PocketAide.PocketAideWidget)
 //   - Widget Kind: PocketAideLargeWidget
 //   - Timeline Provider: PocketAideLargeTimelineProvider
@@ -56,8 +56,6 @@ final class LargeWidgetUITests: XCTestCase {
     ///   앱 번들 내 PlugIns 디렉토리에 PocketAideWidget.appex 존재
     ///   → 위젯 설정 화면("widget_settings_view")이 정상 표시됨
     func test_widgetExtension_buildsSuccessfully() throws {
-        throw XCTSkip("WidgetKit Extension(PocketAideWidget) 타겟 생성 후 활성화: PocketAideWidget.appex 번들 확인 및 widget_settings_view accessibilityIdentifier 노출 필요")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating to widget settings")
@@ -92,8 +90,6 @@ final class LargeWidgetUITests: XCTestCase {
     ///   → "widget_section_sentence" 존재
     ///   → "widget_section_notification" 존재
     func test_widgetSnapshot_timelineProviderDataInjection_rendersAllFiveSections() throws {
-        throw XCTSkip("PocketAideLargeTimelineProvider 및 PocketAideLargeEntry 구현 후 활성화: 5개 섹션(widget_section_calendar/weather/mail/sentence/notification) accessibilityIdentifier 노출 및 --uitesting-widget 데이터 주입 지원 필요")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before navigating to widget preview")
@@ -156,8 +152,6 @@ final class LargeWidgetUITests: XCTestCase {
     ///   pocketaide://tab/sentence 열기 → "tab_sentence" 탭 활성화
     ///   pocketaide://tab/notification 열기 → "tab_notification" 탭 활성화
     func test_widgetDeeplink_sectionURL_navigatesToCorrectTab() throws {
-        throw XCTSkip("딥링크 URL 스킴(pocketaide://tab/{section}) 및 각 탭 accessibilityIdentifier(tab_calendar/weather/mail/sentence/notification) 구현 후 활성화: Info.plist URL Types 등록 및 AppDelegate/SceneDelegate URL 처리 필요")
-
         // Arrange
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "TabBar must be visible before testing deeplinks")

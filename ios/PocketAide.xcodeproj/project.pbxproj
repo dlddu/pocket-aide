@@ -54,6 +54,18 @@
 		AA000073 /* AppNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100073 /* AppNotification.swift */; };
 		AA000074 /* NotificationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100074 /* NotificationRepository.swift */; };
 		AA000075 /* NotificationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100075 /* NotificationsScreen.swift */; };
+		/* New tab views — App Sources */
+		AA000090 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100090 /* CalendarView.swift */; };
+		AA000091 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100091 /* WeatherView.swift */; };
+		AA000092 /* MailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100092 /* MailView.swift */; };
+		/* Widget Extension Sources */
+		AA000080 /* PocketAideWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100080 /* PocketAideWidgetBundle.swift */; };
+		AA000081 /* PocketAideLargeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100081 /* PocketAideLargeEntry.swift */; };
+		AA000082 /* PocketAideLargeTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100082 /* PocketAideLargeTimelineProvider.swift */; };
+		AA000083 /* PocketAideLargeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100083 /* PocketAideLargeWidget.swift */; };
+		AA000084 /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100084 /* LargeWidgetView.swift */; };
+		/* Widget Extension — Copy Files (embed into app) */
+		AA000085 /* PocketAideWidget.appex in CopyFiles */ = {isa = PBXBuildFile; fileRef = AA200004 /* PocketAideWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		/* Unit Tests */
 		AA000020 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100020 /* APIClientTests.swift */; };
 		AA000021 /* MockSpeechRecognizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100021 /* MockSpeechRecognizerTests.swift */; };
@@ -117,6 +129,18 @@
 		AA100073 /* AppNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotification.swift; sourceTree = "<group>"; };
 		AA100074 /* NotificationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRepository.swift; sourceTree = "<group>"; };
 		AA100075 /* NotificationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsScreen.swift; sourceTree = "<group>"; };
+		/* New tab view file references */
+		AA100090 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		AA100091 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
+		AA100092 /* MailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MailView.swift; sourceTree = "<group>"; };
+		/* Widget Extension file references */
+		AA100080 /* PocketAideWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PocketAideWidgetBundle.swift; sourceTree = "<group>"; };
+		AA100081 /* PocketAideLargeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PocketAideLargeEntry.swift; sourceTree = "<group>"; };
+		AA100082 /* PocketAideLargeTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PocketAideLargeTimelineProvider.swift; sourceTree = "<group>"; };
+		AA100083 /* PocketAideLargeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PocketAideLargeWidget.swift; sourceTree = "<group>"; };
+		AA100084 /* LargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetView.swift; sourceTree = "<group>"; };
+		AA100086 /* PocketAideWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA100087 /* PocketAideWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PocketAideWidget.entitlements; sourceTree = "<group>"; };
 		AA100020 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		AA100021 /* MockSpeechRecognizerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockSpeechRecognizerTests.swift; sourceTree = "<group>"; };
 		AA100022 /* ChatViewModelVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelVoiceTests.swift; sourceTree = "<group>"; };
@@ -131,6 +155,7 @@
 		AA200001 /* PocketAide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketAide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA200002 /* PocketAideTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketAideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA200003 /* PocketAideUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketAideUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA200004 /* PocketAideWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PocketAideWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -139,6 +164,7 @@
 			isa = PBXGroup;
 			children = (
 				AAGRP_APP /* PocketAide */,
+				AAGRP_WGT /* PocketAideWidget */,
 				AAGRP_TST /* PocketAideTests */,
 				AAGRP_UIT /* PocketAideUITests */,
 				AAGRP_PRD /* Products */,
@@ -151,6 +177,7 @@
 				AA200001 /* PocketAide.app */,
 				AA200002 /* PocketAideTests.xctest */,
 				AA200003 /* PocketAideUITests.xctest */,
+				AA200004 /* PocketAideWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -167,6 +194,20 @@
 				AA100017 /* PocketAide.entitlements */,
 			);
 			path = PocketAide;
+			sourceTree = "<group>";
+		};
+		AAGRP_WGT /* PocketAideWidget */ = {
+			isa = PBXGroup;
+			children = (
+				AA100080 /* PocketAideWidgetBundle.swift */,
+				AA100081 /* PocketAideLargeEntry.swift */,
+				AA100082 /* PocketAideLargeTimelineProvider.swift */,
+				AA100083 /* PocketAideLargeWidget.swift */,
+				AA100084 /* LargeWidgetView.swift */,
+				AA100086 /* PocketAideWidget-Info.plist */,
+				AA100087 /* PocketAideWidget.entitlements */,
+			);
+			path = PocketAideWidget;
 			sourceTree = "<group>";
 		};
 		AAGRP_APP_APP /* App */ = {
@@ -273,6 +314,9 @@
 				AA100007 /* AssistantView.swift */,
 				AA100008 /* SettingsView.swift */,
 				AA100009 /* ProfileView.swift */,
+				AA100090 /* CalendarView.swift */,
+				AA100091 /* WeatherView.swift */,
+				AA100092 /* MailView.swift */,
 			);
 			path = Tabs;
 			sourceTree = "<group>";
@@ -442,10 +486,12 @@
 			buildPhases = (
 				AAPHASE_APP_SRC /* Sources */,
 				AAPHASE_APP_RES /* Resources */,
+				AAPHASE_APP_CPY /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AADEP_WGT /* PBXTargetDependency */,
 			);
 			name = PocketAide;
 			productName = PocketAide;
@@ -484,6 +530,22 @@
 			productReference = AA200003 /* PocketAideUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		AATGT_WGT /* PocketAideWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AACFG_WGT_LIST /* Build configuration list for PBXNativeTarget "PocketAideWidget" */;
+			buildPhases = (
+				AAPHASE_WGT_SRC /* Sources */,
+				AAPHASE_WGT_RES /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PocketAideWidget;
+			productName = PocketAideWidget;
+			productReference = AA200004 /* PocketAideWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -505,6 +567,9 @@
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = AATGT_APP;
 					};
+					AATGT_WGT = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = AACFG_PRJ_LIST /* Build configuration list for PBXProject "PocketAide" */;
@@ -523,6 +588,7 @@
 				AATGT_APP /* PocketAide */,
 				AATGT_TST /* PocketAideTests */,
 				AATGT_UIT /* PocketAideUITests */,
+				AATGT_WGT /* PocketAideWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -577,6 +643,9 @@
 				AA000073 /* AppNotification.swift in Sources */,
 				AA000074 /* NotificationRepository.swift in Sources */,
 				AA000075 /* NotificationsScreen.swift in Sources */,
+				AA000090 /* CalendarView.swift in Sources */,
+				AA000091 /* WeatherView.swift in Sources */,
+				AA000092 /* MailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -611,7 +680,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AAPHASE_WGT_SRC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000080 /* PocketAideWidgetBundle.swift in Sources */,
+				AA000081 /* PocketAideLargeEntry.swift in Sources */,
+				AA000082 /* PocketAideLargeTimelineProvider.swift in Sources */,
+				AA000083 /* PocketAideLargeWidget.swift in Sources */,
+				AA000084 /* LargeWidgetView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAPHASE_WGT_RES /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AAPHASE_APP_CPY /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AA000085 /* PocketAideWidget.appex in CopyFiles */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		AADEP_TST /* PBXTargetDependency */ = {
@@ -623,6 +725,11 @@
 			isa = PBXTargetDependency;
 			target = AATGT_APP /* PocketAide */;
 			targetProxy = AAPRXY_UIT /* PBXContainerItemProxy */;
+		};
+		AADEP_WGT /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AATGT_WGT /* PocketAideWidget */;
+			targetProxy = AAPRXY_WGT /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -640,6 +747,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = AATGT_APP;
 			remoteInfo = PocketAide;
+		};
+		AAPRXY_WGT /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AAPRJ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AATGT_WGT;
+			remoteInfo = PocketAideWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -893,6 +1007,58 @@
 			};
 			name = Release;
 		};
+		/* Widget Extension Debug */
+		AACFG_WGT_DBG /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PocketAideWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dlddu.PocketAide.PocketAideWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGN_ENTITLEMENTS = PocketAideWidget/PocketAideWidget.entitlements;
+			};
+			name = Debug;
+		};
+		/* Widget Extension Release */
+		AACFG_WGT_REL /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PocketAideWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dlddu.PocketAide.PocketAideWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGN_ENTITLEMENTS = PocketAideWidget/PocketAideWidget.entitlements;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -928,6 +1094,15 @@
 			buildConfigurations = (
 				AACFG_UIT_DBG /* Debug */,
 				AACFG_UIT_REL /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AACFG_WGT_LIST /* Build configuration list for PBXNativeTarget "PocketAideWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AACFG_WGT_DBG /* Debug */,
+				AACFG_WGT_REL /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
