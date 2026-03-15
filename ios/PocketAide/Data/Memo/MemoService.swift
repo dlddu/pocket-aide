@@ -86,3 +86,7 @@ final class MemoService {
         return APIClient(baseURL: baseURL)
     }
 }
+
+// MARK: - MemoServiceProtocol Conformance
+
+extension MemoService: MemoServiceProtocol {}
