@@ -23,6 +23,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -571,21 +572,25 @@ func TestRoutineHandler_Create_DDayCalculation_NextDueDateIsCorrect(t *testing.T
 // GET /routines returns each routine with a d_day field calculated as
 // next_due_date - today (negative when overdue).
 //
-// Scenario (today = 2026-03-14):
+// Scenario:
 //
-//	POST /routines  {"name":"청소","interval_days":7,"last_done_at":"2026-03-10"}
-//	  → next_due_date = "2026-03-17"
+//	POST /routines  {"name":"청소","interval_days":7,"last_done_at": today-4 }
+//	  → next_due_date = today-4+7 = today+3
 //	GET /routines  + Bearer token
-//	  → routines[0].d_day == 3   (2026-03-17 minus 2026-03-14)
+//	  → routines[0].d_day == 3   (next_due_date minus today)
 func TestRoutineHandler_List_DDayCalculation_IncludesDaysRemaining(t *testing.T) {
 
 	tdb := testutil.NewTestDB(t)
 	e := setupRoutineEcho(t, tdb)
 	token := routineToken(t, tdb, e, "routine-dday-list@example.com")
 
+	// Use dynamic dates: last_done_at = today - 4 days, so next_due_date = today + 3
+	today := time.Now().Truncate(24 * time.Hour)
+	lastDoneAt := today.AddDate(0, 0, -4).Format("2006-01-02")
+
 	// Create a routine whose next_due_date will be 3 days ahead of today
-	createBody := strings.NewReader(`{"name":"청소","interval_days":7,"last_done_at":"2026-03-10"}`)
-	createReq := httptest.NewRequest(http.MethodPost, "/routines", createBody)
+	payload := fmt.Sprintf(`{"name":"청소","interval_days":7,"last_done_at":"%s"}`, lastDoneAt)
+	createReq := httptest.NewRequest(http.MethodPost, "/routines", strings.NewReader(payload))
 	createReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	createReq.Header.Set(echo.HeaderAuthorization, token)
 	createRec := httptest.NewRecorder()
@@ -613,9 +618,9 @@ func TestRoutineHandler_List_DDayCalculation_IncludesDaysRemaining(t *testing.T)
 	if !ok {
 		t.Fatal("expected 'd_day' field in routine list item")
 	}
-	// today = 2026-03-14, next_due_date = 2026-03-17 → d_day = 3
+	// next_due_date = last_done_at + 7 = today + 3 → d_day = 3
 	if dDay != float64(3) {
-		t.Errorf("expected d_day 3 (next_due_date 2026-03-17 minus today 2026-03-14), got %v", dDay)
+		t.Errorf("expected d_day 3 (next_due_date minus today), got %v", dDay)
 	}
 }
 
@@ -627,13 +632,13 @@ func TestRoutineHandler_List_DDayCalculation_IncludesDaysRemaining(t *testing.T)
 // POST /routines/:id/complete updates last_done_at to today and recalculates
 // next_due_date as today + interval_days.
 //
-// Scenario (today = 2026-03-14):
+// Scenario:
 //
-//	Seed: routine with interval_days=7, last_done_at="2026-03-01"
+//	Seed: routine with interval_days=7, last_done_at=today-14
 //	POST /routines/<id>/complete  + Bearer token  → 200 OK
 //	GET  /routines/<id>           + Bearer token
-//	  → last_done_at  == "2026-03-14"
-//	  → next_due_date == "2026-03-21"
+//	  → last_done_at  == today
+//	  → next_due_date == today+7
 //	  → d_day         == 7
 func TestRoutineHandler_Complete_UpdatesLastDoneAndNextDue(t *testing.T) {
 
@@ -641,9 +646,15 @@ func TestRoutineHandler_Complete_UpdatesLastDoneAndNextDue(t *testing.T) {
 	e := setupRoutineEcho(t, tdb)
 	token := routineToken(t, tdb, e, "routine-complete@example.com")
 
+	// Use dynamic dates so the test does not depend on a specific calendar date
+	today := time.Now().Truncate(24 * time.Hour)
+	oldLastDoneAt := today.AddDate(0, 0, -14).Format("2006-01-02")
+	expectedLastDoneAt := today.Format("2006-01-02")
+	expectedNextDue := today.AddDate(0, 0, 7).Format("2006-01-02")
+
 	// Create a routine with an old last_done_at
-	createBody := strings.NewReader(`{"name":"독서","interval_days":7,"last_done_at":"2026-03-01"}`)
-	createReq := httptest.NewRequest(http.MethodPost, "/routines", createBody)
+	payload := fmt.Sprintf(`{"name":"독서","interval_days":7,"last_done_at":"%s"}`, oldLastDoneAt)
+	createReq := httptest.NewRequest(http.MethodPost, "/routines", strings.NewReader(payload))
 	createReq.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	createReq.Header.Set(echo.HeaderAuthorization, token)
 	createRec := httptest.NewRecorder()
@@ -681,13 +692,13 @@ func TestRoutineHandler_Complete_UpdatesLastDoneAndNextDue(t *testing.T) {
 	if err := json.Unmarshal(getRec.Body.Bytes(), &routine); err != nil {
 		t.Fatalf("expected valid JSON object, got: %v (body: %s)", err, getRec.Body.String())
 	}
-	// last_done_at must be updated to today (2026-03-14)
-	if routine["last_done_at"] != "2026-03-14" {
-		t.Errorf("expected last_done_at '2026-03-14' after complete, got %v", routine["last_done_at"])
+	// last_done_at must be updated to today
+	if routine["last_done_at"] != expectedLastDoneAt {
+		t.Errorf("expected last_done_at '%s' after complete, got %v", expectedLastDoneAt, routine["last_done_at"])
 	}
-	// next_due_date = today(2026-03-14) + interval(7) = "2026-03-21"
-	if routine["next_due_date"] != "2026-03-21" {
-		t.Errorf("expected next_due_date '2026-03-21' after complete, got %v", routine["next_due_date"])
+	// next_due_date = today + interval(7)
+	if routine["next_due_date"] != expectedNextDue {
+		t.Errorf("expected next_due_date '%s' after complete, got %v", expectedNextDue, routine["next_due_date"])
 	}
 	// d_day = 7
 	if routine["d_day"] != float64(7) {
