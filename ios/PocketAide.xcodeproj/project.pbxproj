@@ -65,6 +65,7 @@
 		/* UI Tests */
 		AA000030 /* TabBarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100030 /* TabBarUITests.swift */; };
 		AA000031 /* VoiceChatUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100031 /* VoiceChatUITests.swift */; };
+		AA000032 /* LargeWidgetUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA100032 /* LargeWidgetUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -125,6 +126,7 @@
 		AA100026 /* NotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationTests.swift; sourceTree = "<group>"; };
 		AA100030 /* TabBarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarUITests.swift; sourceTree = "<group>"; };
 		AA100031 /* VoiceChatUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatUITests.swift; sourceTree = "<group>"; };
+		AA100032 /* LargeWidgetUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetUITests.swift; sourceTree = "<group>"; };
 		/* Products */
 		AA200001 /* PocketAide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketAide.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA200002 /* PocketAideTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketAideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -426,6 +428,7 @@
 			children = (
 				AA100030 /* TabBarUITests.swift */,
 				AA100031 /* VoiceChatUITests.swift */,
+				AA100032 /* LargeWidgetUITests.swift */,
 			);
 			path = PocketAideUITests;
 			sourceTree = "<group>";
@@ -604,6 +607,7 @@
 			files = (
 				AA000030 /* TabBarUITests.swift in Sources */,
 				AA000031 /* VoiceChatUITests.swift in Sources */,
+				AA000032 /* LargeWidgetUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
