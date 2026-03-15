@@ -43,6 +43,14 @@ struct PocketAideApp: App {
 
     private func injectMockData() {
         injectMockNotifications()
+        injectWidgetTestFlag()
+    }
+
+    private func injectWidgetTestFlag() {
+        guard CommandLine.arguments.contains("--uitesting-widget") else { return }
+        let defaults = UserDefaults(suiteName: NotificationRepository.appGroupIdentifier)
+            ?? UserDefaults.standard
+        defaults.set(true, forKey: "uitesting_widget")
     }
 
     private func injectMockNotifications() {
