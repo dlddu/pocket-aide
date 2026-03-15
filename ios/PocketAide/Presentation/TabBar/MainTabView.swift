@@ -20,6 +20,7 @@ struct MainTabView: View {
         case todo      = "tab_todo"
         case scratch   = "tab_scratch"
         case routine   = "tab_routine"
+        case sentence  = "tab_sentence"
         case settings  = "tab_settings"
         case profile   = "tab_profile"
 
@@ -33,6 +34,7 @@ struct MainTabView: View {
             case .todo:      return "Todo"
             case .scratch:   return "Scratch"
             case .routine:   return "Routine"
+            case .sentence:  return "Sentence"
             case .settings:  return "Settings"
             case .profile:   return "Profile"
             }
@@ -48,6 +50,7 @@ struct MainTabView: View {
             case .todo:      return "checkmark.square"
             case .scratch:   return "note.text"
             case .routine:   return "arrow.clockwise"
+            case .sentence:  return "text.quote"
             case .settings:  return "gearshape"
             case .profile:   return "person.circle"
             }
@@ -111,6 +114,13 @@ struct MainTabView: View {
                 }
                 .tag(Tab.routine)
                 .accessibilityIdentifier(Tab.routine.rawValue)
+
+            SentenceScreen()
+                .tabItem {
+                    Label(Tab.sentence.title, systemImage: Tab.sentence.systemImage)
+                }
+                .tag(Tab.sentence)
+                .accessibilityIdentifier(Tab.sentence.rawValue)
 
             SettingsView()
                 .tabItem {

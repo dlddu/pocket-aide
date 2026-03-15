@@ -4,18 +4,7 @@
 //
 // DLD-733: 10-1: 문장 모음 — e2e 테스트 작성 (skipped)
 //
-// NOTE: All tests are skipped (t.Skip). Activate after DLD-734:
-//   - handler.NewSentenceCategoryHandler is implemented (handler/sentence_category.go)
-//   - handler.NewSentenceHandler is implemented (handler/sentence.go)
-//   - db/migrations/000007_sentence_categories.up.sql migration is applied
-//   - db/migrations/000008_sentences.up.sql migration is applied
-//   - Routes /sentences/categories, /sentences/categories/:id are registered
-//   - Routes /sentences, /sentences/:id are registered
-//   - GET /sentences supports ?category_id=:id query parameter for filtering
-//
-// When activating:
-//  1. Remove all t.Skip calls.
-//  2. Uncomment the sentence handler lines inside setupSentenceEcho (marked TODO).
+// NOTE: Tests activated for DLD-734.
 package handler_test
 
 import (
@@ -37,31 +26,28 @@ import (
 // Helpers
 // ---------------------------------------------------------------------------
 
-// setupSentenceEcho builds an Echo instance with the auth route and — once
-// DLD-734 is implemented — the sentence category routes and sentence routes.
-//
-// Activation checklist:
-//
-//	TODO(DLD-734): uncomment the lines below after handler.NewSentenceCategoryHandler exists.
-//	  scHandler := handler.NewSentenceCategoryHandler(tdb.DB)
-//	  scg := e.Group("/sentences/categories", appmiddleware.JWT("test-jwt-secret"))
-//	  scg.POST("",      scHandler.Create)
-//	  scg.GET("",       scHandler.List)
-//	  scg.PUT("/:id",   scHandler.Update)
-//	  scg.DELETE("/:id", scHandler.Delete)
-//
-//	TODO(DLD-734): uncomment the lines below after handler.NewSentenceHandler exists.
-//	  sHandler := handler.NewSentenceHandler(tdb.DB)
-//	  sg := e.Group("/sentences", appmiddleware.JWT("test-jwt-secret"))
-//	  sg.POST("",      sHandler.Create)
-//	  sg.GET("",       sHandler.List)
-//	  sg.PUT("/:id",   sHandler.Update)
-//	  sg.DELETE("/:id", sHandler.Delete)
+// setupSentenceEcho builds an Echo instance with the auth route, the sentence
+// category routes, and the sentence routes.
 func setupSentenceEcho(t *testing.T, tdb *testutil.TestDB) *echo.Echo {
 	t.Helper()
 	e := echo.New()
 	authHandler := handler.NewAuthHandler(tdb.DB, "test-jwt-secret")
 	e.POST("/auth/login", authHandler.Login)
+
+	scHandler := handler.NewSentenceCategoryHandler(tdb.DB)
+	scg := e.Group("/sentences/categories", appmiddleware.JWT("test-jwt-secret"))
+	scg.POST("", scHandler.Create)
+	scg.GET("", scHandler.List)
+	scg.PUT("/:id", scHandler.Update)
+	scg.DELETE("/:id", scHandler.Delete)
+
+	sHandler := handler.NewSentenceHandler(tdb.DB)
+	sg := e.Group("/sentences", appmiddleware.JWT("test-jwt-secret"))
+	sg.POST("", sHandler.Create)
+	sg.GET("", sHandler.List)
+	sg.PUT("/:id", sHandler.Update)
+	sg.DELETE("/:id", sHandler.Delete)
+
 	return e
 }
 
@@ -86,8 +72,6 @@ func sentenceToken(t *testing.T, tdb *testutil.TestDB, e *echo.Echo, email strin
 //	POST /sentences/categories  {"name":"인사말"} + Bearer token
 //	→ 201 Created  {"id":1,"name":"인사말"}
 func TestSentenceCategoryHandler_Create_ReturnsCreated(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-create@example.com")
@@ -122,8 +106,6 @@ func TestSentenceCategoryHandler_Create_ReturnsCreated(t *testing.T) {
 //	POST /sentences/categories  {} + Bearer token
 //	→ 400 Bad Request
 func TestSentenceCategoryHandler_Create_MissingName_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-noname@example.com")
@@ -149,8 +131,6 @@ func TestSentenceCategoryHandler_Create_MissingName_ReturnsBadRequest(t *testing
 //	POST /sentences/categories  {"name":"인사말"}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestSentenceCategoryHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware can reject the
 	// request before any real handler runs. This will be replaced by the
@@ -184,8 +164,6 @@ func TestSentenceCategoryHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testi
 //	GET /sentences/categories  + Bearer token
 //	→ 200 OK  JSON array with 2 elements, each having id/name
 func TestSentenceCategoryHandler_List_ReturnsList(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-list@example.com")
@@ -230,8 +208,6 @@ func TestSentenceCategoryHandler_List_ReturnsList(t *testing.T) {
 //	GET /sentences/categories  + Bearer token
 //	→ 200 OK  []
 func TestSentenceCategoryHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-empty@example.com")
@@ -267,8 +243,6 @@ func TestSentenceCategoryHandler_List_EmptyList_ReturnsEmptyArray(t *testing.T) 
 //	PUT /sentences/categories/<id>  {"name":"감사 표현"} + Bearer token
 //	→ 200 OK  {"id":<id>,"name":"감사 표현"}
 func TestSentenceCategoryHandler_Update_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-update@example.com")
@@ -319,8 +293,6 @@ func TestSentenceCategoryHandler_Update_ReturnsOK(t *testing.T) {
 //	PUT /sentences/categories/99999  {"name":"없는 카테고리"} + Bearer token
 //	→ 404 Not Found
 func TestSentenceCategoryHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-update-notfound@example.com")
@@ -351,8 +323,6 @@ func TestSentenceCategoryHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
 //	DELETE /sentences/categories/<id>  + Bearer token → 204 No Content
 //	GET    /sentences/categories       + Bearer token → array does not contain the deleted id
 func TestSentenceCategoryHandler_Delete_ReturnsNoContent(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-delete@example.com")
@@ -412,8 +382,6 @@ func TestSentenceCategoryHandler_Delete_ReturnsNoContent(t *testing.T) {
 //	DELETE /sentences/categories/99999  + Bearer token
 //	→ 404 Not Found
 func TestSentenceCategoryHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-cat-delete-notfound@example.com")
@@ -442,8 +410,6 @@ func TestSentenceCategoryHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
 //	POST /sentences  {"content":"안녕하세요","category_id":1} + Bearer token
 //	→ 201 Created  {"id":1,"content":"안녕하세요","category_id":1}
 func TestSentenceHandler_Create_ReturnsCreated(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-create@example.com")
@@ -500,8 +466,6 @@ func TestSentenceHandler_Create_ReturnsCreated(t *testing.T) {
 //	POST /sentences  {"category_id":1} + Bearer token
 //	→ 400 Bad Request
 func TestSentenceHandler_Create_MissingContent_ReturnsBadRequest(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-nocontent@example.com")
@@ -526,8 +490,6 @@ func TestSentenceHandler_Create_MissingContent_ReturnsBadRequest(t *testing.T) {
 //	POST /sentences  {"content":"안녕하세요","category_id":1}  (no Authorization header)
 //	→ 401 Unauthorized
 func TestSentenceHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	e := echo.New()
 	// Register a guarded placeholder so the JWT middleware can reject the
 	// request before any real handler runs. This will be replaced by the
@@ -560,8 +522,6 @@ func TestSentenceHandler_Create_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 //	GET /sentences  + Bearer token
 //	→ 200 OK  JSON array with 2 elements, each having id/content/category_id
 func TestSentenceHandler_List_ReturnsList(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-list@example.com")
@@ -623,8 +583,6 @@ func TestSentenceHandler_List_ReturnsList(t *testing.T) {
 //	GET /sentences?category_id=<id of "인사말">  + Bearer token
 //	→ 200 OK  JSON array with 1 element whose category_id matches the filter
 func TestSentenceHandler_List_ByCategoryID_ReturnsFiltered(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-list-filter@example.com")
@@ -708,8 +666,6 @@ func TestSentenceHandler_List_ByCategoryID_ReturnsFiltered(t *testing.T) {
 //	PUT /sentences/<id>  {"content":"안녕히 가세요"} + Bearer token
 //	→ 200 OK  {"id":<id>,"content":"안녕히 가세요","category_id":<id>}
 func TestSentenceHandler_Update_ReturnsOK(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-update@example.com")
@@ -777,8 +733,6 @@ func TestSentenceHandler_Update_ReturnsOK(t *testing.T) {
 //	PUT /sentences/99999  {"content":"없는 문장"} + Bearer token
 //	→ 404 Not Found
 func TestSentenceHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-update-notfound@example.com")
@@ -809,8 +763,6 @@ func TestSentenceHandler_Update_NotFound_ReturnsNotFound(t *testing.T) {
 //	DELETE /sentences/<id>  + Bearer token → 204 No Content
 //	GET    /sentences       + Bearer token → array does not contain the deleted id
 func TestSentenceHandler_Delete_ReturnsNoContent(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-delete@example.com")
@@ -887,8 +839,6 @@ func TestSentenceHandler_Delete_ReturnsNoContent(t *testing.T) {
 //	DELETE /sentences/99999  + Bearer token
 //	→ 404 Not Found
 func TestSentenceHandler_Delete_NotFound_ReturnsNotFound(t *testing.T) {
-	t.Skip("DLD-734: sentence handler not yet implemented")
-
 	tdb := testutil.NewTestDB(t)
 	e := setupSentenceEcho(t, tdb)
 	token := sentenceToken(t, tdb, e, "sentence-delete-notfound@example.com")
