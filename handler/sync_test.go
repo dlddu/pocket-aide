@@ -685,7 +685,7 @@ func TestSyncLogic_TodoUpdate_LWW_ClientNewerOverwrites(t *testing.T) {
 
 	// Act: client sends a newer update — simulate LWW UPDATE with timestamp guard.
 	// SyncHandler will use this pattern: UPDATE ... WHERE id=? AND updated_at < ?
-	clientUpdatedAt := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	clientUpdatedAt := time.Now().UTC().Format("2006-01-02 15:04:05")
 	result, err := tdb.DB.Exec(
 		`UPDATE todos
 		 SET title = '클라이언트 수정 제목', updated_at = ?
@@ -744,7 +744,7 @@ func TestSyncLogic_TodoUpdate_LWW_ServerNewerPreserved(t *testing.T) {
 	)
 
 	// Act: client sends a stale update (5 minutes ago).
-	staleClientTime := time.Now().Add(-5 * time.Minute).UTC().Format("2006-01-02T15:04:05Z")
+	staleClientTime := time.Now().Add(-5 * time.Minute).UTC().Format("2006-01-02 15:04:05")
 	result, err := tdb.DB.Exec(
 		`UPDATE todos
 		 SET title = '클라이언트 오래된 제목', updated_at = ?

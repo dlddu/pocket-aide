@@ -127,7 +127,7 @@ func (h *SyncHandler) Sync(c echo.Context) error {
 
 // applyTodoChange processes a single todo change from the client.
 func (h *SyncHandler) applyTodoChange(userID int64, change syncChange) error {
-	clientUpdatedAt := change.UpdatedAt.UTC().Format("2006-01-02T15:04:05Z")
+	clientUpdatedAt := change.UpdatedAt.UTC().Format("2006-01-02 15:04:05")
 
 	switch change.Operation {
 	case syncOperationCreate:
@@ -167,7 +167,7 @@ func (h *SyncHandler) applyTodoChange(userID int64, change syncChange) error {
 
 // applyMemoChange processes a single memo change from the client.
 func (h *SyncHandler) applyMemoChange(userID int64, change syncChange) error {
-	clientUpdatedAt := change.UpdatedAt.UTC().Format("2006-01-02T15:04:05Z")
+	clientUpdatedAt := change.UpdatedAt.UTC().Format("2006-01-02 15:04:05")
 
 	switch change.Operation {
 	case syncOperationCreate:
