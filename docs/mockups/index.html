@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PocketAide — 화면 목업 모음</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --ink:#1C2624; }
+  html,body{font-family:'Apple SD Gothic Neo','SF Pro Text','-apple-system',BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-0.012em}
+  body{background:#EFEBE3;color:var(--ink)}
+  .card{transition:transform .15s ease, box-shadow .15s ease}
+  .card:hover{transform:translateY(-2px);box-shadow:0 18px 40px -16px rgba(28,38,36,.18)}
+  .preview{aspect-ratio:9/16;border-radius:18px;overflow:hidden;position:relative;border:1px solid rgba(28,38,36,.06)}
+  .preview-strip{height:6px}
+  .stamp{font-feature-settings:"tnum";letter-spacing:.04em}
+  /* tiny phone preview composition primitives */
+  .pv-line{height:6px;border-radius:3px}
+  .pv-block{border-radius:8px}
+  .serif{font-family:'Iowan Old Style','Apple SD Gothic Neo',Georgia,serif}
+  .mono{font-family:'SF Mono','JetBrains Mono',ui-monospace,monospace}
+</style>
+</head>
+<body>
+
+  <!-- header -->
+  <header class="max-w-[1180px] mx-auto px-8 pt-14 pb-10">
+    <div class="flex items-baseline gap-3 mb-3">
+      <span class="text-[11px] uppercase tracking-[0.22em] text-stone-500 font-medium stamp">Mockup Gallery · v1</span>
+      <span class="text-[11px] text-stone-400">— 11 화면 / 9 PRD</span>
+    </div>
+    <h1 class="text-[44px] font-bold tracking-tight leading-[1.05] mb-3">PocketAide<br/><span class="text-stone-500 font-normal">— 화면 목업 모음</span></h1>
+    <p class="max-w-[640px] text-[15px] leading-relaxed text-stone-700">
+      나의 일상과 일을 옆에서 함께 정리해 주는 개인 비서 앱. 핸즈프리 즉시 캡처, 한·영 혼용 STT, 영역별 작업 관리(개인 vs 회사), 의도된 반복 노출, 시스템 전역 글쓰기 보조, 일상 루틴 구조화 등 8가지 가치를 제품화한 화면들입니다.
+    </p>
+  </header>
+
+  <main class="max-w-[1180px] mx-auto px-8 pb-24">
+
+    <!-- section: main tabs -->
+    <div class="flex items-baseline justify-between border-b border-stone-300/70 pb-2 mb-5 mt-4">
+      <h2 class="text-[16px] font-bold tracking-tight">메인 탭 · 7 화면</h2>
+      <span class="text-[11px] text-stone-500 stamp">앱 내부 6 탭</span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-14">
+
+      <!-- 01 chat-text -->
+      <a href="01-chat-text.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#FAFAF7">
+          <div class="preview-strip" style="background:#5E8B73"></div>
+          <div class="p-3 space-y-2">
+            <div class="text-[8px] uppercase tracking-[0.16em] text-stone-500">AI 채팅</div>
+            <div class="text-[11px] font-bold text-[#1C2624]">목요일 오후</div>
+            <div class="space-y-1.5 mt-2">
+              <div class="flex justify-end"><div class="bg-[#1C2624] w-[55%] h-[14px] rounded-[8px] rounded-br-sm"></div></div>
+              <div class="flex"><div class="bg-white border border-stone-200 w-[70%] h-[26px] rounded-[8px] rounded-bl-sm"></div></div>
+              <div class="flex justify-end"><div class="bg-[#1C2624] w-[40%] h-[14px] rounded-[8px] rounded-br-sm"></div></div>
+              <div class="flex"><div class="bg-white border border-stone-200 w-[64%] h-[20px] rounded-[8px] rounded-bl-sm"></div></div>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 h-[18px] bg-white border border-stone-200 rounded-full flex items-center justify-end pr-1">
+              <div class="w-3 h-3 rounded-full bg-[#5E8B73]"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">01 · CHAT</div>
+            <div class="text-[14px] font-semibold tracking-tight">AI 채팅 — 텍스트</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-1</div>
+        </div>
+      </a>
+
+      <!-- 02 chat-voice -->
+      <a href="02-chat-voice.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#0F1614">
+          <div class="preview-strip" style="background:#5E8B73"></div>
+          <div class="absolute inset-0 grid place-items-center">
+            <div class="relative">
+              <div class="w-[80px] h-[80px] rounded-full bg-[#5E8B73]/30 absolute inset-0 animate-pulse"></div>
+              <div class="w-[80px] h-[80px] rounded-full bg-[#5E8B73]/60 grid place-items-center relative">
+                <div class="w-3 h-3 bg-white rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          <div class="absolute bottom-3 inset-x-3 flex items-center justify-center gap-[2px]">
+            <div class="w-[2px] h-2 bg-[#5E8B73]/80"></div>
+            <div class="w-[2px] h-3 bg-[#5E8B73]/80"></div>
+            <div class="w-[2px] h-5 bg-[#5E8B73]"></div>
+            <div class="w-[2px] h-3 bg-[#5E8B73]/80"></div>
+            <div class="w-[2px] h-4 bg-[#5E8B73]"></div>
+            <div class="w-[2px] h-2 bg-[#5E8B73]/80"></div>
+            <div class="w-[2px] h-5 bg-[#5E8B73]"></div>
+            <div class="w-[2px] h-3 bg-[#5E8B73]/80"></div>
+            <div class="w-[2px] h-2 bg-[#5E8B73]/60"></div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">02 · VOICE</div>
+            <div class="text-[14px] font-semibold tracking-tight">AI 채팅 — 음성</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-1</div>
+        </div>
+      </a>
+
+      <!-- 03 scratchpad -->
+      <a href="03-scratchpad.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#F5EFE0">
+          <div class="preview-strip" style="background:#B6855E"></div>
+          <div class="p-3 space-y-2">
+            <div class="flex items-baseline justify-between">
+              <div class="text-[8px] uppercase tracking-[0.16em] text-stone-500">임시공간</div>
+              <div class="w-4 h-4 rounded-full bg-[#B6855E] grid place-items-center text-[7px] text-white font-bold">12</div>
+            </div>
+            <div class="text-[11px] font-bold text-[#2A2723]">캡처 보관함</div>
+            <div class="space-y-1.5 mt-2">
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-[#B6855E]"></div><div class="bg-white border border-[#E5D7C0] flex-1 h-3 rounded"></div></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-stone-400"></div><div class="bg-white border border-[#E5D7C0] flex-1 h-3 rounded"></div></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-[#B6855E]"></div><div class="bg-white border border-[#E5D7C0] flex-1 h-3 rounded"></div></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-[#B6855E]"></div><div class="bg-white border border-[#E5D7C0] flex-1 h-3 rounded"></div></div>
+              <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-stone-400"></div><div class="bg-white border border-[#E5D7C0] flex-1 h-3 rounded"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">03 · INBOX</div>
+            <div class="text-[14px] font-semibold tracking-tight">임시공간</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-4</div>
+        </div>
+      </a>
+
+      <!-- 04 personal todo -->
+      <a href="04-todo-personal.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#FBF1EA">
+          <div class="preview-strip" style="background:#B65A3C"></div>
+          <div class="p-3 space-y-2">
+            <div class="text-[8px] uppercase tracking-[0.16em] text-[#B65A3C] font-bold">PERSONAL</div>
+            <div class="text-[11px] font-bold text-[#2A1714]">오늘 할 일</div>
+            <div class="space-y-1.5 mt-2">
+              <div class="bg-white rounded-[10px] border-l-[3px] border-[#B65A3C] pl-2 pr-2 py-1.5 flex items-center gap-1.5"><div class="w-2 h-2 rounded-full border border-[#B65A3C]"></div><div class="bg-stone-200 flex-1 h-1.5 rounded"></div></div>
+              <div class="bg-white rounded-[10px] border-l-[3px] border-[#B65A3C] pl-2 pr-2 py-1.5 flex items-center gap-1.5"><div class="w-2 h-2 rounded-full border border-[#B65A3C]"></div><div class="bg-stone-200 flex-1 h-1.5 rounded"></div></div>
+              <div class="bg-white rounded-[10px] border-l-[3px] border-[#B65A3C] pl-2 pr-2 py-1.5 flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-[#B65A3C]"></div><div class="bg-stone-200 flex-1 h-1.5 rounded opacity-50"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">04 · PERSONAL</div>
+            <div class="text-[14px] font-semibold tracking-tight">개인 — 할 일</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-3</div>
+        </div>
+      </a>
+
+      <!-- 05 work todo -->
+      <a href="05-todo-work.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#EEF2F8">
+          <div class="preview-strip" style="background:#355577"></div>
+          <div class="p-3 space-y-2">
+            <div class="flex items-baseline justify-between">
+              <div class="text-[8px] uppercase tracking-[0.16em] text-[#355577] font-bold mono">WORK</div>
+              <div class="text-[7px] text-stone-500 mono">14:22</div>
+            </div>
+            <div class="text-[11px] font-bold text-[#0E1A2B] mono">SPRINT · W19</div>
+            <div class="space-y-1 mt-2">
+              <div class="bg-white border-l-[3px] border-[#355577] pl-2 pr-2 py-1"><div class="text-[7px] mono text-stone-500">PA-104</div><div class="bg-stone-300 h-1 rounded mt-0.5"></div></div>
+              <div class="bg-white border-l-[3px] border-[#355577] pl-2 pr-2 py-1"><div class="text-[7px] mono text-stone-500">PA-105</div><div class="bg-stone-300 h-1 rounded mt-0.5"></div></div>
+              <div class="bg-white border-l-[3px] border-[#355577] pl-2 pr-2 py-1"><div class="text-[7px] mono text-stone-500">PA-107</div><div class="bg-stone-300 h-1 rounded mt-0.5"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">05 · WORK</div>
+            <div class="text-[14px] font-semibold tracking-tight">회사 — 할 일</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-3</div>
+        </div>
+      </a>
+
+      <!-- 06 routines -->
+      <a href="06-routines.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#F0F2EC">
+          <div class="preview-strip" style="background:#4F6E5C"></div>
+          <div class="p-3 space-y-2">
+            <div class="text-[8px] uppercase tracking-[0.16em] text-stone-500">루틴</div>
+            <div class="text-[11px] font-bold text-[#1C2A22]">아침 루틴 · 60%</div>
+            <div class="bg-white rounded-md h-1.5 overflow-hidden"><div class="h-full bg-[#4F6E5C] w-[60%]"></div></div>
+            <div class="space-y-1 mt-2">
+              <div class="bg-white border border-stone-200 rounded p-1.5 flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-[#4F6E5C]"></div><div class="bg-stone-200 flex-1 h-1.5 rounded"></div></div>
+              <div class="bg-white border border-stone-200 rounded p-1.5 flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-[#4F6E5C]"></div><div class="bg-stone-200 flex-1 h-1.5 rounded"></div></div>
+              <div class="bg-white border border-stone-200 rounded p-1.5 flex items-center gap-1"><div class="w-2 h-2 rounded-full border border-[#4F6E5C]"></div><div class="bg-stone-200 flex-1 h-1.5 rounded opacity-60"></div></div>
+            </div>
+            <!-- mini heatmap -->
+            <div class="grid grid-cols-7 gap-[1px] mt-1">
+              <div class="aspect-square bg-[#4F6E5C]/80 rounded-[1px]"></div>
+              <div class="aspect-square bg-[#4F6E5C]/40 rounded-[1px]"></div>
+              <div class="aspect-square bg-[#4F6E5C]/80 rounded-[1px]"></div>
+              <div class="aspect-square bg-[#4F6E5C] rounded-[1px]"></div>
+              <div class="aspect-square bg-[#4F6E5C]/60 rounded-[1px]"></div>
+              <div class="aspect-square bg-stone-300 rounded-[1px]"></div>
+              <div class="aspect-square bg-[#4F6E5C]/80 rounded-[1px]"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">06 · ROUTINES</div>
+            <div class="text-[14px] font-semibold tracking-tight">루틴</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-2</div>
+        </div>
+      </a>
+
+      <!-- 07 affirmations -->
+      <a href="07-affirmations.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#F4EBDD">
+          <div class="preview-strip" style="background:#8B6F47"></div>
+          <div class="p-3 flex flex-col h-[calc(100%-6px)]">
+            <div class="text-[8px] uppercase tracking-[0.16em] text-stone-500">다짐</div>
+            <div class="flex-1 grid place-items-center px-1 py-2">
+              <div class="bg-white/80 border border-[#E0D2B8] rounded-xl p-3 w-full">
+                <div class="text-[8px] text-[#8B6F47] uppercase tracking-wider mb-1">하루의 다짐</div>
+                <div class="serif text-[11.5px] leading-snug text-[#3A2E1E]">작게 시작해서 매일 1%씩.</div>
+                <div class="flex items-center gap-1 mt-2"><div class="w-1.5 h-1.5 rounded-full bg-[#8B6F47]"></div><div class="w-1.5 h-1.5 rounded-full bg-[#8B6F47]"></div><div class="w-1.5 h-1.5 rounded-full bg-[#8B6F47]"></div></div>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <div class="bg-white/60 border border-[#E0D2B8] rounded h-3"></div>
+              <div class="bg-white/60 border border-[#E0D2B8] rounded h-3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">07 · AFFIRM</div>
+            <div class="text-[14px] font-semibold tracking-tight">다짐</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-5</div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- section: system integration -->
+    <div class="flex items-baseline justify-between border-b border-stone-300/70 pb-2 mb-5">
+      <h2 class="text-[16px] font-bold tracking-tight">시스템 통합 · 3 화면</h2>
+      <span class="text-[11px] text-stone-500 stamp">홈 화면 · 잠금 화면 · 키보드</span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-14">
+
+      <!-- 08 shortcut capture -->
+      <a href="08-shortcut-capture.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:linear-gradient(160deg,#3a4a5c 0%,#1f2730 100%)">
+          <div class="preview-strip" style="background:#5E8B73"></div>
+          <!-- lockscreen time -->
+          <div class="absolute top-3 inset-x-0 text-center">
+            <div class="text-[8px] text-white/70">목요일, 5월 22일</div>
+            <div class="text-[26px] font-extralight text-white leading-none mt-0.5">9:41</div>
+          </div>
+          <!-- shortcut sheet rising -->
+          <div class="absolute bottom-0 inset-x-2 bg-[#0F1614] rounded-t-2xl pt-2 pb-3 px-2.5">
+            <div class="w-7 h-1 bg-white/30 rounded-full mx-auto mb-2"></div>
+            <div class="text-[8px] text-[#5E8B73] uppercase tracking-wider mb-1.5">SHORTCUT · 캡처</div>
+            <!-- waveform -->
+            <div class="flex items-end justify-center gap-[1px] h-5">
+              <div class="w-[2px] h-2 bg-[#5E8B73]/70"></div>
+              <div class="w-[2px] h-3 bg-[#5E8B73]"></div>
+              <div class="w-[2px] h-4 bg-[#5E8B73]"></div>
+              <div class="w-[2px] h-2 bg-[#5E8B73]/70"></div>
+              <div class="w-[2px] h-5 bg-[#5E8B73]"></div>
+              <div class="w-[2px] h-3 bg-[#5E8B73]"></div>
+              <div class="w-[2px] h-4 bg-[#5E8B73]"></div>
+              <div class="w-[2px] h-2 bg-[#5E8B73]/70"></div>
+            </div>
+            <div class="bg-white/10 rounded h-1.5 mt-2"></div>
+            <div class="bg-white/10 rounded h-1.5 mt-1 w-[70%]"></div>
+            <div class="bg-[#F5EFE0] rounded mt-2 h-3.5 grid place-items-center text-[8px] font-semibold text-[#0F1614]">저장 후 종료</div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">08 · SHORTCUT</div>
+            <div class="text-[14px] font-semibold tracking-tight">즉시 캡처</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-6</div>
+        </div>
+      </a>
+
+      <!-- 09 widget -->
+      <a href="09-widget.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:linear-gradient(160deg,#E6A875 0%,#C7886E 50%,#7A4F3F 100%)">
+          <div class="preview-strip" style="background:#8B6F47"></div>
+          <!-- big widget on home -->
+          <div class="absolute inset-3 top-7 bg-[#F5EFE0] rounded-xl p-2 grid grid-cols-2 gap-1.5 grid-rows-2">
+            <div class="border-r border-b border-[#E5D7C0] pr-1 pb-1">
+              <div class="text-[7px] mono text-[#5E8B73] font-bold">15°</div>
+              <div class="text-[6px] text-stone-500">맑음</div>
+            </div>
+            <div class="border-b border-[#E5D7C0] pl-1 pb-1">
+              <div class="text-[7px] mono text-[#355577] font-bold">14:00</div>
+              <div class="text-[6px] text-stone-600">분기 리뷰</div>
+            </div>
+            <div class="border-r border-[#E5D7C0] pr-1 pt-1">
+              <div class="text-[7px] mono text-[#B6855E] font-bold">메일 3</div>
+              <div class="text-[6px] text-stone-600">윤정</div>
+            </div>
+            <div class="pl-1 pt-1">
+              <div class="text-[7px] mono text-[#8B6F47] font-bold">다짐</div>
+              <div class="text-[6px] serif text-stone-700">매일 1%씩</div>
+            </div>
+          </div>
+          <!-- mini app icons row -->
+          <div class="absolute bottom-2 inset-x-3 flex justify-around">
+            <div class="w-3.5 h-3.5 bg-white/30 rounded"></div>
+            <div class="w-3.5 h-3.5 bg-white/30 rounded"></div>
+            <div class="w-3.5 h-3.5 bg-[#5E8B73] rounded"></div>
+            <div class="w-3.5 h-3.5 bg-white/30 rounded"></div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">09 · WIDGET</div>
+            <div class="text-[14px] font-semibold tracking-tight">홈 화면 위젯</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-8</div>
+        </div>
+      </a>
+
+      <!-- 10 keyboard -->
+      <a href="10-keyboard-extension.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#fff">
+          <div class="preview-strip" style="background:#5E8B73"></div>
+          <!-- mail body up top -->
+          <div class="p-2 space-y-1">
+            <div class="text-[7px] text-stone-500">새 메일 · 윤정</div>
+            <div class="bg-[#FFF1B8] rounded h-2"></div>
+            <div class="bg-[#FFF1B8] rounded h-2 w-[70%]"></div>
+          </div>
+          <!-- keyboard takes bottom 60% -->
+          <div class="absolute bottom-0 inset-x-0 h-[58%] bg-[#D8D3C7] flex flex-col">
+            <!-- LLM bar -->
+            <div class="bg-[#FAFAF7] border-b border-[#C9C2B0] p-1.5">
+              <div class="flex items-center gap-1 mb-1">
+                <div class="w-2 h-2 rounded-sm bg-[#5E8B73]"></div>
+                <div class="text-[6px] font-bold text-[#1C2624]">LLM 편집</div>
+              </div>
+              <div class="flex gap-[2px]">
+                <div class="bg-[#1C2624] rounded-full h-2 w-7"></div>
+                <div class="bg-white border border-stone-300 rounded-full h-2 w-7"></div>
+                <div class="bg-white border border-stone-300 rounded-full h-2 w-5"></div>
+                <div class="bg-white border border-stone-300 rounded-full h-2 w-5"></div>
+              </div>
+              <div class="bg-white rounded-full h-2.5 mt-1 border border-stone-300"></div>
+            </div>
+            <!-- key rows -->
+            <div class="flex-1 p-1 space-y-[2px]">
+              <div class="flex gap-[1px] justify-center">
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+              </div>
+              <div class="flex gap-[1px] justify-center">
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+              </div>
+              <div class="flex gap-[1px] justify-center">
+                <div class="bg-[#B7B2A4] w-2.5 h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] w-[7px] h-3 rounded-sm"></div>
+                <div class="bg-[#B7B2A4] w-2.5 h-3 rounded-sm"></div>
+              </div>
+              <div class="flex gap-[1px] justify-center">
+                <div class="bg-[#B7B2A4] w-3 h-3 rounded-sm"></div>
+                <div class="bg-[#B7B2A4] w-2 h-3 rounded-sm"></div>
+                <div class="bg-[#FBFAF6] flex-1 h-3 rounded-sm"></div>
+                <div class="bg-[#B7B2A4] w-3.5 h-3 rounded-sm"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">10 · KEYBOARD</div>
+            <div class="text-[14px] font-semibold tracking-tight">LLM 키보드</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-9</div>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- value coverage table -->
+    <div class="flex items-baseline justify-between border-b border-stone-300/70 pb-2 mb-5">
+      <h2 class="text-[16px] font-bold tracking-tight">가치 커버리지</h2>
+      <span class="text-[11px] text-stone-500 stamp">8 가치 / 9 PRD</span>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-sm">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 text-[13.5px]">
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V1</div><div><div class="font-semibold">핸즈프리 즉시 캡처</div><div class="text-stone-500 text-[12px] mt-0.5">→ Shortcut(08), Voice(02)</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V2</div><div><div class="font-semibold">한·영 혼용 STT 정확도</div><div class="text-stone-500 text-[12px] mt-0.5">→ Voice(02), Shortcut(08), Keyboard(10)</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V3</div><div><div class="font-semibold">영역 분리 작업 관리</div><div class="text-stone-500 text-[12px] mt-0.5">→ Personal(04) ↔ Work(05) 시각·동작 분리</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V4</div><div><div class="font-semibold">의도된 반복 노출</div><div class="text-stone-500 text-[12px] mt-0.5">→ Affirmations(07), Widget(09)</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V5</div><div><div class="font-semibold">자연 대화 작업 처리</div><div class="text-stone-500 text-[12px] mt-0.5">→ AI Chat(01·02)</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V6</div><div><div class="font-semibold">일상 정보 통합 시야</div><div class="text-stone-500 text-[12px] mt-0.5">→ Widget(09) 5영역 동시 표시</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V7</div><div><div class="font-semibold">시스템 전역 글쓰기 보조</div><div class="text-stone-500 text-[12px] mt-0.5">→ Keyboard(10)</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V8</div><div><div class="font-semibold">일상 루틴 구조화</div><div class="text-stone-500 text-[12px] mt-0.5">→ Routines(06)</div></div></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="max-w-[1180px] mx-auto px-8 pb-12 text-[11px] text-stone-500 stamp tracking-wide flex items-center justify-between">
+    <span>POCKETAIDE · MOCKUP v1 · iPhone 15 frame · 393×852</span>
+    <span>각 화면은 독립 HTML 파일</span>
+  </footer>
+</body>
+</html>

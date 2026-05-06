@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>08 · 숏컷 음성 캡처 — PocketAide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html,body{font-family:'Apple SD Gothic Neo','SF Pro Text','-apple-system',BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+  .frame{width:393px;height:852px;border-radius:56px;background:#0a0a0a;box-shadow:0 30px 80px -20px rgba(0,0,0,.4),0 0 0 12px #0a0a0a,0 0 0 13px #2a2a2a;color:#fff;overflow:hidden}
+  .island{width:118px;height:35px;border-radius:20px;background:#000}
+  .home-bar{width:140px;height:5px;border-radius:3px;background:#fff}
+
+  /* lockscreen wallpaper-ish gradient */
+  .wallpaper{
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, rgba(184,138,98,.4), transparent 70%),
+      radial-gradient(ellipse 80% 50% at 30% 100%, rgba(94,90,120,.5), transparent 70%),
+      linear-gradient(180deg,#1A1612 0%,#0E0D0F 100%);
+  }
+
+  .live-wave{display:flex;align-items:flex-end;gap:3px;justify-content:center;height:48px}
+  .live-wave span{display:block;width:3px;border-radius:1.5px;background:#F5EFE0}
+  .live-wave span:nth-child(odd){animation:lw 1.4s ease-in-out infinite}
+  .live-wave span:nth-child(even){animation:lw 1.4s ease-in-out infinite .3s}
+  .live-wave span:nth-child(3n){animation-delay:.1s}
+  .live-wave span:nth-child(5n){animation-delay:.5s}
+  .live-wave span:nth-child(7n){animation-delay:.7s}
+  @keyframes lw { 0%,100%{height:8px} 50%{height:42px} }
+</style>
+</head>
+<body class="bg-stone-200/70 min-h-screen flex flex-col items-center gap-5 py-8">
+
+  <nav class="text-stone-700 text-sm flex items-center gap-2">
+    <a href="index.html" class="underline underline-offset-4 decoration-stone-400 hover:text-stone-900">← 모든 목업</a>
+    <span class="text-stone-400">/</span>
+    <span>08 · 숏컷 음성 캡처</span>
+  </nav>
+
+  <div class="frame relative">
+
+    <!-- background: looks like locked phone wallpaper -->
+    <div class="absolute inset-0 wallpaper"></div>
+
+    <!-- top: lock screen time block (background context, dimmed) -->
+    <div class="absolute top-[60px] inset-x-0 text-center opacity-40 z-0">
+      <div class="text-[14px] tracking-wider text-white/80">5월 6일 수요일</div>
+      <div class="text-[64px] font-light tracking-tight leading-none mt-1 text-white/95" style="font-family:'SF Pro Display',-apple-system">9:41</div>
+    </div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold text-white/95">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- shortcut indicator pill at top -->
+    <div class="absolute top-[60px] right-5 z-20">
+      <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur border border-white/15 px-2.5 py-1 rounded-full text-[10.5px] font-semibold text-white/85">
+        <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+        Shortcut · 사이드 버튼
+      </div>
+    </div>
+
+    <!-- the capture sheet (rises from middle) -->
+    <div class="absolute bottom-0 inset-x-0 z-10">
+      <!-- Siri-like glow at top of sheet -->
+      <div class="h-[80px] -mb-1" style="background:linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)"></div>
+
+      <div class="bg-[#1A1612]/95 backdrop-blur-2xl rounded-t-[40px] border-t border-white/10 pb-12 pt-7 px-7 relative">
+        <!-- handle -->
+        <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5"></div>
+
+        <!-- header -->
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-2xl grid place-items-center" style="background:linear-gradient(135deg,#B6855E,#8B6F47)">
+              <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            </div>
+            <div>
+              <div class="text-[14.5px] font-bold leading-tight">PocketAide</div>
+              <div class="text-[11px] text-[#E8C8A2] font-medium">녹음 중 · 임시공간으로 자동 저장</div>
+            </div>
+          </div>
+          <div class="text-[11px] tabular-nums text-white/70 font-mono">0:14</div>
+        </div>
+
+        <!-- live waveform -->
+        <div class="live-wave mb-5">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <!-- live STT transcription -->
+        <div class="bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 mb-4">
+          <div class="text-[10px] tracking-wider uppercase text-white/40 mb-1.5 font-semibold">실시간 인식</div>
+          <p class="text-[15.5px] leading-snug">윤정한테 다음 주 화요일 미팅 가능한지 메일 보내고, retention 데이터 fact-check 한 번 더 돌리기<span class="text-white/40">…</span></p>
+        </div>
+
+        <!-- guarantee strip -->
+        <div class="flex items-center justify-center gap-2 text-[11px] text-[#9DBFAB] mb-5">
+          <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19l12-12-1.4-1.4z"/></svg>
+          종료 시 분류·확인 묻지 않음
+        </div>
+
+        <!-- controls -->
+        <div class="flex items-center justify-between gap-3">
+          <button class="flex-1 py-3.5 rounded-2xl bg-white/8 border border-white/10 text-white/80 text-[14px] font-semibold backdrop-blur">취소</button>
+          <button class="flex-1 py-3.5 rounded-2xl bg-[#F5EFE0] text-[#2A2723] text-[14px] font-bold active:scale-[0.98] transition flex items-center justify-center gap-2">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            저장 후 종료
+          </button>
+        </div>
+
+        <!-- bottom hint -->
+        <div class="text-center text-[10.5px] text-white/40 mt-3.5 leading-relaxed">
+          침묵 2초 또는 사이드 버튼으로 자동 종료 · 임시공간 탭에서 분류
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-6 · AC1 시스템 진입(사이드 버튼/Siri/잠금화면), AC2 호출 즉시 녹음, AC3 종료 시 되묻기 없음(우측 버튼 한 번이면 끝), AC4 임시공간 자동 저장</p>
+</body>
+</html>

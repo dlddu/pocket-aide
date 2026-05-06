@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>03 · 임시 공간 — PocketAide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --paper:#F5EFE0; --ink:#2A2723; --rule:#E0D8C2; --warm:#B6855E; }
+  html,body{font-family:'Apple SD Gothic Neo','SF Pro Text','-apple-system',BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+  .frame{width:393px;height:852px;border-radius:56px;background:var(--paper);box-shadow:0 30px 80px -20px rgba(28,38,36,.25),0 0 0 12px #0a0a0a,0 0 0 13px #2a2a2a;color:var(--ink)}
+  .island{width:118px;height:35px;border-radius:20px;background:#0a0a0a}
+  .home-bar{width:140px;height:5px;border-radius:3px;background:#0a0a0a}
+  .card{background:#FBF7EC;border:1px solid var(--rule)}
+  .scroll::-webkit-scrollbar{display:none}
+  .stamp{font-family:'SF Mono','Menlo',monospace;letter-spacing:.05em}
+</style>
+</head>
+<body class="bg-stone-200/70 min-h-screen flex flex-col items-center gap-5 py-8">
+
+  <nav class="text-stone-700 text-sm flex items-center gap-2">
+    <a href="index.html" class="underline underline-offset-4 decoration-stone-400 hover:text-stone-900">← 모든 목업</a>
+    <span class="text-stone-400">/</span>
+    <span>03 · 임시 공간</span>
+  </nav>
+
+  <div class="frame relative overflow-hidden">
+
+    <!-- subtle paper texture -->
+    <div class="absolute inset-0 opacity-[0.4] pointer-events-none" style="background-image:repeating-linear-gradient(transparent 0,transparent 27px,rgba(166,140,90,.07) 27px,rgba(166,140,90,.07) 28px)"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-semibold">임시 공간</div>
+            <span class="bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp">12</span>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight mt-0.5" style="font-family:'SF Pro Display',serif">분류되지 않은 메모</h1>
+          <p class="text-[12px] text-stone-500 mt-0.5">캡처 부담 없이 일단 던져두는 곳</p>
+        </div>
+        <button class="px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[12px] font-semibold flex items-center gap-1">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          새 메모
+        </button>
+      </div>
+    </header>
+
+    <!-- list -->
+    <main class="absolute top-[180px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-2.5">
+
+      <!-- group: today -->
+      <div class="flex items-center gap-2 pt-1">
+        <div class="text-[10.5px] tracking-[0.2em] text-stone-500 font-semibold uppercase">오늘</div>
+        <div class="flex-1 h-px bg-[var(--rule)]"></div>
+        <div class="text-[10.5px] text-stone-400 stamp">5 ITEMS</div>
+      </div>
+
+      <!-- voice item -->
+      <div class="card rounded-2xl p-4 relative">
+        <div class="flex items-start justify-between gap-3 mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--warm)]"></span>
+            <span class="text-[10.5px] uppercase tracking-wider font-semibold text-[var(--warm)]">숏컷 · 음성</span>
+          </div>
+          <span class="text-[11px] text-stone-400 stamp">14:08</span>
+        </div>
+        <p class="text-[15px] leading-relaxed">윤정한테 다음 주 화요일 미팅 가능한지 메일 보내고, retention 데이터 fact-check 한 번 더 돌리기</p>
+        <div class="mt-2.5 pt-2.5 border-t border-[var(--rule)] flex items-center justify-between">
+          <span class="text-[11px] text-stone-500 italic">"한·영 혼용 자동 인식"</span>
+          <button class="text-[11px] font-semibold text-[var(--ink)]/70 underline underline-offset-2">분류 →</button>
+        </div>
+      </div>
+
+      <!-- text quick add -->
+      <div class="card rounded-2xl p-4">
+        <div class="flex items-start justify-between gap-3 mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-stone-500"></span>
+            <span class="text-[10.5px] uppercase tracking-wider font-semibold text-stone-600">탭 내 입력</span>
+          </div>
+          <span class="text-[11px] text-stone-400 stamp">11:42</span>
+        </div>
+        <p class="text-[15px] leading-relaxed">엄마 생신 선물 — 책장 정리 도와드리는 거 어때</p>
+      </div>
+
+      <!-- voice item with longer text -->
+      <div class="card rounded-2xl p-4">
+        <div class="flex items-start justify-between gap-3 mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--warm)]"></span>
+            <span class="text-[10.5px] uppercase tracking-wider font-semibold text-[var(--warm)]">숏컷 · 음성</span>
+          </div>
+          <span class="text-[11px] text-stone-400 stamp">09:13</span>
+        </div>
+        <p class="text-[15px] leading-relaxed">아침 산책 7분만 더 길게 — 다음 주부터는 카페 한 정거장 더 가서 블루보틀로</p>
+        <div class="mt-3 flex gap-1.5 flex-wrap">
+          <button class="px-2.5 py-1 rounded-full bg-white/60 border border-[var(--rule)] text-[11px] font-medium">→ 개인</button>
+          <button class="px-2.5 py-1 rounded-full bg-white/60 border border-[var(--rule)] text-[11px] font-medium">→ 루틴</button>
+          <button class="px-2.5 py-1 rounded-full bg-white/60 border border-[var(--rule)] text-[11px] font-medium">→ 다짐</button>
+        </div>
+      </div>
+
+      <!-- group: yesterday -->
+      <div class="flex items-center gap-2 pt-3">
+        <div class="text-[10.5px] tracking-[0.2em] text-stone-500 font-semibold uppercase">어제</div>
+        <div class="flex-1 h-px bg-[var(--rule)]"></div>
+        <div class="text-[10.5px] text-stone-400 stamp">7 ITEMS</div>
+      </div>
+
+      <div class="card rounded-2xl p-4">
+        <div class="flex items-start justify-between gap-3 mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--warm)]"></span>
+            <span class="text-[10.5px] uppercase tracking-wider font-semibold text-[var(--warm)]">숏컷 · 음성</span>
+          </div>
+          <span class="text-[11px] text-stone-400 stamp">22:51</span>
+        </div>
+        <p class="text-[15px] leading-relaxed">"compounding은 매일 1%면 1년에 37배" — 어디서 들었는지 까먹기 전에</p>
+      </div>
+
+      <div class="card rounded-2xl p-4">
+        <div class="flex items-start justify-between gap-3 mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-stone-500"></span>
+            <span class="text-[10.5px] uppercase tracking-wider font-semibold text-stone-600">탭 내 입력</span>
+          </div>
+          <span class="text-[11px] text-stone-400 stamp">19:30</span>
+        </div>
+        <p class="text-[15px] leading-relaxed">이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정</p>
+      </div>
+
+    </main>
+
+    <!-- tab bar -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[#FBF7EC]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>
+        <span class="text-[10px] font-medium">채팅</span>
+      </button>
+      <button class="text-[var(--ink)] flex flex-col items-center gap-0.5 py-1 px-2 relative">
+        <span class="absolute -top-0.5 right-2 w-4 h-4 rounded-full bg-[var(--warm)] text-[9px] text-white grid place-items-center font-bold stamp">12</span>
+        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>
+        <span class="text-[10px] font-semibold">임시공간</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="text-[10px] font-medium">개인</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+        <span class="text-[10px] font-medium">회사</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+        <span class="text-[10px] font-medium">루틴</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+    </div>
+
+    <!-- home indicator -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12)</p>
+</body>
+</html>
