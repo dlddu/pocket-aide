@@ -13,7 +13,14 @@ last_updated: 2026-05-06
 
 ## 현재 미정의 영역
 
-- **사용자 여정**: `docs/user-journeys/` 디렉토리 비어 있음. 모든 mockup의 "여정" 항목은 `(미정의)`로 표시됨.
+- **사용자 여정**: 2개 정의됨 (`journey-message-writer-keyboard-edit`, `journey-self-reminder-affirmations`). 아래 mockup들은 여전히 여정 미매핑 상태:
+  `screen-chat-text`, `screen-chat-voice` (V5),
+  `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work` (V1·V3),
+  `screen-routines` (V8),
+  `screen-shortcut-capture` (V1·V2).
+  `screen-widget`은 V4 측면만 매핑됨 — V6 다른 4영역(캘린더·메일·날씨·알림) 측면은 미매핑.
+
+위 항목이 추가 작성되면 본 인덱스의 해당 필드도 갱신 대상이다.
 
 ## 디자인 시스템 매핑
 
@@ -83,7 +90,7 @@ last_updated: 2026-05-06
 
 ## screen-affirmations.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: journey-self-reminder-affirmations (S1 추가, S2 우선순위, S3 회전 노출, S4 TTS, S6 위젯에서 진입 시 도착 화면)
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC2 (회전 노출), AC3 (우선순위), AC5 (TTS)
 - **사용 디자인 시스템**:
@@ -103,7 +110,7 @@ last_updated: 2026-05-06
 
 ## screen-widget.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: journey-self-reminder-affirmations (S5 위젯 회전 노출, S6 위젯 영역 탭 → 앱 진입) — V4 측면만. V6(통합 시야)를 다루는 여정은 별도 페르소나로 분리 예정, 현재 미작성.
   - 가치: V4 (의도된 반복 노출 — 다짐 회전), V6 (일상 정보 통합 시야)
   - PRD/AC (보조): PRD-8 / AC1 (5영역 통합), AC5 (다짐 회전), AC8 (영역 탭 진입)
 - **사용 디자인 시스템**:
@@ -113,7 +120,7 @@ last_updated: 2026-05-06
 
 ## screen-keyboard-extension.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: journey-message-writer-keyboard-edit (S1~S5 전체 — 호스트 입력 → 키보드 전환 → 명령 → 비동기 → 결과 반영)
   - 가치: V2 (한·영 혼용 STT), V7 (시스템 전역 글쓰기 보조)
   - PRD/AC (보조): PRD-9 / AC2~AC6, AC8 (임의 앱 호출, 편집 명령, Full Access, 비동기)
 - **사용 디자인 시스템**:
