@@ -16,21 +16,21 @@ open docs/mockups/index.html
 
 | # | 파일 | 화면 | PRD | 핵심 AC |
 |---|---|---|---|---|
-| 01 | `01-chat-text.html` | AI 채팅 — 텍스트 | PRD-1 | AC1 텍스트 송수신, AC4 세션 헤더 |
-| 02 | `02-chat-voice.html` | AI 채팅 — 음성 | PRD-1 | AC2 음성 모드, AC3 인터럽트, AC5 한·영 혼용 |
-| 03 | `03-scratchpad.html` | 임시공간 | PRD-4 | AC1 즉시 캡처, AC3 분류 흐름, AC4 미분류 배지 |
-| 04 | `04-todo-personal.html` | 개인 — 할 일 | PRD-3 | AC3 영역별 시각 분리 (terracotta) |
-| 05 | `05-todo-work.html` | 회사 — 할 일 | PRD-3 | AC1 회사 영역, AC4 영역 검색 분리 (slate) |
-| 06 | `06-routines.html` | 루틴 | PRD-2 | AC1~4 단계·진행률·30일 히트맵 |
-| 07 | `07-affirmations.html` | 다짐 | PRD-5 | AC2 회전 노출, AC3 우선순위, AC5 TTS |
+| 01 | `screen-chat-text.html` | AI 채팅 — 텍스트 | PRD-1 | AC1 텍스트 송수신, AC4 세션 헤더 |
+| 02 | `screen-chat-voice.html` | AI 채팅 — 음성 | PRD-1 | AC2 음성 모드, AC3 인터럽트, AC5 한·영 혼용 |
+| 03 | `screen-scratchpad.html` | 임시공간 | PRD-4 | AC1 즉시 캡처, AC3 분류 흐름, AC4 미분류 배지 |
+| 04 | `screen-todo-personal.html` | 개인 — 할 일 | PRD-3 | AC3 영역별 시각 분리 (terracotta) |
+| 05 | `screen-todo-work.html` | 회사 — 할 일 | PRD-3 | AC1 회사 영역, AC4 영역 검색 분리 (slate) |
+| 06 | `screen-routines.html` | 루틴 | PRD-2 | AC1~4 단계·진행률·30일 히트맵 |
+| 07 | `screen-affirmations.html` | 다짐 | PRD-5 | AC2 회전 노출, AC3 우선순위, AC5 TTS |
 
 ### 시스템 통합
 
 | # | 파일 | 화면 | PRD | 핵심 AC |
 |---|---|---|---|---|
-| 08 | `08-shortcut-capture.html` | Shortcut 즉시 캡처 | PRD-6 | AC1 잠금 화면 호출, AC4 분류·확인 묻지 않음 |
-| 09 | `09-widget.html` | 홈 화면 위젯 | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
-| 10 | `10-keyboard-extension.html` | LLM 키보드 확장 | PRD-9 | AC2~6·AC8 임의 앱 호출·편집 명령·Full Access·비동기 |
+| 08 | `screen-shortcut-capture.html` | Shortcut 즉시 캡처 | PRD-6 | AC1 잠금 화면 호출, AC4 분류·확인 묻지 않음 |
+| 09 | `screen-widget.html` | 홈 화면 위젯 | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
+| 10 | `screen-keyboard-extension.html` | LLM 키보드 확장 | PRD-9 | AC2~6·AC8 임의 앱 호출·편집 명령·Full Access·비동기 |
 
 ### 기타
 
