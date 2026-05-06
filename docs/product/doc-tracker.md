@@ -18,20 +18,20 @@
 ## 문서 인벤토리
 
 ### 가치 문서
-- `pocketaide-values.md` — V1 ~ V8 정의
+- `values.md` — V1 ~ V8 정의
 
 ### PRD
 | ID | 파일 | 다루는 기능 |
 |----|------|-------------|
-| PRD-1 | `pocketaide-prd-ai-chat.md` | AI 채팅 탭 (음성 대화) |
-| PRD-2 | `pocketaide-prd-routines.md` | 루틴 관리 탭 |
-| PRD-3 | `pocketaide-prd-todo.md` | 개인 투두 / 회사 투두 탭 |
-| PRD-4 | `pocketaide-prd-scratchpad.md` | 임시 공간 탭 |
-| PRD-5 | `pocketaide-prd-affirmations.md` | 자주 읽어줘야 하는 문장 탭 |
-| PRD-6 | `pocketaide-prd-shortcut-voice.md` | 아이폰 숏컷 음성 모드 |
-| PRD-7 | `pocketaide-prd-stt-engine.md` | 음성 인식 엔진 |
-| PRD-8 | `pocketaide-prd-widget.md` | 통합 위젯 |
-| PRD-9 | `pocketaide-prd-keyboard-extension.md` | LLM 키보드 확장 |
+| PRD-1 | `prd-ai-chat.md` | AI 채팅 탭 (음성 대화) |
+| PRD-2 | `prd-routines.md` | 루틴 관리 탭 |
+| PRD-3 | `prd-todo.md` | 개인 투두 / 회사 투두 탭 |
+| PRD-4 | `prd-scratchpad.md` | 임시 공간 탭 |
+| PRD-5 | `prd-affirmations.md` | 자주 읽어줘야 하는 문장 탭 |
+| PRD-6 | `prd-shortcut-voice.md` | 아이폰 숏컷 음성 모드 |
+| PRD-7 | `prd-stt-engine.md` | 음성 인식 엔진 |
+| PRD-8 | `prd-widget.md` | 통합 위젯 |
+| PRD-9 | `prd-keyboard-extension.md` | LLM 키보드 확장 |
 
 ### 테스트 문서
 (없음)
