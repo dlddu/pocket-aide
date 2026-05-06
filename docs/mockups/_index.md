@@ -13,7 +13,7 @@ last_updated: 2026-05-06
 
 ## 현재 미정의 영역
 
-- **사용자 여정**: `docs/user-journeys/` 디렉토리 비어 있음. 모든 mockup의 "여정" 항목은 `(미정의)`로 표시됨.
+- **사용자 여정**: 부분 정의됨. `docs/user-journeys/`에 2개 여정(`journey-writer-keyboard-edit.md`, `journey-reminder-widget-glance.md`) 작성됨. 다음 mockup의 "여정"은 여전히 `(미정의)`: screen-chat-text, screen-chat-voice, screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-shortcut-capture (총 7개).
 - **디자인 시스템**: `docs/design-system/` 디렉토리 비어 있음. `mockups/_template.md`에 영역별 색상 팔레트만 약식 존재. mockup별 "사용 토큰"은 `_template.md`의 영역 라벨로 임시 표기.
 
 위 두 항목이 정식 작성되면 본 인덱스의 해당 필드도 갱신 대상이다.
@@ -82,7 +82,7 @@ last_updated: 2026-05-06
 
 ## screen-affirmations.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: journey-reminder-widget-glance.md (S1 등록·우선순위, S4 탭 진입, S5 TTS 재생)
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC2 (회전 노출), AC3 (우선순위), AC5 (TTS)
 - **사용 디자인 시스템**:
@@ -102,7 +102,7 @@ last_updated: 2026-05-06
 
 ## screen-widget.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: journey-reminder-widget-glance.md (S2 통합 시야, S3 다짐 회전 갱신)
   - 가치: V4 (의도된 반복 노출 — 다짐 회전), V6 (일상 정보 통합 시야)
   - PRD/AC (보조): PRD-8 / AC1 (5영역 통합), AC5 (다짐 회전), AC8 (영역 탭 진입)
 - **사용 디자인 시스템**:
@@ -112,7 +112,7 @@ last_updated: 2026-05-06
 
 ## screen-keyboard-extension.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: journey-writer-keyboard-edit.md (S1 키보드 전환, S2 명령/자유 지시, S3 비동기 처리, S4 결과 반영)
   - 가치: V2 (한·영 혼용 STT), V7 (시스템 전역 글쓰기 보조)
   - PRD/AC (보조): PRD-9 / AC2~AC6, AC8 (임의 앱 호출, 편집 명령, Full Access, 비동기)
 - **사용 디자인 시스템**:
