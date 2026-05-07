@@ -114,12 +114,12 @@ last_updated: 2026-05-06
 ## screen-keyboard-extension.html
 - **시각화 대상**:
   - 여정: (미정의)
-  - 가치: V2 (한·영 혼용 STT), V7 (시스템 전역 글쓰기 보조)
-  - PRD/AC (보조): PRD-9 / AC2~AC6, AC8 (임의 앱 호출, 편집 명령, Full Access, 비동기)
+  - 가치: V2 (한·영 혼용 STT — 키보드 전용 인식기), V5 (자연어 대화 기반 작업 처리), V7 (시스템 전역 글쓰기 보조)
+  - PRD/AC (보조): PRD-9 / AC2~AC6, AC9, AC10, AC12 (임의 앱 호출, 호스트 컨텍스트, 전면 대화 UI, 음성 받아쓰기, 자연어 미시 편집, 미리보기·적용·거절·이어서, 적용 모드, Full Access) + PRD-7 / AC6 (키보드 전용 인식기)
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 키보드` (patterns.md §6.3)
-  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `KeyboardKey`, 미니 입력 UI — iOS 키보드 확장 컨벤션 차용
-  - 토큰: 시스템 통합 (tokens.md §1.8) — 키보드 보조 토큰 `--kbd #D8D3C7`, `--key #FBFAF6`. 액션 키만 sage(`--sage #5E8B73`) 강조.
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ChatBubble.me`, `ChatBubble.ai`(압축 변형, `Avatar`(소형 PA), `PillButton.solid`(적용), `PillButton.outline`(거절), `IconCircleButton.accent-ring`(음성 진입 — 컴포저 안 작은 변형 27px), `Composer`(키보드 확장 변형 — 입력+음성+전송), `Disclaimer`. **자판이 가려진 상태이므로 `KeyboardKey`는 본 화면에서 미사용.**
+  - 토큰: 시스템 통합 (tokens.md §1.8) + AI 채팅 영역 차용 (tokens.md §1.3, 대화 UI 성격) — `--paper #FAFAF7`, `--ink #1C2624`, `--sage #5E8B73`, 컨텍스트 카드 보조 `--ctx-bg #F4F1E8`(paper의 톤다운 변형), 디스클레이머 띠 `--kbd #D8D3C7` 40% 알파.
 
 ---
 
@@ -131,7 +131,7 @@ last_updated: 2026-05-06
 | V2 한·영 혼용 STT | screen-chat-voice, screen-shortcut-capture, screen-keyboard-extension |
 | V3 영역 분리 작업 관리 | screen-scratchpad, screen-todo-personal, screen-todo-work |
 | V4 의도된 반복 노출 | screen-affirmations, screen-widget |
-| V5 자연어 대화 작업 처리 | screen-chat-text, screen-chat-voice |
+| V5 자연어 대화 작업 처리 | screen-chat-text, screen-chat-voice, screen-keyboard-extension |
 | V6 일상 정보 통합 시야 | screen-widget |
 | V7 시스템 전역 글쓰기 보조 | screen-keyboard-extension |
 | V8 일상 루틴 구조화 | screen-routines |
@@ -148,7 +148,7 @@ last_updated: 2026-05-06
 | PRD-4 Scratchpad | screen-scratchpad | |
 | PRD-5 다짐 | screen-affirmations | |
 | PRD-6 Shortcut Voice | screen-shortcut-capture | |
-| PRD-7 STT 엔진 | (없음 — 백엔드 컴포넌트, 02·08·10에 결과로 노출) | 의도적 |
+| PRD-7 STT 엔진 | screen-keyboard-extension (AC6 키보드 전용 인식기 진입점만) | 메인 앱 진입점들은 백엔드 컴포넌트로 02·08·10에 결과로 노출 |
 | PRD-8 위젯 | screen-widget | |
 | PRD-9 키보드 확장 | screen-keyboard-extension | |
 
