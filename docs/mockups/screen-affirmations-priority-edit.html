@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>11 · 다짐 우선순위 편집 — PocketAide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --bg:#F4EBDD; --ink:#2E251A; --tan:#8B6F47; --rule:#E5D7C0; --soft:#EADCC2; }
+  html,body{font-family:'Apple SD Gothic Neo','SF Pro Text','-apple-system',BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+  .frame{width:393px;height:852px;border-radius:56px;background:var(--bg);box-shadow:0 30px 80px -20px rgba(28,38,36,.25),0 0 0 12px #0a0a0a,0 0 0 13px #2a2a2a;color:var(--ink)}
+  .island{width:118px;height:35px;border-radius:20px;background:#0a0a0a}
+  .home-bar{width:140px;height:5px;border-radius:3px;background:#0a0a0a}
+  .scroll::-webkit-scrollbar{display:none}
+  .serif{font-family:'Iowan Old Style','Apple Garamond','Apple SD Gothic Neo',ui-serif,Georgia,serif}
+</style>
+</head>
+<body class="bg-stone-200/70 min-h-screen flex flex-col items-center gap-5 py-8">
+
+  <nav class="text-stone-700 text-sm flex items-center gap-2">
+    <a href="index.html" class="underline underline-offset-4 decoration-stone-400 hover:text-stone-900">← 모든 목업</a>
+    <span class="text-stone-400">/</span>
+    <span>11 · 다짐 우선순위 편집</span>
+  </nav>
+
+  <div class="frame relative overflow-hidden">
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header (배경 화면 — backdrop 아래에 깔림) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-10 flex items-end justify-between">
+      <div>
+        <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-semibold">다짐</div>
+        <h1 class="text-[24px] font-bold tracking-tight serif mt-0.5">자주 읽어줘야 할 것</h1>
+      </div>
+      <button class="w-9 h-9 rounded-full border border-[var(--rule)] grid place-items-center bg-white/40">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </header>
+
+    <!-- 배경 main: 새로 추가된 다짐 카드가 가장 위에 강조된 상태 -->
+    <main class="absolute top-[120px] bottom-[88px] inset-x-0 overflow-hidden px-5 pt-2 pb-6 z-10">
+
+      <!-- 새로 추가된 다짐 카드 (강조 — ring + pulse) -->
+      <div class="bg-white rounded-2xl border-2 border-[var(--tan)] p-3.5 ring-4 ring-[var(--tan)]/15">
+        <div class="flex items-start gap-3">
+          <!-- priority dots: pending (모두 흐림 — 아직 우선순위 미설정) -->
+          <div class="flex flex-col gap-0.5 mt-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]/30"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]/30"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]/30"></span>
+          </div>
+          <p class="serif text-[15.5px] flex-1 leading-snug">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p>
+        </div>
+        <div class="mt-2 pt-2 border-t border-dashed border-[var(--rule)] flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)] animate-pulse"></span>
+          <span class="text-[10.5px] text-[var(--tan)] font-bold uppercase tracking-[0.18em]">방금 추가됨 · 우선순위 설정 중</span>
+        </div>
+      </div>
+
+      <!-- 아래에 살짝 보이는 기존 카드 (시트로 가려짐) -->
+      <div class="mt-2 bg-white rounded-2xl border border-[var(--rule)] p-3.5 opacity-80">
+        <div class="flex items-start gap-3">
+          <div class="flex flex-col gap-0.5 mt-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+          </div>
+          <p class="serif text-[15.5px] flex-1 leading-snug">완벽보다 완료. 일단 보내고 나중에 다듬자.</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- tab bar (배경 — backdrop 아래) -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-10">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg><span class="text-[10px] font-medium">채팅</span></button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg><span class="text-[10px] font-medium">임시공간</span></button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="text-[10px] font-medium">개인</span></button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg><span class="text-[10px] font-medium">회사</span></button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg><span class="text-[10px] font-medium">루틴</span></button>
+      <button class="text-[var(--tan)] flex flex-col items-center gap-0.5 py-1 px-2"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg><span class="text-[10px] font-bold">다짐</span></button>
+    </div>
+
+    <!-- Backdrop (Sheet 컴포넌트의 하위 구성 — Backdrop) -->
+    <!-- z-25: header(z-10)·main(z-10)·tab(z-10) 위, status bar(z-30) 아래 -->
+    <div class="absolute inset-0 bg-[#2E251A]/45 z-20"></div>
+
+    <!-- Sheet (다짐 영역 변형) -->
+    <div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40" style="border-radius:24px 24px 0 0;box-shadow:0 -8px 24px -4px rgba(28,38,36,.18)">
+      <!-- Handle -->
+      <div class="pt-2.5 pb-1.5 flex justify-center">
+        <div style="width:36px;height:4px;border-radius:9999px;background:var(--rule)"></div>
+      </div>
+
+      <!-- SheetHeader -->
+      <div class="px-6 pt-2 pb-3">
+        <h2 class="text-[18px] font-bold tracking-tight">우선순위 설정</h2>
+      </div>
+
+      <!-- SheetContent -->
+      <div class="px-6 pb-3">
+        <!-- 새 다짐 문장 미리보기 (정서 본문 — serif 변형 허용) -->
+        <div class="bg-white rounded-2xl border border-[var(--rule)] p-4 relative overflow-hidden">
+          <div class="absolute -top-2 -left-1 text-[64px] leading-none text-[var(--tan)]/10 serif select-none">"</div>
+          <p class="serif text-[16.5px] leading-[1.5] text-[var(--ink)] relative">
+            결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.
+          </p>
+        </div>
+
+        <!-- FilterPills 단일 선택형 3-tier (시스템 UI 텍스트 — sans) -->
+        <div class="mt-5">
+          <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-semibold mb-2">노출 빈도</div>
+          <div class="grid grid-cols-3 gap-2">
+            <!-- 비활성 옵션: 보더만 -->
+            <button class="py-3 rounded-full border border-[var(--rule)] text-[14px] text-stone-600 active:scale-95 transition flex flex-col items-center gap-1">
+              <span class="flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+              </span>
+              <span class="font-medium">높음</span>
+            </button>
+            <!-- 활성 옵션: pill (soft 배경 + ink 글자) -->
+            <button class="py-3 rounded-full bg-[var(--soft)] text-[14px] text-[var(--ink)] flex flex-col items-center gap-1 ring-1 ring-[var(--tan)]/40">
+              <span class="flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]/30"></span>
+              </span>
+              <span class="font-bold">보통</span>
+            </button>
+            <button class="py-3 rounded-full border border-[var(--rule)] text-[14px] text-stone-600 active:scale-95 transition flex flex-col items-center gap-1">
+              <span class="flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]/30"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[var(--tan)]/30"></span>
+              </span>
+              <span class="font-medium">가끔</span>
+            </button>
+          </div>
+          <p class="mt-3 text-[11.5px] text-stone-500 leading-relaxed">
+            위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- SheetActions -->
+      <div class="px-6 pt-2 pb-7 border-t border-[var(--rule)]/60">
+        <button class="w-full py-3.5 rounded-full bg-[var(--ink)] text-[var(--bg)] text-[15px] font-bold active:scale-[0.98] transition">
+          저장
+        </button>
+        <button class="w-full mt-1 py-2.5 text-[13px] text-stone-500 active:text-stone-700 transition">
+          취소
+        </button>
+      </div>
+    </div>
+
+    <!-- home bar (시트 위에 떠 있음) -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-50">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-5 · AC2 우선순위 — 추가 직후 시트 자동 노출 (편집 시트 패턴), 3-tier 단일 선택으로 노출 빈도 결정. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + §4 FilterPills 단일 선택형, patterns §9 편집 시트 패턴.</p>
+</body>
+</html>

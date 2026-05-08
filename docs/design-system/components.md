@@ -87,6 +87,7 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
 - 단일 활성/다중 선택 둘 다 지원
 - 활성 칩: `pill` 클래스(`bg-[var(--soft)]` + `text-[var(--ink)]`) — 영역의 soft 토큰
 - 비활성 칩: 보더만 (`border-[var(--rule)]`)
+- 의미 확장: 필터 외 **단일 선택형 옵션** (예: 다짐 우선순위 3-tier "높음/보통/낮음")에도 사용. 단일 활성 모드 + 비-스크롤 변형 (시트 안 등 좁은 폭)으로 등장.
 
 ### `Chip`
 채팅 메시지 안의 인라인 액션 버튼 ("회사 투두로", "복사" 등).
@@ -185,7 +186,36 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 
 ---
 
-## 9. 상태와 변형 매트릭스 (간단)
+## 9. 오버레이 (Overlay)
+
+기존 화면 위에 일시적으로 떠올라 사용자의 결정(편집·확인)을 받고 닫히는 컴포넌트. 영역 토큰 일관성과 위계 분리(원본 화면 dim + 시트 본체)가 핵심.
+
+### `Sheet`
+화면 하단에서 올라와 모달성 결정을 요구하는 시트.
+- 구조: `Backdrop` (영역 ink에 alpha 적용한 dim) + `Handle` (상단 핸들 인디케이터) + `SheetHeader` (제목) + `SheetContent` (컨텐츠 영역) + `SheetActions` (1차/2차 액션 위계)
+- 형태: `position: fixed; bottom: 0; left: 0; right: 0`, 시트 본체는 `border-radius: 24px 24px 0 0`, 영역 표면색 배경
+- 변형:
+  - **다짐 영역용** (현재 정의): backdrop은 다짐 ink `#2E251A`에 alpha 적용 (예: `bg-[#2E251A]/40`), 시트 본체 배경 `var(--paper)` (= `#F4EBDD`), 핸들 색 `var(--rule)` (= `#E5D7C0`)
+- 인터랙션:
+  - 외부(backdrop) 탭 → 닫기 (취소와 동일)
+  - 핸들 드래그 다운 → 닫기
+  - 명시적 1차 액션(예: "저장") + 2차 액션(예: "취소") 분리
+- 사용 토큰: 영역 표면색·rule·ink, 1차/2차 액션은 §3 헤더와 액션의 버튼 정의 재사용
+- 영역 텍스트 규칙: 시트 내부의 정서 본문(예: 다짐 문장 미리보기)은 영역 §3.1 규칙에 따라 serif 변형 허용. 시트의 시스템 UI 텍스트(헤더 제목, 옵션 라벨, 버튼)는 sans 일관.
+
+### `Backdrop`
+오버레이 컴포넌트의 배경 dim 레이어. 단독으로는 사용하지 않으며 `Sheet` 등 오버레이 컴포넌트의 하위 구성으로만 등장.
+- 형태: `position: fixed; inset: 0`, 배경은 영역 ink 색상에 alpha 적용
+- 인터랙션: 탭 시 부모 오버레이의 닫기 액션 트리거
+
+### `Handle`
+시트 상단의 드래그 핸들 인디케이터.
+- 형태: `width: 36px; height: 4px; border-radius: 9999px`, 색은 영역 `--rule`
+- 시각 신호: "드래그하여 닫을 수 있다"는 가시 단서
+
+---
+
+## 10. 상태와 변형 매트릭스 (간단)
 
 | 컴포넌트 | 영역별 변형 가능 여부 | 사용 토큰 |
 |----------|---------------------|----------|
@@ -199,10 +229,11 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 | `TabBar` | 6종 + 다크 변형 | 영역 표면색 |
 | `IPhoneFrame` | 변형 없음 | 고정 |
 | `KeyboardKey` | 시스템 통합 전용 | `--kbd`, `--key` |
+| `Sheet` | 다짐 영역용 1종 (확장 여지) | 영역 표면색·rule·ink (alpha) |
 
 ---
 
-## 10. 컴포넌트 추가 규칙
+## 11. 컴포넌트 추가 규칙
 
 새 컴포넌트가 필요하다고 느낄 때:
 
@@ -213,7 +244,7 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 
 ---
 
-## 11. 현재 mockup별 사용 컴포넌트 매핑 가이드
+## 12. 현재 mockup별 사용 컴포넌트 매핑 가이드
 
 각 mockup이 사용하는 컴포넌트 식별자는 `mockups/_index.md`의 "사용 디자인 시스템 → 컴포넌트" 항목에서 관리한다. 본 문서는 정의만 담고, 매핑은 인덱스가 단일 진실 원천이다.
 
@@ -222,3 +253,4 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 - `screen-chat-text`: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader.with-icon-button-fab`, `ChatBubble.me`, `ChatBubble.ai`, `ChatBubble.typing`, `Avatar`, `Chip`, `Composer`, `IconCircleButton.accent-ring`, `TabBar`, `TabBarItem` (active/idle), `Disclaimer`
 - `screen-todo-personal`: `IPhoneFrame`, `StatusBar`, `AreaStrip`, `AreaLabel`, `ScreenHeader.with-icon-button-fab`, `FilterPills`, `SectionHeader`, `Card.task-card`, `Card.dimmed`, `CheckCircle` (unchecked/done), `TabBar`, `TabBarItem`
 - `screen-routines`: `IPhoneFrame`, `StatusBar`, `ScreenHeader.with-pill-button`, `AreaLabel`, `Card.routine-card`, `ProgressBar`, `CheckCircle`, `HeatmapDay`, `TabBar`
+- `screen-affirmations-priority-edit`: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `Sheet` (다짐 영역 변형), `Backdrop`, `Handle`, `FilterPills` (단일 선택형 3-tier), 1차 액션 버튼, 2차 텍스트 액션
