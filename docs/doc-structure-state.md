@@ -10,14 +10,14 @@
 
 - **정의된 가치 (참조)**: 8개 (V1 ~ V8) — `docs/product/values.md`
 - **사용자 여정**: **1개** (V4 달성: `journey-affirmation-seeker-daily-exposure.md`) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
-- **Mockup**: 10개 (모두 `_index.md`에 매핑됨)
-  - 가치 매핑됨: 10 / 10 ✅
-  - 여정 매핑됨: **2 / 10** (이전 0/10): `screen-affirmations`, `screen-widget`(V4 측면만)
-  - 디자인 시스템 매핑됨: 10 / 10 ✅
+- **Mockup**: 11개 (모두 `_index.md`에 매핑됨)
+  - 가치 매핑됨: 11 / 11 ✅
+  - 여정 매핑됨: **3 / 11** (이전 2/10): `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만)
+  - 디자인 시스템 매핑됨: 11 / 11 ✅
 - **디자인 시스템**:
   - 토큰 파일 (`design-system/tokens.md`): 작성됨 ✅
-  - 컴포넌트 파일 (`design-system/components.md`): 작성됨 ✅ (22개)
-  - 패턴 파일 (`design-system/patterns.md`): 작성됨 ✅ (8개)
+  - 컴포넌트 파일 (`design-system/components.md`): 작성됨 ✅ (23개)
+  - 패턴 파일 (`design-system/patterns.md`): 작성됨 ✅ (9개)
   - README: 정식 안내
 - **건강 상태**: 🟡 **사용자 여정 부분 작성 (1/예상 5+). 디자인 시스템과 mockup 측은 건강.**
 
@@ -46,14 +46,15 @@ docs/
 ├── design-system/                  ✅ 정식 작성됨 (이번 갱신)
 │   ├── README.md                   (정식 안내)
 │   ├── tokens.md                   (영역별 색상 + 타이포 + 스페이싱)
-│   ├── components.md               (22개 컴포넌트)
-│   └── patterns.md                 (8개 화면/조합 패턴)
+│   ├── components.md               (23개 컴포넌트)
+│   └── patterns.md                 (9개 화면/조합 패턴)
 └── mockups/                        ✅ _index.md 매핑 완료
     ├── _index.md                   ← SSOT (디자인 시스템 매핑까지 포함)
     ├── _template.md                (영역 색상 약식 — 향후 tokens.md로 단일화 가능)
     ├── README.md
     ├── index.html
     ├── screen-affirmations.html
+    ├── screen-affirmations-priority-edit.html
     ├── screen-chat-text.html
     ├── screen-chat-voice.html
     ├── screen-keyboard-extension.html
@@ -76,7 +77,7 @@ docs/
 | V1 | (미정의) | - | screen-chat-voice, screen-scratchpad, screen-shortcut-capture | 🟡 여정 부재 |
 | V2 | (미정의) | - | screen-chat-voice, screen-shortcut-capture, screen-keyboard-extension | 🟡 여정 부재 |
 | V3 | (미정의) | - | screen-scratchpad, screen-todo-personal, screen-todo-work | 🟡 여정 부재 |
-| V4 | `affirmation-seeker:daily-exposure` | S1~S5 | screen-affirmations (S1, S2, S3, S5), screen-widget (S4, S5) | ✅ 매핑 완료 |
+| V4 | `affirmation-seeker:daily-exposure` | S1~S5 | screen-affirmations (S1, S3, S5), screen-affirmations-priority-edit (S2), screen-widget (S4, S5) | ✅ 매핑 완료 |
 | V5 | (미정의) | - | screen-chat-text, screen-chat-voice | 🟡 여정 부재 |
 | V6 | (미정의) | - | screen-widget | 🟡 여정 부재 (위젯의 V4 측면만 매핑됨) |
 | V7 | (미정의) | - | screen-keyboard-extension | 🟡 여정 부재 |
@@ -93,6 +94,7 @@ docs/
 | screen-todo-work | 영역 화면 + 리스트 섹션 (§1+§3) | 회사 | ✅ |
 | screen-routines | 영역 화면 + 카드 진행률 (§1+§5) | 루틴 | ✅ |
 | screen-affirmations | 영역 화면 + 다짐 회전 (§1+§7) | 다짐 | ✅ |
+| screen-affirmations-priority-edit | 영역 화면(다짐) + 편집 시트 (§1+§9) | 다짐 | ✅ |
 | screen-shortcut-capture | 시스템 통합 잠금화면 (§6.1) | 시스템 통합 | ✅ |
 | screen-widget | 시스템 통합 위젯 (§6.2) | 시스템 통합 + 영역 강조색 차용 | ✅ |
 | screen-keyboard-extension | 시스템 통합 키보드 (§6.3) | 시스템 통합 + sage 액센트 | ✅ |
@@ -105,13 +107,14 @@ docs/
 
 ### 🟡 사용자 여정 부분 작성 (이전 🔴 → 부분 해소)
 - `journey-affirmation-seeker-daily-exposure.md` 1개 작성됨 (V4 달성).
-- `screen-affirmations`(S1, S2, S3, S5)와 `screen-widget`(S4, S5, V4 측면) 여정 매핑 완료.
+- `screen-affirmations`(S1, S3, S5), `screen-affirmations-priority-edit`(S2), `screen-widget`(S4, S5, V4 측면) 여정 매핑 완료.
 - 나머지 mockup 8개의 `_index.md` "여정" 항목은 여전히 `(미정의)`. V1, V2, V3, V5, V6, V7, V8을 다루는 여정 미작성.
 - **다음 우선순위**: 운전(V1·V2)/회사미팅(V1·V3)/메시지(V7)/루틴(V8)/위젯-V6 페르소나 정의.
 
-### 🟡 V4 여정 내 "우선순위 인디케이터" 시각화 확인 필요
-- `journey-affirmation-seeker-daily-exposure.md`의 S2(우선순위 설정) 단계가 `screen-affirmations.html`에 명확히 시각화돼 있는지 미검증.
-- 시각화가 빈약하면 mockup 보완 또는 단계 통합 후보.
+### ✅ V4 여정 S2 시각화 — **해소 (이번 갱신)**
+- `journey-affirmation-seeker-daily-exposure.md`의 S2(우선순위 설정) 단계가 새 mockup `screen-affirmations-priority-edit.html`로 시각화됨.
+- 추가 직후 시트 자동 노출 + 3-tier 단일 선택형 옵션(높음/보통/낮음) UI로 PRD-5 AC2를 직접 시각화.
+- `screen-affirmations.html`의 우선순위 표시(점 인디케이터, "우선순위 높음" 라벨, "우선순위 순" 정렬)는 결과 시각화로 유지, S2(편집 액션) 매핑은 priority-edit로 이전.
 
 ### ✅ 디자인 시스템 부재 → **해소 (이번 갱신)**
 - `design-system/tokens.md`, `components.md`, `patterns.md` 작성 완료.
@@ -142,9 +145,9 @@ docs/
 | 순위 | 위험 | 권장 작업 |
 |-----|------|----------|
 | 1 | 나머지 페르소나 여정 부재 (V1·V2·V3·V5·V6·V7·V8) | 운전/회사미팅/메시지/루틴/위젯-V6 페르소나로 `journey-*.md` 추가. 매번 `mockups/_index.md` 여정 매핑 동기화. |
-| 2 | V4 여정 S2 시각화 검증 | `screen-affirmations.html`의 우선순위 인디케이터 존재 여부 점검 → 없으면 mockup 보완 또는 단계 통합. |
-| 3 (선택) | `_template.md` 정리 | `tokens.md`로 정식화됐으므로 `_template.md`를 단순 redirect 노트로 축소하거나 제거. |
-| 4 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 정확히 일치하는지 자동 비교 스크립트. |
+| 2 (선택) | `_template.md` 정리 | `tokens.md`로 정식화됐으므로 `_template.md`를 단순 redirect 노트로 축소하거나 제거. |
+| 3 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 정확히 일치하는지 자동 비교 스크립트. |
+| 4 (미래) | 다른 mockup의 인라인 시트류 표현과 design-system §9 오버레이 정의 일관성 검증 | 5개 mockup(scratchpad, chat-text, chat-voice, routines, keyboard-extension)의 backdrop/dim 인라인 표현이 `Sheet`/`Backdrop` 정의와 정합한지 점검. 정합하지 않으면 인라인 표현을 정의에 맞춰 정리. |
 
 ---
 
@@ -159,3 +162,4 @@ docs/
 | 2026-05-06 | **디자인 시스템 작성**: `tokens.md`(영역 6종 + 다크 + 시스템 통합), `components.md`(22개), `patterns.md`(8개), README 정식 갱신 | 🟡 디렉토리만 → 🟢 정식 시스템. mockup 10개 모두 시스템 식별자로 매핑됨. |
 | 2026-05-07 | **PRD-9 재작성에 따른 mockup·인덱스 동기화**: `screen-keyboard-extension.html`을 명령 칩 UI → 전면 대화 UI 버전으로 재제작. `_index.md`의 키보드 항목을 가치(V2/V5/V7), PRD/AC 매핑(PRD-9 AC2~6, AC9, AC10, AC12 + PRD-7 AC6), 컴포넌트 목록(ChatBubble·PillButton·Composer 변형 차용, KeyboardKey 미사용) 갱신. PRD-7 row를 "키보드 mockup이 AC6을 시각화"로 갱신. V5 커버리지 mockup에 keyboard-extension 추가. | 🟢 → 🟢 (정합성 유지) |
 | 2026-05-07 | **첫 사용자 여정 추가**: `journey-affirmation-seeker-daily-exposure.md`(V4 단일 가치, S1~S5) 작성. `mockups/_index.md`의 `screen-affirmations`(S1·S2·S3·S5)와 `screen-widget`(S4·S5, V4 측면) 여정 매핑 채움. V6 측면은 미정의로 남김. user-journeys/README.md 진행 상황 갱신. | 🔴 여정 0개 → 🟡 여정 1/예상5+. mockup 여정 매핑 0/10 → 2/10 |
+| 2026-05-09 | **V4 여정 S2 편집 액션 시각화 mockup 추가**: 새 mockup `screen-affirmations-priority-edit.html` 신설 (추가 직후 시트 자동 노출, 3-tier 단일 선택). design-system 보완: `components.md` §9 "오버레이" 신설 (`Sheet` + 하위 `Backdrop`/`Handle`), §10 매트릭스에 Sheet 행, §4 `FilterPills` 의미 확장(단일 선택형 옵션); `patterns.md` §9 "편집 시트 패턴" 신설. `_index.md` 새 엔트리 + screen-affirmations의 AC2/AC3 라벨 정정 (PRD-5와 일치). `mockups/index.html` 11번 카드 추가. | 🟡 V4 S2 시각화 검증 위험 → ✅ 해소. mockup 10→11, 컴포넌트 22→23, 패턴 8→9, 여정 매핑 2/10→3/11. |

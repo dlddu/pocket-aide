@@ -83,13 +83,23 @@ last_updated: 2026-05-07
 
 ## screen-affirmations.html
 - **시각화 대상**:
-  - 여정: `affirmation-seeker:daily-exposure` (S1, S2, S3, S5)
+  - 여정: `affirmation-seeker:daily-exposure` (S1, S3, S5)
   - 가치: V4 (의도된 반복 노출)
-  - PRD/AC (보조): PRD-5 / AC2 (회전 노출), AC3 (우선순위), AC5 (TTS)
+  - PRD/AC (보조): PRD-5 / AC2 (우선순위), AC3 (회전 노출), AC5 (TTS)
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `다짐 회전 노출` (patterns.md §7)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader`, `AreaLabel`, `Card` (큰, 다짐 카드), `TabBar` (active=다짐)
   - 토큰: 영역=다짐 (tokens.md §1.6) — `--bg #F4EBDD`, `--ink #2E251A`, `--tan #8B6F47`, `--rule #E5D7C0`, `--soft #EADCC2` (serif 변형 폰트 허용 — tokens.md §3.1)
+
+## screen-affirmations-priority-edit.html
+- **시각화 대상**:
+  - 여정: `affirmation-seeker:daily-exposure` (S2 — 추가한 다짐의 노출 우선순위 설정)
+  - 가치: V4 (의도된 반복 노출)
+  - PRD/AC (보조): PRD-5 / AC2 (우선순위)
+- **사용 디자인 시스템**:
+  - 패턴: `영역 화면` (patterns.md §1, 다짐) + `편집 시트` (patterns.md §9)
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `Sheet` (다짐 영역 변형, components.md §9), `Backdrop`, `Handle`, `FilterPills` (단일 선택형 3-tier — components.md §4 의미 확장), 1차 액션 버튼, 2차 텍스트 액션, `TabBar` (active=다짐, backdrop 아래 dim)
+  - 토큰: 영역=다짐 (tokens.md §1.6) — backdrop은 `--ink #2E251A`에 alpha 적용. 시트 본체 `--bg`. 시트 안 정서 본문(다짐 문장 미리보기)은 serif 변형 허용, 시스템 UI 텍스트(헤더·옵션 라벨·버튼)는 sans 일관 — tokens.md §3.1.
 
 ## screen-shortcut-capture.html
 - **시각화 대상**:
@@ -130,7 +140,7 @@ last_updated: 2026-05-07
 | V1 핸즈프리 즉시 캡처 | screen-chat-voice, screen-scratchpad, screen-shortcut-capture |
 | V2 한·영 혼용 STT | screen-chat-voice, screen-shortcut-capture, screen-keyboard-extension |
 | V3 영역 분리 작업 관리 | screen-scratchpad, screen-todo-personal, screen-todo-work |
-| V4 의도된 반복 노출 | screen-affirmations, screen-widget |
+| V4 의도된 반복 노출 | screen-affirmations, screen-affirmations-priority-edit, screen-widget |
 | V5 자연어 대화 작업 처리 | screen-chat-text, screen-chat-voice, screen-keyboard-extension |
 | V6 일상 정보 통합 시야 | screen-widget |
 | V7 시스템 전역 글쓰기 보조 | screen-keyboard-extension |
@@ -146,7 +156,7 @@ last_updated: 2026-05-07
 | PRD-2 루틴 | screen-routines | |
 | PRD-3 Todo | screen-todo-personal, screen-todo-work | 영역 분리 |
 | PRD-4 Scratchpad | screen-scratchpad | |
-| PRD-5 다짐 | screen-affirmations | |
+| PRD-5 다짐 | screen-affirmations, screen-affirmations-priority-edit | priority-edit는 AC2 우선순위 편집 시트 |
 | PRD-6 Shortcut Voice | screen-shortcut-capture | |
 | PRD-7 STT 엔진 | screen-keyboard-extension (AC6 키보드 전용 인식기 진입점만) | 메인 앱 진입점들은 백엔드 컴포넌트로 02·08·10에 결과로 노출 |
 | PRD-8 위젯 | screen-widget | |
@@ -156,7 +166,7 @@ last_updated: 2026-05-07
 
 | 패턴 (patterns.md) | 사용 mockup |
 |--------------------|-------------|
-| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations |
+| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit |
 | §2 채팅 화면 | screen-chat-text |
 | §3 리스트 + 섹션 | screen-todo-personal, screen-todo-work |
 | §4 음성 모드 (다크) | screen-chat-voice |
@@ -164,5 +174,6 @@ last_updated: 2026-05-07
 | §6 시스템 통합 | screen-shortcut-capture, screen-widget, screen-keyboard-extension |
 | §7 다짐 회전 노출 | screen-affirmations |
 | §8 임시공간 분류 흐름 | screen-scratchpad |
+| §9 편집 시트 | screen-affirmations-priority-edit |
 
 모든 mockup이 1개 이상의 패턴에 매핑됨 — 임의 스타일 mockup 위험은 없음. ✅
