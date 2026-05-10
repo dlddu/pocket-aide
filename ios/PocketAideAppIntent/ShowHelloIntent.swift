@@ -16,7 +16,10 @@ public struct PocketAideShortcuts: AppShortcutsProvider {
     public static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: ShowHelloIntent(),
-            phrases: ["Show pocket aide hello"],
+            phrases: [
+                "Show hello from \(.applicationName)",
+                "Say hi with \(.applicationName)",
+            ],
             shortTitle: "Show hello",
             systemImageName: "hand.wave"
         )
