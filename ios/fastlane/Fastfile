@@ -23,6 +23,7 @@ platform :ios do
       clean: true,
       output_directory: "build",
       output_name: "PocketAide.ipa",
+      api_key: api_key,
       xcargs: "-xcconfig Signing.xcconfig -allowProvisioningUpdates"
     )
 
