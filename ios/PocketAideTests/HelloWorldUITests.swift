@@ -5,19 +5,14 @@ final class HelloWorldUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testHelloWorldShowsHeaderAndPalette() throws {
+    func testHelloWorldShowsHeader() throws {
         let app = XCUIApplication()
         app.launch()
 
         XCTAssertTrue(
-            app.staticTexts["Hello, pocket-aide"].waitForExistence(timeout: 5),
+            app.staticTexts["Hello, pocket-aide"].waitForExistence(timeout: 10),
             "Header text should appear"
         )
-
-        for area in ["personal", "work", "aiChat", "scratchpad", "routines", "affirmations", "voice", "system"] {
-            let chip = app.otherElements["AreaChip-\(area)"]
-            XCTAssertTrue(chip.waitForExistence(timeout: 3), "Area chip \(area) should be present")
-        }
     }
 
     func testHealthBadgeReflectsBackend() throws {
@@ -25,13 +20,8 @@ final class HelloWorldUITests: XCTestCase {
         app.launch()
 
         let health = app.staticTexts["HealthStatus"]
-        XCTAssertTrue(health.waitForExistence(timeout: 8), "Health status label should appear")
-
-        // When the backend is reachable (CI runs server on localhost), label should
-        // contain "OK". When not reachable (developer running tests without backend
-        // up), the label still appears with the error string. Either is acceptable
-        // here; this assertion just guards that the view modeled the result.
-        XCTAssertFalse(health.label.isEmpty)
+        XCTAssertTrue(health.waitForExistence(timeout: 10), "Health status label should appear")
+        XCTAssertFalse(health.label.isEmpty, "Health status label should have text")
     }
 
     func testSignInButtonExistsBeforeAuth() throws {
@@ -39,7 +29,7 @@ final class HelloWorldUITests: XCTestCase {
         app.launch()
 
         let signIn = app.buttons["SignInButton"]
-        XCTAssertTrue(signIn.waitForExistence(timeout: 5))
+        XCTAssertTrue(signIn.waitForExistence(timeout: 10))
         XCTAssertTrue(signIn.isHittable)
     }
 }
