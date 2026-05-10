@@ -1,17 +1,21 @@
+version: "2"
+
 run:
   timeout: 5m
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - errcheck
-    - gofmt
     - govet
     - ineffassign
     - staticcheck
     - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - encoding/json.Encoder.Encode
 
-linters-settings:
-  errcheck:
-    exclude-functions:
-      - encoding/json.Encoder.Encode
+formatters:
+  enable:
+    - gofmt

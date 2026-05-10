@@ -62,11 +62,10 @@ jobs:
       - name: Test
         run: go test -race -count=1 ./...
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: v1.62.0
+          version: v2.1.6
           working-directory: backend
-          args: --timeout=5m
 
   ios-test:
     name: iOS build + test
