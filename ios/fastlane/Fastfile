@@ -15,6 +15,13 @@ platform :ios do
       in_house: false
     )
 
+    auth_xcargs = [
+      "-allowProvisioningUpdates",
+      "-authenticationKeyPath #{api_key_path}",
+      "-authenticationKeyID #{api_key_id}",
+      "-authenticationKeyIssuerID #{api_key_issuer}"
+    ].join(" ")
+
     gym(
       project: "PocketAide.xcodeproj",
       scheme: "PocketAide",
@@ -23,13 +30,12 @@ platform :ios do
       clean: true,
       output_directory: "build",
       output_name: "PocketAide.ipa",
-      xcargs: [
-        "-xcconfig Signing.xcconfig",
-        "-allowProvisioningUpdates",
-        "-authenticationKeyPath #{api_key_path}",
-        "-authenticationKeyID #{api_key_id}",
-        "-authenticationKeyIssuerID #{api_key_issuer}"
-      ].join(" ")
+      xcargs: "-xcconfig Signing.xcconfig #{auth_xcargs}",
+      export_xcargs: auth_xcargs,
+      export_options: {
+        method: "app-store",
+        signingStyle: "automatic"
+      }
     )
 
     pilot(
