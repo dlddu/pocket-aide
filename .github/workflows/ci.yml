@@ -193,6 +193,16 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAide/Info-Release.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideKeyboard/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideWidget/Info.plist
+      - name: Inject BackendBaseURL
+        working-directory: ios
+        env:
+          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
+        run: |
+          if [ -z "$BACKEND_BASE_URL" ]; then
+            echo "Missing repository variable: BACKEND_BASE_URL" >&2
+            exit 1
+          fi
+          /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
       - name: Generate keychain password
         run: echo "KEYCHAIN_PASSWORD=$(openssl rand -base64 32)" >> $GITHUB_ENV
       - name: Import signing certificate
