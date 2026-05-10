@@ -31,7 +31,6 @@ platform :ios do
       output_directory: "build",
       output_name: "PocketAide.ipa",
       xcargs: "-xcconfig Signing.xcconfig #{auth_xcargs}",
-      export_xcargs: auth_xcargs,
       export_options: {
         method: "app-store",
         signingStyle: "automatic"
