@@ -2,7 +2,6 @@ included:
   - PocketAide
   - PocketAideKeyboard
   - PocketAideWidget
-  - PocketAideAppIntent
   - PocketAideTests
   - Shared/Sources
 

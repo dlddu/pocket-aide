@@ -193,7 +193,6 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAide/Info-Release.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideKeyboard/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideWidget/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideAppIntent/Info.plist
       - name: Generate keychain password
         run: echo "KEYCHAIN_PASSWORD=$(openssl rand -base64 32)" >> $GITHUB_ENV
       - name: Import signing certificate
@@ -222,7 +221,6 @@ jobs:
           install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}" PROFILE_NAME_MAIN
           install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PROFILE_NAME_KEYBOARD
           install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PROFILE_NAME_WIDGET
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_APPINTENT_BASE64 }}" PROFILE_NAME_APPINTENT
       - name: Write signing xcconfig
         working-directory: ios
         env:

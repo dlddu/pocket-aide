@@ -29,7 +29,6 @@ targets:
     dependencies:
       - target: PocketAideKeyboard
       - target: PocketAideWidget
-      - target: PocketAideAppIntent
       - package: PocketAideShared
         product: DesignSystem
       - package: PocketAideShared
@@ -46,6 +45,7 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         MARKETING_VERSION: "0.1.0"
         ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       configs:
         Debug:
           INFOPLIST_FILE: PocketAide/Info-Debug.plist
@@ -92,25 +92,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.Widget
         INFOPLIST_FILE: PocketAideWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: PocketAideWidget/PocketAideWidget.entitlements
-        TARGETED_DEVICE_FAMILY: "1"
-        CURRENT_PROJECT_VERSION: "1"
-        MARKETING_VERSION: "0.1.0"
-
-  PocketAideAppIntent:
-    type: app-extension
-    platform: iOS
-    sources:
-      - path: PocketAideAppIntent
-    dependencies:
-      - package: PocketAideShared
-        product: DesignSystem
-      - package: PocketAideShared
-        product: PocketAideStorage
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.AppIntent
-        INFOPLIST_FILE: PocketAideAppIntent/Info.plist
-        CODE_SIGN_ENTITLEMENTS: PocketAideAppIntent/PocketAideAppIntent.entitlements
         TARGETED_DEVICE_FAMILY: "1"
         CURRENT_PROJECT_VERSION: "1"
         MARKETING_VERSION: "0.1.0"

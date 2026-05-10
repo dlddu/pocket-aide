@@ -37,8 +37,7 @@ platform :ios do
         provisioningProfiles: {
           "com.dlddu.PocketAide" => ENV.fetch("PROFILE_NAME_MAIN"),
           "com.dlddu.PocketAide.Keyboard" => ENV.fetch("PROFILE_NAME_KEYBOARD"),
-          "com.dlddu.PocketAide.Widget" => ENV.fetch("PROFILE_NAME_WIDGET"),
-          "com.dlddu.PocketAide.AppIntent" => ENV.fetch("PROFILE_NAME_APPINTENT")
+          "com.dlddu.PocketAide.Widget" => ENV.fetch("PROFILE_NAME_WIDGET")
         }
       }
     )
