@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("db open: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	bootstrapCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

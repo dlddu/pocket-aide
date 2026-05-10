@@ -35,14 +35,13 @@ const (
 // Handler, and register issuer overrides via SetIssuer when running on a
 // pre-existing host like httptest.Server.
 type Server struct {
-	mu        sync.Mutex
-	issuer    string
-	clientID  string
-	audience  string
-	subject   string
-	signKey   *rsa.PrivateKey
-	codes     map[string]authCode
-	authDelay time.Duration
+	mu       sync.Mutex
+	issuer   string
+	clientID string
+	audience string
+	subject  string
+	signKey  *rsa.PrivateKey
+	codes    map[string]authCode
 }
 
 type authCode struct {

@@ -80,7 +80,7 @@ func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, erro
 	if err != nil {
 		return nil, fmt.Errorf("do: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode/100 != 2 {
 		raw, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("openrouter %d: %s", resp.StatusCode, string(raw))
@@ -119,7 +119,7 @@ func (c *Client) ChatStream(ctx context.Context, req ChatRequest, onDelta func(S
 	if err != nil {
 		return fmt.Errorf("do: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode/100 != 2 {
 		raw, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("openrouter %d: %s", resp.StatusCode, string(raw))
