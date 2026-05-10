@@ -1,0 +1,6 @@
+app_identifier("com.dlddu.PocketAide")
+
+# Set these via environment variables in CI:
+#   FASTLANE_APPLE_ID         -> Apple ID email (only needed for non-API auth)
+#   APPSTORE_CONNECT_API_KEY_ID
+#   APPSTORE_CONNECT_API_ISSUER_ID

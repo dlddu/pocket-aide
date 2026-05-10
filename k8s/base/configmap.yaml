@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pocket-aide-config
+data:
+  # Backend reads these at startup. Change OIDC settings here when the IdP
+  # changes - iOS picks them up via /api/auth/config.
+  PORT: "8080"
+  DATABASE_PATH: "/data/pocket-aide.db"
+  OIDC_ISSUER: "https://idp.example.com"
+  OIDC_AUDIENCE: "pocket-aide-prod"
+  OIDC_CLIENT_ID: "pocket-aide-ios"
+  OIDC_REDIRECT_URI: "pocketaide://callback"
+  LANGFUSE_HOST: "https://cloud.langfuse.com"
