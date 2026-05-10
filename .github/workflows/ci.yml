@@ -213,6 +213,15 @@ jobs:
           decode "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PocketAideKeyboard
           decode "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PocketAideWidget
           decode "${{ secrets.IOS_PROVISIONING_PROFILE_APPINTENT_BASE64 }}" PocketAideAppIntent
+      - name: Write signing xcconfig
+        working-directory: ios
+        env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+        run: |
+          cat > Signing.xcconfig <<EOF
+          DEVELOPMENT_TEAM = ${IOS_TEAM_ID}
+          CODE_SIGN_STYLE = Automatic
+          EOF
       - name: Write App Store Connect API key
         run: |
           mkdir -p ~/.appstoreconnect/private_keys

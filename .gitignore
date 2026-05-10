@@ -20,6 +20,9 @@ Package.resolved
 ios/Shared/.build/
 ios/Shared/.swiftpm/
 
+# CI-generated signing config
+ios/Signing.xcconfig
+
 # Fastlane
 ios/fastlane/report.xml
 ios/fastlane/Preview.html

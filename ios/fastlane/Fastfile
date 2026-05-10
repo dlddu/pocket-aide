@@ -22,7 +22,8 @@ platform :ios do
       export_method: "app-store",
       clean: true,
       output_directory: "build",
-      output_name: "PocketAide.ipa"
+      output_name: "PocketAide.ipa",
+      xcargs: "-xcconfig Signing.xcconfig -allowProvisioningUpdates"
     )
 
     pilot(
