@@ -206,13 +206,23 @@ jobs:
         run: |
           PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILE_DIR"
-          decode() {
-            echo "$1" | base64 --decode > "$PROFILE_DIR/$2.mobileprovision"
+          install_profile() {
+            local data="$1" name_var="$2"
+            local tmp
+            tmp=$(mktemp)
+            echo "$data" | base64 --decode > "$tmp"
+            local plist
+            plist=$(security cms -D -i "$tmp")
+            local uuid name
+            uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$plist")
+            name=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< "$plist")
+            mv "$tmp" "$PROFILE_DIR/$uuid.mobileprovision"
+            echo "${name_var}=${name}" >> "$GITHUB_ENV"
           }
-          decode "${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}" PocketAide
-          decode "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PocketAideKeyboard
-          decode "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PocketAideWidget
-          decode "${{ secrets.IOS_PROVISIONING_PROFILE_APPINTENT_BASE64 }}" PocketAideAppIntent
+          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}" PROFILE_NAME_MAIN
+          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PROFILE_NAME_KEYBOARD
+          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PROFILE_NAME_WIDGET
+          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_APPINTENT_BASE64 }}" PROFILE_NAME_APPINTENT
       - name: Write signing xcconfig
         working-directory: ios
         env:
