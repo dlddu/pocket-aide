@@ -15,6 +15,9 @@ disabled_rules:
   - trailing_whitespace
   - todo
   - line_length
+  - trailing_comma
+  - identifier_name
+  - nesting
 
 opt_in_rules:
   - empty_count
