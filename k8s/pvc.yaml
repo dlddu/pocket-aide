@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: pocket-aide-data
+  name: pocket-aide
 spec:
   accessModes:
     - ReadWriteOnce
