@@ -217,12 +217,6 @@ jobs:
         run: |
           mint install yonaskolb/xcodegen
           mint run xcodegen generate
-      - name: Bump build number
-        working-directory: ios
-        run: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAide/Info-Release.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideKeyboard/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideWidget/Info.plist
       - name: Inject BackendBaseURL
         working-directory: ios
         env:
