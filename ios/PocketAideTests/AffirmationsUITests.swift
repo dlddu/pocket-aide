@@ -5,20 +5,33 @@ final class AffirmationsUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testAffirmationsScreenLandsOnLaunch() throws {
+    private func launchOnAffirmationsTab() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
+
+        let affirmationsTab = app.tabBars.buttons["다짐"]
+        XCTAssertTrue(
+            affirmationsTab.waitForExistence(timeout: 15),
+            "Affirmations tab should appear in tab bar"
+        )
+        if !affirmationsTab.isSelected {
+            affirmationsTab.tap()
+        }
+        return app
+    }
+
+    func testAffirmationsScreenLandsOnLaunch() throws {
+        let app = launchOnAffirmationsTab()
 
         let addButton = app.buttons["affirmations.add"]
         XCTAssertTrue(
             addButton.waitForExistence(timeout: 10),
-            "Affirmations screen add button should be visible (affirmations tab is default)"
+            "Affirmations screen add button should be visible after selecting affirmations tab"
         )
     }
 
     func testTapAddOpensPrioritySheet() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnAffirmationsTab()
 
         let addButton = app.buttons["affirmations.add"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 10))
@@ -38,8 +51,7 @@ final class AffirmationsUITests: XCTestCase {
     }
 
     func testCancelClosesSheet() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnAffirmationsTab()
 
         let addButton = app.buttons["affirmations.add"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 10))

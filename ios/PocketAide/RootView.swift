@@ -42,10 +42,6 @@ struct RootView: View {
             case .affirmations: return "heart.fill"
             }
         }
-
-        var accessibilityIdentifier: String {
-            "tab.\(rawValue)"
-        }
     }
 
     @State private var selected: Tab = .affirmations
@@ -55,34 +51,29 @@ struct RootView: View {
             ChatTab()
                 .tabItem { Label(Tab.chat.label, systemImage: Tab.chat.systemImage) }
                 .tag(Tab.chat)
-                .accessibilityIdentifier(Tab.chat.accessibilityIdentifier)
 
             ScratchpadTab()
                 .tabItem { Label(Tab.scratchpad.label, systemImage: Tab.scratchpad.systemImage) }
                 .tag(Tab.scratchpad)
-                .accessibilityIdentifier(Tab.scratchpad.accessibilityIdentifier)
 
             PersonalTab()
                 .tabItem { Label(Tab.personal.label, systemImage: Tab.personal.systemImage) }
                 .tag(Tab.personal)
-                .accessibilityIdentifier(Tab.personal.accessibilityIdentifier)
 
             WorkTab()
                 .tabItem { Label(Tab.work.label, systemImage: Tab.work.systemImage) }
                 .tag(Tab.work)
-                .accessibilityIdentifier(Tab.work.accessibilityIdentifier)
 
             RoutinesTab()
                 .tabItem { Label(Tab.routines.label, systemImage: Tab.routines.systemImage) }
                 .tag(Tab.routines)
-                .accessibilityIdentifier(Tab.routines.accessibilityIdentifier)
 
             AffirmationsView()
                 .tabItem { Label(Tab.affirmations.label, systemImage: Tab.affirmations.systemImage) }
                 .tag(Tab.affirmations)
-                .accessibilityIdentifier(Tab.affirmations.accessibilityIdentifier)
         }
         .tint(DesignTokens.Color.accent(selected.area))
+        .onAppear { selected = .affirmations }
     }
 }
 
