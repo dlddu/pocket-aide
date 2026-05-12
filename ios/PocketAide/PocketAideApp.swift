@@ -4,7 +4,7 @@ import SwiftUI
 struct PocketAideApp: App {
     var body: some Scene {
         WindowGroup {
-            HelloWorldView()
+            RootView()
         }
     }
 }
