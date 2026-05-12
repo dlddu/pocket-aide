@@ -40,6 +40,8 @@ public final class APIClient: @unchecked Sendable {
     public let baseURL: URL
     private let session: URLSession
     private let tokenStore: TokenStoring
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
 
     public init(baseURL: URL, tokenStore: TokenStoring, session: URLSession = .shared) {
         self.baseURL = baseURL
@@ -70,15 +72,69 @@ public final class APIClient: @unchecked Sendable {
 
     private struct HealthResponse: Codable { let status: String }
 
-    private func get<T: Decodable>(
+    func get<T: Decodable>(
         _ path: String,
         authenticated: Bool,
         decodeAs: T.Type
     ) async throws -> T {
+        try await request(path: path, method: "GET", authenticated: authenticated, body: Optional<Empty>.none, decodeAs: T.self)
+    }
+
+    public func post<I: Encodable, O: Decodable>(
+        _ path: String,
+        body: I,
+        decodeAs: O.Type
+    ) async throws -> O {
+        try await request(path: path, method: "POST", authenticated: true, body: body, decodeAs: O.self)
+    }
+
+    public func patch<I: Encodable, O: Decodable>(
+        _ path: String,
+        body: I,
+        decodeAs: O.Type
+    ) async throws -> O {
+        try await request(path: path, method: "PATCH", authenticated: true, body: body, decodeAs: O.self)
+    }
+
+    public func delete(_ path: String) async throws {
+        _ = try await rawRequest(path: path, method: "DELETE", authenticated: true, body: Optional<Empty>.none)
+    }
+
+    private struct Empty: Encodable {}
+
+    private func request<I: Encodable, O: Decodable>(
+        path: String,
+        method: String,
+        authenticated: Bool,
+        body: I?,
+        decodeAs: O.Type
+    ) async throws -> O {
+        let data = try await rawRequest(path: path, method: method, authenticated: authenticated, body: body)
+        do {
+            return try decoder.decode(O.self, from: data)
+        } catch {
+            throw APIError.decoding(error)
+        }
+    }
+
+    private func rawRequest<I: Encodable>(
+        path: String,
+        method: String,
+        authenticated: Bool,
+        body: I?
+    ) async throws -> Data {
         var req = URLRequest(url: baseURL.appendingPathComponent(path))
-        req.httpMethod = "GET"
+        req.httpMethod = method
         if authenticated, let token = try tokenStore.load()?.accessToken {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        if let body {
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            do {
+                req.httpBody = try encoder.encode(body)
+            } catch {
+                throw APIError.decoding(error)
+            }
         }
         let (data, response): (Data, URLResponse)
         do {
@@ -92,10 +148,6 @@ public final class APIClient: @unchecked Sendable {
         guard (200..<300).contains(http.statusCode) else {
             throw APIError.badStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
-        do {
-            return try JSONDecoder().decode(T.self, from: data)
-        } catch {
-            throw APIError.decoding(error)
-        }
+        return data
     }
 }
