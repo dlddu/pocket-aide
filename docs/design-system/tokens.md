@@ -123,11 +123,14 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 
 ### 3.1 폰트 패밀리
 
-```
-'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif
-```
+폰트 family는 두 종류로만 정의된다. 영역에 관계없이 어디서나 호출 가능한 형태로 두고, **다짐(Affirmations) 영역의 정서 본문**에서만 `serif` 변형 사용을 허용한다 (V4 의도된 반복 노출의 정서적 톤). 그 외 영역과 시스템 UI 텍스트(헤더, 옵션 라벨, 버튼)는 항상 `sans`.
 
-다짐(Affirmations) 영역만 serif 변형 사용을 허용한다 (V4 의도된 반복 노출의 정서적 톤).
+| 토큰 | 정의 (CSS) | iOS 매핑 |
+|------|-----------|----------|
+| `family-sans` (기본) | `'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif` | `Font.system(.body)` |
+| `family-serif` (정서 본문 — 다짐 한정) | `'Iowan Old Style', 'Apple Garamond', 'Apple SD Gothic Neo', ui-serif, Georgia, serif` | `Font.custom("Iowan Old Style", size: ...)` with fallback chain → `Georgia` |
+
+iOS 구현에서는 `DesignTokens.Typography.font(_:family:)`로 family를 명시적으로 받는다. family 인자를 생략하면 `sans` 기본.
 
 ### 3.2 전역 타이포 규칙
 - `letter-spacing: -0.01em` (전체 화면 기본)

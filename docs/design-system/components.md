@@ -233,6 +233,25 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 
 ---
 
+## 10.1 SwiftUI 공유 컴포넌트 (코드 구현)
+
+iOS 코드에서 본 문서 컴포넌트 정의를 직접 사용 가능한 SwiftUI 형태로 제공한다. 모든 컴포넌트는 영역(`DesignTokens.Area`)을 prop으로 받아 영역 토큰만으로 시각을 결정한다 — 색·라운드·여백·폰트 모두 토큰에서만 가져온다.
+
+`import DesignSystem` 후 다음 식별자로 사용:
+
+| 컴포넌트 | 본 문서 정의 | iOS 식별자 |
+|---------|------------|-----------|
+| `Card` | §5 | `DSCard(area:padding:content:)` |
+| `ScreenHeader` | §3 | `DSScreenHeader(area:areaLabel:title:trailing:)` |
+| `AreaLabel` | §2 | `DSAreaLabel(area:text:)` |
+| `TabBarItem` | §7 | `DSTabBarItem(area:label:systemImage:isActive:)` |
+| `Sheet` | §9 | `DSSheet(area:isPresented:content:)` (내부에서 `DSBackdrop` + `DSHandle` 사용) |
+| `FilterPills` (단일 선택형) | §4 의미 확장 | `DSFilterPills(area:options:selection:label:)` |
+
+각 컴포넌트는 토큰 외 임의 값(hex, 임의 px)을 사용하지 않는다.
+
+---
+
 ## 11. 컴포넌트 추가 규칙
 
 새 컴포넌트가 필요하다고 느낄 때:
