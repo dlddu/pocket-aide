@@ -8,15 +8,10 @@ final class AffirmationsUITests: XCTestCase {
     private func launchOnAffirmationsTab() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
-
-        let affirmationsTab = app.tabBars.buttons["다짐"]
-        XCTAssertTrue(
-            affirmationsTab.waitForExistence(timeout: 15),
-            "Affirmations tab should appear in tab bar"
-        )
-        if !affirmationsTab.isSelected {
-            affirmationsTab.tap()
-        }
+        // Affirmations is the default selection via RootView.onAppear. The
+        // affirmations tab button itself may live under the system "More" tab
+        // (iPhone TabView folds 6+ tabs), so we don't tap it — we just wait for
+        // affirmations content to render.
         return app
     }
 
