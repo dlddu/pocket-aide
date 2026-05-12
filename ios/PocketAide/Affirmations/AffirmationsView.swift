@@ -8,7 +8,7 @@ struct AffirmationsView: View {
     @StateObject private var viewModel = AffirmationsViewModel()
     @StateObject private var tts = TTSPlayer()
 
-    @State private var sheetMode: PriorityEditSheet.Mode?
+    @State private var sheetMode: PriorityEditSheet.Mode = .create
     @State private var isSheetPresented: Bool = false
 
     var body: some View {
@@ -51,18 +51,16 @@ struct AffirmationsView: View {
             }
         }
         .sheet(isPresented: $isSheetPresented) {
-            if let mode = sheetMode {
-                PriorityEditSheet(
-                    mode: mode,
-                    onSave: { text, priority in
-                        await save(mode: mode, text: text, priority: priority)
-                    },
-                    onCancel: dismissSheet
-                )
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(DesignTokens.Color.surface(area))
-            }
+            PriorityEditSheet(
+                mode: sheetMode,
+                onSave: { text, priority in
+                    await save(mode: sheetMode, text: text, priority: priority)
+                },
+                onCancel: dismissSheet
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(DesignTokens.Color.surface(area))
         }
         .task { await viewModel.load() }
     }
@@ -235,7 +233,6 @@ struct AffirmationsView: View {
 
     private func dismissSheet() {
         isSheetPresented = false
-        sheetMode = nil
     }
 
     private func label(for priority: Priority) -> String {
