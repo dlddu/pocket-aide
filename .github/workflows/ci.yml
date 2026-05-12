@@ -182,27 +182,6 @@ jobs:
           working-directory: ios
           bundler-cache: true
       - uses: irgaly/setup-mint@v1
-      - name: Generate Xcode project
-        working-directory: ios
-        run: |
-          mint install yonaskolb/xcodegen
-          mint run xcodegen generate
-      - name: Bump build number
-        working-directory: ios
-        run: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAide/Info-Release.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideKeyboard/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideWidget/Info.plist
-      - name: Inject BackendBaseURL
-        working-directory: ios
-        env:
-          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
-        run: |
-          if [ -z "$BACKEND_BASE_URL" ]; then
-            echo "Missing repository variable: BACKEND_BASE_URL" >&2
-            exit 1
-          fi
-          /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
       - name: Generate keychain password
         run: echo "KEYCHAIN_PASSWORD=$(openssl rand -base64 32)" >> $GITHUB_ENV
       - name: Import signing certificate
@@ -231,15 +210,29 @@ jobs:
           install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}" PROFILE_NAME_MAIN
           install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PROFILE_NAME_KEYBOARD
           install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PROFILE_NAME_WIDGET
-      - name: Write signing xcconfig
+      - name: Generate Xcode project
         working-directory: ios
         env:
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
         run: |
-          cat > Signing.xcconfig <<EOF
-          DEVELOPMENT_TEAM = ${IOS_TEAM_ID}
-          CODE_SIGN_STYLE = Automatic
-          EOF
+          mint install yonaskolb/xcodegen
+          mint run xcodegen generate
+      - name: Bump build number
+        working-directory: ios
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAide/Info-Release.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideKeyboard/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" PocketAideWidget/Info.plist
+      - name: Inject BackendBaseURL
+        working-directory: ios
+        env:
+          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
+        run: |
+          if [ -z "$BACKEND_BASE_URL" ]; then
+            echo "Missing repository variable: BACKEND_BASE_URL" >&2
+            exit 1
+          fi
+          /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
       - name: Write App Store Connect API key
         run: |
           mkdir -p ~/.appstoreconnect/private_keys
