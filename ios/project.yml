@@ -57,6 +57,7 @@ targets:
     scheme:
       testTargets:
         - PocketAideTests
+        - PocketAideUnitTests
       gatherCoverageData: true
       commandLineArguments:
         "-com.apple.CoreData.ConcurrencyDebug 1": false
@@ -123,3 +124,16 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.UITests
         INFOPLIST_FILE: PocketAideTests/Info.plist
         TEST_TARGET_NAME: PocketAide
+
+  PocketAideUnitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: PocketAideUnitTests
+    dependencies:
+      - package: PocketAideShared
+        product: PocketAideAPI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.UnitTests
+        INFOPLIST_FILE: PocketAideUnitTests/Info.plist
