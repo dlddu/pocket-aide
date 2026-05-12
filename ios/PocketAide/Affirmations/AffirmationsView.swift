@@ -12,7 +12,7 @@ struct AffirmationsView: View {
     @State private var isSheetPresented: Bool = false
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             DesignTokens.Color.surface(area)
                 .ignoresSafeArea()
 
@@ -49,17 +49,19 @@ struct AffirmationsView: View {
                     .padding(.vertical, DesignTokens.Spacing.md)
                 }
             }
-
-            DSSheet(area: area, isPresented: $isSheetPresented) {
-                if let mode = sheetMode {
-                    PriorityEditSheet(
-                        mode: mode,
-                        onSave: { text, priority in
-                            await save(mode: mode, text: text, priority: priority)
-                        },
-                        onCancel: dismissSheet
-                    )
-                }
+        }
+        .sheet(isPresented: $isSheetPresented) {
+            if let mode = sheetMode {
+                PriorityEditSheet(
+                    mode: mode,
+                    onSave: { text, priority in
+                        await save(mode: mode, text: text, priority: priority)
+                    },
+                    onCancel: dismissSheet
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(DesignTokens.Color.surface(area))
             }
         }
         .task { await viewModel.load() }
