@@ -1,0 +1,25 @@
+included:
+  - PocketAide
+  - PocketAideKeyboard
+  - PocketAideWidget
+  - PocketAideTests
+  - Shared/Sources
+
+excluded:
+  - .build
+  - DerivedData
+  - "**/.build"
+
+disabled_rules:
+  - trailing_whitespace
+  - todo
+  - line_length
+  - trailing_comma
+  - identifier_name
+  - nesting
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+
+reporter: "xcode"

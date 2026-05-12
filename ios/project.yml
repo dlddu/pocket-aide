@@ -1,0 +1,125 @@
+name: PocketAide
+options:
+  bundleIdPrefix: com.dlddu
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: en
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    SWIFT_STRICT_CONCURRENCY: minimal
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+
+packages:
+  PocketAideShared:
+    path: Shared
+
+targets:
+  PocketAide:
+    type: application
+    platform: iOS
+    sources:
+      - path: PocketAide
+    dependencies:
+      - target: PocketAideKeyboard
+      - target: PocketAideWidget
+      - package: PocketAideShared
+        product: DesignSystem
+      - package: PocketAideShared
+        product: PocketAideAPI
+      - package: PocketAideShared
+        product: PocketAideAuth
+      - package: PocketAideShared
+        product: PocketAideStorage
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide
+        CODE_SIGN_ENTITLEMENTS: PocketAide/PocketAide.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      configs:
+        Debug:
+          INFOPLIST_FILE: PocketAide/Info-Debug.plist
+        Release:
+          INFOPLIST_FILE: PocketAide/Info-Release.plist
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          DEVELOPMENT_TEAM: ${IOS_TEAM_ID}
+          PROVISIONING_PROFILE_SPECIFIER: ${PROFILE_NAME_MAIN}
+    scheme:
+      testTargets:
+        - PocketAideTests
+      gatherCoverageData: true
+      commandLineArguments:
+        "-com.apple.CoreData.ConcurrencyDebug 1": false
+
+  PocketAideKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: PocketAideKeyboard
+    dependencies:
+      - package: PocketAideShared
+        product: DesignSystem
+      - package: PocketAideShared
+        product: PocketAideStorage
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.Keyboard
+        INFOPLIST_FILE: PocketAideKeyboard/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PocketAideKeyboard/PocketAideKeyboard.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          DEVELOPMENT_TEAM: ${IOS_TEAM_ID}
+          PROVISIONING_PROFILE_SPECIFIER: ${PROFILE_NAME_KEYBOARD}
+
+  PocketAideWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: PocketAideWidget
+    dependencies:
+      - package: PocketAideShared
+        product: DesignSystem
+      - package: PocketAideShared
+        product: PocketAideStorage
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.Widget
+        INFOPLIST_FILE: PocketAideWidget/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PocketAideWidget/PocketAideWidget.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          DEVELOPMENT_TEAM: ${IOS_TEAM_ID}
+          PROVISIONING_PROFILE_SPECIFIER: ${PROFILE_NAME_WIDGET}
+
+  PocketAideTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: PocketAideTests
+    dependencies:
+      - target: PocketAide
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.UITests
+        INFOPLIST_FILE: PocketAideTests/Info.plist
+        TEST_TARGET_NAME: PocketAide

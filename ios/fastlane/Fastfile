@@ -1,0 +1,59 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build & upload to TestFlight"
+  lane :beta do
+    api_key_id = ENV.fetch("APPSTORE_CONNECT_API_KEY_ID")
+    api_key_issuer = ENV.fetch("APPSTORE_CONNECT_API_ISSUER_ID")
+    api_key_path = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{api_key_id}.p8")
+
+    api_key = app_store_connect_api_key(
+      key_id: api_key_id,
+      issuer_id: api_key_issuer,
+      key_filepath: api_key_path,
+      duration: 1200,
+      in_house: false
+    )
+
+    next_build = (latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: "com.dlddu.PocketAide",
+      initial_build_number: 0
+    ) + 1).to_s
+
+    [
+      "PocketAide/Info-Release.plist",
+      "PocketAideKeyboard/Info.plist",
+      "PocketAideWidget/Info.plist"
+    ].each do |path|
+      set_info_plist_value(path: path, key: "CFBundleVersion", value: next_build)
+    end
+
+    gym(
+      project: "PocketAide.xcodeproj",
+      scheme: "PocketAide",
+      configuration: "Release",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "build",
+      output_name: "PocketAide.ipa",
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.dlddu.PocketAide" => ENV.fetch("PROFILE_NAME_MAIN"),
+          "com.dlddu.PocketAide.Keyboard" => ENV.fetch("PROFILE_NAME_KEYBOARD"),
+          "com.dlddu.PocketAide.Widget" => ENV.fetch("PROFILE_NAME_WIDGET")
+        }
+      }
+    )
+
+    pilot(
+      api_key: api_key,
+      ipa: "build/PocketAide.ipa",
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      changelog: "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}"
+    )
+  end
+end
