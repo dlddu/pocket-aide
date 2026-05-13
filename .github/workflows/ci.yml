@@ -73,10 +73,8 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: macos-26
     env:
-      OIDC_ISSUER: http://localhost:5556
-      OIDC_AUDIENCE: pocket-aide-dev
-      OIDC_CLIENT_ID: pocket-aide-ios-dev
-      OIDC_REDIRECT_URI: pocketaide-dev://callback
+      POCKET_AIDE_DEV: "1"
+      OIDC_MOCK_ADDR: 127.0.0.1:5556
       OPENROUTER_API_KEY: test-key-not-used
       LANGFUSE_PUBLIC_KEY: test
       LANGFUSE_SECRET_KEY: test
@@ -91,17 +89,8 @@ jobs:
           cache-dependency-path: backend/go.sum
       - name: Build backend binaries
         working-directory: backend
-        run: |
-          go build -o /tmp/oidcmock ./cmd/oidcmock
-          go build -o /tmp/pocket-aide ./cmd/server
-      - name: Start oidcmock
-        run: |
-          /tmp/oidcmock -addr :5556 -client-id pocket-aide-ios-dev -audience pocket-aide-dev &
-          echo "OIDCMOCK_PID=$!" >> $GITHUB_ENV
-          for i in {1..30}; do
-            curl -fsS http://localhost:5556/.well-known/openid-configuration && break || sleep 1
-          done
-      - name: Start backend
+        run: go build -o /tmp/pocket-aide ./cmd/server
+      - name: Start backend (dev mode, embedded oidcmock)
         run: |
           /tmp/pocket-aide &
           echo "BACKEND_PID=$!" >> $GITHUB_ENV
@@ -137,7 +126,6 @@ jobs:
       - name: Stop background processes
         if: always()
         run: |
-          [ -n "${OIDCMOCK_PID:-}" ] && kill ${OIDCMOCK_PID} || true
           [ -n "${BACKEND_PID:-}" ] && kill ${BACKEND_PID} || true
 
   backend-docker-push:
