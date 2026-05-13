@@ -3,7 +3,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,10 +19,14 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
+	"github.com/dlddu/pocket-aide/backend/internal/oidcmock"
 )
 
 func main() {
-	cfg := loadConfig()
+	cfg, mock, mockSrv := loadConfig()
+	if mockSrv != nil {
+		defer func() { _ = mockSrv.Close() }()
+	}
 
 	conn, err := db.Open(cfg.DatabasePath)
 	if err != nil {
@@ -50,6 +56,11 @@ func main() {
 
 	r.Get("/healthz", handlers.Health(conn))
 	r.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
+
+	if mock != nil {
+		r.Post("/dev/auth-token", devAuthTokenHandler(mock))
+		log.Println("dev mode: /dev/auth-token enabled — DO NOT use in production")
+	}
 
 	affStore := affirmations.NewStore(conn)
 
@@ -94,14 +105,76 @@ type config struct {
 	OIDCRedirectURI string
 }
 
-func loadConfig() config {
-	return config{
+// loadConfig reads configuration from the environment. When POCKET_AIDE_DEV=1
+// it spins up an in-process oidcmock IdP on a side listener and routes the
+// main server's OIDC config to it so dev/UI-test clients can mint real
+// RS256-signed tokens that the auth middleware will verify.
+func loadConfig() (config, *oidcmock.Server, *http.Server) {
+	if os.Getenv("POCKET_AIDE_DEV") == "1" {
+		return loadDevConfig()
+	}
+	cfg := config{
 		Port:            envOr("PORT", "8080"),
 		DatabasePath:    envOr("DATABASE_PATH", "/data/pocket-aide.db"),
 		OIDCIssuer:      mustEnv("OIDC_ISSUER"),
 		OIDCAudience:    mustEnv("OIDC_AUDIENCE"),
 		OIDCClientID:    mustEnv("OIDC_CLIENT_ID"),
 		OIDCRedirectURI: mustEnv("OIDC_REDIRECT_URI"),
+	}
+	return cfg, nil, nil
+}
+
+func loadDevConfig() (config, *oidcmock.Server, *http.Server) {
+	mock, err := oidcmock.New(oidcmock.Options{})
+	if err != nil {
+		log.Fatalf("dev: oidcmock new: %v", err)
+	}
+	listener, err := net.Listen("tcp", envOr("OIDC_MOCK_ADDR", "127.0.0.1:0"))
+	if err != nil {
+		log.Fatalf("dev: oidcmock listen: %v", err)
+	}
+	issuer := "http://" + listener.Addr().String()
+	mock.SetIssuer(issuer)
+
+	srv := &http.Server{
+		Handler:           mock.Handler(),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	go func() {
+		if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("dev: oidcmock serve: %v", err)
+		}
+	}()
+	log.Printf("dev: oidcmock listening on %s", issuer)
+
+	cfg := config{
+		Port:            envOr("PORT", "8080"),
+		DatabasePath:    envOr("DATABASE_PATH", "/tmp/pocket-aide-dev.db"),
+		OIDCIssuer:      issuer,
+		OIDCAudience:    mock.Audience(),
+		OIDCClientID:    mock.ClientID(),
+		OIDCRedirectURI: envOr("OIDC_REDIRECT_URI", "pocketaide://oauth-callback"),
+	}
+	return cfg, mock, srv
+}
+
+// devAuthTokenHandler issues an oidcmock-signed access token without going
+// through the full PKCE auth-code flow. Wired only when dev mode is on, so it
+// cannot be reached in production builds.
+func devAuthTokenHandler(mock *oidcmock.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ttl := time.Hour
+		access, err := mock.SignAccessToken(mock.Subject(), ttl)
+		if err != nil {
+			http.Error(w, "token mint failed", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"access_token": access,
+			"token_type":   "Bearer",
+			"expires_in":   int(ttl.Seconds()),
+		})
 	}
 }
 

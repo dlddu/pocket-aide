@@ -30,8 +30,8 @@ final class AppSession: ObservableObject {
             self.api = nil
             self.oidc = nil
         }
-        if CommandLine.arguments.contains("--ui-test-skip-auth") {
-            state = .signedIn
+        if CommandLine.arguments.contains("--ui-test-mock-oidc") {
+            Task { await signInWithDevToken() }
         } else {
             refreshState()
         }
@@ -73,5 +73,42 @@ final class AppSession: ObservableObject {
     func signOut() {
         try? oidc?.signOut()
         state = .signedOut
+    }
+
+    // Hits the backend's POCKET_AIDE_DEV-only /dev/auth-token endpoint, which
+    // mints an oidcmock-signed access token. Stored in the keychain so the
+    // standard Authorization header path works for subsequent API calls.
+    private func signInWithDevToken() async {
+        guard let api else {
+            state = .signedOut
+            return
+        }
+        do {
+            let bundle = try await fetchDevTokenBundle(baseURL: api.baseURL)
+            try tokenStore.save(bundle)
+            state = .signedIn
+        } catch {
+            signInError = "mock 로그인에 실패했어요"
+            state = .signedOut
+        }
+    }
+
+    private func fetchDevTokenBundle(baseURL: URL) async throws -> TokenBundle {
+        var req = URLRequest(url: baseURL.appendingPathComponent("dev/auth-token"))
+        req.httpMethod = "POST"
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        struct DevTokenResponse: Decodable {
+            let access_token: String
+            let expires_in: Int
+        }
+        let decoded = try JSONDecoder().decode(DevTokenResponse.self, from: data)
+        return TokenBundle(
+            accessToken: decoded.access_token,
+            refreshToken: nil,
+            expiresAt: Date().addingTimeInterval(TimeInterval(decoded.expires_in))
+        )
     }
 }

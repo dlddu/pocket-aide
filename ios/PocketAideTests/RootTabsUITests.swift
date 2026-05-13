@@ -11,7 +11,7 @@ final class RootTabsUITests: XCTestCase {
         // assert on the affirmations tab button itself. Instead, we verify that
         // the affirmations view content is rendered on launch.
         let app = XCUIApplication()
-        app.launchArguments.append("--ui-test-skip-auth")
+        app.launchArguments.append("--ui-test-mock-oidc")
         app.launch()
 
         XCTAssertTrue(
@@ -22,7 +22,7 @@ final class RootTabsUITests: XCTestCase {
 
     func testTabBarHasMultipleTabs() throws {
         let app = XCUIApplication()
-        app.launchArguments.append("--ui-test-skip-auth")
+        app.launchArguments.append("--ui-test-mock-oidc")
         app.launch()
 
         let tabBar = app.tabBars.firstMatch
