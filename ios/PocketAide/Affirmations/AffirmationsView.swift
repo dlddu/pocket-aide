@@ -62,6 +62,7 @@ struct AffirmationsView: View {
             .presentationDragIndicator(.visible)
             .presentationBackground(DesignTokens.Color.surface(area))
         }
+        .dsToast(area: area, message: $viewModel.loadError)
         .task { await viewModel.load() }
     }
 

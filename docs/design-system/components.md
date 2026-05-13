@@ -213,6 +213,23 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 - 형태: `width: 36px; height: 4px; border-radius: 9999px`, 색은 영역 `--rule`
 - 시각 신호: "드래그하여 닫을 수 있다"는 가시 단서
 
+### `Toast`
+화면 하단(또는 상단)에서 잠시 떠올라 결과·에러·상태 변경을 알리는 일시적 알림.
+- 사용처: 네트워크 실패, 저장 성공, 비파괴적 오류 (사용자의 결정을 요구하지 않는 메시지)
+- 구조: 메시지 텍스트 + (선택) 좌측 아이콘 + (선택) 우측 닫기 버튼
+- 형태: `border-radius: 9999px` (pill) 또는 `border-radius: 16~24px` (카드형). 모서리는 영역 일관 — 다짐 등 부드러운 영역에선 카드형, 채팅·시스템 영역에선 pill 권장
+- 위치: 화면 하단(탭바 위 16~24px 띄움) 또는 상단(상태바 아래) 중 하나로 일관. 본 시스템은 **하단 기본**
+- 색상:
+  - 배경: 영역 `--ink` (다크 표면) + 자체 그림자 — 일반 콘텐츠와 시각적으로 분리
+  - 텍스트: 영역 `--bg`/`--paper` (밝은 톤)
+  - 좌측 아이콘 (선택): 에러는 영역 강조색 또는 시스템 빨강 미사용 → 영역 강조색의 변형으로 정보 위계만 표현
+- 텍스트: sans 일관 (§3.1), 가중치 medium, 1~2줄, 너무 길면 truncate
+- 동작:
+  - 자동 dismiss (기본 3초). 사용자 탭 시 즉시 dismiss
+  - 새 토스트가 등장하면 직전 토스트 즉시 교체 (queueing 없이 latest-only)
+  - 다른 오버레이(`Sheet` 등)와 동시에 표시되지 않도록 시트가 떠 있으면 토스트는 시트 위로 떠오르거나 후 표시
+- 변형: 영역별 6종. 시스템 통합 영역에선 영역 토큰 대신 iOS 표준 알림 톤 차용 가능
+
 ---
 
 ## 10. 상태와 변형 매트릭스 (간단)
@@ -230,6 +247,7 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 | `IPhoneFrame` | 변형 없음 | 고정 |
 | `KeyboardKey` | 시스템 통합 전용 | `--kbd`, `--key` |
 | `Sheet` | 다짐 영역용 1종 (확장 여지) | 영역 표면색·rule·ink (alpha) |
+| `Toast` | 6종 (영역별) | 영역 ink (배경) + bg/paper (텍스트) |
 
 ---
 
@@ -247,6 +265,7 @@ iOS 코드에서 본 문서 컴포넌트 정의를 직접 사용 가능한 Swift
 | `TabBarItem` | §7 | `DSTabBarItem(area:label:systemImage:isActive:)` |
 | `Sheet` | §9 | `DSSheet(area:isPresented:content:)` (내부에서 `DSBackdrop` + `DSHandle` 사용) |
 | `FilterPills` (단일 선택형) | §4 의미 확장 | `DSFilterPills(area:options:selection:label:)` |
+| `Toast` | §9 | `DSToast(area:message:)` + `View.dsToast(area:message:)` modifier |
 
 각 컴포넌트는 토큰 외 임의 값(hex, 임의 px)을 사용하지 않는다.
 

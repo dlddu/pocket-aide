@@ -42,7 +42,7 @@ final class AffirmationsViewModel: ObservableObject {
             items = fetched
             rotateHero()
         } catch {
-            loadError = String(describing: error)
+            loadError = "다짐을 불러오지 못했어요"
         }
     }
 
@@ -64,7 +64,7 @@ final class AffirmationsViewModel: ObservableObject {
             items.insert(created, at: 0)
             heroId = created.id
         } catch {
-            loadError = String(describing: error)
+            loadError = "다짐을 추가하지 못했어요"
         }
     }
 
@@ -77,7 +77,7 @@ final class AffirmationsViewModel: ObservableObject {
             }
             heroId = updated.id
         } catch {
-            loadError = String(describing: error)
+            loadError = "다짐을 수정하지 못했어요"
         }
     }
 
@@ -90,7 +90,7 @@ final class AffirmationsViewModel: ObservableObject {
                 rotateHero()
             }
         } catch {
-            loadError = String(describing: error)
+            loadError = "다짐을 삭제하지 못했어요"
         }
     }
 }
