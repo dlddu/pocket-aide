@@ -61,6 +61,7 @@ struct AffirmationsView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
             .presentationBackground(DesignTokens.Color.surface(area))
+            .dsToast(area: area, message: $viewModel.loadError)
         }
         .dsToast(area: area, message: $viewModel.loadError)
         .task { await viewModel.load() }
@@ -223,13 +224,18 @@ struct AffirmationsView: View {
 
     private func save(mode: PriorityEditSheet.Mode, text: String, priority: Priority) async {
         guard !text.isEmpty else { return }
+        let success: Bool
         switch mode {
         case .create:
-            await viewModel.add(text: text, priority: priority)
+            success = await viewModel.add(text: text, priority: priority)
         case .edit(let existing):
-            await viewModel.update(id: existing.id, text: text, priority: priority)
+            success = await viewModel.update(id: existing.id, text: text, priority: priority)
         }
-        dismissSheet()
+        if success {
+            dismissSheet()
+        }
+        // On failure the sheet stays open and the toast (attached to the sheet
+        // content) surfaces the error so the user can correct and retry.
     }
 
     private func dismissSheet() {

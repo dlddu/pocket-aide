@@ -57,40 +57,49 @@ final class AffirmationsViewModel: ObservableObject {
         }
     }
 
-    func add(text: String, priority: Priority) async {
-        guard let api else { return }
+    @discardableResult
+    func add(text: String, priority: Priority) async -> Bool {
+        guard let api else { return false }
         do {
             let created = try await api.createAffirmation(text: text, priority: priority)
             items.insert(created, at: 0)
             heroId = created.id
+            return true
         } catch {
             loadError = "다짐을 추가하지 못했어요"
+            return false
         }
     }
 
-    func update(id: Int64, text: String, priority: Priority) async {
-        guard let api else { return }
+    @discardableResult
+    func update(id: Int64, text: String, priority: Priority) async -> Bool {
+        guard let api else { return false }
         do {
             let updated = try await api.updateAffirmation(id: id, text: text, priority: priority)
             if let idx = items.firstIndex(where: { $0.id == id }) {
                 items[idx] = updated
             }
             heroId = updated.id
+            return true
         } catch {
             loadError = "다짐을 수정하지 못했어요"
+            return false
         }
     }
 
-    func delete(id: Int64) async {
-        guard let api else { return }
+    @discardableResult
+    func delete(id: Int64) async -> Bool {
+        guard let api else { return false }
         do {
             try await api.deleteAffirmation(id: id)
             items.removeAll(where: { $0.id == id })
             if heroId == id {
                 rotateHero()
             }
+            return true
         } catch {
             loadError = "다짐을 삭제하지 못했어요"
+            return false
         }
     }
 }
