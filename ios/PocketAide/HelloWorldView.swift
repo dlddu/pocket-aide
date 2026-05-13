@@ -49,6 +49,21 @@ struct HelloWorldView: View {
                 Button("Sign out", action: auth.signOut)
                     .buttonStyle(.bordered)
                     .accessibilityIdentifier("SignOutButton")
+            } else if let error = auth.meError {
+                Text(error)
+                    .font(.system(size: DesignTokens.Typography.captionSm))
+                    .foregroundStyle(DesignTokens.Color.accent(.personal))
+                    .accessibilityIdentifier("MeErrorLabel")
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Button("Retry") {
+                        Task { await auth.refreshMe() }
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("RetryMeButton")
+                    Button("Sign out", action: auth.signOut)
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("SignOutButton")
+                }
             } else {
                 Text("Loading account…")
                     .font(.system(size: DesignTokens.Typography.captionSm))
