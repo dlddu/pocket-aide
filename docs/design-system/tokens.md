@@ -1,7 +1,7 @@
 ---
 type: design-system-tokens
-last_updated: 2026-05-06
-source: docs/mockups/_template.md + 10 mockup HTML 인라인 스타일 추출
+last_updated: 2026-05-13
+source: docs/mockups/_template.md + 10 mockup HTML 인라인 스타일 추출 + 다크 변형(1.9) 추가
 ---
 
 # 디자인 토큰 (Tokens)
@@ -70,6 +70,37 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 키보드 확장 보조 토큰:
 - `--kbd` 키보드 배경: `#D8D3C7`
 - `--key` 키 캡: `#FBFAF6`
+
+### 1.9 다크 변형 (Dark Variants)
+
+음성 모드(1.7)의 다크 표면 컨셉을 전체 영역으로 확장한 변형. iOS `prefers-color-scheme: dark` 및 명시적 다크 모드 토글에서 사용한다.
+
+도출 원칙:
+- 라이트 `--bg`/`--paper`를 어두운 톤(L 7~15%)으로 낮추고, 라이트 `--ink`를 밝은 톤(L 80~95%)으로 끌어올린다.
+- 영역 강조(accent)는 색상을 유지하되 명도를 한 단계 끌어올려 다크 배경 위 대비를 확보한다.
+- 보더(`--rule`)와 부드러운 강조(`--soft`)는 다크 surface 위에서 카드 분리가 보이도록 surface보다 한 단계 밝은 톤을 쓴다.
+
+| 영역 | `--bg`/`--paper` | `--ink` | accent | `--rule` | `--soft` / 카드 |
+|---|---|---|---|---|---|
+| 개인 (Personal) — Warm Clay | `#1F1410` | `#F4E2D4` | `--clay` `#D67852` | `#4A2E22` | `#3D2218` |
+| 회사 (Work) — Cool Slate | `#0E1A2B` | `#DDE5F0` | `--slate` `#7A9BC2` | `#1F2D3F` | `#1A2638` |
+| AI 채팅 — Charcoal + Sage | `#0F1614` | `#ECEAE3` | `--sage` `#7CB293` | `#2A3530` | `#1A2320` |
+| 임시공간 (Scratchpad) — Paper + Warm Brown | `#1F1B12` | `#E0D8C2` | `--warm` `#D6A57E` | `#3D3528` | `#272219` |
+| 루틴 (Routines) — Forest | `#1A2218` | `#D6DDD2` | `--forest` `#7CAB89` | `#2D3829` | `#243029` |
+| 다짐 (Affirmations) — Sand/Tan | `#2E251A` | `#EADCC2` | `--tan` `#C49B6F` | `#4A3D28` | `#3A2E1E` |
+| 음성 모드 (Voice) | `#0F1614` | `#FFFFFF` | `--sage` `#5E8B73` | — | — |
+
+시스템 통합 영역(1.8)의 다크 변형은 iOS 시스템 다크 컨벤션을 따른다:
+- 페이지 배경: `#000000`
+- 카드/그룹화 셀: `#1C1C1E`
+- 구분선: `#2C2C2E`
+- 보조 텍스트: `#8E8E93`
+- 키보드 배경 `--kbd`: `#1C1C1E` / 키 캡 `--key`: `#2C2C2E`
+
+**제약**:
+- 영역 간 다크 변형을 섞지 않는다(V3 영역 분리 원칙 유지).
+- 음성 모드(1.7)와 AI 채팅 다크는 표면을 공유(`#0F1614`)하지만 본문 톤이 다르다(`#FFFFFF` vs `#ECEAE3`). 음성은 풀 컨트라스트, 채팅은 장문 가독성 우선.
+- 다크 변형에서도 stone 팔레트는 메타 영역에만 사용한다(영역 내부 텍스트는 영역 다크 토큰 사용).
 
 ---
 
