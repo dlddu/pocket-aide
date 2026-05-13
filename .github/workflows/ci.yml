@@ -3,9 +3,11 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -170,7 +172,7 @@ jobs:
   testflight-upload:
     name: TestFlight upload
     needs: backend-docker-push
-    if: ${{ !cancelled() && !failure() && needs.changes.outputs.ios == 'true' }}
+    if: ${{ !cancelled() && !failure() && needs.changes.outputs.ios == 'true' && github.event_name == 'pull_request' }}
     runs-on: macos-26
     env:
       APP_BUNDLE_ID: com.dlddu.PocketAide
@@ -266,7 +268,7 @@ jobs:
           if [ "$BACKEND_CHANGED" = "true" ]; then
             [ "$BACKEND_PUSH_RESULT" = "success" ] || { echo "backend-docker-push must pass"; exit 1; }
           fi
-          if [ "$IOS_CHANGED" = "true" ]; then
+          if [ "$IOS_CHANGED" = "true" ] && [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             [ "$TESTFLIGHT_RESULT" = "success" ] || { echo "testflight-upload must pass"; exit 1; }
           fi
           echo "ci-success: all required gates green"
