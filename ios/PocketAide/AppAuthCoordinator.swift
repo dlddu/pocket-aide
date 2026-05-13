@@ -53,6 +53,8 @@ final class AppAuthCoordinator: ObservableObject {
         guard let api else { return }
         do {
             me = try await api.me()
+        } catch APIError.badStatus(401, _) {
+            signOut()
         } catch {
             me = nil
         }
