@@ -8,13 +8,24 @@ import XCTest
 ///   - backend listening on :8080, configured to verify against oidcmock
 ///   - BackendBaseURL in Info-Debug.plist points to http://localhost:8080
 ///   - URL scheme `pocketaide-dev` registered for the redirect URI
+///
+/// Every test asks the app to wipe the keychain on launch via the
+/// `-uitest-reset-keychain` launch argument so that we always start on the
+/// LoginView, independent of state left behind by previous CI runs on the
+/// same simulator UDID.
 final class LoginUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
-    func testLoginViewShowsBrandAndSignInButton() {
+    private func makeApp() -> XCUIApplication {
         let app = XCUIApplication()
+        app.launchArguments.append("-uitest-reset-keychain")
+        return app
+    }
+
+    func testLoginViewShowsBrandAndSignInButton() {
+        let app = makeApp()
         app.launch()
 
         XCTAssertTrue(
@@ -32,7 +43,7 @@ final class LoginUITests: XCTestCase {
     }
 
     func testHealthBadgeReflectsBackendOnLogin() {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launch()
 
         let health = app.staticTexts["HealthStatus"]
@@ -42,12 +53,12 @@ final class LoginUITests: XCTestCase {
 
     /// Walks the full OIDC dance via the oidcmock server:
     /// 1. tap Sign-in button on LoginView
-    /// 2. approve the ASWebAuthenticationSession system prompt
+    /// 2. approve the ASWebAuthenticationSession system prompt (if shown)
     /// 3. oidcmock immediately 302-redirects to the registered URL scheme
     /// 4. assert we land on the signed-in screen with the mock subject
     /// 5. sign out and confirm we return to LoginView
     func testFullSignInFlowAgainstOidcMock() {
-        let app = XCUIApplication()
+        let app = makeApp()
 
         // Add an interruption monitor for the system "wants to use … to sign in"
         // alert that ASWebAuthenticationSession raises on the first attempt.
@@ -70,16 +81,15 @@ final class LoginUITests: XCTestCase {
         signInButton.tap()
 
         // The ASWebAuthenticationSession consent alert is rendered by
-        // springboard, not the app, so reach for it directly.
+        // springboard, not the app, so reach for it directly. Some iOS
+        // releases / re-runs skip the alert entirely (consent persisted),
+        // so we treat "not present" as a no-op rather than a failure.
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let continuePredicate = NSPredicate(format: "label IN %@", ["Continue", "계속", "확인", "OK"])
         let continueButton = springboard.buttons.matching(continuePredicate).firstMatch
         if continueButton.waitForExistence(timeout: 10) {
             continueButton.tap()
         }
-        // Touch the app to give the interruption monitor a chance to fire if
-        // the springboard path missed.
-        app.tap()
 
         let signedInLabel = app.staticTexts["SignedInLabel"]
         XCTAssertTrue(
