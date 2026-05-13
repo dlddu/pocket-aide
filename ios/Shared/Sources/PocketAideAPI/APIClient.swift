@@ -6,12 +6,14 @@ public struct AuthConfig: Codable, Equatable, Sendable {
     public let clientId: String
     public let redirectUri: String
     public let audience: String
+    public let devAuthTokenPath: String?
 
     enum CodingKeys: String, CodingKey {
         case issuer
         case clientId = "client_id"
         case redirectUri = "redirect_uri"
         case audience
+        case devAuthTokenPath = "dev_auth_token_path"
     }
 }
 

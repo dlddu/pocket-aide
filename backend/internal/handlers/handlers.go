@@ -15,12 +15,16 @@ const pingTimeout = 2 * time.Second
 
 // AuthConfig is what /api/auth/config returns to the iOS client. Values come
 // from the backend's environment (ConfigMap in K8s) so the IdP can be swapped
-// without rebuilding the app.
+// without rebuilding the app. DevAuthTokenPath is non-empty only when the
+// backend is running with POCKET_AIDE_DEV=1, signalling that the client can
+// skip the interactive OIDC flow and POST there to mint an oidcmock-signed
+// access token.
 type AuthConfig struct {
-	Issuer      string `json:"issuer"`
-	ClientID    string `json:"client_id"`
-	RedirectURI string `json:"redirect_uri"`
-	Audience    string `json:"audience"`
+	Issuer           string `json:"issuer"`
+	ClientID         string `json:"client_id"`
+	RedirectURI      string `json:"redirect_uri"`
+	Audience         string `json:"audience"`
+	DevAuthTokenPath string `json:"dev_auth_token_path,omitempty"`
 }
 
 // Health returns an /healthz handler that pings the database.

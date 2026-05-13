@@ -47,6 +47,9 @@ func main() {
 		RedirectURI: cfg.OIDCRedirectURI,
 		Audience:    cfg.OIDCAudience,
 	}
+	if mock != nil {
+		authCfg.DevAuthTokenPath = "/dev/auth-token"
+	}
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

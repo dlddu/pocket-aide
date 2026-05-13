@@ -30,11 +30,41 @@ final class AppSession: ObservableObject {
             self.api = nil
             self.oidc = nil
         }
-        if CommandLine.arguments.contains("--ui-test-mock-oidc") {
-            Task { await signInWithDevToken() }
-        } else {
-            refreshState()
+        bootstrap()
+    }
+
+    // Called once at launch: if a token is already on the keychain, go
+    // straight to signedIn. Otherwise, ask the backend's /api/auth/config —
+    // when it reports a dev_auth_token_path (POCKET_AIDE_DEV=1 backend) we
+    // automatically mint an oidcmock-signed token. Real prod backends omit
+    // the field, so this falls through to the LoginView.
+    private func bootstrap() {
+        do {
+            if try tokenStore.load() != nil {
+                state = .signedIn
+                return
+            }
+        } catch {
+            // fall through, treat as signed out
         }
+        Task { await self.resolveInitialAuth() }
+    }
+
+    private func resolveInitialAuth() async {
+        guard let api else {
+            state = .signedOut
+            return
+        }
+        do {
+            let cfg = try await api.authConfig()
+            if let path = cfg.devAuthTokenPath, !path.isEmpty {
+                await signInWithDevToken(path: path)
+                return
+            }
+        } catch {
+            // Backend unreachable / non-dev — surface LoginView as usual.
+        }
+        state = .signedOut
     }
 
     var isSignedIn: Bool {
@@ -75,16 +105,17 @@ final class AppSession: ObservableObject {
         state = .signedOut
     }
 
-    // Hits the backend's POCKET_AIDE_DEV-only /dev/auth-token endpoint, which
-    // mints an oidcmock-signed access token. Stored in the keychain so the
-    // standard Authorization header path works for subsequent API calls.
-    private func signInWithDevToken() async {
+    // Hits the backend's POCKET_AIDE_DEV-only token endpoint advertised via
+    // /api/auth/config.dev_auth_token_path, which mints an oidcmock-signed
+    // access token. Stored in the keychain so the standard Authorization
+    // header path works for subsequent API calls.
+    private func signInWithDevToken(path: String) async {
         guard let api else {
             state = .signedOut
             return
         }
         do {
-            let bundle = try await fetchDevTokenBundle(baseURL: api.baseURL)
+            let bundle = try await fetchDevTokenBundle(baseURL: api.baseURL, path: path)
             try tokenStore.save(bundle)
             state = .signedIn
         } catch {
@@ -93,8 +124,9 @@ final class AppSession: ObservableObject {
         }
     }
 
-    private func fetchDevTokenBundle(baseURL: URL) async throws -> TokenBundle {
-        var req = URLRequest(url: baseURL.appendingPathComponent("dev/auth-token"))
+    private func fetchDevTokenBundle(baseURL: URL, path: String) async throws -> TokenBundle {
+        let trimmed = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        var req = URLRequest(url: baseURL.appendingPathComponent(trimmed))
         req.httpMethod = "POST"
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {

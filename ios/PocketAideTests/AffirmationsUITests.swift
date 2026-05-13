@@ -7,7 +7,6 @@ final class AffirmationsUITests: XCTestCase {
 
     private func launchOnAffirmationsTab() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments.append("--ui-test-mock-oidc")
         app.launch()
         // Affirmations is the default selection via RootView.onAppear. The
         // affirmations tab button itself may live under the system "More" tab
