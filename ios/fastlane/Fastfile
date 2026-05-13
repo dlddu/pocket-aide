@@ -48,12 +48,17 @@ platform :ios do
       }
     )
 
+    pr_number = ENV["PR_NUMBER"]
+    commit_sha = ENV["COMMIT_SHA"] || `git rev-parse HEAD`.strip
+    short_sha = commit_sha[0, 7]
+    pr_label = pr_number && !pr_number.empty? ? "PR ##{pr_number}" : "local"
+
     pilot(
       api_key: api_key,
       ipa: "build/PocketAide.ipa",
       skip_waiting_for_build_processing: true,
       skip_submission: true,
-      changelog: "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}"
+      changelog: "#{pr_label} • commit #{short_sha}"
     )
   end
 end
