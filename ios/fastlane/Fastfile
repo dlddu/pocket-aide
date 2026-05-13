@@ -56,7 +56,7 @@ platform :ios do
     upload_to_testflight(
       api_key: api_key,
       ipa: "build/PocketAide.ipa",
-      skip_waiting_for_build_processing: true,
+      skip_waiting_for_build_processing: false,
       skip_submission: true,
       changelog: "#{pr_label} • commit #{short_sha}"
     )
