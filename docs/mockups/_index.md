@@ -1,6 +1,6 @@
 ---
 type: mockup-index
-last_updated: 2026-05-07
+last_updated: 2026-05-13
 ---
 
 # Mockup 인덱스
@@ -10,6 +10,11 @@ last_updated: 2026-05-07
 > design-doc-structure-validator의 모든 검증이 무의미해진다.
 >
 > 보조 필드인 **PRD/AC**는 product-doc-engineer 산출물과의 연결을 보존하기 위한 확장이다.
+
+## 메타 도구 (mockup이 아닌 갤러리 페이지)
+
+- `index.html` — 라이트 갤러리. 각 `screen-*.html`로 링크.
+- `mockups-dark.html` — **다크 변형 통합 갤러리**. 11개 `screen-*.html`의 다크 버전을 `tokens.md §1.9` 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다.
 
 ## 현재 미정의 영역
 
