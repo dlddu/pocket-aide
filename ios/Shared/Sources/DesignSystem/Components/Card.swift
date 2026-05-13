@@ -11,6 +11,8 @@ public struct DSCard<Content: View>: View {
     private let emphasized: Bool
     private let content: () -> Content
 
+    @Environment(\.colorScheme) private var colorScheme
+
     public init(
         area: DesignTokens.Area,
         padding: Padding = .small,
@@ -26,11 +28,17 @@ public struct DSCard<Content: View>: View {
     public var body: some View {
         let radius = padding == .large ? DesignTokens.Radius.cardLarge : DesignTokens.Radius.card
         let innerPadding = padding == .large ? DesignTokens.Spacing.xxl : DesignTokens.Spacing.md
+        // tokens.md §1.9: in dark variants the card surface is the area's --soft
+        // token (e.g. affirmations dark soft = #3A2E1E). In light it stays white
+        // per the original mockups.
+        let cardBackground: Color = colorScheme == .dark
+            ? DesignTokens.Color.soft(area)
+            : .white
 
         content()
             .padding(innerPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white)
+            .background(cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: radius))
             .overlay(
                 RoundedRectangle(cornerRadius: radius)
