@@ -18,9 +18,6 @@ final class AppAuthCoordinator: ObservableObject {
 
     init() {
         let store = KeychainTokenStore(accessGroup: nil)
-        if ProcessInfo.processInfo.arguments.contains("-uitest-reset-keychain") {
-            try? store.clear()
-        }
         self.tokenStore = store
         if let api = try? APIClient.fromBundle(.main, tokenStore: store) {
             self.api = api

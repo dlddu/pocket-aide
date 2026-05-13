@@ -19,7 +19,6 @@ struct LoginView: View {
             .padding(.horizontal, DesignTokens.Spacing.xl)
             .padding(.vertical, DesignTokens.Spacing.xxl)
         }
-        .accessibilityIdentifier("LoginView")
     }
 
     private var brand: some View {
