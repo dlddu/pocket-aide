@@ -11,6 +11,7 @@ final class AppAuthCoordinator: ObservableObject {
     @Published var healthOK = false
     @Published var healthError: String?
     @Published var me: MeResponse?
+    @Published var meError: String?
 
     let api: APIClient?
     let oidc: OIDCClient?
@@ -51,10 +52,14 @@ final class AppAuthCoordinator: ObservableObject {
 
     func refreshMe() async {
         guard let api else { return }
+        meError = nil
         do {
             me = try await api.me()
+        } catch APIError.badStatus(401, _) {
+            signOut()
         } catch {
             me = nil
+            meError = String(describing: error)
         }
     }
 
@@ -76,6 +81,7 @@ final class AppAuthCoordinator: ObservableObject {
     func signOut() {
         try? oidc?.signOut()
         me = nil
+        meError = nil
         signedIn = false
     }
 }
