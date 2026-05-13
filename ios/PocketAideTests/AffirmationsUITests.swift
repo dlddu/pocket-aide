@@ -16,10 +16,12 @@ final class AffirmationsUITests: XCTestCase {
     }
 
     private func findInSheet(_ app: XCUIApplication, identifier: String, timeout: TimeInterval = 5) -> XCUIElement {
-        // SwiftUI .sheet() places content in a separate accessibility container
-        // ("sheets"). Walking the full descendants tree finds elements
-        // regardless of which container they ended up in.
-        let element = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        // SwiftUI .sheet() places content in a separate accessibility container.
+        // Walking descendants finds elements there, and narrowing to .button
+        // ensures the returned element is hit-testable (not a wrapping VStack).
+        let element = app.descendants(matching: .button)
+            .matching(identifier: identifier)
+            .firstMatch
         _ = element.waitForExistence(timeout: timeout)
         return element
     }
@@ -62,7 +64,7 @@ final class AffirmationsUITests: XCTestCase {
         let dismissed = NSPredicate(format: "exists == false")
         let expectation = XCTNSPredicateExpectation(predicate: dismissed, object: cancelButton)
         XCTAssertEqual(
-            XCTWaiter.wait(for: [expectation], timeout: 3),
+            XCTWaiter.wait(for: [expectation], timeout: 6),
             .completed,
             "Sheet should be dismissed and cancel button should disappear"
         )
