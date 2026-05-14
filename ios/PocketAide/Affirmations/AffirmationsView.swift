@@ -29,7 +29,7 @@ struct AffirmationsView: View {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .bold))
                             .frame(width: 36, height: 36)
-                            .background(Color.white.opacity(0.4))
+                            .background(DesignTokens.Color.card(.affirmations).opacity(0.4))
                             .overlay(
                                 Circle().stroke(DesignTokens.Color.rule(.affirmations), lineWidth: 1)
                             )
