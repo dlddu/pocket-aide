@@ -51,9 +51,13 @@ platform :ios do
     pilot(
       api_key: api_key,
       ipa: "build/PocketAide.ipa",
-      skip_waiting_for_build_processing: true,
+      skip_waiting_for_build_processing: false,
       skip_submission: true,
-      changelog: "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}"
+      localized_build_info: {
+        "ko" => {
+          whats_new: "PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'} 자동 빌드 (#{(ENV['GITHUB_SHA'] || 'local')[0, 7]})"
+        }
+      }
     )
   end
 end
