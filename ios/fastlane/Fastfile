@@ -83,7 +83,7 @@ platform :ios do
       app_identifier: "com.dlddu.PocketAide",
       app_platform: "ios",
       build_number: build_number,
-      changelog: changelog,
+      localized_build_info: { "en-US" => { whats_new: changelog } },
       distribute_only: true,
       skip_submission: true,
       distribute_external: false
