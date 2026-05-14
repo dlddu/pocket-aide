@@ -39,14 +39,25 @@ struct AffirmationsView: View {
                     .accessibilityIdentifier("affirmations.add.button")
                 }
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                List {
+                    Section {
                         heroSection
-                        listSection
+                            .padding(.bottom, DesignTokens.Spacing.lg)
+                            .listRowInsets(EdgeInsets(
+                                top: 0,
+                                leading: DesignTokens.Spacing.xl,
+                                bottom: 0,
+                                trailing: DesignTokens.Spacing.xl
+                            ))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                     }
-                    .padding(.horizontal, DesignTokens.Spacing.xl)
-                    .padding(.bottom, DesignTokens.Spacing.xxl)
+
+                    listSection
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(DesignTokens.Color.surface(.affirmations))
             }
         }
         .task {
@@ -71,7 +82,12 @@ struct AffirmationsView: View {
                             }
                         }
                     },
-                    onCancel: { sheetMode = nil }
+                    onCancel: { sheetMode = nil },
+                    onDelete: {
+                        guard case let .edit(existing) = mode else { return }
+                        sheetMode = nil
+                        Task { await viewModel.delete(id: existing.id) }
+                    }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 // No outer accessibilityIdentifier here — iOS 26 cascades it
@@ -101,7 +117,7 @@ struct AffirmationsView: View {
                     Divider().background(DesignTokens.Color.rule(.affirmations))
                     HStack {
                         HStack(spacing: 6) {
-                            priorityDots(for: hero.priority)
+                            PriorityDots.horizontal(for: hero.priority)
                             Text("우선순위 \(hero.priority.displayName)")
                                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                                 .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
@@ -161,20 +177,43 @@ struct AffirmationsView: View {
     @ViewBuilder
     private var listSection: some View {
         if !viewModel.items.isEmpty {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            Section {
+                ForEach(viewModel.items) { item in
+                    listRow(for: item)
+                        .listRowInsets(EdgeInsets(
+                            top: DesignTokens.Spacing.xs,
+                            leading: DesignTokens.Spacing.xl,
+                            bottom: DesignTokens.Spacing.xs,
+                            trailing: DesignTokens.Spacing.xl
+                        ))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button {
+                                Task { await viewModel.delete(id: item.id) }
+                            } label: {
+                                Label("삭제", systemImage: "trash")
+                            }
+                            .tint(DesignTokens.Color.destructive(.affirmations))
+                            .accessibilityIdentifier("affirmations.row.\(item.id).delete")
+                        }
+                }
+            } header: {
                 HStack {
                     Text("전체 \(viewModel.items.count)개")
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .bold))
                         .foregroundStyle(DesignTokens.Color.ink(.affirmations))
                     Spacer()
                 }
+                .textCase(nil)
+                .listRowInsets(EdgeInsets(
+                    top: 0,
+                    leading: DesignTokens.Spacing.xl,
+                    bottom: DesignTokens.Spacing.sm,
+                    trailing: DesignTokens.Spacing.xl
+                ))
+                .listRowBackground(Color.clear)
                 .accessibilityIdentifier("affirmations.list.header")
-
-                VStack(spacing: DesignTokens.Spacing.sm) {
-                    ForEach(viewModel.items) { item in
-                        listRow(for: item)
-                    }
-                }
             }
         }
     }
@@ -182,7 +221,7 @@ struct AffirmationsView: View {
     private func listRow(for item: Affirmation) -> some View {
         Card(area: .affirmations, padding: .small) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                priorityDotsColumn(for: item.priority)
+                PriorityDots.vertical(for: item.priority)
                 Text(item.text)
                     .font(DesignTokens.Typography.font(size: 15.5, family: .serif))
                     .foregroundStyle(DesignTokens.Color.ink(.affirmations))
@@ -204,32 +243,35 @@ struct AffirmationsView: View {
         .accessibilityIdentifier("affirmations.row.\(item.id)")
     }
 
-    private func priorityDots(for priority: AffirmationPriority) -> some View {
-        HStack(spacing: 3) {
-            ForEach(0..<3, id: \.self) { idx in
-                Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < dotsFilled(priority) ? 1 : 0.25))
-                    .frame(width: 6, height: 6)
-            }
-        }
-    }
+}
 
-    private func priorityDotsColumn(for priority: AffirmationPriority) -> some View {
-        VStack(spacing: 2) {
-            ForEach(0..<3, id: \.self) { idx in
-                Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < dotsFilled(priority) ? 1 : 0.25))
-                    .frame(width: 6, height: 6)
-            }
-        }
-        .padding(.top, 4)
-    }
-
-    private func dotsFilled(_ priority: AffirmationPriority) -> Int {
+private enum PriorityDots {
+    static func filled(_ priority: AffirmationPriority) -> Int {
         switch priority {
         case .high: return 3
         case .normal: return 2
         case .low: return 1
         }
+    }
+
+    static func horizontal(for priority: AffirmationPriority) -> some View {
+        HStack(spacing: 3) {
+            ForEach(0..<3, id: \.self) { idx in
+                Circle()
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.25))
+                    .frame(width: 6, height: 6)
+            }
+        }
+    }
+
+    static func vertical(for priority: AffirmationPriority) -> some View {
+        VStack(spacing: 2) {
+            ForEach(0..<3, id: \.self) { idx in
+                Circle()
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.25))
+                    .frame(width: 6, height: 6)
+            }
+        }
+        .padding(.top, 4)
     }
 }

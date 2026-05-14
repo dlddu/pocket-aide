@@ -6,6 +6,7 @@ struct PriorityEditSheet: View {
     let mode: Mode
     let onSave: (String, AffirmationPriority) -> Void
     let onCancel: () -> Void
+    let onDelete: (() -> Void)?
 
     @State private var text: String
     @State private var priority: AffirmationPriority
@@ -13,11 +14,13 @@ struct PriorityEditSheet: View {
     init(
         mode: Mode,
         onSave: @escaping (String, AffirmationPriority) -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onDelete: (() -> Void)? = nil
     ) {
         self.mode = mode
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onDelete = onDelete
         switch mode {
         case .create:
             _text = State(initialValue: "")
@@ -136,12 +139,36 @@ struct PriorityEditSheet: View {
             .opacity(trimmedText.isEmpty ? 0.5 : 1)
             .accessibilityIdentifier("sheet.save.button")
 
+            if isEditing, let onDelete {
+                Button(action: onDelete) {
+                    Text("삭제")
+                        .font(DesignTokens.Typography.font(
+                            size: DesignTokens.Typography.bodyLg,
+                            weight: .semibold
+                        ))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .overlay(
+                            Capsule()
+                                .stroke(DesignTokens.Color.destructive(.affirmations), lineWidth: 1.4)
+                        )
+                        .foregroundStyle(DesignTokens.Color.destructive(.affirmations))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("sheet.delete.button")
+            }
+
             Button("취소", action: onCancel)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))
                 .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
                 .padding(.vertical, 8)
                 .accessibilityIdentifier("sheet.cancel.button")
         }
+    }
+
+    private var isEditing: Bool {
+        if case .edit = mode { return true }
+        return false
     }
 
     private func priorityDots(for option: AffirmationPriority) -> some View {
