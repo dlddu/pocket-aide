@@ -117,7 +117,7 @@ struct AffirmationsView: View {
                     Divider().background(DesignTokens.Color.rule(.affirmations))
                     HStack {
                         HStack(spacing: 6) {
-                            priorityDots(for: hero.priority)
+                            PriorityDots.horizontal(for: hero.priority)
                             Text("우선순위 \(hero.priority.displayName)")
                                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                                 .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
@@ -221,7 +221,7 @@ struct AffirmationsView: View {
     private func listRow(for item: Affirmation) -> some View {
         Card(area: .affirmations, padding: .small) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                priorityDotsColumn(for: item.priority)
+                PriorityDots.vertical(for: item.priority)
                 Text(item.text)
                     .font(DesignTokens.Typography.font(size: 15.5, family: .serif))
                     .foregroundStyle(DesignTokens.Color.ink(.affirmations))
@@ -243,32 +243,35 @@ struct AffirmationsView: View {
         .accessibilityIdentifier("affirmations.row.\(item.id)")
     }
 
-    private func priorityDots(for priority: AffirmationPriority) -> some View {
-        HStack(spacing: 3) {
-            ForEach(0..<3, id: \.self) { idx in
-                Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < dotsFilled(priority) ? 1 : 0.25))
-                    .frame(width: 6, height: 6)
-            }
-        }
-    }
+}
 
-    private func priorityDotsColumn(for priority: AffirmationPriority) -> some View {
-        VStack(spacing: 2) {
-            ForEach(0..<3, id: \.self) { idx in
-                Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < dotsFilled(priority) ? 1 : 0.25))
-                    .frame(width: 6, height: 6)
-            }
-        }
-        .padding(.top, 4)
-    }
-
-    private func dotsFilled(_ priority: AffirmationPriority) -> Int {
+private enum PriorityDots {
+    static func filled(_ priority: AffirmationPriority) -> Int {
         switch priority {
         case .high: return 3
         case .normal: return 2
         case .low: return 1
         }
+    }
+
+    static func horizontal(for priority: AffirmationPriority) -> some View {
+        HStack(spacing: 3) {
+            ForEach(0..<3, id: \.self) { idx in
+                Circle()
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.25))
+                    .frame(width: 6, height: 6)
+            }
+        }
+    }
+
+    static func vertical(for priority: AffirmationPriority) -> some View {
+        VStack(spacing: 2) {
+            ForEach(0..<3, id: \.self) { idx in
+                Circle()
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.25))
+                    .frame(width: 6, height: 6)
+            }
+        }
+        .padding(.top, 4)
     }
 }
