@@ -28,6 +28,19 @@ final class AffirmationsUITests: XCTestCase {
     private func selectAffirmationsTab(in app: XCUIApplication) {
         let tabsBar = app.tabBars.firstMatch
         XCTAssertTrue(tabsBar.waitForExistence(timeout: 15), "Tab bar should appear after sign-in")
+
+        // Diagnostic: attach what the tab bar actually exposes so we can read
+        // it from the xcresult bundle when running in CI.
+        let dump = XCTAttachment(string: tabsBar.debugDescription)
+        dump.name = "tabBar.debugDescription"
+        dump.lifetime = .keepAlways
+        add(dump)
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "before-affirmations-tap"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
         // Prefer the labelled button if present, otherwise fall back to the
         // last tab in the bar (affirmations is the 6th tab in RootView).
         let labelled = tabsBar.buttons["다짐"]
@@ -38,6 +51,11 @@ final class AffirmationsUITests: XCTestCase {
         let allTabs = tabsBar.buttons.allElementsBoundByIndex
         XCTAssertFalse(allTabs.isEmpty, "Tab bar should expose at least one button")
         allTabs.last?.tap()
+
+        let after = XCTAttachment(screenshot: app.screenshot())
+        after.name = "after-affirmations-tap"
+        after.lifetime = .keepAlways
+        add(after)
     }
 
     func testAffirmationsTabIsReachable() {
