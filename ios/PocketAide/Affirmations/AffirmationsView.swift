@@ -74,7 +74,9 @@ struct AffirmationsView: View {
                     onCancel: { sheetMode = nil }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .accessibilityIdentifier("affirmations.sheet")
+                // No outer accessibilityIdentifier here — iOS 26 cascades it
+                // to every leaf inside the sheet, clobbering sheet.title,
+                // sheet.text.field, sheet.save.button, sheet.cancel.button.
             }
         }
         .animation(.easeInOut(duration: 0.18), value: sheetMode)
