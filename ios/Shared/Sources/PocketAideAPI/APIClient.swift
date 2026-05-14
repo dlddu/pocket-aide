@@ -148,15 +148,7 @@ public final class APIClient: @unchecked Sendable {
 
     public struct EmptyResponse: Decodable, Sendable { public init() {} }
 
-    public static let encoder: JSONEncoder = {
-        let e = JSONEncoder()
-        e.keyEncodingStrategy = .convertToSnakeCase
-        return e
-    }()
+    public static let encoder: JSONEncoder = JSONEncoder()
 
-    public static let decoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.keyDecodingStrategy = .convertFromSnakeCase
-        return d
-    }()
+    public static let decoder: JSONDecoder = JSONDecoder()
 }

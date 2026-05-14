@@ -21,6 +21,14 @@ public struct Affirmation: Codable, Identifiable, Equatable, Sendable, Hashable 
     public let createdAt: Int64
     public let updatedAt: Int64
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case text
+        case priority
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+
     public init(id: Int64, text: String, priority: AffirmationPriority, createdAt: Int64, updatedAt: Int64) {
         self.id = id
         self.text = text
