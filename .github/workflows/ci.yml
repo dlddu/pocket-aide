@@ -35,6 +35,8 @@ jobs:
               - '.dockerignore'
             ios:
               - 'ios/**'
+              - '!ios/PocketAideTests/**'
+              - '!ios/.swiftlint.yml'
             code:
               - 'backend/**'
               - 'Dockerfile'

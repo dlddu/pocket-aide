@@ -61,16 +61,21 @@ final class LoginUITests: XCTestCase {
         // The ASWebAuthenticationSession consent alert is rendered by
         // springboard. Some iOS releases / re-runs skip it because consent
         // is persisted; treat absence as a no-op rather than a failure.
+        // The dialog can take >10s to appear on a cold simulator, so wait
+        // longer to avoid racing past it.
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let continuePredicate = NSPredicate(format: "label IN %@", ["Continue", "계속", "확인", "OK"])
         let continueButton = springboard.buttons.matching(continuePredicate).firstMatch
-        if continueButton.waitForExistence(timeout: 10) {
+        if continueButton.waitForExistence(timeout: 20) {
             continueButton.tap()
         }
 
+        // First sign-in does a cold OIDC handshake plus initial /healthz
+        // and /api/me requests against just-booted backends — observed
+        // ~24s on CI, so give 60s of headroom.
         let signedInLabel = app.staticTexts["SignedInLabel"]
         XCTAssertTrue(
-            signedInLabel.waitForExistence(timeout: 30),
+            signedInLabel.waitForExistence(timeout: 60),
             "Sign-in should complete and land on HelloWorldView"
         )
         XCTAssertTrue(
