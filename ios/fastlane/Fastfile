@@ -117,8 +117,15 @@ platform :ios do
     ).first
     UI.user_error!("No builds found for com.dlddu.PocketAide") if build.nil?
 
-    localizations = build.get_beta_build_localizations
-    UI.user_error!("No beta build localizations for build #{build.version}") if localizations.empty?
+    localizations = []
+    attempts = 12
+    attempts.times do |i|
+      localizations = build.get_beta_build_localizations
+      break if localizations.any? && localizations.all? { |loc| loc.whats_new == expected }
+      UI.message("TestFlight changelog not yet visible for build #{build.version} (attempt #{i + 1}/#{attempts}), waiting 15s...")
+      sleep(15) unless i == attempts - 1
+    end
+    UI.user_error!("No beta build localizations for build #{build.version} after #{attempts * 15}s") if localizations.empty?
 
     mismatched = localizations.reject { |loc| loc.whats_new == expected }
     if mismatched.any?
