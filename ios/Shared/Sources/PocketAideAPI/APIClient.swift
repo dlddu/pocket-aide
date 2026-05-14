@@ -70,15 +70,55 @@ public final class APIClient: @unchecked Sendable {
 
     private struct HealthResponse: Codable { let status: String }
 
-    private func get<T: Decodable>(
+    public func get<T: Decodable>(
         _ path: String,
-        authenticated: Bool,
-        decodeAs: T.Type
+        authenticated: Bool = true,
+        decodeAs: T.Type = T.self
     ) async throws -> T {
+        let data = try await send(method: "GET", path: path, body: Optional<Empty>.none, authenticated: authenticated)
+        return try decodeResponse(T.self, from: data)
+    }
+
+    public func post<Input: Encodable, Output: Decodable>(
+        _ path: String,
+        body: Input,
+        authenticated: Bool = true,
+        decodeAs: Output.Type = Output.self
+    ) async throws -> Output {
+        let data = try await send(method: "POST", path: path, body: body, authenticated: authenticated)
+        return try decodeResponse(Output.self, from: data)
+    }
+
+    public func patch<Input: Encodable, Output: Decodable>(
+        _ path: String,
+        body: Input,
+        authenticated: Bool = true,
+        decodeAs: Output.Type = Output.self
+    ) async throws -> Output {
+        let data = try await send(method: "PATCH", path: path, body: body, authenticated: authenticated)
+        return try decodeResponse(Output.self, from: data)
+    }
+
+    public func delete(_ path: String, authenticated: Bool = true) async throws {
+        _ = try await send(method: "DELETE", path: path, body: Optional<Empty>.none, authenticated: authenticated)
+    }
+
+    private struct Empty: Encodable {}
+
+    private func send<Input: Encodable>(
+        method: String,
+        path: String,
+        body: Input?,
+        authenticated: Bool
+    ) async throws -> Data {
         var req = URLRequest(url: baseURL.appendingPathComponent(path))
-        req.httpMethod = "GET"
+        req.httpMethod = method
         if authenticated, let token = try tokenStore.load()?.accessToken {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        if let body {
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.httpBody = try APIClient.encoder.encode(body)
         }
         let (data, response): (Data, URLResponse)
         do {
@@ -92,10 +132,31 @@ public final class APIClient: @unchecked Sendable {
         guard (200..<300).contains(http.statusCode) else {
             throw APIError.badStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
+        return data
+    }
+
+    private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+        if data.isEmpty, let empty = EmptyResponse() as? T {
+            return empty
+        }
         do {
-            return try JSONDecoder().decode(T.self, from: data)
+            return try APIClient.decoder.decode(T.self, from: data)
         } catch {
             throw APIError.decoding(error)
         }
     }
+
+    public struct EmptyResponse: Decodable, Sendable { public init() {} }
+
+    public static let encoder: JSONEncoder = {
+        let e = JSONEncoder()
+        e.keyEncodingStrategy = .convertToSnakeCase
+        return e
+    }()
+
+    public static let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.keyDecodingStrategy = .convertFromSnakeCase
+        return d
+    }()
 }

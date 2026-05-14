@@ -12,17 +12,3 @@ struct PocketAideApp: App {
         }
     }
 }
-
-struct RootView: View {
-    @EnvironmentObject private var auth: AppAuthCoordinator
-
-    var body: some View {
-        Group {
-            if auth.signedIn {
-                HelloWorldView()
-            } else {
-                LoginView()
-            }
-        }
-    }
-}
