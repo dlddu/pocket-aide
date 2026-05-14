@@ -21,41 +21,67 @@ final class AffirmationsUITests: XCTestCase {
         return app
     }
 
-    /// Tap the affirmations tab by *position* (last of 6) rather than by label,
-    /// since SwiftUI on iOS 26 may not honour the `selection:` binding's
-    /// default for the last tab and we can't rely on the Korean "다짐" string
-    /// being the exact button label exposed to XCUITest.
+    /// Navigate to the affirmations screen.
+    ///
+    /// iOS 26 SwiftUI `TabView` on iPhone portrait shows at most 4 tabs in the
+    /// bottom bar plus a "More" entry — the remaining tabs (루틴 and 다짐 in
+    /// our 6-tab shell) live behind "More". Default `selection: .affirmations`
+    /// causes the system to mark "More" selected on launch and surface the
+    /// overflow list from which the user picks 다짐. Real users do the same
+    /// two-step navigation, so we mirror that here.
     private func selectAffirmationsTab(in app: XCUIApplication) {
         let tabsBar = app.tabBars.firstMatch
         XCTAssertTrue(tabsBar.waitForExistence(timeout: 15), "Tab bar should appear after sign-in")
 
-        // Diagnostic: attach what the tab bar actually exposes so we can read
-        // it from the xcresult bundle when running in CI.
+        // Diagnostic: attach what the tab bar exposes so any future failure
+        // surfaces tab-bar state in the xcresult bundle.
         let dump = XCTAttachment(string: tabsBar.debugDescription)
         dump.name = "tabBar.debugDescription"
         dump.lifetime = .keepAlways
         add(dump)
 
-        let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = "before-affirmations-tap"
-        screenshot.lifetime = .keepAlways
-        add(screenshot)
-
-        // Prefer the labelled button if present, otherwise fall back to the
-        // last tab in the bar (affirmations is the 6th tab in RootView).
+        // Path 1: affirmations is directly in the bar.
         let labelled = tabsBar.buttons["다짐"]
         if labelled.exists {
             labelled.tap()
             return
         }
-        let allTabs = tabsBar.buttons.allElementsBoundByIndex
-        XCTAssertFalse(allTabs.isEmpty, "Tab bar should expose at least one button")
-        allTabs.last?.tap()
+
+        // Path 2: affirmations is in the "More" overflow. The More tab is
+        // already selected by default (selection binding == .affirmations),
+        // so the overflow list should already be rendered. If it isn't,
+        // tap "More" to bring it up.
+        if !findAndTapAffirmationsRow(in: app) {
+            let more = tabsBar.buttons["More"]
+            XCTAssertTrue(more.exists, "Neither '다짐' tab nor 'More' tab is present")
+            more.tap()
+            _ = findAndTapAffirmationsRow(in: app)
+        }
 
         let after = XCTAttachment(screenshot: app.screenshot())
         after.name = "after-affirmations-tap"
         after.lifetime = .keepAlways
         add(after)
+    }
+
+    /// Try the common places where iOS surfaces the "More" overflow rows
+    /// (tableview cells, collectionview cells, plain buttons). Returns true
+    /// if a 다짐 entry was found and tapped.
+    @discardableResult
+    private func findAndTapAffirmationsRow(in app: XCUIApplication) -> Bool {
+        let queries: [XCUIElementQuery] = [
+            app.tables.cells,
+            app.collectionViews.cells,
+            app.buttons,
+        ]
+        for query in queries {
+            let row = query["다짐"]
+            if row.waitForExistence(timeout: 3) {
+                row.tap()
+                return true
+            }
+        }
+        return false
     }
 
     func testAffirmationsTabIsReachable() {
