@@ -70,7 +70,10 @@ public struct Sheet<Content: View>: View {
                 style: .continuous
             ))
             .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: -4)
-            .accessibilityIdentifier("sheet.body")
+            // NOTE: No `.accessibilityIdentifier("sheet.body")` here. On iOS 26
+            // SwiftUI cascades container identifiers down to every leaf,
+            // clobbering inner identifiers (sheet.title, sheet.save.button,
+            // etc.) that UI tests query.
         }
         .ignoresSafeArea(.container, edges: .bottom)
     }
