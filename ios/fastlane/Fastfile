@@ -52,8 +52,39 @@ platform :ios do
       api_key: api_key,
       ipa: "build/PocketAide.ipa",
       skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+  end
+
+  desc "Wait for the latest TestFlight build to finish processing and set its changelog"
+  lane :set_changelog do
+    api_key_id = ENV.fetch("APPSTORE_CONNECT_API_KEY_ID")
+    api_key_issuer = ENV.fetch("APPSTORE_CONNECT_API_ISSUER_ID")
+    api_key_path = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{api_key_id}.p8")
+
+    api_key = app_store_connect_api_key(
+      key_id: api_key_id,
+      issuer_id: api_key_issuer,
+      key_filepath: api_key_path,
+      duration: 1200,
+      in_house: false
+    )
+
+    build_number = latest_testflight_build_number(
+      api_key: api_key,
+      app_identifier: "com.dlddu.PocketAide"
+    ).to_s
+
+    changelog = ENV["TESTFLIGHT_CHANGELOG"]
+    changelog = "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}" if changelog.nil? || changelog.empty?
+
+    pilot(
+      api_key: api_key,
+      app_identifier: "com.dlddu.PocketAide",
+      build_number: build_number,
+      changelog: changelog,
       skip_submission: true,
-      changelog: "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}"
+      distribute_external: false
     )
   end
 end
