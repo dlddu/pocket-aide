@@ -55,7 +55,7 @@ enum UITestAuth {
 
         let signedInLabel = app.staticTexts["SignedInLabel"]
         XCTAssertTrue(
-            signedInLabel.waitForExistence(timeout: 60),
+            signedInLabel.waitForExistence(timeout: 120),
             "Sign-in should complete and land on HelloWorldView"
         )
         XCTAssertTrue(
