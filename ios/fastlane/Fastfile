@@ -81,6 +81,7 @@ platform :ios do
     pilot(
       api_key: api_key,
       app_identifier: "com.dlddu.PocketAide",
+      app_platform: "ios",
       build_number: build_number,
       changelog: changelog,
       distribute_only: true,
