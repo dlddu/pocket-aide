@@ -44,15 +44,18 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
 	r.Get("/healthz", handlers.Health(conn))
-	r.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
 
-	r.Group(func(p chi.Router) {
-		p.Use(auth.Middleware(verifier, conn))
-		p.Get("/api/me", handlers.Me())
+	r.Group(func(g chi.Router) {
+		g.Use(middleware.Logger)
+		g.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
+
+		g.Group(func(p chi.Router) {
+			p.Use(auth.Middleware(verifier, conn))
+			p.Get("/api/me", handlers.Me())
+		})
 	})
 
 	srv := &http.Server{
