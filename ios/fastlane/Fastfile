@@ -57,7 +57,7 @@ platform :ios do
   end
 
   desc "Wait for the latest TestFlight build to finish processing and set its changelog"
-  lane :set_changelog do
+  lane :update_changelog do
     api_key_id = ENV.fetch("APPSTORE_CONNECT_API_KEY_ID")
     api_key_issuer = ENV.fetch("APPSTORE_CONNECT_API_ISSUER_ID")
     api_key_path = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{api_key_id}.p8")
@@ -83,6 +83,7 @@ platform :ios do
       app_identifier: "com.dlddu.PocketAide",
       build_number: build_number,
       changelog: changelog,
+      distribute_only: true,
       skip_submission: true,
       distribute_external: false
     )
