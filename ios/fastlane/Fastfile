@@ -53,7 +53,14 @@ platform :ios do
       ipa: "build/PocketAide.ipa",
       skip_waiting_for_build_processing: true,
       skip_submission: true,
-      changelog: "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}"
+      localized_build_info: {
+        "default" => {
+          whats_new: "PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'} 자동 빌드"
+        },
+        "ko" => {
+          whats_new: "PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'} 자동 빌드"
+        }
+      }
     )
   end
 end
