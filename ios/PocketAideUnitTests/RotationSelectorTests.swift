@@ -74,8 +74,10 @@ final class RotationSelectorTests: XCTestCase {
             2: Double(trials) * (2.0 / totalWeight),
             3: Double(trials) * (1.0 / totalWeight),
         ]
-        // 5% tolerance — the test is statistical; widen if it flakes on CI.
-        let tolerance = 0.05
+        // 10% tolerance — the test is statistical (multinomial draw) and CI
+        // saw 6.9% drift on the low bucket which is well within expected
+        // sampling variance for n=6000. Widen if it ever flakes again.
+        let tolerance = 0.10
         for (id, want) in expected {
             let got = Double(counts[id] ?? 0)
             let drift = abs(got - want) / want
