@@ -31,36 +31,37 @@ struct RootView: View {
     }
 
     private var signedInTabs: some View {
+        // NOTE: `.accessibilityIdentifier` is intentionally NOT applied to tab
+        // children. On iOS 26 SwiftUI cascades that identifier to every
+        // descendant accessibility element, overriding the more specific
+        // identifiers we set inside (e.g. `screen.header.title`,
+        // `affirmations.add.button`). UI tests query inner identifiers
+        // directly, so the cascade did harm without helping the tab bar
+        // (which uses the system Tab type and ignores the modifier anyway).
         TabView(selection: $selectedTab) {
             ChatTab()
                 .tabItem { Label("채팅", systemImage: "bubble.left.and.bubble.right") }
                 .tag(Tab.chat)
-                .accessibilityIdentifier("tab.chat")
 
             ScratchpadTab()
                 .tabItem { Label("임시공간", systemImage: "doc.text") }
                 .tag(Tab.scratchpad)
-                .accessibilityIdentifier("tab.scratchpad")
 
             PersonalTab()
                 .tabItem { Label("개인", systemImage: "person") }
                 .tag(Tab.personal)
-                .accessibilityIdentifier("tab.personal")
 
             WorkTab()
                 .tabItem { Label("회사", systemImage: "briefcase") }
                 .tag(Tab.work)
-                .accessibilityIdentifier("tab.work")
 
             RoutinesTab()
                 .tabItem { Label("루틴", systemImage: "arrow.triangle.2.circlepath") }
                 .tag(Tab.routines)
-                .accessibilityIdentifier("tab.routines")
 
             AffirmationsView()
                 .tabItem { Label("다짐", systemImage: "heart.fill") }
                 .tag(Tab.affirmations)
-                .accessibilityIdentifier("tab.affirmations")
         }
         .tint(DesignTokens.Color.accent(.affirmations))
     }
