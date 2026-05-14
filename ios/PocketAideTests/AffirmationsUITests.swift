@@ -8,6 +8,11 @@ import XCTest
 final class AffirmationsUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
+        // Class execution order is alphabetical, so this class runs BEFORE
+        // LoginUITests. We must perform the OIDC dance ourselves to populate
+        // the simulator keychain — otherwise every launch lands on LoginView
+        // and the affirmations screen identifiers are unreachable.
+        UITestAuth.ensureSignedIn(self)
     }
 
     private func launchApp(seed: String? = "1337") -> XCUIApplication {
