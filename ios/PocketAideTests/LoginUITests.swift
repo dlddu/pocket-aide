@@ -87,6 +87,7 @@ final class LoginUITests: XCTestCase {
 
     func testHealthBadgeAppearsWhileSignedIn() {
         let app = XCUIApplication()
+        app.launchEnvironment["UI_TESTS_USE_LEGACY_HOME"] = "1"
         app.launch()
 
         let health = app.staticTexts["HealthStatus"]
@@ -96,6 +97,7 @@ final class LoginUITests: XCTestCase {
 
     func testSignedInScreenShowsMockSubject() {
         let app = XCUIApplication()
+        app.launchEnvironment["UI_TESTS_USE_LEGACY_HOME"] = "1"
         app.launch()
 
         let signedInLabel = app.staticTexts["SignedInLabel"]
@@ -116,6 +118,7 @@ final class LoginUITests: XCTestCase {
     /// returns the user to LoginView.
     func testZSignOutReturnsToLoginAndClearsToken() {
         let app = XCUIApplication()
+        app.launchEnvironment["UI_TESTS_USE_LEGACY_HOME"] = "1"
         app.launch()
 
         let signOut = app.buttons["SignOutButton"]

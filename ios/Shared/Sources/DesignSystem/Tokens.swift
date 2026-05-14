@@ -62,6 +62,24 @@ public enum DesignTokens {
         public static let titleMd: CGFloat = 16
         public static let h2: CGFloat = 22
         public static let h1: CGFloat = 27
+
+        public enum Family: Sendable {
+            case sans
+            case serif
+        }
+
+        public static func font(
+            size: CGFloat,
+            weight: Font.Weight = .regular,
+            family: Family = .sans
+        ) -> Font {
+            switch family {
+            case .sans:
+                return .system(size: size, weight: weight)
+            case .serif:
+                return .system(size: size, weight: weight, design: .serif)
+            }
+        }
     }
 
     private static func asset(_ area: Area, _ token: String) -> String {
