@@ -117,6 +117,14 @@ final class AffirmationsUITests: XCTestCase {
         let sheetTitle = app.staticTexts["sheet.title"]
         XCTAssertTrue(sheetTitle.waitForExistence(timeout: 5), "Priority edit sheet should appear")
 
+        // Create-mode sheet must not surface a destructive action — delete only
+        // makes sense for existing items, and PriorityEditSheet wires
+        // `sheet.delete.button` conditionally on `.edit` mode.
+        XCTAssertFalse(
+            app.buttons["sheet.delete.button"].waitForExistence(timeout: 1),
+            "Delete button should be hidden in create mode"
+        )
+
         // Cancel — closing via the cancel button is enough to verify the
         // sheet round-trips. Typing into the SwiftUI multi-line TextField
         // through XCUITest is flaky across iOS releases.

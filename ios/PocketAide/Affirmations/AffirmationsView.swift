@@ -39,14 +39,25 @@ struct AffirmationsView: View {
                     .accessibilityIdentifier("affirmations.add.button")
                 }
 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+                List {
+                    Section {
                         heroSection
-                        listSection
+                            .padding(.bottom, DesignTokens.Spacing.lg)
+                            .listRowInsets(EdgeInsets(
+                                top: 0,
+                                leading: DesignTokens.Spacing.xl,
+                                bottom: 0,
+                                trailing: DesignTokens.Spacing.xl
+                            ))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                     }
-                    .padding(.horizontal, DesignTokens.Spacing.xl)
-                    .padding(.bottom, DesignTokens.Spacing.xxl)
+
+                    listSection
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(DesignTokens.Color.surface(.affirmations))
             }
         }
         .task {
@@ -71,7 +82,12 @@ struct AffirmationsView: View {
                             }
                         }
                     },
-                    onCancel: { sheetMode = nil }
+                    onCancel: { sheetMode = nil },
+                    onDelete: {
+                        guard case let .edit(existing) = mode else { return }
+                        sheetMode = nil
+                        Task { await viewModel.delete(id: existing.id) }
+                    }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 // No outer accessibilityIdentifier here — iOS 26 cascades it
@@ -161,20 +177,43 @@ struct AffirmationsView: View {
     @ViewBuilder
     private var listSection: some View {
         if !viewModel.items.isEmpty {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            Section {
+                ForEach(viewModel.items) { item in
+                    listRow(for: item)
+                        .listRowInsets(EdgeInsets(
+                            top: DesignTokens.Spacing.xs,
+                            leading: DesignTokens.Spacing.xl,
+                            bottom: DesignTokens.Spacing.xs,
+                            trailing: DesignTokens.Spacing.xl
+                        ))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button {
+                                Task { await viewModel.delete(id: item.id) }
+                            } label: {
+                                Label("삭제", systemImage: "trash")
+                            }
+                            .tint(DesignTokens.Color.destructive(.affirmations))
+                            .accessibilityIdentifier("affirmations.row.\(item.id).delete")
+                        }
+                }
+            } header: {
                 HStack {
                     Text("전체 \(viewModel.items.count)개")
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .bold))
                         .foregroundStyle(DesignTokens.Color.ink(.affirmations))
                     Spacer()
                 }
+                .textCase(nil)
+                .listRowInsets(EdgeInsets(
+                    top: 0,
+                    leading: DesignTokens.Spacing.xl,
+                    bottom: DesignTokens.Spacing.sm,
+                    trailing: DesignTokens.Spacing.xl
+                ))
+                .listRowBackground(Color.clear)
                 .accessibilityIdentifier("affirmations.list.header")
-
-                VStack(spacing: DesignTokens.Spacing.sm) {
-                    ForEach(viewModel.items) { item in
-                        listRow(for: item)
-                    }
-                }
             }
         }
     }
