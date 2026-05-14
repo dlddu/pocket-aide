@@ -32,6 +32,10 @@ public enum DesignTokens {
         public static func soft(_ area: Area) -> SwiftUI.Color {
             SwiftUI.Color(asset(area, "soft"), bundle: .module)
         }
+
+        public static func card(_ area: Area) -> SwiftUI.Color {
+            SwiftUI.Color(asset(area, "card"), bundle: .module)
+        }
     }
 
     public enum Spacing {

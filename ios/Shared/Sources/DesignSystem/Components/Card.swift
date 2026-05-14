@@ -45,7 +45,7 @@ public struct Card<Content: View>: View {
     public var body: some View {
         content
             .padding(padding.value)
-            .background(Color.white)
+            .background(DesignTokens.Color.card(area))
             .clipShape(RoundedRectangle(cornerRadius: padding.radius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: padding.radius, style: .continuous)

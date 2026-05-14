@@ -78,17 +78,17 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 도출 원칙:
 - 라이트 `--bg`/`--paper`를 어두운 톤(L 7~15%)으로 낮추고, 라이트 `--ink`를 밝은 톤(L 80~95%)으로 끌어올린다.
 - 영역 강조(accent)는 색상을 유지하되 명도를 한 단계 끌어올려 다크 배경 위 대비를 확보한다.
-- 보더(`--rule`)와 부드러운 강조(`--soft`)는 다크 surface 위에서 카드 분리가 보이도록 surface보다 한 단계 밝은 톤을 쓴다.
+- 보더(`--rule`)와 카드(`--card`)는 다크 surface 위에서 카드 분리가 보이도록 surface보다 한 단계 밝은 톤을 쓴다. 카드는 라이트에서는 흰색이지만 다크에서는 영역 톤이 깔린 어두운 표면이다 (영역의 색 정체성을 잃지 않기 위함).
 
-| 영역 | `--bg`/`--paper` | `--ink` | accent | `--rule` | `--soft` / 카드 |
-|---|---|---|---|---|---|
-| 개인 (Personal) — Warm Clay | `#1F1410` | `#F4E2D4` | `--clay` `#D67852` | `#4A2E22` | `#3D2218` |
-| 회사 (Work) — Cool Slate | `#0E1A2B` | `#DDE5F0` | `--slate` `#7A9BC2` | `#1F2D3F` | `#1A2638` |
-| AI 채팅 — Charcoal + Sage | `#0F1614` | `#ECEAE3` | `--sage` `#7CB293` | `#2A3530` | `#1A2320` |
-| 임시공간 (Scratchpad) — Paper + Warm Brown | `#1F1B12` | `#E0D8C2` | `--warm` `#D6A57E` | `#3D3528` | `#272219` |
-| 루틴 (Routines) — Forest | `#1A2218` | `#D6DDD2` | `--forest` `#7CAB89` | `#2D3829` | `#243029` |
-| 다짐 (Affirmations) — Sand/Tan | `#2E251A` | `#EADCC2` | `--tan` `#C49B6F` | `#4A3D28` | `#3A2E1E` |
-| 음성 모드 (Voice) | `#0F1614` | `#FFFFFF` | `--sage` `#5E8B73` | — | — |
+| 영역 | `--bg`/`--paper` | `--ink` | accent | `--rule` | `--soft` | `--card` |
+|---|---|---|---|---|---|---|
+| 개인 (Personal) — Warm Clay | `#1F1410` | `#F4E2D4` | `--clay` `#D67852` | `#4A2E22` | `#3D2218` | `#3D2218` |
+| 회사 (Work) — Cool Slate | `#0E1A2B` | `#DDE5F0` | `--slate` `#7A9BC2` | `#1F2D3F` | `#1A2638` | `#1A2638` |
+| AI 채팅 — Charcoal + Sage | `#0F1614` | `#ECEAE3` | `--sage` `#7CB293` | `#2A3530` | `#1A2320` | `#1A2320` |
+| 임시공간 (Scratchpad) — Paper + Warm Brown | `#1F1B12` | `#E0D8C2` | `--warm` `#D6A57E` | `#3D3528` | `#272219` | `#272219` |
+| 루틴 (Routines) — Forest | `#1A2218` | `#D6DDD2` | `--forest` `#7CAB89` | `#2D3829` | `#243029` | `#243029` |
+| 다짐 (Affirmations) — Sand/Tan | `#2E251A` | `#EADCC2` | `--tan` `#C49B6F` | `#4A3D28` | `#3A2E1E` | `#3A2E1E` |
+| 음성 모드 (Voice) | `#0F1614` | `#FFFFFF` | `--sage` `#5E8B73` | — | — | `#1A2421` |
 
 시스템 통합 영역(1.8)의 다크 변형은 iOS 시스템 다크 컨벤션을 따른다:
 - 페이지 배경: `#000000`
@@ -113,7 +113,7 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 - 페이지 배경(목업 갤러리): `bg-stone-200/70`
 - 보조 텍스트: `text-stone-500` / `text-stone-400`
 - 흐린 보더: `border-stone-200/70`, `border-stone-300/80`
-- 흰색 카드 배경: `#FFFFFF` (영역에 따라 약간의 톤 가미는 영역의 카드 배경 토큰 사용)
+- 카드 배경 토큰 `--card`: 라이트에서는 흰색 `#FFFFFF` (단, 임시공간은 종이톤 `#FBF7EC`), 다크에서는 §1.9의 영역별 카드 톤. SwiftUI에서는 `DesignTokens.Color.card(area)`로 접근한다.
 
 영역 토큰이 정의된 곳에서는 stone 팔레트보다 영역 토큰을 우선한다. stone은 어디에도 속하지 않는 메타 영역(목업 외부 nav, 페이지 배경 등)에서만 쓴다.
 
