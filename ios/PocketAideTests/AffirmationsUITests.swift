@@ -64,20 +64,36 @@ final class AffirmationsUITests: XCTestCase {
         add(after)
     }
 
-    /// Try the common places where iOS surfaces the "More" overflow rows
-    /// (tableview cells, collectionview cells, plain buttons). Returns true
-    /// if a 다짐 entry was found and tapped.
+    /// Try the common places where iOS surfaces the "More" overflow rows.
+    /// On iOS 26 each overflow row renders as an "Other" element whose label
+    /// lives on a child `StaticText`, so the table cells themselves don't
+    /// match `cells["다짐"]` — we have to query by static text or by row
+    /// position. Returns true if an entry was found and tapped.
     @discardableResult
     private func findAndTapAffirmationsRow(in app: XCUIApplication) -> Bool {
-        let queries: [XCUIElementQuery] = [
-            app.tables.cells,
-            app.collectionViews.cells,
-            app.buttons,
+        // Direct StaticText lookups handle the iOS 26 More table layout where
+        // labels sit on a child element rather than the row itself.
+        let textCandidates: [XCUIElement] = [
+            app.tables.staticTexts["다짐"],
+            app.collectionViews.staticTexts["다짐"],
+            app.staticTexts["다짐"],
         ]
-        for query in queries {
-            let row = query["다짐"]
-            if row.waitForExistence(timeout: 3) {
-                row.tap()
+        for candidate in textCandidates {
+            if candidate.waitForExistence(timeout: 3) {
+                candidate.tap()
+                return true
+            }
+        }
+        // Fallback: legacy queries in case future iOS versions promote the
+        // overflow rows to proper cells/buttons.
+        let elementCandidates: [XCUIElement] = [
+            app.tables.cells["다짐"],
+            app.collectionViews.cells["다짐"],
+            app.buttons["다짐"],
+        ]
+        for candidate in elementCandidates {
+            if candidate.exists {
+                candidate.tap()
                 return true
             }
         }
