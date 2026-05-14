@@ -51,7 +51,7 @@ platform :ios do
     pilot(
       api_key: api_key,
       ipa: "build/PocketAide.ipa",
-      skip_waiting_for_build_processing: true,
+      skip_waiting_for_build_processing: false,
       skip_submission: true,
       localized_build_info: {
         "default" => {
