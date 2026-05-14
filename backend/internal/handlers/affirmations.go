@@ -14,8 +14,8 @@ import (
 )
 
 type affirmationPayload struct {
-	Text     string                 `json:"text"`
-	Priority affirmations.Priority  `json:"priority"`
+	Text     string                `json:"text"`
+	Priority affirmations.Priority `json:"priority"`
 }
 
 // ListAffirmations handles GET /api/affirmations.
