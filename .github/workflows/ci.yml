@@ -37,8 +37,6 @@ jobs:
               - 'ios/**'
               - '!ios/PocketAideTests/**'
               - '!ios/.swiftlint.yml'
-              - '!ios/fastlane/**'
-              - '!ios/Gemfile*'
             code:
               - 'backend/**'
               - 'Dockerfile'
