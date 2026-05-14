@@ -55,7 +55,7 @@ platform :ios do
       skip_submission: true,
       localized_build_info: {
         "ko" => {
-          whats_new: "PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'} 자동 빌드 (#{(ENV['GITHUB_SHA'] || 'local')[0, 7]})"
+          whats_new: "PR ##{ENV['PR_NUMBER'] || 'local'} 자동 빌드 (#{(ENV['GITHUB_SHA'] || 'local')[0, 7]})"
         }
       }
     )

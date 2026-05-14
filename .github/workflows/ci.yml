@@ -176,6 +176,7 @@ jobs:
     runs-on: macos-26
     env:
       APP_BUNDLE_ID: com.dlddu.PocketAide
+      PR_NUMBER: ${{ github.event.pull_request.number }}
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
