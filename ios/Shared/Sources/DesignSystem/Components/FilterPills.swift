@@ -39,7 +39,7 @@ public struct FilterPills<Option: Hashable, Label: View>: View {
                                     lineWidth: active ? 1.5 : 1
                                 )
                         )
-                        .foregroundStyle(active ? DesignTokens.Color.ink(area) : Color(white: 0.45))
+                        .foregroundStyle(active ? DesignTokens.Color.ink(area) : DesignTokens.Color.ink(area).opacity(0.55))
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("filter.pill.\(String(describing: option))")
