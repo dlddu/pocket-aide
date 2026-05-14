@@ -78,11 +78,9 @@ final class AffirmationsUITests: XCTestCase {
             app.collectionViews.staticTexts["다짐"],
             app.staticTexts["다짐"],
         ]
-        for candidate in textCandidates {
-            if candidate.waitForExistence(timeout: 3) {
-                candidate.tap()
-                return true
-            }
+        for candidate in textCandidates where candidate.waitForExistence(timeout: 3) {
+            candidate.tap()
+            return true
         }
         // Fallback: legacy queries in case future iOS versions promote the
         // overflow rows to proper cells/buttons.
@@ -91,11 +89,9 @@ final class AffirmationsUITests: XCTestCase {
             app.collectionViews.cells["다짐"],
             app.buttons["다짐"],
         ]
-        for candidate in elementCandidates {
-            if candidate.exists {
-                candidate.tap()
-                return true
-            }
+        for candidate in elementCandidates where candidate.exists {
+            candidate.tap()
+            return true
         }
         return false
     }
