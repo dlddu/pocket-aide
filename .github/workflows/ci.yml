@@ -247,6 +247,13 @@ jobs:
           APPSTORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_API_ISSUER_ID }}
           TESTFLIGHT_CHANGELOG: "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
         run: bundle exec fastlane update_changelog
+      - name: Verify TestFlight changelog
+        working-directory: ios
+        env:
+          APPSTORE_CONNECT_API_KEY_ID: ${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}
+          APPSTORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_API_ISSUER_ID }}
+          TESTFLIGHT_CHANGELOG: "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+        run: bundle exec fastlane verify_changelog
 
   ci-success:
     name: ci-success

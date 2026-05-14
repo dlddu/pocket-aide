@@ -89,4 +89,47 @@ platform :ios do
       distribute_external: false
     )
   end
+
+  desc "Verify the TestFlight changelog of the latest build matches the expected value"
+  lane :verify_changelog do
+    api_key_id = ENV.fetch("APPSTORE_CONNECT_API_KEY_ID")
+    api_key_issuer = ENV.fetch("APPSTORE_CONNECT_API_ISSUER_ID")
+    api_key_path = File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{api_key_id}.p8")
+
+    app_store_connect_api_key(
+      key_id: api_key_id,
+      issuer_id: api_key_issuer,
+      key_filepath: api_key_path,
+      duration: 1200,
+      in_house: false
+    )
+
+    expected = ENV["TESTFLIGHT_CHANGELOG"]
+    expected = "Automated build from PR ##{ENV['GITHUB_RUN_NUMBER'] || 'local'}" if expected.nil? || expected.empty?
+
+    app = Spaceship::ConnectAPI::App.find("com.dlddu.PocketAide")
+    UI.user_error!("App com.dlddu.PocketAide not found in App Store Connect") if app.nil?
+
+    build = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      sort: "-uploadedDate",
+      limit: 1
+    ).first
+    UI.user_error!("No builds found for com.dlddu.PocketAide") if build.nil?
+
+    localizations = build.get_beta_build_localizations
+    UI.user_error!("No beta build localizations for build #{build.version}") if localizations.empty?
+
+    mismatched = localizations.reject { |loc| loc.whats_new == expected }
+    if mismatched.any?
+      mismatched.each do |loc|
+        UI.error("Locale #{loc.locale} whatsNew differs from expected:")
+        UI.error("  expected: #{expected.inspect}")
+        UI.error("  actual:   #{loc.whats_new.inspect}")
+      end
+      UI.user_error!("TestFlight changelog verification failed")
+    end
+
+    UI.success("TestFlight changelog verified for build #{build.version} across #{localizations.count} locale(s)")
+  end
 end
