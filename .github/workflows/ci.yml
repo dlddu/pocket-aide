@@ -22,7 +22,8 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       ios: ${{ steps.filter.outputs.ios }}
-      code: ${{ steps.filter.outputs.code }}
+      backend_tests: ${{ steps.filter.outputs.backend_tests }}
+      ios_tests: ${{ steps.filter.outputs.ios_tests }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -34,21 +35,26 @@ jobs:
               - 'Dockerfile'
               - '.dockerignore'
             ios:
-              - 'ios/**'
-              - '!ios/PocketAideTests/**'
-              - '!ios/.swiftlint.yml'
-            code:
+              - 'ios/Gemfile'
+              - 'ios/project.yml'
+              - 'ios/PocketAide/**'
+              - 'ios/PocketAideKeyboard/**'
+              - 'ios/PocketAideUnitTests/**'
+              - 'ios/PocketAideWidget/**'
+              - 'ios/Shared/**'
+              - 'ios/fastlane/**'
+            backend_tests:
               - 'backend/**'
-              - 'Dockerfile'
-              - '.dockerignore'
+              - '.github/workflows/ci.yml'
+            ios_tests:
+              - 'backend/**'
               - 'ios/**'
               - '.github/workflows/ci.yml'
-              - 'k8s/**'
 
   backend-test:
     name: Backend test + lint
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.backend_tests == 'true'
     runs-on: ubuntu-24.04-arm
     defaults:
       run:
@@ -74,7 +80,7 @@ jobs:
   ios-test:
     name: iOS build + test
     needs: backend-test
-    if: needs.changes.outputs.code == 'true'
+    if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.backend-test.result != 'failure' }}
     runs-on: macos-26
     env:
       OIDC_ISSUER: http://localhost:5556
@@ -153,8 +159,8 @@ jobs:
 
   backend-docker-push:
     name: Backend Docker build + push
-    needs: ios-test
-    if: needs.changes.outputs.backend == 'true'
+    needs: [backend-test, ios-test]
+    if: ${{ !cancelled() && needs.changes.outputs.backend == 'true' && needs.backend-test.result != 'failure' && needs.ios-test.result != 'failure' }}
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
@@ -180,8 +186,8 @@ jobs:
 
   testflight-upload:
     name: TestFlight upload
-    needs: backend-docker-push
-    if: ${{ !cancelled() && !failure() && needs.changes.outputs.ios == 'true' && github.event_name == 'pull_request' }}
+    needs: [ios-test, backend-docker-push]
+    if: ${{ !cancelled() && needs.changes.outputs.ios == 'true' && github.event_name == 'pull_request' && needs.ios-test.result == 'success' && needs.backend-docker-push.result != 'failure' }}
     runs-on: macos-26
     env:
       APP_BUNDLE_ID: com.dlddu.PocketAide
@@ -264,15 +270,18 @@ jobs:
           IOS_TEST_RESULT: ${{ needs.ios-test.result }}
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
-          CODE_CHANGED: ${{ needs.changes.outputs.code }}
+          BACKEND_TESTS_CHANGED: ${{ needs.changes.outputs.backend_tests }}
+          IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
           BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
           IOS_CHANGED: ${{ needs.changes.outputs.ios }}
         run: |
           set -e
           echo "changes=$CHANGES_RESULT backend-test=$BACKEND_TEST_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
-          if [ "$CODE_CHANGED" = "true" ]; then
+          if [ "$BACKEND_TESTS_CHANGED" = "true" ]; then
             [ "$BACKEND_TEST_RESULT" = "success" ] || { echo "backend-test must pass"; exit 1; }
+          fi
+          if [ "$IOS_TESTS_CHANGED" = "true" ]; then
             [ "$IOS_TEST_RESULT" = "success" ] || { echo "ios-test must pass"; exit 1; }
           fi
           if [ "$BACKEND_CHANGED" = "true" ]; then
