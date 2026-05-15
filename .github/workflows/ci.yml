@@ -30,9 +30,9 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          # Each test job has its own filter — paying for LocalStack on a
-          # pure README change, or rebuilding Xcode on a backend-only PR, is
-          # not free. Anchored to the reusable workflow + composite action
+          # Each job has its own filter — paying for LocalStack on a pure
+          # README change, or rebuilding Xcode on a backend-only PR, is not
+          # free. Anchored to the reusable workflow + composite action
           # files so changes to CI plumbing always trigger the job they
           # affect. .github/workflows/ci.yml is included everywhere because
           # orchestrator edits (gate logic, filter rules) can silently
@@ -70,10 +70,13 @@ jobs:
               - '.github/workflows/ios-test.yml'
               - '.github/actions/setup-go-backend/**'
               - '.github/actions/start-test-backend/**'
+              - '.github/actions/generate-xcode-project/**'
             backend:
               - 'backend/**'
               - 'Dockerfile'
               - '.dockerignore'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/backend-docker-push.yml'
             ios:
               - 'ios/Gemfile'
               - 'ios/project.yml'
@@ -84,6 +87,10 @@ jobs:
               - 'ios/PocketAideWidget/**'
               - 'ios/Shared/**'
               - 'ios/fastlane/**'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/testflight-upload.yml'
+              - '.github/actions/install-ios-signing/**'
+              - '.github/actions/generate-xcode-project/**'
 
   backend-unit-test:
     name: Backend unit + lint
@@ -107,101 +114,14 @@ jobs:
     name: Backend Docker build + push
     needs: [changes, backend-unit-test, backend-integration-test, ios-test]
     if: ${{ !cancelled() && needs.changes.outputs.backend == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' && needs.ios-test.result != 'failure' }}
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build & push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            ghcr.io/dlddu/pocket-aide:latest
-            ghcr.io/dlddu/pocket-aide:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    uses: ./.github/workflows/backend-docker-push.yml
 
   testflight-upload:
     name: TestFlight upload
     needs: [changes, ios-test, backend-docker-push]
     if: ${{ !cancelled() && needs.changes.outputs.ios == 'true' && github.event_name == 'pull_request' && needs.ios-test.result == 'success' && needs.backend-docker-push.result != 'failure' }}
-    runs-on: macos-26
-    env:
-      APP_BUNDLE_ID: com.dlddu.PocketAide
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          working-directory: ios
-          bundler-cache: true
-      - uses: irgaly/setup-mint@v1
-      - name: Generate keychain password
-        run: echo "KEYCHAIN_PASSWORD=$(openssl rand -base64 32)" >> $GITHUB_ENV
-      - name: Import signing certificate
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
-          p12-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-          keychain-password: ${{ env.KEYCHAIN_PASSWORD }}
-      - name: Install provisioning profiles
-        run: |
-          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILE_DIR"
-          install_profile() {
-            local data="$1" name_var="$2"
-            local tmp
-            tmp=$(mktemp)
-            echo "$data" | base64 --decode > "$tmp"
-            local plist
-            plist=$(security cms -D -i "$tmp")
-            local uuid name
-            uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$plist")
-            name=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< "$plist")
-            mv "$tmp" "$PROFILE_DIR/$uuid.mobileprovision"
-            echo "${name_var}=${name}" >> "$GITHUB_ENV"
-          }
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}" PROFILE_NAME_MAIN
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PROFILE_NAME_KEYBOARD
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PROFILE_NAME_WIDGET
-      - name: Generate Xcode project
-        working-directory: ios
-        env:
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
-        run: |
-          mint install yonaskolb/xcodegen
-          mint run xcodegen generate
-      - name: Inject BackendBaseURL
-        working-directory: ios
-        env:
-          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
-        run: |
-          if [ -z "$BACKEND_BASE_URL" ]; then
-            echo "Missing repository variable: BACKEND_BASE_URL" >&2
-            exit 1
-          fi
-          /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
-      - name: Write App Store Connect API key
-        run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APPSTORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode \
-            > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}.p8
-      - name: Run fastlane beta
-        working-directory: ios
-        env:
-          APPSTORE_CONNECT_API_KEY_ID: ${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}
-          APPSTORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_API_ISSUER_ID }}
-        run: bundle exec fastlane beta
+    uses: ./.github/workflows/testflight-upload.yml
+    secrets: inherit
 
   ci-success:
     name: ci-success

@@ -1,0 +1,20 @@
+name: Generate the Xcode project
+description: >
+  Installs xcodegen via mint and runs `xcodegen generate` in ios/. Required
+  before any xcodebuild step because the project is generated, not
+  committed. Used by both the test job (which builds for the simulator)
+  and the TestFlight upload job (which signs for distribution); the
+  Release-config signing inputs come from job-level env vars
+  (DEVELOPMENT_TEAM, PROVISIONING_PROFILE_SPECIFIER) so this action stays
+  agnostic of which side is calling it.
+
+runs:
+  using: composite
+  steps:
+    - uses: irgaly/setup-mint@v1
+    - name: Run xcodegen
+      shell: bash
+      working-directory: ios
+      run: |
+        mint install yonaskolb/xcodegen
+        mint run xcodegen generate
