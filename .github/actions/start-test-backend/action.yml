@@ -1,0 +1,47 @@
+name: Build & start the test backend
+description: >
+  Compiles cmd/oidcmock + cmd/server, starts both in the background, and
+  exports OIDCMOCK_PID / BACKEND_PID via $GITHUB_ENV so a later step can
+  kill them. Assumes the caller already checked out the repo and ran
+  ./.github/actions/setup-go-backend. Required env vars on the calling
+  job (read by the binaries themselves, not this action):
+    OIDC_ISSUER, OIDC_AUDIENCE, OIDC_CLIENT_ID, OIDC_REDIRECT_URI,
+    OPENROUTER_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY,
+    LANGFUSE_HOST, DATABASE_PATH, PORT.
+
+inputs:
+  oidcmock_port:
+    description: Port the oidcmock server listens on.
+    required: false
+    default: '5556'
+  backend_port:
+    description: Port the backend server listens on. Must match $PORT.
+    required: false
+    default: '8080'
+
+runs:
+  using: composite
+  steps:
+    - name: Build backend binaries
+      shell: bash
+      working-directory: backend
+      run: |
+        go build -o /tmp/oidcmock ./cmd/oidcmock
+        go build -o /tmp/pocket-aide ./cmd/server
+    - name: Start oidcmock
+      shell: bash
+      run: |
+        /tmp/oidcmock -addr :${{ inputs.oidcmock_port }} \
+          -client-id pocket-aide-ios-dev -audience pocket-aide-dev &
+        echo "OIDCMOCK_PID=$!" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS http://localhost:${{ inputs.oidcmock_port }}/.well-known/openid-configuration && break || sleep 1
+        done
+    - name: Start backend
+      shell: bash
+      run: |
+        /tmp/pocket-aide &
+        echo "BACKEND_PID=$!" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS http://localhost:${{ inputs.backend_port }}/healthz && break || sleep 1
+        done

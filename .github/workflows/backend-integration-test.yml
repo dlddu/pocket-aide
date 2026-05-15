@@ -1,0 +1,37 @@
+name: Backend integration tests
+
+# Reusable job that boots a LocalStack SQS endpoint as a service container
+# and runs the `integration` build-tag tests in internal/githubwebhook.
+# Split from backend-unit-test so unit-only path changes don't pay the
+# LocalStack startup cost, and integration-only changes don't re-run the
+# whole unit + lint suite.
+
+on:
+  workflow_call:
+
+jobs:
+  integration:
+    name: Backend integration (LocalStack)
+    runs-on: ubuntu-24.04-arm
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: sqs
+          DEBUG: "0"
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-backend
+      - uses: ./.github/actions/wait-for-localstack
+      - name: Integration tests
+        run: go test -tags=integration -race -count=1 ./internal/githubwebhook/...
