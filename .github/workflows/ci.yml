@@ -56,9 +56,28 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend_tests == 'true'
     runs-on: ubuntu-24.04-arm
+    services:
+      # LocalStack provides an SQS endpoint for the githubwebhook
+      # integration tests (build tag `integration`). SERVICES=sqs trims the
+      # boot time by skipping every other AWS service. The default health
+      # check is TCP-only, which proves the listener is up but not the SQS
+      # subsystem — the "Wait for LocalStack" step polls the readiness
+      # endpoint to make that distinction.
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: sqs
+          DEBUG: "0"
     defaults:
       run:
         working-directory: backend
+    env:
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -71,6 +90,20 @@ jobs:
         run: go vet ./...
       - name: Test
         run: go test -race -count=1 ./...
+      - name: Wait for LocalStack
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:4566/_localstack/health | grep -q '"sqs": *"available"\|"sqs": *"running"'; then
+              echo "LocalStack SQS ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "LocalStack SQS not ready after 60s" >&2
+          curl -s http://localhost:4566/_localstack/health || true
+          exit 1
+      - name: Integration tests (LocalStack)
+        run: go test -tags=integration -race -count=1 ./internal/githubwebhook/...
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:

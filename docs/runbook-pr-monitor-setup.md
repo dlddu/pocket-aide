@@ -169,7 +169,35 @@ Both rows must be exercised before declaring the feature shipped.
 
 ---
 
-## 7. Out of scope for this draft
+## 7. Integration tests
+
+The `internal/githubwebhook` package has two test layers:
+
+- **Unit + internal tests** (default `go test`): cover the decoder, HMAC
+  verifier, and the full `process()` pipeline with hand-built envelopes.
+  These run on every CI build.
+- **LocalStack integration tests** (build tag `integration`): boot a real
+  SQS endpoint and drive `Consumer.Run()` end-to-end. CI runs them
+  automatically in the `backend-test` job via a `services: localstack`
+  container.
+
+Locally:
+
+```sh
+docker run --rm -d -p 4566:4566 -e SERVICES=sqs --name ls localstack/localstack
+AWS_ENDPOINT_URL=http://localhost:4566 \
+AWS_REGION=us-east-1 \
+AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
+  go test -tags=integration -race ./internal/githubwebhook/...
+docker stop ls
+```
+
+Tests skip automatically when `AWS_ENDPOINT_URL` is not set, so a plain
+`go test ./...` invocation never requires Docker.
+
+---
+
+## 8. Out of scope for this draft
 
 These are intentionally NOT implemented and would be future work:
 
