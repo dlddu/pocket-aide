@@ -32,6 +32,19 @@ public enum DesignTokens {
         public static func soft(_ area: Area) -> SwiftUI.Color {
             SwiftUI.Color(asset(area, "soft"), bundle: .module)
         }
+
+        public static func card(_ area: Area) -> SwiftUI.Color {
+            SwiftUI.Color(asset(area, "card"), bundle: .module)
+        }
+
+        /// Destructive semantic color for the given area.
+        ///
+        /// Only defined for areas listed in `tokens.md` §1.10. Asking for an
+        /// area without a registered destructive colorset will fall back to
+        /// the asset catalog default (clear), so add the colorset before use.
+        public static func destructive(_ area: Area) -> SwiftUI.Color {
+            SwiftUI.Color(asset(area, "destructive"), bundle: .module)
+        }
     }
 
     public enum Spacing {
@@ -62,6 +75,24 @@ public enum DesignTokens {
         public static let titleMd: CGFloat = 16
         public static let h2: CGFloat = 22
         public static let h1: CGFloat = 27
+
+        public enum Family: Sendable {
+            case sans
+            case serif
+        }
+
+        public static func font(
+            size: CGFloat,
+            weight: Font.Weight = .regular,
+            family: Family = .sans
+        ) -> Font {
+            switch family {
+            case .sans:
+                return .system(size: size, weight: weight)
+            case .serif:
+                return .system(size: size, weight: weight, design: .serif)
+            }
+        }
     }
 
     private static func asset(_ area: Area, _ token: String) -> String {

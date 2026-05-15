@@ -58,6 +58,7 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 - `--tan` 강조: `#8B6F47`
 - `--rule` 보더: `#E5D7C0`
 - `--soft` 부드러운 강조: `#EADCC2`
+- `--destructive` 파괴적 액션: `#9C3F2D` (테라코타 레드 — 모래/탠 팔레트에 어울리는 채도로 낮춘 경고색. §1.10 규칙 참조)
 
 ### 1.7 음성 모드 (다크 변형, AI 채팅의 카운터파트)
 - `--bg` 다크 표면: `#0F1614`
@@ -78,17 +79,17 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 도출 원칙:
 - 라이트 `--bg`/`--paper`를 어두운 톤(L 7~15%)으로 낮추고, 라이트 `--ink`를 밝은 톤(L 80~95%)으로 끌어올린다.
 - 영역 강조(accent)는 색상을 유지하되 명도를 한 단계 끌어올려 다크 배경 위 대비를 확보한다.
-- 보더(`--rule`)와 부드러운 강조(`--soft`)는 다크 surface 위에서 카드 분리가 보이도록 surface보다 한 단계 밝은 톤을 쓴다.
+- 보더(`--rule`)와 카드(`--card`)는 다크 surface 위에서 카드 분리가 보이도록 surface보다 한 단계 밝은 톤을 쓴다. 카드는 라이트에서는 흰색이지만 다크에서는 영역 톤이 깔린 어두운 표면이다 (영역의 색 정체성을 잃지 않기 위함).
 
-| 영역 | `--bg`/`--paper` | `--ink` | accent | `--rule` | `--soft` / 카드 |
-|---|---|---|---|---|---|
-| 개인 (Personal) — Warm Clay | `#1F1410` | `#F4E2D4` | `--clay` `#D67852` | `#4A2E22` | `#3D2218` |
-| 회사 (Work) — Cool Slate | `#0E1A2B` | `#DDE5F0` | `--slate` `#7A9BC2` | `#1F2D3F` | `#1A2638` |
-| AI 채팅 — Charcoal + Sage | `#0F1614` | `#ECEAE3` | `--sage` `#7CB293` | `#2A3530` | `#1A2320` |
-| 임시공간 (Scratchpad) — Paper + Warm Brown | `#1F1B12` | `#E0D8C2` | `--warm` `#D6A57E` | `#3D3528` | `#272219` |
-| 루틴 (Routines) — Forest | `#1A2218` | `#D6DDD2` | `--forest` `#7CAB89` | `#2D3829` | `#243029` |
-| 다짐 (Affirmations) — Sand/Tan | `#2E251A` | `#EADCC2` | `--tan` `#C49B6F` | `#4A3D28` | `#3A2E1E` |
-| 음성 모드 (Voice) | `#0F1614` | `#FFFFFF` | `--sage` `#5E8B73` | — | — |
+| 영역 | `--bg`/`--paper` | `--ink` | accent | `--rule` | `--soft` | `--card` |
+|---|---|---|---|---|---|---|
+| 개인 (Personal) — Warm Clay | `#1F1410` | `#F4E2D4` | `--clay` `#D67852` | `#4A2E22` | `#3D2218` | `#3D2218` |
+| 회사 (Work) — Cool Slate | `#0E1A2B` | `#DDE5F0` | `--slate` `#7A9BC2` | `#1F2D3F` | `#1A2638` | `#1A2638` |
+| AI 채팅 — Charcoal + Sage | `#0F1614` | `#ECEAE3` | `--sage` `#7CB293` | `#2A3530` | `#1A2320` | `#1A2320` |
+| 임시공간 (Scratchpad) — Paper + Warm Brown | `#1F1B12` | `#E0D8C2` | `--warm` `#D6A57E` | `#3D3528` | `#272219` | `#272219` |
+| 루틴 (Routines) — Forest | `#1A2218` | `#D6DDD2` | `--forest` `#7CAB89` | `#2D3829` | `#243029` | `#243029` |
+| 다짐 (Affirmations) — Sand/Tan | `#2E251A` | `#EADCC2` | `--tan` `#C49B6F` | `#4A3D28` | `#3A2E1E` | `#3A2E1E` |
+| 음성 모드 (Voice) | `#0F1614` | `#FFFFFF` | `--sage` `#5E8B73` | — | — | `#1A2421` |
 
 시스템 통합 영역(1.8)의 다크 변형은 iOS 시스템 다크 컨벤션을 따른다:
 - 페이지 배경: `#000000`
@@ -102,6 +103,22 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 - 음성 모드(1.7)와 AI 채팅 다크는 표면을 공유(`#0F1614`)하지만 본문 톤이 다르다(`#FFFFFF` vs `#ECEAE3`). 음성은 풀 컨트라스트, 채팅은 장문 가독성 우선.
 - 다크 변형에서도 stone 팔레트는 메타 영역에만 사용한다(영역 내부 텍스트는 영역 다크 토큰 사용).
 
+### 1.10 파괴적 액션 (Destructive)
+
+삭제·되돌릴 수 없는 액션에 사용하는 의미적 토큰. iOS 표준 system red는 본 시스템의 차분한 영역 팔레트와 채도 차이가 커서 차용하지 않는다. 대신 영역별로 그 팔레트와 어울리는 채도/명도의 경고색을 정의한다.
+
+규칙:
+- 영역별 강조(accent)보다 채도가 살짝 높거나 명도가 한 단계 깊어 "위험" 신호를 준다.
+- 영역 ink/accent와 색상 충돌(시각적 혼동)을 일으키지 않는 hue를 고른다.
+- 본문 텍스트가 아니라 액션 버튼·스와이프 액션·삭제 라벨 등 **명시적 파괴 트리거**에만 쓴다.
+- 모든 영역에 미리 정의해 두지 않는다. 해당 영역에 destructive 액션이 실제로 도입될 때 본 절에 추가한다.
+
+| 영역 | 라이트 `--destructive` | 다크 `--destructive` |
+|---|---|---|
+| 다짐 (Affirmations) | `#9C3F2D` (terracotta red) | `#D87560` (밝은 clay-red) |
+
+다른 영역(개인·회사·루틴·임시공간·AI 채팅)은 destructive 액션이 실제로 도입될 때 본 표를 갱신한다. 시스템 통합 영역(§1.8)은 iOS 시스템 컨벤션(`UIColor.systemRed`)을 그대로 따른다.
+
 ---
 
 ## 2. 중립 토큰 (Neutral)
@@ -113,7 +130,7 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 - 페이지 배경(목업 갤러리): `bg-stone-200/70`
 - 보조 텍스트: `text-stone-500` / `text-stone-400`
 - 흐린 보더: `border-stone-200/70`, `border-stone-300/80`
-- 흰색 카드 배경: `#FFFFFF` (영역에 따라 약간의 톤 가미는 영역의 카드 배경 토큰 사용)
+- 카드 배경 토큰 `--card`: 라이트에서는 흰색 `#FFFFFF` (단, 임시공간은 종이톤 `#FBF7EC`), 다크에서는 §1.9의 영역별 카드 톤. SwiftUI에서는 `DesignTokens.Color.card(area)`로 접근한다.
 
 영역 토큰이 정의된 곳에서는 stone 팔레트보다 영역 토큰을 우선한다. stone은 어디에도 속하지 않는 메타 영역(목업 외부 nav, 페이지 배경 등)에서만 쓴다.
 
@@ -123,11 +140,17 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 
 ### 3.1 폰트 패밀리
 
-```
-'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif
-```
+폰트 family 토큰은 두 가지다. 기본은 `sans`, 다짐(Affirmations) 영역의 정서 본문에 한해 `serif` 변형이 허용된다 (V4 의도된 반복 노출의 정서적 톤).
 
-다짐(Affirmations) 영역만 serif 변형 사용을 허용한다 (V4 의도된 반복 노출의 정서적 톤).
+| 토큰 | 폴백 체인 |
+|------|-----------|
+| `sans` (기본) | `'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif` |
+| `serif` (다짐 영역 한정) | `'Iowan Old Style', 'Apple Garamond', 'New York', 'Apple SD Gothic Neo', ui-serif, Georgia, serif` |
+
+규칙:
+- 다짐 영역 외에서는 `serif`를 쓰지 않는다.
+- 다짐 영역 내부라도 시스템 UI 텍스트(헤더 제목, 옵션 라벨, 버튼 등)는 `sans`를 유지한다. `serif`는 정서 본문(다짐 문장 본문, 인용부호 글리프 등)에만 사용한다.
+- 구현 코드(SwiftUI 등)에서는 `font(size, family: .sans | .serif)` 형태로 두 family 토큰을 분리 노출한다.
 
 ### 3.2 전역 타이포 규칙
 - `letter-spacing: -0.01em` (전체 화면 기본)

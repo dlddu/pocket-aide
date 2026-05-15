@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/dlddu/pocket-aide/backend/internal/affirmations"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
@@ -48,6 +49,8 @@ func main() {
 
 	r.Get("/healthz", handlers.Health(conn))
 
+	affStore := affirmations.New(conn)
+
 	r.Group(func(g chi.Router) {
 		g.Use(middleware.Logger)
 		g.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
@@ -55,6 +58,10 @@ func main() {
 		g.Group(func(p chi.Router) {
 			p.Use(auth.Middleware(verifier, conn))
 			p.Get("/api/me", handlers.Me())
+			p.Get("/api/affirmations", handlers.ListAffirmations(affStore))
+			p.Post("/api/affirmations", handlers.CreateAffirmation(affStore))
+			p.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(affStore))
+			p.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(affStore))
 		})
 	})
 
