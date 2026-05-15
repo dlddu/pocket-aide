@@ -46,23 +46,20 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(loggerSkipping("/healthz"))
 
 	r.Get("/healthz", handlers.Health(conn))
+	r.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
 
 	affStore := affirmations.New(conn)
 
-	r.Group(func(g chi.Router) {
-		g.Use(middleware.Logger)
-		g.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
-
-		g.Group(func(p chi.Router) {
-			p.Use(auth.Middleware(verifier, conn))
-			p.Get("/api/me", handlers.Me())
-			p.Get("/api/affirmations", handlers.ListAffirmations(affStore))
-			p.Post("/api/affirmations", handlers.CreateAffirmation(affStore))
-			p.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(affStore))
-			p.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(affStore))
-		})
+	r.Group(func(p chi.Router) {
+		p.Use(auth.Middleware(verifier, conn))
+		p.Get("/api/me", handlers.Me())
+		p.Get("/api/affirmations", handlers.ListAffirmations(affStore))
+		p.Post("/api/affirmations", handlers.CreateAffirmation(affStore))
+		p.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(affStore))
+		p.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(affStore))
 	})
 
 	srv := &http.Server{
@@ -120,4 +117,24 @@ func mustEnv(k string) string {
 		log.Fatalf("required env var %s is not set", k)
 	}
 	return v
+}
+
+// loggerSkipping wraps middleware.Logger so that requests to the given paths
+// bypass access logging. Registered at the router root so unmatched routes
+// (404) are logged too.
+func loggerSkipping(paths ...string) func(http.Handler) http.Handler {
+	skip := make(map[string]struct{}, len(paths))
+	for _, p := range paths {
+		skip[p] = struct{}{}
+	}
+	return func(next http.Handler) http.Handler {
+		logged := middleware.Logger(next)
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if _, ok := skip[r.URL.Path]; ok {
+				next.ServeHTTP(w, r)
+				return
+			}
+			logged.ServeHTTP(w, r)
+		})
+	}
 }
