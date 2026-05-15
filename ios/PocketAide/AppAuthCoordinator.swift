@@ -12,10 +12,12 @@ final class AppAuthCoordinator: ObservableObject {
     @Published var healthError: String?
     @Published var me: MeResponse?
     @Published var meError: String?
+    @Published var pushAuthorizationDenied = false
 
     let api: APIClient?
     let oidc: OIDCClient?
     private let tokenStore: TokenStoring
+    private let pushRegistrar = PushRegistrar()
 
     init() {
         let store = KeychainTokenStore(accessGroup: nil)
@@ -35,6 +37,7 @@ final class AppAuthCoordinator: ObservableObject {
         await refreshHealth()
         if signedIn {
             await refreshMe()
+            await registerForPush()
         }
     }
 
@@ -72,6 +75,7 @@ final class AppAuthCoordinator: ObservableObject {
             _ = try await oidc.signIn()
             signedIn = true
             await refreshMe()
+            await registerForPush()
         } catch {
             signInError = String(describing: error)
             signedIn = (try? tokenStore.load()) != nil
@@ -83,5 +87,16 @@ final class AppAuthCoordinator: ObservableObject {
         me = nil
         meError = nil
         signedIn = false
+    }
+
+    func refreshPushAuthorization() async {
+        let state = await pushRegistrar.currentAuthorization()
+        pushAuthorizationDenied = (state == .denied)
+    }
+
+    private func registerForPush() async {
+        guard let api else { return }
+        let state = await pushRegistrar.register(api: api)
+        pushAuthorizationDenied = (state == .denied)
     }
 }

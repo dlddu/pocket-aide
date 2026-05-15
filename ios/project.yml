@@ -48,8 +48,10 @@ targets:
       configs:
         Debug:
           INFOPLIST_FILE: PocketAide/Info-Debug.plist
+          APS_ENVIRONMENT: development
         Release:
           INFOPLIST_FILE: PocketAide/Info-Release.plist
+          APS_ENVIRONMENT: production
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: Apple Distribution
           DEVELOPMENT_TEAM: ${IOS_TEAM_ID}

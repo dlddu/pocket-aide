@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +15,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/dlddu/pocket-aide/backend/internal/affirmations"
+	"github.com/dlddu/pocket-aide/backend/internal/apns"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
+	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
+	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 )
 
@@ -52,6 +56,7 @@ func main() {
 	r.Get("/api/auth/config", handlers.AuthConfigHandler(authCfg))
 
 	affStore := affirmations.New(conn)
+	deviceStore := devicetokens.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -60,6 +65,7 @@ func main() {
 		p.Post("/api/affirmations", handlers.CreateAffirmation(affStore))
 		p.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(affStore))
 		p.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(affStore))
+		p.Post("/api/device-tokens", handlers.RegisterDeviceToken(deviceStore))
 	})
 
 	srv := &http.Server{
@@ -75,10 +81,44 @@ func main() {
 		}
 	}()
 
+	consumerCtx, cancelConsumer := context.WithCancel(context.Background())
+	defer cancelConsumer()
+	if cfg.PRMonitorEnabled {
+		apnsClient, err := apns.New(
+			cfg.APNSKeyID, cfg.APNSTeamID, cfg.APNSBundleID,
+			[]byte(cfg.APNSAuthKeyP8), cfg.APNSUseProduction,
+		)
+		if err != nil {
+			log.Fatalf("apns: %v", err)
+		}
+		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
+			tokens, err := deviceStore.ListAll(ctx)
+			if err != nil {
+				return err
+			}
+			title := fmt.Sprintf("%s — %s", evt.Repo, evt.Conclusion)
+			body := fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
+			for _, t := range tokens {
+				if err := apnsClient.Send(ctx, t, title, body); err != nil {
+					log.Printf("apns send token=%s…: %v", safePrefix(t), err)
+				}
+			}
+			return nil
+		}
+		consumer, err := githubwebhook.New(consumerCtx, cfg.SQSQueueURL, cfg.GitHubWebhookSecret, dispatch)
+		if err != nil {
+			log.Fatalf("sqs consumer: %v", err)
+		}
+		go consumer.Run(consumerCtx)
+	} else {
+		log.Printf("pr-monitor: disabled (SQS_QUEUE_URL not set)")
+	}
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 	log.Println("shutting down")
+	cancelConsumer()
 	shutdownCtx, sc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer sc()
 	_ = srv.Shutdown(shutdownCtx)
@@ -91,17 +131,39 @@ type config struct {
 	OIDCAudience    string
 	OIDCClientID    string
 	OIDCRedirectURI string
+
+	// PR monitor pipeline. Disabled when SQS_QUEUE_URL is empty so local /
+	// test environments don't need APNs or SQS configured.
+	PRMonitorEnabled    bool
+	SQSQueueURL         string
+	GitHubWebhookSecret string
+	APNSKeyID           string
+	APNSTeamID          string
+	APNSBundleID        string
+	APNSAuthKeyP8       string
+	APNSUseProduction   bool
 }
 
 func loadConfig() config {
-	return config{
+	c := config{
 		Port:            envOr("PORT", "8080"),
 		DatabasePath:    envOr("DATABASE_PATH", "/data/pocket-aide.db"),
 		OIDCIssuer:      mustEnv("OIDC_ISSUER"),
 		OIDCAudience:    mustEnv("OIDC_AUDIENCE"),
 		OIDCClientID:    mustEnv("OIDC_CLIENT_ID"),
 		OIDCRedirectURI: mustEnv("OIDC_REDIRECT_URI"),
+		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
 	}
+	if c.SQSQueueURL != "" {
+		c.PRMonitorEnabled = true
+		c.GitHubWebhookSecret = mustEnv("GITHUB_WEBHOOK_SECRET")
+		c.APNSKeyID = mustEnv("APNS_KEY_ID")
+		c.APNSTeamID = mustEnv("APNS_TEAM_ID")
+		c.APNSBundleID = mustEnv("APNS_BUNDLE_ID")
+		c.APNSAuthKeyP8 = mustEnv("APNS_AUTH_KEY_P8")
+		c.APNSUseProduction = envOr("APNS_USE_PRODUCTION", "false") == "true"
+	}
+	return c
 }
 
 func envOr(k, def string) string {
@@ -117,6 +179,15 @@ func mustEnv(k string) string {
 		log.Fatalf("required env var %s is not set", k)
 	}
 	return v
+}
+
+// safePrefix returns the first 8 chars of a token (or fewer) so log lines can
+// identify devices without leaking the full token.
+func safePrefix(t string) string {
+	if len(t) <= 8 {
+		return t
+	}
+	return t[:8]
 }
 
 // loggerSkipping wraps middleware.Logger so that requests to the given paths

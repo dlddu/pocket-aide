@@ -20,6 +20,11 @@ public struct MeResponse: Codable, Equatable, Sendable {
     public let sub: String
 }
 
+public struct DeviceTokenRegistration: Encodable, Sendable {
+    public let token: String
+    public init(token: String) { self.token = token }
+}
+
 public enum APIError: Error, CustomStringConvertible {
     case badStatus(Int, String)
     case decoding(Error)
@@ -66,6 +71,15 @@ public final class APIClient: @unchecked Sendable {
 
     public func me() async throws -> MeResponse {
         try await get("/api/me", authenticated: true, decodeAs: MeResponse.self)
+    }
+
+    public func registerDeviceToken(_ token: String) async throws {
+        _ = try await post(
+            "/api/device-tokens",
+            body: DeviceTokenRegistration(token: token),
+            authenticated: true,
+            decodeAs: EmptyResponse.self
+        )
     }
 
     private struct HealthResponse: Codable { let status: String }

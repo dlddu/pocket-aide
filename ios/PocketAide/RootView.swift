@@ -1,5 +1,6 @@
 import DesignSystem
 import SwiftUI
+import UIKit
 
 struct RootView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
@@ -22,12 +23,44 @@ struct RootView: View {
                 if useLegacyHome {
                     HelloWorldView()
                 } else {
-                    signedInTabs
+                    signedInContent
                 }
             } else {
                 LoginView()
             }
         }
+    }
+
+    private var signedInContent: some View {
+        VStack(spacing: 0) {
+            if auth.pushAuthorizationDenied {
+                pushDeniedBanner
+            }
+            signedInTabs
+        }
+    }
+
+    private var pushDeniedBanner: some View {
+        Button {
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        } label: {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "bell.slash.fill")
+                Text("알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기")
+                    .font(.system(size: DesignTokens.Typography.captionXs))
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(DesignTokens.Color.accent(.work).opacity(0.18))
+            .foregroundStyle(DesignTokens.Color.ink(.work))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("PushDeniedBanner")
     }
 
     private var signedInTabs: some View {
