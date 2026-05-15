@@ -15,7 +15,11 @@ jobs:
     runs-on: ubuntu-24.04-arm
     services:
       localstack:
-        image: localstack/localstack:latest
+        # Pinned to a pre-license-gate community release. The rolling
+        # `:latest` tag now resolves to a Pro build that exits early
+        # without LOCALSTACK_AUTH_TOKEN, even for OSS services like SQS.
+        # 3.8.1 still works for community SQS without auth.
+        image: localstack/localstack:3.8.1
         ports:
           - 4566:4566
         env:
