@@ -43,6 +43,8 @@
     </array>
     <key>BackendBaseURL</key>
     <string>http://localhost:8080</string>
+    <key>KeychainAccessGroup</key>
+    <string>$(AppIdentifierPrefix)com.dlddu.PocketAide</string>
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsLocalNetworking</key>

@@ -43,6 +43,8 @@
     </array>
     <key>BackendBaseURL</key>
     <string></string>
+    <key>KeychainAccessGroup</key>
+    <string>$(AppIdentifierPrefix)com.dlddu.PocketAide</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

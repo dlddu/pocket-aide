@@ -2,13 +2,13 @@ import DesignSystem
 import SwiftUI
 import UIKit
 
+enum RootTab: Hashable {
+    case chat, scratchpad, personal, work, routines, affirmations
+}
+
 struct RootView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
-    @State private var selectedTab: Tab = .affirmations
-
-    enum Tab: Hashable {
-        case chat, scratchpad, personal, work, routines, affirmations
-    }
+    @Binding var selectedTab: RootTab
 
     /// LoginUITests still target HelloWorldView's identifiers
     /// (SignedInLabel, SignOutButton). Tests opt in by setting
@@ -74,27 +74,27 @@ struct RootView: View {
         TabView(selection: $selectedTab) {
             ChatTab()
                 .tabItem { Label("채팅", systemImage: "bubble.left.and.bubble.right") }
-                .tag(Tab.chat)
+                .tag(RootTab.chat)
 
             ScratchpadTab()
                 .tabItem { Label("임시공간", systemImage: "doc.text") }
-                .tag(Tab.scratchpad)
+                .tag(RootTab.scratchpad)
 
             PersonalTab()
                 .tabItem { Label("개인", systemImage: "person") }
-                .tag(Tab.personal)
+                .tag(RootTab.personal)
 
             WorkTab()
                 .tabItem { Label("회사", systemImage: "briefcase") }
-                .tag(Tab.work)
+                .tag(RootTab.work)
 
             RoutinesTab()
                 .tabItem { Label("루틴", systemImage: "arrow.triangle.2.circlepath") }
-                .tag(Tab.routines)
+                .tag(RootTab.routines)
 
             AffirmationsView()
                 .tabItem { Label("다짐", systemImage: "heart.fill") }
-                .tag(Tab.affirmations)
+                .tag(RootTab.affirmations)
         }
         .tint(DesignTokens.Color.accent(.affirmations))
     }

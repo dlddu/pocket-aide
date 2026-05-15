@@ -98,6 +98,10 @@ targets:
       - package: PocketAideShared
         product: DesignSystem
       - package: PocketAideShared
+        product: PocketAideAPI
+      - package: PocketAideShared
+        product: PocketAideAuth
+      - package: PocketAideShared
         product: PocketAideStorage
     settings:
       base:
@@ -108,7 +112,10 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         MARKETING_VERSION: "1.0"
       configs:
+        Debug:
+          BACKEND_BASE_URL: http://localhost:8080
         Release:
+          BACKEND_BASE_URL: ""
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: Apple Distribution
           DEVELOPMENT_TEAM: ${IOS_TEAM_ID}
