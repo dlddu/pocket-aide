@@ -102,7 +102,7 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 
 	const secret = "shared-secret"
 	dispatched := make(chan WorkflowRunEvent, 1)
-	consumer, err := New(ctx, queueURL, secret, func(_ context.Context, evt WorkflowRunEvent) error {
+	consumer, err := New(ctx, queueURL, secret, "", func(_ context.Context, evt WorkflowRunEvent) error {
 		dispatched <- evt
 		return nil
 	})
@@ -141,7 +141,7 @@ func TestIntegration_ConsumerDropsBadSignature(t *testing.T) {
 	client, queueURL := createEphemeralQueue(t, ctx)
 
 	dispatched := make(chan WorkflowRunEvent, 1)
-	consumer, err := New(ctx, queueURL, "real-secret", func(_ context.Context, evt WorkflowRunEvent) error {
+	consumer, err := New(ctx, queueURL, "real-secret", "", func(_ context.Context, evt WorkflowRunEvent) error {
 		dispatched <- evt
 		return nil
 	})

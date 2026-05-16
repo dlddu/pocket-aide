@@ -16,8 +16,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 // WorkflowRunEvent is the subset of fields the dispatcher cares about.
@@ -43,8 +45,11 @@ type Consumer struct {
 }
 
 // New loads AWS config from the default credential chain (instance profile,
-// AWS_* env vars, etc.) and returns a Consumer ready for Run.
-func New(ctx context.Context, queueURL, secret string, dispatch DispatchFunc) (*Consumer, error) {
+// AWS_* env vars, etc.) and returns a Consumer ready for Run. If roleARN is
+// non-empty, the SQS client uses credentials obtained by assuming that role
+// via STS — the default chain provides the base credentials that sign the
+// AssumeRole call.
+func New(ctx context.Context, queueURL, secret, roleARN string, dispatch DispatchFunc) (*Consumer, error) {
 	if queueURL == "" {
 		return nil, errors.New("queueURL is empty")
 	}
@@ -57,6 +62,12 @@ func New(ctx context.Context, queueURL, secret string, dispatch DispatchFunc) (*
 	awsCfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("aws config: %w", err)
+	}
+	if roleARN != "" {
+		provider := stscreds.NewAssumeRoleProvider(sts.NewFromConfig(awsCfg), roleARN, func(o *stscreds.AssumeRoleOptions) {
+			o.RoleSessionName = "pocket-aide-sqs"
+		})
+		awsCfg.Credentials = aws.NewCredentialsCache(provider)
 	}
 	return &Consumer{
 		client:   sqs.NewFromConfig(awsCfg),

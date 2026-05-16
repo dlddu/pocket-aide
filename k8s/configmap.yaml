@@ -18,6 +18,9 @@ data:
   # safe for any environment that doesn't run the feature yet.
   AWS_REGION: "ap-northeast-2"
   SQS_QUEUE_URL: ""
+  # Optional: when set, backend assumes this role via STS for SQS access.
+  # Leave empty to use the default credential chain (instance profile, etc.).
+  AWS_ROLE_ARN: ""
   APNS_KEY_ID: "REPLACE_ME"
   APNS_TEAM_ID: "REPLACE_ME"
   APNS_BUNDLE_ID: "com.dlddu.PocketAide"

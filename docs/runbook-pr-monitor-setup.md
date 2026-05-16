@@ -46,9 +46,11 @@ aps-environment entitlement", the profile was not re-issued after step 1.
    - `sqs:DeleteMessage`
    - `sqs:GetQueueAttributes`
 3. **Attach the role** to the K3s node's EC2 instance profile, OR set the
-   `AWS_ROLE_ARN` env var on the deployment so the SDK's default
-   credential chain assumes it via STS. The backend's `aws/config`
-   loader uses the default chain — no app-level credentials.
+   `AWS_ROLE_ARN` env var on the deployment. When `AWS_ROLE_ARN` is set,
+   the backend explicitly assumes that role via STS using the default
+   credential chain (instance profile / `AWS_*` env vars) as the base
+   identity that signs the AssumeRole call. When unset, the SQS client
+   uses the default chain's credentials directly.
 4. Inject `AWS_REGION` + `SQS_QUEUE_URL` into the ConfigMap.
 
 To test the role from a shell on the cluster:
@@ -102,6 +104,7 @@ test environments run without any of this set up.
 | ----------------------- | ---------- | ------------------------- |
 | `AWS_REGION`            | ConfigMap  | always                    |
 | `SQS_QUEUE_URL`         | ConfigMap  | empty disables PR monitor |
+| `AWS_ROLE_ARN`          | ConfigMap  | optional; assumes role via STS when set |
 | `APNS_KEY_ID`           | ConfigMap  | PR monitor enabled        |
 | `APNS_TEAM_ID`          | ConfigMap  | PR monitor enabled        |
 | `APNS_BUNDLE_ID`        | ConfigMap  | PR monitor enabled        |
