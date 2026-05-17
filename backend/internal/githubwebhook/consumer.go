@@ -125,7 +125,11 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		return fmt.Errorf("envelope: %w", err)
 	}
 	if event := headers["x-github-event"]; event != "workflow_run" {
-		return nil // not a workflow_run — silently drop
+		// Not a workflow_run — the webhook is subscribed to events we don't
+		// act on. Log once per message so operators can see what's filling
+		// the queue without having to sample messages directly.
+		log.Printf("githubwebhook: skipping event=%q (not workflow_run)", event)
+		return nil
 	}
 	if err := verifyHMAC(c.secret, payload, headers["x-hub-signature-256"]); err != nil {
 		return fmt.Errorf("hmac: %w", err)
@@ -135,6 +139,10 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		return fmt.Errorf("parse workflow_run: %w", err)
 	}
 	if parsed.Action != "completed" {
+		// GitHub sends requested/in_progress/completed for every run;
+		// we only push on completed. Log so the requested/in_progress
+		// volume is observable.
+		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
 		return nil
 	}
 	evt := WorkflowRunEvent{
@@ -147,6 +155,7 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 	if err := c.dispatch(ctx, evt); err != nil {
 		return fmt.Errorf("dispatch: %w", err)
 	}
+	log.Printf("githubwebhook: dispatched repo=%s branch=%s conclusion=%s", evt.Repo, evt.HeadBranch, evt.Conclusion)
 	return nil
 }
 
