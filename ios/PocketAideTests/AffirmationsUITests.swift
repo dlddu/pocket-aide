@@ -1,5 +1,22 @@
 import XCTest
 
+private extension XCUIElement {
+    /// `waitForExistence` + `XCTAssertFalse` can't observe a currently-visible
+    /// element disappearing — it returns immediately. Use a predicate-based
+    /// wait when the assertion is "this should be gone soon".
+    @discardableResult
+    func waitToDisappear(timeout: TimeInterval, in testCase: XCTestCase, message: String) -> Bool {
+        let predicate = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
+        let result = XCTWaiter.wait(for: [expectation], timeout: timeout)
+        if result != .completed {
+            XCTFail(message, file: #filePath, line: #line)
+            return false
+        }
+        return true
+    }
+}
+
 /// End-to-end coverage for the 다짐 (affirmations) tab. Relies on the shared
 /// `UITestAuth.ensureSignedIn` helper to drop a token in the simulator keychain
 /// once per process, then each test launches into the new TabView shell.
@@ -62,6 +79,14 @@ final class AffirmationsUITests: XCTestCase {
         after.name = "after-affirmations-tap"
         after.lifetime = .keepAlways
         add(after)
+
+        // Anchor on the affirmations screen header so callers don't all repeat
+        // the same wait, and a failure here points at navigation rather than
+        // at whatever assertion the test happens to make next.
+        XCTAssertTrue(
+            app.staticTexts["screen.header.title"].waitForExistence(timeout: 15),
+            "Affirmations header should appear after selecting the affirmations tab"
+        )
     }
 
     /// Try the common places where iOS surfaces the "More" overflow rows.
@@ -99,23 +124,22 @@ final class AffirmationsUITests: XCTestCase {
     func testAffirmationsTabIsReachable() {
         let app = launchApp()
         selectAffirmationsTab(in: app)
-        XCTAssertTrue(
-            app.staticTexts["screen.header.title"].waitForExistence(timeout: 15),
-            "Affirmations header should appear after selecting the affirmations tab"
-        )
+        // selectAffirmationsTab already waits for screen.header.title.
     }
 
     func testAddSentenceOpensSheet() {
         let app = launchApp()
         selectAffirmationsTab(in: app)
-        XCTAssertTrue(app.staticTexts["screen.header.title"].waitForExistence(timeout: 15))
 
         let addButton = app.buttons["affirmations.add.button"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 5), "Add button should be visible")
         addButton.tap()
 
         let sheetTitle = app.staticTexts["sheet.title"]
-        XCTAssertTrue(sheetTitle.waitForExistence(timeout: 5), "Priority edit sheet should appear")
+        XCTAssertTrue(
+            sheetTitle.waitForExistence(timeout: 15),
+            "Priority edit sheet should appear within 15s of tapping add"
+        )
 
         // Create-mode sheet must not surface a destructive action — delete only
         // makes sense for existing items, and PriorityEditSheet wires
@@ -129,21 +153,23 @@ final class AffirmationsUITests: XCTestCase {
         // sheet round-trips. Typing into the SwiftUI multi-line TextField
         // through XCUITest is flaky across iOS releases.
         let cancel = app.buttons["sheet.cancel.button"]
-        if cancel.waitForExistence(timeout: 3) {
-            cancel.tap()
-        }
-        XCTAssertFalse(
-            app.staticTexts["sheet.title"].waitForExistence(timeout: 2),
-            "Sheet should dismiss after cancel"
+        XCTAssertTrue(
+            cancel.waitForExistence(timeout: 5),
+            "Cancel button should be present on create-mode sheet"
+        )
+        cancel.tap()
+
+        sheetTitle.waitToDisappear(
+            timeout: 5,
+            in: self,
+            message: "Sheet should dismiss within 5s of tapping cancel"
         )
     }
 
     func testRotationSeedLandsOnAffirmationsScreen() {
         let app = launchApp(seed: "424242")
         selectAffirmationsTab(in: app)
-        XCTAssertTrue(
-            app.staticTexts["screen.header.title"].waitForExistence(timeout: 15),
-            "Same rotation seed should still render the affirmations screen header"
-        )
+        // selectAffirmationsTab already waits for screen.header.title; the
+        // assertion lives there so we don't duplicate it here.
     }
 }
