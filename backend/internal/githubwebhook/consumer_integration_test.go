@@ -14,9 +14,6 @@ package githubwebhook
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -68,30 +65,6 @@ func sendEnvelope(t *testing.T, ctx context.Context, client *sqs.Client, queueUR
 	}
 }
 
-// makeSignedEnvelope mirrors what the API Gateway → SQS bridge produces for
-// a GitHub webhook delivery: the standard envelope with a real HMAC-SHA256.
-func makeSignedEnvelope(t *testing.T, event string, payload any, secret []byte) []byte {
-	t.Helper()
-	body, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatalf("marshal payload: %v", err)
-	}
-	mac := hmac.New(sha256.New, secret)
-	mac.Write(body)
-	env := apiGatewayEnvelope{
-		Headers: map[string]string{
-			"X-GitHub-Event":      event,
-			"X-Hub-Signature-256": "sha256=" + hex.EncodeToString(mac.Sum(nil)),
-		},
-		Body: string(body),
-	}
-	raw, err := json.Marshal(env)
-	if err != nil {
-		t.Fatalf("marshal envelope: %v", err)
-	}
-	return raw
-}
-
 func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 	requireLocalStack(t)
 
@@ -100,9 +73,8 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 
 	client, queueURL := createEphemeralQueue(t, ctx)
 
-	const secret = "shared-secret"
-	dispatched := make(chan WorkflowRunEvent, 1)
-	consumer, err := New(ctx, queueURL, secret, "", func(_ context.Context, evt WorkflowRunEvent) error {
+	dispatched := make(chan WorkflowJobEvent, 1)
+	consumer, err := New(ctx, queueURL, "", func(_ context.Context, evt WorkflowJobEvent) error {
 		dispatched <- evt
 		return nil
 	})
@@ -117,11 +89,11 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 		consumer.Run(ctx)
 	}()
 
-	sendEnvelope(t, ctx, client, queueURL, makeSignedEnvelope(t, "workflow_run", completedWorkflowRun(), []byte(secret)))
+	sendEnvelope(t, ctx, client, queueURL, makeEventBridgeMessage(t, "workflow_job", completedWorkflowJob()))
 
 	select {
 	case evt := <-dispatched:
-		if evt.Repo != "dlddu/pocket-aide" || evt.Conclusion != "failure" {
+		if evt.Repo != "dlddu/pocket-aide" || evt.Conclusion != "failure" || evt.JobName != "lint" {
 			t.Errorf("unexpected event: %+v", evt)
 		}
 	case <-time.After(30 * time.Second):
@@ -132,7 +104,7 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 	wg.Wait()
 }
 
-func TestIntegration_ConsumerDropsBadSignature(t *testing.T) {
+func TestIntegration_ConsumerDropsNonWorkflowJobMessages(t *testing.T) {
 	requireLocalStack(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -140,8 +112,8 @@ func TestIntegration_ConsumerDropsBadSignature(t *testing.T) {
 
 	client, queueURL := createEphemeralQueue(t, ctx)
 
-	dispatched := make(chan WorkflowRunEvent, 1)
-	consumer, err := New(ctx, queueURL, "real-secret", "", func(_ context.Context, evt WorkflowRunEvent) error {
+	dispatched := make(chan WorkflowJobEvent, 1)
+	consumer, err := New(ctx, queueURL, "", func(_ context.Context, evt WorkflowJobEvent) error {
 		dispatched <- evt
 		return nil
 	})
@@ -156,13 +128,12 @@ func TestIntegration_ConsumerDropsBadSignature(t *testing.T) {
 		consumer.Run(ctx)
 	}()
 
-	// Sign with the wrong secret — consumer must reject and never dispatch.
-	sendEnvelope(t, ctx, client, queueURL, makeSignedEnvelope(t, "workflow_run", completedWorkflowRun(), []byte("attacker-secret")))
+	// A detail-type we don't act on — must be silently dropped.
+	sendEnvelope(t, ctx, client, queueURL, makeEventBridgeMessage(t, "push", map[string]any{"ref": "refs/heads/main"}))
 
-	// Also send a non-workflow_run event with the right secret so we have a
-	// known "consumer is alive and reached this point" signal — if dispatch
-	// fires for *anything* in this test, that's a bug.
-	sendEnvelope(t, ctx, client, queueURL, makeSignedEnvelope(t, "push", map[string]any{"ref": "refs/heads/main"}, []byte("real-secret")))
+	// A direct, non-EventBridge envelope — also silently dropped.
+	bogus, _ := json.Marshal(map[string]any{"foo": "bar"})
+	sendEnvelope(t, ctx, client, queueURL, bogus)
 
 	select {
 	case evt := <-dispatched:
@@ -175,7 +146,7 @@ func TestIntegration_ConsumerDropsBadSignature(t *testing.T) {
 	wg.Wait()
 
 	// Belt and suspenders: confirm the queue actually drained, so we know
-	// the consumer processed (and rejected) the messages rather than them
+	// the consumer processed (and dropped) the messages rather than them
 	// sitting on the queue.
 	out, err := client.GetQueueAttributes(context.Background(), &sqs.GetQueueAttributesInput{
 		QueueUrl: aws.String(queueURL),

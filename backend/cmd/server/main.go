@@ -91,13 +91,13 @@ func main() {
 		if err != nil {
 			log.Fatalf("apns: %v", err)
 		}
-		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
+		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowJobEvent) error {
 			tokens, err := deviceStore.ListAll(ctx)
 			if err != nil {
 				return err
 			}
 			title := fmt.Sprintf("%s — %s", evt.Repo, evt.Conclusion)
-			body := fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
+			body := fmt.Sprintf("%s · %s on %s", evt.WorkflowName, evt.JobName, evt.HeadBranch)
 			for _, t := range tokens {
 				if err := apnsClient.Send(ctx, t, title, body); err != nil {
 					log.Printf("apns send token=%s…: %v", safePrefix(t), err)
@@ -105,7 +105,7 @@ func main() {
 			}
 			return nil
 		}
-		consumer, err := githubwebhook.New(consumerCtx, cfg.SQSQueueURL, cfg.GitHubWebhookSecret, cfg.AWSRoleARN, dispatch)
+		consumer, err := githubwebhook.New(consumerCtx, cfg.SQSQueueURL, cfg.AWSRoleARN, dispatch)
 		if err != nil {
 			log.Fatalf("sqs consumer: %v", err)
 		}
@@ -134,15 +134,14 @@ type config struct {
 
 	// PR monitor pipeline. Disabled when SQS_QUEUE_URL is empty so local /
 	// test environments don't need APNs or SQS configured.
-	PRMonitorEnabled    bool
-	SQSQueueURL         string
-	AWSRoleARN          string
-	GitHubWebhookSecret string
-	APNSKeyID           string
-	APNSTeamID          string
-	APNSBundleID        string
-	APNSAuthKeyP8       string
-	APNSUseProduction   bool
+	PRMonitorEnabled  bool
+	SQSQueueURL       string
+	AWSRoleARN        string
+	APNSKeyID         string
+	APNSTeamID        string
+	APNSBundleID      string
+	APNSAuthKeyP8     string
+	APNSUseProduction bool
 }
 
 func loadConfig() config {
@@ -158,7 +157,6 @@ func loadConfig() config {
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
 		c.AWSRoleARN = os.Getenv("AWS_ROLE_ARN")
-		c.GitHubWebhookSecret = mustEnv("GITHUB_WEBHOOK_SECRET")
 		c.APNSKeyID = mustEnv("APNS_KEY_ID")
 		c.APNSTeamID = mustEnv("APNS_TEAM_ID")
 		c.APNSBundleID = mustEnv("APNS_BUNDLE_ID")

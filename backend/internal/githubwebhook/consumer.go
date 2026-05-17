@@ -1,10 +1,16 @@
 // Package githubwebhook consumes GitHub webhook deliveries that have been
-// forwarded to an SQS queue (typically via API Gateway → SQS integration).
-// It verifies the X-Hub-Signature-256 HMAC, filters to workflow_run completed
-// events, and hands the parsed event to a caller-supplied dispatch func.
+// forwarded into an SQS queue via the EventBridge → SQS target integration.
+// EventBridge wraps each delivery in its standard envelope; this package
+// unwraps the envelope, filters to workflow_job completed events, and hands
+// the parsed event to a caller-supplied dispatch func.
+//
+// Message authenticity is enforced by the IAM/queue-policy boundary around
+// the SQS queue, not by an HMAC. The EventBridge bus is the only producer
+// expected to hold sqs:SendMessage on this queue; the GitHub-side webhook
+// signature is consumed and discarded by EventBridge before forwarding.
 //
 // Idempotency, retries, and dedupe are intentionally out of scope — the draft
-// only validates HMAC and forwards once.
+// validates the message shape and forwards once.
 package githubwebhook
 
 import (
@@ -24,19 +30,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
-// WorkflowRunEvent is the subset of fields the dispatcher cares about.
-type WorkflowRunEvent struct {
+// WorkflowJobEvent is the subset of fields the dispatcher cares about.
+// Sourced from EventBridge `detail.workflow_job` / `detail.repository`.
+type WorkflowJobEvent struct {
 	Repo         string // e.g. "dlddu/pocket-aide"
-	WorkflowName string
+	WorkflowName string // overall workflow, e.g. "CI"
+	JobName      string // single job within the workflow, e.g. "lint"
 	HeadBranch   string
-	Conclusion   string // success | failure | cancelled | ...
+	Conclusion   string // success | failure | cancelled | skipped | ...
 	HTMLURL      string
 }
 
-// DispatchFunc is invoked once per accepted (HMAC-verified, completed)
-// workflow_run event. Its error is logged but never blocks message deletion —
-// the draft favours throughput over guaranteed delivery.
-type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
+// DispatchFunc is invoked once per accepted (workflow_job completed) event.
+// Its error is logged but never blocks message deletion — the draft favours
+// throughput over guaranteed delivery.
+type DispatchFunc func(ctx context.Context, evt WorkflowJobEvent) error
 
 // Consumer long-polls a single SQS queue.
 //
@@ -44,11 +52,10 @@ type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
 // DEBUG_LOG_ENVELOPE_HEADERS / DEBUG_LOG_ENVELOPE_BODY at construction time.
 // When set, they cause silent-drop paths in process() to dump additional
 // envelope detail — useful for diagnosing unexpected messages on the queue
-// (test sends from the AWS console, non-API-Gateway producers, etc.).
+// (test sends from the AWS console, non-EventBridge producers, etc.).
 type Consumer struct {
 	client          *sqs.Client
 	queueURL        string
-	secret          []byte
 	dispatch        DispatchFunc
 	debugLogHeaders bool
 	debugLogBody    bool
@@ -59,12 +66,9 @@ type Consumer struct {
 // non-empty, the SQS client uses credentials obtained by assuming that role
 // via STS — the default chain provides the base credentials that sign the
 // AssumeRole call.
-func New(ctx context.Context, queueURL, secret, roleARN string, dispatch DispatchFunc) (*Consumer, error) {
+func New(ctx context.Context, queueURL, roleARN string, dispatch DispatchFunc) (*Consumer, error) {
 	if queueURL == "" {
 		return nil, errors.New("queueURL is empty")
-	}
-	if secret == "" {
-		return nil, errors.New("secret is empty")
 	}
 	if dispatch == nil {
 		return nil, errors.New("dispatch is nil")
@@ -82,7 +86,6 @@ func New(ctx context.Context, queueURL, secret, roleARN string, dispatch Dispatc
 	return &Consumer{
 		client:          sqs.NewFromConfig(awsCfg),
 		queueURL:        queueURL,
-		secret:          []byte(secret),
 		dispatch:        dispatch,
 		debugLogHeaders: os.Getenv("DEBUG_LOG_ENVELOPE_HEADERS") == "1",
 		debugLogBody:    os.Getenv("DEBUG_LOG_ENVELOPE_BODY") == "1",
@@ -118,9 +121,9 @@ func (c *Consumer) Run(ctx context.Context) {
 func (c *Consumer) handleMessage(ctx context.Context, msg types.Message) {
 	body := []byte(aws.ToString(msg.Body))
 	if err := c.process(ctx, body); err != nil {
-		// Log and still delete — failures here are unrecoverable (bad
-		// signature, malformed payload). Leaving the message would just
-		// stall the queue.
+		// Log and still delete — failures here are unrecoverable (malformed
+		// envelope, malformed payload). Leaving the message would just stall
+		// the queue.
 		log.Printf("githubwebhook: dropping message: %v", err)
 	}
 	if _, err := c.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
@@ -132,44 +135,44 @@ func (c *Consumer) handleMessage(ctx context.Context, msg types.Message) {
 }
 
 func (c *Consumer) process(ctx context.Context, raw []byte) error {
-	headers, payload, err := decodeAPIGatewayEnvelope(raw)
+	detailType, source, detail, err := decodeEventBridgeEnvelope(raw)
 	if err != nil {
 		return fmt.Errorf("envelope: %w", err)
 	}
-	if event := headers["x-github-event"]; event != "workflow_run" {
-		// Not a workflow_run — the webhook is subscribed to events we don't
-		// act on. Log once per message so operators can see what's filling
-		// the queue without having to sample messages directly.
-		log.Printf("githubwebhook: skipping event=%q (not workflow_run)", event)
-		c.debugLogEnvelope(headers, payload)
+	if detailType != "workflow_job" {
+		// Not a workflow_job — could be any other GitHub event forwarded
+		// by the same bus, an AWS test message, etc. Log once so operators
+		// can see what's filling the queue without sampling messages
+		// directly. Source is included for the same reason.
+		log.Printf("githubwebhook: skipping detail_type=%q source=%q (not workflow_job)", detailType, source)
+		c.debugLogEnvelope(raw)
 		return nil
 	}
-	if err := verifyHMAC(c.secret, payload, headers["x-hub-signature-256"]); err != nil {
-		return fmt.Errorf("hmac: %w", err)
-	}
-	var parsed workflowRunPayload
-	if err := json.Unmarshal(payload, &parsed); err != nil {
-		return fmt.Errorf("parse workflow_run: %w", err)
+	var parsed workflowJobPayload
+	if err := json.Unmarshal(detail, &parsed); err != nil {
+		return fmt.Errorf("parse workflow_job: %w", err)
 	}
 	if parsed.Action != "completed" {
-		// GitHub sends requested/in_progress/completed for every run;
-		// we only push on completed. Log so the requested/in_progress
-		// volume is observable.
-		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
-		c.debugLogEnvelope(headers, payload)
+		// GitHub sends queued/in_progress/completed (and occasionally
+		// waiting) for every job; we only push on completed. Log so the
+		// non-completed volume is observable.
+		log.Printf("githubwebhook: skipping workflow_job action=%q (not completed)", parsed.Action)
+		c.debugLogEnvelope(raw)
 		return nil
 	}
-	evt := WorkflowRunEvent{
+	evt := WorkflowJobEvent{
 		Repo:         parsed.Repository.FullName,
-		WorkflowName: parsed.WorkflowRun.Name,
-		HeadBranch:   parsed.WorkflowRun.HeadBranch,
-		Conclusion:   parsed.WorkflowRun.Conclusion,
-		HTMLURL:      parsed.WorkflowRun.HTMLURL,
+		WorkflowName: parsed.WorkflowJob.WorkflowName,
+		JobName:      parsed.WorkflowJob.Name,
+		HeadBranch:   parsed.WorkflowJob.HeadBranch,
+		Conclusion:   parsed.WorkflowJob.Conclusion,
+		HTMLURL:      parsed.WorkflowJob.HTMLURL,
 	}
 	if err := c.dispatch(ctx, evt); err != nil {
 		return fmt.Errorf("dispatch: %w", err)
 	}
-	log.Printf("githubwebhook: dispatched repo=%s branch=%s conclusion=%s", evt.Repo, evt.HeadBranch, evt.Conclusion)
+	log.Printf("githubwebhook: dispatched repo=%s workflow=%s job=%s branch=%s conclusion=%s",
+		evt.Repo, evt.WorkflowName, evt.JobName, evt.HeadBranch, evt.Conclusion)
 	return nil
 }
 
@@ -177,44 +180,51 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 // opt-in env var is set. Called from the silent-drop paths only — happy-path
 // messages already log a structured "dispatched ..." line.
 //
-// Header values are deliberately NOT logged: they can include
-// x-hub-signature-256, which is non-secret but noisy. Keys are sufficient
-// to identify whether the message came from API Gateway (which sets
-// x-github-event / x-hub-signature-256) or from some other producer.
+// For EventBridge envelopes the "header keys" we surface are the top-level
+// fields of the envelope JSON itself (detail-type, source, detail, etc.).
+// This is the analogue of header keys in the old API-Gateway-shaped envelope
+// and is sufficient to identify whether a message came from EventBridge or
+// from another producer.
 //
 // Body output is capped at maxBodyPrefix bytes and printed via %q so any
 // non-UTF-8 bytes are safely escaped.
-func (c *Consumer) debugLogEnvelope(headers map[string]string, body []byte) {
+func (c *Consumer) debugLogEnvelope(raw []byte) {
 	if c.debugLogHeaders {
-		keys := make([]string, 0, len(headers))
-		for k := range headers {
-			keys = append(keys, k)
+		var top map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &top); err == nil {
+			keys := make([]string, 0, len(top))
+			for k := range top {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			log.Printf("githubwebhook: debug envelope_keys=%v", keys)
+		} else {
+			log.Printf("githubwebhook: debug envelope_keys=<unparseable: %v>", err)
 		}
-		sort.Strings(keys)
-		log.Printf("githubwebhook: debug header_keys=%v", keys)
 	}
 	if c.debugLogBody {
 		const maxBodyPrefix = 256
-		prefix := body
+		prefix := raw
 		truncated := false
 		if len(prefix) > maxBodyPrefix {
 			prefix = prefix[:maxBodyPrefix]
 			truncated = true
 		}
 		log.Printf("githubwebhook: debug body_prefix=%q total_len=%d truncated=%t",
-			prefix, len(body), truncated)
+			prefix, len(raw), truncated)
 	}
 }
 
-type workflowRunPayload struct {
+type workflowJobPayload struct {
 	Action     string `json:"action"`
 	Repository struct {
 		FullName string `json:"full_name"`
 	} `json:"repository"`
-	WorkflowRun struct {
-		Name       string `json:"name"`
-		HeadBranch string `json:"head_branch"`
-		Conclusion string `json:"conclusion"`
-		HTMLURL    string `json:"html_url"`
-	} `json:"workflow_run"`
+	WorkflowJob struct {
+		Name         string `json:"name"`          // job name, e.g. "lint"
+		WorkflowName string `json:"workflow_name"` // overall workflow, e.g. "CI"
+		HeadBranch   string `json:"head_branch"`
+		Conclusion   string `json:"conclusion"`
+		HTMLURL      string `json:"html_url"`
+	} `json:"workflow_job"`
 }
