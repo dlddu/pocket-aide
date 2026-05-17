@@ -45,6 +45,16 @@ public enum DesignTokens {
         public static func destructive(_ area: Area) -> SwiftUI.Color {
             SwiftUI.Color(asset(area, "destructive"), bundle: .module)
         }
+
+        // §1.8 — widget surface/rule live outside the area system.
+        // Data-source accent inside the widget still uses `accent(area)`.
+        public static func widgetSurface() -> SwiftUI.Color {
+            SwiftUI.Color("widget/surface", bundle: .module)
+        }
+
+        public static func widgetRule() -> SwiftUI.Color {
+            SwiftUI.Color("widget/rule", bundle: .module)
+        }
     }
 
     public enum Spacing {

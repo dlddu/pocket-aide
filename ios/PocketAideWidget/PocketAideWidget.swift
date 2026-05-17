@@ -2,43 +2,53 @@ import DesignSystem
 import SwiftUI
 import WidgetKit
 
-struct PocketAideEntry: TimelineEntry {
-    let date: Date
-    let greeting: String
-}
-
-struct PocketAideProvider: TimelineProvider {
-    func placeholder(in _: Context) -> PocketAideEntry {
-        PocketAideEntry(date: Date(), greeting: "Hello, pocket-aide")
-    }
-
-    func getSnapshot(in _: Context, completion: @escaping (PocketAideEntry) -> Void) {
-        completion(PocketAideEntry(date: Date(), greeting: "Hello, pocket-aide"))
-    }
-
-    func getTimeline(in _: Context, completion: @escaping (Timeline<PocketAideEntry>) -> Void) {
-        let entry = PocketAideEntry(date: Date(), greeting: "Hello, pocket-aide")
-        completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(60 * 60))))
-    }
-}
-
 struct PocketAideWidgetEntryView: View {
-    let entry: PocketAideProvider.Entry
+    let entry: PocketAideWidgetEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("POCKET AIDE")
-                .font(.system(size: DesignTokens.Typography.captionXs, weight: .bold))
-                .tracking(2)
-                .foregroundStyle(DesignTokens.Color.accent(.aiChat))
-            Text(entry.greeting)
-                .font(.system(size: DesignTokens.Typography.titleMd, weight: .semibold))
-                .foregroundStyle(DesignTokens.Color.ink(.aiChat))
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+                PlaceholderSection(area: .personal, label: "날씨")
+                ruleDivider(vertical: true)
+                PlaceholderSection(area: .work, label: "다음 일정")
+            }
+            .padding(.bottom, DesignTokens.Spacing.md)
+
+            ruleDivider(vertical: false)
+
+            AffirmationSection(state: entry.state)
+                .padding(.vertical, DesignTokens.Spacing.md)
+
+            ruleDivider(vertical: false)
+
+            HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+                PlaceholderSection(area: .aiChat, label: "메일")
+                ruleDivider(vertical: true)
+                PlaceholderSection(area: .scratchpad, label: "알림")
+            }
+            .padding(.top, DesignTokens.Spacing.md)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .padding(DesignTokens.Spacing.lg)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Outer widgetURL is the fallback tap target — used for placeholder
+        // sections that don't yet have their own destinations. The
+        // affirmation section overrides this region with its own Link.
+        .widgetURL(URL(string: "pocketaide://root"))
         .containerBackground(for: .widget) {
-            DesignTokens.Color.surface(.aiChat)
+            DesignTokens.Color.widgetSurface()
+        }
+    }
+
+    @ViewBuilder
+    private func ruleDivider(vertical: Bool) -> some View {
+        if vertical {
+            Rectangle()
+                .fill(DesignTokens.Color.widgetRule())
+                .frame(width: 1)
+        } else {
+            Rectangle()
+                .fill(DesignTokens.Color.widgetRule())
+                .frame(height: 1)
         }
     }
 }
@@ -48,11 +58,11 @@ struct PocketAideWidget: Widget {
     let kind = "PocketAideWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: PocketAideProvider()) { entry in
+        StaticConfiguration(kind: kind, provider: AffirmationProvider()) { entry in
             PocketAideWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("PocketAide")
-        .description("Hello from pocket-aide.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .description("하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.")
+        .supportedFamilies([.systemLarge])
     }
 }

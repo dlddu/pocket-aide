@@ -72,6 +72,12 @@ PocketAide의 가장 중요한 토큰은 **영역(area)별 색상 세트**다. �
 - `--kbd` 키보드 배경: `#D8D3C7`
 - `--key` 키 캡: `#FBFAF6`
 
+위젯 보조 토큰 (홈/잠금 화면 단일 위젯 표면):
+- `--widget-surface` 위젯 표면: `#F5EFE0` (라이트) / `#1F1B12` (다크 — §1.9 패턴: L 7~12%)
+- `--widget-rule` 위젯 내부 구분선: `#E5D7C0` (라이트) / `#3D3528` (다크)
+
+위젯 내부의 영역별 강조(다짐 라벨 등)는 해당 데이터 출처 영역의 `accent`를 그대로 차용한다. SwiftUI에서는 `DesignTokens.Color.widgetSurface()` / `DesignTokens.Color.widgetRule()`로 접근한다.
+
 ### 1.9 다크 변형 (Dark Variants)
 
 음성 모드(1.7)의 다크 표면 컨셉을 전체 영역으로 확장한 변형. iOS `prefers-color-scheme: dark` 및 명시적 다크 모드 토글에서 사용한다.

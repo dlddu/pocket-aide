@@ -25,5 +25,9 @@
         <key>NSExtensionPointIdentifier</key>
         <string>com.apple.widgetkit-extension</string>
     </dict>
+    <key>BackendBaseURL</key>
+    <string></string>
+    <key>KeychainAccessGroup</key>
+    <string>$(AppIdentifierPrefix)com.dlddu.PocketAide</string>
 </dict>
 </plist>
