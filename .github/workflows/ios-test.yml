@@ -40,12 +40,19 @@ jobs:
         working-directory: ios
         run: |
           set -o pipefail
+          # -retry-tests-on-failure + -test-iterations 2 absorbs environment-
+          # induced flakes (e.g. "Failed to get background assertion", UI
+          # query snapshot timeouts on a loaded simulator). Each failing test
+          # is re-run once; if the retry passes, the job goes green and the
+          # xcresult bundle still records both attempts.
           xcodebuild \
             -project PocketAide.xcodeproj \
             -scheme PocketAide \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
             -resultBundlePath TestResults.xcresult \
+            -retry-tests-on-failure \
+            -test-iterations 2 \
             test | xcbeautify
       - name: Upload xcresult on failure
         if: failure()
