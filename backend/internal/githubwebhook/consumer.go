@@ -1,7 +1,7 @@
 // Package githubwebhook consumes GitHub webhook deliveries that have been
 // forwarded into an SQS queue via the EventBridge → SQS target integration.
 // EventBridge wraps each delivery in its standard envelope; this package
-// unwraps the envelope, filters to workflow_job completed events, and hands
+// unwraps the envelope, filters to workflow_run completed events, and hands
 // the parsed event to a caller-supplied dispatch func.
 //
 // Message authenticity is enforced by the IAM/queue-policy boundary around
@@ -30,21 +30,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
-// WorkflowJobEvent is the subset of fields the dispatcher cares about.
-// Sourced from EventBridge `detail.workflow_job` / `detail.repository`.
-type WorkflowJobEvent struct {
+// WorkflowRunEvent is the subset of fields the dispatcher cares about.
+// Sourced from EventBridge `detail.workflow_run` / `detail.repository`.
+type WorkflowRunEvent struct {
 	Repo         string // e.g. "dlddu/pocket-aide"
-	WorkflowName string // overall workflow, e.g. "CI"
-	JobName      string // single job within the workflow, e.g. "lint"
+	WorkflowName string // workflow name, e.g. "CI"
 	HeadBranch   string
 	Conclusion   string // success | failure | cancelled | skipped | ...
 	HTMLURL      string
 }
 
-// DispatchFunc is invoked once per accepted (workflow_job completed) event.
+// DispatchFunc is invoked once per accepted (workflow_run completed) event.
 // Its error is logged but never blocks message deletion — the draft favours
 // throughput over guaranteed delivery.
-type DispatchFunc func(ctx context.Context, evt WorkflowJobEvent) error
+type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
 
 // Consumer long-polls a single SQS queue.
 //
@@ -139,40 +138,39 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 	if err != nil {
 		return fmt.Errorf("envelope: %w", err)
 	}
-	if detailType != "workflow_job" {
-		// Not a workflow_job — could be any other GitHub event forwarded
+	if detailType != "workflow_run" {
+		// Not a workflow_run — could be any other GitHub event forwarded
 		// by the same bus, an AWS test message, etc. Log once so operators
 		// can see what's filling the queue without sampling messages
 		// directly. Source is included for the same reason.
-		log.Printf("githubwebhook: skipping detail_type=%q source=%q (not workflow_job)", detailType, source)
+		log.Printf("githubwebhook: skipping detail_type=%q source=%q (not workflow_run)", detailType, source)
 		c.debugLogEnvelope(raw)
 		return nil
 	}
-	var parsed workflowJobPayload
+	var parsed workflowRunPayload
 	if err := json.Unmarshal(detail, &parsed); err != nil {
-		return fmt.Errorf("parse workflow_job: %w", err)
+		return fmt.Errorf("parse workflow_run: %w", err)
 	}
 	if parsed.Action != "completed" {
-		// GitHub sends queued/in_progress/completed (and occasionally
-		// waiting) for every job; we only push on completed. Log so the
-		// non-completed volume is observable.
-		log.Printf("githubwebhook: skipping workflow_job action=%q (not completed)", parsed.Action)
+		// GitHub sends requested/in_progress/completed for every run;
+		// we only push on completed. Log so the non-completed volume is
+		// observable.
+		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
 		c.debugLogEnvelope(raw)
 		return nil
 	}
-	evt := WorkflowJobEvent{
+	evt := WorkflowRunEvent{
 		Repo:         parsed.Repository.FullName,
-		WorkflowName: parsed.WorkflowJob.WorkflowName,
-		JobName:      parsed.WorkflowJob.Name,
-		HeadBranch:   parsed.WorkflowJob.HeadBranch,
-		Conclusion:   parsed.WorkflowJob.Conclusion,
-		HTMLURL:      parsed.WorkflowJob.HTMLURL,
+		WorkflowName: parsed.WorkflowRun.Name,
+		HeadBranch:   parsed.WorkflowRun.HeadBranch,
+		Conclusion:   parsed.WorkflowRun.Conclusion,
+		HTMLURL:      parsed.WorkflowRun.HTMLURL,
 	}
 	if err := c.dispatch(ctx, evt); err != nil {
 		return fmt.Errorf("dispatch: %w", err)
 	}
-	log.Printf("githubwebhook: dispatched repo=%s workflow=%s job=%s branch=%s conclusion=%s",
-		evt.Repo, evt.WorkflowName, evt.JobName, evt.HeadBranch, evt.Conclusion)
+	log.Printf("githubwebhook: dispatched repo=%s workflow=%s branch=%s conclusion=%s",
+		evt.Repo, evt.WorkflowName, evt.HeadBranch, evt.Conclusion)
 	return nil
 }
 
@@ -215,16 +213,15 @@ func (c *Consumer) debugLogEnvelope(raw []byte) {
 	}
 }
 
-type workflowJobPayload struct {
+type workflowRunPayload struct {
 	Action     string `json:"action"`
 	Repository struct {
 		FullName string `json:"full_name"`
 	} `json:"repository"`
-	WorkflowJob struct {
-		Name         string `json:"name"`          // job name, e.g. "lint"
-		WorkflowName string `json:"workflow_name"` // overall workflow, e.g. "CI"
-		HeadBranch   string `json:"head_branch"`
-		Conclusion   string `json:"conclusion"`
-		HTMLURL      string `json:"html_url"`
-	} `json:"workflow_job"`
+	WorkflowRun struct {
+		Name       string `json:"name"` // workflow name, e.g. "CI"
+		HeadBranch string `json:"head_branch"`
+		Conclusion string `json:"conclusion"`
+		HTMLURL    string `json:"html_url"`
+	} `json:"workflow_run"`
 }

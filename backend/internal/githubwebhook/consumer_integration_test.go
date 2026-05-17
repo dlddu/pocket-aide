@@ -73,8 +73,8 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 
 	client, queueURL := createEphemeralQueue(t, ctx)
 
-	dispatched := make(chan WorkflowJobEvent, 1)
-	consumer, err := New(ctx, queueURL, "", func(_ context.Context, evt WorkflowJobEvent) error {
+	dispatched := make(chan WorkflowRunEvent, 1)
+	consumer, err := New(ctx, queueURL, "", func(_ context.Context, evt WorkflowRunEvent) error {
 		dispatched <- evt
 		return nil
 	})
@@ -89,11 +89,11 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 		consumer.Run(ctx)
 	}()
 
-	sendEnvelope(t, ctx, client, queueURL, makeEventBridgeMessage(t, "workflow_job", completedWorkflowJob()))
+	sendEnvelope(t, ctx, client, queueURL, makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun()))
 
 	select {
 	case evt := <-dispatched:
-		if evt.Repo != "dlddu/pocket-aide" || evt.Conclusion != "failure" || evt.JobName != "lint" {
+		if evt.Repo != "dlddu/pocket-aide" || evt.Conclusion != "failure" || evt.WorkflowName != "CI" {
 			t.Errorf("unexpected event: %+v", evt)
 		}
 	case <-time.After(30 * time.Second):
@@ -104,7 +104,7 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 	wg.Wait()
 }
 
-func TestIntegration_ConsumerDropsNonWorkflowJobMessages(t *testing.T) {
+func TestIntegration_ConsumerDropsNonWorkflowRunMessages(t *testing.T) {
 	requireLocalStack(t)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -112,8 +112,8 @@ func TestIntegration_ConsumerDropsNonWorkflowJobMessages(t *testing.T) {
 
 	client, queueURL := createEphemeralQueue(t, ctx)
 
-	dispatched := make(chan WorkflowJobEvent, 1)
-	consumer, err := New(ctx, queueURL, "", func(_ context.Context, evt WorkflowJobEvent) error {
+	dispatched := make(chan WorkflowRunEvent, 1)
+	consumer, err := New(ctx, queueURL, "", func(_ context.Context, evt WorkflowRunEvent) error {
 		dispatched <- evt
 		return nil
 	})

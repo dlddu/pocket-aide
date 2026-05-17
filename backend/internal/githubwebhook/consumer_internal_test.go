@@ -25,18 +25,17 @@ func makeEventBridgeMessage(t *testing.T, detailType string, detail any) []byte 
 	return raw
 }
 
-func completedWorkflowJob() map[string]any {
+func completedWorkflowRun() map[string]any {
 	return map[string]any{
 		"action": "completed",
 		"repository": map[string]any{
 			"full_name": "dlddu/pocket-aide",
 		},
-		"workflow_job": map[string]any{
-			"name":          "lint",
-			"workflow_name": "CI",
-			"head_branch":   "main",
-			"conclusion":    "failure",
-			"html_url":      "https://github.com/dlddu/pocket-aide/actions/runs/1/job/1",
+		"workflow_run": map[string]any{
+			"name":        "CI",
+			"head_branch": "main",
+			"conclusion":  "failure",
+			"html_url":    "https://github.com/dlddu/pocket-aide/actions/runs/1",
 		},
 	}
 }
@@ -44,11 +43,11 @@ func completedWorkflowJob() map[string]any {
 // recorderConsumer wires a Consumer with a dispatch func that records every
 // invocation, so each test case can assert how many times — and with what
 // payload — dispatch fired.
-func recorderConsumer(t *testing.T) (*Consumer, *[]WorkflowJobEvent) {
+func recorderConsumer(t *testing.T) (*Consumer, *[]WorkflowRunEvent) {
 	t.Helper()
-	var got []WorkflowJobEvent
+	var got []WorkflowRunEvent
 	c := &Consumer{
-		dispatch: func(_ context.Context, evt WorkflowJobEvent) error {
+		dispatch: func(_ context.Context, evt WorkflowRunEvent) error {
 			got = append(got, evt)
 			return nil
 		},
@@ -58,7 +57,7 @@ func recorderConsumer(t *testing.T) (*Consumer, *[]WorkflowJobEvent) {
 
 func TestProcess_HappyPath(t *testing.T) {
 	c, got := recorderConsumer(t)
-	raw := makeEventBridgeMessage(t, "workflow_job", completedWorkflowJob())
+	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun())
 
 	if err := c.process(context.Background(), raw); err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -68,22 +67,21 @@ func TestProcess_HappyPath(t *testing.T) {
 	}
 	evt := (*got)[0]
 	if evt.Repo != "dlddu/pocket-aide" || evt.WorkflowName != "CI" ||
-		evt.JobName != "lint" || evt.HeadBranch != "main" ||
-		evt.Conclusion != "failure" {
+		evt.HeadBranch != "main" || evt.Conclusion != "failure" {
 		t.Errorf("unexpected event: %+v", evt)
 	}
 }
 
-func TestProcess_NonWorkflowJobDetailTypeSilentlyDropped(t *testing.T) {
+func TestProcess_NonWorkflowRunDetailTypeSilentlyDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
 	// Some other GitHub event forwarded by the same bus.
 	raw := makeEventBridgeMessage(t, "push", map[string]any{"ref": "refs/heads/main"})
 
 	if err := c.process(context.Background(), raw); err != nil {
-		t.Fatalf("expected nil for non-workflow_job, got %v", err)
+		t.Fatalf("expected nil for non-workflow_run, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on non-workflow_job detail-type")
+		t.Errorf("dispatch fired on non-workflow_run detail-type")
 	}
 }
 
@@ -103,15 +101,15 @@ func TestProcess_EmptyDetailTypeSilentlyDropped(t *testing.T) {
 
 func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
-	payload := completedWorkflowJob()
-	payload["action"] = "queued"
-	raw := makeEventBridgeMessage(t, "workflow_job", payload)
+	payload := completedWorkflowRun()
+	payload["action"] = "requested"
+	raw := makeEventBridgeMessage(t, "workflow_run", payload)
 
 	if err := c.process(context.Background(), raw); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on action=queued")
+		t.Errorf("dispatch fired on action=requested")
 	}
 }
 
@@ -127,10 +125,10 @@ func TestProcess_MalformedEnvelope(t *testing.T) {
 
 func TestProcess_MalformedDetail(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// Valid envelope, but detail isn't a workflow_job JSON object — it's a
-	// JSON array. Unmarshal into workflowJobPayload will fail.
+	// Valid envelope, but detail isn't a workflow_run JSON object — it's a
+	// JSON array. Unmarshal into workflowRunPayload will fail.
 	raw, _ := json.Marshal(eventBridgeEnvelope{
-		DetailType: "workflow_job",
+		DetailType: "workflow_run",
 		Source:     "github.webhooks",
 		Detail:     json.RawMessage(`[1, 2, 3]`),
 	})
@@ -144,11 +142,11 @@ func TestProcess_MalformedDetail(t *testing.T) {
 
 func TestProcess_DispatchErrorPropagates(t *testing.T) {
 	c := &Consumer{
-		dispatch: func(_ context.Context, _ WorkflowJobEvent) error {
+		dispatch: func(_ context.Context, _ WorkflowRunEvent) error {
 			return errBoom
 		},
 	}
-	raw := makeEventBridgeMessage(t, "workflow_job", completedWorkflowJob())
+	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun())
 	if err := c.process(context.Background(), raw); err == nil {
 		t.Fatal("expected dispatch error to propagate, got nil")
 	}

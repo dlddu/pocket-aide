@@ -7,21 +7,21 @@ import (
 
 func TestDecodeEventBridgeEnvelope_WellFormed(t *testing.T) {
 	raw, _ := json.Marshal(eventBridgeEnvelope{
-		DetailType: "workflow_job",
+		DetailType: "workflow_run",
 		Source:     "github.webhooks",
-		Detail:     json.RawMessage(`{"action":"completed","workflow_job":{"name":"lint"}}`),
+		Detail:     json.RawMessage(`{"action":"completed","workflow_run":{"name":"CI"}}`),
 	})
 	dt, src, detail, err := decodeEventBridgeEnvelope(raw)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if dt != "workflow_job" {
-		t.Errorf("detail-type: got %q want %q", dt, "workflow_job")
+	if dt != "workflow_run" {
+		t.Errorf("detail-type: got %q want %q", dt, "workflow_run")
 	}
 	if src != "github.webhooks" {
 		t.Errorf("source: got %q want %q", src, "github.webhooks")
 	}
-	if string(detail) != `{"action":"completed","workflow_job":{"name":"lint"}}` {
+	if string(detail) != `{"action":"completed","workflow_run":{"name":"CI"}}` {
 		t.Errorf("detail roundtrip mismatch: %s", detail)
 	}
 }

@@ -1,6 +1,6 @@
 # PR Monitor — Setup Runbook
 
-End-to-end checklist for wiring GitHub workflow_job events to iOS push
+End-to-end checklist for wiring GitHub workflow_run events to iOS push
 notifications. The code in this repo closes the loop from "SQS message
 received" to "APNs push delivered"; this doc covers everything else
 (Apple Developer Portal, AWS, GitHub via EventBridge, environment
@@ -79,7 +79,7 @@ GitHub itself cannot publish straight to SQS. Bridge with **AWS EventBridge
    header on GitHub's side is verified and consumed by EventBridge before
    forwarding — no shared secret is propagated to the backend.
 3. Add a **rule** on the bus that routes desired events to the SQS queue:
-   - Event pattern: `{"detail-type": ["workflow_job"]}` (and any others
+   - Event pattern: `{"detail-type": ["workflow_run"]}` (and any others
      you want — see §6 for what the consumer drops vs. acts on).
    - Target: the SQS queue created in §2. EventBridge wraps each event
      in its standard envelope before SendMessage:
@@ -87,13 +87,13 @@ GitHub itself cannot publish straight to SQS. Bridge with **AWS EventBridge
      {
        "version": "0",
        "id": "...",
-       "detail-type": "workflow_job",
+       "detail-type": "workflow_run",
        "source": "github.webhooks",
        "account": "...",
        "time": "...",
        "region": "ap-northeast-2",
        "resources": [],
-       "detail": { /* raw GitHub workflow_job event */ }
+       "detail": { /* raw GitHub workflow_run event */ }
      }
      ```
    - The decoder in `backend/internal/githubwebhook/decoder.go`
@@ -150,14 +150,14 @@ Both rows must be exercised before declaring the feature shipped.
    tokens require a physical device).
 3. Sign in. The backend log should print
    `POST /api/device-tokens 201` and `device_tokens` should grow.
-4. Send a mock workflow_job message into SQS (EventBridge envelope
+4. Send a mock workflow_run message into SQS (EventBridge envelope
    shape, since that's what the consumer now expects):
    ```sh
-   DETAIL='{"action":"completed","repository":{"full_name":"dlddu/pocket-aide"},"workflow_job":{"name":"lint","workflow_name":"CI","head_branch":"main","conclusion":"failure","html_url":"https://github.com/x"}}'
+   DETAIL='{"action":"completed","repository":{"full_name":"dlddu/pocket-aide"},"workflow_run":{"name":"CI","head_branch":"main","conclusion":"failure","html_url":"https://github.com/x"}}'
    ENV=$(jq -nc --argjson d "$DETAIL" '{
      "version":"0",
      "id":"local-test",
-     "detail-type":"workflow_job",
+     "detail-type":"workflow_run",
      "source":"github.webhooks",
      "account":"000000000000",
      "time":"2026-01-01T00:00:00Z",
@@ -168,8 +168,8 @@ Both rows must be exercised before declaring the feature shipped.
    aws sqs send-message --queue-url "$SQS_QUEUE_URL" --message-body "$ENV"
    ```
 5. The device should receive an alert
-   (`dlddu/pocket-aide — failure` / `CI · lint on main`).
-6. Repeat with `detail-type` set to something other than `workflow_job`
+   (`dlddu/pocket-aide — failure` / `CI on main`).
+6. Repeat with `detail-type` set to something other than `workflow_run`
    (e.g. `"push"`) → backend logs `skipping detail_type=...`, no push
    delivered.
 
@@ -196,12 +196,12 @@ Both rows must be exercised before declaring the feature shipped.
 | `apns rejected (status=400 reason="BadDeviceToken")` | Token from sandbox device sent to production APNs (env mismatch)    |
 | `apns rejected (status=403 reason="ExpiredProviderToken")` | .p8 PEM truncated in the secret, or wrong Key ID / Team ID          |
 | Push appears on device only when app is foreground | `UNUserNotificationCenter` delegate missing — `AppDelegate.application(_:didFinishLaunchingWithOptions:)` not running |
-| `skipping detail_type="..." (not workflow_job)` repeating | EventBridge rule routes more `detail-type`s than the consumer acts on, or a non-EventBridge producer is publishing to the queue. Use the debug toggles below to identify the source. |
+| `skipping detail_type="..." (not workflow_run)` repeating | EventBridge rule routes more `detail-type`s than the consumer acts on, or a non-EventBridge producer is publishing to the queue. Use the debug toggles below to identify the source. |
 | `skipping detail_type=""` repeating      | Envelope JSON decodes but has no `detail-type` field — not an EventBridge message. Likely a direct SendMessage from outside (AWS Console test, ad-hoc script). |
 
 ### Diagnosing unexpected envelopes
 
-The consumer logs `skipping ...` for two silent-drop paths (non-`workflow_job` `detail-type`; `workflow_job` with `action != "completed"`). Two opt-in env vars make those lines verbose so the producer can be identified without sampling messages from the queue directly:
+The consumer logs `skipping ...` for two silent-drop paths (non-`workflow_run` `detail-type`; `workflow_run` with `action != "completed"`). Two opt-in env vars make those lines verbose so the producer can be identified without sampling messages from the queue directly:
 
 | Env var                        | What it adds                                                                          |
 | ------------------------------ | ------------------------------------------------------------------------------------- |

@@ -91,13 +91,13 @@ func main() {
 		if err != nil {
 			log.Fatalf("apns: %v", err)
 		}
-		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowJobEvent) error {
+		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
 			tokens, err := deviceStore.ListAll(ctx)
 			if err != nil {
 				return err
 			}
 			title := fmt.Sprintf("%s — %s", evt.Repo, evt.Conclusion)
-			body := fmt.Sprintf("%s · %s on %s", evt.WorkflowName, evt.JobName, evt.HeadBranch)
+			body := fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
 			for _, t := range tokens {
 				if err := apnsClient.Send(ctx, t, title, body); err != nil {
 					log.Printf("apns send token=%s…: %v", safePrefix(t), err)
