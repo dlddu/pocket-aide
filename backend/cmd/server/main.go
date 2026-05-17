@@ -105,7 +105,7 @@ func main() {
 			}
 			return nil
 		}
-		consumer, err := githubwebhook.New(consumerCtx, cfg.SQSQueueURL, cfg.GitHubWebhookSecret, cfg.AWSRoleARN, dispatch)
+		consumer, err := githubwebhook.New(consumerCtx, cfg.SQSQueueURL, cfg.AWSRoleARN, dispatch)
 		if err != nil {
 			log.Fatalf("sqs consumer: %v", err)
 		}
@@ -134,15 +134,14 @@ type config struct {
 
 	// PR monitor pipeline. Disabled when SQS_QUEUE_URL is empty so local /
 	// test environments don't need APNs or SQS configured.
-	PRMonitorEnabled    bool
-	SQSQueueURL         string
-	AWSRoleARN          string
-	GitHubWebhookSecret string
-	APNSKeyID           string
-	APNSTeamID          string
-	APNSBundleID        string
-	APNSAuthKeyP8       string
-	APNSUseProduction   bool
+	PRMonitorEnabled  bool
+	SQSQueueURL       string
+	AWSRoleARN        string
+	APNSKeyID         string
+	APNSTeamID        string
+	APNSBundleID      string
+	APNSAuthKeyP8     string
+	APNSUseProduction bool
 }
 
 func loadConfig() config {
@@ -158,7 +157,6 @@ func loadConfig() config {
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
 		c.AWSRoleARN = os.Getenv("AWS_ROLE_ARN")
-		c.GitHubWebhookSecret = mustEnv("GITHUB_WEBHOOK_SECRET")
 		c.APNSKeyID = mustEnv("APNS_KEY_ID")
 		c.APNSTeamID = mustEnv("APNS_TEAM_ID")
 		c.APNSBundleID = mustEnv("APNS_BUNDLE_ID")

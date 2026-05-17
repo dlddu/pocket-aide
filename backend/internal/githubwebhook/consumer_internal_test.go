@@ -2,34 +2,23 @@ package githubwebhook
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"testing"
 )
 
-// makeEnvelope builds a faithful API Gateway → SQS message body with the
-// given GitHub event header and JSON payload. signWith is the HMAC secret
-// the producer uses; pass a different value than the consumer's secret to
-// exercise the rejection path.
-func makeEnvelope(t *testing.T, event string, payload any, signWith []byte) []byte {
+// makeEventBridgeMessage builds a faithful EventBridge → SQS message body
+// with the given detail-type and detail (GitHub event) payload.
+func makeEventBridgeMessage(t *testing.T, detailType string, detail any) []byte {
 	t.Helper()
-	body, err := json.Marshal(payload)
+	detailRaw, err := json.Marshal(detail)
 	if err != nil {
-		t.Fatalf("marshal payload: %v", err)
+		t.Fatalf("marshal detail: %v", err)
 	}
-	mac := hmac.New(sha256.New, signWith)
-	mac.Write(body)
-	env := apiGatewayEnvelope{
-		Headers: map[string]string{
-			"X-GitHub-Event":      event,
-			"X-Hub-Signature-256": "sha256=" + hex.EncodeToString(mac.Sum(nil)),
-		},
-		Body:            string(body),
-		IsBase64Encoded: false,
-	}
-	raw, err := json.Marshal(env)
+	raw, err := json.Marshal(eventBridgeEnvelope{
+		DetailType: detailType,
+		Source:     "github.webhooks",
+		Detail:     detailRaw,
+	})
 	if err != nil {
 		t.Fatalf("marshal envelope: %v", err)
 	}
@@ -54,11 +43,10 @@ func completedWorkflowRun() map[string]any {
 // recorderConsumer wires a Consumer with a dispatch func that records every
 // invocation, so each test case can assert how many times — and with what
 // payload — dispatch fired.
-func recorderConsumer(t *testing.T, secret string) (*Consumer, *[]WorkflowRunEvent) {
+func recorderConsumer(t *testing.T) (*Consumer, *[]WorkflowRunEvent) {
 	t.Helper()
 	var got []WorkflowRunEvent
 	c := &Consumer{
-		secret: []byte(secret),
 		dispatch: func(_ context.Context, evt WorkflowRunEvent) error {
 			got = append(got, evt)
 			return nil
@@ -68,9 +56,8 @@ func recorderConsumer(t *testing.T, secret string) (*Consumer, *[]WorkflowRunEve
 }
 
 func TestProcess_HappyPath(t *testing.T) {
-	const secret = "shared-secret"
-	c, got := recorderConsumer(t, secret)
-	raw := makeEnvelope(t, "workflow_run", completedWorkflowRun(), []byte(secret))
+	c, got := recorderConsumer(t)
+	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun())
 
 	if err := c.process(context.Background(), raw); err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -85,40 +72,38 @@ func TestProcess_HappyPath(t *testing.T) {
 	}
 }
 
-func TestProcess_WrongSignatureRejected(t *testing.T) {
-	c, got := recorderConsumer(t, "shared-secret")
-	raw := makeEnvelope(t, "workflow_run", completedWorkflowRun(), []byte("other-secret"))
-
-	if err := c.process(context.Background(), raw); err == nil {
-		t.Fatal("expected hmac error, got nil")
-	}
-	if len(*got) != 0 {
-		t.Errorf("dispatch fired on bad signature: %d invocations", len(*got))
-	}
-}
-
-func TestProcess_NonWorkflowRunSilentlyDropped(t *testing.T) {
-	const secret = "shared-secret"
-	c, got := recorderConsumer(t, secret)
-	// "push" events arrive on the same webhook with a valid signature; we
-	// just don't care about them. Should return nil so the message is
-	// deleted from the queue.
-	raw := makeEnvelope(t, "push", map[string]any{"ref": "refs/heads/main"}, []byte(secret))
+func TestProcess_NonWorkflowRunDetailTypeSilentlyDropped(t *testing.T) {
+	c, got := recorderConsumer(t)
+	// Some other GitHub event forwarded by the same bus.
+	raw := makeEventBridgeMessage(t, "push", map[string]any{"ref": "refs/heads/main"})
 
 	if err := c.process(context.Background(), raw); err != nil {
 		t.Fatalf("expected nil for non-workflow_run, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on non-workflow_run event")
+		t.Errorf("dispatch fired on non-workflow_run detail-type")
+	}
+}
+
+func TestProcess_EmptyDetailTypeSilentlyDropped(t *testing.T) {
+	c, got := recorderConsumer(t)
+	// Envelope decodes but has no detail-type — e.g. a non-EventBridge
+	// producer published directly to the queue.
+	raw, _ := json.Marshal(map[string]any{"hello": "world"})
+
+	if err := c.process(context.Background(), raw); err != nil {
+		t.Fatalf("expected nil for empty detail-type, got %v", err)
+	}
+	if len(*got) != 0 {
+		t.Errorf("dispatch fired on empty detail-type")
 	}
 }
 
 func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
-	const secret = "shared-secret"
-	c, got := recorderConsumer(t, secret)
+	c, got := recorderConsumer(t)
 	payload := completedWorkflowRun()
 	payload["action"] = "requested"
-	raw := makeEnvelope(t, "workflow_run", payload, []byte(secret))
+	raw := makeEventBridgeMessage(t, "workflow_run", payload)
 
 	if err := c.process(context.Background(), raw); err != nil {
 		t.Fatalf("expected nil, got %v", err)
@@ -129,7 +114,7 @@ func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
 }
 
 func TestProcess_MalformedEnvelope(t *testing.T) {
-	c, got := recorderConsumer(t, "shared-secret")
+	c, got := recorderConsumer(t)
 	if err := c.process(context.Background(), []byte("not json")); err == nil {
 		t.Fatal("expected envelope error, got nil")
 	}
@@ -138,38 +123,30 @@ func TestProcess_MalformedEnvelope(t *testing.T) {
 	}
 }
 
-func TestProcess_MalformedInnerPayload(t *testing.T) {
-	const secret = "shared-secret"
-	c, got := recorderConsumer(t, secret)
-	// Valid envelope, valid HMAC, but the body isn't a workflow_run JSON
-	// object — it's a JSON array. parse will fail.
-	rawBody := []byte(`[1, 2, 3]`)
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write(rawBody)
-	env, _ := json.Marshal(apiGatewayEnvelope{
-		Headers: map[string]string{
-			"X-GitHub-Event":      "workflow_run",
-			"X-Hub-Signature-256": "sha256=" + hex.EncodeToString(mac.Sum(nil)),
-		},
-		Body: string(rawBody),
+func TestProcess_MalformedDetail(t *testing.T) {
+	c, got := recorderConsumer(t)
+	// Valid envelope, but detail isn't a workflow_run JSON object — it's a
+	// JSON array. Unmarshal into workflowRunPayload will fail.
+	raw, _ := json.Marshal(eventBridgeEnvelope{
+		DetailType: "workflow_run",
+		Source:     "github.webhooks",
+		Detail:     json.RawMessage(`[1, 2, 3]`),
 	})
-	if err := c.process(context.Background(), env); err == nil {
+	if err := c.process(context.Background(), raw); err == nil {
 		t.Fatal("expected parse error, got nil")
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on malformed payload")
+		t.Errorf("dispatch fired on malformed detail")
 	}
 }
 
 func TestProcess_DispatchErrorPropagates(t *testing.T) {
-	const secret = "shared-secret"
 	c := &Consumer{
-		secret: []byte(secret),
 		dispatch: func(_ context.Context, _ WorkflowRunEvent) error {
 			return errBoom
 		},
 	}
-	raw := makeEnvelope(t, "workflow_run", completedWorkflowRun(), []byte(secret))
+	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun())
 	if err := c.process(context.Background(), raw); err == nil {
 		t.Fatal("expected dispatch error to propagate, got nil")
 	}

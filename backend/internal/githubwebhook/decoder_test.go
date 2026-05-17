@@ -1,60 +1,46 @@
 package githubwebhook
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"testing"
 )
 
-func TestDecodeAPIGatewayEnvelope_PlainBody(t *testing.T) {
-	raw, _ := json.Marshal(apiGatewayEnvelope{
-		Headers: map[string]string{
-			"X-GitHub-Event":      "workflow_run",
-			"X-Hub-Signature-256": "sha256=abc",
-		},
-		Body:            `{"hello":"world"}`,
-		IsBase64Encoded: false,
+func TestDecodeEventBridgeEnvelope_WellFormed(t *testing.T) {
+	raw, _ := json.Marshal(eventBridgeEnvelope{
+		DetailType: "workflow_run",
+		Source:     "github.webhooks",
+		Detail:     json.RawMessage(`{"action":"completed","workflow_run":{"name":"CI"}}`),
 	})
-	headers, body, err := decodeAPIGatewayEnvelope(raw)
+	dt, src, detail, err := decodeEventBridgeEnvelope(raw)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if headers["x-github-event"] != "workflow_run" {
-		t.Errorf("expected lowercased header lookup, got %#v", headers)
+	if dt != "workflow_run" {
+		t.Errorf("detail-type: got %q want %q", dt, "workflow_run")
 	}
-	if string(body) != `{"hello":"world"}` {
-		t.Errorf("body roundtrip mismatch: %s", body)
+	if src != "github.webhooks" {
+		t.Errorf("source: got %q want %q", src, "github.webhooks")
 	}
-}
-
-func TestDecodeAPIGatewayEnvelope_Base64Body(t *testing.T) {
-	original := []byte(`{"hello":"world"}`)
-	raw, _ := json.Marshal(apiGatewayEnvelope{
-		Headers:         map[string]string{"X-GitHub-Event": "workflow_run"},
-		Body:            base64.StdEncoding.EncodeToString(original),
-		IsBase64Encoded: true,
-	})
-	_, body, err := decodeAPIGatewayEnvelope(raw)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if string(body) != string(original) {
-		t.Errorf("base64 body mismatch: got=%s want=%s", body, original)
+	if string(detail) != `{"action":"completed","workflow_run":{"name":"CI"}}` {
+		t.Errorf("detail roundtrip mismatch: %s", detail)
 	}
 }
 
-func TestDecodeAPIGatewayEnvelope_BadBase64(t *testing.T) {
-	raw, _ := json.Marshal(apiGatewayEnvelope{
-		Body:            "not_base64!@#",
-		IsBase64Encoded: true,
-	})
-	if _, _, err := decodeAPIGatewayEnvelope(raw); err == nil {
+func TestDecodeEventBridgeEnvelope_MalformedJSON(t *testing.T) {
+	if _, _, _, err := decodeEventBridgeEnvelope([]byte(`{not json`)); err == nil {
 		t.Fatal("expected error, got nil")
 	}
 }
 
-func TestDecodeAPIGatewayEnvelope_MalformedJSON(t *testing.T) {
-	if _, _, err := decodeAPIGatewayEnvelope([]byte(`{not json`)); err == nil {
-		t.Fatal("expected error, got nil")
+func TestDecodeEventBridgeEnvelope_EmptyFieldsAreNotErrors(t *testing.T) {
+	// An envelope that decodes but is missing detail-type / detail should
+	// NOT return an error here — the caller decides whether to drop it.
+	raw, _ := json.Marshal(map[string]any{"some": "other-shape"})
+	dt, src, detail, err := decodeEventBridgeEnvelope(raw)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if dt != "" || src != "" || len(detail) != 0 {
+		t.Errorf("expected zero values, got dt=%q src=%q detail=%s", dt, src, detail)
 	}
 }

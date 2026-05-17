@@ -3,7 +3,8 @@
 End-to-end checklist for wiring GitHub workflow_run events to iOS push
 notifications. The code in this repo closes the loop from "SQS message
 received" to "APNs push delivered"; this doc covers everything else
-(Apple Developer Portal, AWS, GitHub webhook, environment variables).
+(Apple Developer Portal, AWS, GitHub via EventBridge, environment
+variables).
 
 If anything below is missing, the backend either fails to start or
 silently drops messages — it does not retry, so each box matters.
@@ -63,33 +64,46 @@ aws sqs get-queue-attributes --queue-url "$SQS_QUEUE_URL" --attribute-names Queu
 
 ## 3. GitHub → SQS adapter
 
-GitHub itself cannot publish straight to SQS. Bridge with **AWS API
-Gateway HTTP API → SQS integration**:
+GitHub itself cannot publish straight to SQS. Bridge with **AWS EventBridge
+→ SQS target**, using the GitHub partner event source:
 
-1. Create an HTTP API in API Gateway (regional, same region as the
-   queue).
-2. Add an integration of type "AWS service → SQS → SendMessage".
-   - The integration must serialize the request as the standard API
-     Gateway envelope:
+1. In the AWS account that owns the SQS queue, create an **EventBridge
+   event bus** dedicated to GitHub (or reuse the default bus, with the
+   caveat that other events will land on the same SQS target). Region
+   must match the queue (e.g. `ap-northeast-2`).
+2. Add the **GitHub Webhooks partner event source** to that bus
+   (Console → EventBridge → Partner event sources → GitHub Webhooks).
+   Follow the GitHub × AWS integration UI to associate the source with
+   the target organization / repos. Authenticity of forwarded events is
+   established by the partner integration; the X-Hub-Signature-256
+   header on GitHub's side is verified and consumed by EventBridge before
+   forwarding — no shared secret is propagated to the backend.
+3. Add a **rule** on the bus that routes desired events to the SQS queue:
+   - Event pattern: `{"detail-type": ["workflow_run"]}` (and any others
+     you want — see §6 for what the consumer drops vs. acts on).
+   - Target: the SQS queue created in §2. EventBridge wraps each event
+     in its standard envelope before SendMessage:
      ```json
      {
-       "headers": { ... },
-       "body": "<raw GitHub JSON>",
-       "isBase64Encoded": false
+       "version": "0",
+       "id": "...",
+       "detail-type": "workflow_run",
+       "source": "github.webhooks",
+       "account": "...",
+       "time": "...",
+       "region": "ap-northeast-2",
+       "resources": [],
+       "detail": { /* raw GitHub workflow_run event */ }
      }
      ```
    - The decoder in `backend/internal/githubwebhook/decoder.go`
-     understands both `isBase64Encoded: true` and `false` paths.
-3. In each watched GitHub repo:
-   - Settings → Webhooks → Add webhook.
-   - Payload URL: API Gateway endpoint.
-   - Content type: `application/json`.
-   - **Secret**: same value you put in the K8s secret as
-     `GITHUB_WEBHOOK_SECRET`. Both sides MUST match — a mismatch causes
-     every message to be dropped with `signature mismatch` in logs.
-   - Events: only "Workflow runs". Subscribing to more events is
-     harmless (the consumer ignores anything other than `workflow_run`)
-     but wastes SQS volume.
+     unwraps the envelope and the consumer reads `detail-type` and
+     `detail`.
+4. Ensure the SQS **queue access policy** allows `sqs:SendMessage` from
+   the EventBridge rule's role (Console wires this automatically when
+   the target is added) and otherwise grants SendMessage to no one
+   except the principals you trust. The backend trusts the IAM
+   boundary in place of an HMAC.
 
 ---
 
@@ -109,8 +123,10 @@ test environments run without any of this set up.
 | `APNS_TEAM_ID`          | ConfigMap  | PR monitor enabled        |
 | `APNS_BUNDLE_ID`        | ConfigMap  | PR monitor enabled        |
 | `APNS_USE_PRODUCTION`   | ConfigMap  | PR monitor enabled        |
-| `GITHUB_WEBHOOK_SECRET` | Secret     | PR monitor enabled        |
 | `APNS_AUTH_KEY_P8`      | Secret     | PR monitor enabled        |
+
+Message authenticity is enforced by IAM/queue-policy on the SQS queue —
+there is no GitHub webhook secret in the backend.
 
 The deployment manifest already has `envFrom` for both — adding the
 keys above is enough.
@@ -134,16 +150,28 @@ Both rows must be exercised before declaring the feature shipped.
    tokens require a physical device).
 3. Sign in. The backend log should print
    `POST /api/device-tokens 201` and `device_tokens` should grow.
-4. Send a mock workflow_run message into SQS:
+4. Send a mock workflow_run message into SQS (EventBridge envelope
+   shape, since that's what the consumer now expects):
    ```sh
-   PAYLOAD='{"action":"completed","repository":{"full_name":"dlddu/pocket-aide"},"workflow_run":{"name":"CI","head_branch":"main","conclusion":"failure","html_url":"https://github.com/x"}}'
-   SIG=$(printf %s "$PAYLOAD" | openssl dgst -sha256 -hmac "$GITHUB_WEBHOOK_SECRET" | awk '{print "sha256="$2}')
-   ENV=$(jq -nc --arg b "$PAYLOAD" --arg s "$SIG" '{headers:{"X-GitHub-Event":"workflow_run","X-Hub-Signature-256":$s}, body:$b, isBase64Encoded:false}')
+   DETAIL='{"action":"completed","repository":{"full_name":"dlddu/pocket-aide"},"workflow_run":{"name":"CI","head_branch":"main","conclusion":"failure","html_url":"https://github.com/x"}}'
+   ENV=$(jq -nc --argjson d "$DETAIL" '{
+     "version":"0",
+     "id":"local-test",
+     "detail-type":"workflow_run",
+     "source":"github.webhooks",
+     "account":"000000000000",
+     "time":"2026-01-01T00:00:00Z",
+     "region":"ap-northeast-2",
+     "resources":[],
+     "detail":$d
+   }')
    aws sqs send-message --queue-url "$SQS_QUEUE_URL" --message-body "$ENV"
    ```
-5. The device should receive an alert (`dlddu/pocket-aide — failure`).
-6. Repeat with a deliberately wrong secret → backend logs
-   `signature mismatch`, no push delivered.
+5. The device should receive an alert
+   (`dlddu/pocket-aide — failure` / `CI on main`).
+6. Repeat with `detail-type` set to something other than `workflow_run`
+   (e.g. `"push"`) → backend logs `skipping detail_type=...`, no push
+   delivered.
 
 ### Prod walkthrough
 
@@ -163,12 +191,34 @@ Both rows must be exercised before declaring the feature shipped.
 
 | Symptom                                  | Likely cause                                                          |
 | ---------------------------------------- | --------------------------------------------------------------------- |
-| `signature mismatch` in backend logs     | GitHub webhook secret ≠ `GITHUB_WEBHOOK_SECRET`                      |
 | Consumer stuck `receive error: ... AccessDenied` | IAM role missing `sqs:ReceiveMessage` on the queue                  |
 | iOS never POSTs to `/api/device-tokens`  | Notification permission denied → check banner; or `aps-environment` entitlement missing |
 | `apns rejected (status=400 reason="BadDeviceToken")` | Token from sandbox device sent to production APNs (env mismatch)    |
 | `apns rejected (status=403 reason="ExpiredProviderToken")` | .p8 PEM truncated in the secret, or wrong Key ID / Team ID          |
 | Push appears on device only when app is foreground | `UNUserNotificationCenter` delegate missing — `AppDelegate.application(_:didFinishLaunchingWithOptions:)` not running |
+| `skipping detail_type="..." (not workflow_run)` repeating | EventBridge rule routes more `detail-type`s than the consumer acts on, or a non-EventBridge producer is publishing to the queue. Use the debug toggles below to identify the source. |
+| `skipping detail_type=""` repeating      | Envelope JSON decodes but has no `detail-type` field — not an EventBridge message. Likely a direct SendMessage from outside (AWS Console test, ad-hoc script). |
+
+### Diagnosing unexpected envelopes
+
+The consumer logs `skipping ...` for two silent-drop paths (non-`workflow_run` `detail-type`; `workflow_run` with `action != "completed"`). Two opt-in env vars make those lines verbose so the producer can be identified without sampling messages from the queue directly:
+
+| Env var                        | What it adds                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------- |
+| `DEBUG_LOG_ENVELOPE_HEADERS=1` | Sorted list of top-level envelope JSON keys (e.g. `[account detail detail-type id region resources source time version]` for a real EventBridge message). |
+| `DEBUG_LOG_ENVELOPE_BODY=1`    | Message body prefix (first 256 bytes, `%q`-escaped) plus the total body length.       |
+
+Toggle on the running pod, observe a few lines, toggle off:
+
+```sh
+kubectl set env deploy/pocket-aide -n pocket-aide \
+  DEBUG_LOG_ENVELOPE_HEADERS=1 DEBUG_LOG_ENVELOPE_BODY=1
+# ... wait for a few skip lines ...
+kubectl set env deploy/pocket-aide -n pocket-aide \
+  DEBUG_LOG_ENVELOPE_HEADERS- DEBUG_LOG_ENVELOPE_BODY-
+```
+
+Body output may include any payload published to the queue, so leave the body toggle off in normal operation.
 
 ---
 
@@ -176,9 +226,9 @@ Both rows must be exercised before declaring the feature shipped.
 
 The `internal/githubwebhook` package has two test layers:
 
-- **Unit + internal tests** (default `go test`): cover the decoder, HMAC
-  verifier, and the full `process()` pipeline with hand-built envelopes.
-  These run on every CI build.
+- **Unit + internal tests** (default `go test`): cover the decoder and the
+  full `process()` pipeline with hand-built EventBridge envelopes. These run
+  on every CI build.
 - **LocalStack integration tests** (build tag `integration`): boot a real
   SQS endpoint and drive `Consumer.Run()` end-to-end. CI runs them
   automatically in the `backend-test` job via a `services: localstack`
