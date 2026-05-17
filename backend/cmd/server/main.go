@@ -96,7 +96,11 @@ func main() {
 			if err != nil {
 				return err
 			}
-			title := fmt.Sprintf("%s — %s", evt.Repo, evt.Conclusion)
+			status := evt.Conclusion
+			if evt.Action == "requested" {
+				status = "started"
+			}
+			title := fmt.Sprintf("%s — %s", evt.Repo, status)
 			body := fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
 			for _, t := range tokens {
 				if err := apnsClient.Send(ctx, t, title, body); err != nil {

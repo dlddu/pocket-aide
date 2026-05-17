@@ -67,7 +67,29 @@ func TestProcess_HappyPath(t *testing.T) {
 	}
 	evt := (*got)[0]
 	if evt.Repo != "dlddu/pocket-aide" || evt.WorkflowName != "CI" ||
-		evt.HeadBranch != "main" || evt.Conclusion != "failure" {
+		evt.HeadBranch != "main" || evt.Action != "completed" ||
+		evt.Conclusion != "failure" {
+		t.Errorf("unexpected event: %+v", evt)
+	}
+}
+
+func TestProcess_RequestedDispatched(t *testing.T) {
+	c, got := recorderConsumer(t)
+	payload := completedWorkflowRun()
+	payload["action"] = "requested"
+	// GitHub sends requested events before the run finishes, so conclusion
+	// is null on the wire; mirror that here.
+	payload["workflow_run"].(map[string]any)["conclusion"] = nil
+	raw := makeEventBridgeMessage(t, "workflow_run", payload)
+
+	if err := c.process(context.Background(), raw); err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+	if len(*got) != 1 {
+		t.Fatalf("dispatch invocations: got %d want 1", len(*got))
+	}
+	evt := (*got)[0]
+	if evt.Action != "requested" || evt.Conclusion != "" {
 		t.Errorf("unexpected event: %+v", evt)
 	}
 }
@@ -99,17 +121,17 @@ func TestProcess_EmptyDetailTypeSilentlyDropped(t *testing.T) {
 	}
 }
 
-func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
+func TestProcess_InProgressDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
 	payload := completedWorkflowRun()
-	payload["action"] = "requested"
+	payload["action"] = "in_progress"
 	raw := makeEventBridgeMessage(t, "workflow_run", payload)
 
 	if err := c.process(context.Background(), raw); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on action=requested")
+		t.Errorf("dispatch fired on action=in_progress")
 	}
 }
 

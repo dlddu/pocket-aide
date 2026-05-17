@@ -1,8 +1,8 @@
 // Package githubwebhook consumes GitHub webhook deliveries that have been
 // forwarded into an SQS queue via the EventBridge → SQS target integration.
 // EventBridge wraps each delivery in its standard envelope; this package
-// unwraps the envelope, filters to workflow_run completed events, and hands
-// the parsed event to a caller-supplied dispatch func.
+// unwraps the envelope, filters to workflow_run requested/completed events,
+// and hands the parsed event to a caller-supplied dispatch func.
 //
 // Message authenticity is enforced by the IAM/queue-policy boundary around
 // the SQS queue, not by an HMAC. The EventBridge bus is the only producer
@@ -36,11 +36,12 @@ type WorkflowRunEvent struct {
 	Repo         string // e.g. "dlddu/pocket-aide"
 	WorkflowName string // workflow name, e.g. "CI"
 	HeadBranch   string
-	Conclusion   string // success | failure | cancelled | skipped | ...
+	Action       string // "requested" | "completed"
+	Conclusion   string // success | failure | cancelled | skipped | ... ; empty for requested
 	HTMLURL      string
 }
 
-// DispatchFunc is invoked once per accepted (workflow_run completed) event.
+// DispatchFunc is invoked once per accepted (workflow_run requested/completed) event.
 // Its error is logged but never blocks message deletion — the draft favours
 // throughput over guaranteed delivery.
 type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
@@ -151,11 +152,11 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 	if err := json.Unmarshal(detail, &parsed); err != nil {
 		return fmt.Errorf("parse workflow_run: %w", err)
 	}
-	if parsed.Action != "completed" {
-		// GitHub sends requested/in_progress/completed for every run;
-		// we only push on completed. Log so the non-completed volume is
-		// observable.
-		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
+	// GitHub sends requested/in_progress/completed for every run. We push on
+	// requested (run kicked off) and completed (final result); in_progress
+	// fires per-job and would just spam.
+	if parsed.Action != "requested" && parsed.Action != "completed" {
+		log.Printf("githubwebhook: skipping workflow_run action=%q (not requested/completed)", parsed.Action)
 		c.debugLogEnvelope(raw)
 		return nil
 	}
@@ -163,14 +164,15 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		Repo:         parsed.Repository.FullName,
 		WorkflowName: parsed.WorkflowRun.Name,
 		HeadBranch:   parsed.WorkflowRun.HeadBranch,
+		Action:       parsed.Action,
 		Conclusion:   parsed.WorkflowRun.Conclusion,
 		HTMLURL:      parsed.WorkflowRun.HTMLURL,
 	}
 	if err := c.dispatch(ctx, evt); err != nil {
 		return fmt.Errorf("dispatch: %w", err)
 	}
-	log.Printf("githubwebhook: dispatched repo=%s workflow=%s branch=%s conclusion=%s",
-		evt.Repo, evt.WorkflowName, evt.HeadBranch, evt.Conclusion)
+	log.Printf("githubwebhook: dispatched repo=%s workflow=%s branch=%s action=%s conclusion=%s",
+		evt.Repo, evt.WorkflowName, evt.HeadBranch, evt.Action, evt.Conclusion)
 	return nil
 }
 
