@@ -1,7 +1,10 @@
 import Foundation
+import os
 import PocketAideAPI
 import PocketAideStorage
 import WidgetKit
+
+private let logger = Logger(subsystem: "com.dlddu.PocketAide.Widget", category: "AffirmationProvider")
 
 /// Drives the Large widget timeline. Builds 24 entries × 30-minute strides
 /// using `SeededRNG(seed: entry.date.timeIntervalSince1970)` so each entry's
@@ -96,13 +99,18 @@ struct AffirmationProvider: TimelineProvider {
     private func fetchAffirmations() async -> FetchResult {
         let accessGroup = Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String
         let resolvedGroup = accessGroup.flatMap { $0.isEmpty ? nil : $0 }
+        let baseURL = Bundle.main.object(forInfoDictionaryKey: "BackendBaseURL") as? String ?? "<nil>"
+        logger.debug("fetch start: accessGroup=\(resolvedGroup ?? "<nil>", privacy: .public) baseURL=\(baseURL, privacy: .public)")
+
         let store = KeychainTokenStore(accessGroup: resolvedGroup)
 
         do {
             if (try store.load()) == nil {
+                logger.info("no token in keychain → needsLogin")
                 return .needsLogin
             }
         } catch {
+            logger.error("keychain load failed: \(String(describing: error), privacy: .public)")
             return .error
         }
 
@@ -110,15 +118,19 @@ struct AffirmationProvider: TimelineProvider {
         do {
             api = try APIClient.fromBundle(.main, tokenStore: store)
         } catch {
+            logger.error("APIClient.fromBundle failed: \(String(describing: error), privacy: .public)")
             return .error
         }
 
         do {
             let items = try await api.listAffirmations()
+            logger.info("fetched \(items.count, privacy: .public) affirmations")
             return .success(items)
         } catch APIError.badStatus(401, _) {
+            logger.info("listAffirmations → 401, needsLogin")
             return .needsLogin
         } catch {
+            logger.error("listAffirmations failed: \(String(describing: error), privacy: .public)")
             return .error
         }
     }
