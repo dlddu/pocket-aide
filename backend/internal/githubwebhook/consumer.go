@@ -13,6 +13,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -37,11 +39,19 @@ type WorkflowRunEvent struct {
 type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
 
 // Consumer long-polls a single SQS queue.
+//
+// debugLogHeaders / debugLogBody are opt-in toggles read from
+// DEBUG_LOG_ENVELOPE_HEADERS / DEBUG_LOG_ENVELOPE_BODY at construction time.
+// When set, they cause silent-drop paths in process() to dump additional
+// envelope detail — useful for diagnosing unexpected messages on the queue
+// (test sends from the AWS console, non-API-Gateway producers, etc.).
 type Consumer struct {
-	client   *sqs.Client
-	queueURL string
-	secret   []byte
-	dispatch DispatchFunc
+	client          *sqs.Client
+	queueURL        string
+	secret          []byte
+	dispatch        DispatchFunc
+	debugLogHeaders bool
+	debugLogBody    bool
 }
 
 // New loads AWS config from the default credential chain (instance profile,
@@ -70,10 +80,12 @@ func New(ctx context.Context, queueURL, secret, roleARN string, dispatch Dispatc
 		awsCfg.Credentials = aws.NewCredentialsCache(provider)
 	}
 	return &Consumer{
-		client:   sqs.NewFromConfig(awsCfg),
-		queueURL: queueURL,
-		secret:   []byte(secret),
-		dispatch: dispatch,
+		client:          sqs.NewFromConfig(awsCfg),
+		queueURL:        queueURL,
+		secret:          []byte(secret),
+		dispatch:        dispatch,
+		debugLogHeaders: os.Getenv("DEBUG_LOG_ENVELOPE_HEADERS") == "1",
+		debugLogBody:    os.Getenv("DEBUG_LOG_ENVELOPE_BODY") == "1",
 	}, nil
 }
 
@@ -129,6 +141,7 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		// act on. Log once per message so operators can see what's filling
 		// the queue without having to sample messages directly.
 		log.Printf("githubwebhook: skipping event=%q (not workflow_run)", event)
+		c.debugLogEnvelope(headers, payload)
 		return nil
 	}
 	if err := verifyHMAC(c.secret, payload, headers["x-hub-signature-256"]); err != nil {
@@ -143,6 +156,7 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		// we only push on completed. Log so the requested/in_progress
 		// volume is observable.
 		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
+		c.debugLogEnvelope(headers, payload)
 		return nil
 	}
 	evt := WorkflowRunEvent{
@@ -157,6 +171,39 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 	}
 	log.Printf("githubwebhook: dispatched repo=%s branch=%s conclusion=%s", evt.Repo, evt.HeadBranch, evt.Conclusion)
 	return nil
+}
+
+// debugLogEnvelope dumps extra envelope detail when the corresponding
+// opt-in env var is set. Called from the silent-drop paths only — happy-path
+// messages already log a structured "dispatched ..." line.
+//
+// Header values are deliberately NOT logged: they can include
+// x-hub-signature-256, which is non-secret but noisy. Keys are sufficient
+// to identify whether the message came from API Gateway (which sets
+// x-github-event / x-hub-signature-256) or from some other producer.
+//
+// Body output is capped at maxBodyPrefix bytes and printed via %q so any
+// non-UTF-8 bytes are safely escaped.
+func (c *Consumer) debugLogEnvelope(headers map[string]string, body []byte) {
+	if c.debugLogHeaders {
+		keys := make([]string, 0, len(headers))
+		for k := range headers {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		log.Printf("githubwebhook: debug header_keys=%v", keys)
+	}
+	if c.debugLogBody {
+		const maxBodyPrefix = 256
+		prefix := body
+		truncated := false
+		if len(prefix) > maxBodyPrefix {
+			prefix = prefix[:maxBodyPrefix]
+			truncated = true
+		}
+		log.Printf("githubwebhook: debug body_prefix=%q total_len=%d truncated=%t",
+			prefix, len(body), truncated)
+	}
 }
 
 type workflowRunPayload struct {

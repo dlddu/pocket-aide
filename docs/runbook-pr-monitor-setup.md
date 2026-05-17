@@ -169,6 +169,28 @@ Both rows must be exercised before declaring the feature shipped.
 | `apns rejected (status=400 reason="BadDeviceToken")` | Token from sandbox device sent to production APNs (env mismatch)    |
 | `apns rejected (status=403 reason="ExpiredProviderToken")` | .p8 PEM truncated in the secret, or wrong Key ID / Team ID          |
 | Push appears on device only when app is foreground | `UNUserNotificationCenter` delegate missing — `AppDelegate.application(_:didFinishLaunchingWithOptions:)` not running |
+| `skipping event="" (not workflow_run)` repeating | Envelope JSON decodes, but lacks a recognisable `X-GitHub-Event` header — non-API-Gateway producer on the queue (AWS Console test send, EventBridge, etc.). Use the debug toggles below to identify the source. |
+
+### Diagnosing unexpected envelopes
+
+The consumer logs `skipping ...` for two silent-drop paths (non-`workflow_run` events; `workflow_run` with `action != "completed"`). Two opt-in env vars make those lines verbose so the producer can be identified without sampling messages from the queue directly:
+
+| Env var                       | What it adds                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------- |
+| `DEBUG_LOG_ENVELOPE_HEADERS=1` | Sorted list of envelope header keys. Header values are NOT logged (signature noise). |
+| `DEBUG_LOG_ENVELOPE_BODY=1`    | Body prefix (first 256 bytes, `%q`-escaped) plus the total body length.              |
+
+Toggle on the running pod, observe a few lines, toggle off:
+
+```sh
+kubectl set env deploy/pocket-aide -n pocket-aide \
+  DEBUG_LOG_ENVELOPE_HEADERS=1 DEBUG_LOG_ENVELOPE_BODY=1
+# ... wait for a few skip lines ...
+kubectl set env deploy/pocket-aide -n pocket-aide \
+  DEBUG_LOG_ENVELOPE_HEADERS- DEBUG_LOG_ENVELOPE_BODY-
+```
+
+Body output may include any payload published to the queue, so leave the body toggle off in normal operation.
 
 ---
 
