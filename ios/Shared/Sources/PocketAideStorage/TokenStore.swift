@@ -19,6 +19,10 @@ public protocol TokenStoring: Sendable {
     func clear() throws
 }
 
+public protocol TokenRefreshing: Sendable {
+    func refresh() async throws -> TokenBundle
+}
+
 public final class KeychainTokenStore: TokenStoring, @unchecked Sendable {
     private let service: String
     private let account: String
