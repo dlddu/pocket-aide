@@ -82,8 +82,6 @@ jobs:
               - 'ios/project.yml'
               - 'ios/PocketAide/**'
               - 'ios/PocketAideKeyboard/**'
-              - 'ios/PocketAideTests/**'
-              - 'ios/PocketAideUnitTests/**'
               - 'ios/PocketAideWidget/**'
               - 'ios/Shared/**'
               - 'ios/fastlane/**'
