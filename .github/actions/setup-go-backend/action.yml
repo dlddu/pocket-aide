@@ -1,0 +1,19 @@
+name: Set up Go for the backend module
+description: >
+  Runs actions/setup-go pinned to the version this repo uses, with the
+  backend module's go.sum as the cache key, then pre-downloads modules so
+  later `go vet`/`go test`/`go build` calls don't redo it. Assumes the
+  caller already ran actions/checkout.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+        cache-dependency-path: backend/go.sum
+    - name: Download modules
+      shell: bash
+      working-directory: backend
+      run: go mod download

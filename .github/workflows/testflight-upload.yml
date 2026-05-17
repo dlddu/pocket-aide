@@ -1,0 +1,58 @@
+name: TestFlight upload
+
+# Builds and uploads a Release-config TestFlight build via fastlane.
+# Pulls all signing material (cert + 3 provisioning profiles) and the
+# App Store Connect API key from secrets — the caller must invoke with
+# `secrets: inherit`. The repository variable BACKEND_BASE_URL is
+# inherited automatically and points the Release plist at the production
+# backend.
+
+on:
+  workflow_call:
+
+jobs:
+  upload:
+    name: Build & upload to TestFlight
+    runs-on: macos-26
+    env:
+      APP_BUNDLE_ID: com.dlddu.PocketAide
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          working-directory: ios
+          bundler-cache: true
+      - uses: ./.github/actions/install-ios-signing
+        with:
+          cert_p12_base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          cert_password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          profile_main_base64: ${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}
+          profile_keyboard_base64: ${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}
+          profile_widget_base64: ${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}
+      - name: Generate Xcode project
+        uses: ./.github/actions/generate-xcode-project
+        env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+      - name: Inject BackendBaseURL
+        working-directory: ios
+        env:
+          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
+        run: |
+          if [ -z "$BACKEND_BASE_URL" ]; then
+            echo "Missing repository variable: BACKEND_BASE_URL" >&2
+            exit 1
+          fi
+          /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
+      - name: Write App Store Connect API key
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "${{ secrets.APPSTORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode \
+            > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}.p8
+      - name: Run fastlane beta
+        working-directory: ios
+        env:
+          APPSTORE_CONNECT_API_KEY_ID: ${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}
+          APPSTORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_API_ISSUER_ID }}
+        run: bundle exec fastlane beta

@@ -1,0 +1,65 @@
+name: Install iOS distribution signing assets
+description: >
+  Generates an ephemeral keychain password, imports the Distribution .p12
+  cert into a temporary keychain, and installs the three provisioning
+  profiles (main app, keyboard extension, widget extension). For each
+  profile, the human-readable Name is exported to $GITHUB_ENV under
+  PROFILE_NAME_{MAIN,KEYBOARD,WIDGET} so xcodegen / xcodebuild can
+  reference it by name (matching project.yml's
+  PROVISIONING_PROFILE_SPECIFIER). Composite actions can't read secrets
+  directly, so the caller must pass them as inputs.
+
+inputs:
+  cert_p12_base64:
+    description: Base64-encoded Apple Distribution .p12 file.
+    required: true
+  cert_password:
+    description: Password protecting the .p12.
+    required: true
+  profile_main_base64:
+    description: Base64-encoded .mobileprovision for the main app.
+    required: true
+  profile_keyboard_base64:
+    description: Base64-encoded .mobileprovision for the keyboard extension.
+    required: true
+  profile_widget_base64:
+    description: Base64-encoded .mobileprovision for the widget extension.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Generate keychain password
+      shell: bash
+      run: echo "KEYCHAIN_PASSWORD=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+    - name: Import signing certificate
+      uses: apple-actions/import-codesign-certs@v3
+      with:
+        p12-file-base64: ${{ inputs.cert_p12_base64 }}
+        p12-password: ${{ inputs.cert_password }}
+        keychain-password: ${{ env.KEYCHAIN_PASSWORD }}
+    - name: Install provisioning profiles
+      shell: bash
+      env:
+        PROFILE_MAIN_B64: ${{ inputs.profile_main_base64 }}
+        PROFILE_KEYBOARD_B64: ${{ inputs.profile_keyboard_base64 }}
+        PROFILE_WIDGET_B64: ${{ inputs.profile_widget_base64 }}
+      run: |
+        PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+        mkdir -p "$PROFILE_DIR"
+        install_profile() {
+          local data="$1" name_var="$2"
+          local tmp
+          tmp=$(mktemp)
+          echo "$data" | base64 --decode > "$tmp"
+          local plist
+          plist=$(security cms -D -i "$tmp")
+          local uuid name
+          uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$plist")
+          name=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< "$plist")
+          mv "$tmp" "$PROFILE_DIR/$uuid.mobileprovision"
+          echo "${name_var}=${name}" >> "$GITHUB_ENV"
+        }
+        install_profile "$PROFILE_MAIN_B64" PROFILE_NAME_MAIN
+        install_profile "$PROFILE_KEYBOARD_B64" PROFILE_NAME_KEYBOARD
+        install_profile "$PROFILE_WIDGET_B64" PROFILE_NAME_WIDGET

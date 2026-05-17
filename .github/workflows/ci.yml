@@ -20,266 +20,137 @@ jobs:
     name: Detect changes
     runs-on: ubuntu-24.04-arm
     outputs:
+      backend_unit: ${{ steps.filter.outputs.backend_unit }}
+      backend_integration: ${{ steps.filter.outputs.backend_integration }}
+      ios_tests: ${{ steps.filter.outputs.ios_tests }}
       backend: ${{ steps.filter.outputs.backend }}
       ios: ${{ steps.filter.outputs.ios }}
-      backend_tests: ${{ steps.filter.outputs.backend_tests }}
-      ios_tests: ${{ steps.filter.outputs.ios_tests }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          # Each job has its own filter — paying for LocalStack on a pure
+          # README change, or rebuilding Xcode on a backend-only PR, is not
+          # free. Anchored to the reusable workflow + composite action
+          # files so changes to CI plumbing always trigger the job they
+          # affect. .github/workflows/ci.yml is included everywhere because
+          # orchestrator edits (gate logic, filter rules) can silently
+          # change which jobs run.
           filters: |
+            backend_unit:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/backend-unit-test.yml'
+              - '.github/actions/setup-go-backend/**'
+            backend_integration:
+              - 'backend/cmd/server/**'
+              - 'backend/internal/githubwebhook/**'
+              - 'backend/internal/devicetokens/**'
+              - 'backend/internal/apns/**'
+              - 'backend/internal/db/**'
+              - 'backend/go.mod'
+              - 'backend/go.sum'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/backend-integration-test.yml'
+              - '.github/actions/setup-go-backend/**'
+              - '.github/actions/wait-for-localstack/**'
+            ios_tests:
+              - 'backend/**'
+              - 'ios/Gemfile'
+              - 'ios/project.yml'
+              - 'ios/PocketAide/**'
+              - 'ios/PocketAideKeyboard/**'
+              - 'ios/PocketAideTests/**'
+              - 'ios/PocketAideUnitTests/**'
+              - 'ios/PocketAideWidget/**'
+              - 'ios/Shared/**'
+              - 'ios/fastlane/**'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/ios-test.yml'
+              - '.github/actions/setup-go-backend/**'
+              - '.github/actions/start-test-backend/**'
+              - '.github/actions/generate-xcode-project/**'
             backend:
               - 'backend/**'
               - 'Dockerfile'
               - '.dockerignore'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/backend-docker-push.yml'
             ios:
               - 'ios/Gemfile'
               - 'ios/project.yml'
               - 'ios/PocketAide/**'
               - 'ios/PocketAideKeyboard/**'
+              - 'ios/PocketAideTests/**'
               - 'ios/PocketAideUnitTests/**'
               - 'ios/PocketAideWidget/**'
               - 'ios/Shared/**'
               - 'ios/fastlane/**'
-            backend_tests:
-              - 'backend/**'
               - '.github/workflows/ci.yml'
-            ios_tests:
-              - 'backend/**'
-              - 'ios/**'
-              - '.github/workflows/ci.yml'
+              - '.github/workflows/testflight-upload.yml'
+              - '.github/actions/install-ios-signing/**'
+              - '.github/actions/generate-xcode-project/**'
 
-  backend-test:
-    name: Backend test + lint
+  backend-unit-test:
+    name: Backend unit + lint
     needs: changes
-    if: needs.changes.outputs.backend_tests == 'true'
-    runs-on: ubuntu-24.04-arm
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache-dependency-path: backend/go.sum
-      - name: Download modules
-        run: go mod download
-      - name: Vet
-        run: go vet ./...
-      - name: Test
-        run: go test -race -count=1 ./...
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.1.6
-          working-directory: backend
+    if: needs.changes.outputs.backend_unit == 'true'
+    uses: ./.github/workflows/backend-unit-test.yml
+
+  backend-integration-test:
+    name: Backend integration (LocalStack)
+    needs: changes
+    if: needs.changes.outputs.backend_integration == 'true'
+    uses: ./.github/workflows/backend-integration-test.yml
 
   ios-test:
     name: iOS build + test
-    needs: backend-test
-    if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.backend-test.result != 'failure' }}
-    runs-on: macos-26
-    env:
-      OIDC_ISSUER: http://localhost:5556
-      OIDC_AUDIENCE: pocket-aide-dev
-      OIDC_CLIENT_ID: pocket-aide-ios-dev
-      OIDC_REDIRECT_URI: pocketaide-dev://callback
-      OPENROUTER_API_KEY: test-key-not-used
-      LANGFUSE_PUBLIC_KEY: test
-      LANGFUSE_SECRET_KEY: test
-      LANGFUSE_HOST: http://localhost:0
-      DATABASE_PATH: /tmp/pocket-aide-ci.db
-      PORT: "8080"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-          cache-dependency-path: backend/go.sum
-      - name: Build backend binaries
-        working-directory: backend
-        run: |
-          go build -o /tmp/oidcmock ./cmd/oidcmock
-          go build -o /tmp/pocket-aide ./cmd/server
-      - name: Start oidcmock
-        run: |
-          /tmp/oidcmock -addr :5556 -client-id pocket-aide-ios-dev -audience pocket-aide-dev &
-          echo "OIDCMOCK_PID=$!" >> $GITHUB_ENV
-          for i in {1..30}; do
-            curl -fsS http://localhost:5556/.well-known/openid-configuration && break || sleep 1
-          done
-      - name: Start backend
-        run: |
-          /tmp/pocket-aide &
-          echo "BACKEND_PID=$!" >> $GITHUB_ENV
-          for i in {1..30}; do
-            curl -fsS http://localhost:8080/healthz && break || sleep 1
-          done
-      - uses: irgaly/setup-mint@v1
-      - name: Generate Xcode project
-        working-directory: ios
-        run: |
-          mint install yonaskolb/xcodegen
-          mint run xcodegen generate
-      - name: SwiftLint
-        working-directory: ios
-        run: |
-          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
-          swiftlint --strict --reporter github-actions-logging
-      - name: Resolve Xcode
-        run: |
-          sudo xcode-select -s /Applications/Xcode.app
-          xcodebuild -version
-      - name: Build & test (simulator)
-        working-directory: ios
-        run: |
-          set -o pipefail
-          xcodebuild \
-            -project PocketAide.xcodeproj \
-            -scheme PocketAide \
-            -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
-            -resultBundlePath TestResults.xcresult \
-            test | xcbeautify
-      - name: Upload xcresult on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-test-result-bundle
-          path: ios/TestResults.xcresult
-          retention-days: 7
-      - name: Stop background processes
-        if: always()
-        run: |
-          [ -n "${OIDCMOCK_PID:-}" ] && kill ${OIDCMOCK_PID} || true
-          [ -n "${BACKEND_PID:-}" ] && kill ${BACKEND_PID} || true
+    needs: [changes, backend-unit-test, backend-integration-test]
+    if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' }}
+    uses: ./.github/workflows/ios-test.yml
 
   backend-docker-push:
     name: Backend Docker build + push
-    needs: [backend-test, ios-test]
-    if: ${{ !cancelled() && needs.changes.outputs.backend == 'true' && needs.backend-test.result != 'failure' && needs.ios-test.result != 'failure' }}
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build & push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/arm64
-          push: true
-          tags: |
-            ghcr.io/dlddu/pocket-aide:latest
-            ghcr.io/dlddu/pocket-aide:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test]
+    if: ${{ !cancelled() && needs.changes.outputs.backend == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' && needs.ios-test.result != 'failure' }}
+    uses: ./.github/workflows/backend-docker-push.yml
 
   testflight-upload:
     name: TestFlight upload
-    needs: [ios-test, backend-docker-push]
+    needs: [changes, ios-test, backend-docker-push]
     if: ${{ !cancelled() && needs.changes.outputs.ios == 'true' && github.event_name == 'pull_request' && needs.ios-test.result == 'success' && needs.backend-docker-push.result != 'failure' }}
-    runs-on: macos-26
-    env:
-      APP_BUNDLE_ID: com.dlddu.PocketAide
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          working-directory: ios
-          bundler-cache: true
-      - uses: irgaly/setup-mint@v1
-      - name: Generate keychain password
-        run: echo "KEYCHAIN_PASSWORD=$(openssl rand -base64 32)" >> $GITHUB_ENV
-      - name: Import signing certificate
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
-          p12-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-          keychain-password: ${{ env.KEYCHAIN_PASSWORD }}
-      - name: Install provisioning profiles
-        run: |
-          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILE_DIR"
-          install_profile() {
-            local data="$1" name_var="$2"
-            local tmp
-            tmp=$(mktemp)
-            echo "$data" | base64 --decode > "$tmp"
-            local plist
-            plist=$(security cms -D -i "$tmp")
-            local uuid name
-            uuid=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$plist")
-            name=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< "$plist")
-            mv "$tmp" "$PROFILE_DIR/$uuid.mobileprovision"
-            echo "${name_var}=${name}" >> "$GITHUB_ENV"
-          }
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_MAIN_BASE64 }}" PROFILE_NAME_MAIN
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_KEYBOARD_BASE64 }}" PROFILE_NAME_KEYBOARD
-          install_profile "${{ secrets.IOS_PROVISIONING_PROFILE_WIDGET_BASE64 }}" PROFILE_NAME_WIDGET
-      - name: Generate Xcode project
-        working-directory: ios
-        env:
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
-        run: |
-          mint install yonaskolb/xcodegen
-          mint run xcodegen generate
-      - name: Inject BackendBaseURL
-        working-directory: ios
-        env:
-          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
-        run: |
-          if [ -z "$BACKEND_BASE_URL" ]; then
-            echo "Missing repository variable: BACKEND_BASE_URL" >&2
-            exit 1
-          fi
-          /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
-      - name: Write App Store Connect API key
-        run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APPSTORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode \
-            > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}.p8
-      - name: Run fastlane beta
-        working-directory: ios
-        env:
-          APPSTORE_CONNECT_API_KEY_ID: ${{ secrets.APPSTORE_CONNECT_API_KEY_ID }}
-          APPSTORE_CONNECT_API_ISSUER_ID: ${{ secrets.APPSTORE_CONNECT_API_ISSUER_ID }}
-        run: bundle exec fastlane beta
+    uses: ./.github/workflows/testflight-upload.yml
+    secrets: inherit
 
   ci-success:
     name: ci-success
-    needs: [changes, backend-test, ios-test, backend-docker-push, testflight-upload]
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload]
     if: always()
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Verify required jobs succeeded or were correctly skipped
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}
-          BACKEND_TEST_RESULT: ${{ needs.backend-test.result }}
+          BACKEND_UNIT_RESULT: ${{ needs.backend-unit-test.result }}
+          BACKEND_INTEGRATION_RESULT: ${{ needs.backend-integration-test.result }}
           IOS_TEST_RESULT: ${{ needs.ios-test.result }}
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
-          BACKEND_TESTS_CHANGED: ${{ needs.changes.outputs.backend_tests }}
+          BACKEND_UNIT_CHANGED: ${{ needs.changes.outputs.backend_unit }}
+          BACKEND_INTEGRATION_CHANGED: ${{ needs.changes.outputs.backend_integration }}
           IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
           BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
           IOS_CHANGED: ${{ needs.changes.outputs.ios }}
         run: |
           set -e
-          echo "changes=$CHANGES_RESULT backend-test=$BACKEND_TEST_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
+          echo "changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
-          if [ "$BACKEND_TESTS_CHANGED" = "true" ]; then
-            [ "$BACKEND_TEST_RESULT" = "success" ] || { echo "backend-test must pass"; exit 1; }
+          if [ "$BACKEND_UNIT_CHANGED" = "true" ]; then
+            [ "$BACKEND_UNIT_RESULT" = "success" ] || { echo "backend-unit-test must pass"; exit 1; }
+          fi
+          if [ "$BACKEND_INTEGRATION_CHANGED" = "true" ]; then
+            [ "$BACKEND_INTEGRATION_RESULT" = "success" ] || { echo "backend-integration-test must pass"; exit 1; }
           fi
           if [ "$IOS_TESTS_CHANGED" = "true" ]; then
             [ "$IOS_TEST_RESULT" = "success" ] || { echo "ios-test must pass"; exit 1; }

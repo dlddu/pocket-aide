@@ -1,0 +1,36 @@
+name: Wait for LocalStack SQS
+description: >
+  Polls /_localstack/health until the SQS subsystem reports
+  available/running. LocalStack opens its TCP port well before SQS is
+  actually serving requests, so the default service-level health check
+  (TCP only) isn't enough — this step closes that gap.
+
+inputs:
+  endpoint:
+    description: LocalStack base URL
+    required: false
+    default: http://localhost:4566
+  timeout_seconds:
+    description: Maximum total wait time, in whole seconds.
+    required: false
+    default: '60'
+
+runs:
+  using: composite
+  steps:
+    - name: Poll /_localstack/health for SQS readiness
+      shell: bash
+      run: |
+        endpoint='${{ inputs.endpoint }}'
+        timeout='${{ inputs.timeout_seconds }}'
+        for i in $(seq 1 "$timeout"); do
+          if curl -fsS "$endpoint/_localstack/health" \
+              | grep -qE '"sqs": *"(available|running)"'; then
+            echo "LocalStack SQS ready after ${i}s"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "LocalStack SQS not ready after ${timeout}s" >&2
+        curl -s "$endpoint/_localstack/health" || true
+        exit 1

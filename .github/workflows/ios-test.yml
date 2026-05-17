@@ -1,0 +1,61 @@
+name: iOS build + test
+
+# Reusable job that generates the Xcode project, lints Swift, builds the
+# app, and runs the simulator test bundles. Boots oidcmock + backend
+# locally so the in-app health/login/me endpoints all resolve.
+
+on:
+  workflow_call:
+
+jobs:
+  ios:
+    name: iOS build + test
+    runs-on: macos-26
+    env:
+      OIDC_ISSUER: http://localhost:5556
+      OIDC_AUDIENCE: pocket-aide-dev
+      OIDC_CLIENT_ID: pocket-aide-ios-dev
+      OIDC_REDIRECT_URI: pocketaide-dev://callback
+      OPENROUTER_API_KEY: test-key-not-used
+      LANGFUSE_PUBLIC_KEY: test
+      LANGFUSE_SECRET_KEY: test
+      LANGFUSE_HOST: http://localhost:0
+      DATABASE_PATH: /tmp/pocket-aide-ci.db
+      PORT: "8080"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-backend
+      - uses: ./.github/actions/start-test-backend
+      - uses: ./.github/actions/generate-xcode-project
+      - name: SwiftLint
+        working-directory: ios
+        run: |
+          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
+          swiftlint --strict --reporter github-actions-logging
+      - name: Resolve Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+      - name: Build & test (simulator)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project PocketAide.xcodeproj \
+            -scheme PocketAide \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -resultBundlePath TestResults.xcresult \
+            test | xcbeautify
+      - name: Upload xcresult on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-result-bundle
+          path: ios/TestResults.xcresult
+          retention-days: 7
+      - name: Stop background processes
+        if: always()
+        run: |
+          [ -n "${OIDCMOCK_PID:-}" ] && kill ${OIDCMOCK_PID} || true
+          [ -n "${BACKEND_PID:-}" ] && kill ${BACKEND_PID} || true

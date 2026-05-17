@@ -1,0 +1,28 @@
+name: Backend unit tests
+
+# Reusable job that runs `go vet`, `go test` (default tags only), and
+# golangci-lint on the backend module. Callable from any orchestrator; ci.yml
+# invokes it when paths-filter sees a relevant backend file change.
+
+on:
+  workflow_call:
+
+jobs:
+  unit:
+    name: Backend unit + lint
+    runs-on: ubuntu-24.04-arm
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-backend
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test -race -count=1 ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.1.6
+          working-directory: backend
