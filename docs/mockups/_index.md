@@ -18,7 +18,7 @@ last_updated: 2026-05-13
 
 ## 현재 미정의 영역
 
-- **사용자 여정**: 1개 작성됨 (`journey-affirmation-seeker-daily-exposure.md` — V4 달성). 나머지 mockup 8개의 "여정" 항목은 여전히 `(미정의)`. `screen-widget`은 V4 측면만 매핑되었고 V6 측면 여정은 미정의.
+- **사용자 여정**: 1개 작성됨 (`journey-affirmation-seeker-daily-exposure.md` — V4 달성). 나머지 mockup 10개의 "여정" 항목은 여전히 `(미정의)`. `screen-widget`은 V4 측면만 매핑되었고 V6 측면 여정은 미정의. PR 모니터 두 화면(V9)의 여정도 미정의.
 
 ## 디자인 시스템 매핑
 
@@ -136,6 +136,26 @@ last_updated: 2026-05-13
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ChatBubble.me`, `ChatBubble.ai`(압축 변형, `Avatar`(소형 PA), `PillButton.solid`(적용), `PillButton.outline`(거절), `IconCircleButton.accent-ring`(음성 진입 — 컴포저 안 작은 변형 27px), `Composer`(키보드 확장 변형 — 입력+음성+전송), `Disclaimer`. **자판이 가려진 상태이므로 `KeyboardKey`는 본 화면에서 미사용.**
   - 토큰: 시스템 통합 (tokens.md §1.8) + AI 채팅 영역 차용 (tokens.md §1.3, 대화 UI 성격) — `--paper #FAFAF7`, `--ink #1C2624`, `--sage #5E8B73`, 컨텍스트 카드 보조 `--ctx-bg #F4F1E8`(paper의 톤다운 변형), 디스클레이머 띠 `--kbd #D8D3C7` 40% 알파.
 
+## screen-pr-monitor-push.html
+- **시각화 대상**:
+  - 여정: (미정의)
+  - 가치: V9 (개발 워크플로우 인지 부하 감소)
+  - PRD/AC (보조): PRD-10 / AC6 (백그라운드 폴링·CI 완료 푸시 — 성공/실패 양쪽 케이스), AC7 진입점 (푸시 탭 = 라우팅만, 확인 미트리거)
+- **사용 디자인 시스템**:
+  - 패턴: `시스템 통합 — 잠금 화면` (patterns.md §6.1) — 잠금 화면 위 iOS 알림 스택
+  - 컴포넌트: `IPhoneFrame`, `StatusBar` (잠금화면 변형), 알림 카드(iOS 시스템 컨벤션 차용 — `bg-rgba(28,28,30,0.7)` + `backdrop-blur-2xl`), 상태 아이콘 원형 배지(성공 forest, 실패 terracotta), 그루핑 스택
+  - 토큰: 시스템 통합 (tokens.md §1.8) — 영역 토큰 미사용. PocketAide 앱 아이콘 강조는 회사(slate) 그라디언트(`#7A9BC2`→`#355577`). 상태 색은 영역 외 의미 토큰 차용: 성공 `--forest #4F6E5C`(루틴 영역에서 차용), 실패 `--destructive #9C3F2D`(다짐 영역 §1.10에서 차용). **다른 영역의 강조색을 시스템 영역에서 차용하는 첫 사례 — patterns.md / tokens.md §1.8에 "상태 시그널 차용 규칙" 추가 검토 필요.**
+
+## screen-pr-monitor-history.html
+- **시각화 대상**:
+  - 여정: (미정의)
+  - 가치: V9 (개발 워크플로우 인지 부하 감소)
+  - PRD/AC (보조): PRD-10 / AC7 도착지 (푸시 진입 시 해당 항목 강조, 미확인 유지), AC11 (서버 영속화된 이력 조회 — id·PR 링크 옵션·커밋 링크·런 링크·확인 여부·확인 시각), AC12 (명시적 "확인" 버튼만 처리 트리거 — 외부 링크 탭 미트리거, 확인됨/미확인 시각 구분)
+- **사용 디자인 시스템**:
+  - 패턴: `영역 화면`의 변형 (patterns.md §1) — 메타 화면이므로 탭 활성 없음 + 좌측 상단 "← 설정" 백 버튼. `리스트 + 섹션` (patterns.md §3) — 오늘/어제 그룹 + 상태별 스타일 분기. **본 화면은 영역 6종 어디에도 속하지 않는 메타/도구 화면이므로 patterns.md에 §10 "메타 도구 화면" 패턴 추가 검토 필요.**
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip`(slate 차용), `AreaLabel`("GITHUB · MONITOR"), `ScreenHeader`(백버튼+세팅 아이콘 변형), 세그먼티드 토글(열린 PR/이력), `Card.history-item`(미확인=흰색+슬레이트 보더, 확인됨=점선 보더+dim+취소선), 펄스 글로우 카드 변형(푸시 진입 강조), 상태 원형 배지, 외부링크 칩, 확인 버튼(solid=강조 / outline=일반), `TabBar`(전 탭 비활성).
+  - 토큰: 회사(slate, tokens.md §1.2) 차용 — `--bg #EEF2F8`, `--ink #1E2A3A`, `--slate #355577`, `--rule #D6DEE9`, `--soft #DDE5F0`. 상태 시그널은 push 화면과 동일하게 `--forest #4F6E5C` / `--terracotta #9C3F2D`. **회사 영역 토큰을 별도 화면에서 차용한 첫 사례 — V3(영역 분리) 원칙과의 충돌 여부는 검토 필요(PR 모니터는 영역이 아닌 도구이므로 영역 정체성 침해는 아님).**
+
 ---
 
 ## 가치별 mockup 커버리지 (역인덱스)
@@ -150,8 +170,9 @@ last_updated: 2026-05-13
 | V6 일상 정보 통합 시야 | screen-widget |
 | V7 시스템 전역 글쓰기 보조 | screen-keyboard-extension |
 | V8 일상 루틴 구조화 | screen-routines |
+| V9 개발 워크플로우 인지 부하 감소 | screen-pr-monitor-push, screen-pr-monitor-history |
 
-모든 V1~V8에 1개 이상의 mockup이 매핑됨 — 시각화 없는 가치 위험은 없음. ✅
+모든 V1~V9에 1개 이상의 mockup이 매핑됨 — 시각화 없는 가치 위험은 없음. ✅
 
 ## PRD별 mockup 커버리지 (역인덱스)
 
@@ -166,17 +187,18 @@ last_updated: 2026-05-13
 | PRD-7 STT 엔진 | screen-keyboard-extension (AC6 키보드 전용 인식기 진입점만) | 메인 앱 진입점들은 백엔드 컴포넌트로 02·08·10에 결과로 노출 |
 | PRD-8 위젯 | screen-widget | |
 | PRD-9 키보드 확장 | screen-keyboard-extension | |
+| PRD-10 GitHub PR·CI 모니터 | screen-pr-monitor-push, screen-pr-monitor-history | push=AC6·AC7 진입점, history=AC7 도착지·AC11·AC12. AC1·AC2·AC3·AC4·AC5·AC8·AC9·AC10은 별도 mockup 필요 (열린 PR 목록·필터·인증 오류 배너·빈/로딩 상태 등) — follow-up. |
 
 ## 패턴별 mockup 커버리지 (역인덱스)
 
 | 패턴 (patterns.md) | 사용 mockup |
 |--------------------|-------------|
-| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit |
+| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit, screen-pr-monitor-history (변형 — 메타 화면) |
 | §2 채팅 화면 | screen-chat-text |
-| §3 리스트 + 섹션 | screen-todo-personal, screen-todo-work |
+| §3 리스트 + 섹션 | screen-todo-personal, screen-todo-work, screen-pr-monitor-history |
 | §4 음성 모드 (다크) | screen-chat-voice |
 | §5 카드 + 진행률 | screen-routines |
-| §6 시스템 통합 | screen-shortcut-capture, screen-widget, screen-keyboard-extension |
+| §6 시스템 통합 | screen-shortcut-capture, screen-widget, screen-keyboard-extension, screen-pr-monitor-push (§6.1 잠금 화면 변형) |
 | §7 다짐 회전 노출 | screen-affirmations |
 | §8 임시공간 분류 흐름 | screen-scratchpad |
 | §9 편집 시트 | screen-affirmations-priority-edit |

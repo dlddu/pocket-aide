@@ -27,11 +27,11 @@
   <header class="max-w-[1180px] mx-auto px-8 pt-14 pb-10">
     <div class="flex items-baseline gap-3 mb-3">
       <span class="text-[11px] uppercase tracking-[0.22em] text-stone-500 font-medium stamp">Mockup Gallery · v1</span>
-      <span class="text-[11px] text-stone-400">— 11 화면 / 9 PRD</span>
+      <span class="text-[11px] text-stone-400">— 13 화면 / 10 PRD</span>
     </div>
     <h1 class="text-[44px] font-bold tracking-tight leading-[1.05] mb-3">PocketAide<br/><span class="text-stone-500 font-normal">— 화면 목업 모음</span></h1>
     <p class="max-w-[640px] text-[15px] leading-relaxed text-stone-700">
-      나의 일상과 일을 옆에서 함께 정리해 주는 개인 비서 앱. 핸즈프리 즉시 캡처, 한·영 혼용 STT, 영역별 작업 관리(개인 vs 회사), 의도된 반복 노출, 시스템 전역 글쓰기 보조, 일상 루틴 구조화 등 8가지 가치를 제품화한 화면들입니다.
+      나의 일상과 일을 옆에서 함께 정리해 주는 개인 비서 앱. 핸즈프리 즉시 캡처, 한·영 혼용 STT, 영역별 작업 관리(개인 vs 회사), 의도된 반복 노출, 시스템 전역 글쓰기 보조, 일상 루틴 구조화, 개발 워크플로우 인지 부하 감소 등 9가지 가치를 제품화한 화면들입니다.
     </p>
   </header>
 
@@ -441,10 +441,126 @@
 
     </div>
 
+    <!-- section: developer tools -->
+    <div class="flex items-baseline justify-between border-b border-stone-300/70 pb-2 mb-5">
+      <h2 class="text-[16px] font-bold tracking-tight">개발자 도구 · 2 화면</h2>
+      <span class="text-[11px] text-stone-500 stamp">PRD-10 · V9 개발 워크플로우</span>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-14">
+
+      <!-- 12 pr-monitor-push -->
+      <a href="screen-pr-monitor-push.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:linear-gradient(160deg,#1f3149 0%,#0a1119 100%)">
+          <div class="preview-strip" style="background:#355577"></div>
+          <!-- lockscreen time -->
+          <div class="absolute top-3 inset-x-0 text-center">
+            <div class="text-[7px] text-white/65">5월 18일 월요일</div>
+            <div class="text-[24px] font-extralight text-white leading-none mt-0.5">9:41</div>
+          </div>
+          <!-- notification stack -->
+          <div class="absolute bottom-3 inset-x-2 space-y-1.5">
+            <!-- failure notification (top, most prominent) -->
+            <div class="bg-[rgba(28,28,30,0.85)] backdrop-blur rounded-[10px] p-1.5 border border-white/10">
+              <div class="flex items-start gap-1.5">
+                <div class="w-3.5 h-3.5 rounded-[4px] shrink-0" style="background:linear-gradient(135deg,#7A9BC2,#355577)"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full" style="background:#9C3F2D"></div>
+                    <div class="text-[6.5px] font-bold text-white leading-tight">CI 실패 · #42</div>
+                  </div>
+                  <div class="bg-white/20 rounded h-0.5 mt-0.5"></div>
+                  <div class="bg-white/15 rounded h-0.5 mt-[1px] w-[60%]"></div>
+                </div>
+              </div>
+            </div>
+            <!-- success notification (older) -->
+            <div class="bg-[rgba(28,28,30,0.7)] backdrop-blur rounded-[10px] p-1.5 border border-white/10">
+              <div class="flex items-start gap-1.5">
+                <div class="w-3.5 h-3.5 rounded-[4px] shrink-0" style="background:linear-gradient(135deg,#7A9BC2,#355577)"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1">
+                    <div class="w-1.5 h-1.5 rounded-full" style="background:#4F6E5C"></div>
+                    <div class="text-[6.5px] font-bold text-white leading-tight">CI 통과 · #41</div>
+                  </div>
+                  <div class="bg-white/15 rounded h-0.5 mt-0.5 w-[80%]"></div>
+                </div>
+              </div>
+            </div>
+            <!-- grouped indicator -->
+            <div class="mx-1 bg-[rgba(28,28,30,0.45)] backdrop-blur rounded-[8px] h-2"></div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">12 · PUSH</div>
+            <div class="text-[14px] font-semibold tracking-tight">CI 완료 푸시</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-10 / AC6·7</div>
+        </div>
+      </a>
+
+      <!-- 13 pr-monitor-history -->
+      <a href="screen-pr-monitor-history.html" class="card block bg-white rounded-2xl p-3 pb-4 shadow-sm">
+        <div class="preview" style="background:#EEF2F8">
+          <div class="preview-strip" style="background:#355577"></div>
+          <div class="p-2">
+            <div class="text-[7px] uppercase tracking-[0.16em] text-[#355577] font-bold mono">GITHUB · MONITOR</div>
+            <div class="text-[10px] font-bold text-[#1E2A3A] mt-0.5">PR 모니터링</div>
+            <!-- tab toggle -->
+            <div class="flex gap-[1px] bg-white border border-[#D6DEE9] rounded p-[1px] mt-1.5">
+              <div class="flex-1 h-2 rounded-sm"></div>
+              <div class="flex-1 h-2 rounded-sm bg-[#355577]"></div>
+            </div>
+            <!-- highlighted (push entry) card -->
+            <div class="bg-white border-l-[2px] border-l-[#355577] border-y border-r border-[#D6DEE9] rounded-sm p-1 mt-1.5" style="box-shadow:0 0 0 1.5px rgba(53,85,119,.18)">
+              <div class="flex items-center gap-1">
+                <div class="w-2 h-2 rounded-full" style="background:#9C3F2D"></div>
+                <div class="bg-[#1E2A3A] rounded h-1 flex-1"></div>
+              </div>
+              <div class="bg-[#DDE5F0] rounded h-1 mt-1 w-[80%]"></div>
+              <div class="flex justify-end mt-1">
+                <div class="bg-[#355577] rounded h-1.5 w-4"></div>
+              </div>
+            </div>
+            <!-- regular unacked -->
+            <div class="bg-white border border-[#D6DEE9] rounded-sm p-1 mt-1">
+              <div class="flex items-center gap-1">
+                <div class="w-1.5 h-1.5 rounded-full" style="background:#4F6E5C"></div>
+                <div class="bg-[#1E2A3A]/70 rounded h-[3px] flex-1"></div>
+              </div>
+              <div class="bg-[#DDE5F0] rounded h-[3px] mt-[2px] w-[70%]"></div>
+            </div>
+            <!-- acked (dimmed) -->
+            <div class="bg-[#EEF2F8]/60 border border-dashed border-[#D6DEE9] rounded-sm p-1 mt-1 opacity-70">
+              <div class="flex items-center gap-1">
+                <div class="w-1.5 h-1.5 rounded-full bg-stone-300"></div>
+                <div class="bg-stone-400 rounded h-[3px] flex-1"></div>
+              </div>
+            </div>
+            <div class="bg-[#EEF2F8]/60 border border-dashed border-[#D6DEE9] rounded-sm p-1 mt-1 opacity-70">
+              <div class="flex items-center gap-1">
+                <div class="w-1.5 h-1.5 rounded-full bg-stone-300"></div>
+                <div class="bg-stone-400 rounded h-[3px] flex-1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-baseline justify-between">
+          <div>
+            <div class="text-[10px] text-stone-500 stamp">13 · HISTORY</div>
+            <div class="text-[14px] font-semibold tracking-tight">알림 이력 + 확인</div>
+          </div>
+          <div class="text-[10px] text-stone-400 stamp">PRD-10 / AC7·11·12</div>
+        </div>
+      </a>
+
+    </div>
+
     <!-- value coverage table -->
     <div class="flex items-baseline justify-between border-b border-stone-300/70 pb-2 mb-5">
       <h2 class="text-[16px] font-bold tracking-tight">가치 커버리지</h2>
-      <span class="text-[11px] text-stone-500 stamp">8 가치 / 9 PRD</span>
+      <span class="text-[11px] text-stone-500 stamp">9 가치 / 10 PRD</span>
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm">
@@ -457,6 +573,7 @@
         <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V6</div><div><div class="font-semibold">일상 정보 통합 시야</div><div class="text-stone-500 text-[12px] mt-0.5">→ Widget(09) 5영역 동시 표시</div></div></div>
         <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V7</div><div><div class="font-semibold">시스템 전역 글쓰기 보조</div><div class="text-stone-500 text-[12px] mt-0.5">→ Keyboard(10)</div></div></div>
         <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V8</div><div><div class="font-semibold">일상 루틴 구조화</div><div class="text-stone-500 text-[12px] mt-0.5">→ Routines(06)</div></div></div>
+        <div class="flex gap-3"><div class="stamp text-stone-400 w-7 shrink-0">V9</div><div><div class="font-semibold">개발 워크플로우 인지 부하 감소</div><div class="text-stone-500 text-[12px] mt-0.5">→ PR-Monitor Push(12) · History(13)</div></div></div>
       </div>
     </div>
 

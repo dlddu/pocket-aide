@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>12 · PR 모니터링 푸시 — PocketAide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root { --slate:#355577; --slate-soft:#7A9BC2; --forest:#4F6E5C; --terracotta:#9C3F2D; --tan:#8B6F47; }
+  html,body{font-family:'Apple SD Gothic Neo','SF Pro Text','-apple-system',BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+  .frame{width:393px;height:852px;border-radius:56px;background:#0a0a0a;box-shadow:0 30px 80px -20px rgba(0,0,0,.4),0 0 0 12px #0a0a0a,0 0 0 13px #2a2a2a;color:#fff;overflow:hidden}
+  .island{width:118px;height:35px;border-radius:20px;background:#000}
+  .home-bar{width:140px;height:5px;border-radius:3px;background:#fff}
+  .stamp{font-family:'SF Mono','Menlo',monospace;letter-spacing:.04em}
+  .mono{font-family:'SF Mono','Menlo',monospace}
+
+  /* lockscreen wallpaper — cool slate dawn */
+  .wallpaper{
+    background:
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(53,85,119,.55), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(122,155,194,.25), transparent 70%),
+      linear-gradient(180deg,#0F1A2B 0%,#06090E 100%);
+  }
+
+  /* arrival pulse on the newest notification */
+  .arriving{
+    animation:arrive 1.2s ease-out both;
+  }
+  @keyframes arrive {
+    0%   { transform: translateY(-12px); opacity:0; }
+    60%  { transform: translateY(2px);   opacity:1; }
+    100% { transform: translateY(0);     opacity:1; }
+  }
+
+  /* tap affordance ring */
+  .tap-hint{
+    position:absolute; inset:-3px; border-radius:22px;
+    border:1.5px dashed rgba(122,155,194,.55);
+    pointer-events:none;
+    animation:tapring 2.4s ease-in-out infinite;
+  }
+  @keyframes tapring {
+    0%,100% { opacity:.25 }
+    50%     { opacity:.7 }
+  }
+</style>
+</head>
+<body class="bg-stone-200/70 min-h-screen flex flex-col items-center gap-5 py-8">
+
+  <nav class="text-stone-700 text-sm flex items-center gap-2">
+    <a href="index.html" class="underline underline-offset-4 decoration-stone-400 hover:text-stone-900">← 모든 목업</a>
+    <span class="text-stone-400">/</span>
+    <span>12 · PR 모니터링 — CI 완료 푸시</span>
+  </nav>
+
+  <div class="frame relative">
+
+    <!-- wallpaper -->
+    <div class="absolute inset-0 wallpaper"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold text-white/95">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- lock screen time block -->
+    <div class="absolute top-[68px] inset-x-0 text-center z-10">
+      <div class="text-[13.5px] tracking-wider text-white/75 stamp">5월 18일 월요일</div>
+      <div class="text-[80px] font-light tracking-tight leading-none mt-1 text-white" style="font-family:'SF Pro Display','-apple-system'">9:41</div>
+    </div>
+
+    <!-- notifications stack -->
+    <div class="absolute top-[230px] inset-x-0 px-3.5 z-20 space-y-2">
+
+      <!-- newest: failure — arriving with animation -->
+      <div class="arriving relative">
+        <div class="bg-[rgba(28,28,30,0.78)] backdrop-blur-2xl border border-white/8 rounded-[20px] px-3.5 py-3 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]">
+          <div class="flex items-start gap-2.5">
+            <!-- app icon -->
+            <div class="w-9 h-9 rounded-lg grid place-items-center shrink-0" style="background:linear-gradient(135deg,#7A9BC2,#355577)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
+                <path d="M12 1.27a11 11 0 0 0-3.5 21.4c.5.1.7-.2.7-.5v-1.8c-3 .7-3.7-1.3-3.7-1.3-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.4-.3-4.9-1.2-4.9-5.3 0-1.2.4-2.1 1.1-2.9-.1-.3-.5-1.4.1-2.9 0 0 .9-.3 3 1.1.9-.2 1.8-.4 2.7-.4.9 0 1.8.1 2.7.4 2.1-1.4 3-1.1 3-1.1.6 1.5.2 2.6.1 2.9.7.8 1.1 1.7 1.1 2.9 0 4.1-2.5 5-4.9 5.3.4.3.7 1 .7 2v3c0 .3.2.6.7.5A11 11 0 0 0 12 1.27z" fill="white"/>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline justify-between gap-2">
+                <div class="text-[11px] font-semibold tracking-wide text-white/85 uppercase stamp">PocketAide</div>
+                <div class="text-[10.5px] text-white/55 stamp">방금</div>
+              </div>
+              <div class="mt-0.5 flex items-center gap-1.5">
+                <span class="w-[14px] h-[14px] rounded-full grid place-items-center shrink-0" style="background:var(--terracotta)">
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M6 6l12 12M6 18L18 6"/></svg>
+                </span>
+                <div class="text-[14.5px] font-bold text-white leading-tight">CI 실패 — pocket-aide #42</div>
+              </div>
+              <p class="text-[13px] text-white/75 leading-snug mt-1.5">feat(widget): Large 5영역 골격 + 다짐 회전 노출 · <span class="mono text-white/55">ios-tests / xcodebuild</span></p>
+            </div>
+          </div>
+
+          <!-- tap hint ring -->
+          <span class="tap-hint"></span>
+        </div>
+
+        <!-- swipe hint under the newest -->
+        <div class="absolute -bottom-5 right-3 flex items-center gap-1 text-[10px] text-[var(--slate-soft)]/80 stamp uppercase tracking-wider">
+          <span>탭 → 앱 진입</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- older: success — collapsed style -->
+      <div class="bg-[rgba(28,28,30,0.7)] backdrop-blur-2xl border border-white/8 rounded-[20px] px-3.5 py-3 mt-8">
+        <div class="flex items-start gap-2.5">
+          <div class="w-9 h-9 rounded-lg grid place-items-center shrink-0" style="background:linear-gradient(135deg,#7A9BC2,#355577)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2">
+              <path d="M12 1.27a11 11 0 0 0-3.5 21.4c.5.1.7-.2.7-.5v-1.8c-3 .7-3.7-1.3-3.7-1.3-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.4-.3-4.9-1.2-4.9-5.3 0-1.2.4-2.1 1.1-2.9-.1-.3-.5-1.4.1-2.9 0 0 .9-.3 3 1.1.9-.2 1.8-.4 2.7-.4.9 0 1.8.1 2.7.4 2.1-1.4 3-1.1 3-1.1.6 1.5.2 2.6.1 2.9.7.8 1.1 1.7 1.1 2.9 0 4.1-2.5 5-4.9 5.3.4.3.7 1 .7 2v3c0 .3.2.6.7.5A11 11 0 0 0 12 1.27z" fill="white"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between gap-2">
+              <div class="text-[11px] font-semibold tracking-wide text-white/85 uppercase stamp">PocketAide</div>
+              <div class="text-[10.5px] text-white/55 stamp">22분 전</div>
+            </div>
+            <div class="mt-0.5 flex items-center gap-1.5">
+              <span class="w-[14px] h-[14px] rounded-full grid place-items-center shrink-0" style="background:var(--forest)">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 12l4 4 10-10"/></svg>
+              </span>
+              <div class="text-[14.5px] font-bold text-white leading-tight">CI 통과 — pocket-aide #41</div>
+            </div>
+            <p class="text-[12.5px] text-white/65 leading-snug mt-1">fix(ios-tests): xcodebuild retry safety net</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- stacked others (grouped) -->
+      <div class="relative">
+        <div class="bg-[rgba(28,28,30,0.55)] backdrop-blur-2xl border border-white/8 rounded-[20px] mx-2 h-8"></div>
+        <div class="absolute inset-x-4 -bottom-2 bg-[rgba(28,28,30,0.4)] backdrop-blur-2xl border border-white/6 rounded-[20px] h-6"></div>
+        <div class="absolute top-1.5 inset-x-0 text-center text-[11px] text-white/55 stamp uppercase tracking-wider">+3 PocketAide 알림</div>
+      </div>
+
+    </div>
+
+    <!-- bottom hint -->
+    <div class="absolute bottom-[60px] inset-x-0 text-center z-20 px-8">
+      <p class="text-[11px] text-white/45 leading-relaxed">
+        탭은 앱 진입과 라우팅만 수행합니다.<br/>
+        이력 항목의 확인 처리는 앱 안의 <span class="text-white/70 font-semibold">"확인" 버튼</span>으로만 트리거됩니다.
+      </p>
+    </div>
+
+    <!-- camera/flashlight buttons faint -->
+    <div class="absolute bottom-[28px] left-7 z-20 w-11 h-11 rounded-full bg-white/10 backdrop-blur grid place-items-center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 6l-2-2H8L6 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2z"/><circle cx="12" cy="13" r="3.5"/></svg>
+    </div>
+    <div class="absolute bottom-[28px] right-7 z-20 w-11 h-11 rounded-full bg-white/10 backdrop-blur grid place-items-center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 2L7 8h3l-1 14 8-12h-3l3-8z"/></svg>
+    </div>
+
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">
+    PRD-10 · AC6 백그라운드 진입/종료 상태에서도 진행 중→종료 전환 시 시스템 푸시 도달 (성공/실패 모두). 알림에 레포·PR 번호·제목 축약·결과 상태 포함.<br/>
+    AC7 푸시 탭은 앱 진입과 해당 PR 가시화 화면으로의 라우팅만 담당하며, AC12의 확인 처리는 트리거하지 않음.
+  </p>
+
+</body>
+</html>
