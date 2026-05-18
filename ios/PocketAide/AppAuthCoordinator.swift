@@ -30,8 +30,10 @@ final class AppAuthCoordinator: ObservableObject {
         let store = KeychainTokenStore(accessGroup: resolvedGroup)
         self.tokenStore = store
         if let api = try? APIClient.fromBundle(.main, tokenStore: store) {
+            let oidc = OIDCClient(api: api, tokenStore: store)
+            api.setTokenRefresher(oidc)
             self.api = api
-            self.oidc = OIDCClient(api: api, tokenStore: store)
+            self.oidc = oidc
         } else {
             self.api = nil
             self.oidc = nil

@@ -45,11 +45,25 @@ public final class APIClient: @unchecked Sendable {
     public let baseURL: URL
     private let session: URLSession
     private let tokenStore: TokenStoring
+    private let refresherLock = NSLock()
+    private var _refresher: (any TokenRefreshing)?
 
     public init(baseURL: URL, tokenStore: TokenStoring, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session
         self.tokenStore = tokenStore
+    }
+
+    public func setTokenRefresher(_ refresher: any TokenRefreshing) {
+        refresherLock.lock()
+        _refresher = refresher
+        refresherLock.unlock()
+    }
+
+    private var refresher: (any TokenRefreshing)? {
+        refresherLock.lock()
+        defer { refresherLock.unlock() }
+        return _refresher
     }
 
     public static func fromBundle(_ bundle: Bundle = .main, tokenStore: TokenStoring) throws -> APIClient {
@@ -125,6 +139,25 @@ public final class APIClient: @unchecked Sendable {
         body: Input?,
         authenticated: Bool
     ) async throws -> Data {
+        if authenticated {
+            await refreshIfExpired()
+        }
+        return try await performSend(
+            method: method,
+            path: path,
+            body: body,
+            authenticated: authenticated,
+            didRetryAfterRefresh: false
+        )
+    }
+
+    private func performSend<Input: Encodable>(
+        method: String,
+        path: String,
+        body: Input?,
+        authenticated: Bool,
+        didRetryAfterRefresh: Bool
+    ) async throws -> Data {
         var req = URLRequest(url: baseURL.appendingPathComponent(path))
         req.httpMethod = method
         if authenticated, let token = try tokenStore.load()?.accessToken {
@@ -143,10 +176,38 @@ public final class APIClient: @unchecked Sendable {
         guard let http = response as? HTTPURLResponse else {
             throw APIError.transport(URLError(.badServerResponse))
         }
+        if authenticated,
+           http.statusCode == 401,
+           !didRetryAfterRefresh,
+           let refresher,
+           (try? tokenStore.load()?.refreshToken) != nil {
+            do {
+                _ = try await refresher.refresh()
+            } catch {
+                throw APIError.badStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+            }
+            return try await performSend(
+                method: method,
+                path: path,
+                body: body,
+                authenticated: authenticated,
+                didRetryAfterRefresh: true
+            )
+        }
         guard (200..<300).contains(http.statusCode) else {
             throw APIError.badStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
         return data
+    }
+
+    private func refreshIfExpired() async {
+        guard let refresher,
+              let bundle = try? tokenStore.load(),
+              bundle.refreshToken != nil else { return }
+        let leeway: TimeInterval = 30
+        if bundle.expiresAt.timeIntervalSinceNow < leeway {
+            _ = try? await refresher.refresh()
+        }
     }
 
     private func decodeResponse<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {

@@ -14,6 +14,7 @@ public enum OIDCError: Error, CustomStringConvertible {
     case decoding(Error)
     case cancelled
     case missingPresentationAnchor
+    case noRefreshToken
 
     public var description: String {
         switch self {
@@ -23,16 +24,18 @@ public enum OIDCError: Error, CustomStringConvertible {
         case .decoding(let e): return "decode: \(e)"
         case .cancelled: return "cancelled"
         case .missingPresentationAnchor: return "no presentation anchor"
+        case .noRefreshToken: return "no refresh token stored"
         }
     }
 }
 
 @MainActor
-public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextProviding {
+public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextProviding, TokenRefreshing {
     private let api: APIClient
     private let tokenStore: TokenStoring
     private let session: URLSession
     private weak var presentationAnchor: ASPresentationAnchor?
+    private var refreshTask: Task<TokenBundle, Error>?
 
     public init(api: APIClient, tokenStore: TokenStoring, session: URLSession = .shared) {
         self.api = api
@@ -86,6 +89,67 @@ public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextP
 
     public func signOut() throws {
         try tokenStore.clear()
+    }
+
+    public func refresh() async throws -> TokenBundle {
+        if let existing = refreshTask {
+            return try await existing.value
+        }
+        let task = Task { [weak self] () throws -> TokenBundle in
+            guard let self else { throw OIDCError.cancelled }
+            defer { self.refreshTask = nil }
+            return try await self.performRefresh()
+        }
+        refreshTask = task
+        return try await task.value
+    }
+
+    private func performRefresh() async throws -> TokenBundle {
+        guard let current = try tokenStore.load(),
+              let refreshToken = current.refreshToken else {
+            throw OIDCError.noRefreshToken
+        }
+        let cfg = try await api.authConfig()
+        let discovery = try await fetchDiscovery(issuer: cfg.issuer)
+
+        var req = URLRequest(url: URL(string: discovery.tokenEndpoint)!)
+        req.httpMethod = "POST"
+        req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let body = [
+            "grant_type": "refresh_token",
+            "refresh_token": refreshToken,
+            "client_id": cfg.clientId,
+        ]
+        req.httpBody = formEncode(body).data(using: .utf8)
+
+        let (data, response) = try await session.data(for: req)
+        guard let http = response as? HTTPURLResponse else {
+            throw OIDCError.tokenExchange(-1, "no http response")
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            // 4xx means the refresh token itself is rejected — clear so the
+            // next request falls through to a clean signed-out state. 5xx and
+            // transport errors leave the bundle in place so a later retry can
+            // recover without forcing the user back to the login screen.
+            if (400..<500).contains(http.statusCode) {
+                try? tokenStore.clear()
+            }
+            throw OIDCError.tokenExchange(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+        }
+        let parsed: TokenResponse
+        do {
+            parsed = try JSONDecoder().decode(TokenResponse.self, from: data)
+        } catch {
+            throw OIDCError.decoding(error)
+        }
+        let expiresAt = Date().addingTimeInterval(TimeInterval(parsed.expiresIn ?? 3600))
+        let newBundle = TokenBundle(
+            accessToken: parsed.accessToken,
+            refreshToken: parsed.refreshToken ?? refreshToken,
+            expiresAt: expiresAt
+        )
+        try tokenStore.save(newBundle)
+        return newBundle
     }
 
     private func runWebAuth(url: URL, scheme: String?) async throws -> URL {
