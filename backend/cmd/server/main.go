@@ -19,8 +19,10 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
+	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
+	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 )
 
 func main() {
@@ -57,6 +59,8 @@ func main() {
 
 	affStore := affirmations.New(conn)
 	deviceStore := devicetokens.New(conn)
+	excludedStore := excludedrepos.New(conn)
+	historyStore := notificationhistory.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -66,6 +70,11 @@ func main() {
 		p.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(affStore))
 		p.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(affStore))
 		p.Post("/api/device-tokens", handlers.RegisterDeviceToken(deviceStore))
+		p.Get("/api/excluded-repos", handlers.ListExcludedRepos(excludedStore))
+		p.Post("/api/excluded-repos", handlers.AddExcludedRepo(excludedStore))
+		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
+		p.Get("/api/notification-history", handlers.ListNotificationHistory(historyStore))
+		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
 	})
 
 	srv := &http.Server{
@@ -92,15 +101,53 @@ func main() {
 			log.Fatalf("apns: %v", err)
 		}
 		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
-			tokens, err := deviceStore.ListAll(ctx)
+			// PRD-10 AC6: blacklist match — every user who hasn't excluded
+			// this repo gets a row + push. Done outside the transaction so
+			// the tx scope is just the writes (keeps SQLite locking tight).
+			userIDs, err := excludedStore.ListUserIDsExcluding(ctx, evt.Repo)
 			if err != nil {
-				return err
+				return fmt.Errorf("list matched users: %w", err)
 			}
-			title := fmt.Sprintf("%s — %s", evt.Repo, evt.Conclusion)
-			body := fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
-			for _, t := range tokens {
-				if err := apnsClient.Send(ctx, t, title, body); err != nil {
-					log.Printf("apns send token=%s…: %v", safePrefix(t), err)
+			if len(userIDs) == 0 {
+				log.Printf("githubwebhook: no matched users for repo=%s", evt.Repo)
+				return nil
+			}
+
+			// PRD-10 AC11: persist history *before* pushing. All-or-nothing
+			// across users so SQS retry sees a clean state on failure.
+			historyEvt := notificationhistory.Event{
+				RepoFullName: evt.Repo,
+				PRNumber:     evt.PRNumber,
+				PRTitle:      evt.PRTitle,
+				PRURL:        evt.PRURL,
+				CommitURL:    evt.CommitURL,
+				RunURL:       evt.HTMLURL,
+				WorkflowName: evt.WorkflowName,
+				HeadBranch:   evt.HeadBranch,
+				Conclusion:   evt.Conclusion,
+			}
+			ids, err := historyStore.InsertBatchTx(ctx, userIDs, historyEvt)
+			if err != nil {
+				// Returning error makes handleMessage skip DeleteMessage —
+				// SQS redelivers after VisibilityTimeout.
+				return fmt.Errorf("persist history: %w", err)
+			}
+
+			// Best-effort APNs fan-out. A failed push for one user does not
+			// block other users; the history row is already persisted so
+			// the user will still see the unacked card on next app open.
+			title, body := formatPushText(evt)
+			for i, uid := range userIDs {
+				tokens, err := deviceStore.ListByUserID(ctx, uid)
+				if err != nil {
+					log.Printf("apns: list tokens for user=%d: %v", uid, err)
+					continue
+				}
+				for _, t := range tokens {
+					data := map[string]any{"event_id": ids[i]}
+					if err := apnsClient.SendWithData(ctx, t, title, body, data); err != nil {
+						log.Printf("apns send user=%d token=%s…: %v", uid, safePrefix(t), err)
+					}
 				}
 			}
 			return nil
@@ -188,6 +235,33 @@ func safePrefix(t string) string {
 		return t
 	}
 	return t[:8]
+}
+
+// formatPushText builds the title/body shown by the iOS notification banner.
+// When a PR is linked we lead with "CI <result> — repo #N" + the PR title;
+// otherwise we fall back to "repo — <result>" + workflow/branch — the
+// workflow_run.pull_requests array is empty for runs triggered by a direct
+// push to a branch (e.g. main).
+func formatPushText(evt githubwebhook.WorkflowRunEvent) (title, body string) {
+	verdict := "CI " + evt.Conclusion
+	switch evt.Conclusion {
+	case "success":
+		verdict = "CI 통과"
+	case "failure":
+		verdict = "CI 실패"
+	}
+	if evt.PRNumber > 0 {
+		title = fmt.Sprintf("%s — %s #%d", verdict, evt.Repo, evt.PRNumber)
+		if evt.PRTitle != "" {
+			body = evt.PRTitle
+		} else {
+			body = fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
+		}
+		return
+	}
+	title = fmt.Sprintf("%s — %s", evt.Repo, evt.Conclusion)
+	body = fmt.Sprintf("%s on %s", evt.WorkflowName, evt.HeadBranch)
+	return
 }
 
 // loggerSkipping wraps middleware.Logger so that requests to the given paths

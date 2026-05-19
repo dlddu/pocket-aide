@@ -53,10 +53,23 @@ func New(keyID, teamID, bundleID string, p8PEM []byte, useProduction bool) (*Cli
 // non-2xx responses become Go errors with the reason string included so the
 // caller can log them per-token.
 func (c *Client) Send(ctx context.Context, deviceToken, title, body string) error {
+	return c.SendWithData(ctx, deviceToken, title, body, nil)
+}
+
+// SendWithData behaves like Send but also attaches custom top-level keys to
+// the APNs payload. The iOS client reads these from
+// `UNNotification.request.content.userInfo` to drive deep-link routing
+// (PRD-10 AC7 — we send `event_id` so the receiver can highlight the right
+// notification-history row).
+func (c *Client) SendWithData(ctx context.Context, deviceToken, title, body string, data map[string]any) error {
+	p := payload.NewPayload().AlertTitle(title).AlertBody(body).Sound("default")
+	for k, v := range data {
+		p = p.Custom(k, v)
+	}
 	n := &apns2.Notification{
 		DeviceToken: deviceToken,
 		Topic:       c.bundleID,
-		Payload:     payload.NewPayload().AlertTitle(title).AlertBody(body).Sound("default"),
+		Payload:     p,
 	}
 	resp, err := c.cli.PushWithContext(ctx, n)
 	if err != nil {
