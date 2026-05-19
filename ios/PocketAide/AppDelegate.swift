@@ -11,12 +11,6 @@ extension Notification.Name {
 
     /// Posted when APNs registration fails. Object is the underlying Error.
     static let pushTokenRegistrationFailed = Notification.Name("pushTokenRegistrationFailed")
-
-    /// Posted when the user taps a PocketAide push notification. Object is
-    /// the deep-link URL synthesized from the push payload's `event_id`
-    /// (PRD-10 AC7). PocketAideApp listens via .onReceive and routes the
-    /// app to the PR monitor tab.
-    static let pushNotificationOpened = Notification.Name("pushNotificationOpened")
 }
 
 /// AppDelegate exists solely to receive the APNs callbacks SwiftUI's App
@@ -29,15 +23,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
 
-        // Cold-start path: if the app launched in response to a push tap,
-        // the system surfaces the originating notification here. Post the
-        // deep link async so SwiftUI has time to install onReceive before
-        // we publish — without the dispatch the broadcast arrives during
-        // app construction and is dropped.
-        if let response = launchOptions?[.remoteNotification] as? [AnyHashable: Any],
-           let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: response) {
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .pushNotificationOpened, object: url)
+        // Cold-start path: the system surfaces the originating notification
+        // here when the app launched in response to a push tap. Hand the URL
+        // to DeepLinkRouter — it's an @Published store, so SwiftUI picks it
+        // up when the scene mounts even if the assignment happens before the
+        // scene has installed its observer.
+        if let response = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
+            NSLog("[AppDelegate] cold-start launchOptions push payload: %@", String(describing: response))
+            if let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: response) {
+                Task { @MainActor in
+                    DeepLinkRouter.shared.receive(url)
+                }
             }
         }
         return true
@@ -72,15 +68,20 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     /// launch). PRD-10 AC7: the tap must route the app to the matching
     /// PR-monitor item but MUST NOT acknowledge it (AC12 explicit-button
     /// rule). We synthesize a deep-link URL from the payload's `event_id`
-    /// and broadcast it; PocketAideApp consumes the broadcast.
+    /// and hand it to DeepLinkRouter; the scene observes that store.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let info = response.notification.request.content.userInfo
+        NSLog("[AppDelegate] didReceive response userInfo=%@", String(describing: info))
         if let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: info) {
-            NotificationCenter.default.post(name: .pushNotificationOpened, object: url)
+            Task { @MainActor in
+                DeepLinkRouter.shared.receive(url)
+            }
+        } else {
+            NSLog("[AppDelegate] didReceive response: no event_id in payload, skipping deep link")
         }
         completionHandler()
     }
