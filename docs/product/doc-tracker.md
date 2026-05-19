@@ -97,15 +97,10 @@
 - 대화 이력 보존 범위 (호출 간/호스트 앱 간 세션 정책).
 
 ### PRD-10 (GitHub PR·CI 모니터링) 관련
-- 백그라운드 폴링 주기 vs. 서버 웹훅 + APNs 푸시 모델 선택.
-- 서버 컴포넌트(기존 Go 백엔드) 활용 범위.
-- "관심 PR"의 범위 (작성자/리뷰어 한정 vs. CODEOWNERS·팀 리뷰 포함).
-- GitHub Enterprise 지원 여부.
-- CI 시스템 범위 (GitHub Actions 한정 vs. Checks API 전체).
-- GitHub 연결 방식 (OAuth vs. Personal Access Token).
-- 알림 이력 보존 정책 (영구 / N일 / 확인 시 삭제). 잠정 영구 보존.
-- 모니터링 화면 구성 (열린 PR 목록 + 알림 이력을 동일 화면 / 별도 탭).
-- V9 가치 원안 표현("개발 경험을 줄인다")이 의도(개발 경험에서 발생하는 마찰 감소)와 어긋남 → values.md에서 재서술. 의도 확인 필요.
+- **해소 (2026-05-19)**: 푸시 모델(서버 웹훅 → APNs 채택), 서버 컴포넌트 활용(기존 Go 백엔드), CI 범위(`workflow_run` 1차), 매칭 모델(blacklist `user_excluded_repos`), 이력 보존(영구), 화면 구성(7번째 탭 "PR 모니터"), V9 표현(values.md V9 비고 절에서 재서술 완료). → `prd-github-monitor.md` "결정 사항" 절 참조.
+- **잔존**: GitHub Enterprise 지원 여부.
+- **잔존**: CODEOWNERS·팀 리뷰 매칭 (AC2 후속).
+- **후속 AC**: AC1(GitHub 연결 — OAuth vs PAT), AC2~AC5(PR 목록·필터·새로고침·CI 상태), AC8(알림 설정 UI), AC9(오류 배너), AC10(빈/로딩 상태) — 이번 범위 제외.
 
 ---
 
@@ -127,3 +122,4 @@
 | 2026-05-07 | PRD-9 키보드 확장 전면 재작성 (고정 명령 메뉴 → 자연어 대화 + 전면 대화 UI). 가치 매핑 V7 단독 → V5+V7. PRD-7에 키보드 전용 인식기 AC6 추가. values.md "가치 간 관계"에서 V7 단독 진술 정정 (V5와 보완 관계로). | PRD-9 AC8개 / PRD-7 AC5개 (47개) | PRD-9 AC13개 / PRD-7 AC6개 (53개) |
 | 2026-05-13 | V9(개발 워크플로우 인지 부하 감소) 추가 및 PRD-10(GitHub PR·CI 모니터링 화면 + CI 완료 푸시 알림) 신규 작성. | 가치 8개 / PRD 9개 / AC 53개 | 가치 9개 / PRD 10개 / AC 63개 |
 | 2026-05-18 | PRD-10에 AC11(알림 이력 영속화)·AC12(명시적 확인 처리) 추가, AC7(푸시 탭) 보완(진입/라우팅과 확인 처리 분리 명시), 열린 질문 2건 추가(이력 보존 정책, 화면 구성). | AC 63개 | AC 65개 |
+| 2026-05-19 | PRD-10 AC6 재서술(blacklist 매칭·workflow_run 1차·PR 없는 케이스 포함), "결정 사항"·"운영 노트"·"후속 작업" 절 신설. AC6/7/11/12 구현 진행(backend stores + handlers + dispatch 재설계, iOS PR 모니터 탭·deep-link). 열린 질문 9건 중 7건 해소, 2건 잔존(GitHub Enterprise, CODEOWNERS). | PRD-10 열린 질문 9건 | 해소 7건 / 잔존 2건 |

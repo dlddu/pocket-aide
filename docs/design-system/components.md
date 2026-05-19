@@ -108,6 +108,8 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
   - `routine-card`: 헤더(아이콘+제목+%) + 진행률 + 단계 리스트
   - `note-card`: 임시공간 메모 카드 (살짝 톤 다른 배경 `#FBF7EC`)
   - `dimmed`: `bg-white/50 opacity-60` (완료된 task)
+  - `history-item.unacked` (PR 모니터, PRD-10 AC11/12): surface + 좌측 3px `--accent`(인디고) 보더 + 나머지 1px `--rule` 보더 + 상태 원형 배지(성공 `--forest` / 실패 `--destructive`) + 외부 링크 칩 3개(PR · 커밋 · 런) + 명시적 "확인" 버튼(영역 강조색 채움). 옵션: `pulse-glow` 변형 — 푸시 진입 직후 카드만 `--accent-strong` 4~6% 알파 외곽 링이 펄스. 5초 후 자동 해제(자세한 동작은 `tokens.md` §1.11 마지막 항목).
+  - `history-item.acked` (PR 모니터): `bg-[var(--bg)]/60` + `border border-dashed border-[var(--rule)]` + `opacity-70` + 본문 텍스트 `line-through decoration-stone-300`. 상태 배지는 stone-300(중립)으로 다운그레이드, "확인 · YYYY-MM-DD HH:MM" 메타가 본문 아래 작은 글씨로. ack 트리거는 **본 변형 외부의 "확인" 버튼 클릭만**(외부 링크 칩 탭이나 푸시 탭은 ack 미트리거 — AC12).
 
 ### `SectionHeader`
 리스트 안의 섹션 구분자. 좌측 제목 + 우측 메타(카운트·날짜).
@@ -223,6 +225,8 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 | `AreaStrip` | 6종 (영역별) | 영역 강조색 |
 | `AreaLabel` | 6종 + 시스템 통합 | 영역 강조색 |
 | `Card.task-card` | 6종 | 영역 ink, rule, soft |
+| `Card.history-item.unacked` | PR 모니터 영역 전용 | §1.11 인디고 + 의미 토큰(forest/destructive) |
+| `Card.history-item.acked` | PR 모니터 영역 전용 | §1.11 인디고 + stone(중립) |
 | `CheckCircle` | 6종 | 영역 강조색 |
 | `ChatBubble` | AI 채팅 영역 전용 | sage, ink |
 | `Composer` | AI 채팅 / 시스템 통합 | 영역에 따름 |
