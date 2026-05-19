@@ -215,9 +215,7 @@ struct PRMonitorHistoryRow: View {
     @ViewBuilder
     private var highlightOverlay: some View {
         if isHighlighted {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(DesignTokens.StatusColor.arrivalGlow.opacity(0.55), lineWidth: 3)
-                .blur(radius: 1.5)
+            ArrivalGlowOverlay()
         }
     }
 
@@ -276,4 +274,27 @@ struct PRMonitorHistoryRow: View {
     }()
 
     private static let relativeFormatter = RelativeDateTimeFormatter()
+}
+
+/// Push-arrival highlight (AC7). Pulse animates the ring thickness + alpha +
+/// drop-shadow so a freshly-routed card visibly throbs against the rest of
+/// the list. Auto-stops when the parent removes the overlay (5s after route).
+private struct ArrivalGlowOverlay: View {
+    @State private var pulse = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .stroke(
+                DesignTokens.StatusColor.arrivalGlow.opacity(pulse ? 0.95 : 0.55),
+                lineWidth: pulse ? 6 : 3
+            )
+            .shadow(
+                color: DesignTokens.StatusColor.arrivalGlow.opacity(pulse ? 0.6 : 0.3),
+                radius: pulse ? 22 : 10,
+                x: 0,
+                y: 6
+            )
+            .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: pulse)
+            .onAppear { pulse = true }
+    }
 }
