@@ -56,6 +56,12 @@ struct PRMonitorView: View {
         }
         .onChange(of: highlightedEventID) { _, newValue in
             scheduleHighlightClear(for: newValue)
+            // Foreground push tap: highlight is set but viewModel.items may be
+            // stale and not yet contain the newly-arrived event. Re-fetch so
+            // the matching card actually exists in the list and can light up.
+            if newValue != nil {
+                Task { await viewModel.load() }
+            }
         }
         .onAppear { scheduleHighlightClear(for: highlightedEventID) }
         .sheet(isPresented: $showingExcludedSheet) {
