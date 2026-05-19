@@ -15,24 +15,38 @@ struct PocketAideApp: App {
             RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID)
                 .environmentObject(auth)
                 .task { await auth.bootstrap() }
-                .onChange(of: scenePhase) { _, newPhase in
+                .onChange(of: scenePhase) { oldPhase, newPhase in
+                    NSLog("[PocketAideApp] scenePhase %@ -> %@",
+                          String(describing: oldPhase), String(describing: newPhase))
                     if newPhase == .active {
                         Task { await auth.refreshPushAuthorization() }
-                        // Drain any URL queued before the scene was active.
-                        if let pending = deepLinkRouter.pendingURL {
-                            NSLog("[PocketAideApp] scene active, draining pending URL %@", pending.absoluteString)
-                            handleDeepLink(pending)
-                            deepLinkRouter.pendingURL = nil
-                        }
+                        drainPendingURL(label: "scene-active")
                     }
                 }
                 .onOpenURL { url in handleDeepLink(url) }
                 .onChange(of: deepLinkRouter.pendingURL) { _, url in
-                    guard let url else { return }
-                    NSLog("[PocketAideApp] pendingURL changed -> %@", url.absoluteString)
-                    handleDeepLink(url)
-                    deepLinkRouter.pendingURL = nil
+                    guard url != nil else { return }
+                    drainPendingURL(label: "router-onChange")
                 }
+        }
+    }
+
+    /// Pull the pending deep link out of the router and apply it on the next
+    /// main-runloop turn. Async-dispatch is the safety belt that fixes the
+    /// "background → push tap → wrong tab" symptom: when SwiftUI processes
+    /// the scene activation, the TabView re-installs its selection binding
+    /// AFTER the @StateObject's value change has fired. A synchronous
+    /// selectedTab = .prMonitor here loses the race; deferring one turn
+    /// guarantees the TabView is ready to observe the update.
+    private func drainPendingURL(label: String) {
+        guard let pending = deepLinkRouter.pendingURL else {
+            NSLog("[PocketAideApp] drainPendingURL(%@) called with no pending URL", label)
+            return
+        }
+        NSLog("[PocketAideApp] drainPendingURL(%@) %@", label, pending.absoluteString)
+        deepLinkRouter.pendingURL = nil
+        DispatchQueue.main.async {
+            handleDeepLink(pending)
         }
     }
 
