@@ -3,12 +3,18 @@ import SwiftUI
 import UIKit
 
 enum RootTab: Hashable {
-    case chat, scratchpad, personal, work, routines, affirmations
+    case chat, scratchpad, personal, work, routines, affirmations, prMonitor
 }
 
 struct RootView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Binding var selectedTab: RootTab
+    @Binding var highlightedEventID: Int64?
+
+    init(selectedTab: Binding<RootTab>, highlightedEventID: Binding<Int64?> = .constant(nil)) {
+        _selectedTab = selectedTab
+        _highlightedEventID = highlightedEventID
+    }
 
     /// LoginUITests still target HelloWorldView's identifiers
     /// (SignedInLabel, SignOutButton). Tests opt in by setting
@@ -63,6 +69,23 @@ struct RootView: View {
         .accessibilityIdentifier("PushDeniedBanner")
     }
 
+    private var activeTint: Color {
+        // SwiftUI applies `.tint` globally to the TabView; we still want each
+        // tab's selected state to match its area accent. Picking the active
+        // tab's accent at render time keeps the visual identity consistent
+        // for the PR-monitor and affirmations tabs (the two with the loudest
+        // custom palettes).
+        switch selectedTab {
+        case .prMonitor: return DesignTokens.Color.accent(.prMonitor)
+        case .affirmations: return DesignTokens.Color.accent(.affirmations)
+        case .personal: return DesignTokens.Color.accent(.personal)
+        case .work: return DesignTokens.Color.accent(.work)
+        case .routines: return DesignTokens.Color.accent(.routines)
+        case .chat: return DesignTokens.Color.accent(.aiChat)
+        case .scratchpad: return DesignTokens.Color.accent(.scratchpad)
+        }
+    }
+
     private var signedInTabs: some View {
         // NOTE: `.accessibilityIdentifier` is intentionally NOT applied to tab
         // children. On iOS 26 SwiftUI cascades that identifier to every
@@ -95,7 +118,11 @@ struct RootView: View {
             AffirmationsView()
                 .tabItem { Label("다짐", systemImage: "heart.fill") }
                 .tag(RootTab.affirmations)
+
+            PRMonitorView(highlightedEventID: $highlightedEventID)
+                .tabItem { Label("PR 모니터", systemImage: "checkmark.seal") }
+                .tag(RootTab.prMonitor)
         }
-        .tint(DesignTokens.Color.accent(.affirmations))
+        .tint(activeTint)
     }
 }

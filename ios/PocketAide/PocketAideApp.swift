@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 @main
@@ -6,10 +7,11 @@ struct PocketAideApp: App {
     @StateObject private var auth = AppAuthCoordinator()
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: RootTab = .affirmations
+    @State private var highlightedEventID: Int64?
 
     var body: some Scene {
         WindowGroup {
-            RootView(selectedTab: $selectedTab)
+            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID)
                 .environmentObject(auth)
                 .task { await auth.bootstrap() }
                 .onChange(of: scenePhase) { _, newPhase in
@@ -18,6 +20,11 @@ struct PocketAideApp: App {
                     }
                 }
                 .onOpenURL { url in handleDeepLink(url) }
+                .onReceive(NotificationCenter.default.publisher(for: .pushNotificationOpened)) { note in
+                    if let url = note.object as? URL {
+                        handleDeepLink(url)
+                    }
+                }
         }
     }
 
@@ -29,6 +36,18 @@ struct PocketAideApp: App {
         switch url.host {
         case "affirmations":
             selectedTab = .affirmations
+        case "pr-monitor":
+            selectedTab = .prMonitor
+            // Optional eventId query item — set so PRMonitorView can
+            // highlight the matching card. PRMonitorView clears it after
+            // its arrival window expires.
+            if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
+               let raw = comps.queryItems?.first(where: { $0.name == "eventId" })?.value,
+               let parsed = Int64(raw) {
+                highlightedEventID = parsed
+            } else {
+                highlightedEventID = nil
+            }
         default:
             break
         }

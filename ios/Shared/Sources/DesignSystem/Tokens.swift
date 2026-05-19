@@ -10,6 +10,22 @@ public enum DesignTokens {
         case affirmations
         case voice
         case system
+        /// §1.11 PR 모니터 영역 — cool indigo. Used by the GitHub PR-monitor
+        /// 7th-tab screen (PRD-10).
+        case prMonitor
+    }
+
+    /// Cross-area semantic colors used by PR monitor cards.
+    /// Defined as direct sRGB literals (not asset references) because they
+    /// borrow §1.5 (forest) / §1.10 (destructive) — declaring them on the
+    /// prMonitor asset would duplicate the source-of-truth in §1.11.
+    public enum StatusColor {
+        /// `--forest` borrowed from §1.5 routines area for CI success.
+        public static let success = SwiftUI.Color(red: 0x4F / 255.0, green: 0x6E / 255.0, blue: 0x5C / 255.0)
+        /// `--destructive` borrowed from §1.10 (affirmations) for CI failure.
+        public static let failure = SwiftUI.Color(red: 0x9C / 255.0, green: 0x3F / 255.0, blue: 0x2D / 255.0)
+        /// Deeper accent for the push-arrival pulse glow (`--accent-strong`).
+        public static let arrivalGlow = SwiftUI.Color(red: 0x3D / 255.0, green: 0x2F / 255.0, blue: 0x8E / 255.0)
     }
 
     public enum Color {
@@ -121,6 +137,7 @@ public extension DesignTokens.Area {
         case .affirmations: return "Affirmations"
         case .voice: return "Voice"
         case .system: return "System"
+        case .prMonitor: return "PR · Monitor"
         }
     }
 }
