@@ -90,6 +90,7 @@ struct PRMonitorView: View {
                 .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
                 Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("prmonitor.error.state")
         } else if viewModel.items.isEmpty {
             VStack(spacing: DesignTokens.Spacing.sm) {
@@ -102,6 +103,7 @@ struct PRMonitorView: View {
                     .foregroundStyle(DesignTokens.Color.ink(.prMonitor).opacity(0.55))
                 Spacer()
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("prmonitor.empty.state")
         } else {
             historyList
