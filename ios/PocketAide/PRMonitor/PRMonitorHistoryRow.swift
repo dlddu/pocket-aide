@@ -131,30 +131,33 @@ struct PRMonitorHistoryRow: View {
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
+                .buttonStyle(.borderless)
                 .accessibilityIdentifier("prmonitor.row.\(item.id).ack.button")
             }
         }
     }
 
+    @ViewBuilder
     private func linkChip(label: String, url: String, identifier: String) -> some View {
-        Button {
-            if let u = URL(string: url) {
-                #if canImport(UIKit)
-                UIApplication.shared.open(u)
-                #endif
+        // Link instead of Button so SwiftUI's List doesn't merge the link tap
+        // into the row's primary action — i.e. tapping "↗ PR" must open
+        // GitHub WITHOUT also triggering the explicit 확인 button next to it
+        // (AC12: external link taps never acknowledge).
+        if let dest = URL(string: url) {
+            Link(destination: dest) {
+                Text("↗ \(label)")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
+                    )
+                    .foregroundStyle(.secondary)
             }
-        } label: {
-            Text("↗ \(label)")
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
-                .padding(.vertical, 4)
-                .padding(.horizontal, DesignTokens.Spacing.sm)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
-                )
-                .foregroundStyle(.secondary)
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier(identifier)
         }
-        .accessibilityIdentifier(identifier)
     }
 
     private var rowBackground: some View {
