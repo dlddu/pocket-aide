@@ -22,7 +22,7 @@ open docs/mockups/index.html
 | 04 | `screen-todo-personal.html` | 개인 — 할 일 | PRD-3 | AC3 영역별 시각 분리 (terracotta) |
 | 05 | `screen-todo-work.html` | 회사 — 할 일 | PRD-3 | AC1 회사 영역, AC4 영역 검색 분리 (slate) |
 | 06 | `screen-routines.html` | 루틴 | PRD-2 | AC1~4 단계·진행률·30일 히트맵 |
-| 07 | `screen-affirmations.html` | 다짐 | PRD-5 | AC2 회전 노출, AC3 우선순위, AC5 TTS |
+| 07 | `screen-affirmations.html` | 다짐 | PRD-5 | AC2 회전 노출, AC3 우선순위 |
 
 ### 시스템 통합
 
