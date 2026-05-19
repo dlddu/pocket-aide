@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 public enum DesignTokens {
     public enum Area: String, CaseIterable, Sendable {
@@ -30,28 +33,79 @@ public enum DesignTokens {
 
     public enum Color {
         public static func surface(_ area: Area) -> SwiftUI.Color {
-            SwiftUI.Color(asset(area, "surface"), bundle: .module)
+            resolved(area, "surface")
         }
 
         public static func ink(_ area: Area) -> SwiftUI.Color {
-            SwiftUI.Color(asset(area, "ink"), bundle: .module)
+            resolved(area, "ink")
         }
 
         public static func accent(_ area: Area) -> SwiftUI.Color {
-            SwiftUI.Color(asset(area, "accent"), bundle: .module)
+            resolved(area, "accent")
         }
 
         public static func rule(_ area: Area) -> SwiftUI.Color {
-            SwiftUI.Color(asset(area, "rule"), bundle: .module)
+            resolved(area, "rule")
         }
 
         public static func soft(_ area: Area) -> SwiftUI.Color {
-            SwiftUI.Color(asset(area, "soft"), bundle: .module)
+            resolved(area, "soft")
         }
 
         public static func card(_ area: Area) -> SwiftUI.Color {
-            SwiftUI.Color(asset(area, "card"), bundle: .module)
+            resolved(area, "card")
         }
+
+        /// Try the asset catalog first, then fall back to a hardcoded literal
+        /// when the asset is missing. Without this guard `Color(named:)`
+        /// silently resolves to clear, which on a dark background renders as
+        /// pure black — exactly the symptom we hit on PR-monitor's first
+        /// build before adding fallbacks. Fallback values currently cover
+        /// §1.11 prMonitor only (the area that exhibited the issue); other
+        /// areas keep their existing catalog-only path.
+        private static func resolved(_ area: Area, _ token: String) -> SwiftUI.Color {
+            let name = asset(area, token)
+            #if canImport(UIKit)
+            if let ui = UIColor(named: name, in: .module, compatibleWith: nil) {
+                return SwiftUI.Color(uiColor: ui)
+            }
+            if let fb = prMonitorFallback(area: area, token: token) {
+                return fb
+            }
+            #endif
+            return SwiftUI.Color(name, bundle: .module)
+        }
+
+        #if canImport(UIKit)
+        private static let prMonitorLight: [String: (CGFloat, CGFloat, CGFloat)] = [
+            "surface": (0xEE / 255.0, 0xED / 255.0, 0xF5 / 255.0),
+            "ink":     (0x22 / 255.0, 0x1F / 255.0, 0x33 / 255.0),
+            "accent":  (0x5B / 255.0, 0x4D / 255.0, 0xB8 / 255.0),
+            "rule":    (0xD8 / 255.0, 0xD5 / 255.0, 0xE4 / 255.0),
+            "soft":    (0xDD / 255.0, 0xDA / 255.0, 0xEB / 255.0),
+            "card":    (0xFF / 255.0, 0xFF / 255.0, 0xFF / 255.0),
+        ]
+
+        private static let prMonitorDark: [String: (CGFloat, CGFloat, CGFloat)] = [
+            "surface": (0x22 / 255.0, 0x1C / 255.0, 0x3F / 255.0),
+            "ink":     (0xE0 / 255.0, 0xDC / 255.0, 0xEB / 255.0),
+            "accent":  (0x84 / 255.0, 0x78 / 255.0, 0xD8 / 255.0),
+            "rule":    (0x3F / 255.0, 0x36 / 255.0, 0x5B / 255.0),
+            "soft":    (0x2D / 255.0, 0x27 / 255.0, 0x4E / 255.0),
+            "card":    (0x2D / 255.0, 0x27 / 255.0, 0x4E / 255.0),
+        ]
+
+        private static func prMonitorFallback(area: Area, token: String) -> SwiftUI.Color? {
+            guard area == .prMonitor,
+                  let light = prMonitorLight[token],
+                  let dark = prMonitorDark[token] else { return nil }
+            let dynamic = UIColor { trait in
+                let rgb = trait.userInterfaceStyle == .dark ? dark : light
+                return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1.0)
+            }
+            return SwiftUI.Color(uiColor: dynamic)
+        }
+        #endif
 
         /// Destructive semantic color for the given area.
         ///
