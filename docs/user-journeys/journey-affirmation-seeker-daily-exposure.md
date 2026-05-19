@@ -43,11 +43,11 @@ achieves_values: [V4]
 - **시각화 mockup**: `screen-widget.html` (위젯 다짐 슬라이스)
 - **참조 PRD/AC**: PRD-5 AC4 (위젯 연계), PRD-8 AC5 (자주 읽어줘야 하는 문장 회전 노출)
 
-### S5: 위젯 → 다짐 탭 진입 → 음성으로 듣기
-- **사용자 행동**: 위젯에서 본 문장이 마음에 들어, 다짐 영역을 탭해 앱에 진입한다. 회전 중인 문장을 다시 한 번 탭해 음성으로 듣는다.
-- **시스템 응답**: 위젯 탭 → 다짐 탭으로 진입한다. 문장 탭 시 TTS로 다짐을 음성 출력한다.
+### S5: 위젯 → 다짐 탭 진입
+- **사용자 행동**: 위젯에서 본 문장이 마음에 들어, 다짐 영역을 탭해 앱에 진입한다.
+- **시스템 응답**: 위젯 탭 → 다짐 탭으로 진입한다.
 - **시각화 mockup**: `screen-widget.html` → `screen-affirmations.html`
-- **참조 PRD/AC**: PRD-8 AC8 (위젯 영역 탭 시 앱 진입), PRD-5 AC5 (음성으로 듣기)
+- **참조 PRD/AC**: PRD-8 AC8 (위젯 영역 탭 시 앱 진입)
 
 ## 단계별 mockup 매핑 요약
 
@@ -57,7 +57,7 @@ achieves_values: [V4]
 | S2 | screen-affirmations | 우선순위 설정 |
 | S3 | screen-affirmations | 회전 노출 카드 |
 | S4 | screen-widget | 위젯 다짐 슬라이스 (V4 측면) |
-| S5 | screen-widget → screen-affirmations | 진입 + TTS |
+| S5 | screen-widget → screen-affirmations | 진입 |
 
 ## 시각화 누락 / 열린 항목
 

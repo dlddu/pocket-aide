@@ -5,7 +5,6 @@ import SwiftUI
 struct AffirmationsView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @StateObject private var viewModel: AffirmationsViewModel
-    @StateObject private var tts = TTSPlayer()
 
     @State private var sheetMode: PriorityEditSheet.Mode?
 
@@ -115,29 +114,11 @@ struct AffirmationsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("affirmations.hero.text")
                     Divider().background(DesignTokens.Color.rule(.affirmations))
-                    HStack {
-                        HStack(spacing: 6) {
-                            PriorityDots.horizontal(for: hero.priority)
-                            Text("우선순위 \(hero.priority.displayName)")
-                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
-                                .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
-                        }
-                        Spacer()
-                        Button {
-                            tts.speak(hero.text)
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "speaker.wave.2.fill")
-                                    .font(.system(size: 12))
-                                Text("읽어주기")
-                                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(Capsule().fill(DesignTokens.Color.ink(.affirmations)))
-                            .foregroundStyle(DesignTokens.Color.surface(.affirmations))
-                        }
-                        .accessibilityIdentifier("affirmations.hero.tts")
+                    HStack(spacing: 6) {
+                        PriorityDots.horizontal(for: hero.priority)
+                        Text("우선순위 \(hero.priority.displayName)")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                            .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
                     }
                     HStack {
                         Spacer()
@@ -226,14 +207,6 @@ struct AffirmationsView: View {
                     .font(DesignTokens.Typography.font(size: 15.5, family: .serif))
                     .foregroundStyle(DesignTokens.Color.ink(.affirmations))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    tts.speak(item.text)
-                } label: {
-                    Image(systemName: "speaker.wave.2")
-                        .font(.system(size: 16))
-                        .foregroundStyle(DesignTokens.Color.accent(.affirmations))
-                }
-                .accessibilityIdentifier("affirmations.row.\(item.id).tts")
             }
         }
         .contentShape(Rectangle())

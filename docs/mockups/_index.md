@@ -90,7 +90,7 @@ last_updated: 2026-05-13
 - **시각화 대상**:
   - 여정: `affirmation-seeker:daily-exposure` (S1, S3, S5)
   - 가치: V4 (의도된 반복 노출)
-  - PRD/AC (보조): PRD-5 / AC2 (우선순위), AC3 (회전 노출), AC5 (TTS)
+  - PRD/AC (보조): PRD-5 / AC2 (우선순위), AC3 (회전 노출)
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `다짐 회전 노출` (patterns.md §7)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader`, `AreaLabel`, `Card` (큰, 다짐 카드), `TabBar` (active=다짐)
