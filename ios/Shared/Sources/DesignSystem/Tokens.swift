@@ -77,22 +77,22 @@ public enum DesignTokens {
         }
 
         #if canImport(UIKit)
-        private static let prMonitorLight: [String: (CGFloat, CGFloat, CGFloat)] = [
-            "surface": (0xEE / 255.0, 0xED / 255.0, 0xF5 / 255.0),
-            "ink":     (0x22 / 255.0, 0x1F / 255.0, 0x33 / 255.0),
-            "accent":  (0x5B / 255.0, 0x4D / 255.0, 0xB8 / 255.0),
-            "rule":    (0xD8 / 255.0, 0xD5 / 255.0, 0xE4 / 255.0),
-            "soft":    (0xDD / 255.0, 0xDA / 255.0, 0xEB / 255.0),
-            "card":    (0xFF / 255.0, 0xFF / 255.0, 0xFF / 255.0),
+        private static let prMonitorLight: [String: UIColor] = [
+            "surface": UIColor(red: 0xEE / 255.0, green: 0xED / 255.0, blue: 0xF5 / 255.0, alpha: 1),
+            "ink": UIColor(red: 0x22 / 255.0, green: 0x1F / 255.0, blue: 0x33 / 255.0, alpha: 1),
+            "accent": UIColor(red: 0x5B / 255.0, green: 0x4D / 255.0, blue: 0xB8 / 255.0, alpha: 1),
+            "rule": UIColor(red: 0xD8 / 255.0, green: 0xD5 / 255.0, blue: 0xE4 / 255.0, alpha: 1),
+            "soft": UIColor(red: 0xDD / 255.0, green: 0xDA / 255.0, blue: 0xEB / 255.0, alpha: 1),
+            "card": UIColor(red: 0xFF / 255.0, green: 0xFF / 255.0, blue: 0xFF / 255.0, alpha: 1),
         ]
 
-        private static let prMonitorDark: [String: (CGFloat, CGFloat, CGFloat)] = [
-            "surface": (0x22 / 255.0, 0x1C / 255.0, 0x3F / 255.0),
-            "ink":     (0xE0 / 255.0, 0xDC / 255.0, 0xEB / 255.0),
-            "accent":  (0x84 / 255.0, 0x78 / 255.0, 0xD8 / 255.0),
-            "rule":    (0x3F / 255.0, 0x36 / 255.0, 0x5B / 255.0),
-            "soft":    (0x2D / 255.0, 0x27 / 255.0, 0x4E / 255.0),
-            "card":    (0x2D / 255.0, 0x27 / 255.0, 0x4E / 255.0),
+        private static let prMonitorDark: [String: UIColor] = [
+            "surface": UIColor(red: 0x22 / 255.0, green: 0x1C / 255.0, blue: 0x3F / 255.0, alpha: 1),
+            "ink": UIColor(red: 0xE0 / 255.0, green: 0xDC / 255.0, blue: 0xEB / 255.0, alpha: 1),
+            "accent": UIColor(red: 0x84 / 255.0, green: 0x78 / 255.0, blue: 0xD8 / 255.0, alpha: 1),
+            "rule": UIColor(red: 0x3F / 255.0, green: 0x36 / 255.0, blue: 0x5B / 255.0, alpha: 1),
+            "soft": UIColor(red: 0x2D / 255.0, green: 0x27 / 255.0, blue: 0x4E / 255.0, alpha: 1),
+            "card": UIColor(red: 0x2D / 255.0, green: 0x27 / 255.0, blue: 0x4E / 255.0, alpha: 1),
         ]
 
         private static func prMonitorFallback(area: Area, token: String) -> SwiftUI.Color? {
@@ -100,8 +100,7 @@ public enum DesignTokens {
                   let light = prMonitorLight[token],
                   let dark = prMonitorDark[token] else { return nil }
             let dynamic = UIColor { trait in
-                let rgb = trait.userInterfaceStyle == .dark ? dark : light
-                return UIColor(red: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1.0)
+                trait.userInterfaceStyle == .dark ? dark : light
             }
             return SwiftUI.Color(uiColor: dynamic)
         }
