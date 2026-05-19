@@ -87,41 +87,32 @@ struct RootView: View {
     }
 
     private var signedInTabs: some View {
-        // NOTE: `.accessibilityIdentifier` is intentionally NOT applied to tab
-        // children. On iOS 26 SwiftUI cascades that identifier to every
-        // descendant accessibility element, overriding the more specific
-        // identifiers we set inside (e.g. `screen.header.title`,
-        // `affirmations.add.button`). UI tests query inner identifiers
-        // directly, so the cascade did harm without helping the tab bar
-        // (which uses the system Tab type and ignores the modifier anyway).
+        // iOS 18+ Tab(value:) API — selection이 customization/More 안 자식까지
+        // 전파되어 deep link로 PR 모니터 탭을 외부에서 활성화할 수 있다.
+        // 기존 .tabItem + .tag(RootTab.x) 조합은 More로 묶이는 7번째 탭에
+        // selectedTab 변경이 닿지 않는 한계가 있었음.
         TabView(selection: $selectedTab) {
-            ChatTab()
-                .tabItem { Label("채팅", systemImage: "bubble.left.and.bubble.right") }
-                .tag(RootTab.chat)
-
-            ScratchpadTab()
-                .tabItem { Label("임시공간", systemImage: "doc.text") }
-                .tag(RootTab.scratchpad)
-
-            PersonalTab()
-                .tabItem { Label("개인", systemImage: "person") }
-                .tag(RootTab.personal)
-
-            WorkTab()
-                .tabItem { Label("회사", systemImage: "briefcase") }
-                .tag(RootTab.work)
-
-            RoutinesTab()
-                .tabItem { Label("루틴", systemImage: "arrow.triangle.2.circlepath") }
-                .tag(RootTab.routines)
-
-            AffirmationsView()
-                .tabItem { Label("다짐", systemImage: "heart.fill") }
-                .tag(RootTab.affirmations)
-
-            PRMonitorView(highlightedEventID: $highlightedEventID)
-                .tabItem { Label("PR 모니터", systemImage: "checkmark.seal") }
-                .tag(RootTab.prMonitor)
+            Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
+                ChatTab()
+            }
+            Tab("임시공간", systemImage: "doc.text", value: RootTab.scratchpad) {
+                ScratchpadTab()
+            }
+            Tab("개인", systemImage: "person", value: RootTab.personal) {
+                PersonalTab()
+            }
+            Tab("회사", systemImage: "briefcase", value: RootTab.work) {
+                WorkTab()
+            }
+            Tab("루틴", systemImage: "arrow.triangle.2.circlepath", value: RootTab.routines) {
+                RoutinesTab()
+            }
+            Tab("다짐", systemImage: "heart.fill", value: RootTab.affirmations) {
+                AffirmationsView()
+            }
+            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
+                PRMonitorView(highlightedEventID: $highlightedEventID)
+            }
         }
         .tint(activeTint)
     }
