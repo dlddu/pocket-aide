@@ -87,11 +87,18 @@ struct RootView: View {
     }
 
     private var signedInTabs: some View {
+        // 탭 순서: 구현된 탭(다짐·PR 모니터)을 앞에 두고 placeholder를 뒤로.
+        // iPhone compact는 첫 5개를 직접 노출하고 6번째부터 More로 보내므로,
+        // PR 모니터가 직접 탭으로 노출되어 deep link selection이 즉시 작동한다.
         // iOS 18+ Tab(value:) API — selection이 customization/More 안 자식까지
         // 전파되어 deep link로 PR 모니터 탭을 외부에서 활성화할 수 있다.
-        // 기존 .tabItem + .tag(RootTab.x) 조합은 More로 묶이는 7번째 탭에
-        // selectedTab 변경이 닿지 않는 한계가 있었음.
         TabView(selection: $selectedTab) {
+            Tab("다짐", systemImage: "heart.fill", value: RootTab.affirmations) {
+                AffirmationsView()
+            }
+            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
+                PRMonitorView(highlightedEventID: $highlightedEventID)
+            }
             Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
                 ChatTab()
             }
@@ -106,12 +113,6 @@ struct RootView: View {
             }
             Tab("루틴", systemImage: "arrow.triangle.2.circlepath", value: RootTab.routines) {
                 RoutinesTab()
-            }
-            Tab("다짐", systemImage: "heart.fill", value: RootTab.affirmations) {
-                AffirmationsView()
-            }
-            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
-                PRMonitorView(highlightedEventID: $highlightedEventID)
             }
         }
         .tint(activeTint)
