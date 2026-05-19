@@ -111,13 +111,28 @@ struct PRMonitorHistoryRow: View {
         if item.acknowledgedAt == nil {
             HStack(spacing: DesignTokens.Spacing.sm) {
                 if let url = item.prURL {
-                    linkChip(label: "PR", url: url, identifier: "prmonitor.row.\(item.id).link.pr")
+                    linkChip(
+                        label: "PR",
+                        systemImage: "arrow.triangle.pull",
+                        url: url,
+                        identifier: "prmonitor.row.\(item.id).link.pr"
+                    )
                 }
                 if let url = item.commitURL {
-                    linkChip(label: "커밋", url: url, identifier: "prmonitor.row.\(item.id).link.commit")
+                    linkChip(
+                        label: "커밋",
+                        systemImage: "circle.fill",
+                        url: url,
+                        identifier: "prmonitor.row.\(item.id).link.commit"
+                    )
                 }
                 if let url = item.runURL {
-                    linkChip(label: "런", url: url, identifier: "prmonitor.row.\(item.id).link.run")
+                    linkChip(
+                        label: "런",
+                        systemImage: "play.fill",
+                        url: url,
+                        identifier: "prmonitor.row.\(item.id).link.run"
+                    )
                 }
                 Spacer()
                 Button {
@@ -138,22 +153,28 @@ struct PRMonitorHistoryRow: View {
     }
 
     @ViewBuilder
-    private func linkChip(label: String, url: String, identifier: String) -> some View {
+    private func linkChip(label: String, systemImage: String, url: String, identifier: String) -> some View {
         // Link instead of Button so SwiftUI's List doesn't merge the link tap
-        // into the row's primary action — i.e. tapping "↗ PR" must open
+        // into the row's primary action — i.e. tapping the chip must open
         // GitHub WITHOUT also triggering the explicit 확인 button next to it
-        // (AC12: external link taps never acknowledge).
+        // (AC12: external link taps never acknowledge). Each chip carries an
+        // action-specific symbol so the destination is recognisable at a
+        // glance: PR(pull arrow), commit(dot), run(play).
         if let dest = URL(string: url) {
             Link(destination: dest) {
-                Text("↗ \(label)")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
-                    )
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(label)
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                }
+                .padding(.vertical, 4)
+                .padding(.horizontal, DesignTokens.Spacing.sm)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
+                )
+                .foregroundStyle(.secondary)
             }
             .buttonStyle(.borderless)
             .accessibilityIdentifier(identifier)
