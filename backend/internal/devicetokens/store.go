@@ -1,6 +1,7 @@
 // Package devicetokens stores APNs device tokens registered by iOS clients.
-// Broadcast-style fan-out: ListAll returns every token across all users so the
-// PR-monitor pipeline can push to each registered device.
+// Per-user fan-out: ListByUserID returns tokens for a single user so the
+// PR-monitor pipeline can push only to that user's devices after blacklist
+// matching.
 package devicetokens
 
 import (
@@ -34,12 +35,36 @@ func (s *Store) Upsert(ctx context.Context, userID int64, token string) error {
 	return nil
 }
 
-// ListAll returns every registered token across all users. The PR-monitor
-// pipeline broadcasts to all of them — single-user assumption per the draft.
+// ListAll returns every registered token across all users. Kept for tests
+// that pre-date per-user fan-out; production dispatch should use
+// ListByUserID for the blacklist-matched push path.
 func (s *Store) ListAll(ctx context.Context) ([]string, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT token FROM device_tokens`)
 	if err != nil {
 		return nil, fmt.Errorf("list device tokens: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make([]string, 0)
+	for rows.Next() {
+		var t string
+		if err := rows.Scan(&t); err != nil {
+			return nil, fmt.Errorf("scan device token: %w", err)
+		}
+		out = append(out, t)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows err: %w", err)
+	}
+	return out, nil
+}
+
+// ListByUserID returns every token registered for a single user. A user with
+// no devices returns an empty slice (not an error).
+func (s *Store) ListByUserID(ctx context.Context, userID int64) ([]string, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT token FROM device_tokens WHERE user_id = ?`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list device tokens for user: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 

@@ -30,14 +30,25 @@ func completedWorkflowRun() map[string]any {
 		"action": "completed",
 		"repository": map[string]any{
 			"full_name": "dlddu/pocket-aide",
+			"html_url":  "https://github.com/dlddu/pocket-aide",
 		},
 		"workflow_run": map[string]any{
 			"name":        "CI",
 			"head_branch": "main",
+			"head_sha":    "a3f9c27deadbeef",
 			"conclusion":  "failure",
 			"html_url":    "https://github.com/dlddu/pocket-aide/actions/runs/1",
 		},
 	}
+}
+
+func completedWorkflowRunWithPR(number int) map[string]any {
+	p := completedWorkflowRun()
+	wr := p["workflow_run"].(map[string]any)
+	wr["pull_requests"] = []map[string]any{
+		{"number": number, "title": "feat(x): hello"},
+	}
+	return p
 }
 
 // recorderConsumer wires a Consumer with a dispatch func that records every
@@ -69,6 +80,35 @@ func TestProcess_HappyPath(t *testing.T) {
 	if evt.Repo != "dlddu/pocket-aide" || evt.WorkflowName != "CI" ||
 		evt.HeadBranch != "main" || evt.Conclusion != "failure" {
 		t.Errorf("unexpected event: %+v", evt)
+	}
+	if evt.CommitURL != "https://github.com/dlddu/pocket-aide/commit/a3f9c27deadbeef" {
+		t.Errorf("commit url: got %q", evt.CommitURL)
+	}
+	if evt.PRNumber != 0 || evt.PRTitle != "" || evt.PRURL != "" {
+		t.Errorf("expected zero PR fields when pull_requests missing, got n=%d t=%q u=%q",
+			evt.PRNumber, evt.PRTitle, evt.PRURL)
+	}
+}
+
+func TestProcess_WithPullRequest(t *testing.T) {
+	c, got := recorderConsumer(t)
+	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRunWithPR(42))
+
+	if err := c.process(context.Background(), raw); err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+	if len(*got) != 1 {
+		t.Fatalf("dispatch invocations: got %d want 1", len(*got))
+	}
+	evt := (*got)[0]
+	if evt.PRNumber != 42 {
+		t.Errorf("pr number: got %d want 42", evt.PRNumber)
+	}
+	if evt.PRTitle != "feat(x): hello" {
+		t.Errorf("pr title: got %q", evt.PRTitle)
+	}
+	if evt.PRURL != "https://github.com/dlddu/pocket-aide/pull/42" {
+		t.Errorf("pr url: got %q", evt.PRURL)
 	}
 }
 

@@ -39,8 +39,16 @@ aps-environment entitlement", the profile was not re-issued after step 1.
 1. **Create an SQS Standard queue**, e.g.
    `pocket-aide-github-webhooks` in `ap-northeast-2`.
    - Receive Message Wait Time: `20s` (matches the consumer's long poll).
-   - Visibility Timeout: `30s` (sane default; consumer deletes on success
-     or unrecoverable failure).
+   - **Visibility Timeout: `30s`** — required. The consumer SKIPS
+     `DeleteMessage` whenever `process()` returns an error (including
+     transient ones like a SQLite busy lock or a notification-history
+     write failure). SQS then re-delivers after this many seconds. Setting
+     a longer timeout (e.g. 5 min) delays retries unnecessarily; setting
+     it shorter risks double-dispatch when the consumer is slow. The
+     consumer keeps `DeleteMessage` only on success (no error returned).
+   - Configure a Dead Letter Queue with `maxReceiveCount=5` so messages
+     that *can never* succeed (malformed envelope, malformed payload)
+     don't stall the queue forever.
 2. **Create / update the IAM role** the backend pod assumes. Required
    actions on the queue:
    - `sqs:ReceiveMessage`
@@ -259,11 +267,39 @@ Tests skip automatically when `AWS_ENDPOINT_URL` is not set, so a plain
 
 These are intentionally NOT implemented and would be future work:
 
-- Idempotency / dedupe of repeated webhook deliveries.
-- Push retries with exponential backoff.
+- Idempotency / dedupe of repeated webhook deliveries (SQS at-least-once
+  semantics now matter more — see §2 visibility-timeout note. AC11 history
+  rows are not deduplicated, so a webhook redelivery + consumer success
+  produces two rows).
+- Push retries with exponential backoff for transient APNs errors.
 - Cleanup of `BadDeviceToken` / `Unregistered` rows from `device_tokens`.
-- Per-user notification preferences UI.
-- PR list screen, in-app navigation from a tapped notification, GitHub
-  account linking (PRD AC1, AC2–AC10 except permission denial).
+- AC8 full notification-preferences UI (success/failure on/off, scope of
+  per-repo exclusions). The current implementation surfaces only the
+  blacklist "제외한 레포" sheet from the PR-monitor tab.
+- PR list screen, GitHub account linking (PRD AC1, AC2–AC5, AC8 full,
+  AC9–AC10).
 - IaC for the AWS resources above. All AWS work in this runbook is
   manual; codify it once the feature is past draft.
+
+## 9. AC6/AC7/AC11/AC12 specifics
+
+Backend changes that landed with PRD-10 AC6/7/11/12:
+
+- New tables: `user_excluded_repos` (blacklist for AC6) and
+  `notification_history` (per-user row, AC11). Migrations `0004` / `0005`.
+- New endpoints (auth required):
+  - `GET/POST/DELETE /api/excluded-repos[/{id}]` — blacklist CRUD.
+  - `GET /api/notification-history?limit=&before=` — keyset paginated.
+  - `POST /api/notification-history/{id}/ack` — AC12 explicit ack only.
+- Dispatch (`cmd/server/main.go`) now:
+  1. Resolves matched users (`ListUserIDsExcluding`).
+  2. Writes one history row per matched user in a single transaction.
+  3. Sends APNs per token, with custom data `{ "event_id": <id> }`.
+  - History persistence failure aborts the dispatch and leaves the SQS
+    message for retry (§2 visibility-timeout note).
+  - APNs failures are logged and skipped per-token; the history row
+    remains so the user still sees the unacked card on next app open.
+- iOS: PR monitor is the 7th tab (`RootTab.prMonitor`). Push tap →
+  deep-link `pocketaide://pr-monitor?eventId=<id>` → tab switch with the
+  matching card highlighted for 5 seconds. The highlight does NOT ack;
+  the explicit "확인" button is the only ack trigger (AC12).

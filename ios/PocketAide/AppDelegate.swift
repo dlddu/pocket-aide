@@ -1,4 +1,5 @@
 import Foundation
+import PocketAideAPI
 import UIKit
 import UserNotifications
 
@@ -21,6 +22,20 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+
+        // Cold-start path: the system surfaces the originating notification
+        // here when the app launched in response to a push tap. Hand the URL
+        // to DeepLinkRouter — it's an @Published store, so SwiftUI picks it
+        // up when the scene mounts even if the assignment happens before the
+        // scene has installed its observer.
+        if let response = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
+            NSLog("[AppDelegate] cold-start launchOptions push payload: %@", String(describing: response))
+            if let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: response) {
+                Task { @MainActor in
+                    DeepLinkRouter.shared.receive(url)
+                }
+            }
+        }
         return true
     }
 
@@ -47,5 +62,27 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound, .badge])
+    }
+
+    /// Fires when the user taps a notification (foreground or background
+    /// launch). PRD-10 AC7: the tap must route the app to the matching
+    /// PR-monitor item but MUST NOT acknowledge it (AC12 explicit-button
+    /// rule). We synthesize a deep-link URL from the payload's `event_id`
+    /// and hand it to DeepLinkRouter; the scene observes that store.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let info = response.notification.request.content.userInfo
+        NSLog("[AppDelegate] didReceive response userInfo=%@", String(describing: info))
+        if let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: info) {
+            Task { @MainActor in
+                DeepLinkRouter.shared.receive(url)
+            }
+        } else {
+            NSLog("[AppDelegate] didReceive response: no event_id in payload, skipping deep link")
+        }
+        completionHandler()
     }
 }

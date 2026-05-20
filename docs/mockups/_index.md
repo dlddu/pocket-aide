@@ -140,21 +140,21 @@ last_updated: 2026-05-13
 - **시각화 대상**:
   - 여정: (미정의)
   - 가치: V9 (개발 워크플로우 인지 부하 감소)
-  - PRD/AC (보조): PRD-10 / AC6 (백그라운드 폴링·CI 완료 푸시 — 성공/실패 양쪽 케이스), AC7 진입점 (푸시 탭 = 라우팅만, 확인 미트리거)
+  - PRD/AC (보조): PRD-10 / AC6 (워크플로우 완료 푸시 — 성공/실패 + PR 연결 있는 케이스 / 없는 fallback 케이스 모두), AC7 진입점 (푸시 탭 = 라우팅만, 확인 미트리거)
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (patterns.md §6.1) — 잠금 화면 위 iOS 알림 스택
-  - 컴포넌트: `IPhoneFrame`, `StatusBar` (잠금화면 변형), 알림 카드(iOS 시스템 컨벤션 차용 — `bg-rgba(28,28,30,0.7)` + `backdrop-blur-2xl`), 상태 아이콘 원형 배지(성공 forest, 실패 terracotta), 그루핑 스택
-  - 토큰: 시스템 통합 (tokens.md §1.8) — 영역 토큰 미사용. PocketAide 앱 아이콘 강조는 회사(slate) 그라디언트(`#7A9BC2`→`#355577`). 상태 색은 영역 외 의미 토큰 차용: 성공 `--forest #4F6E5C`(루틴 영역에서 차용), 실패 `--destructive #9C3F2D`(다짐 영역 §1.10에서 차용). **다른 영역의 강조색을 시스템 영역에서 차용하는 첫 사례 — patterns.md / tokens.md §1.8에 "상태 시그널 차용 규칙" 추가 검토 필요.**
+  - 컴포넌트: `IPhoneFrame`, `StatusBar` (잠금화면 변형), 알림 카드(iOS 시스템 컨벤션 차용 — `bg-rgba(28,28,30,0.7)` + `backdrop-blur-2xl`), 상태 아이콘 원형 배지(성공 forest, 실패 destructive), 그루핑 스택. PR 없는 fallback variant 1종 추가(타이틀 "repo — conclusion" 형태).
+  - 토큰: 시스템 통합 (tokens.md §1.8) — 잠금화면 자체는 iOS 컨벤션. PocketAide 앱 아이콘 강조와 잠금화면 벽지 그라디언트는 §1.11 PR 모니터 인디고(`#8478D8` → `#3D2F8E`). 상태 색은 §1.11의 "상태 시그널 차용 규칙"에 따라 성공 `--forest #4F6E5C`(루틴 영역에서 차용), 실패 `--destructive #9C3F2D`(다짐 영역 §1.10에서 차용).
 
 ## screen-pr-monitor-history.html
 - **시각화 대상**:
   - 여정: (미정의)
   - 가치: V9 (개발 워크플로우 인지 부하 감소)
-  - PRD/AC (보조): PRD-10 / AC7 도착지 (푸시 진입 시 해당 항목 강조, 미확인 유지), AC11 (서버 영속화된 이력 조회 — id·PR 링크 옵션·커밋 링크·런 링크·확인 여부·확인 시각), AC12 (명시적 "확인" 버튼만 처리 트리거 — 외부 링크 탭 미트리거, 확인됨/미확인 시각 구분)
+  - PRD/AC (보조): PRD-10 / AC7 도착지 (푸시 진입 시 해당 항목 강조 — 인디고 글로우, 5초 후 자동 해제, 미확인 유지), AC11 (서버 영속화된 이력 조회 — id·PR 링크 옵션·커밋 링크·런 링크·확인 여부·확인 시각), AC12 (명시적 "확인" 버튼만 처리 트리거 — 외부 링크 탭 미트리거, 확인됨/미확인 시각 구분)
 - **사용 디자인 시스템**:
-  - 패턴: `영역 화면`의 변형 (patterns.md §1) — 메타 화면이므로 탭 활성 없음 + 좌측 상단 "← 설정" 백 버튼. `리스트 + 섹션` (patterns.md §3) — 오늘/어제 그룹 + 상태별 스타일 분기. **본 화면은 영역 6종 어디에도 속하지 않는 메타/도구 화면이므로 patterns.md에 §10 "메타 도구 화면" 패턴 추가 검토 필요.**
-  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip`(slate 차용), `AreaLabel`("GITHUB · MONITOR"), `ScreenHeader`(백버튼+세팅 아이콘 변형), 세그먼티드 토글(열린 PR/이력), `Card.history-item`(미확인=흰색+슬레이트 보더, 확인됨=점선 보더+dim+취소선), 펄스 글로우 카드 변형(푸시 진입 강조), 상태 원형 배지, 외부링크 칩, 확인 버튼(solid=강조 / outline=일반), `TabBar`(전 탭 비활성).
-  - 토큰: 회사(slate, tokens.md §1.2) 차용 — `--bg #EEF2F8`, `--ink #1E2A3A`, `--slate #355577`, `--rule #D6DEE9`, `--soft #DDE5F0`. 상태 시그널은 push 화면과 동일하게 `--forest #4F6E5C` / `--terracotta #9C3F2D`. **회사 영역 토큰을 별도 화면에서 차용한 첫 사례 — V3(영역 분리) 원칙과의 충돌 여부는 검토 필요(PR 모니터는 영역이 아닌 도구이므로 영역 정체성 침해는 아님).**
+  - 패턴: `영역 화면` (patterns.md §1) — PR 모니터는 RootView의 7번째 일상 탭이므로 일반 영역 화면 패턴을 그대로 사용. `리스트 + 섹션` (patterns.md §3) — 오늘/어제 그룹 + 상태별 스타일 분기.
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip`(§1.11 인디고), `AreaLabel`("PR · MONITOR"), `ScreenHeader`(우측 IconCircleButton: 제외 레포 관리), `Card.history-item.unacked`(흰 배경 + 좌측 3px 인디고 보더 + 외부 링크 칩 + "확인" 버튼), `Card.history-item.acked`(점선 보더 + dim + 취소선), 펄스 글로우 카드 변형(푸시 진입 강조 — `--accent-strong`), 상태 원형 배지(성공 forest / 실패 destructive), `TabBar`(PR 모니터 탭 = 7번째 활성).
+  - 토큰: PR 모니터 (§1.11) — `--bg #EEEDF5`, `--ink #221F33`, `--accent #5B4DB8`, `--accent-strong #3D2F8E`, `--rule #D8D5E4`, `--soft #DDDAEB`. 상태 시그널은 §1.11 "상태 시그널 차용 규칙"에 따라 `--forest`/`--destructive` 차용.
 
 ---
 
@@ -193,7 +193,7 @@ last_updated: 2026-05-13
 
 | 패턴 (patterns.md) | 사용 mockup |
 |--------------------|-------------|
-| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit, screen-pr-monitor-history (변형 — 메타 화면) |
+| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit, screen-pr-monitor-history |
 | §2 채팅 화면 | screen-chat-text |
 | §3 리스트 + 섹션 | screen-todo-personal, screen-todo-work, screen-pr-monitor-history |
 | §4 음성 모드 (다크) | screen-chat-voice |

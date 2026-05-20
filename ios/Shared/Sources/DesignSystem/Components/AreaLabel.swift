@@ -40,6 +40,7 @@ public struct AreaLabel: View {
         case .affirmations: return "다짐"
         case .voice: return "Voice"
         case .system: return "System"
+        case .prMonitor: return "PR · Monitor"
         }
     }
 }

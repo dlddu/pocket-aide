@@ -9,8 +9,11 @@
 // expected to hold sqs:SendMessage on this queue; the GitHub-side webhook
 // signature is consumed and discarded by EventBridge before forwarding.
 //
-// Idempotency, retries, and dedupe are intentionally out of scope — the draft
-// validates the message shape and forwards once.
+// Retry semantics: a dispatch func that returns a non-nil error keeps the
+// SQS message on the queue (SkipDeleteMessage on the receive cycle) so it
+// will be re-delivered after the queue's VisibilityTimeout (30s — see PRD
+// operational notes). A DLQ with maxReceiveCount=5 backstops malformed
+// messages so the queue does not stall.
 package githubwebhook
 
 import (
@@ -31,18 +34,30 @@ import (
 )
 
 // WorkflowRunEvent is the subset of fields the dispatcher cares about.
-// Sourced from EventBridge `detail.workflow_run` / `detail.repository`.
+// Sourced from EventBridge `detail.workflow_run` / `detail.repository` /
+// `detail.workflow_run.pull_requests[]`.
+//
+// PR fields (PRNumber/PRTitle/PRURL) are zero-valued when the workflow run
+// is not associated with a pull request (e.g. a push to main triggered the
+// workflow directly). Notifications still fire in that case — the iOS card
+// falls back to "repo — conclusion · workflow_name".
 type WorkflowRunEvent struct {
 	Repo         string // e.g. "dlddu/pocket-aide"
 	WorkflowName string // workflow name, e.g. "CI"
 	HeadBranch   string
 	Conclusion   string // success | failure | cancelled | skipped | ...
-	HTMLURL      string
+	HTMLURL      string // run URL
+	CommitURL    string // head commit URL on GitHub
+	PRNumber     int    // 0 when no PR linked
+	PRTitle      string // "" when no PR linked
+	PRURL        string // "" when no PR linked
 }
 
 // DispatchFunc is invoked once per accepted (workflow_run completed) event.
-// Its error is logged but never blocks message deletion — the draft favours
-// throughput over guaranteed delivery.
+// A non-nil error causes handleMessage to SKIP DeleteMessage, so the SQS
+// message is re-delivered after VisibilityTimeout. Use that to signal
+// "retry this event later" (e.g. the notification-history write failed).
+// PRD-10 AC11 requires this — history must persist before pushes go out.
 type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
 
 // Consumer long-polls a single SQS queue.
@@ -120,10 +135,18 @@ func (c *Consumer) Run(ctx context.Context) {
 func (c *Consumer) handleMessage(ctx context.Context, msg types.Message) {
 	body := []byte(aws.ToString(msg.Body))
 	if err := c.process(ctx, body); err != nil {
-		// Log and still delete — failures here are unrecoverable (malformed
-		// envelope, malformed payload). Leaving the message would just stall
-		// the queue.
-		log.Printf("githubwebhook: dropping message: %v", err)
+		// Two kinds of failure land here:
+		//   1) Malformed envelope/payload — replays would never succeed.
+		//   2) Transient dispatch error (e.g. SQLite busy, history write
+		//      failed) — should be retried.
+		// We don't reliably distinguish them in code, so we take the safer
+		// option for PRD-10 AC11: SKIP DeleteMessage on any process error.
+		// SQS re-delivers after VisibilityTimeout (configured to 30s — see
+		// PRD operational notes). Malformed messages will eventually land on
+		// the DLQ after maxReceiveCount attempts, so they don't stall the
+		// queue indefinitely.
+		log.Printf("githubwebhook: process error, leaving message for retry: %v", err)
+		return
 	}
 	if _, err := c.client.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(c.queueURL),
@@ -165,6 +188,20 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		HeadBranch:   parsed.WorkflowRun.HeadBranch,
 		Conclusion:   parsed.WorkflowRun.Conclusion,
 		HTMLURL:      parsed.WorkflowRun.HTMLURL,
+	}
+	if parsed.WorkflowRun.HeadSHA != "" && parsed.Repository.HTMLURL != "" {
+		evt.CommitURL = parsed.Repository.HTMLURL + "/commit/" + parsed.WorkflowRun.HeadSHA
+	}
+	if len(parsed.WorkflowRun.PullRequests) > 0 {
+		pr := parsed.WorkflowRun.PullRequests[0]
+		evt.PRNumber = pr.Number
+		evt.PRTitle = pr.Title
+		// GitHub doesn't include the PR HTML URL inside the workflow_run's
+		// pull_requests[] entries (only the API url). Synthesize it from the
+		// repo + number — stable and matches what a user would expect.
+		if parsed.Repository.HTMLURL != "" && pr.Number > 0 {
+			evt.PRURL = fmt.Sprintf("%s/pull/%d", parsed.Repository.HTMLURL, pr.Number)
+		}
 	}
 	if err := c.dispatch(ctx, evt); err != nil {
 		return fmt.Errorf("dispatch: %w", err)
@@ -217,11 +254,20 @@ type workflowRunPayload struct {
 	Action     string `json:"action"`
 	Repository struct {
 		FullName string `json:"full_name"`
+		HTMLURL  string `json:"html_url"`
 	} `json:"repository"`
 	WorkflowRun struct {
-		Name       string `json:"name"` // workflow name, e.g. "CI"
-		HeadBranch string `json:"head_branch"`
-		Conclusion string `json:"conclusion"`
-		HTMLURL    string `json:"html_url"`
+		Name         string                   `json:"name"` // workflow name, e.g. "CI"
+		HeadBranch   string                   `json:"head_branch"`
+		HeadSHA      string                   `json:"head_sha"`
+		Conclusion   string                   `json:"conclusion"`
+		HTMLURL      string                   `json:"html_url"`
+		PullRequests []workflowRunPullRequest `json:"pull_requests"`
 	} `json:"workflow_run"`
+}
+
+type workflowRunPullRequest struct {
+	Number int    `json:"number"`
+	Title  string `json:"title"`
+	URL    string `json:"url"` // API url, not the html_url — we synthesize the html_url separately
 }
