@@ -38,6 +38,9 @@ struct PRMonitorGroupCard: View {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                     titleLine
                     statusSummary
+                    if !group.allAcknowledged {
+                        groupLinks
+                    }
                 }
                 Spacer(minLength: DesignTokens.Spacing.sm)
                 VStack(alignment: .trailing, spacing: 4) {
@@ -263,5 +266,58 @@ struct PRMonitorGroupCard: View {
         guard !sha.isEmpty else { return "" }
         let short = String(sha.prefix(7))
         return " @\(short)"
+    }
+}
+
+extension PRMonitorGroupCard {
+    /// 그룹 키에 해당하는 외부 링크 칩. PR 그룹은 PR + 대표 커밋 두 칩, 커밋 전용
+    /// 그룹은 커밋 칩만. row 단위 commit SHA 차이는 row 메타 라인의 "commit
+    /// xxxxxxx" 텍스트로 식별 가능하므로 그룹 헤더의 커밋 링크는 lead(가장 최근)
+    /// 항목의 커밋만 가리킨다.
+    @ViewBuilder
+    fileprivate var groupLinks: some View {
+        let prDest = group.prURL.flatMap(URL.init(string:))
+        let commitDest = group.leadItem?.commitURL.flatMap(URL.init(string:))
+        if prDest != nil || commitDest != nil {
+            HStack(spacing: 4) {
+                if let prDest {
+                    linkChip(
+                        label: "PR",
+                        systemImage: "arrow.triangle.pull",
+                        url: prDest,
+                        identifier: "prmonitor.group.\(group.id).link.pr"
+                    )
+                }
+                if let commitDest {
+                    linkChip(
+                        label: "커밋",
+                        systemImage: "circle.fill",
+                        url: commitDest,
+                        identifier: "prmonitor.group.\(group.id).link.commit"
+                    )
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    fileprivate func linkChip(label: String, systemImage: String, url: URL, identifier: String) -> some View {
+        Link(destination: url) {
+            HStack(spacing: 4) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 9, weight: .semibold))
+                Text(label)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+            }
+            .padding(.vertical, 4)
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
+            )
+            .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityIdentifier(identifier)
     }
 }
