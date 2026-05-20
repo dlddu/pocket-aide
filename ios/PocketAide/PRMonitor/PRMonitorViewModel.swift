@@ -15,6 +15,25 @@ final class PRMonitorViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var excludedRepoError: String?
 
+    /// PRD-10 AC13: PR(있으면) 또는 head_sha 기준으로 묶은 그룹. 미확인 그룹이 먼저
+    /// 오고, 각 섹션 내에서는 가장 최근 이벤트가 위로 온다.
+    var groups: [HistoryGroup] {
+        HistoryGrouping.group(items)
+    }
+
+    /// 헤더 배지에 노출되는 미확인 항목 총 개수(AC11). 그룹 단위가 아니라 항목 단위.
+    var totalUnacknowledgedCount: Int {
+        items.reduce(0) { $0 + ($1.acknowledgedAt == nil ? 1 : 0) }
+    }
+
+    var unacknowledgedGroups: [HistoryGroup] {
+        groups.filter { !$0.allAcknowledged }
+    }
+
+    var acknowledgedGroups: [HistoryGroup] {
+        groups.filter { $0.allAcknowledged }
+    }
+
     private(set) var api: APIClient?
 
     init(api: APIClient?) {
@@ -68,6 +87,7 @@ final class PRMonitorViewModel: ObservableObject {
             runURL: original.runURL,
             workflowName: original.workflowName,
             headBranch: original.headBranch,
+            headSHA: original.headSHA,
             conclusion: original.conclusion,
             acknowledgedAt: Int64(Date().timeIntervalSince1970),
             createdAt: original.createdAt
@@ -83,6 +103,16 @@ final class PRMonitorViewModel: ObservableObject {
                 items[revertIdx] = original
             }
             errorMessage = String(describing: error)
+        }
+    }
+
+    /// PRD-10 후속: 한 그룹(PR 또는 head_sha 단위) 안의 미확인 항목을 한꺼번에
+    /// 확인 처리한다. 개별 ack 엔드포인트를 순차 호출하므로 한 항목이 실패해도
+    /// 다음은 계속 진행한다(각 호출이 자체 optimistic update + revert를 가진다).
+    func acknowledgeGroup(_ group: HistoryGroup) async {
+        let unackedIDs = group.items.compactMap { $0.acknowledgedAt == nil ? $0.id : nil }
+        for id in unackedIDs {
+            await acknowledge(id: id)
         }
     }
 

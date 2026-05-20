@@ -30,6 +30,7 @@ type Event struct {
 	RunURL       string
 	WorkflowName string
 	HeadBranch   string
+	HeadSHA      string // commit SHA — grouping key fallback when no PR is linked (AC13)
 	Conclusion   string
 }
 
@@ -46,6 +47,7 @@ type Item struct {
 	RunURL         *string `json:"run_url,omitempty"`
 	WorkflowName   string  `json:"workflow_name"`
 	HeadBranch     string  `json:"head_branch"`
+	HeadSHA        string  `json:"head_sha"`
 	Conclusion     string  `json:"conclusion"`
 	AcknowledgedAt *int64  `json:"acknowledged_at,omitempty"`
 	CreatedAt      int64   `json:"created_at"`
@@ -77,7 +79,7 @@ func (s *Store) List(ctx context.Context, userID int64, limit int, beforeID int6
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT id, repo_full_name, pr_number, pr_title, pr_url,
 			       commit_url, run_url, workflow_name, head_branch,
-			       conclusion, acknowledged_at, created_at
+			       head_sha, conclusion, acknowledged_at, created_at
 			FROM notification_history
 			WHERE user_id = ? AND id < ?
 			ORDER BY id DESC
@@ -87,7 +89,7 @@ func (s *Store) List(ctx context.Context, userID int64, limit int, beforeID int6
 		rows, err = s.db.QueryContext(ctx, `
 			SELECT id, repo_full_name, pr_number, pr_title, pr_url,
 			       commit_url, run_url, workflow_name, head_branch,
-			       conclusion, acknowledged_at, created_at
+			       head_sha, conclusion, acknowledged_at, created_at
 			FROM notification_history
 			WHERE user_id = ?
 			ORDER BY id DESC
@@ -113,7 +115,7 @@ func (s *Store) List(ctx context.Context, userID int64, limit int, beforeID int6
 		if err := rows.Scan(
 			&it.ID, &it.RepoFullName, &prNum, &prTitle, &prURL,
 			&commit, &run, &it.WorkflowName, &it.HeadBranch,
-			&it.Conclusion, &ackedAt, &it.CreatedAt,
+			&it.HeadSHA, &it.Conclusion, &ackedAt, &it.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan notification history: %w", err)
 		}
@@ -196,8 +198,8 @@ func (s *Store) InsertBatchTx(ctx context.Context, userIDs []int64, evt Event) (
 	stmt, err := tx.PrepareContext(ctx, `
 		INSERT INTO notification_history (
 			user_id, repo_full_name, pr_number, pr_title, pr_url,
-			commit_url, run_url, workflow_name, head_branch, conclusion
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			commit_url, run_url, workflow_name, head_branch, head_sha, conclusion
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("prepare insert: %w", err)
@@ -215,6 +217,7 @@ func (s *Store) InsertBatchTx(ctx context.Context, userIDs []int64, evt Event) (
 			nullableString(evt.RunURL),
 			evt.WorkflowName,
 			evt.HeadBranch,
+			evt.HeadSHA,
 			evt.Conclusion,
 		)
 		if err != nil {
@@ -238,7 +241,7 @@ func (s *Store) Get(ctx context.Context, userID, id int64) (Item, error) {
 	items, err := s.db.QueryContext(ctx, `
 		SELECT id, repo_full_name, pr_number, pr_title, pr_url,
 		       commit_url, run_url, workflow_name, head_branch,
-		       conclusion, acknowledged_at, created_at
+		       head_sha, conclusion, acknowledged_at, created_at
 		FROM notification_history
 		WHERE id = ? AND user_id = ?
 	`, id, userID)
@@ -264,7 +267,7 @@ func (s *Store) Get(ctx context.Context, userID, id int64) (Item, error) {
 	if err := items.Scan(
 		&it.ID, &it.RepoFullName, &prNum, &prTitle, &prURL,
 		&commit, &run, &it.WorkflowName, &it.HeadBranch,
-		&it.Conclusion, &ackedAt, &it.CreatedAt,
+		&it.HeadSHA, &it.Conclusion, &ackedAt, &it.CreatedAt,
 	); err != nil {
 		return Item{}, fmt.Errorf("scan: %w", err)
 	}

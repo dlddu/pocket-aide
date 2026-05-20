@@ -12,7 +12,6 @@ struct PRMonitorView: View {
     @Binding var highlightedEventID: Int64?
 
     @State private var showingExcludedSheet = false
-    @State private var newRepoText = ""
     @State private var arrivalClearTask: Task<Void, Never>?
 
     private let arrivalHighlightDuration: TimeInterval = 5
@@ -27,22 +26,27 @@ struct PRMonitorView: View {
             DesignTokens.Color.surface(.prMonitor).ignoresSafeArea()
             VStack(spacing: 0) {
                 ScreenHeader(area: .prMonitor, title: "PR 모니터") {
-                    Button {
-                        showingExcludedSheet = true
-                        Task { await viewModel.loadExcludedRepos() }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .font(.system(size: 14, weight: .bold))
-                            .frame(width: 36, height: 36)
-                            .background(DesignTokens.Color.card(.prMonitor))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
+                    HStack(spacing: DesignTokens.Spacing.sm) {
+                        if viewModel.totalUnacknowledgedCount > 0 {
+                            unreadBadge
+                        }
+                        Button {
+                            showingExcludedSheet = true
+                            Task { await viewModel.loadExcludedRepos() }
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .font(.system(size: 14, weight: .bold))
+                                .frame(width: 36, height: 36)
+                                .background(DesignTokens.Color.card(.prMonitor))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
+                        }
+                        .accessibilityIdentifier("prmonitor.excluded.button")
                     }
-                    .accessibilityIdentifier("prmonitor.excluded.button")
                 }
 
                 content
@@ -65,7 +69,10 @@ struct PRMonitorView: View {
         }
         .onAppear { scheduleHighlightClear(for: highlightedEventID) }
         .sheet(isPresented: $showingExcludedSheet) {
-            excludedReposSheet
+            PRMonitorExcludedReposSheet(
+                viewModel: viewModel,
+                isPresented: $showingExcludedSheet
+            )
         }
     }
 
@@ -118,23 +125,27 @@ struct PRMonitorView: View {
 
     private var historyList: some View {
         List {
-            ForEach(viewModel.items) { item in
-                PRMonitorHistoryRow(
-                    item: item,
-                    isHighlighted: highlightedEventID == item.id,
-                    onAcknowledge: {
-                        Task { await viewModel.acknowledge(id: item.id) }
-                    }
+            let unread = viewModel.unacknowledgedGroups
+            let read = viewModel.acknowledgedGroups
+            if !unread.isEmpty {
+                sectionHeader(
+                    title: "미확인 · \(unread.count)개 그룹",
+                    accentColor: DesignTokens.Color.accent(.prMonitor),
+                    titleColor: DesignTokens.Color.accent(.prMonitor)
                 )
-                .listRowInsets(EdgeInsets(
-                    top: DesignTokens.Spacing.xs,
-                    leading: DesignTokens.Spacing.xl,
-                    bottom: DesignTokens.Spacing.xs,
-                    trailing: DesignTokens.Spacing.xl
-                ))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .accessibilityIdentifier("prmonitor.row.\(item.id)")
+                ForEach(unread) { group in
+                    groupCard(group)
+                }
+            }
+            if !read.isEmpty {
+                sectionHeader(
+                    title: "확인 완료",
+                    accentColor: DesignTokens.Color.rule(.prMonitor),
+                    titleColor: DesignTokens.Color.ink(.prMonitor).opacity(0.55)
+                )
+                ForEach(read) { group in
+                    groupCard(group)
+                }
             }
         }
         .listStyle(.plain)
@@ -145,87 +156,69 @@ struct PRMonitorView: View {
         }
     }
 
-    private var excludedReposSheet: some View {
-        NavigationStack {
-            VStack(spacing: DesignTokens.Spacing.md) {
-                HStack {
-                    TextField("owner/repo", text: $newRepoText)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
-                        .padding(.vertical, DesignTokens.Spacing.sm)
-                        .padding(.horizontal, DesignTokens.Spacing.md)
-                        .background(DesignTokens.Color.card(.prMonitor))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .accessibilityIdentifier("prmonitor.excluded.input")
-                    Button {
-                        let value = newRepoText.trimmingCharacters(in: .whitespaces)
-                        guard !value.isEmpty else { return }
-                        let captured = value
-                        newRepoText = ""
-                        Task { await viewModel.excludeRepo(captured) }
-                    } label: {
-                        Text("추가")
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
-                            .padding(.vertical, DesignTokens.Spacing.sm)
-                            .padding(.horizontal, DesignTokens.Spacing.md)
-                            .background(DesignTokens.Color.accent(.prMonitor))
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    }
-                    .accessibilityIdentifier("prmonitor.excluded.add.button")
-                }
-                .padding(.horizontal, DesignTokens.Spacing.xl)
-
-                if let message = viewModel.excludedRepoError {
-                    Text(message)
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
-                        .foregroundStyle(DesignTokens.StatusColor.failure)
-                        .padding(.horizontal, DesignTokens.Spacing.xl)
-                }
-
-                List {
-                    if viewModel.excludedRepos.isEmpty && !viewModel.isLoadingExcluded {
-                        Text("제외한 레포가 없습니다")
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
-                            .foregroundStyle(DesignTokens.Color.ink(.prMonitor).opacity(0.55))
-                            .listRowBackground(Color.clear)
-                    }
-                    ForEach(viewModel.excludedRepos) { repo in
-                        Text(repo.repoFullName)
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
-                            .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
-                            .listRowBackground(DesignTokens.Color.surface(.prMonitor))
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    Task { await viewModel.removeExcludedRepo(id: repo.id) }
-                                } label: {
-                                    Label("삭제", systemImage: "trash")
-                                }
-                            }
-                            .accessibilityIdentifier("prmonitor.excluded.row.\(repo.id)")
-                    }
-                }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .background(DesignTokens.Color.surface(.prMonitor))
+    @ViewBuilder
+    private func groupCard(_ group: HistoryGroup) -> some View {
+        PRMonitorGroupCard(
+            group: group,
+            highlightedEventID: highlightedEventID,
+            onAcknowledge: { id in
+                Task { await viewModel.acknowledge(id: id) }
+            },
+            onAcknowledgeGroup: {
+                Task { await viewModel.acknowledgeGroup(group) }
             }
-            .padding(.top, DesignTokens.Spacing.lg)
-            .background(DesignTokens.Color.surface(.prMonitor))
-            .navigationTitle("제외한 레포")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("완료") { showingExcludedSheet = false }
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))
-                        .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
-                }
-            }
+        )
+        .listRowInsets(EdgeInsets(
+            top: DesignTokens.Spacing.xs,
+            leading: DesignTokens.Spacing.xl,
+            bottom: DesignTokens.Spacing.xs,
+            trailing: DesignTokens.Spacing.xl
+        ))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .accessibilityIdentifier("prmonitor.group.\(group.id)")
+    }
+
+    @ViewBuilder
+    private func sectionHeader(title: String, accentColor: Color, titleColor: Color) -> some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: 3, height: 12)
+            Text(title)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .bold))
+                .foregroundStyle(titleColor)
+                .textCase(.uppercase)
+            Rectangle()
+                .fill(DesignTokens.Color.rule(.prMonitor))
+                .frame(height: 1)
         }
+        .listRowInsets(EdgeInsets(
+            top: DesignTokens.Spacing.sm,
+            leading: DesignTokens.Spacing.xl,
+            bottom: DesignTokens.Spacing.xs,
+            trailing: DesignTokens.Spacing.xl
+        ))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+    }
+
+    @ViewBuilder
+    private var unreadBadge: some View {
+        VStack(spacing: 2) {
+            Text("\(viewModel.totalUnacknowledgedCount)")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                .foregroundStyle(.white)
+            Text("미확인")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))
+                .foregroundStyle(.white)
+                .textCase(.uppercase)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, DesignTokens.Spacing.sm)
+        .background(DesignTokens.Color.accent(.prMonitor))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .accessibilityIdentifier("prmonitor.unread.badge")
     }
 
     /// Schedule the auto-clear of the push-arrival highlight. Calls cancel
