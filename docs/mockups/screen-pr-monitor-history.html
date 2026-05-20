@@ -71,267 +71,341 @@
           <p class="text-[11.5px] text-stone-500 mt-1.5 stamp">
             <span class="text-[var(--accent)] font-bold">@dlddu</span>
             <span class="text-stone-300 mx-1">·</span>
-            12 미확인
-            <span class="text-stone-300 mx-1">·</span>
             <span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[var(--forest)]"></span>웹훅 연결</span>
           </p>
         </div>
-        <button class="w-9 h-9 border border-[var(--rule)] bg-white rounded-md grid place-items-center active:scale-95" title="제외 레포 관리">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- 미확인 총 개수 배지 — AC11 -->
+          <div class="flex flex-col items-center justify-center px-2.5 py-1 bg-[var(--accent)] text-white rounded-md">
+            <span class="text-[15px] font-bold leading-none stamp">5</span>
+            <span class="text-[8px] font-bold uppercase tracking-wider stamp mt-0.5">미확인</span>
+          </div>
+          <button class="w-9 h-9 border border-[var(--rule)] bg-white rounded-md grid place-items-center active:scale-95" title="제외 레포 관리">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
     <!-- main -->
     <main class="absolute top-[170px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
 
-      <!-- ARRIVAL / ROUTED FROM PUSH ───────────────────────── -->
+      <!-- ── SECTION: 미확인 (PR/커밋 단위 그룹, 미확인 우선) ───────── -->
       <div class="mb-2 flex items-center gap-2">
         <div class="w-1 h-3 bg-[var(--accent)]"></div>
-        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-[var(--accent)]">푸시에서 진입한 항목</h2>
+        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-[var(--accent)]">미확인 · 3개 그룹</h2>
         <div class="flex-1 h-px bg-[var(--rule)]"></div>
       </div>
 
-      <!-- Card.history-item.unacked + pulse-glow variant; UNACKNOWLEDGED to prove AC7≠AC12 -->
-      <div class="bg-white border-l-[3px] border-l-[var(--accent)] border-y border-r border-[var(--rule)] p-3.5 pulse-border rounded-md">
-        <div class="flex items-start gap-3">
-          <!-- status icon -->
-          <div class="w-7 h-7 rounded-full grid place-items-center shrink-0" style="background:var(--destructive)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M6 6l12 12M6 18L18 6"/></svg>
-          </div>
+      <!-- ╭ GROUP: PR #42 — 푸시 진입 그룹 (CI 3건이 한 PR로 묶임) ─╮
+           AC13 그룹핑 + AC7 푸시 진입 강조(pulse) -->
+      <div class="bg-white border-l-[3px] border-l-[var(--accent)] border-y border-r border-[var(--rule)] rounded-md mb-2.5 pulse-border">
 
+        <!-- group header — 그룹 키 + 종합 상태 + 미확인 수 -->
+        <button class="w-full flex items-start gap-2.5 px-3.5 pt-3 pb-2.5 text-left">
+          <svg width="13" height="13" class="mt-0.5 shrink-0 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
           <div class="flex-1 min-w-0">
-            <!-- top meta line -->
             <div class="flex items-center gap-2 mb-1">
-              <span class="text-[10.5px] font-bold uppercase tracking-wider stamp px-1.5 py-0.5 bg-[var(--soft)] text-[var(--accent)] rounded-sm">CI 실패</span>
-              <span class="text-[10.5px] text-[var(--accent)] font-bold stamp uppercase">방금 진입</span>
-              <span class="text-[10.5px] text-stone-400 stamp ml-auto">9:41:02</span>
+              <span class="text-[10px] font-bold uppercase tracking-wider stamp text-[var(--accent)]">방금 진입</span>
+              <span class="text-[10px] text-stone-400 stamp ml-auto">최근 9:41:02</span>
             </div>
-
-            <!-- repo / PR -->
-            <p class="text-[14.5px] leading-snug font-semibold mb-0.5">
+            <p class="text-[13.5px] leading-snug font-semibold">
               <span class="mono text-[var(--accent)]">pocket-aide</span>
               <span class="text-stone-300 mx-1">·</span>
               <span class="mono">#42</span>
               feat(widget): Large 5영역 골격 + 다짐 회전 노출
             </p>
-
-            <!-- mono metadata: commit + workflow -->
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-stone-500 stamp mt-1">
-              <span class="mono"><span class="text-stone-400">commit</span> a3f9c27</span>
-              <span class="mono"><span class="text-stone-400">run</span> ios-tests #318</span>
-            </div>
-
-            <!-- external links (these do NOT trigger ack — AC12) -->
-            <div class="flex items-center gap-1.5 mt-2.5">
-              <a class="flex items-center gap-1 text-[11px] font-semibold stamp uppercase px-2 py-1 border border-[var(--rule)] text-stone-600 hover:bg-[var(--soft)] rounded-sm">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg>
-                PR
-              </a>
-              <a class="flex items-center gap-1 text-[11px] font-semibold stamp uppercase px-2 py-1 border border-[var(--rule)] text-stone-600 hover:bg-[var(--soft)] rounded-sm">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg>
-                커밋
-              </a>
-              <a class="flex items-center gap-1 text-[11px] font-semibold stamp uppercase px-2 py-1 border border-[var(--rule)] text-stone-600 hover:bg-[var(--soft)] rounded-sm">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M7 17L17 7M9 7h8v8"/></svg>
-                런 로그
-              </a>
-
-              <div class="flex-1"></div>
-
-              <!-- THE ONLY ACK TRIGGER — AC12 -->
-              <button class="flex items-center gap-1.5 text-[11.5px] font-bold stamp uppercase px-3 py-1.5 bg-[var(--accent)] text-white active:scale-95 rounded-sm">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4 10-10"/></svg>
-                확인
-              </button>
+            <!-- 그룹 종합: 상태 카운트 + 항목 수 -->
+            <div class="flex items-center gap-2.5 mt-1.5 text-[10.5px] stamp">
+              <span class="inline-flex items-center gap-1 text-[var(--forest)] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-[var(--forest)]"></span>통과 1</span>
+              <span class="inline-flex items-center gap-1 text-[var(--destructive)] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-[var(--destructive)]"></span>실패 1</span>
+              <span class="text-stone-400">·</span>
+              <span class="text-stone-500">CI 3건</span>
             </div>
           </div>
+          <span class="shrink-0 text-[10.5px] font-bold stamp uppercase px-2 py-1 bg-[var(--accent)] text-white rounded-sm">미확인 2</span>
+        </button>
+
+        <!-- group body — 개별 workflow_run 이벤트 (시각 역순) -->
+        <div class="border-t border-[var(--rule)]">
+
+          <!-- event row — 푸시로 진입한 항목, 미확인, 강조 -->
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5 bg-[var(--soft)]/45 border-l-2 border-l-[var(--accent)]">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--destructive)">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M6 6l12 12M6 18L18 6"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-[var(--destructive)]">CI 실패</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">9:41:02</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
+                <span class="mono"><span class="text-stone-400">commit</span> a3f9c27</span>
+                <span class="mono"><span class="text-stone-400">run</span> ci #319</span>
+              </div>
+              <div class="flex items-center gap-1 mt-2">
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ PR</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
+                <div class="flex-1"></div>
+                <button class="flex items-center gap-1 text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-[var(--accent)] text-white active:scale-95 rounded-sm">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4 10-10"/></svg>
+                  확인
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- event row — 같은 PR, 다른 워크플로우, 미확인 -->
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5 border-t border-[var(--rule)]/60">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--forest)">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-[var(--forest)]">CI 통과</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">9:38:40</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
+                <span class="mono"><span class="text-stone-400">commit</span> a3f9c27</span>
+                <span class="mono"><span class="text-stone-400">run</span> ios-tests #318</span>
+              </div>
+              <div class="flex items-center gap-1 mt-2">
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ PR</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
+                <div class="flex-1"></div>
+                <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- event row — 같은 PR, 재실행 이전 결과, 이미 확인됨 (그룹 내 확인/미확인 혼재) -->
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5 border-t border-[var(--rule)]/60 opacity-60">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5 bg-stone-300">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-stone-400">CI 통과 · 확인됨</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">9:12:30</span>
+              </div>
+              <p class="text-[11px] text-stone-500 stamp mt-1 line-through decoration-stone-300">
+                <span class="mono">commit b1e07d4</span> · <span class="mono">run ios-tests #312</span>
+              </p>
+              <div class="flex items-center gap-2 mt-1.5 text-[10px] text-stone-400 stamp">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4 10-10"/></svg>
+                <span class="uppercase tracking-wider">확인 · 오늘 09:15:04</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- inline explainer for the AC7/AC12 separation -->
-      <div class="mt-2 mb-4 p-2.5 border border-dashed border-[var(--accent)]/40 bg-[var(--soft)]/40 rounded-sm">
+      <!-- inline explainer for the AC7/AC12/AC13 separation -->
+      <div class="mb-3 p-2.5 border border-dashed border-[var(--accent)]/40 bg-[var(--soft)]/40 rounded-sm">
         <p class="text-[11px] text-stone-600 leading-relaxed">
           <span class="font-bold text-[var(--accent)] stamp">N.B.</span>
-          푸시 알림 탭으로 이 화면에 도착했어도 항목은 <span class="font-bold">미확인 상태</span>로 유지됩니다. 위 <span class="font-bold">"확인"</span> 버튼을 눌러야 처리되며, 강조 글로우는 5초 후 자동 해제됩니다.
+          한 PR(없으면 커밋)에 도착한 CI 완료 이벤트는 하나의 그룹으로 묶입니다. 푸시 탭으로 진입해도 항목은 <span class="font-bold">미확인 상태</span>로 유지되며, 각 항목의 <span class="font-bold">"확인"</span> 버튼만이 처리 트리거입니다.
         </p>
       </div>
 
-      <!-- TODAY ─────────────────────────────────────── -->
-      <div class="flex items-center gap-2 pt-1 pb-2">
-        <div class="w-1 h-3 bg-stone-400"></div>
-        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-stone-500">오늘 · 미확인 4</h2>
-        <div class="flex-1 h-px bg-[var(--rule)]"></div>
-      </div>
-
-      <!-- unacknowledged success — today -->
-      <div class="bg-white border border-[var(--rule)] p-3 mb-1.5 rounded-md">
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--forest)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 12l4 4 10-10"/></svg>
-          </div>
+      <!-- ╭ GROUP: PR #41 — 미확인 2/2 ─╮ -->
+      <div class="bg-white border-l-[3px] border-l-[var(--accent)] border-y border-r border-[var(--rule)] rounded-md mb-2.5">
+        <button class="w-full flex items-start gap-2.5 px-3.5 pt-3 pb-2.5 text-left">
+          <svg width="13" height="13" class="mt-0.5 shrink-0 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <span class="text-[10.5px] font-bold uppercase tracking-wider stamp text-[var(--forest)]">CI 통과</span>
-              <span class="text-[10.5px] text-stone-400 stamp ml-auto">08:12</span>
-            </div>
-            <p class="text-[13.5px] leading-snug font-medium">
+            <p class="text-[13.5px] leading-snug font-semibold">
               <span class="mono text-[var(--accent)]">pocket-aide</span>
               <span class="text-stone-300 mx-1">·</span>
               <span class="mono">#41</span>
               fix(ios-tests): xcodebuild retry safety net
             </p>
-            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
-              <span class="mono"><span class="text-stone-400">commit</span> dfd5de7</span>
-              <span class="mono"><span class="text-stone-400">run</span> ios-tests #317</span>
+            <div class="flex items-center gap-2.5 mt-1.5 text-[10.5px] stamp">
+              <span class="inline-flex items-center gap-1 text-[var(--forest)] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-[var(--forest)]"></span>통과 2</span>
+              <span class="text-stone-400">·</span>
+              <span class="text-stone-500">CI 2건</span>
+              <span class="text-stone-400 ml-auto">최근 08:12</span>
             </div>
-            <div class="flex items-center gap-1 mt-2">
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ PR</a>
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
-              <div class="flex-1"></div>
-              <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
+          </div>
+          <span class="shrink-0 text-[10.5px] font-bold stamp uppercase px-2 py-1 bg-[var(--accent)] text-white rounded-sm">미확인 2</span>
+        </button>
+        <div class="border-t border-[var(--rule)]">
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--forest)">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-[var(--forest)]">CI 통과</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">08:12</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
+                <span class="mono"><span class="text-stone-400">commit</span> dfd5de7</span>
+                <span class="mono"><span class="text-stone-400">run</span> ios-tests #317</span>
+              </div>
+              <div class="flex items-center gap-1 mt-2">
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ PR</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
+                <div class="flex-1"></div>
+                <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5 border-t border-[var(--rule)]/60">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--forest)">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-[var(--forest)]">CI 통과</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">07:46</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
+                <span class="mono"><span class="text-stone-400">commit</span> dfd5de7</span>
+                <span class="mono"><span class="text-stone-400">run</span> build #316</span>
+              </div>
+              <div class="flex items-center gap-1 mt-2">
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ PR</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
+                <div class="flex-1"></div>
+                <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- unacknowledged failure — today -->
-      <div class="bg-white border border-[var(--rule)] p-3 mb-1.5 rounded-md">
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--destructive)">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M6 6l12 12M6 18L18 6"/></svg>
-          </div>
+      <!-- ╭ GROUP: 커밋 그룹 — PR 없음(main 직접 푸시), head_sha 기준 ─╮
+           AC13 "PR 정보 없는 경우 (repo, head_sha)" 그룹 키 -->
+      <div class="bg-white border-l-[3px] border-l-[var(--accent)] border-y border-r border-[var(--rule)] rounded-md mb-2.5">
+        <button class="w-full flex items-start gap-2.5 px-3.5 pt-3 pb-2.5 text-left">
+          <svg width="13" height="13" class="mt-0.5 shrink-0 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <span class="text-[10.5px] font-bold uppercase tracking-wider stamp text-[var(--destructive)]">CI 실패</span>
-              <span class="text-[10.5px] text-stone-400 stamp ml-auto">07:55</span>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] text-stone-400 italic">PR 없음 · main 직접 푸시</span>
+              <span class="text-[10px] text-stone-400 stamp ml-auto">최근 07:01</span>
             </div>
-            <p class="text-[13.5px] leading-snug font-medium">
+            <p class="text-[13.5px] leading-snug font-semibold">
               <span class="mono text-[var(--accent)]">pocket-aide</span>
               <span class="text-stone-300 mx-1">·</span>
-              <span class="mono">#40</span>
-              feat(pr-monitor): GitHub workflow_run → SQS → APNs
+              <span class="mono text-stone-500">main</span>
+              <span class="mono text-stone-400">@f77e024</span>
             </p>
-            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
-              <span class="mono"><span class="text-stone-400">commit</span> 1d56e97</span>
-              <span class="mono"><span class="text-stone-400">run</span> ci #312</span>
+            <div class="flex items-center gap-2.5 mt-1.5 text-[10.5px] stamp">
+              <span class="inline-flex items-center gap-1 text-[var(--forest)] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-[var(--forest)]"></span>통과 1</span>
+              <span class="inline-flex items-center gap-1 text-[var(--destructive)] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-[var(--destructive)]"></span>실패 1</span>
+              <span class="text-stone-400">·</span>
+              <span class="text-stone-500">CI 2건</span>
             </div>
-            <div class="flex items-center gap-1 mt-2">
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ PR</a>
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
-              <div class="flex-1"></div>
-              <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
+          </div>
+          <span class="shrink-0 text-[10.5px] font-bold stamp uppercase px-2 py-1 bg-[var(--accent)] text-white rounded-sm">미확인 1</span>
+        </button>
+        <div class="border-t border-[var(--rule)]">
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--forest)">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-[var(--forest)]">CI 통과</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">07:01</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
+                <span class="mono"><span class="text-stone-400">commit</span> f77e024</span>
+                <span class="mono"><span class="text-stone-400">run</span> ci #310</span>
+              </div>
+              <div class="flex items-center gap-1 mt-2">
+                <span class="text-[10.5px] stamp uppercase px-1.5 py-0.5 text-stone-300 line-through">↗ PR</span>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
+                <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
+                <div class="flex-1"></div>
+                <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5 px-3.5 py-2.5 border-t border-[var(--rule)]/60 opacity-60">
+            <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 mt-0.5 bg-stone-300">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M6 6l12 12M6 18L18 6"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider stamp text-stone-400">CI 실패 · 확인됨</span>
+                <span class="text-[10px] text-stone-400 stamp ml-auto">06:48</span>
+              </div>
+              <p class="text-[11px] text-stone-500 stamp mt-1 line-through decoration-stone-300">
+                <span class="mono">commit f77e024</span> · <span class="mono">run lint #309</span>
+              </p>
+              <div class="flex items-center gap-2 mt-1.5 text-[10px] text-stone-400 stamp">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l4 4 10-10"/></svg>
+                <span class="uppercase tracking-wider">확인 · 오늘 07:02:19</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- a no-PR-link item to prove AC11 "PR 링크(없을 수 있음)" — main push 케이스 -->
-      <div class="bg-white border border-[var(--rule)] p-3 mb-1.5 rounded-md">
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full grid place-items-center shrink-0 mt-0.5" style="background:var(--forest)">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 12l4 4 10-10"/></svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <span class="text-[10.5px] font-bold uppercase tracking-wider stamp text-[var(--forest)]">CI 통과</span>
-              <span class="text-[10.5px] text-stone-400 italic ml-2">PR 없음 · main 직접 푸시</span>
-              <span class="text-[10.5px] text-stone-400 stamp ml-auto">07:01</span>
-            </div>
-            <p class="text-[13.5px] leading-snug font-medium">
-              <span class="mono text-[var(--accent)]">pocket-aide</span>
-              <span class="text-stone-300 mx-1">·</span>
-              <span class="mono text-stone-500">ci / main</span>
-            </p>
-            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-stone-500 stamp mt-1">
-              <span class="mono"><span class="text-stone-400">commit</span> f77e024</span>
-              <span class="mono"><span class="text-stone-400">run</span> ci #310</span>
-            </div>
-            <div class="flex items-center gap-1 mt-2">
-              <span class="text-[10.5px] stamp uppercase px-1.5 py-0.5 text-stone-300 line-through">↗ PR</span>
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 커밋</a>
-              <a class="text-[10.5px] font-semibold stamp uppercase px-1.5 py-0.5 border border-[var(--rule)] text-stone-500 rounded-sm">↗ 런</a>
-              <div class="flex-1"></div>
-              <button class="text-[11px] font-bold stamp uppercase px-2.5 py-1 bg-white border border-[var(--accent)] text-[var(--accent)] active:scale-95 rounded-sm">확인</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ACKNOWLEDGED today (Card.history-item.acked) — proves visual distinction (AC12) -->
-      <div class="bg-[var(--bg)]/60 border border-dashed border-[var(--rule)] p-3 mb-1.5 opacity-70 rounded-md">
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full grid place-items-center shrink-0 mt-0.5 bg-stone-300">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><path d="M5 12l4 4 10-10"/></svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-0.5">
-              <span class="text-[10.5px] font-bold uppercase tracking-wider stamp text-stone-400">CI 통과 · 확인됨</span>
-              <span class="text-[10.5px] text-stone-400 stamp ml-auto">06:30</span>
-            </div>
-            <p class="text-[13px] leading-snug text-stone-500 line-through decoration-stone-300">
-              <span class="mono">pocket-aide</span>
-              <span class="text-stone-300 mx-1">·</span>
-              <span class="mono">#39</span>
-              ci: GitHub Actions workflow_run trigger
-            </p>
-            <div class="flex items-center gap-2 mt-1.5 text-[10.5px] text-stone-400 stamp">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l4 4 10-10"/></svg>
-              <span class="uppercase tracking-wider">확인 · 오늘 06:34:12</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- YESTERDAY ───────────────────────────────────── -->
+      <!-- ── SECTION: 확인 완료 (모두 확인된 그룹은 dim + 접힘) ───────── -->
       <div class="flex items-center gap-2 pt-3 pb-2">
         <div class="w-1 h-3 bg-stone-400"></div>
-        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-stone-500">어제 · 모두 확인됨</h2>
+        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-stone-500">확인 완료 · 어제</h2>
         <div class="flex-1 h-px bg-[var(--rule)]"></div>
       </div>
 
-      <div class="bg-[var(--bg)]/60 border border-dashed border-[var(--rule)] p-2.5 mb-1 opacity-65 rounded-md">
-        <div class="flex items-center gap-2.5">
-          <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 bg-stone-300">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M6 6l12 12M6 18L18 6"/></svg>
+      <!-- ╭ GROUP: PR #38 — 모두 확인됨 (acked group, dim, 접힌 상태) ─╮ -->
+      <div class="bg-[var(--bg)]/60 border border-dashed border-[var(--rule)] rounded-md mb-1.5 opacity-70">
+        <button class="w-full flex items-start gap-2.5 px-3.5 py-3 text-left">
+          <svg width="13" height="13" class="mt-0.5 shrink-0 text-stone-400 -rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
+          <div class="flex-1 min-w-0">
+            <p class="text-[13px] leading-snug text-stone-500 line-through decoration-stone-300">
+              <span class="mono">pocket-aide</span>
+              <span class="text-stone-300 mx-1">·</span>
+              <span class="mono">#38</span>
+              docs(prd-10): AC10·11·12
+            </p>
+            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1.5 text-[10.5px] stamp text-stone-400">
+              <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span>통과 3</span>
+              <span class="text-stone-300">·</span>
+              <span class="whitespace-nowrap">CI 3건</span>
+              <span class="whitespace-nowrap text-stone-300">·</span>
+              <span class="whitespace-nowrap">어제 14:32</span>
+            </div>
           </div>
-          <p class="text-[12.5px] text-stone-500 leading-tight flex-1 line-through decoration-stone-300">
-            <span class="mono">pocket-aide</span> · <span class="mono">#38</span> docs(prd-10): AC10·11·12
-          </p>
-          <span class="text-[10px] text-stone-400 stamp">14:32</span>
-        </div>
+          <span class="shrink-0 text-[10px] font-bold stamp uppercase px-2 py-0.5 text-stone-400 border border-[var(--rule)] rounded-sm">모두 확인</span>
+        </button>
       </div>
 
-      <div class="bg-[var(--bg)]/60 border border-dashed border-[var(--rule)] p-2.5 mb-1 opacity-65 rounded-md">
-        <div class="flex items-center gap-2.5">
-          <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 bg-stone-300">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
+      <!-- ╭ GROUP: PR #37 — 모두 확인됨 (acked group, dim, 접힌 상태) ─╮ -->
+      <div class="bg-[var(--bg)]/60 border border-dashed border-[var(--rule)] rounded-md mb-1.5 opacity-70">
+        <button class="w-full flex items-start gap-2.5 px-3.5 py-3 text-left">
+          <svg width="13" height="13" class="mt-0.5 shrink-0 text-stone-400 -rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg>
+          <div class="flex-1 min-w-0">
+            <p class="text-[13px] leading-snug text-stone-500 line-through decoration-stone-300">
+              <span class="mono">pocket-aide</span>
+              <span class="text-stone-300 mx-1">·</span>
+              <span class="mono">#37</span>
+              feat(stt): 한·영 혼용 임시 어휘
+            </p>
+            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-1.5 text-[10.5px] stamp text-stone-400">
+              <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span>통과 1</span>
+              <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span>실패 1</span>
+              <span class="text-stone-300">·</span>
+              <span class="whitespace-nowrap">CI 2건</span>
+              <span class="whitespace-nowrap text-stone-300">·</span>
+              <span class="whitespace-nowrap">어제 11:08</span>
+            </div>
           </div>
-          <p class="text-[12.5px] text-stone-500 leading-tight flex-1 line-through decoration-stone-300">
-            <span class="mono">pocket-aide</span> · <span class="mono">#37</span> feat(stt): 한·영 혼용 임시 어휘
-          </p>
-          <span class="text-[10px] text-stone-400 stamp">11:08</span>
-        </div>
+          <span class="shrink-0 text-[10px] font-bold stamp uppercase px-2 py-0.5 text-stone-400 border border-[var(--rule)] rounded-sm">모두 확인</span>
+        </button>
       </div>
 
-      <div class="bg-[var(--bg)]/60 border border-dashed border-[var(--rule)] p-2.5 mb-2 opacity-65 rounded-md">
-        <div class="flex items-center gap-2.5">
-          <div class="w-5 h-5 rounded-full grid place-items-center shrink-0 bg-stone-300">
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4"><path d="M5 12l4 4 10-10"/></svg>
-          </div>
-          <p class="text-[12.5px] text-stone-500 leading-tight flex-1 line-through decoration-stone-300">
-            <span class="mono">pocket-aide</span> · <span class="mono">#36</span> chore: SwiftLint config
-          </p>
-          <span class="text-[10px] text-stone-400 stamp">08:52</span>
-        </div>
-      </div>
-
-      <!-- AC11 persistence footnote -->
+      <!-- AC11 · AC12 · AC13 footnote -->
       <div class="mt-4 p-3 border border-dashed border-[var(--accent)]/40 rounded-sm text-[11px] text-stone-500 leading-relaxed">
-        <span class="font-bold text-[var(--accent)] stamp">AC11 · AC12.</span>
-        모든 <span class="mono">workflow_run completed</span> 이벤트는 푸시 발송 이전에 서버에 영속화됩니다. 외부 링크(↗ PR · 커밋 · 런) 탭은 GitHub로 이동만 하며 확인 처리를 트리거하지 않습니다 — 확인은 오직 <span class="font-bold text-[var(--accent)]">"확인"</span> 버튼만.
+        <span class="font-bold text-[var(--accent)] stamp">AC11 · AC12 · AC13.</span>
+        모든 <span class="mono">workflow_run completed</span> 이벤트는 푸시 발송 이전에 서버에 영속화되며, 이력 목록은 PR(있으면) 또는 커밋(<span class="mono">head_sha</span>) 기준으로 그룹핑됩니다. 미확인 항목은 강조·우선 노출되고, 모두 확인된 그룹은 dim 처리되어 접힙니다. 확인은 항목별 <span class="font-bold text-[var(--accent)]">"확인"</span> 버튼만이 트리거합니다.
       </div>
 
     </main>
@@ -375,7 +449,7 @@
   </div>
 
   <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">
-    PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력(식별자·PR 링크 옵션·커밋 링크·런 링크·확인 여부·확인 시각) 조회 · AC12 외부 링크 탭은 확인 미트리거, "확인" 버튼이 유일한 처리 트리거. 확인된 항목은 점선 보더 + 취소선 + dim으로 미확인과 명확히 구분.
+    PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, "확인" 버튼이 유일한 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태 표시.
   </p>
 
 </body>
