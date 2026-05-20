@@ -270,32 +270,20 @@ struct PRMonitorGroupCard: View {
 }
 
 extension PRMonitorGroupCard {
-    /// 그룹 키에 해당하는 외부 링크 칩. PR 그룹은 PR + 대표 커밋 두 칩, 커밋 전용
-    /// 그룹은 커밋 칩만. row 단위 commit SHA 차이는 row 메타 라인의 "commit
-    /// xxxxxxx" 텍스트로 식별 가능하므로 그룹 헤더의 커밋 링크는 lead(가장 최근)
-    /// 항목의 커밋만 가리킨다.
+    /// 그룹 키에 해당하는 외부 링크 칩. PR이 있는 그룹만 `PR` 칩을 노출한다.
+    /// 커밋은 row마다 다를 수 있으므로(같은 PR 안에 여러 커밋) row 측에 남긴다.
+    /// 커밋 전용 그룹은 그룹 헤더의 `@sha` 텍스트가 이미 그룹 키를 표시하므로
+    /// 별도 칩 없이도 식별 가능.
     @ViewBuilder
     fileprivate var groupLinks: some View {
-        let prDest = group.prURL.flatMap(URL.init(string:))
-        let commitDest = group.leadItem?.commitURL.flatMap(URL.init(string:))
-        if prDest != nil || commitDest != nil {
+        if let prDest = group.prURL.flatMap(URL.init(string:)) {
             HStack(spacing: 4) {
-                if let prDest {
-                    linkChip(
-                        label: "PR",
-                        systemImage: "arrow.triangle.pull",
-                        url: prDest,
-                        identifier: "prmonitor.group.\(group.id).link.pr"
-                    )
-                }
-                if let commitDest {
-                    linkChip(
-                        label: "커밋",
-                        systemImage: "circle.fill",
-                        url: commitDest,
-                        identifier: "prmonitor.group.\(group.id).link.commit"
-                    )
-                }
+                linkChip(
+                    label: "PR",
+                    systemImage: "arrow.triangle.pull",
+                    url: prDest,
+                    identifier: "prmonitor.group.\(group.id).link.pr"
+                )
             }
         }
     }

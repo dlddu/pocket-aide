@@ -110,10 +110,17 @@ struct PRMonitorHistoryRow: View {
     private var actionsRow: some View {
         if item.acknowledgedAt == nil {
             HStack(spacing: DesignTokens.Spacing.sm) {
-                // PR · 커밋 링크 칩은 그룹 헤더(`PRMonitorGroupCard`)로 이전됨
-                // — 같은 그룹 안에서 PR URL은 동일하고 대표 커밋은 그룹 키 또는
-                // lead 항목 기준. row에는 workflow_run마다 고유한 "런" 링크만
-                // 남기고 "확인" 버튼이 우측에 위치한다.
+                // PR 링크는 그룹 헤더(`PRMonitorGroupCard`)로 이전됨 — 같은 그룹
+                // 안에서 PR URL은 동일하므로. 커밋과 런은 row마다 고유하므로
+                // row 측에 남는다(같은 PR 안에 여러 커밋이 있을 수 있다).
+                if let url = item.commitURL {
+                    linkChip(
+                        label: "커밋",
+                        systemImage: "circle.fill",
+                        url: url,
+                        identifier: "prmonitor.row.\(item.id).link.commit"
+                    )
+                }
                 if let url = item.runURL {
                     linkChip(
                         label: "런",
