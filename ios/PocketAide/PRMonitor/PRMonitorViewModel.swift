@@ -106,6 +106,16 @@ final class PRMonitorViewModel: ObservableObject {
         }
     }
 
+    /// PRD-10 후속: 한 그룹(PR 또는 head_sha 단위) 안의 미확인 항목을 한꺼번에
+    /// 확인 처리한다. 개별 ack 엔드포인트를 순차 호출하므로 한 항목이 실패해도
+    /// 다음은 계속 진행한다(각 호출이 자체 optimistic update + revert를 가진다).
+    func acknowledgeGroup(_ group: HistoryGroup) async {
+        let unackedIDs = group.items.compactMap { $0.acknowledgedAt == nil ? $0.id : nil }
+        for id in unackedIDs {
+            await acknowledge(id: id)
+        }
+    }
+
     func excludeRepo(_ repoFullName: String) async {
         guard let api else { return }
         excludedRepoError = nil

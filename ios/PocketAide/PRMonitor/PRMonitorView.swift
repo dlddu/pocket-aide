@@ -163,6 +163,9 @@ struct PRMonitorView: View {
             highlightedEventID: highlightedEventID,
             onAcknowledge: { id in
                 Task { await viewModel.acknowledge(id: id) }
+            },
+            onAcknowledgeGroup: {
+                Task { await viewModel.acknowledgeGroup(group) }
             }
         )
         .listRowInsets(EdgeInsets(

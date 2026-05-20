@@ -13,6 +13,10 @@ struct PRMonitorGroupCard: View {
     let group: HistoryGroup
     let highlightedEventID: Int64?
     let onAcknowledge: (Int64) -> Void
+    /// AC13 후속: 미확인 그룹 헤더의 "모두 확인" 버튼이 호출하는 콜백. 그룹
+    /// 내 미확인 항목들을 한꺼번에 ack 처리하는 책임은 호출자(ViewModel)에 있다.
+    /// `nil`이면 버튼을 숨긴다(테스트/프리뷰에서 콜백 없이 카드만 띄우는 케이스).
+    let onAcknowledgeGroup: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -36,10 +40,39 @@ struct PRMonitorGroupCard: View {
                     statusSummary
                 }
                 Spacer(minLength: DesignTokens.Spacing.sm)
-                badge
+                VStack(alignment: .trailing, spacing: 4) {
+                    badge
+                    ackGroupButton
+                }
             }
         }
         .padding(DesignTokens.Spacing.md)
+    }
+
+    @ViewBuilder
+    private var ackGroupButton: some View {
+        if !group.allAcknowledged, let onAcknowledgeGroup {
+            Button(action: onAcknowledgeGroup) {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 9, weight: .bold))
+                    Text("모두 확인")
+                        .font(DesignTokens.Typography.font(
+                            size: DesignTokens.Typography.caption2xs,
+                            weight: .bold
+                        ))
+                }
+                .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
+                .padding(.vertical, 4)
+                .padding(.horizontal, DesignTokens.Spacing.sm)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(DesignTokens.Color.accent(.prMonitor), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier("prmonitor.group.\(group.id).ack-all.button")
+        }
     }
 
     @ViewBuilder
