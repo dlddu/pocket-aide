@@ -84,6 +84,9 @@ func TestProcess_HappyPath(t *testing.T) {
 	if evt.CommitURL != "https://github.com/dlddu/pocket-aide/commit/a3f9c27deadbeef" {
 		t.Errorf("commit url: got %q", evt.CommitURL)
 	}
+	if evt.HeadSHA != "a3f9c27deadbeef" {
+		t.Errorf("head sha: got %q want %q", evt.HeadSHA, "a3f9c27deadbeef")
+	}
 	if evt.PRNumber != 0 || evt.PRTitle != "" || evt.PRURL != "" {
 		t.Errorf("expected zero PR fields when pull_requests missing, got n=%d t=%q u=%q",
 			evt.PRNumber, evt.PRTitle, evt.PRURL)

@@ -124,6 +124,7 @@ func main() {
 				RunURL:       evt.HTMLURL,
 				WorkflowName: evt.WorkflowName,
 				HeadBranch:   evt.HeadBranch,
+				HeadSHA:      evt.HeadSHA,
 				Conclusion:   evt.Conclusion,
 			}
 			ids, err := historyStore.InsertBatchTx(ctx, userIDs, historyEvt)

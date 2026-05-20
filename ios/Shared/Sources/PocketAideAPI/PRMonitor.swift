@@ -14,6 +14,7 @@ public struct NotificationHistoryItem: Codable, Identifiable, Equatable, Sendabl
     public let runURL: String?
     public let workflowName: String
     public let headBranch: String
+    public let headSHA: String
     public let conclusion: String
     public let acknowledgedAt: Int64?
     public let createdAt: Int64
@@ -28,6 +29,7 @@ public struct NotificationHistoryItem: Codable, Identifiable, Equatable, Sendabl
         case runURL = "run_url"
         case workflowName = "workflow_name"
         case headBranch = "head_branch"
+        case headSHA = "head_sha"
         case conclusion
         case acknowledgedAt = "acknowledged_at"
         case createdAt = "created_at"
@@ -43,6 +45,7 @@ public struct NotificationHistoryItem: Codable, Identifiable, Equatable, Sendabl
         runURL: String?,
         workflowName: String,
         headBranch: String,
+        headSHA: String,
         conclusion: String,
         acknowledgedAt: Int64?,
         createdAt: Int64
@@ -56,6 +59,7 @@ public struct NotificationHistoryItem: Codable, Identifiable, Equatable, Sendabl
         self.runURL = runURL
         self.workflowName = workflowName
         self.headBranch = headBranch
+        self.headSHA = headSHA
         self.conclusion = conclusion
         self.acknowledgedAt = acknowledgedAt
         self.createdAt = createdAt

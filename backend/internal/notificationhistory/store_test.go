@@ -36,6 +36,7 @@ func TestInsertBatchTx_FansOutAcrossUsers(t *testing.T) {
 		RunURL:       "https://github.com/dlddu/pocket-aide/actions/runs/1",
 		WorkflowName: "CI",
 		HeadBranch:   "feature/x",
+		HeadSHA:      "abc123",
 		Conclusion:   "failure",
 	}
 	ids, err := store.InsertBatchTx(ctx, []int64{1, 2}, evt)
@@ -57,6 +58,9 @@ func TestInsertBatchTx_FansOutAcrossUsers(t *testing.T) {
 		}
 		if items[0].PRNumber == nil || *items[0].PRNumber != 42 {
 			t.Errorf("uid=%d PR number lost: %+v", uid, items[0].PRNumber)
+		}
+		if items[0].HeadSHA != "abc123" {
+			t.Errorf("uid=%d head_sha: got %q want %q", uid, items[0].HeadSHA, "abc123")
 		}
 	}
 }

@@ -45,6 +45,7 @@ type WorkflowRunEvent struct {
 	Repo         string // e.g. "dlddu/pocket-aide"
 	WorkflowName string // workflow name, e.g. "CI"
 	HeadBranch   string
+	HeadSHA      string // commit SHA — used by the iOS client to group PR-less rows (AC13)
 	Conclusion   string // success | failure | cancelled | skipped | ...
 	HTMLURL      string // run URL
 	CommitURL    string // head commit URL on GitHub
@@ -186,6 +187,7 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		Repo:         parsed.Repository.FullName,
 		WorkflowName: parsed.WorkflowRun.Name,
 		HeadBranch:   parsed.WorkflowRun.HeadBranch,
+		HeadSHA:      parsed.WorkflowRun.HeadSHA,
 		Conclusion:   parsed.WorkflowRun.Conclusion,
 		HTMLURL:      parsed.WorkflowRun.HTMLURL,
 	}

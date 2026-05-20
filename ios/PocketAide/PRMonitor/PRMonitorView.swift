@@ -27,22 +27,27 @@ struct PRMonitorView: View {
             DesignTokens.Color.surface(.prMonitor).ignoresSafeArea()
             VStack(spacing: 0) {
                 ScreenHeader(area: .prMonitor, title: "PR 모니터") {
-                    Button {
-                        showingExcludedSheet = true
-                        Task { await viewModel.loadExcludedRepos() }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .font(.system(size: 14, weight: .bold))
-                            .frame(width: 36, height: 36)
-                            .background(DesignTokens.Color.card(.prMonitor))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
+                    HStack(spacing: DesignTokens.Spacing.sm) {
+                        if viewModel.totalUnacknowledgedCount > 0 {
+                            unreadBadge
+                        }
+                        Button {
+                            showingExcludedSheet = true
+                            Task { await viewModel.loadExcludedRepos() }
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease")
+                                .font(.system(size: 14, weight: .bold))
+                                .frame(width: 36, height: 36)
+                                .background(DesignTokens.Color.card(.prMonitor))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
+                        }
+                        .accessibilityIdentifier("prmonitor.excluded.button")
                     }
-                    .accessibilityIdentifier("prmonitor.excluded.button")
                 }
 
                 content
@@ -118,23 +123,27 @@ struct PRMonitorView: View {
 
     private var historyList: some View {
         List {
-            ForEach(viewModel.items) { item in
-                PRMonitorHistoryRow(
-                    item: item,
-                    isHighlighted: highlightedEventID == item.id,
-                    onAcknowledge: {
-                        Task { await viewModel.acknowledge(id: item.id) }
-                    }
+            let unread = viewModel.unacknowledgedGroups
+            let read = viewModel.acknowledgedGroups
+            if !unread.isEmpty {
+                sectionHeader(
+                    title: "미확인 · \(unread.count)개 그룹",
+                    accentColor: DesignTokens.Color.accent(.prMonitor),
+                    titleColor: DesignTokens.Color.accent(.prMonitor)
                 )
-                .listRowInsets(EdgeInsets(
-                    top: DesignTokens.Spacing.xs,
-                    leading: DesignTokens.Spacing.xl,
-                    bottom: DesignTokens.Spacing.xs,
-                    trailing: DesignTokens.Spacing.xl
-                ))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .accessibilityIdentifier("prmonitor.row.\(item.id)")
+                ForEach(unread) { group in
+                    groupCard(group)
+                }
+            }
+            if !read.isEmpty {
+                sectionHeader(
+                    title: "확인 완료",
+                    accentColor: DesignTokens.Color.rule(.prMonitor),
+                    titleColor: DesignTokens.Color.ink(.prMonitor).opacity(0.55)
+                )
+                ForEach(read) { group in
+                    groupCard(group)
+                }
             }
         }
         .listStyle(.plain)
@@ -143,6 +152,68 @@ struct PRMonitorView: View {
         .refreshable {
             await viewModel.load()
         }
+    }
+
+    @ViewBuilder
+    private func groupCard(_ group: HistoryGroup) -> some View {
+        PRMonitorGroupCard(
+            group: group,
+            highlightedEventID: highlightedEventID,
+            onAcknowledge: { id in
+                Task { await viewModel.acknowledge(id: id) }
+            }
+        )
+        .listRowInsets(EdgeInsets(
+            top: DesignTokens.Spacing.xs,
+            leading: DesignTokens.Spacing.xl,
+            bottom: DesignTokens.Spacing.xs,
+            trailing: DesignTokens.Spacing.xl
+        ))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .accessibilityIdentifier("prmonitor.group.\(group.id)")
+    }
+
+    @ViewBuilder
+    private func sectionHeader(title: String, accentColor: Color, titleColor: Color) -> some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: 3, height: 12)
+            Text(title)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .bold))
+                .foregroundStyle(titleColor)
+                .textCase(.uppercase)
+            Rectangle()
+                .fill(DesignTokens.Color.rule(.prMonitor))
+                .frame(height: 1)
+        }
+        .listRowInsets(EdgeInsets(
+            top: DesignTokens.Spacing.sm,
+            leading: DesignTokens.Spacing.xl,
+            bottom: DesignTokens.Spacing.xs,
+            trailing: DesignTokens.Spacing.xl
+        ))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+    }
+
+    @ViewBuilder
+    private var unreadBadge: some View {
+        VStack(spacing: 2) {
+            Text("\(viewModel.totalUnacknowledgedCount)")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                .foregroundStyle(.white)
+            Text("미확인")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))
+                .foregroundStyle(.white)
+                .textCase(.uppercase)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, DesignTokens.Spacing.sm)
+        .background(DesignTokens.Color.accent(.prMonitor))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .accessibilityIdentifier("prmonitor.unread.badge")
     }
 
     private var excludedReposSheet: some View {
