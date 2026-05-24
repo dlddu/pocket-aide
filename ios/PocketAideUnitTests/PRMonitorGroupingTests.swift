@@ -151,6 +151,22 @@ final class PRMonitorGroupingTests: XCTestCase {
         XCTAssertEqual(pr.successCount, 2)
         // failure + cancelled 모두 "실패 계열"로 카운트
         XCTAssertEqual(pr.failureCount, 2)
+        XCTAssertEqual(pr.inProgressCount, 0)
+    }
+
+    func testGroupCountsInProgressSeparately() {
+        // CI 시작(requested) 이벤트는 백엔드가 conclusion에 run status를 정규화해
+        // 저장한다(queued / in_progress). 이들은 성공/실패가 아닌 진행 중으로 집계.
+        let items = [
+            item(id: 1, prNumber: 42, conclusion: "queued"),
+            item(id: 2, prNumber: 42, conclusion: "in_progress"),
+            item(id: 3, prNumber: 42, conclusion: "success"),
+        ]
+        let groups = HistoryGrouping.group(items)
+        let pr = groups[0]
+        XCTAssertEqual(pr.inProgressCount, 2)
+        XCTAssertEqual(pr.successCount, 1)
+        XCTAssertEqual(pr.failureCount, 0)
     }
 
     // MARK: - 입력이 정렬되지 않은 상태에서도 안정

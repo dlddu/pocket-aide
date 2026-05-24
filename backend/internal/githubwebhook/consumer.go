@@ -5,7 +5,8 @@
 // GitHub event type and signature are forwarded as SQS message attributes
 // (x-github-event, x-hub-signature-256; see the PR-monitor runbook §3). This
 // package reads x-github-event to filter to workflow_run, json-decodes the
-// body, keeps only completed runs, and hands the parsed event to a
+// body, keeps workflow_run requested ("CI 시작") and completed runs (dropping
+// in_progress and other actions), and hands the parsed event to a
 // caller-supplied dispatch func.
 //
 // Message authenticity is established upstream: GitHub → API Gateway → an
@@ -51,15 +52,21 @@ type WorkflowRunEvent struct {
 	WorkflowName string // workflow name, e.g. "CI"
 	HeadBranch   string
 	HeadSHA      string // commit SHA — used by the iOS client to group PR-less rows (AC13)
-	Conclusion   string // success | failure | cancelled | skipped | ...
-	HTMLURL      string // run URL
-	CommitURL    string // head commit URL on GitHub
-	PRNumber     int    // 0 when no PR linked
-	PRTitle      string // "" when no PR linked
-	PRURL        string // "" when no PR linked
+	// Conclusion carries the workflow_run conclusion for completed runs
+	// (success | failure | cancelled | skipped | ...). For a "requested"
+	// (CI 시작) event the GitHub conclusion is null, so we normalize it to the
+	// run's status instead (queued | in_progress) — a non-empty status string
+	// the history row and iOS client treat as the in-progress state.
+	Conclusion string
+	HTMLURL    string // run URL
+	CommitURL  string // head commit URL on GitHub
+	PRNumber   int    // 0 when no PR linked
+	PRTitle    string // "" when no PR linked
+	PRURL      string // "" when no PR linked
 }
 
-// DispatchFunc is invoked once per accepted (workflow_run completed) event.
+// DispatchFunc is invoked once per accepted (workflow_run requested or
+// completed) event.
 // A non-nil error causes handleMessage to SKIP DeleteMessage, so the SQS
 // message is re-delivered after VisibilityTimeout. Use that to signal
 // "retry this event later" (e.g. the notification-history write failed).
@@ -184,20 +191,30 @@ func (c *Consumer) process(ctx context.Context, msg types.Message) error {
 	if err := json.Unmarshal(body, &parsed); err != nil {
 		return fmt.Errorf("parse workflow_run: %w", err)
 	}
-	if parsed.Action != "completed" {
-		// GitHub sends requested/in_progress/completed for every run;
-		// we only push on completed. Log so the non-completed volume is
-		// observable.
-		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
+	if parsed.Action != "completed" && parsed.Action != "requested" {
+		// GitHub sends requested/in_progress/completed for every run; we push
+		// on requested (CI 시작) and completed only. in_progress and anything
+		// else is dropped. Log so the dropped volume stays observable.
+		log.Printf("githubwebhook: skipping workflow_run action=%q (not requested/completed)", parsed.Action)
 		c.debugLogMessage(msg)
 		return nil
+	}
+	// A requested run has a null conclusion; fall back to the run status so
+	// the history row carries a non-empty in-progress marker (queued /
+	// in_progress) the iOS client renders as "CI 시작" rather than a failure.
+	conclusion := parsed.WorkflowRun.Conclusion
+	if conclusion == "" {
+		conclusion = parsed.WorkflowRun.Status
+		if conclusion == "" {
+			conclusion = "in_progress"
+		}
 	}
 	evt := WorkflowRunEvent{
 		Repo:         parsed.Repository.FullName,
 		WorkflowName: parsed.WorkflowRun.Name,
 		HeadBranch:   parsed.WorkflowRun.HeadBranch,
 		HeadSHA:      parsed.WorkflowRun.HeadSHA,
-		Conclusion:   parsed.WorkflowRun.Conclusion,
+		Conclusion:   conclusion,
 		HTMLURL:      parsed.WorkflowRun.HTMLURL,
 	}
 	if parsed.WorkflowRun.HeadSHA != "" && parsed.Repository.HTMLURL != "" {
@@ -264,7 +281,8 @@ type workflowRunPayload struct {
 		Name         string                   `json:"name"` // workflow name, e.g. "CI"
 		HeadBranch   string                   `json:"head_branch"`
 		HeadSHA      string                   `json:"head_sha"`
-		Conclusion   string                   `json:"conclusion"`
+		Status       string                   `json:"status"`     // queued | in_progress | completed
+		Conclusion   string                   `json:"conclusion"` // null until status=completed
 		HTMLURL      string                   `json:"html_url"`
 		PullRequests []workflowRunPullRequest `json:"pull_requests"`
 	} `json:"workflow_run"`

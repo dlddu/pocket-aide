@@ -17,13 +17,15 @@ public enum DesignTokens {
 
     /// Cross-area semantic colors used by PR monitor cards.
     /// Defined as direct sRGB literals (not asset references) because they
-    /// borrow §1.5 (forest) / §1.10 (destructive) — declaring them on the
-    /// prMonitor asset would duplicate the source-of-truth in §1.11.
+    /// borrow §1.5 (forest) / §1.10 (destructive) / §1.6 (tan) — declaring
+    /// them on the prMonitor asset would duplicate the source-of-truth in §1.11.
     public enum StatusColor {
         /// `--forest` borrowed from §1.5 routines area for CI success.
         public static let success = SwiftUI.Color(red: 0x4F / 255.0, green: 0x6E / 255.0, blue: 0x5C / 255.0)
         /// `--destructive` borrowed from §1.10 (affirmations) for CI failure.
         public static let failure = SwiftUI.Color(red: 0x9C / 255.0, green: 0x3F / 255.0, blue: 0x2D / 255.0)
+        /// `--tan` borrowed from §1.6 (affirmations) for CI in-progress / 시작.
+        public static let inProgress = SwiftUI.Color(red: 0x8B / 255.0, green: 0x6F / 255.0, blue: 0x47 / 255.0)
         /// Deeper accent for the push-arrival pulse glow (`--accent-strong`).
         public static let arrivalGlow = SwiftUI.Color(red: 0x3D / 255.0, green: 0x2F / 255.0, blue: 0x8E / 255.0)
     }
