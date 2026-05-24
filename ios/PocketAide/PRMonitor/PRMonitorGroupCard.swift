@@ -126,6 +126,9 @@ struct PRMonitorGroupCard: View {
             if group.failureCount > 0 {
                 statusDot(color: DesignTokens.StatusColor.failure, label: "실패 \(group.failureCount)")
             }
+            if group.inProgressCount > 0 {
+                statusDot(color: DesignTokens.StatusColor.inProgress, label: "진행 \(group.inProgressCount)")
+            }
             Text("CI \(group.items.count)건")
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
                 .foregroundStyle(.secondary)

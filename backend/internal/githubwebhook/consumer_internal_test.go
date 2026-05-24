@@ -73,6 +73,17 @@ func completedWorkflowRunWithPR(number int) map[string]any {
 	return p
 }
 
+// requestedWorkflowRun models a "CI 시작" event: action=requested, a null
+// conclusion, and a non-terminal status.
+func requestedWorkflowRun() map[string]any {
+	p := completedWorkflowRun()
+	p["action"] = "requested"
+	wr := p["workflow_run"].(map[string]any)
+	wr["status"] = "queued"
+	delete(wr, "conclusion")
+	return p
+}
+
 // recorderConsumer wires a Consumer with a dispatch func that records every
 // invocation, so each test case can assert how many times — and with what
 // payload — dispatch fired.
@@ -164,17 +175,51 @@ func TestProcess_MissingEventTypeSilentlyDropped(t *testing.T) {
 	}
 }
 
-func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
+func TestProcess_RequestedStartEventDispatched(t *testing.T) {
+	c, got := recorderConsumer(t)
+	msg := makeNativeMessage(t, "workflow_run", requestedWorkflowRun())
+
+	if err := c.process(context.Background(), msg); err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+	if len(*got) != 1 {
+		t.Fatalf("dispatch invocations: got %d want 1", len(*got))
+	}
+	// A requested run has a null conclusion; we normalize it to the run
+	// status so the history row carries a non-empty in-progress marker.
+	if evt := (*got)[0]; evt.Conclusion != "queued" {
+		t.Errorf("start event conclusion: got %q want %q", evt.Conclusion, "queued")
+	}
+}
+
+func TestProcess_RequestedWithoutStatusFallsBackToInProgress(t *testing.T) {
+	c, got := recorderConsumer(t)
+	payload := requestedWorkflowRun()
+	delete(payload["workflow_run"].(map[string]any), "status")
+	msg := makeNativeMessage(t, "workflow_run", payload)
+
+	if err := c.process(context.Background(), msg); err != nil {
+		t.Fatalf("expected nil, got %v", err)
+	}
+	if len(*got) != 1 {
+		t.Fatalf("dispatch invocations: got %d want 1", len(*got))
+	}
+	if evt := (*got)[0]; evt.Conclusion != "in_progress" {
+		t.Errorf("start event conclusion fallback: got %q want %q", evt.Conclusion, "in_progress")
+	}
+}
+
+func TestProcess_InProgressActionDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
 	payload := completedWorkflowRun()
-	payload["action"] = "requested"
+	payload["action"] = "in_progress"
 	msg := makeNativeMessage(t, "workflow_run", payload)
 
 	if err := c.process(context.Background(), msg); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on action=requested")
+		t.Errorf("dispatch fired on action=in_progress")
 	}
 }
 

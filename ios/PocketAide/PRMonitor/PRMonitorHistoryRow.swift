@@ -217,6 +217,7 @@ struct PRMonitorHistoryRow: View {
     private var statusColor: Color {
         switch item.conclusion.lowercased() {
         case "success": return DesignTokens.StatusColor.success
+        case "queued", "requested", "in_progress", "pending", "waiting": return DesignTokens.StatusColor.inProgress
         case "failure", "timed_out", "cancelled", "action_required": return DesignTokens.StatusColor.failure
         default: return DesignTokens.StatusColor.failure
         }
@@ -225,6 +226,7 @@ struct PRMonitorHistoryRow: View {
     private var badgeIcon: String {
         switch item.conclusion.lowercased() {
         case "success": return "checkmark"
+        case "queued", "requested", "in_progress", "pending", "waiting": return "clock"
         default: return "xmark"
         }
     }
@@ -235,6 +237,7 @@ struct PRMonitorHistoryRow: View {
         case "failure": return "CI 실패"
         case "cancelled": return "CI 취소"
         case "timed_out": return "CI 타임아웃"
+        case "queued", "requested", "in_progress", "pending", "waiting": return "CI 시작"
         default: return "CI \(item.conclusion)"
         }
     }

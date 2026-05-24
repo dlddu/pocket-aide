@@ -243,6 +243,10 @@ func safePrefix(t string) string {
 // otherwise we fall back to "repo — <result>" + workflow/branch — the
 // workflow_run.pull_requests array is empty for runs triggered by a direct
 // push to a branch (e.g. main).
+//
+// For a requested (CI 시작) event evt.Conclusion holds the run status
+// (queued / in_progress) instead of a terminal conclusion, so those map to
+// the "CI 시작" verdict.
 func formatPushText(evt githubwebhook.WorkflowRunEvent) (title, body string) {
 	verdict := "CI " + evt.Conclusion
 	switch evt.Conclusion {
@@ -250,6 +254,8 @@ func formatPushText(evt githubwebhook.WorkflowRunEvent) (title, body string) {
 		verdict = "CI 통과"
 	case "failure":
 		verdict = "CI 실패"
+	case "queued", "requested", "in_progress", "pending", "waiting":
+		verdict = "CI 시작"
 	}
 	if evt.PRNumber > 0 {
 		title = fmt.Sprintf("%s — %s #%d", verdict, evt.Repo, evt.PRNumber)

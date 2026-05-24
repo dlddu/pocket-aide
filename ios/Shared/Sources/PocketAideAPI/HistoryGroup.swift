@@ -44,6 +44,18 @@ public struct HistoryGroup: Identifiable, Equatable, Sendable {
         }
     }
 
+    /// CI 시작/진행 중 항목 수 — 종합 상태 요약의 🟡(앤버) 집계.
+    public var inProgressCount: Int {
+        items.reduce(0) { count, item in
+            switch item.conclusion.lowercased() {
+            case "queued", "requested", "in_progress", "pending", "waiting":
+                return count + 1
+            default:
+                return count
+            }
+        }
+    }
+
     /// 같은 그룹에 속하는 항목 중 "대표"로 노출할 항목 — 가장 최근(첫 번째).
     public var leadItem: NotificationHistoryItem? { items.first }
 }
