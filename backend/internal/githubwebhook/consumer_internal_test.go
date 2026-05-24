@@ -4,25 +4,47 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
-// makeEventBridgeMessage builds a faithful EventBridge → SQS message body
-// with the given detail-type and detail (GitHub event) payload.
-func makeEventBridgeMessage(t *testing.T, detailType string, detail any) []byte {
+// mustMarshal JSON-encodes v or fails the test. Shared with the integration
+// test, which builds the same native message bodies.
+func mustMarshal(t *testing.T, v any) []byte {
 	t.Helper()
-	detailRaw, err := json.Marshal(detail)
+	b, err := json.Marshal(v)
 	if err != nil {
-		t.Fatalf("marshal detail: %v", err)
+		t.Fatalf("marshal: %v", err)
 	}
-	raw, err := json.Marshal(eventBridgeEnvelope{
-		DetailType: detailType,
-		Source:     "github.webhooks",
-		Detail:     detailRaw,
-	})
-	if err != nil {
-		t.Fatalf("marshal envelope: %v", err)
+	return b
+}
+
+// eventAttrs builds the SQS message-attribute map the API Gateway → SQS
+// integration produces. An empty eventType yields nil (no attributes),
+// simulating a producer other than the integration.
+func eventAttrs(eventType string) map[string]types.MessageAttributeValue {
+	if eventType == "" {
+		return nil
 	}
-	return raw
+	return map[string]types.MessageAttributeValue{
+		attrGitHubEvent: {
+			DataType:    aws.String("String"),
+			StringValue: aws.String(eventType),
+		},
+	}
+}
+
+// makeNativeMessage builds the SQS message the API Gateway → SQS integration
+// delivers: the raw GitHub event JSON as the body, with the event type carried
+// in the x-github-event message attribute.
+func makeNativeMessage(t *testing.T, eventType string, payload any) types.Message {
+	t.Helper()
+	body := mustMarshal(t, payload)
+	return types.Message{
+		Body:              aws.String(string(body)),
+		MessageAttributes: eventAttrs(eventType),
+	}
 }
 
 func completedWorkflowRun() map[string]any {
@@ -68,9 +90,9 @@ func recorderConsumer(t *testing.T) (*Consumer, *[]WorkflowRunEvent) {
 
 func TestProcess_HappyPath(t *testing.T) {
 	c, got := recorderConsumer(t)
-	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun())
+	msg := makeNativeMessage(t, "workflow_run", completedWorkflowRun())
 
-	if err := c.process(context.Background(), raw); err != nil {
+	if err := c.process(context.Background(), msg); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 	if len(*got) != 1 {
@@ -95,9 +117,9 @@ func TestProcess_HappyPath(t *testing.T) {
 
 func TestProcess_WithPullRequest(t *testing.T) {
 	c, got := recorderConsumer(t)
-	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRunWithPR(42))
+	msg := makeNativeMessage(t, "workflow_run", completedWorkflowRunWithPR(42))
 
-	if err := c.process(context.Background(), raw); err != nil {
+	if err := c.process(context.Background(), msg); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 	if len(*got) != 1 {
@@ -115,30 +137,30 @@ func TestProcess_WithPullRequest(t *testing.T) {
 	}
 }
 
-func TestProcess_NonWorkflowRunDetailTypeSilentlyDropped(t *testing.T) {
+func TestProcess_NonWorkflowRunEventSilentlyDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// Some other GitHub event forwarded by the same bus.
-	raw := makeEventBridgeMessage(t, "push", map[string]any{"ref": "refs/heads/main"})
+	// Some other GitHub event the same webhook forwards.
+	msg := makeNativeMessage(t, "push", map[string]any{"ref": "refs/heads/main"})
 
-	if err := c.process(context.Background(), raw); err != nil {
+	if err := c.process(context.Background(), msg); err != nil {
 		t.Fatalf("expected nil for non-workflow_run, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on non-workflow_run detail-type")
+		t.Errorf("dispatch fired on non-workflow_run event")
 	}
 }
 
-func TestProcess_EmptyDetailTypeSilentlyDropped(t *testing.T) {
+func TestProcess_MissingEventTypeSilentlyDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// Envelope decodes but has no detail-type — e.g. a non-EventBridge
-	// producer published directly to the queue.
-	raw, _ := json.Marshal(map[string]any{"hello": "world"})
+	// No x-github-event attribute — e.g. a producer other than the API Gateway
+	// integration published directly to the queue.
+	msg := makeNativeMessage(t, "", map[string]any{"hello": "world"})
 
-	if err := c.process(context.Background(), raw); err != nil {
-		t.Fatalf("expected nil for empty detail-type, got %v", err)
+	if err := c.process(context.Background(), msg); err != nil {
+		t.Fatalf("expected nil for missing event type, got %v", err)
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on empty detail-type")
+		t.Errorf("dispatch fired on missing event type")
 	}
 }
 
@@ -146,9 +168,9 @@ func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
 	payload := completedWorkflowRun()
 	payload["action"] = "requested"
-	raw := makeEventBridgeMessage(t, "workflow_run", payload)
+	msg := makeNativeMessage(t, "workflow_run", payload)
 
-	if err := c.process(context.Background(), raw); err != nil {
+	if err := c.process(context.Background(), msg); err != nil {
 		t.Fatalf("expected nil, got %v", err)
 	}
 	if len(*got) != 0 {
@@ -156,30 +178,34 @@ func TestProcess_ActionOtherThanCompletedDropped(t *testing.T) {
 	}
 }
 
-func TestProcess_MalformedEnvelope(t *testing.T) {
+func TestProcess_MalformedBody(t *testing.T) {
 	c, got := recorderConsumer(t)
-	if err := c.process(context.Background(), []byte("not json")); err == nil {
-		t.Fatal("expected envelope error, got nil")
+	// x-github-event says workflow_run, but the body isn't valid JSON.
+	msg := types.Message{
+		Body:              aws.String("not json"),
+		MessageAttributes: eventAttrs("workflow_run"),
 	}
-	if len(*got) != 0 {
-		t.Errorf("dispatch fired on malformed envelope")
-	}
-}
-
-func TestProcess_MalformedDetail(t *testing.T) {
-	c, got := recorderConsumer(t)
-	// Valid envelope, but detail isn't a workflow_run JSON object — it's a
-	// JSON array. Unmarshal into workflowRunPayload will fail.
-	raw, _ := json.Marshal(eventBridgeEnvelope{
-		DetailType: "workflow_run",
-		Source:     "github.webhooks",
-		Detail:     json.RawMessage(`[1, 2, 3]`),
-	})
-	if err := c.process(context.Background(), raw); err == nil {
+	if err := c.process(context.Background(), msg); err == nil {
 		t.Fatal("expected parse error, got nil")
 	}
 	if len(*got) != 0 {
-		t.Errorf("dispatch fired on malformed detail")
+		t.Errorf("dispatch fired on malformed body")
+	}
+}
+
+func TestProcess_BodyNotObject(t *testing.T) {
+	c, got := recorderConsumer(t)
+	// Valid JSON, but a workflow_run body must be an object; an array fails to
+	// unmarshal into workflowRunPayload.
+	msg := types.Message{
+		Body:              aws.String(`[1, 2, 3]`),
+		MessageAttributes: eventAttrs("workflow_run"),
+	}
+	if err := c.process(context.Background(), msg); err == nil {
+		t.Fatal("expected parse error, got nil")
+	}
+	if len(*got) != 0 {
+		t.Errorf("dispatch fired on non-object body")
 	}
 }
 
@@ -189,8 +215,8 @@ func TestProcess_DispatchErrorPropagates(t *testing.T) {
 			return errBoom
 		},
 	}
-	raw := makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun())
-	if err := c.process(context.Background(), raw); err == nil {
+	msg := makeNativeMessage(t, "workflow_run", completedWorkflowRun())
+	if err := c.process(context.Background(), msg); err == nil {
 		t.Fatal("expected dispatch error to propagate, got nil")
 	}
 }

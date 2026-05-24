@@ -1,13 +1,17 @@
 // Package githubwebhook consumes GitHub webhook deliveries that have been
-// forwarded into an SQS queue via the EventBridge → SQS target integration.
-// EventBridge wraps each delivery in its standard envelope; this package
-// unwraps the envelope, filters to workflow_run completed events, and hands
-// the parsed event to a caller-supplied dispatch func.
+// forwarded into an SQS queue by an API Gateway → SQS (SendMessage) proxy
+// integration. The SQS message body is the raw GitHub event payload (the
+// native webhook body, "$request.body") — not an EventBridge envelope. The
+// GitHub event type and signature are forwarded as SQS message attributes
+// (x-github-event, x-hub-signature-256; see the PR-monitor runbook §3). This
+// package reads x-github-event to filter to workflow_run, json-decodes the
+// body, keeps only completed runs, and hands the parsed event to a
+// caller-supplied dispatch func.
 //
-// Message authenticity is enforced by the IAM/queue-policy boundary around
-// the SQS queue, not by an HMAC. The EventBridge bus is the only producer
-// expected to hold sqs:SendMessage on this queue; the GitHub-side webhook
-// signature is consumed and discarded by EventBridge before forwarding.
+// Message authenticity: GitHub's HMAC of the body is forwarded as the
+// x-hub-signature-256 attribute. The API Gateway endpoint is internet-facing,
+// so that signature — not an IAM/queue boundary — is what establishes
+// authenticity. This consumer does not yet verify it; see the runbook §3.
 //
 // Retry semantics: a dispatch func that returns a non-nil error keeps the
 // SQS message on the queue (SkipDeleteMessage on the receive cycle) so it
@@ -34,8 +38,8 @@ import (
 )
 
 // WorkflowRunEvent is the subset of fields the dispatcher cares about.
-// Sourced from EventBridge `detail.workflow_run` / `detail.repository` /
-// `detail.workflow_run.pull_requests[]`.
+// Sourced from the GitHub workflow_run event body: `workflow_run`,
+// `repository`, and `workflow_run.pull_requests[]`.
 //
 // PR fields (PRNumber/PRTitle/PRURL) are zero-valued when the workflow run
 // is not associated with a pull request (e.g. a push to main triggered the
@@ -65,9 +69,10 @@ type DispatchFunc func(ctx context.Context, evt WorkflowRunEvent) error
 //
 // debugLogHeaders / debugLogBody are opt-in toggles read from
 // DEBUG_LOG_ENVELOPE_HEADERS / DEBUG_LOG_ENVELOPE_BODY at construction time.
-// When set, they cause silent-drop paths in process() to dump additional
-// envelope detail — useful for diagnosing unexpected messages on the queue
-// (test sends from the AWS console, non-EventBridge producers, etc.).
+// When set, they cause silent-drop paths in process() to dump the message's
+// attribute keys / body prefix — useful for diagnosing unexpected messages on
+// the queue (AWS console test sends, producers other than the API Gateway
+// integration, etc.).
 type Consumer struct {
 	client          *sqs.Client
 	queueURL        string
@@ -119,6 +124,11 @@ func (c *Consumer) Run(ctx context.Context) {
 			QueueUrl:            aws.String(c.queueURL),
 			MaxNumberOfMessages: 10,
 			WaitTimeSeconds:     20,
+			// The API Gateway integration carries the GitHub event type in the
+			// x-github-event message attribute; SQS omits attributes unless
+			// asked. "All" also surfaces x-hub-signature-256 / requestTime for
+			// the debug-log path.
+			MessageAttributeNames: []string{"All"},
 		})
 		if err != nil {
 			if ctx.Err() != nil {
@@ -134,10 +144,9 @@ func (c *Consumer) Run(ctx context.Context) {
 }
 
 func (c *Consumer) handleMessage(ctx context.Context, msg types.Message) {
-	body := []byte(aws.ToString(msg.Body))
-	if err := c.process(ctx, body); err != nil {
+	if err := c.process(ctx, msg); err != nil {
 		// Two kinds of failure land here:
-		//   1) Malformed envelope/payload — replays would never succeed.
+		//   1) Malformed body — replays would never succeed.
 		//   2) Transient dispatch error (e.g. SQLite busy, history write
 		//      failed) — should be retried.
 		// We don't reliably distinguish them in code, so we take the safer
@@ -157,22 +166,21 @@ func (c *Consumer) handleMessage(ctx context.Context, msg types.Message) {
 	}
 }
 
-func (c *Consumer) process(ctx context.Context, raw []byte) error {
-	detailType, source, detail, err := decodeEventBridgeEnvelope(raw)
-	if err != nil {
-		return fmt.Errorf("envelope: %w", err)
-	}
-	if detailType != "workflow_run" {
-		// Not a workflow_run — could be any other GitHub event forwarded
-		// by the same bus, an AWS test message, etc. Log once so operators
-		// can see what's filling the queue without sampling messages
-		// directly. Source is included for the same reason.
-		log.Printf("githubwebhook: skipping detail_type=%q source=%q (not workflow_run)", detailType, source)
-		c.debugLogEnvelope(raw)
+func (c *Consumer) process(ctx context.Context, msg types.Message) error {
+	eventType := githubEventType(msg)
+	if eventType != "workflow_run" {
+		// Not a workflow_run — could be any other GitHub event the API
+		// Gateway forwards (push, ping, …), or a message with no
+		// x-github-event attribute at all (a producer other than the API
+		// Gateway integration). Log once so operators can see what's filling
+		// the queue without sampling messages directly.
+		log.Printf("githubwebhook: skipping x-github-event=%q (not workflow_run)", eventType)
+		c.debugLogMessage(msg)
 		return nil
 	}
+	body := []byte(aws.ToString(msg.Body))
 	var parsed workflowRunPayload
-	if err := json.Unmarshal(detail, &parsed); err != nil {
+	if err := json.Unmarshal(body, &parsed); err != nil {
 		return fmt.Errorf("parse workflow_run: %w", err)
 	}
 	if parsed.Action != "completed" {
@@ -180,7 +188,7 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 		// we only push on completed. Log so the non-completed volume is
 		// observable.
 		log.Printf("githubwebhook: skipping workflow_run action=%q (not completed)", parsed.Action)
-		c.debugLogEnvelope(raw)
+		c.debugLogMessage(msg)
 		return nil
 	}
 	evt := WorkflowRunEvent{
@@ -213,42 +221,35 @@ func (c *Consumer) process(ctx context.Context, raw []byte) error {
 	return nil
 }
 
-// debugLogEnvelope dumps extra envelope detail when the corresponding
-// opt-in env var is set. Called from the silent-drop paths only — happy-path
-// messages already log a structured "dispatched ..." line.
+// debugLogMessage dumps extra detail about an SQS message when the
+// corresponding opt-in env var is set. Called from the silent-drop paths only
+// — happy-path messages already log a structured "dispatched ..." line.
 //
-// For EventBridge envelopes the "header keys" we surface are the top-level
-// fields of the envelope JSON itself (detail-type, source, detail, etc.).
-// This is the analogue of header keys in the old API-Gateway-shaped envelope
-// and is sufficient to identify whether a message came from EventBridge or
-// from another producer.
-//
-// Body output is capped at maxBodyPrefix bytes and printed via %q so any
-// non-UTF-8 bytes are safely escaped.
-func (c *Consumer) debugLogEnvelope(raw []byte) {
+// The useful "headers" are now the SQS message attributes the API Gateway
+// integration adds (x-github-event, x-hub-signature-256, requestTime); their
+// presence/absence identifies whether a message came from the integration or
+// from another producer. Body output is the raw GitHub event payload, capped
+// at maxBodyPrefix bytes and printed via %q so non-UTF-8 bytes are escaped.
+func (c *Consumer) debugLogMessage(msg types.Message) {
 	if c.debugLogHeaders {
-		var top map[string]json.RawMessage
-		if err := json.Unmarshal(raw, &top); err == nil {
-			keys := make([]string, 0, len(top))
-			for k := range top {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-			log.Printf("githubwebhook: debug envelope_keys=%v", keys)
-		} else {
-			log.Printf("githubwebhook: debug envelope_keys=<unparseable: %v>", err)
+		keys := make([]string, 0, len(msg.MessageAttributes))
+		for k := range msg.MessageAttributes {
+			keys = append(keys, k)
 		}
+		sort.Strings(keys)
+		log.Printf("githubwebhook: debug message_attributes=%v", keys)
 	}
 	if c.debugLogBody {
+		body := []byte(aws.ToString(msg.Body))
 		const maxBodyPrefix = 256
-		prefix := raw
+		prefix := body
 		truncated := false
 		if len(prefix) > maxBodyPrefix {
 			prefix = prefix[:maxBodyPrefix]
 			truncated = true
 		}
 		log.Printf("githubwebhook: debug body_prefix=%q total_len=%d truncated=%t",
-			prefix, len(raw), truncated)
+			prefix, len(body), truncated)
 	}
 }
 

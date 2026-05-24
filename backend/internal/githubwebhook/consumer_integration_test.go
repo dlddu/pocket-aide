@@ -14,7 +14,6 @@ package githubwebhook
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -54,11 +53,15 @@ func createEphemeralQueue(t *testing.T, ctx context.Context) (*sqs.Client, strin
 	return client, aws.ToString(create.QueueUrl)
 }
 
-func sendEnvelope(t *testing.T, ctx context.Context, client *sqs.Client, queueURL string, body []byte) {
+// sendNativeMessage mirrors the API Gateway → SQS integration: the raw GitHub
+// event JSON as the body, with the event type in the x-github-event attribute.
+// An empty eventType omits the attribute (a non-integration producer).
+func sendNativeMessage(t *testing.T, ctx context.Context, client *sqs.Client, queueURL, eventType string, payload any) {
 	t.Helper()
 	_, err := client.SendMessage(ctx, &sqs.SendMessageInput{
-		QueueUrl:    aws.String(queueURL),
-		MessageBody: aws.String(string(body)),
+		QueueUrl:          aws.String(queueURL),
+		MessageBody:       aws.String(string(mustMarshal(t, payload))),
+		MessageAttributes: eventAttrs(eventType),
 	})
 	if err != nil {
 		t.Fatalf("send message: %v", err)
@@ -89,7 +92,7 @@ func TestIntegration_ConsumerDeliversValidMessage(t *testing.T) {
 		consumer.Run(ctx)
 	}()
 
-	sendEnvelope(t, ctx, client, queueURL, makeEventBridgeMessage(t, "workflow_run", completedWorkflowRun()))
+	sendNativeMessage(t, ctx, client, queueURL, "workflow_run", completedWorkflowRun())
 
 	select {
 	case evt := <-dispatched:
@@ -128,12 +131,12 @@ func TestIntegration_ConsumerDropsNonWorkflowRunMessages(t *testing.T) {
 		consumer.Run(ctx)
 	}()
 
-	// A detail-type we don't act on — must be silently dropped.
-	sendEnvelope(t, ctx, client, queueURL, makeEventBridgeMessage(t, "push", map[string]any{"ref": "refs/heads/main"}))
+	// An event type we don't act on — must be silently dropped.
+	sendNativeMessage(t, ctx, client, queueURL, "push", map[string]any{"ref": "refs/heads/main"})
 
-	// A direct, non-EventBridge envelope — also silently dropped.
-	bogus, _ := json.Marshal(map[string]any{"foo": "bar"})
-	sendEnvelope(t, ctx, client, queueURL, bogus)
+	// A message with no x-github-event attribute (non-integration producer) —
+	// also silently dropped.
+	sendNativeMessage(t, ctx, client, queueURL, "", map[string]any{"foo": "bar"})
 
 	select {
 	case evt := <-dispatched:
