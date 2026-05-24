@@ -123,18 +123,21 @@ forwarded as message attributes.
 
 ### Authenticity
 
-The previous EventBridge partner integration verified GitHub's
-`X-Hub-Signature-256` and made EventBridge the only producer behind the
-IAM/queue boundary. With a public API Gateway endpoint that's no longer true:
-anyone who reaches the invoke URL can enqueue a message. GitHub's HMAC
-(`x-hub-signature-256`, forwarded as a message attribute) is therefore the
-authenticity check.
+GitHub signs each delivery; the `x-hub-signature-256` header carries the HMAC.
+Because the API Gateway endpoint is public, the signature is verified *before*
+the backend's queue, in a Lambda hop:
 
-> ⚠️ The consumer does **not** yet verify the signature (see §8). Until it
-> does, treat queue contents as untrusted input and keep the invoke URL
-> unpublished. The attribute is already forwarded, so verification can be
-> added without any infra change — only a `GITHUB_WEBHOOK_SECRET` in the
-> backend Secret.
+```
+GitHub → API Gateway → ingress SQS → verifier Lambda → consumer SQS → backend
+```
+
+The Lambda recomputes HMAC-SHA256 over the body with the webhook secret, drops
+anything that doesn't match, and forwards verified deliveries — body and the
+`x-github-event` attribute preserved — to the consumer queue. `SQS_QUEUE_URL`
+(§4) is that consumer queue, and the §2 visibility-timeout / DLQ settings
+apply to it. Only the Lambda holds `sqs:SendMessage` on the consumer queue, so
+the backend trusts its input and does **not** re-verify — no GitHub webhook
+secret lives in the backend (the Lambda holds it).
 
 ---
 
@@ -282,11 +285,6 @@ Tests skip automatically when `AWS_ENDPOINT_URL` is not set, so a plain
 
 These are intentionally NOT implemented and would be future work:
 
-- **GitHub webhook signature (HMAC) verification.** `x-hub-signature-256` is
-  forwarded as a message attribute (§3) but the consumer does not yet verify
-  it. With the public API Gateway endpoint this is the only authenticity
-  check, so it should land before the endpoint is exposed broadly — wire a
-  `GITHUB_WEBHOOK_SECRET` and HMAC-SHA256 the body against the attribute.
 - Idempotency / dedupe of repeated webhook deliveries (SQS at-least-once
   semantics now matter more — see §2 visibility-timeout note. AC11 history
   rows are not deduplicated, so a webhook redelivery + consumer success

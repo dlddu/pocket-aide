@@ -8,10 +8,11 @@
 // body, keeps only completed runs, and hands the parsed event to a
 // caller-supplied dispatch func.
 //
-// Message authenticity: GitHub's HMAC of the body is forwarded as the
-// x-hub-signature-256 attribute. The API Gateway endpoint is internet-facing,
-// so that signature — not an IAM/queue boundary — is what establishes
-// authenticity. This consumer does not yet verify it; see the runbook §3.
+// Message authenticity is established upstream: GitHub → API Gateway → an
+// ingress SQS queue → a verifier Lambda that checks x-hub-signature-256
+// against the webhook secret → the queue this consumer reads. Only the Lambda
+// holds sqs:SendMessage on that queue, so the consumer trusts its input and
+// does not re-verify the HMAC. See the runbook §3.
 //
 // Retry semantics: a dispatch func that returns a non-nil error keeps the
 // SQS message on the queue (SkipDeleteMessage on the receive cycle) so it
