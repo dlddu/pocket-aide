@@ -22,8 +22,13 @@ import (
 // WAL needs a -shm mapping shared by every process that opens the file, and a
 // network filesystem does not guarantee that. The Deployment runs replicas=1
 // with strategy Recreate, so there is only ever one writer.
+//
+// synchronous is pinned to FULL: on the rollback journal, NORMAL does not
+// guarantee that committed transactions survive a power loss. FULL is the
+// SQLite default, but pinning it keeps a driver-default change or a future
+// tuning pass from silently weakening durability.
 func Open(path string) (*sql.DB, error) {
-	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(DELETE)&_pragma=foreign_keys(ON)&_pragma=busy_timeout(5000)", path)
+	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(DELETE)&_pragma=foreign_keys(ON)&_pragma=busy_timeout(5000)&_pragma=synchronous(FULL)", path)
 	conn, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
