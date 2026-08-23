@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: [main]
+  # Manual escape hatch. TestFlight builds expire 90 days after upload, so a
+  # quiet stretch with no ios/** changes leaves testers with a dead build and
+  # no way to refresh it. A dispatch skips path filtering and runs everything,
+  # including the TestFlight upload.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.sha }}
@@ -20,15 +25,19 @@ jobs:
     name: Detect changes
     runs-on: ubuntu-24.04-arm
     outputs:
-      backend_unit: ${{ steps.filter.outputs.backend_unit }}
-      backend_integration: ${{ steps.filter.outputs.backend_integration }}
-      ios_tests: ${{ steps.filter.outputs.ios_tests }}
-      backend: ${{ steps.filter.outputs.backend }}
-      ios: ${{ steps.filter.outputs.ios }}
+      # On workflow_dispatch there is no diff to filter against — paths-filter
+      # would fall back to comparing the ref with the default branch and report
+      # nothing changed, skipping every job. Force all filters true instead.
+      backend_unit: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend_unit == 'true' }}
+      backend_integration: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend_integration == 'true' }}
+      ios_tests: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios_tests == 'true' }}
+      backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
+      ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
+        if: github.event_name != 'workflow_dispatch'
         with:
           # Each job has its own filter — paying for LocalStack on a pure
           # README change, or rebuilding Xcode on a backend-only PR, is not
@@ -117,7 +126,7 @@ jobs:
   testflight-upload:
     name: TestFlight upload
     needs: [changes, ios-test, backend-docker-push]
-    if: ${{ !cancelled() && needs.changes.outputs.ios == 'true' && github.event_name == 'pull_request' && needs.ios-test.result == 'success' && needs.backend-docker-push.result != 'failure' }}
+    if: ${{ !cancelled() && needs.changes.outputs.ios == 'true' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.ios-test.result == 'success' && needs.backend-docker-push.result != 'failure' }}
     uses: ./.github/workflows/testflight-upload.yml
     secrets: inherit
 
@@ -156,7 +165,7 @@ jobs:
           if [ "$BACKEND_CHANGED" = "true" ]; then
             [ "$BACKEND_PUSH_RESULT" = "success" ] || { echo "backend-docker-push must pass"; exit 1; }
           fi
-          if [ "$IOS_CHANGED" = "true" ] && [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+          if [ "$IOS_CHANGED" = "true" ] && { [ "$GITHUB_EVENT_NAME" = "pull_request" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; }; then
             [ "$TESTFLIGHT_RESULT" = "success" ] || { echo "testflight-upload must pass"; exit 1; }
           fi
           echo "ci-success: all required gates green"

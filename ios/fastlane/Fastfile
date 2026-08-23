@@ -48,6 +48,11 @@ platform :ios do
       }
     )
 
+    # workflow_dispatch 빌드에는 PR 번호가 없다. ENV는 빈 문자열로 들어오고
+    # 루비에서 ""는 truthy라 `||`로는 안 걸러지므로 명시적으로 처리한다.
+    pr_number = ENV["PR_NUMBER"].to_s
+    build_source = pr_number.empty? ? "수동" : "PR ##{pr_number}"
+
     pilot(
       api_key: api_key,
       ipa: "build/PocketAide.ipa",
@@ -55,7 +60,7 @@ platform :ios do
       skip_submission: true,
       localized_build_info: {
         "ko" => {
-          whats_new: "PR ##{ENV['PR_NUMBER'] || 'local'} 자동 빌드 (#{(ENV['GITHUB_SHA'] || 'local')[0, 7]})"
+          whats_new: "#{build_source} 자동 빌드 (#{(ENV['GITHUB_SHA'] || 'local')[0, 7]})"
         }
       }
     )
