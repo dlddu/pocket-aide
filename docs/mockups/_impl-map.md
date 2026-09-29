@@ -1,0 +1,99 @@
+---
+type: mockup-impl-map
+last_updated: 2026-09-29
+---
+
+# 구현 ↔ 목업 매핑
+
+> 구현된 SwiftUI 렌더링 소스가 어느 화면 목업(`screen-<슬러그>`)을 그리는지 적은 **기계 판독용 매핑**이다.
+> 목업 ↔ 가치·여정·PRD·디자인 시스템의 연결은 [`_index.md`](./_index.md)가 맡고, 이 파일은 그 반대편
+> (목업 ↔ `ios/` 구현 파일)만 맡는다. 목업이 시각의 단일 진실 원천(SSOT)이므로, 이 표는 토큰·카피·구조
+> 대조를 **어느 파일과 어느 목업 사이에서 할지** 정하는 전제다.
+
+## 판독 규약
+
+- 대상 파일은 렌더링 소스 네 트리 — `ios/PocketAide/`, `ios/PocketAideWidget/`, `ios/PocketAideKeyboard/`,
+  `ios/Shared/Sources/DesignSystem/` — 의 `*.swift` **전부**와 색 에셋 카탈로그
+  `ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets` 1개다. 각 파일은 아래 표에 **정확히 한 번** 나온다.
+  (`Info*.plist`·`*.entitlements`·앱 아이콘 `Assets.xcassets` 는 화면을 그리지 않으므로 대상이 아니다.)
+- 표의 데이터 행은 `` | `<레포 루트 기준 경로>` | <분류> | <목업> | <대조 범위> | `` 형태다.
+  - **분류**는 다음 일곱 값 중 하나다.
+    - `화면` — 목업 한 장의 화면 셸 전체를 그린다.
+    - `부분` — 목업 한 장(또는 여러 장)의 특정 영역만 그린다. 영역은 대조 범위 열에 적는다.
+    - `미구현` — 대응 목업은 있지만 구현이 자리표시자·골격뿐이다. 대응 화면이 구현되기 전까지 대조하지 않는다.
+    - `목업 없음` — 화면을 그리지만 대응 목업이 없다.
+    - `컴포넌트` — `components.md` 의 컴포넌트 구현. 목업 열은 `—`, 대조 범위에 컴포넌트 식별자를 적는다.
+    - `토큰` — `tokens.md` 의 토큰 구현. 목업 열은 `—`, 대조 범위에 절 번호를 적는다.
+    - `비렌더링` — 뷰를 그리지 않는다(상태·API·진입점·인텐트).
+  - **목업** 열은 백틱으로 감싼 화면 ID(`screen-<슬러그>`, 파일명에서 `.html` 을 뺀 것)를 쉼표로 나열하거나 `—` 다.
+    `화면`·`부분`·`미구현` 행은 화면 ID 가 1개 이상이어야 하고, 나머지 분류는 `—` 여야 한다.
+- 대조(토큰·카피·구조)는 `화면`·`부분` 행만 대상이다. `미구현` 행은 해당 화면이 구현되면 `화면`/`부분` 으로 바꾼다.
+- 파일을 추가·삭제·이동하거나 목업을 추가·삭제하면 이 표를 함께 갱신한다. 아래 검산이 실패하면 표가 낡은 것이다.
+
+## 매핑
+
+| 구현 파일 | 분류 | 목업 | 대조 범위 |
+|---|---|---|---|
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
+| `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
+| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
+| `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
+| `ios/PocketAide/AppDelegate.swift` | 비렌더링 | — | 앱 수명주기·푸시 등록 |
+| `ios/PocketAide/DeepLinkRouter.swift` | 비렌더링 | — | `pocketaide://` 딥링크 → 탭 선택 |
+| `ios/PocketAide/HelloWorldView.swift` | 목업 없음 | — | UI 테스트 전용 레거시 홈(`UI_TESTS_USE_LEGACY_HOME=1` 일 때만 `RootView` 가 띄움) |
+| `ios/PocketAide/LoginView.swift` | 목업 없음 | — | 로그인 화면 |
+| `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift` | 목업 없음 | — | 제외 레포 관리 시트. 목업은 진입 버튼(`ScreenHeader` 우측 `IconCircleButton`)까지만 그린다 — 버튼은 `PRMonitorView.swift` 행 |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | 부분 | `screen-pr-monitor-history` | PR/커밋 단위 그룹 카드 `Card.history-group.unacked`·`.acked` — 헤더(키 정보·종합 상태·항목 수·미확인 배지)·펼침 영역·그룹 글로우 |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | 부분 | `screen-pr-monitor-history` | 이벤트 row `Card.history-item.unacked`·`.acked`(외부 링크 칩·「확인」 버튼·취소선) + 푸시 진입 강조(펄스 글로우, PRD-10 AC7 도착지) |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 화면 | `screen-pr-monitor-history` | PR 모니터 탭 화면 셸 — `AreaStrip`·`AreaLabel`·`ScreenHeader`(미확인 배지·제외 레포 버튼)·미확인/확인 완료 섹션. 카드·row 는 위 두 행 |
+| `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 비렌더링 | — | 이력 조회·확인 처리 |
+| `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-routines` | 채팅·임시공간·개인·회사·루틴 탭의 「준비 중」 자리표시자 |
+| `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`) |
+| `ios/PocketAide/PushRegistrar.swift` | 비렌더링 | — | APNs 토큰 등록 |
+| `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-pr-monitor-history` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업별 활성 탭: 다짐·다짐·PR 모니터). 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 목업 없음 |
+| `ios/PocketAide/ShowHelloIntent.swift` | 비렌더링 | — | App Intent |
+| `ios/PocketAideKeyboard/KeyboardViewController.swift` | 미구현 | `screen-keyboard-extension` | 키보드 확장 골격(삽입 버튼·다음 키보드 버튼)뿐 |
+| `ios/PocketAideWidget/AffirmationProvider.swift` | 비렌더링 | — | 위젯 타임라인·다짐 조회 |
+| `ios/PocketAideWidget/PocketAideWidget.swift` | 화면 | `screen-widget` | 위젯 본체(Large) — 슬라이스 배치·구분선·배경. 홈 화면 벽지·앱 아이콘 등 위젯 밖은 iOS 시스템 UI |
+| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | 부분 | `screen-widget` | 다짐 슬라이스(「오늘의 다짐」 라벨·다짐 문장) |
+| `ios/PocketAideWidget/Sections/PlaceholderSection.swift` | 미구현 | `screen-widget` | 날씨·다음 일정·메일·알림 슬라이스의 「곧 추가」 자리표시자 |
+| `ios/PocketAideWidget/WidgetEntry.swift` | 비렌더링 | — | 위젯 타임라인 엔트리 |
+| `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 컴포넌트 | — | `AreaLabel` |
+| `ios/Shared/Sources/DesignSystem/Components/Card.swift` | 컴포넌트 | — | `Card` |
+| `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | 컴포넌트 | — | `FilterPills` |
+| `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | 컴포넌트 | — | `ScreenHeader` |
+| `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 컴포넌트 | — | `Sheet`(+ `Backdrop`·`Handle`) |
+| `ios/Shared/Sources/DesignSystem/Components/TabBarItem.swift` | 컴포넌트 | — | `TabBarItem` — 앱의 탭 바는 시스템 `TabView` 를 쓰며 현재 이 컴포넌트를 호출하지 않는다 |
+| `ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets` | 토큰 | — | `tokens.md` §1.1~§1.11 영역 팔레트·다크 변형·파괴적 액션·PR 모니터 |
+| `ios/Shared/Sources/DesignSystem/Tokens.swift` | 토큰 | — | `tokens.md` §1 색 접근자·§1.11 상태색(`StatusColor`)·§3 타이포·§4 스페이싱/라운드 |
+
+`screen-pr-monitor-push` 는 이 표에 없다 — 잠금 화면 알림은 iOS 시스템 UI 가 그리고 알림 제목·본문은
+`backend/`(APNs 발송)가 정하므로 `ios/` 렌더링 소스가 없다. 푸시를 탭한 뒤의 도착지 강조는
+`screen-pr-monitor-history` 행(`PRMonitorHistoryRow.swift`)에 들어 있다.
+
+## 검산
+
+레포 루트에서 실행한다. 출력이 `ok` 한 줄이면 표가 현재 트리와 맞다.
+
+```bash
+python3 - <<'EOF'
+import re, subprocess, pathlib
+roots = ["ios/PocketAide", "ios/PocketAideWidget", "ios/PocketAideKeyboard", "ios/Shared/Sources/DesignSystem"]
+files = subprocess.run(["git", "ls-files", "--", *roots], capture_output=True, text=True, check=True).stdout.split()
+want = {f for f in files if f.endswith(".swift")} | {"ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets"}
+text = pathlib.Path("docs/mockups/_impl-map.md").read_text()
+rows = re.findall(r"^\| `([^`]+)` \| ([^|]+?) \| ([^|]+?) \| [^|]+ \|$", text, re.M)
+paths = [r[0] for r in rows]
+kinds = {"화면", "부분", "미구현", "목업 없음", "컴포넌트", "토큰", "비렌더링"}
+errs = [f"중복 {p}" for p in {p for p in paths if paths.count(p) > 1}]
+errs += [f"누락 {p}" for p in sorted(want - set(paths))] + [f"잉여 {p}" for p in sorted(set(paths) - want)]
+for path, kind, mock in rows:
+    ids = re.findall(r"`(screen-[a-z0-9-]+)`", mock)
+    if kind not in kinds:
+        errs.append(f"분류 {path}: {kind}")
+    elif (kind in {"화면", "부분", "미구현"}) != bool(ids) or (not ids and mock != "—"):
+        errs.append(f"목업 열 {path}: {mock}")
+    errs += [f"목업 없음 {path}: {i}" for i in ids if not pathlib.Path(f"docs/mockups/{i}.html").is_file()]
+print("\n".join(errs) or "ok")
+EOF
+```
