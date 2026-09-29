@@ -14,7 +14,7 @@
 
 | 판정일 | 범위 | 주석 줄 | 지문 | 판정 | 결과 |
 | --- | --- | ---: | --- | :-: | --- |
-| — | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/backend-unit-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/journey-mockup.yml`, `.github/workflows/testflight-upload.yml` | 49 | `f04b14529e47` | — | 미판정 |
+| — | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/backend-unit-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/journey-mockup.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 143 | `fe8e3b3454d6` | — | 미판정 |
 | — | `.gitignore` | 10 | `4ff410e66d15` | — | 미판정 |
 | — | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | — | 미판정 |
 | — | `backend/cmd/server/main.go` | 27 | `7ca2ee2b1d70` | — | 미판정 |
@@ -46,8 +46,8 @@
 | — | `ios/Shared/Sources/DesignSystem/Tokens.swift` | 17 | `d7ba6a7c41e9` | — | 미판정 |
 | — | `ios/Shared/Sources/PocketAideAPI/HistoryGroup.swift`, `ios/Shared/Sources/PocketAideAPI/PRMonitor.swift`, `ios/Shared/Sources/PocketAideAPI/RotationSelector.swift`, `ios/Shared/Sources/PocketAideAPI/SeededRNG.swift`, `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 49 | `25a15d5d32c3` | — | 미판정 |
 | — | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 4 | `e2d993afe182` | — | 미판정 |
-| — | `ios/fastlane/Appfile`, `ios/fastlane/Fastfile` | 6 | `d8b183eb8f26` | — | 미판정 |
-| — | `k8s/configmap.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 31 | `47c7b833fb62` | — | 미판정 |
+| — | `ios/fastlane/Appfile`, `ios/fastlane/Fastfile` | 7 | `6e7a84af74bc` | — | 미판정 |
+| — | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 37 | `6eb32216d955` | — | 미판정 |
 | — | `tools/journey-mockup-harness/check.mjs` | 29 | `099ed72df19d` | — | 미판정 |
 
 ## E — 줄 끝·줄 중간 주석
