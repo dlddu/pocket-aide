@@ -1,3 +1,5 @@
+// 검증 시나리오: 없음 (스모크/인프라)
+// 등재: docs/product/doc-tracker/ 최신 월 파일 「## e2e 매핑」 → 「비-시나리오(스모크·인프라) 등재」.
 import XCTest
 
 private extension XCUIElement {
