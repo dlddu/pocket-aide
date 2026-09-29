@@ -9,9 +9,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 )
 
-// ListNotificationHistory handles GET /api/notification-history with optional
-// `?limit=&before=` query parameters (limit clamped to 100, before is a row
-// id used for keyset pagination — pass the last id of the previous page).
+// ListNotificationHistory handles GET /api/notification-history.
 func ListNotificationHistory(store *notificationhistory.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())

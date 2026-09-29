@@ -20,9 +20,6 @@ func mustMarshal(t *testing.T, v any) []byte {
 	return b
 }
 
-// eventAttrs builds the SQS message-attribute map the API Gateway → SQS
-// integration produces. An empty eventType yields nil (no attributes),
-// simulating a producer other than the integration.
 func eventAttrs(eventType string) map[string]types.MessageAttributeValue {
 	if eventType == "" {
 		return nil
@@ -35,9 +32,6 @@ func eventAttrs(eventType string) map[string]types.MessageAttributeValue {
 	}
 }
 
-// makeNativeMessage builds the SQS message the API Gateway → SQS integration
-// delivers: the raw GitHub event JSON as the body, with the event type carried
-// in the x-github-event message attribute.
 func makeNativeMessage(t *testing.T, eventType string, payload any) types.Message {
 	t.Helper()
 	body := mustMarshal(t, payload)
@@ -73,8 +67,6 @@ func completedWorkflowRunWithPR(number int) map[string]any {
 	return p
 }
 
-// requestedWorkflowRun models a "CI 시작" event: action=requested, a null
-// conclusion, and a non-terminal status.
 func requestedWorkflowRun() map[string]any {
 	p := completedWorkflowRun()
 	p["action"] = "requested"
@@ -84,9 +76,6 @@ func requestedWorkflowRun() map[string]any {
 	return p
 }
 
-// recorderConsumer wires a Consumer with a dispatch func that records every
-// invocation, so each test case can assert how many times — and with what
-// payload — dispatch fired.
 func recorderConsumer(t *testing.T) (*Consumer, *[]WorkflowRunEvent) {
 	t.Helper()
 	var got []WorkflowRunEvent
@@ -150,7 +139,6 @@ func TestProcess_WithPullRequest(t *testing.T) {
 
 func TestProcess_NonWorkflowRunEventSilentlyDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// Some other GitHub event the same webhook forwards.
 	msg := makeNativeMessage(t, "push", map[string]any{"ref": "refs/heads/main"})
 
 	if err := c.process(context.Background(), msg); err != nil {
@@ -163,8 +151,6 @@ func TestProcess_NonWorkflowRunEventSilentlyDropped(t *testing.T) {
 
 func TestProcess_MissingEventTypeSilentlyDropped(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// No x-github-event attribute — e.g. a producer other than the API Gateway
-	// integration published directly to the queue.
 	msg := makeNativeMessage(t, "", map[string]any{"hello": "world"})
 
 	if err := c.process(context.Background(), msg); err != nil {
@@ -185,8 +171,6 @@ func TestProcess_RequestedStartEventDispatched(t *testing.T) {
 	if len(*got) != 1 {
 		t.Fatalf("dispatch invocations: got %d want 1", len(*got))
 	}
-	// A requested run has a null conclusion; we normalize it to the run
-	// status so the history row carries a non-empty in-progress marker.
 	if evt := (*got)[0]; evt.Conclusion != "queued" {
 		t.Errorf("start event conclusion: got %q want %q", evt.Conclusion, "queued")
 	}
@@ -225,7 +209,6 @@ func TestProcess_InProgressActionDropped(t *testing.T) {
 
 func TestProcess_MalformedBody(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// x-github-event says workflow_run, but the body isn't valid JSON.
 	msg := types.Message{
 		Body:              aws.String("not json"),
 		MessageAttributes: eventAttrs("workflow_run"),
@@ -240,8 +223,6 @@ func TestProcess_MalformedBody(t *testing.T) {
 
 func TestProcess_BodyNotObject(t *testing.T) {
 	c, got := recorderConsumer(t)
-	// Valid JSON, but a workflow_run body must be an object; an array fails to
-	// unmarshal into workflowRunPayload.
 	msg := types.Message{
 		Body:              aws.String(`[1, 2, 3]`),
 		MessageAttributes: eventAttrs("workflow_run"),

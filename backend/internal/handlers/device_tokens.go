@@ -14,9 +14,7 @@ type deviceTokenPayload struct {
 	Token string `json:"token"`
 }
 
-// RegisterDeviceToken handles POST /api/device-tokens. The body carries the
-// hex-encoded APNs device token captured by the iOS client after the user
-// granted notification permission.
+// RegisterDeviceToken handles POST /api/device-tokens.
 func RegisterDeviceToken(store *devicetokens.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())

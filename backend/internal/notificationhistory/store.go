@@ -1,11 +1,6 @@
 // Package notificationhistory persists CI-completion events per user so the
 // PR-monitor screen can show a history (PRD-10 AC11) and the user can
 // explicitly acknowledge each item (AC12).
-//
-// One workflow_run event becomes N rows — one per matched user — so each
-// user's `acknowledged_at` is independent. The dispatch pipeline uses
-// InsertBatchTx to write every row inside a single transaction so a partial
-// failure leaves no orphan rows and the SQS message can be retried cleanly.
 package notificationhistory
 
 import (
@@ -19,13 +14,13 @@ import (
 // is not owned by the caller.
 var ErrNotFound = errors.New("notification history item not found")
 
-// Event is the workflow_run-completed shape supplied by the dispatch
-// pipeline. PR fields are optional (zero values mean "no PR linked").
+// Event is the workflow_run shape supplied by the dispatch pipeline. PR fields
+// are optional (zero values mean "no PR linked").
 type Event struct {
 	RepoFullName string
-	PRNumber     int    // 0 when no PR linked
-	PRTitle      string // "" when no PR linked
-	PRURL        string // "" when no PR linked
+	PRNumber     int
+	PRTitle      string
+	PRURL        string
 	CommitURL    string
 	RunURL       string
 	WorkflowName string
@@ -61,9 +56,7 @@ type Store struct {
 // New wires a Store onto an open *sql.DB.
 func New(db *sql.DB) *Store { return &Store{db: db} }
 
-// List returns up to `limit` history items belonging to userID, newest
-// first. When beforeID > 0 the result is keyset-paginated: only rows with
-// id < beforeID are returned. Limit is clamped to [1, 100].
+// List returns up to `limit` of userID's history items, newest first.
 func (s *Store) List(ctx context.Context, userID int64, limit int, beforeID int64) ([]Item, error) {
 	if limit <= 0 {
 		limit = 50
@@ -235,8 +228,7 @@ func (s *Store) InsertBatchTx(ctx context.Context, userIDs []int64, evt Event) (
 	return ids, nil
 }
 
-// Get returns a single row by id, scoped to userID. Used by tests; production
-// reads always come through List or the dispatch path.
+// Get returns a single row by id, scoped to userID.
 func (s *Store) Get(ctx context.Context, userID, id int64) (Item, error) {
 	items, err := s.db.QueryContext(ctx, `
 		SELECT id, repo_full_name, pr_number, pr_title, pr_url,

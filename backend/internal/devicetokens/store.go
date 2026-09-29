@@ -1,7 +1,4 @@
 // Package devicetokens stores APNs device tokens registered by iOS clients.
-// Per-user fan-out: ListByUserID returns tokens for a single user so the
-// PR-monitor pipeline can push only to that user's devices after blacklist
-// matching.
 package devicetokens
 
 import (
@@ -59,8 +56,7 @@ func (s *Store) ListAll(ctx context.Context) ([]string, error) {
 	return out, nil
 }
 
-// ListByUserID returns every token registered for a single user. A user with
-// no devices returns an empty slice (not an error).
+// ListByUserID returns every token registered for a single user.
 func (s *Store) ListByUserID(ctx context.Context, userID int64) ([]string, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT token FROM device_tokens WHERE user_id = ?`, userID)
 	if err != nil {

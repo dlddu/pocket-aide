@@ -1,15 +1,5 @@
 //go:build integration
 
-// Package-level integration tests that drive the real SQS path. Skipped by
-// default (`//go:build integration`); CI activates them with the matching
-// `-tags=integration` flag against a LocalStack container.
-//
-// Running locally:
-//
-//	docker run --rm -d -p 4566:4566 -e SERVICES=sqs --name ls localstack/localstack:3.8.1
-//	AWS_ENDPOINT_URL=http://localhost:4566 AWS_REGION=us-east-1 \
-//	  AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
-//	  go test -tags=integration -race ./internal/githubwebhook/...
 package githubwebhook
 
 import (
@@ -33,8 +23,6 @@ func requireLocalStack(t *testing.T) {
 	}
 }
 
-// createEphemeralQueue spins up a fresh queue per test so cases don't share
-// state. The test is responsible for deleting it via t.Cleanup.
 func createEphemeralQueue(t *testing.T, ctx context.Context) (*sqs.Client, string) {
 	t.Helper()
 	cfg, err := config.LoadDefaultConfig(ctx)
@@ -53,9 +41,6 @@ func createEphemeralQueue(t *testing.T, ctx context.Context) (*sqs.Client, strin
 	return client, aws.ToString(create.QueueUrl)
 }
 
-// sendNativeMessage mirrors the API Gateway → SQS integration: the raw GitHub
-// event JSON as the body, with the event type in the x-github-event attribute.
-// An empty eventType omits the attribute (a non-integration producer).
 func sendNativeMessage(t *testing.T, ctx context.Context, client *sqs.Client, queueURL, eventType string, payload any) {
 	t.Helper()
 	_, err := client.SendMessage(ctx, &sqs.SendMessageInput{
@@ -131,18 +116,14 @@ func TestIntegration_ConsumerDropsNonWorkflowRunMessages(t *testing.T) {
 		consumer.Run(ctx)
 	}()
 
-	// An event type we don't act on — must be silently dropped.
 	sendNativeMessage(t, ctx, client, queueURL, "push", map[string]any{"ref": "refs/heads/main"})
 
-	// A message with no x-github-event attribute (non-integration producer) —
-	// also silently dropped.
 	sendNativeMessage(t, ctx, client, queueURL, "", map[string]any{"foo": "bar"})
 
 	select {
 	case evt := <-dispatched:
 		t.Fatalf("dispatch should not fire, got %+v", evt)
 	case <-time.After(15 * time.Second):
-		// Expected: nothing arrives.
 	}
 
 	cancel()

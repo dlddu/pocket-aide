@@ -121,7 +121,7 @@ func TestExcludedRepos_DeleteOtherUserReturns404(t *testing.T) {
 	router.ServeHTTP(rec, authedRequest(
 		http.MethodDelete,
 		"/api/excluded-repos/"+strconv.FormatInt(created.ID, 10),
-		nil, 2, // different user
+		nil, 2,
 	))
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("cross-user delete: got %d want 404", rec.Code)

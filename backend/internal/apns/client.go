@@ -21,8 +21,7 @@ type Client struct {
 }
 
 // New parses the .p8 PEM in memory and returns a configured client.
-// useProduction selects api.push.apple.com (true) vs api.sandbox.push.apple.com
-// (false). It must agree with the iOS app's `aps-environment` entitlement —
+// useProduction must agree with the iOS app's `aps-environment` entitlement —
 // mismatched environments fail silently with no notification delivered.
 func New(keyID, teamID, bundleID string, p8PEM []byte, useProduction bool) (*Client, error) {
 	if keyID == "" || teamID == "" || bundleID == "" {
@@ -49,9 +48,7 @@ func New(keyID, teamID, bundleID string, p8PEM []byte, useProduction bool) (*Cli
 	return &Client{cli: cli, bundleID: bundleID}, nil
 }
 
-// Send delivers a simple alert (title + body) to a single device token. APNs
-// non-2xx responses become Go errors with the reason string included so the
-// caller can log them per-token.
+// Send delivers a simple alert (title + body) to a single device token.
 func (c *Client) Send(ctx context.Context, deviceToken, title, body string) error {
 	return c.SendWithData(ctx, deviceToken, title, body, nil)
 }
