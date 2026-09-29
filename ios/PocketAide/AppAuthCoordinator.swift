@@ -23,8 +23,6 @@ final class AppAuthCoordinator: ObservableObject {
         // Share the keychain item with the widget extension. Both targets
         // declare the same `keychain-access-groups` entitlement; the value
         // here must match (with the resolved `$(AppIdentifierPrefix)`).
-        // If the Info.plist key is missing in some environment we fall back
-        // to nil so the app still works standalone.
         let accessGroup = Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String
         let resolvedGroup = accessGroup.flatMap { $0.isEmpty ? nil : $0 }
         let store = KeychainTokenStore(accessGroup: resolvedGroup)

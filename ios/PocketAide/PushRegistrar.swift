@@ -3,18 +3,8 @@ import PocketAideAPI
 import UIKit
 import UserNotifications
 
-/// PushRegistrar owns the iOS-side half of the PR-monitor pipeline:
-/// 1. Ask the user for notification permission.
-/// 2. Register with APNs.
-/// 3. POST the resulting device token to /api/device-tokens.
-///
-/// It also re-checks system permission on demand (for the foreground banner
-/// in RootView) so the UI can prompt the user to re-enable notifications
-/// without restarting the app.
 @MainActor
 final class PushRegistrar {
-    /// Snapshot of the system push-authorization state, surfaced to the UI
-    /// via AppAuthCoordinator so the user can see when notifications are off.
     enum AuthorizationState {
         case notDetermined
         case denied
@@ -31,9 +21,6 @@ final class PushRegistrar {
         if let failureObserver { NotificationCenter.default.removeObserver(failureObserver) }
     }
 
-    /// Asks for push permission (if not yet decided), registers with APNs on
-    /// success, and forwards the resulting token to the backend. Returns the
-    /// post-call authorization state so callers can show UI immediately.
     @discardableResult
     func register(api: APIClient) async -> AuthorizationState {
         self.api = api
@@ -65,9 +52,6 @@ final class PushRegistrar {
         }
     }
 
-    /// Re-reads the system authorization state without prompting. Use when
-    /// the app comes back to the foreground (the user may have toggled the
-    /// setting in Settings.app).
     func currentAuthorization() async -> AuthorizationState {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         switch settings.authorizationStatus {
@@ -90,8 +74,7 @@ final class PushRegistrar {
                     do {
                         try await api.registerDeviceToken(token)
                     } catch {
-                        // Surface as log only — registration retries on next
-                        // launch via bootstrap(). No retry loop in the draft.
+                        // Log only — bootstrap() registers again on the next launch.
                         print("PushRegistrar: registerDeviceToken failed: \(error)")
                     }
                 }

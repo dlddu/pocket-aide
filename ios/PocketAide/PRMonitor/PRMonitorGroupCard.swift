@@ -2,20 +2,10 @@ import DesignSystem
 import PocketAideAPI
 import SwiftUI
 
-/// PR/커밋 단위로 묶인 알림 이력 그룹 카드 (PRD-10 AC13).
-/// 디자인 시스템: `Card.history-group.unacked` / `Card.history-group.acked`
-/// (`docs/design-system/components.md` §5 참조).
-///
-/// 헤더: 그룹 키(PR 번호+제목 또는 branch@sha) · 종합 상태 · 미확인 배지.
-/// 본체: 그룹 내 항목들을 시각 역순으로 노출. 항목 1개당 `PRMonitorHistoryRow`
-/// 재사용. 그룹 전체가 확인 완료된 경우 본체는 접고 헤더만 표시한다.
 struct PRMonitorGroupCard: View {
     let group: HistoryGroup
     let highlightedEventID: Int64?
     let onAcknowledge: (Int64) -> Void
-    /// AC13 후속: 미확인 그룹 헤더의 "모두 확인" 버튼이 호출하는 콜백. 그룹
-    /// 내 미확인 항목들을 한꺼번에 ack 처리하는 책임은 호출자(ViewModel)에 있다.
-    /// `nil`이면 버튼을 숨긴다(테스트/프리뷰에서 콜백 없이 카드만 띄우는 케이스).
     let onAcknowledgeGroup: (() -> Void)?
 
     var body: some View {
@@ -81,7 +71,6 @@ struct PRMonitorGroupCard: View {
     @ViewBuilder
     private var titleLine: some View {
         if let number = group.prNumber {
-            // PR 그룹: repo · #N title
             (
                 Text(group.repoFullName)
                     .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
@@ -98,7 +87,6 @@ struct PRMonitorGroupCard: View {
             ))
             .strikethrough(group.allAcknowledged)
         } else {
-            // 커밋 그룹 (PR 없음): repo · branch @sha
             (
                 Text(group.repoFullName)
                     .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
@@ -234,9 +222,6 @@ struct PRMonitorGroupCard: View {
 
     @ViewBuilder
     private var groupHighlightOverlay: some View {
-        // 푸시 진입 항목이 그룹 안에 있으면 그룹 카드 자체가 인디고 글로우.
-        // 각 row의 ArrivalGlowOverlay는 row 안에서 그대로 살아 있어 사용자가
-        // "이 그룹의 어떤 항목"에 도착했는지 한눈에 식별할 수 있다.
         if isGroupHighlighted {
             RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
                 .stroke(DesignTokens.StatusColor.arrivalGlow.opacity(0.16), lineWidth: 4)
@@ -273,10 +258,6 @@ struct PRMonitorGroupCard: View {
 }
 
 extension PRMonitorGroupCard {
-    /// 그룹 키에 해당하는 외부 링크 칩. PR이 있는 그룹만 `PR` 칩을 노출한다.
-    /// 커밋은 row마다 다를 수 있으므로(같은 PR 안에 여러 커밋) row 측에 남긴다.
-    /// 커밋 전용 그룹은 그룹 헤더의 `@sha` 텍스트가 이미 그룹 키를 표시하므로
-    /// 별도 칩 없이도 식별 가능.
     @ViewBuilder
     fileprivate var groupLinks: some View {
         if let prDest = group.prURL.flatMap(URL.init(string:)) {

@@ -40,7 +40,7 @@ final class AffirmationsViewModel: ObservableObject {
         do {
             let created = try await api.createAffirmation(text: text, priority: priority)
             items.insert(created, at: 0)
-            heroID = created.id // new sentences become the hero immediately (PRD-5 AC: 자동 노출)
+            heroID = created.id
         } catch {
             errorMessage = String(describing: error)
         }

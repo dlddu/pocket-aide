@@ -2,11 +2,6 @@ import DesignSystem
 import PocketAideAPI
 import SwiftUI
 
-/// "제외 레포" 관리 시트. PRD-10 AC6 — 사용자가 자신의 blacklist에 owner/repo
-/// 항목을 추가/삭제한다.
-///
-/// `PRMonitorView`에서 추출 — PRMonitorView의 type_body가 SwiftLint 250라인
-/// 한도를 넘어 시각적으로 독립적인 sheet를 별도 파일로 분리.
 struct PRMonitorExcludedReposSheet: View {
     @ObservedObject var viewModel: PRMonitorViewModel
     @Binding var isPresented: Bool

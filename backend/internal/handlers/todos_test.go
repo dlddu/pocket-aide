@@ -197,7 +197,6 @@ func TestTodoUserScopingAndValidation(t *testing.T) {
 	}
 }
 
-// Open items come first (earliest due date, undated last); completed go last.
 func TestTodoListOrdering(t *testing.T) {
 	router := newTodoRouter(t)
 	undated := createTodo(t, router, "personal", map[string]any{"title": "undated"}, 1)
