@@ -1,6 +1,6 @@
 # 문서 구조 상태 추적
 
-> 마지막 검증: 2026-09-29 (여정 mockup 체계 도입 후)
+> 마지막 검증: 2026-09-29 (V9 여정 추가 후)
 > 검증 기준: user-journey-writer · journey-mockup-builder 규약 (design-doc-structure-validator 부재로 수동 점검)
 > 대상: pocket-aide 레포
 
@@ -9,16 +9,16 @@
 ## 현재 상태 요약
 
 - **정의된 가치 (참조)**: 9개 (V1 ~ V9) — `docs/product/values.md`
-- **사용자 여정**: **1개** (`JRN-affirmation-daily-exposure`, V4) — V1, V2, V3, V5, V6, V7, V8, V9는 여정 미정의
-- **여정 mockup**: **1개** (`journeys/JRN-affirmation-daily-exposure/`) — 여정 1 / 1 ✅, `check_mockup.py` 실패 0
+- **사용자 여정**: **2개** (`JRN-affirmation-daily-exposure` V4, `JRN-ci-push-to-ack` V9) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
+- **여정 mockup**: **2개** — 여정 2 / 2 ✅, 둘 다 `check_mockup.py` 실패 0
 - **화면 mockup**: 13개 (모두 `_index.md`에 매핑됨)
   - 가치 매핑됨: 13 / 13 ✅
-  - 여정 매핑됨: **3 / 13**: `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만)
+  - 여정 매핑됨: **5 / 13**: `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만), `screen-pr-monitor-push`, `screen-pr-monitor-history`
   - 디자인 시스템 매핑됨: 13 / 13 ✅
   - 다크 갤러리 반영: 11 / 13 (PR 모니터 2화면 미반영)
 - **허브·리더**: `docs/index.html`(허브), `docs/reader.html`(문서 리더 — `STP-*` 앵커, 문서 → mockup 링크)
 - **디자인 시스템**: 토큰 · 컴포넌트 · 패턴 작성됨 ✅
-- **건강 상태**: 🟡 **여정 커버리지 1/9 가치. 구조(식별자·여정 mockup·허브·리더)는 갖춰짐.**
+- **건강 상태**: 🟡 **여정 커버리지 2/9 가치. 구조(식별자·여정 mockup·허브·리더)는 갖춰짐.**
 
 ---
 
@@ -30,11 +30,13 @@ docs/
 ├── reader.html                     ← 문서 리더 (?doc=<docs 기준 경로>)
 ├── doc-structure-state.md          ← 이 문서
 ├── product/                        ✅ 가치·PRD (상태 추적: product/doc-tracker/)
-├── user-journeys/                  🟡 1개 (V4만)
+├── user-journeys/                  🟡 2개 (V4, V9)
 │   ├── README.md
-│   └── JRN-affirmation-daily-exposure.md
-├── journeys/                       🟡 여정 mockup 1개
-│   └── JRN-affirmation-daily-exposure/index.html
+│   ├── JRN-affirmation-daily-exposure.md
+│   └── JRN-ci-push-to-ack.md
+├── journeys/                       🟡 여정 mockup 2개
+│   ├── JRN-affirmation-daily-exposure/index.html
+│   └── JRN-ci-push-to-ack/index.html
 ├── design-system/                  ✅ tokens · components · patterns
 └── mockups/                        ✅ 화면 mockup 13개 + _index.md(SSOT)
 ```
@@ -55,7 +57,7 @@ docs/
 | V6 | (미정의) | - | screen-widget | 🟡 여정 부재 (위젯의 V4 측면만 매핑됨) |
 | V7 | (미정의) | - | screen-keyboard-extension | 🟡 여정 부재 |
 | V8 | (미정의) | - | screen-routines | 🟡 여정 부재 |
-| V9 | (미정의) | - | screen-pr-monitor-push, screen-pr-monitor-history | 🟡 여정 부재 |
+| V9 | `JRN-ci-push-to-ack` | ✅ 4/4 단계 | screen-pr-monitor-push, screen-pr-monitor-history | ✅ (열린 PR 목록 여정은 AC2~5 구현 후) |
 
 ### 화면 mockup → 디자인 시스템
 
@@ -82,8 +84,12 @@ docs/
 ## 위험 진단
 
 ### 🟡 사용자 여정 부분 작성
-- 여정 1개(V4). V1, V2, V3, V5, V6, V7, V8, V9를 다루는 여정 미작성.
-- 화면 mockup 10개의 `_index.md` "여정" 항목은 `(미정의)`.
+- 여정 2개(V4, V9). V1, V2, V3, V5, V6, V7, V8을 다루는 여정 미작성.
+- 화면 mockup 8개의 `_index.md` "여정" 항목은 `(미정의)`.
+
+### 🟡 PRD-10과 구현의 차이 (여정 작성 중 발견)
+- 구현됐지만 PRD-10에 없는 동작 2건: CI 시작(`workflow_run requested`) 이력·푸시(#40), 그룹 헤더 "모두 확인"(PRD에는 후속 작업으로만 기재). `JRN-ci-push-to-ack`는 이 둘을 "구현됨 — PRD 미반영" 분기로 표기했다. PRD-10 갱신은 product-doc-engineer 범위.
+- `screen-pr-monitor-history.html`은 행마다 `↗ PR` 칩을 두지만, `components.md`의 `history-group`은 PR 링크를 그룹 헤더로 옮긴 정의다. 여정 mockup은 원본 화면을 따랐다.
 
 ### 🟡 다크 갤러리 미동기화
 - `mockups-dark.html`에 `screen-pr-monitor-push`, `screen-pr-monitor-history` 다크 변형 없음. 다크 토큰은 `tokens.md` §1.11에 정의됨.
@@ -108,7 +114,8 @@ docs/
 
 | 순위 | 위험 | 권장 작업 |
 |-----|------|----------|
-| 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8·V9) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. V9(PR 모니터)는 화면·구현이 이미 있어 우선 후보. |
+| 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. |
+| 1 | PRD-10 미반영 구현 2건 | PRD-10에 CI 시작 이벤트와 그룹 일괄 확인을 AC로 반영(또는 결정 사항 갱신). 반영 후 `JRN-ci-push-to-ack`의 "PRD 미반영" 표기 정리. |
 | 2 | 다크 갤러리 미동기화 | `mockups-dark.html`에 PR 모니터 2화면을 §1.11 다크 토큰으로 추가. |
 | 3 | 토스트 컴포넌트 미정의 | `components.md`에 토스트(일시 안내) 정의 추가 여부 결정. |
 | 4 (선택) | `_template.md` 정리 | `tokens.md` 참조 노트로 축소하거나 제거. |
@@ -129,3 +136,4 @@ docs/
 | 2026-05-07 | **첫 사용자 여정 추가**: `journey-affirmation-seeker-daily-exposure.md`(V4 단일 가치, S1~S5) 작성. `mockups/_index.md`의 `screen-affirmations`(S1·S2·S3·S5)와 `screen-widget`(S4·S5, V4 측면) 여정 매핑 채움. V6 측면은 미정의로 남김. user-journeys/README.md 진행 상황 갱신. | 🔴 여정 0개 → 🟡 여정 1/예상5+. mockup 여정 매핑 0/10 → 2/10 |
 | 2026-05-09 | **V4 여정 S2 편집 액션 시각화 mockup 추가**: 새 mockup `screen-affirmations-priority-edit.html` 신설 (추가 직후 시트 자동 노출, 3-tier 단일 선택). design-system 보완: `components.md` §9 "오버레이" 신설 (`Sheet` + 하위 `Backdrop`/`Handle`), §10 매트릭스에 Sheet 행, §4 `FilterPills` 의미 확장(단일 선택형 옵션); `patterns.md` §9 "편집 시트 패턴" 신설. `_index.md` 새 엔트리 + screen-affirmations의 AC2/AC3 라벨 정정 (PRD-5와 일치). `mockups/index.html` 11번 카드 추가. | 🟡 V4 S2 시각화 검증 위험 → ✅ 해소. mockup 10→11, 컴포넌트 22→23, 패턴 8→9, 여정 매핑 2/10→3/11. |
 | 2026-09-29 | **여정 mockup 체계 도입 + 정합성 정리**: 여정 식별자 전환(`affirmation-seeker:daily-exposure` → `JRN-affirmation-daily-exposure`, S1~S5 → `STP-*` 슬러그), 여정 문서를 `user-journey-writer` 템플릿으로 재구성·파일명 변경. 여정 mockup `journeys/JRN-affirmation-daily-exposure/index.html` 신설(5단계·분기 상태 5개·외부 의존 없음). 문서 리더 `reader.html`, 허브 `index.html`(기존 `./mockups/` 리다이렉트 대체) 신설. `_index.md` AC 오기 3건(scratchpad·todo-work·shortcut-capture)·`GroupCard` 명칭·여정 참조 정정, 여정 mockup 항목 추가. `mockups/README.md` 13화면 기준 갱신. V9·PR 모니터 2화면 반영(5/13~5/20 변경분 추적 누락 보정). | 여정 mockup 0 → 1, 허브·리더 없음 → 있음, 여정 식별자 순번 → 슬러그 |
+| 2026-09-29 | **V9 여정 추가**: `JRN-ci-push-to-ack`(4단계, 분기 7개) 작성 + 여정 mockup `journeys/JRN-ci-push-to-ack/`. `_index.md`에 여정 mockup 항목·PR 모니터 두 화면의 여정 매핑 추가, 허브·user-journeys/README 갱신. PRD-10과 구현의 차이 2건(CI 시작 푸시, 그룹 모두 확인)과 PR 링크 위치 불일치 발견·기록. | 여정 1 → 2, 화면 mockup 여정 매핑 3/13 → 5/13 |

@@ -18,8 +18,8 @@ last_updated: 2026-09-29
 
 ## 현재 미정의 영역
 
-- **사용자 여정**: 1개 작성됨 (`JRN-affirmation-daily-exposure` — V4 달성). 나머지 화면 mockup 10개의 "여정" 항목은 여전히 `(미정의)`. `screen-widget`은 V4 측면만 매핑되었고 V6 측면 여정은 미정의. PR 모니터 두 화면(V9)의 여정도 미정의.
-- **여정 mockup**: 여정 하나 = 페이지 하나(`docs/journeys/<JRN-id>/index.html`) 체계를 2026-09-29 도입. 현재 1개. 화면 mockup(`screen-*.html`)은 여정 mockup의 원본 화면·디자인 레퍼런스로 유지한다.
+- **사용자 여정**: 2개 작성됨 (`JRN-affirmation-daily-exposure` — V4, `JRN-ci-push-to-ack` — V9). 나머지 화면 mockup 8개의 "여정" 항목은 여전히 `(미정의)`. `screen-widget`은 V4 측면만 매핑되었고 V6 측면 여정은 미정의.
+- **여정 mockup**: 여정 하나 = 페이지 하나(`docs/journeys/<JRN-id>/index.html`) 체계를 2026-09-29 도입. 현재 2개. 화면 mockup(`screen-*.html`)은 여정 mockup의 원본 화면·디자인 레퍼런스로 유지한다.
 
 ## 여정 mockup
 
@@ -36,6 +36,20 @@ last_updated: 2026-09-29
   - 디자인 시스템 밖 값: 홈 화면 벽지 그라디언트·iOS 앱 아이콘 색(§1.8에 따라 iOS 컨벤션 차용, screen-widget.html과 동일), 하단 토스트(컴포넌트 미정의 — 추가 후보)
 - **공개 경로**: `journeys/JRN-affirmation-daily-exposure/`
 - **외부 의존**: 없음 (인라인 CSS·JS, `file://`로 동작)
+
+### journeys/JRN-ci-push-to-ack/
+- **여정**: `JRN-ci-push-to-ack` (`user-journeys/JRN-ci-push-to-ack.md`)
+- **달성 가치**: V9 (개발 워크플로우 인지 부하 감소)
+- **담은 단계**: `STP-push-glance`, `STP-open-from-push`, `STP-check-details`, `STP-ack-item`
+- **분기 상태**: `STP-push-glance/in-progress`(CI 시작 푸시), `STP-push-glance/no-pr`(PR 없는 실행), `STP-push-glance/excluded`(제외 레포 — 여정 밖 종료), `STP-open-from-push/from-tab`(푸시 놓침 후 탭 직접 진입), `STP-open-from-push/commit-group`(커밋 단위 그룹), `STP-ack-item/done`(확인 완료 — 여정 완료), `STP-ack-item/bulk`(그룹 모두 확인)
+- **원본 화면 mockup**: screen-pr-monitor-push, screen-pr-monitor-history
+- **사용 디자인 시스템**:
+  - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `AreaStrip`, `AreaLabel`, `ScreenHeader`, `IconCircleButton`, `Card.history-group.unacked` / `.acked`, `Card.history-item.unacked` / `.acked`(pulse-glow 포함), `TabBar`, `TabBarItem`
+  - 토큰: §1.11 PR 모니터 + 상태 시그널 차용(forest·destructive·tan), §2 중립, §3.1 sans
+  - 디자인 시스템 밖 값: 잠금 화면 벽지·알림 카드(§6.1 iOS 컨벤션 차용, screen-pr-monitor-push.html과 동일), 앱 내 브라우저 화면(iOS SFSafariViewController 컨벤션 차용, GitHub 페이지 내용은 예시), 탭바 PR 모니터 아이콘(git-branch 형태 인라인 SVG — tokens §7 아이콘 키 준수)
+- **공개 경로**: `journeys/JRN-ci-push-to-ack/`
+- **외부 의존**: 없음
 
 ## 디자인 시스템 매핑
 
@@ -155,7 +169,7 @@ last_updated: 2026-09-29
 
 ## screen-pr-monitor-push.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: `JRN-ci-push-to-ack` (`STP-push-glance`)
   - 가치: V9 (개발 워크플로우 인지 부하 감소)
   - PRD/AC (보조): PRD-10 / AC6 (워크플로우 완료 푸시 — 성공/실패 + PR 연결 있는 케이스 / 없는 fallback 케이스 모두), AC7 진입점 (푸시 탭 = 라우팅만, 확인 미트리거)
 - **사용 디자인 시스템**:
@@ -165,7 +179,7 @@ last_updated: 2026-09-29
 
 ## screen-pr-monitor-history.html
 - **시각화 대상**:
-  - 여정: (미정의)
+  - 여정: `JRN-ci-push-to-ack` (`STP-open-from-push`, `STP-ack-item`)
   - 가치: V9 (개발 워크플로우 인지 부하 감소)
   - PRD/AC (보조): PRD-10 / AC7 도착지 (푸시 진입 시 해당 항목 강조 — 인디고 글로우, 5초 후 자동 해제, 미확인 유지), AC11 (서버 영속화된 이력 조회 — id·PR 링크 옵션·커밋 링크·런 링크·확인 여부·확인 시각, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지), AC12 (명시적 "확인" 버튼만 처리 트리거 — 외부 링크 탭 미트리거), AC13 (PR 있으면 PR 번호, 없으면 커밋 head_sha 기준으로 이력을 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태 표시)
 - **사용 디자인 시스템**:

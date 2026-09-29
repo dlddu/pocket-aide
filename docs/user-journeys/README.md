@@ -1,6 +1,6 @@
 # 사용자 여정 (User Journeys)
 
-> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 1개 작성됨.
+> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 2개 작성됨.
 > 작성은 `user-journey-writer` 규약을, 여정 mockup은 `journey-mockup-builder` 규약을 따른다.
 
 ## 파일·식별자 규칙
@@ -45,6 +45,7 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 | 여정 | 달성 가치 | 여정 mockup |
 |---|---|---|
 | [`JRN-affirmation-daily-exposure`](./JRN-affirmation-daily-exposure.md) — 다짐 문장의 일상 반복 노출 | V4 | [journeys/JRN-affirmation-daily-exposure/](../journeys/JRN-affirmation-daily-exposure/) |
+| [`JRN-ci-push-to-ack`](./JRN-ci-push-to-ack.md) — CI 결과 푸시에서 확인 처리까지 | V9 | [journeys/JRN-ci-push-to-ack/](../journeys/JRN-ci-push-to-ack/) |
 
 ## 남은 후보 (PRD에서 추론)
 
@@ -53,4 +54,4 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 - 메시지 작성 중 글쓰기 보조 (V7, V5 — 키보드 확장)
 - 아침 루틴 시작 (V8 — 루틴)
 - 하루 시작 시 통합 시야 (V6 — 위젯의 일정/메일/날씨/알림 측면)
-- CI 완료 푸시에서 확인까지 (V9 — PR 모니터)
+- 열린 PR 목록으로 상태 훑기 (V9 — PRD-10 AC2~AC5 구현 후)
