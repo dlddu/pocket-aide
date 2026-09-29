@@ -110,8 +110,8 @@
   - 1·2단계 알림에는 결과 상태, 레포 이름, PR 번호·제목 축약이 있다.
   - 3단계 알림에는 결과 상태, 레포 이름, 워크플로우 이름(`repo — conclusion · workflow_name`)이 있다.
 - **검증 AC**: AC6
-- **구현 상태**: 구현됨. 단 4단계(시작 푸시 없음)는 `main` `7c6cfce` 기준 미충족 — 서버가 시작 이벤트도 푸시한다(#40). 수정은 `fix/prd-10-push-completed-only` 브랜치(별도 PR).
-- **관련 코드 테스트**: `backend/internal/githubwebhook/consumer_internal_test.go` — `TestProcess_HappyPath`, `TestProcess_WithPullRequest`, `TestProcess_NonWorkflowRunEventSilentlyDropped`, `TestProcess_RequestedStartEventDispatched`; `consumer_integration_test.go` — `TestIntegration_ConsumerDeliversValidMessage`; `backend/cmd/server/main_test.go` — `TestShouldPush`(수정 PR에서 추가); `backend/internal/handlers/device_tokens_test.go`; `backend/internal/apns/client_test.go`
+- **구현 상태**: 구현됨 (4단계 시작 푸시 없음은 #62에서 반영)
+- **관련 코드 테스트**: `backend/internal/githubwebhook/consumer_internal_test.go` — `TestProcess_HappyPath`, `TestProcess_WithPullRequest`, `TestProcess_NonWorkflowRunEventSilentlyDropped`, `TestProcess_RequestedStartEventDispatched`; `consumer_integration_test.go` — `TestIntegration_ConsumerDeliversValidMessage`; `backend/cmd/server/main_test.go` — `TestShouldPush`; `backend/internal/handlers/device_tokens_test.go`; `backend/internal/apns/client_test.go`
 
 ### 시나리오 7: 제외한 레포의 워크플로우는 푸시되지 않는다
 - **사전 조건**: 로그인되어 디바이스 토큰이 등록된 상태. 레포 A는 PR 모니터 화면의 제외 레포 시트에서 제외, 레포 B는 제외하지 않음.
