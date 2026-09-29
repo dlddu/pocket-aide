@@ -36,14 +36,6 @@ struct ScratchpadTab: View {
     var body: some View { PlaceholderTab(area: .scratchpad, title: "임시공간") }
 }
 
-struct PersonalTab: View {
-    var body: some View { PlaceholderTab(area: .personal, title: "개인") }
-}
-
-struct WorkTab: View {
-    var body: some View { PlaceholderTab(area: .work, title: "회사") }
-}
-
 struct RoutinesTab: View {
     var body: some View { PlaceholderTab(area: .routines, title: "루틴") }
 }
