@@ -12,8 +12,14 @@ import XCTest
 ///     is enqueued once the first user row exists (i.e. after sign-in)
 final class PRMonitorUITests: XCTestCase {
     /// Title line the fixture produces: GitHub's workflow_run.pull_requests[]
-    /// carries no PR title, so the row reads "<repo> · #<number>".
-    private let fixtureTitle = "dlddu/pocket-aide-e2e · #9001"
+    /// carries no PR title, so it reads "<repo> · #<number>". Matched by
+    /// prefix because the group header formats the number with grouping
+    /// ("#9,001") while the row does not ("#9001").
+    private let fixtureTitlePrefix = "dlddu/pocket-aide-e2e · #9"
+
+    private func fixtureTitle(in app: XCUIApplication) -> XCUIElement {
+        app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", fixtureTitlePrefix)).firstMatch
+    }
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -39,35 +45,49 @@ final class PRMonitorUITests: XCTestCase {
         // The event is enqueued after the first sign-in and consumed within
         // seconds; relaunch to re-fetch until the row shows up.
         var attempts = 0
-        while !app.staticTexts[fixtureTitle].firstMatch.waitForExistence(timeout: 10) && attempts < 6 {
+        while !fixtureTitle(in: app).waitForExistence(timeout: 10) && attempts < 6 {
             attempts += 1
             app.terminate()
             app = openPRMonitor()
         }
         XCTAssertTrue(
-            app.staticTexts[fixtureTitle].firstMatch.exists,
+            fixtureTitle(in: app).exists,
             "History row for the webhook fixture should appear on the PR 모니터 screen"
         )
 
-        // -test-iterations 2 may re-run this test after the row was already
-        // acknowledged; the persisted state must then read as acknowledged.
-        let unacked = app.staticTexts["CI 통과"].firstMatch
-        if unacked.exists {
+        // An acknowledged group moves under the 「확인 완료」 section header
+        // and collapses to its card header, so the section header is the
+        // observable acknowledged state. -test-iterations 2 may re-run this
+        // test after the row was already acknowledged.
+        let acknowledgedSection = app.staticTexts["확인 완료"].firstMatch
+        if !acknowledgedSection.exists {
+            XCTAssertTrue(
+                app.staticTexts["CI 통과"].firstMatch.exists,
+                "Fixture conclusion=success should render as CI 통과 on the unacknowledged row"
+            )
             let ack = app.buttons["확인"].firstMatch
             XCTAssertTrue(ack.waitForExistence(timeout: 5), "Unacknowledged row should offer the 확인 button")
             ack.tap()
         }
         XCTAssertTrue(
-            app.staticTexts["CI 통과 · 확인됨"].firstMatch.waitForExistence(timeout: 10),
-            "Fixture conclusion=success should read CI 통과 · 확인됨 once acknowledged"
+            acknowledgedSection.waitForExistence(timeout: 10),
+            "Acknowledged group should move under 확인 완료"
         )
 
         // Acknowledgement is server-side: a fresh launch re-fetches history.
         app.terminate()
         app = openPRMonitor()
         XCTAssertTrue(
-            app.staticTexts["CI 통과 · 확인됨"].firstMatch.waitForExistence(timeout: 15),
+            fixtureTitle(in: app).waitForExistence(timeout: 15),
+            "Row should still be listed after relaunch"
+        )
+        XCTAssertTrue(
+            app.staticTexts["확인 완료"].firstMatch.exists,
             "Acknowledgement should persist via the history API"
+        )
+        XCTAssertFalse(
+            app.staticTexts["CI 통과"].firstMatch.exists,
+            "No unacknowledged row should remain after the persisted acknowledgement"
         )
     }
 }
