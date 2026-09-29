@@ -26,16 +26,19 @@
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
+| — | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | — | 미판정 |
 | — | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 12 | `5af8a11e5aab` | — | 미판정 |
 | 2026-09-29 | `backend/internal/llm/openrouter.go` | 11 | `9dcd360cbdb0` | 완료 | 필요성 판정 — 제거 2줄 · 유지 11줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 26 | `ebe1e7cd5f5e` | 완료 | 필요성 판정 — 제거 10줄 · 유지 26줄(개작 4블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | — | `backend/internal/oidcmock/oidcmock.go` | 21 | `bcb86c763f99` | — | 미판정 |
+| — | `backend/internal/scratchpad/store.go` | 23 | `614edc61eca0` | — | 미판정 |
 | — | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | — | 미판정 |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |
 | — | `backend/migrations/0007_todos.up.sql` | 3 | `b37ba16e4205` | — | 미판정 |
 | — | `ios/PocketAide/Affirmations/AffirmationsView.swift` | 3 | `9a6585e35c9a` | — | 미판정 |
 | — | `ios/PocketAide/AppAuthCoordinator.swift`, `ios/PocketAide/AppDelegate.swift`, `ios/PocketAide/DeepLinkRouter.swift`, `ios/PocketAide/PocketAideApp.swift`, `ios/PocketAide/PushRegistrar.swift`, `ios/PocketAide/RootView.swift` | 74 | `aeac7bc08c03` | — | 미판정 |
 | — | `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift`, `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift`, `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift`, `ios/PocketAide/PRMonitor/PRMonitorView.swift`, `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 70 | `2e520ce8871f` | — | 미판정 |
+| — | `ios/PocketAide/Scratchpad/ScratchpadView.swift`, `ios/PocketAide/Scratchpad/ScratchpadViewModel.swift` | 4 | `20822bf71863` | — | 미판정 |
 | — | `ios/PocketAide/Todos/TodoEditSheet.swift`, `ios/PocketAide/Todos/TodoListView.swift` | 6 | `1413f9b4c157` | — | 미판정 |
 | — | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 81 | `5a2a742d4a99` | — | 미판정 |
 | — | `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift`, `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift`, `ios/PocketAideUnitTests/RotationSelectorTests.swift` | 25 | `d2b5e81aab09` | — | 미판정 |
@@ -45,6 +48,7 @@
 | — | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 7 | `7eaa1de510bc` | — | 미판정 |
 | — | `ios/Shared/Sources/DesignSystem/Tokens.swift` | 17 | `d7ba6a7c41e9` | — | 미판정 |
 | — | `ios/Shared/Sources/PocketAideAPI/HistoryGroup.swift`, `ios/Shared/Sources/PocketAideAPI/PRMonitor.swift`, `ios/Shared/Sources/PocketAideAPI/RotationSelector.swift`, `ios/Shared/Sources/PocketAideAPI/SeededRNG.swift`, `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 49 | `25a15d5d32c3` | — | 미판정 |
+| — | `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 3 | `7dbfb751ae6b` | — | 미판정 |
 | — | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 4 | `e2d993afe182` | — | 미판정 |
 | — | `ios/fastlane/Appfile`, `ios/fastlane/Fastfile` | 6 | `d8b183eb8f26` | — | 미판정 |
 | — | `k8s/configmap.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 31 | `47c7b833fb62` | — | 미판정 |
