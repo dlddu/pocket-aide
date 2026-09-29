@@ -1,0 +1,35 @@
+name: Journey mockup
+
+# 여정 mockup(docs/journeys/*/index.html)을 실제 DOM(jsdom)에서 굴려 여정 문서와의 1:1 규칙과
+# 프로토타입 충실도(화면 행동 전진 · 실제 입력 요소 · 상태 도달)를 집행한다. 규칙 표는
+# tools/journey-mockup-harness/README.md. ci.yml 과 분리한 이유: ci.yml 을 건드리면 paths-filter 의
+# 모든 필터(iOS 빌드 · TestFlight 업로드 포함)가 켜진다. paths 필터를 두지 않아 모든 PR 에 상태가
+# 붙으므로 필수 status 로 지정할 수 있다(수십 초).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: journey-mockup-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  harness:
+    name: journey-mockup
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/journey-mockup-harness/package-lock.json
+      - run: npm ci --prefix tools/journey-mockup-harness
+      - run: node tools/journey-mockup-harness/check.mjs

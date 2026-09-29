@@ -1,0 +1,15 @@
+{
+  "name": "journey-mockup-harness",
+  "private": true,
+  "description": "여정 mockup(docs/journeys/*/index.html)을 실제 DOM에서 굴려 1:1 규칙과 프로토타입 충실도를 집행한다",
+  "type": "module",
+  "scripts": {
+    "check": "node check.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "jsdom": "26.1.0"
+  }
+}

@@ -29,6 +29,17 @@
 
 여정 하나 = mockup 페이지 하나: `docs/journeys/<JRN-id>/index.html`. 모든 단계, 단계 전환·현재 위치, 화면 안 전진 버튼, `#STP-x` 딥링크, 분기 상태(`#STP-x/<state>`), 여정 문서 복귀 링크를 갖춘 외부 의존 없는 단일 HTML이다. 만든 뒤 `mockups/_index.md`의 "여정 mockup" 절과 허브(`docs/index.html`)의 여정 표를 갱신한다.
 
+페이지는 문서 뷰어가 아니라 **클릭되는 제품 프로토타입**이다: 문장·선택·토글은 실제 폼 요소(`<input>`/`<select>`/`<textarea>`)로, 단계는 화면 안의 행동으로 전진하고, 분기·예외 상태에 프로토타입 안에서 도달하며, 식별자·단계 번호·연결 AC 같은 문서 메타는 기본 접힌 레이어(`details.jm-meta`)에만 둔다. 이 규칙은 `tools/journey-mockup-harness`가 페이지를 실제 DOM으로 열고 눌러 보며 집행하고, CI(`.github/workflows/journey-mockup.yml`)가 모든 PR·main push에서 돌린다. 로컬 실행: `npm ci --prefix tools/journey-mockup-harness && node tools/journey-mockup-harness/check.mjs`.
+
+## 여정 mockup 예외
+
+mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검토 시점**과 함께 아래 표에 등재한다. 등재된 여정은 페이지가 없어도 정합성 위반이 아니다. 등재 없이 페이지만 없는 여정은 하네스가 막는다(`폐기` 여정은 등재 없이도 판정 대상이 아니다). 존재하지 않는 여정을 등재해도 하네스가 막는다.
+
+| 여정 | 사유 | 재검토 시점 |
+|---|---|---|
+
+현재 등재된 여정은 없다.
+
 ## 작성된 여정
 
 | 여정 | 달성 가치 | 여정 mockup |
