@@ -16,21 +16,10 @@ struct RootView: View {
         _highlightedEventID = highlightedEventID
     }
 
-    /// LoginUITests still target HelloWorldView's identifiers
-    /// (SignedInLabel, SignOutButton). Tests opt in by setting
-    /// `UI_TESTS_USE_LEGACY_HOME=1`; production never sees this branch.
-    private var useLegacyHome: Bool {
-        ProcessInfo.processInfo.environment["UI_TESTS_USE_LEGACY_HOME"] == "1"
-    }
-
     var body: some View {
         Group {
             if auth.signedIn {
-                if useLegacyHome {
-                    HelloWorldView()
-                } else {
-                    signedInContent
-                }
+                signedInContent
             } else {
                 LoginView()
             }

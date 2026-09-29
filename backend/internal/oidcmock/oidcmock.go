@@ -1,3 +1,5 @@
+// mock-exception: EXT — 실 OIDC IdP 대체 mock 서버. 허용 사유는 docs/e2e-mocking-policy.md 허용목록.
+
 // Package oidcmock provides an OpenID Connect mock server for tests and local
 // development. It implements the minimum surface of an OIDC IdP: discovery,
 // JWKS, authorization (with PKCE), and token endpoints. Tokens are signed with

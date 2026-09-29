@@ -1,5 +1,6 @@
 import XCTest
 
+// mock-exception: EXT — 실 OIDC IdP 대신 oidcmock 과 로그인 왕복을 한다 (docs/e2e-mocking-policy.md 허용목록)
 /// Shared OIDC sign-in helper used by every UI test class.
 ///
 /// Sign-in is heavy (`ASWebAuthenticationSession` round trip against the
@@ -7,10 +8,8 @@ import XCTest
 /// which persists across tests. We perform the dance exactly once per UI test
 /// process via a static guard, then every test launches on top of that token.
 ///
-/// IMPORTANT: this helper launches the app under
-/// `UI_TESTS_USE_LEGACY_HOME=1` for sign-in only, because the verification it
-/// runs (`SignedInLabel.waitForExistence`) targets `HelloWorldView`. Per-test
-/// launches are free to drop that env var and exercise the new TabView shell.
+/// Sign-in is considered complete once the real signed-in shell (the TabView's
+/// tab bar) is on screen.
 enum UITestAuth {
     private static var didSignIn = false
 
@@ -30,18 +29,18 @@ enum UITestAuth {
         defer { testCase.removeUIInterruptionMonitor(monitor) }
 
         // First attempt: launch, optionally run the OIDC dance, watch for
-        // SignedInLabel.
+        // the signed-in tab bar.
         if attemptSignIn(longWait: 120) {
             didSignIn = true
             return
         }
 
         // Fallback: the OIDC callback may have written a token to the keychain
-        // even though we missed the SignedInLabel render window (CI cold-start
+        // even though we missed the tab bar render window (CI cold-start
         // can keep the simulator stalled past the assertion timeout). A fresh
         // launch reads the keychain and lands signed-in directly, so we get a
         // cheap retry without re-doing the browser dance.
-        let attachment = XCTAttachment(string: "UITestAuth: retrying sign-in after first attempt missed SignedInLabel")
+        let attachment = XCTAttachment(string: "UITestAuth: retrying sign-in after first attempt missed the tab bar")
         attachment.lifetime = .keepAlways
         testCase.add(attachment)
 
@@ -50,18 +49,17 @@ enum UITestAuth {
             return
         }
 
-        XCTFail("Sign-in did not complete after two attempts (OIDC dance never produced SignedInLabel)")
+        XCTFail("Sign-in did not complete after two attempts (OIDC dance never produced the tab bar)")
     }
 
     /// One sign-in attempt: launch the app, if already signed in return true,
-    /// otherwise run the OIDC dance and wait `longWait` seconds for
-    /// SignedInLabel. Returns whether the label was seen.
+    /// otherwise run the OIDC dance and wait `longWait` seconds for the
+    /// signed-in tab bar. Returns whether it was seen.
     private static func attemptSignIn(longWait: TimeInterval) -> Bool {
         let app = XCUIApplication()
-        app.launchEnvironment["UI_TESTS_USE_LEGACY_HOME"] = "1"
         app.launch()
 
-        if app.staticTexts["SignedInLabel"].waitForExistence(timeout: 5) {
+        if app.tabBars.firstMatch.waitForExistence(timeout: 5) {
             app.terminate()
             return true
         }
@@ -82,7 +80,7 @@ enum UITestAuth {
             }
         }
 
-        let seen = app.staticTexts["SignedInLabel"].waitForExistence(timeout: longWait)
+        let seen = app.tabBars.firstMatch.waitForExistence(timeout: longWait)
         app.terminate()
         return seen
     }
