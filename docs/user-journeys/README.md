@@ -1,57 +1,45 @@
 # 사용자 여정 (User Journeys)
 
-> 이 디렉토리는 페르소나별 사용자 여정 문서를 담는다. 현재 1개 작성됨.
+> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 1개 작성됨.
+> 작성은 `user-journey-writer` 규약을, 여정 mockup은 `journey-mockup-builder` 규약을 따른다.
 
-## 작성 규칙
+## 파일·식별자 규칙
 
-각 여정은 다음 파일명 규칙으로 작성한다:
+- 파일명: `JRN-<슬러그>.md` — 파일명 = 여정 식별자.
+- 여정 식별자: `JRN-<슬러그>` (예: `JRN-affirmation-daily-exposure`).
+- 단계 식별자: `STP-<슬러그>` (예: `STP-set-priority`). **순번(S1, STP-3)을 식별자로 쓰지 않는다** — 단계를 추가·재배치해도 mockup·리더 앵커가 깨지지 않게 하기 위해서다.
+- 단계 제목은 `` ### `STP-<슬러그>` 단계명 `` 형식. 이 식별자가 곧 문서 앵커(`reader.html?doc=...#STP-x`)이자 여정 mockup 딥링크(`journeys/<JRN>/#STP-x`)다.
+- 기존 식별자는 바꾸지 않는다. 단계가 사라지면 식별자를 재사용하지 말고 변경 이력에 폐기 사실을 남긴다.
 
-```
-journey-[persona]-[name].md
-```
+## 문서 구조
 
-예시: `journey-newuser-onboarding.md`, `journey-poweruser-export.md`
+모든 여정 문서는 같은 섹션 순서를 따른다. 해당 없는 항목은 지우지 말고 "해당 없음"이라고 적는다.
 
-## 표준 frontmatter + 구조
+0. 문서 정보 — 여정 식별자 · 여정명 · 상태(`초안 → 검토중 → 확정 → 폐기`, 버전) · 담당자 · 최종 수정일 · 달성 가치 · 연결 문서(PRD·mockup, 없으면 "미연결")
+1. 서비스 개요 (참고)
+2. 여정 정의 — 페르소나 · 진입 맥락 · 트리거 · 사용자 목표 · 완료 기준(관찰 가능한 이벤트)
+3. 단계별 상세 — 단계 3~8개, 각 단계에 사용자 행동 / 터치포인트 / 생각·감정 / 페인포인트·이탈 위험(→ 대응 방향)
+4. 분기·예외 흐름 — 중도 이탈 · 실패 · 우회 · 외부 지연을 점검하고, 이어지는 단계 식별자를 적는다
+5. 측정 지표 — 분자/분모가 드러나는 정의, 모르는 목표는 `TBD`
+6. 변경 이력
 
-```markdown
----
-type: user-journey
-persona: 페르소나명
-name: 여정 이름
-achieves_values: [V1, V3]
----
+가정한 내용 뒤에는 `(가정)`을 붙인다.
 
-# 사용자 여정: [페르소나] — [이름]
+## 여정 mockup
 
-## 페르소나
-- 이름/역할:
-- 상황:
-- 목표:
+여정 하나 = mockup 페이지 하나: `docs/journeys/<JRN-id>/index.html`. 모든 단계, 단계 전환·현재 위치, 화면 안 전진 버튼, `#STP-x` 딥링크, 분기 상태(`#STP-x/<state>`), 여정 문서 복귀 링크를 갖춘 외부 의존 없는 단일 HTML이다. 만든 뒤 `mockups/_index.md`의 "여정 mockup" 절과 허브(`docs/index.html`)의 여정 표를 갱신한다.
 
-## 달성 가치
-- V1: [가치 이름] — [기여 방식]
+## 작성된 여정
 
-## 단계 흐름
+| 여정 | 달성 가치 | 여정 mockup |
+|---|---|---|
+| [`JRN-affirmation-daily-exposure`](./JRN-affirmation-daily-exposure.md) — 다짐 문장의 일상 반복 노출 | V4 | [journeys/JRN-affirmation-daily-exposure/](../journeys/JRN-affirmation-daily-exposure/) |
 
-### S1: [단계 이름]
-- 사용자 행동:
-- 시스템 응답:
-- 시각화 mockup: screen-[name].html
-```
+## 남은 후보 (PRD에서 추론)
 
-## PocketAide에서 다음 단계
-
-가치 V1~V8과 mockup 10개는 정의되어 있다. 페르소나·여정은 1개 작성되었고 4개가 남았다.
-
-작성된 여정:
-- ✅ `journey-affirmation-seeker-daily-exposure.md` — 자기 다짐 추구자 (V4 — 다짐 + 위젯의 V4 측면)
-
-남은 후보 페르소나 (PRD에서 추론):
-- 운전 중인 사용자 (V1, V2 — Shortcut 음성 캡처)
-- 회사 미팅 직후 사용자 (V1, V3 — Scratchpad → Todo 분류)
-- 메시지 작성 중인 사용자 (V7 — 키보드 확장)
-- 아침 루틴 시작 사용자 (V8 — 루틴)
-- (위젯 V6 측면 별도 페르소나 — 일정/메일/날씨 통합 시야)
-
-여정 작성 후 `mockups/_index.md`의 해당 mockup "여정" 항목을 갱신해야 한다.
+- 운전 중 음성 캡처 (V1, V2 — Shortcut 음성 캡처)
+- 회사 미팅 직후 메모 분류 (V1, V3 — 임시공간 → 투두 분류)
+- 메시지 작성 중 글쓰기 보조 (V7, V5 — 키보드 확장)
+- 아침 루틴 시작 (V8 — 루틴)
+- 하루 시작 시 통합 시야 (V6 — 위젯의 일정/메일/날씨/알림 측면)
+- CI 완료 푸시에서 확인까지 (V9 — PR 모니터)

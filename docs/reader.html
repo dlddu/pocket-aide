@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>문서 리더 — PocketAide</title>
+<style>
+  :root { --fg:#1c1917; --muted:#78716c; --line:#e7e5e4; --bg:#fafaf9; --accent:#8B6F47; --code:#f5f5f4;
+          --sans:'Apple SD Gothic Neo','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); color: var(--fg); background: var(--bg); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+         padding: 8px 16px; background: var(--bg); border-bottom: 1px dashed var(--line); font-size: 13px; }
+  .bar a { color: var(--muted); }
+  .bar code { color: var(--muted); }
+  article { max-width: 760px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1, h2, h3, h4 { line-height: 1.35; scroll-margin-top: 56px; }
+  h1 { font-size: 26px; } h2 { font-size: 20px; margin-top: 36px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  h3 { font-size: 16px; margin-top: 28px; }
+  h3:target, h2:target { background: #f5ecdc; outline: 6px solid #f5ecdc; border-radius: 2px; }
+  code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .9em; background: var(--code); padding: 1px 4px; border-radius: 4px; }
+  pre { background: var(--code); padding: 12px; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  .table { overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+  th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  blockquote { margin: 12px 0; padding: 4px 14px; border-left: 3px solid var(--line); color: var(--muted); }
+  a { color: var(--accent); }
+  .mock { margin-left: 8px; font-size: 12px; font-weight: 400; padding: 1px 8px; border: 1px dashed var(--accent); border-radius: 999px; text-decoration: none; }
+  .err { color: #9C3F2D; }
+</style>
+</head>
+<body>
+<div class="bar"><a href="./">← 허브</a><code id="path"></code><a id="raw" href="#">원문</a><span id="mock"></span></div>
+<article id="out">불러오는 중…</article>
+<script>
+/* 최소 마크다운 리더 — 외부 의존 없음.
+   ?doc=<docs 기준 경로>로 문서를 열고, `STP-*`/`JRN-*` 코드가 든 제목은 그 식별자를 앵커로 쓴다.
+   문서가 여정(JRN-)이면 journeys/<JRN>/ mockup이 있을 때 단계 제목 옆에 mockup 링크를 단다(문서 → mockup). */
+(function () {
+  var params = new URLSearchParams(location.search);
+  var doc = params.get('doc') || '';
+  var out = document.getElementById('out');
+  document.getElementById('path').textContent = doc;
+  document.getElementById('raw').href = doc;
+  if (!doc || /(^|\/)\.\.(\/|$)/.test(doc) || /^[a-z]+:/i.test(doc)) { out.innerHTML = '<p class="err">doc 파라미터가 올바르지 않습니다.</p>'; return; }
+  var base = doc.replace(/[^/]*$/, '');
+
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function resolve(href) {
+    if (/^([a-z]+:|#|\/)/i.test(href)) return href;
+    var parts = (base + href).split('/'), st = [];
+    parts.forEach(function (p) { if (p === '..') st.pop(); else if (p !== '.') st.push(p); });
+    var path = st.join('/');
+    var m = path.match(/^([^#]*\.md)(#.*)?$/);
+    return m ? 'reader.html?doc=' + encodeURI(m[1]) + (m[2] || '') : path;
+  }
+  function inline(s) {
+    var codes = [];
+    s = s.replace(/`([^`]+)`/g, function (_, c) { codes.push('<code>' + esc(c) + '</code>'); return '\u0000' + (codes.length - 1) + '\u0000'; });
+    s = esc(s);
+    s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (_, t, h) { return '<a href="' + resolve(h) + '">' + t + '</a>'; });
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    return s.replace(/\u0000(\d+)\u0000/g, function (_, i) { return codes[+i]; });
+  }
+  function slug(t) {
+    var m = t.match(/`((?:STP|JRN)-[\w-]+)`/); if (m) return m[1];
+    return t.replace(/`/g, '').trim().toLowerCase().replace(/[^\w\u3131-\uD79D\s-]/g, '').replace(/\s+/g, '-');
+  }
+  function render(md) {
+    md = md.replace(/^---\n[\s\S]*?\n---\n/, '');
+    var lines = md.split('\n'), html = [], i = 0;
+    while (i < lines.length) {
+      var l = lines[i];
+      if (/^```/.test(l)) { var buf = []; i++; while (i < lines.length && !/^```/.test(lines[i])) buf.push(esc(lines[i++])); i++; html.push('<pre><code>' + buf.join('\n') + '</code></pre>'); continue; }
+      var h = l.match(/^(#{1,6})\s+(.*)$/);
+      if (h) { html.push('<h' + h[1].length + ' id="' + esc(slug(h[2])) + '">' + inline(h[2]) + '</h' + h[1].length + '>'); i++; continue; }
+      if (/^\s*\|/.test(l) && i + 1 < lines.length && /^\s*\|[\s:|-]+\|\s*$/.test(lines[i + 1])) {
+        var row = function (r) { return r.trim().replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); }); };
+        var t = '<div class="table"><table><thead><tr>' + row(l).map(function (c) { return '<th>' + inline(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+        i += 2; while (i < lines.length && /^\s*\|/.test(lines[i])) { t += '<tr>' + row(lines[i++]).map(function (c) { return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>'; }
+        html.push(t + '</tbody></table></div>'); continue;
+      }
+      if (/^>\s?/.test(l)) { var q = []; while (i < lines.length && /^>\s?/.test(lines[i])) q.push(lines[i++].replace(/^>\s?/, '')); html.push('<blockquote>' + render(q.join('\n')) + '</blockquote>'); continue; }
+      if (/^\s*([-*]|\d+\.)\s+/.test(l)) {
+        var ordered = /^\s*\d+\./.test(l), items = [];
+        while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i])) items.push('<li>' + inline(lines[i++].replace(/^\s*([-*]|\d+\.)\s+/, '')) + '</li>');
+        html.push((ordered ? '<ol>' : '<ul>') + items.join('') + (ordered ? '</ol>' : '</ul>')); continue;
+      }
+      if (/^\s*(-{3,}|\*{3,})\s*$/.test(l)) { html.push('<hr>'); i++; continue; }
+      if (!l.trim()) { i++; continue; }
+      var p = []; while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s|```|>|\s*\||\s*([-*]|\d+\.)\s)/.test(lines[i])) p.push(lines[i++]);
+      if (!p.length) p.push(lines[i++]);
+      html.push('<p>' + inline(p.join('\n')).replace(/\n/g, '<br>') + '</p>');
+    }
+    return html.join('\n');
+  }
+  fetch(doc).then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); }).then(function (md) {
+    out.innerHTML = render(md);
+    var t = out.querySelector('h1'); if (t) document.title = t.textContent + ' — PocketAide';
+    var jrn = (md.match(/`(JRN-[\w-]+)`/) || [])[1];
+    if (jrn) {
+      var mockDir = 'journeys/' + jrn + '/';
+      fetch(mockDir + 'index.html', { method: 'HEAD' }).then(function (r) {
+        if (!r.ok) return;
+        document.getElementById('mock').innerHTML = '<a href="' + mockDir + '">여정 mockup 열기</a>';
+        out.querySelectorAll('h3[id^="STP-"]').forEach(function (h3) {
+          var a = document.createElement('a'); a.className = 'mock'; a.href = mockDir + '#' + h3.id; a.textContent = 'mockup에서 보기';
+          h3.appendChild(a);
+        });
+      }).catch(function () {});
+    }
+    if (location.hash) { var el = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (el) el.scrollIntoView(); }
+  }).catch(function (e) {
+    out.innerHTML = '<p class="err">문서를 불러오지 못했습니다 (' + esc(String(e.message || e)) + '). file://로 열었다면 GitHub Pages 주소에서 열어 주세요.</p>';
+  });
+})();
+</script>
+</body>
+</html>
