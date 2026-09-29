@@ -20,6 +20,11 @@ permissions:
   packages: write
   pull-requests: read
 
+env:
+  # Opt-in label for a PR preview environment (flux-cd-apps
+  # apps/pocket-aide-preview) and a TestFlight build pointed at it.
+  PREVIEW_LABEL: deploy/preview
+
 jobs:
   changes:
     name: Detect changes
@@ -33,6 +38,12 @@ jobs:
       ios_tests: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios_tests == 'true' }}
       backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
       ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
+      # Whether this run publishes a backend image / uploads to TestFlight.
+      # Decided once here so the jobs and the ci-success gate cannot disagree.
+      image: ${{ steps.plan.outputs.image }}
+      testflight: ${{ steps.plan.outputs.testflight }}
+      preview_pr: ${{ steps.plan.outputs.preview_pr }}
+      build_source: ${{ steps.plan.outputs.build_source }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -80,8 +91,12 @@ jobs:
               - '.github/actions/setup-go-backend/**'
               - '.github/actions/start-test-backend/**'
               - '.github/actions/generate-xcode-project/**'
+            # k8s/** is here because production only moves when the `pin` job
+            # republishes the deploy branch, and pin runs after an image build.
+            # A manifest-only change on main must still reach production.
             backend:
               - 'backend/**'
+              - 'k8s/**'
               - 'Dockerfile'
               - '.dockerignore'
               - '.github/workflows/ci.yml'
@@ -98,6 +113,54 @@ jobs:
               - '.github/workflows/testflight-upload.yml'
               - '.github/actions/install-ios-signing/**'
               - '.github/actions/generate-xcode-project/**'
+
+      - name: Plan image / TestFlight
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HAS_LABEL: ${{ contains(github.event.pull_request.labels.*.name, env.PREVIEW_LABEL) }}
+          BACKEND: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
+          IOS: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
+          IOS_TESTS: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios_tests == 'true' }}
+        run: |
+          set -euo pipefail
+          image=$BACKEND testflight=false preview_pr='' build_source=''
+          case "$EVENT" in
+            pull_request)
+              # A labelled PR always needs an image under its head SHA, even
+              # when backend/ is untouched: the preview retags to that SHA.
+              # TestFlight goes to the preview when the app or backend changed.
+              # Unlabelled PRs no longer upload to TestFlight at all.
+              if [ "$HAS_LABEL" = true ]; then
+                image=true preview_pr=$PR_NUMBER build_source="PR #$PR_NUMBER 프리뷰"
+                if [ "$IOS" = true ] || [ "$IOS_TESTS" = true ]; then testflight=true; fi
+              fi
+              ;;
+            push)
+              # Production build on main when the app changed, or when the
+              # merged PR was a labelled one — its testers are on a preview
+              # build that dies with the preview, so move them back to prod.
+              build_source=main
+              merged_labelled=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/pulls" \
+                --jq "[.[] | select(.merged_at != null) | .labels[].name] | any(. == \"$PREVIEW_LABEL\")" \
+                2>/dev/null || echo false)
+              if [ "$IOS" = true ] || [ "$merged_labelled" = true ]; then testflight=true; fi
+              ;;
+            workflow_dispatch)
+              testflight=true build_source=수동
+              ;;
+          esac
+          {
+            echo "image=$image"
+            echo "testflight=$testflight"
+            echo "preview_pr=$preview_pr"
+            echo "build_source=$build_source"
+          } >> "$GITHUB_OUTPUT"
+          echo "image=$image testflight=$testflight preview_pr=${preview_pr:-none} source=${build_source:-none}"
+
 
   backend-unit-test:
     name: Backend unit + lint
@@ -117,22 +180,40 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' }}
     uses: ./.github/workflows/ios-test.yml
 
+  # No path filter: runs on every PR and main push (tens of seconds). The PR
+  # checkout is the merge ref, so a broken mockup already on main fails every PR
+  # until fixed — which is the point of gating on it.
+  journey-mockup:
+    name: Journey mockup
+    uses: ./.github/workflows/journey-mockup.yml
+
   backend-docker-push:
     name: Backend Docker build + push
     needs: [changes, backend-unit-test, backend-integration-test, ios-test]
-    if: ${{ !cancelled() && needs.changes.outputs.backend == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' && needs.ios-test.result != 'failure' }}
+    if: ${{ !cancelled() && needs.changes.outputs.image == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' && needs.ios-test.result != 'failure' }}
+    # The called workflow's `pin` job pushes the deploy branch, so the caller
+    # has to allow contents: write. pin itself is skipped outside main pushes.
+    permissions:
+      contents: write
+      packages: write
     uses: ./.github/workflows/backend-docker-push.yml
 
   testflight-upload:
     name: TestFlight upload
     needs: [changes, ios-test, backend-docker-push]
-    if: ${{ !cancelled() && needs.changes.outputs.ios == 'true' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch') && needs.ios-test.result == 'success' && needs.backend-docker-push.result != 'failure' }}
+    # ios-test may be skipped (e.g. a main merge of a docs-only labelled PR);
+    # it only has to not have failed. A preview build needs its backend image
+    # published first, hence the docker-push dependency.
+    if: ${{ !cancelled() && needs.changes.outputs.testflight == 'true' && (needs.ios-test.result == 'success' || needs.ios-test.result == 'skipped') && needs.backend-docker-push.result != 'failure' }}
     uses: ./.github/workflows/testflight-upload.yml
+    with:
+      preview_pr: ${{ needs.changes.outputs.preview_pr }}
+      build_source: ${{ needs.changes.outputs.build_source }}
     secrets: inherit
 
   ci-success:
     name: ci-success
-    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload]
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload, journey-mockup]
     if: always()
     runs-on: ubuntu-24.04-arm
     steps:
@@ -144,15 +225,17 @@ jobs:
           IOS_TEST_RESULT: ${{ needs.ios-test.result }}
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
+          JOURNEY_MOCKUP_RESULT: ${{ needs.journey-mockup.result }}
           BACKEND_UNIT_CHANGED: ${{ needs.changes.outputs.backend_unit }}
           BACKEND_INTEGRATION_CHANGED: ${{ needs.changes.outputs.backend_integration }}
           IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
-          BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
-          IOS_CHANGED: ${{ needs.changes.outputs.ios }}
+          IMAGE_EXPECTED: ${{ needs.changes.outputs.image }}
+          TESTFLIGHT_EXPECTED: ${{ needs.changes.outputs.testflight }}
         run: |
           set -e
-          echo "changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
+          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
+          [ "$JOURNEY_MOCKUP_RESULT" = "success" ] || { echo "journey-mockup must pass"; exit 1; }
           if [ "$BACKEND_UNIT_CHANGED" = "true" ]; then
             [ "$BACKEND_UNIT_RESULT" = "success" ] || { echo "backend-unit-test must pass"; exit 1; }
           fi
@@ -162,10 +245,10 @@ jobs:
           if [ "$IOS_TESTS_CHANGED" = "true" ]; then
             [ "$IOS_TEST_RESULT" = "success" ] || { echo "ios-test must pass"; exit 1; }
           fi
-          if [ "$BACKEND_CHANGED" = "true" ]; then
+          if [ "$IMAGE_EXPECTED" = "true" ]; then
             [ "$BACKEND_PUSH_RESULT" = "success" ] || { echo "backend-docker-push must pass"; exit 1; }
           fi
-          if [ "$IOS_CHANGED" = "true" ] && { [ "$GITHUB_EVENT_NAME" = "pull_request" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; }; then
+          if [ "$TESTFLIGHT_EXPECTED" = "true" ]; then
             [ "$TESTFLIGHT_RESULT" = "success" ] || { echo "testflight-upload must pass"; exit 1; }
           fi
           echo "ci-success: all required gates green"
