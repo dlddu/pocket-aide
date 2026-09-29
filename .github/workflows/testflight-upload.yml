@@ -3,12 +3,32 @@ name: TestFlight upload
 # Builds and uploads a Release-config TestFlight build via fastlane.
 # Pulls all signing material (cert + 3 provisioning profiles) and the
 # App Store Connect API key from secrets — the caller must invoke with
-# `secrets: inherit`. The repository variable BACKEND_BASE_URL is
-# inherited automatically and points the Release plist at the production
-# backend.
+# `secrets: inherit`.
+#
+# Which backend the build talks to:
+#   preview_pr empty → the repository variable BACKEND_BASE_URL (production).
+#                      Used for main merges and manual dispatches.
+#   preview_pr = N   → that PR's preview environment. The host is derived from
+#                      BACKEND_BASE_URL by turning `pocket-aide.` into
+#                      `pocket-aide-pr-N.` — the same host the ResourceSet in
+#                      flux-cd-apps apps/pocket-aide-preview serves. Used for PRs
+#                      labelled `deploy/preview`.
+#
+# A preview build stops working once its PR is merged or closed (the preview is
+# garbage-collected). ci.yml therefore uploads a production build on every main
+# merge of a labelled PR, so testers are moved back onto production.
 
 on:
   workflow_call:
+    inputs:
+      preview_pr:
+        description: PR number whose preview backend to target. Empty = production.
+        type: string
+        default: ''
+      build_source:
+        description: Short origin label shown in the TestFlight "What to Test" note.
+        type: string
+        default: ''
 
 jobs:
   upload:
@@ -16,9 +36,14 @@ jobs:
     runs-on: macos-26
     env:
       APP_BUNDLE_ID: com.dlddu.PocketAide
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BUILD_SOURCE: ${{ inputs.build_source }}
+      # Build (and label the note with) the PR head, not refs/pull/N/merge, so
+      # the app matches the commit the preview backend runs.
+      BUILD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
@@ -39,11 +64,22 @@ jobs:
         working-directory: ios
         env:
           BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
+          PREVIEW_PR: ${{ inputs.preview_pr }}
         run: |
+          set -euo pipefail
           if [ -z "$BACKEND_BASE_URL" ]; then
             echo "Missing repository variable: BACKEND_BASE_URL" >&2
             exit 1
           fi
+          if [ -n "$PREVIEW_PR" ]; then
+            case "$PREVIEW_PR" in *[!0-9]*) echo "preview_pr must be a number: $PREVIEW_PR" >&2; exit 1;; esac
+            case "$BACKEND_BASE_URL" in
+              https://pocket-aide.*) ;;
+              *) echo "BACKEND_BASE_URL must start with https://pocket-aide. to derive the preview host" >&2; exit 1;;
+            esac
+            BACKEND_BASE_URL="https://pocket-aide-pr-${PREVIEW_PR}.${BACKEND_BASE_URL#https://pocket-aide.}"
+          fi
+          echo "BackendBaseURL=$BACKEND_BASE_URL"
           /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAide/Info-Release.plist
           /usr/libexec/PlistBuddy -c "Set :BackendBaseURL $BACKEND_BASE_URL" PocketAideWidget/Info-Release.plist
       - name: Write App Store Connect API key
