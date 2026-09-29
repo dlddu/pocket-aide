@@ -63,6 +63,27 @@ func TestFormatPushText(t *testing.T) {
 	}
 }
 
+func TestShouldPush(t *testing.T) {
+	cases := []struct {
+		name string
+		evt  githubwebhook.WorkflowRunEvent
+		want bool
+	}{
+		{"start queued is history only", githubwebhook.WorkflowRunEvent{Conclusion: "queued"}, false},
+		{"start in_progress is history only", githubwebhook.WorkflowRunEvent{Conclusion: "in_progress"}, false},
+		{"completed success", githubwebhook.WorkflowRunEvent{Conclusion: "success", Completed: true}, true},
+		{"completed failure", githubwebhook.WorkflowRunEvent{Conclusion: "failure", Completed: true}, true},
+		{"completed cancelled", githubwebhook.WorkflowRunEvent{Conclusion: "cancelled", Completed: true}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := shouldPush(tc.evt); got != tc.want {
+				t.Errorf("shouldPush: got %v want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestLoadConfigAPNSDisabled(t *testing.T) {
 	t.Setenv("OIDC_ISSUER", "http://issuer")
 	t.Setenv("OIDC_AUDIENCE", "aud")

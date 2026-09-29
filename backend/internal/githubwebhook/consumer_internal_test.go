@@ -106,6 +106,9 @@ func TestProcess_HappyPath(t *testing.T) {
 	if evt.CommitURL != "https://github.com/dlddu/pocket-aide/commit/a3f9c27deadbeef" {
 		t.Errorf("commit url: got %q", evt.CommitURL)
 	}
+	if !evt.Completed {
+		t.Errorf("completed run: Completed=false, want true")
+	}
 	if evt.HeadSHA != "a3f9c27deadbeef" {
 		t.Errorf("head sha: got %q want %q", evt.HeadSHA, "a3f9c27deadbeef")
 	}
@@ -171,8 +174,12 @@ func TestProcess_RequestedStartEventDispatched(t *testing.T) {
 	if len(*got) != 1 {
 		t.Fatalf("dispatch invocations: got %d want 1", len(*got))
 	}
-	if evt := (*got)[0]; evt.Conclusion != "queued" {
+	evt := (*got)[0]
+	if evt.Conclusion != "queued" {
 		t.Errorf("start event conclusion: got %q want %q", evt.Conclusion, "queued")
+	}
+	if evt.Completed {
+		t.Errorf("start event: Completed=true, want false")
 	}
 }
 
