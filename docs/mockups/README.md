@@ -44,6 +44,7 @@ open docs/mockups/index.html
 - `index.html` — 라이트 갤러리 진입 페이지
 - `mockups-dark.html` — 다크 변형 통합 갤러리 (PR 모니터 2화면 미반영 — `_index.md` 참조)
 - `_index.md` — mockup 인덱스 (SSOT)
+- `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
 - `_template.md` — 디자인 토큰 레퍼런스 (영역별 색·폰트). 정본은 `docs/design-system/tokens.md`
 
 ## 디자인 토큰
