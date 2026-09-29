@@ -37,7 +37,10 @@
   .jm-bar { position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; gap: 8px var(--jm-gap);
             align-items: center; padding: 8px 16px; border-bottom: 1px dashed var(--jm-line);
             background: var(--jm-bg); font-size: 13px; }
-  .jm-title code { color: var(--jm-muted); font-size: 12px; }
+  .jm-meta { color: var(--jm-muted); font-size: 12px; }
+  .jm-meta > summary { cursor: pointer; }
+  .jm-meta[open] { flex-basis: 100%; }
+  .jm-meta > code { display: block; margin: 6px 0; }
   .jm-hub { color: var(--jm-muted); margin-right: 4px; }
   .jm-steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
   .jm-steps a { display: block; padding: 2px 8px; border: 1px solid var(--jm-line); border-radius: 999px;
@@ -54,6 +57,7 @@
   .jm-branches > span { color: var(--jm-muted); }
   .jm-branches button { font: inherit; padding: 3px 10px; border: 1px dashed var(--jm-line); border-radius: 999px;
             background: none; color: var(--jm-fg); cursor: pointer; }
+  .jm-note-wrap { max-width: 393px; margin: 8px auto 0; }
   .jm-note { max-width: 393px; margin: 8px auto 0; font-size: 12px; line-height: 1.6; color: var(--jm-muted); }
 
   /* ── 3. 단계 표시 ── 한 번에 한 단계, 상태가 열리면 기본 화면을 숨긴다 */
@@ -137,18 +141,20 @@
            border-radius: 24px 24px 0 0; box-shadow: 0 -8px 24px -4px rgba(28,38,36,.18); }
   .handle { width: 36px; height: 4px; border-radius: 999px; background: var(--rule); margin: 0 auto 14px; }
   .sheet h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: -.02em; }
-  .field { min-height: 96px; background: var(--card); border: 1px solid var(--rule); border-radius: 24px; padding: 16px 18px;
-           font-size: 16.5px; line-height: 1.5; outline: none; }
+  .field { display: block; box-sizing: border-box; width: 100%; min-height: 96px; background: var(--card); border: 1px solid var(--rule); border-radius: 24px; padding: 16px 18px;
+           font: inherit; font-size: 16.5px; line-height: 1.5; color: inherit; outline: none; resize: none; caret-color: var(--tan); }
   .field:focus { border-color: var(--tan); }
-  .caret { display: inline-block; width: 1.5px; height: 18px; background: var(--tan); vertical-align: middle; margin-left: 2px; animation: pulse 1s steps(1) infinite; }
   .preview { position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 16px; font-size: 16.5px; line-height: 1.5; }
   .preview .quote { position: absolute; top: -10px; left: -2px; font-size: 64px; line-height: 1; color: var(--tan); opacity: .1; }
   .hint { margin: 12px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--stone-500); }
   /* FilterPills 단일 선택형 (components §4) */
-  .pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pills { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pill-input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
   .pill { padding: 12px 0; border-radius: 999px; border: 1px solid var(--rule); background: none; font-size: 14px; color: var(--stone-600);
           display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .pill.is-on { background: var(--soft); border-color: rgba(139,111,71,.4); color: var(--ink); font-weight: 700; }
+  .pill { cursor: pointer; }
+  .pill-input:checked + .pill { background: var(--soft); border-color: rgba(139,111,71,.4); color: var(--ink); font-weight: 700; }
+  .pill-input:focus-visible + .pill { outline: 2px solid var(--tan); outline-offset: 2px; }
   /* PillButton.solid(1차) · 텍스트 액션(2차) — patterns §9 위계 규칙 */
   .actions { margin-top: 16px; padding-top: 8px; border-top: 1px solid rgba(229,215,192,.6); }
   .btn-primary { width: 100%; padding: 14px 0; border: 0; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 15px; font-weight: 700; }
@@ -204,9 +210,13 @@
 <body>
 
 <header class="jm-bar" aria-label="여정 mockup 도구">
-  <div class="jm-title"><a class="jm-hub" href="../../">허브</a> 다짐 문장의 일상 반복 노출 <code>JRN-affirmation-daily-exposure</code></div>
-  <ol class="jm-steps" aria-label="단계 목록"></ol>
-  <div class="jm-pos" aria-live="polite"></div>
+  <div class="jm-title"><a class="jm-hub" href="../../">허브</a> 다짐 문장의 일상 반복 노출</div>
+  <details class="jm-meta">
+    <summary>문서 정보</summary>
+    <code>JRN-affirmation-daily-exposure</code>
+    <ol class="jm-steps" aria-label="단계 목록"></ol>
+    <div class="jm-pos" aria-live="polite"></div>
+  </details>
   <nav class="jm-nav">
     <button type="button" data-jm="prev">← 이전</button>
     <button type="button" data-jm="next">다음 →</button>
@@ -237,7 +247,7 @@
 <div class="sheet" role="dialog" aria-label="새 다짐">
   <div class="handle"></div>
   <h2>새 다짐</h2>
-  <div class="field serif" contenteditable="true" aria-label="다짐 문장">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.<i class="caret"></i></div>
+  <textarea class="field serif" rows="3" aria-label="다짐 문장">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</textarea>
   <p class="hint">잊고 싶지 않은 문장을 적어두세요. 다음 화면에서 얼마나 자주 볼지 정합니다.</p>
   <div class="actions">
     <button type="button" class="btn-primary" data-go="STP-set-priority">추가</button>
@@ -269,7 +279,9 @@
 </div>
     </div>
     <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-add-affirmation/from-scratchpad" data-branch>우회: 임시공간 메모를 다짐으로 이동</button></div>
-    <p class="jm-note">PRD-5 AC1 · 헤더 <b>+</b>로 입력 시트를 열어 문장을 적는다. 입력 시트는 편집 시트 패턴(patterns §9)의 텍스트 입력 사례.</p>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-5 AC1 · 헤더 <b>+</b>로 입력 시트를 열어 문장을 적는다. 입력 시트는 편집 시트 패턴(patterns §9)의 텍스트 입력 사례.</p>
+    </details>
   </section>
 
   <section data-step="STP-set-priority" data-title="노출 빈도 정하기">
@@ -294,7 +306,7 @@
   <h2>우선순위 설정</h2>
   <div class="preview serif"><span class="quote serif">"</span>결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</div>
   <div class="area-label mt">노출 빈도</div>
-  <div class="pills" data-pill-group><button type="button" class="pill" data-pill><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><span>높음</span></button><button type="button" class="pill is-on" data-pill><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><span>보통</span></button><button type="button" class="pill" data-pill><span class="dots h"><i class="dot"></i><i class="dot dim"></i><i class="dot dim"></i></span><span>가끔</span></button></div>
+  <div class="pills" role="radiogroup" aria-label="노출 빈도"><input type="radio" class="pill-input" name="priority" id="priority-high" value="high"><label class="pill" for="priority-high"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><span>높음</span></label><input type="radio" class="pill-input" name="priority" id="priority-normal" value="normal" checked><label class="pill" for="priority-normal"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><span>보통</span></label><input type="radio" class="pill-input" name="priority" id="priority-low" value="low"><label class="pill" for="priority-low"><span class="dots h"><i class="dot"></i><i class="dot dim"></i><i class="dot dim"></i></span><span>가끔</span></label></div>
   <p class="hint">위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.</p>
   <div class="actions">
     <button type="button" class="btn-primary" data-go="STP-rotation-in-app">저장</button>
@@ -304,7 +316,9 @@
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
 </div></div></div>
     <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-rotation-in-app/default-priority" data-branch>중도 이탈: 시트 취소</button></div>
-    <p class="jm-note">PRD-5 AC2 · 추가 직후 시트 자동 노출, 3단계 단일 선택. 원본 화면: mockups/screen-affirmations-priority-edit.html</p>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-5 AC2 · 추가 직후 시트 자동 노출, 3단계 단일 선택. 원본 화면: mockups/screen-affirmations-priority-edit.html</p>
+    </details>
   </section>
 
   <section data-step="STP-rotation-in-app" data-title="앱에서 회전 문장 마주치기">
@@ -380,7 +394,9 @@
 </div></div>
     </div>
     <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-rotation-in-app/empty" data-branch>실패: 등록된 문장이 없음</button><button type="button" data-go="STP-widget-glance/no-widget" data-branch>이탈: 위젯 미설치</button></div>
-    <p class="jm-note">PRD-5 AC3 · 진입마다 우선순위 가중 회전. 앱을 나가려면 화면 아래 홈 인디케이터를 누른다(홈 화면으로 스와이프).</p>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-5 AC3 · 진입마다 우선순위 가중 회전. 앱을 나가려면 화면 아래 홈 인디케이터를 누른다(홈 화면으로 스와이프).</p>
+    </details>
   </section>
 
   <section data-step="STP-widget-glance" data-title="홈 화면 위젯에서 마주치기">
@@ -419,7 +435,7 @@
 <div class="dock"><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#fff;--c2:#fff;color:#000">메일</span><span class="app" style="--c1:#000;--c2:#333">사파리</span><span class="app" style="--c1:#ff2d55;--c2:#ff375f">음악</span></div>
 <div class="home-bar-wrap"><i class="home-bar light"></i></div>
 </div>
-      <div class="frame home-screen" data-state="no-widget" data-end="이탈: 위젯 미설치 — 앱 내 노출(STP-rotation-in-app)에서 여정 종료" hidden>
+      <div class="frame home-screen" data-state="no-widget" data-end="이탈: 위젯 미설치 — 앱 안의 회전 노출까지만 이어지고 여정 종료" hidden>
 <div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <div class="grid-apps"><span class="app" style="--c1:#8e8e93;--c2:#636366">설정</span><span class="app" style="--c1:#ffcc00;--c2:#ff9500">메모</span><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#0a84ff;--c2:#0060df">지도</span></div>
 <div class="apps"><span class="app" style="--c1:#34c759;--c2:#1d8a3a">전화</span><span class="app" style="--c1:#65d96d;--c2:#2dac41">메시지</span><span class="app" style="--c1:#5ac8fa;--c2:#0a84ff">사진</span><span class="app" style="--c1:#ff9500;--c2:#ff5500">캘린더</span></div>
@@ -428,7 +444,9 @@
 </div>
     </div>
     <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-widget-glance/delayed" data-branch>외부 지연: 위젯 갱신 대기</button><button type="button" data-go="STP-widget-glance/no-widget" data-branch>이탈: 위젯 미설치</button></div>
-    <p class="jm-note">PRD-5 AC4 · PRD-8 AC5 · 위젯의 <b>오늘의 다짐</b> 영역을 누르면 다짐 탭으로 들어간다. 갱신 대기 상태에서는 방금 등록한 문장 대신 이전 문장이 보인다.</p>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-5 AC4 · PRD-8 AC5 · 위젯의 <b>오늘의 다짐</b> 영역을 누르면 다짐 탭으로 들어간다. 갱신 대기 상태에서는 방금 등록한 문장 대신 이전 문장이 보인다.</p>
+    </details>
   </section>
 
   <section data-step="STP-widget-to-app" data-title="위젯에서 다짐 탭으로" data-end="여정 완료 — 위젯 노출 후 다짐 탭 진입">
@@ -453,7 +471,9 @@
 
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
 </div></div></div>
-    <p class="jm-note">PRD-8 AC8 · 위젯에서 보던 문장을 히어로에 그대로 보여주는 것은 가정(PRD 미정의).</p>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-8 AC8 · 위젯에서 보던 문장을 히어로에 그대로 보여주는 것은 가정(PRD 미정의).</p>
+    </details>
   </section>
 
 </main>
