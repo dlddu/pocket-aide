@@ -1,0 +1,97 @@
+name: Preview
+
+# Runs when `deploy/preview` is attached to a PR. Attaching the label is what
+# makes flux-cd-apps (apps/pocket-aide-preview) start a preview environment at
+# https://pocket-aide-pr-<N>.<domain>, running ghcr.io/dlddu/pocket-aide:<head sha>.
+# This workflow makes sure that image exists and uploads a TestFlight build
+# pointed at the preview.
+#
+# Later pushes to a labelled PR are handled by ci.yml (it sees the label in the
+# pull_request payload), which also runs the tests first. This workflow covers
+# only the moment of labelling, and does not re-run tests: the head commit's
+# ci.yml run reports on its own, and ci-success stays the merge gate.
+#
+# Deliberately separate from ci.yml: adding `labeled` to ci.yml's triggers would
+# re-run the whole suite (and re-evaluate ci-success) for every unrelated label.
+
+on:
+  pull_request:
+    types: [labeled]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
+
+jobs:
+  plan:
+    name: Plan preview
+    if: github.event.label.name == 'deploy/preview'
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      run: ${{ steps.plan.outputs.run }}
+      image_missing: ${{ steps.plan.outputs.image_missing }}
+      build_source: ${{ steps.plan.outputs.build_source }}
+    steps:
+      - name: Decide
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          CREATED_AT: ${{ github.event.pull_request.created_at }}
+          UPDATED_AT: ${{ github.event.pull_request.updated_at }}
+        run: |
+          set -euo pipefail
+          # A PR created with the label already on it fires `opened` (payload
+          # includes the label → ci.yml builds and uploads) and then `labeled`.
+          # Skip that second path so TestFlight does not get two uploads racing
+          # for the same build number.
+          gap=$(( $(date -d "$UPDATED_AT" +%s) - $(date -d "$CREATED_AT" +%s) ))
+          if [ "$gap" -le 10 ]; then
+            echo "Label came with the PR (${gap}s after creation) — ci.yml handles it."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+          echo "build_source=PR #${PR_NUMBER} 프리뷰" >> "$GITHUB_OUTPUT"
+
+          # Does ghcr.io/dlddu/pocket-aide:<head sha> exist already? (ci.yml
+          # builds it for PRs that touch the backend.)
+          token=$(curl -fsS -u "x:${GH_TOKEN}" \
+            "https://ghcr.io/token?scope=repository:dlddu/pocket-aide:pull" \
+            | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
+          code=$(curl -s -o /dev/null -w '%{http_code}' -I \
+            -H "Authorization: Bearer $token" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.index.v1+json" \
+            "https://ghcr.io/v2/dlddu/pocket-aide/manifests/${HEAD_SHA}")
+          case "$code" in
+            200) echo "image_missing=false" >> "$GITHUB_OUTPUT"; echo "image exists for $HEAD_SHA" ;;
+            404) echo "image_missing=true" >> "$GITHUB_OUTPUT"; echo "image missing for $HEAD_SHA — building" ;;
+            *) echo "::error::unexpected registry response $code"; exit 1 ;;
+          esac
+
+  image:
+    name: Backend image for preview
+    needs: plan
+    if: needs.plan.outputs.run == 'true' && needs.plan.outputs.image_missing == 'true'
+    # The called workflow declares contents: write for its `pin` job (skipped on
+    # pull_request), so the caller has to allow it.
+    permissions:
+      contents: write
+      packages: write
+    uses: ./.github/workflows/backend-docker-push.yml
+
+  testflight:
+    name: TestFlight (preview)
+    needs: [plan, image]
+    if: ${{ !cancelled() && needs.plan.outputs.run == 'true' && needs.image.result != 'failure' }}
+    uses: ./.github/workflows/testflight-upload.yml
+    with:
+      preview_pr: ${{ format('{0}', github.event.pull_request.number) }}
+      build_source: ${{ needs.plan.outputs.build_source }}
+    secrets: inherit
