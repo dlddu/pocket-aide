@@ -47,7 +47,6 @@ func TestInsertBatchTx_FansOutAcrossUsers(t *testing.T) {
 		t.Fatalf("got %d ids, want 2", len(ids))
 	}
 
-	// Each user sees only their own row.
 	for _, uid := range []int64{1, 2} {
 		items, err := store.List(ctx, uid, 100, 0)
 		if err != nil {
@@ -71,7 +70,6 @@ func TestInsertBatchTx_PRFieldsNilWhenEmpty(t *testing.T) {
 
 	evt := notificationhistory.Event{
 		RepoFullName: "dlddu/pocket-aide",
-		// PRNumber/PRTitle/PRURL deliberately zero — main-direct-push case.
 		CommitURL:    "https://example/commit",
 		RunURL:       "https://example/run",
 		WorkflowName: "CI",

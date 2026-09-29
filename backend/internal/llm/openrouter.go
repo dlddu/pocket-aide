@@ -1,6 +1,4 @@
-// Package llm contains a thin OpenRouter REST client. Stream support is
-// provided as a generic SSE parser; downstream features wire actual prompts in
-// follow-up work.
+// Package llm contains a thin OpenRouter REST client.
 package llm
 
 import (

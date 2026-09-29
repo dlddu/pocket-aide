@@ -23,6 +23,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
+	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
 
 func main() {
@@ -61,6 +62,7 @@ func main() {
 	deviceStore := devicetokens.New(conn)
 	excludedStore := excludedrepos.New(conn)
 	historyStore := notificationhistory.New(conn)
+	todoStore := todos.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -75,6 +77,10 @@ func main() {
 		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
 		p.Get("/api/notification-history", handlers.ListNotificationHistory(historyStore))
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
+		p.Get("/api/todos/{area}", handlers.ListTodos(todoStore))
+		p.Post("/api/todos/{area}", handlers.CreateTodo(todoStore))
+		p.Patch("/api/todos/{area}/{id}", handlers.UpdateTodo(todoStore))
+		p.Delete("/api/todos/{area}/{id}", handlers.DeleteTodo(todoStore))
 	})
 
 	srv := &http.Server{

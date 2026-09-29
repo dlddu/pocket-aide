@@ -52,8 +52,6 @@ func chiRouterForAffirmations(store *affirmations.Store) http.Handler {
 	r.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(store))
 	r.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(store))
 
-	// Wrap so the auth.User context survives chi's routing — chi normally
-	// preserves it, but we wrap once defensively for our own context plumbing.
 	return r
 }
 
@@ -134,7 +132,7 @@ func TestUpdateOtherUserReturns404(t *testing.T) {
 		http.MethodPatch,
 		"/api/affirmations/"+strconv.FormatInt(created.ID, 10),
 		updateBody,
-		2, // different user
+		2,
 	))
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("cross-user update should 404, got %d (body=%s)", rec.Code, rec.Body.String())
