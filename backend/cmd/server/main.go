@@ -93,12 +93,17 @@ func main() {
 	consumerCtx, cancelConsumer := context.WithCancel(context.Background())
 	defer cancelConsumer()
 	if cfg.PRMonitorEnabled {
-		apnsClient, err := apns.New(
-			cfg.APNSKeyID, cfg.APNSTeamID, cfg.APNSBundleID,
-			[]byte(cfg.APNSAuthKeyP8), cfg.APNSUseProduction,
-		)
-		if err != nil {
-			log.Fatalf("apns: %v", err)
+		var apnsClient *apns.Client
+		if cfg.APNSDisabled {
+			log.Printf("pr-monitor: APNs push disabled (APNS_DISABLED=true); history is still recorded")
+		} else {
+			apnsClient, err = apns.New(
+				cfg.APNSKeyID, cfg.APNSTeamID, cfg.APNSBundleID,
+				[]byte(cfg.APNSAuthKeyP8), cfg.APNSUseProduction,
+			)
+			if err != nil {
+				log.Fatalf("apns: %v", err)
+			}
 		}
 		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
 			// PRD-10 AC6: blacklist match — every user who hasn't excluded
@@ -132,6 +137,9 @@ func main() {
 				// Returning error makes handleMessage skip DeleteMessage —
 				// SQS redelivers after VisibilityTimeout.
 				return fmt.Errorf("persist history: %w", err)
+			}
+			if apnsClient == nil {
+				return nil
 			}
 
 			// Best-effort APNs fan-out. A failed push for one user does not
@@ -190,6 +198,10 @@ type config struct {
 	APNSBundleID      string
 	APNSAuthKeyP8     string
 	APNSUseProduction bool
+	// APNSDisabled keeps the consumer and history writes on but skips the
+	// push fan-out, so the E2E backend can run the pipeline without Apple
+	// credentials (docs/e2e-mocking-policy.md).
+	APNSDisabled bool
 }
 
 func loadConfig() config {
@@ -205,11 +217,14 @@ func loadConfig() config {
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
 		c.AWSRoleARN = os.Getenv("AWS_ROLE_ARN")
-		c.APNSKeyID = mustEnv("APNS_KEY_ID")
-		c.APNSTeamID = mustEnv("APNS_TEAM_ID")
-		c.APNSBundleID = mustEnv("APNS_BUNDLE_ID")
-		c.APNSAuthKeyP8 = mustEnv("APNS_AUTH_KEY_P8")
-		c.APNSUseProduction = envOr("APNS_USE_PRODUCTION", "false") == "true"
+		c.APNSDisabled = os.Getenv("APNS_DISABLED") == "true"
+		if !c.APNSDisabled {
+			c.APNSKeyID = mustEnv("APNS_KEY_ID")
+			c.APNSTeamID = mustEnv("APNS_TEAM_ID")
+			c.APNSBundleID = mustEnv("APNS_BUNDLE_ID")
+			c.APNSAuthKeyP8 = mustEnv("APNS_AUTH_KEY_P8")
+			c.APNSUseProduction = envOr("APNS_USE_PRODUCTION", "false") == "true"
+		}
 	}
 	return c
 }
