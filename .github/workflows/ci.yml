@@ -180,6 +180,13 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' }}
     uses: ./.github/workflows/ios-test.yml
 
+  # No path filter: runs on every PR and main push (tens of seconds). The PR
+  # checkout is the merge ref, so a broken mockup already on main fails every PR
+  # until fixed — which is the point of gating on it.
+  journey-mockup:
+    name: Journey mockup
+    uses: ./.github/workflows/journey-mockup.yml
+
   backend-docker-push:
     name: Backend Docker build + push
     needs: [changes, backend-unit-test, backend-integration-test, ios-test]
@@ -206,7 +213,7 @@ jobs:
 
   ci-success:
     name: ci-success
-    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload]
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload, journey-mockup]
     if: always()
     runs-on: ubuntu-24.04-arm
     steps:
@@ -218,6 +225,7 @@ jobs:
           IOS_TEST_RESULT: ${{ needs.ios-test.result }}
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
+          JOURNEY_MOCKUP_RESULT: ${{ needs.journey-mockup.result }}
           BACKEND_UNIT_CHANGED: ${{ needs.changes.outputs.backend_unit }}
           BACKEND_INTEGRATION_CHANGED: ${{ needs.changes.outputs.backend_integration }}
           IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
@@ -225,8 +233,9 @@ jobs:
           TESTFLIGHT_EXPECTED: ${{ needs.changes.outputs.testflight }}
         run: |
           set -e
-          echo "changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
+          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
+          [ "$JOURNEY_MOCKUP_RESULT" = "success" ] || { echo "journey-mockup must pass"; exit 1; }
           if [ "$BACKEND_UNIT_CHANGED" = "true" ]; then
             [ "$BACKEND_UNIT_RESULT" = "success" ] || { echo "backend-unit-test must pass"; exit 1; }
           fi
