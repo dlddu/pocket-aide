@@ -1,10 +1,6 @@
 import DesignSystem
 import SwiftUI
 
-/// Shared shape for the 4 not-yet-wired widget sections (weather, calendar,
-/// mail, notifications). Real data ships per PRD-위젯 AC2/3/4/6 follow-ups —
-/// for now we show the area-tinted label and an explicit "곧 추가" line so
-/// the widget reads as intentional, not broken.
 struct PlaceholderSection: View {
     let area: DesignTokens.Area
     let label: String

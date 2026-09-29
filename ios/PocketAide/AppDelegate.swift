@@ -5,8 +5,7 @@ import UserNotifications
 
 extension Notification.Name {
     /// Posted when APNs hands us a device token. Object is the hex-encoded
-    /// token (String). Listeners are PushRegistrar (to forward to the backend)
-    /// and anyone who wants to react to fresh tokens.
+    /// token (String).
     static let pushTokenReceived = Notification.Name("pushTokenReceived")
 
     /// Posted when APNs registration fails. Object is the underlying Error.
@@ -64,11 +63,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         completionHandler([.banner, .sound, .badge])
     }
 
-    /// Fires when the user taps a notification (foreground or background
-    /// launch). PRD-10 AC7: the tap must route the app to the matching
-    /// PR-monitor item but MUST NOT acknowledge it (AC12 explicit-button
-    /// rule). We synthesize a deep-link URL from the payload's `event_id`
-    /// and hand it to DeepLinkRouter; the scene observes that store.
+    /// PRD-10 AC7: a notification tap routes the app to the matching PR-monitor
+    /// item but MUST NOT acknowledge it (AC12 explicit-button rule).
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,

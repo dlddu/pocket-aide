@@ -1,5 +1,4 @@
 // 검증 시나리오: 없음 (스모크/인프라)
-// 등재: docs/product/doc-tracker/ 최신 월 파일 「## e2e 매핑」 → 「비-시나리오(스모크·인프라) 등재」.
 import XCTest
 
 private extension XCUIElement {
@@ -19,9 +18,6 @@ private extension XCUIElement {
     }
 }
 
-/// End-to-end coverage for the 다짐 (affirmations) tab. Relies on the shared
-/// `UITestAuth.ensureSignedIn` helper to drop a token in the simulator keychain
-/// once per process, then each test launches into the new TabView shell.
 final class AffirmationsUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -37,36 +33,21 @@ final class AffirmationsUITests: XCTestCase {
         return app
     }
 
-    /// Navigate to the affirmations screen.
-    ///
-    /// iOS 26 SwiftUI `TabView` on iPhone portrait shows at most 4 tabs in the
-    /// bottom bar plus a "More" entry — the remaining tabs (루틴 and 다짐 in
-    /// our 6-tab shell) live behind "More". Default `selection: .affirmations`
-    /// causes the system to mark "More" selected on launch and surface the
-    /// overflow list from which the user picks 다짐. Real users do the same
-    /// two-step navigation, so we mirror that here.
     private func selectAffirmationsTab(in app: XCUIApplication) {
         let tabsBar = app.tabBars.firstMatch
         XCTAssertTrue(tabsBar.waitForExistence(timeout: 15), "Tab bar should appear after sign-in")
 
-        // Diagnostic: attach what the tab bar exposes so any future failure
-        // surfaces tab-bar state in the xcresult bundle.
         let dump = XCTAttachment(string: tabsBar.debugDescription)
         dump.name = "tabBar.debugDescription"
         dump.lifetime = .keepAlways
         add(dump)
 
-        // Path 1: affirmations is directly in the bar.
         let labelled = tabsBar.buttons["다짐"]
         if labelled.exists {
             labelled.tap()
             return
         }
 
-        // Path 2: affirmations is in the "More" overflow. The More tab is
-        // already selected by default (selection binding == .affirmations),
-        // so the overflow list should already be rendered. If it isn't,
-        // tap "More" to bring it up.
         if !findAndTapAffirmationsRow(in: app) {
             let more = tabsBar.buttons["More"]
             XCTAssertTrue(more.exists, "Neither '다짐' tab nor 'More' tab is present")
@@ -79,9 +60,6 @@ final class AffirmationsUITests: XCTestCase {
         after.lifetime = .keepAlways
         add(after)
 
-        // Anchor on the affirmations screen header so callers don't all repeat
-        // the same wait, and a failure here points at navigation rather than
-        // at whatever assertion the test happens to make next.
         XCTAssertTrue(
             app.staticTexts["screen.header.title"].waitForExistence(timeout: 15),
             "Affirmations header should appear after selecting the affirmations tab"
@@ -95,8 +73,6 @@ final class AffirmationsUITests: XCTestCase {
     /// position. Returns true if an entry was found and tapped.
     @discardableResult
     private func findAndTapAffirmationsRow(in app: XCUIApplication) -> Bool {
-        // Direct StaticText lookups handle the iOS 26 More table layout where
-        // labels sit on a child element rather than the row itself.
         let textCandidates: [XCUIElement] = [
             app.tables.staticTexts["다짐"],
             app.collectionViews.staticTexts["다짐"],
@@ -106,8 +82,6 @@ final class AffirmationsUITests: XCTestCase {
             candidate.tap()
             return true
         }
-        // Fallback: legacy queries in case future iOS versions promote the
-        // overflow rows to proper cells/buttons.
         let elementCandidates: [XCUIElement] = [
             app.tables.cells["다짐"],
             app.collectionViews.cells["다짐"],
@@ -140,9 +114,6 @@ final class AffirmationsUITests: XCTestCase {
             "Priority edit sheet should appear within 15s of tapping add"
         )
 
-        // Create-mode sheet must not surface a destructive action — delete only
-        // makes sense for existing items, and PriorityEditSheet wires
-        // `sheet.delete.button` conditionally on `.edit` mode.
         XCTAssertFalse(
             app.buttons["sheet.delete.button"].waitForExistence(timeout: 1),
             "Delete button should be hidden in create mode"

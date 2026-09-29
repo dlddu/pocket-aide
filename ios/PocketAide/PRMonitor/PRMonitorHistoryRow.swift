@@ -5,13 +5,6 @@ import SwiftUI
 import UIKit
 #endif
 
-/// One row of the PR-monitor history list. Visually distinguishes unacked
-/// (`Card.history-item.unacked`: surface + left indigo stripe + ack button)
-/// vs. acked (`Card.history-item.acked`: dashed + dim + strikethrough). Push
-/// arrival adds a 5-second indigo glow overlay (PRD-10 AC7).
-///
-/// Pulled out of `PRMonitorView.swift` to keep that file under SwiftLint's
-/// 400-line file_length limit.
 struct PRMonitorHistoryRow: View {
     let item: NotificationHistoryItem
     let isHighlighted: Bool
@@ -110,9 +103,8 @@ struct PRMonitorHistoryRow: View {
     private var actionsRow: some View {
         if item.acknowledgedAt == nil {
             HStack(spacing: DesignTokens.Spacing.sm) {
-                // PR 링크는 그룹 헤더(`PRMonitorGroupCard`)로 이전됨 — 같은 그룹
-                // 안에서 PR URL은 동일하므로. 커밋과 런은 row마다 고유하므로
-                // row 측에 남는다(같은 PR 안에 여러 커밋이 있을 수 있다).
+                // PR 링크는 그룹 헤더(`PRMonitorGroupCard`)에만 둔다 — 한 그룹의 PR URL 은 같지만
+                // 커밋·런은 row 마다 다르다(같은 PR 안에 커밋이 여럿일 수 있다).
                 if let url = item.commitURL {
                     linkChip(
                         label: "커밋",
@@ -152,9 +144,7 @@ struct PRMonitorHistoryRow: View {
         // Link instead of Button so SwiftUI's List doesn't merge the link tap
         // into the row's primary action — i.e. tapping the chip must open
         // GitHub WITHOUT also triggering the explicit 확인 button next to it
-        // (AC12: external link taps never acknowledge). Each chip carries an
-        // action-specific symbol so the destination is recognisable at a
-        // glance: PR(pull arrow), commit(dot), run(play).
+        // (AC12: external link taps never acknowledge).
         if let dest = URL(string: url) {
             Link(destination: dest) {
                 HStack(spacing: 4) {
@@ -249,7 +239,6 @@ struct PRMonitorHistoryRow: View {
         if let number = item.prNumber {
             return "\(item.repoFullName) · #\(number)"
         }
-        // No PR linked — fallback (AC6 PR-less case).
         if item.headBranch.isEmpty {
             return item.repoFullName
         }
@@ -274,9 +263,6 @@ struct PRMonitorHistoryRow: View {
     private static let relativeFormatter = RelativeDateTimeFormatter()
 }
 
-/// Push-arrival highlight (AC7). Pulse animates the ring thickness + alpha +
-/// drop-shadow so a freshly-routed card visibly throbs against the rest of
-/// the list. Auto-stops when the parent removes the overlay (5s after route).
 private struct ArrivalGlowOverlay: View {
     @State private var pulse = false
 

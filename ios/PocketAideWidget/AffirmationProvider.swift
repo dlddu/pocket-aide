@@ -6,9 +6,8 @@ import WidgetKit
 
 private let logger = Logger(subsystem: "com.dlddu.PocketAide.Widget", category: "AffirmationProvider")
 
-/// Drives the Large widget timeline. Builds 24 entries × 30-minute strides
-/// using `SeededRNG(seed: entry.date.timeIntervalSince1970)` so each entry's
-/// pick is deterministic and survives across snapshot/timeline calls.
+/// Each entry's pick is seeded by its date (`SeededRNG`) so it is deterministic
+/// and survives across snapshot/timeline calls.
 struct AffirmationProvider: TimelineProvider {
     typealias Entry = PocketAideWidgetEntry
 

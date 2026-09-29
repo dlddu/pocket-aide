@@ -6,9 +6,6 @@ struct AffirmationSection: View {
     let state: WidgetAffirmationState
 
     var body: some View {
-        // Link gives this region its own tap target on Large widgets — the
-        // outer `widgetURL` covers everything else (placeholder areas) and
-        // sends the user to the app root.
         Link(destination: URL(string: "pocketaide://affirmations")!) {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 HStack(spacing: 6) {

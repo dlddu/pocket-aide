@@ -6,9 +6,6 @@ struct PRMonitorView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @StateObject private var viewModel: PRMonitorViewModel
 
-    /// Set by the parent when a push tap opens this tab via deep-link.
-    /// Cleared after `arrivalHighlightDuration` seconds so the glow doesn't
-    /// linger forever (AC7 — routing only, no acknowledgement).
     @Binding var highlightedEventID: Int64?
 
     @State private var showingExcludedSheet = false

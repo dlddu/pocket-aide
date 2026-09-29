@@ -28,8 +28,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         )
     }
 
-    // MARK: - 그룹 키 산출
-
     func testGroupKeyUsesPRWhenAvailable() {
         let it = item(id: 1, prNumber: 42, headSHA: "abc")
         XCTAssertEqual(HistoryGrouping.groupKey(for: it), "pr:dlddu/pocket-aide:42")
@@ -45,8 +43,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         XCTAssertEqual(HistoryGrouping.groupKey(for: it), "row:7")
     }
 
-    // MARK: - 그룹핑 결과
-
     func testItemsWithSamePRAreGroupedTogether() {
         let items = [
             item(id: 1, prNumber: 42, createdAt: 100),
@@ -58,7 +54,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         let pr42 = groups.first(where: { $0.prNumber == 42 })
         XCTAssertNotNil(pr42)
         XCTAssertEqual(pr42?.items.count, 2)
-        // 그룹 내 시각 역순
         XCTAssertEqual(pr42?.items.map(\.id), [2, 1])
     }
 
@@ -85,20 +80,15 @@ final class PRMonitorGroupingTests: XCTestCase {
         XCTAssertTrue(groups.allSatisfy { $0.items.count == 1 })
     }
 
-    // MARK: - 미확인 우선 정렬
-
     func testUnacknowledgedGroupsComeFirst() {
         // 더 최근에 도착한 그룹이 전부 확인된 상태, 더 오래된 그룹에 미확인 항목이 있어도
         // 미확인 그룹이 먼저 와야 한다 (AC11).
         let items = [
-            // 그룹 A: PR #1, 모두 확인됨, 최근
             item(id: 10, prNumber: 1, acked: 999, createdAt: 1000),
-            // 그룹 B: PR #2, 미확인, 더 오래됨
             item(id: 20, prNumber: 2, acked: nil, createdAt: 500),
         ]
         let groups = HistoryGrouping.group(items)
         XCTAssertEqual(groups.count, 2)
-        // 첫 번째는 미확인 (PR #2), 두 번째는 확인 완료 (PR #1)
         XCTAssertEqual(groups[0].prNumber, 2)
         XCTAssertEqual(groups[1].prNumber, 1)
     }
@@ -111,8 +101,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         let groups = HistoryGrouping.group(items)
         XCTAssertEqual(groups.map(\.prNumber), [2, 1])
     }
-
-    // MARK: - 미확인 카운트
 
     func testUnacknowledgedCountPerGroup() {
         let items = [
@@ -137,8 +125,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         XCTAssertEqual(groups[0].unacknowledgedCount, 0)
     }
 
-    // MARK: - 종합 상태 카운트
-
     func testGroupCountsSuccessAndFailureSeparately() {
         let items = [
             item(id: 1, prNumber: 42, conclusion: "success"),
@@ -149,7 +135,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         let groups = HistoryGrouping.group(items)
         let pr = groups[0]
         XCTAssertEqual(pr.successCount, 2)
-        // failure + cancelled 모두 "실패 계열"로 카운트
         XCTAssertEqual(pr.failureCount, 2)
         XCTAssertEqual(pr.inProgressCount, 0)
     }
@@ -169,8 +154,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         XCTAssertEqual(pr.failureCount, 0)
     }
 
-    // MARK: - 입력이 정렬되지 않은 상태에서도 안정
-
     func testInputOrderDoesNotAffectGrouping() {
         let unsorted = [
             item(id: 3, prNumber: 42, createdAt: 300),
@@ -181,8 +164,6 @@ final class PRMonitorGroupingTests: XCTestCase {
         XCTAssertEqual(groups.count, 1)
         XCTAssertEqual(groups[0].items.map(\.id), [3, 2, 1])
     }
-
-    // MARK: - 빈 입력
 
     func testEmptyInputReturnsNoGroups() {
         XCTAssertEqual(HistoryGrouping.group([]), [])

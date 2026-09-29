@@ -2,10 +2,10 @@
 
 - **task**: `tbm_pocket-aide-comment-necessity` / `rct_20260929-0002`
 - **기준 커밋**: `2bb24bf` (줄 번호는 모두 이 커밋 기준이다)
-- **범위**: 원장의 `—` 행을 원장 순서대로 예산(L+E 400줄)까지 채운 덩어리 — L 표면 37파일 383줄 · E 표면 2파일 2줄. 뺀 덩어리: `.github/workflows/`(7파일 49줄)·`backend/cmd/server/`(27줄) — 열린 PR #58 이 `ci.yml`·`ios-test.yml`·`main.go` 를 고친다. 예산에 안 맞아 건너뛴 행: `ios/Shared/Sources/PocketAideAPI/`(49) · `k8s/`(31) · `tools/journey-mockup-harness/`(29). 모두 원장에서 `—` 로 남는다.
-- **결과**: L 383 → 196줄, E 2 → 1줄. 비주석 변경은 없다(줄 끝 주석을 걷은 줄은 주석만 빠졌다). 첫 패스가 미룬 개명 `githubwebhook.WorkflowRunEvent.HTMLURL` → `RunURL` 은 사용처 `backend/cmd/server/main.go` 가 열린 PR #58 과 겹쳐 다시 미룬다.
+- **범위**: 원장의 `—` 행을 원장 순서대로 예산(L+E 400줄)까지 채운 덩어리 — L 표면 35파일 377줄 · E 표면 2파일 2줄. 뺀 덩어리: `.github/workflows/`(7파일 49줄)·`backend/cmd/server/`(27줄) — 열린 PR #58 이 `ci.yml`·`ios-test.yml`·`main.go` 를 고친다 · `ios/fastlane/`(6줄) — 열린 PR #63 이 `Fastfile` 을 고친다. 예산에 안 맞아 건너뛴 행: `ios/Shared/Sources/PocketAideAPI/`(49) · `k8s/`(31) · `tools/journey-mockup-harness/`(29). 모두 원장에서 `—` 로 남는다.
+- **결과**: L 377 → 194줄, E 2 → 1줄. 비주석 변경은 없다(줄 끝 주석을 걷은 줄은 주석만 빠졌다). 첫 패스가 미룬 개명 `githubwebhook.WorkflowRunEvent.HTMLURL` → `RunURL` 은 사용처 `backend/cmd/server/main.go` 가 열린 PR #58 과 겹쳐 다시 미룬다.
 - **doc 수준으로 유지(사유 생략)**: Go exported 식별자·패키지와 `ios/Shared` 의 `public` 선언에 붙은 첫 문장 32줄. 아래 표는 그 수준을 넘는 본문과 비공개 선언의 주석만 다룬다.
-- **모든 주석을 걷어 원장에서 빠진 파일**: `.gitignore` · `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift` · `PRMonitorGroupCard.swift` · `PRMonitorViewModel.swift` · `ios/PocketAideWidget/Sections/AffirmationSection.swift` · `PlaceholderSection.swift` · `ios/fastlane/Appfile` · (E) `ios/PocketAide/Affirmations/AffirmationsViewModel.swift`.
+- **모든 주석을 걷어 원장에서 빠진 파일**: `.gitignore` · `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift` · `PRMonitorGroupCard.swift` · `PRMonitorViewModel.swift` · `ios/PocketAideWidget/Sections/AffirmationSection.swift` · `PlaceholderSection.swift` · (E) `ios/PocketAide/Affirmations/AffirmationsViewModel.swift`.
 
 ## 제거
 
@@ -76,7 +76,6 @@
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` 9–11 | 「Link gives this region its own tap target on Large widgets — the」 (3줄) | 주석 재진술(바깥 `widgetURL` 과 섹션 Link 의 관계는 `PocketAideWidget.swift` 의 `widgetURL` 자리가 정본) |
 | `ios/PocketAideWidget/Sections/PlaceholderSection.swift` 4–7 | 「Shared shape for the 4 not-yet-wired widget sections (weather, calenda…」 (4줄) | 작업 흔적(후속 AC 계획) + 코드 재진술 |
 | `ios/Shared/Sources/DesignSystem/Tokens.swift` 67–68 | 「§1.8 — widget surface/rule live outside the area system.」 (2줄) | 저장소 문서 재진술(`tokens.md` §1.8) |
-| `ios/fastlane/Appfile` 3–6 | 「Set these via environment variables in CI:」 (4줄) | 코드 재진술(`Fastfile` 이 `ENV.fetch` 로 읽는 키 · `testflight-upload.yml` 이 넘기는 env) + 낡은 서술(`FASTLANE_APPLE_ID` 는 어디서도 쓰지 않는다) |
 
 ## 유지 · 개작
 
@@ -144,7 +143,6 @@
 | `ios/Shared/Sources/DesignSystem/Tokens.swift` 18–21 | 「Cross-area semantic colors used by PR monitor cards.」 | 첫 문장 doc 수준 + 에셋 참조가 아니라 sRGB 리터럴인 이유(다른 영역 색을 빌려 §1.11 의 정본을 중복하지 않는다) — 지우면 prMonitor 에셋에 색을 더해 정본을 둘로 만든다 |
 | `ios/Shared/Sources/DesignSystem/Tokens.swift` 58–62 | 「Destructive semantic color for the given area.」 | 첫 문장 doc 수준 + colorset 이 없는 영역은 에셋 기본값(투명)으로 조용히 떨어진다는 함정 — 지우면 등록 안 된 영역에 호출해 버튼이 투명해진다 |
 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` 130–133 | 「4xx means the refresh token itself is rejected — clear so the」 | 4xx 는 리프레시 토큰 거부라 지우고 5xx·전송 오류는 남기는 이유 — 지우면 두 경우를 합쳐 일시 장애에 사용자를 로그아웃시키거나 거부된 토큰으로 무한 재시도한다 |
-| `ios/fastlane/Fastfile` 51–52 | 「workflow_dispatch 빌드에는 PR 번호가 없다. ENV는 빈 문자열로 들어오고」 | dispatch 빌드엔 PR 번호가 없고 Ruby 에서 "" 는 truthy 라 `\|\|` 로 안 걸러진다는 함정 — 지우면 `\|\|` 로 「단순화」해 빈 PR 번호가 빌드 메타데이터에 들어간다 |
 
 ## E 표면 (줄 끝 주석)
 
