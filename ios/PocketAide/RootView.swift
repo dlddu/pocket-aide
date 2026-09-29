@@ -10,10 +10,12 @@ struct RootView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
+    @StateObject private var scratchpad: ScratchpadViewModel
 
     init(selectedTab: Binding<RootTab>, highlightedEventID: Binding<Int64?> = .constant(nil)) {
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
+        _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
     }
 
     var body: some View {
@@ -92,8 +94,9 @@ struct RootView: View {
                 ChatTab()
             }
             Tab("임시공간", systemImage: "doc.text", value: RootTab.scratchpad) {
-                ScratchpadTab()
+                ScratchpadTab(viewModel: scratchpad)
             }
+            .badge(scratchpad.unclassifiedCount)
             Tab("개인", systemImage: "person", value: RootTab.personal) {
                 PersonalTab()
             }
@@ -105,5 +108,11 @@ struct RootView: View {
             }
         }
         .tint(activeTint)
+        .task {
+            if scratchpad.api == nil, let api = auth.api {
+                scratchpad.replaceAPI(api)
+            }
+            await scratchpad.load()
+        }
     }
 }
