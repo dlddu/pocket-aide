@@ -140,6 +140,11 @@ func main() {
 				return fmt.Errorf("persist history: %w", err)
 			}
 
+			if !shouldPush(evt) {
+				log.Printf("githubwebhook: history-only (start event) repo=%s workflow=%s", evt.Repo, evt.WorkflowName)
+				return nil
+			}
+
 			// Best-effort APNs fan-out. A failed push for one user does not
 			// block other users; the history row is already persisted so
 			// the user will still see the unacked card on next app open.
@@ -237,6 +242,10 @@ func mustEnv(k string) string {
 
 // safePrefix returns the first 8 chars of a token (or fewer) so log lines can
 // identify devices without leaking the full token.
+func shouldPush(evt githubwebhook.WorkflowRunEvent) bool {
+	return evt.Completed
+}
+
 func safePrefix(t string) string {
 	if len(t) <= 8 {
 		return t

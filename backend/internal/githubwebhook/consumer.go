@@ -42,6 +42,7 @@ type WorkflowRunEvent struct {
 	// run's status instead (queued | in_progress) — a non-empty status string
 	// the history row and iOS client treat as the in-progress state.
 	Conclusion string
+	Completed  bool
 	HTMLURL    string // run URL
 	CommitURL  string
 	PRNumber   int
@@ -178,6 +179,7 @@ func (c *Consumer) process(ctx context.Context, msg types.Message) error {
 		HeadBranch:   parsed.WorkflowRun.HeadBranch,
 		HeadSHA:      parsed.WorkflowRun.HeadSHA,
 		Conclusion:   conclusion,
+		Completed:    parsed.Action == "completed",
 		HTMLURL:      parsed.WorkflowRun.HTMLURL,
 	}
 	if parsed.WorkflowRun.HeadSHA != "" && parsed.Repository.HTMLURL != "" {
