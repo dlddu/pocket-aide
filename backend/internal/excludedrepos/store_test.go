@@ -18,7 +18,6 @@ func newStore(t *testing.T) (*excludedrepos.Store, []int64) {
 	}
 	t.Cleanup(func() { _ = conn.Close() })
 
-	// Two users — exclusion behaviour only makes sense across multiple subjects.
 	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1'), (2, 'u2')`); err != nil {
 		t.Fatalf("seed users: %v", err)
 	}
@@ -101,7 +100,6 @@ func TestListUserIDsExcluding(t *testing.T) {
 	store, users := newStore(t)
 	ctx := context.Background()
 
-	// u1 excludes pocket-aide; u2 does not.
 	if _, err := store.Add(ctx, 1, "dlddu/pocket-aide"); err != nil {
 		t.Fatalf("seed: %v", err)
 	}

@@ -110,9 +110,7 @@ func (s *Store) Create(ctx context.Context, userID int64, text string, priority 
 	return s.Get(ctx, userID, id)
 }
 
-// Update changes text and/or priority on an existing affirmation. Both args
-// are required (full overwrite) — partial updates are intentionally not
-// supported to keep the contract small.
+// Update overwrites text and priority on an existing affirmation.
 func (s *Store) Update(ctx context.Context, userID, id int64, text string, priority Priority) (Affirmation, error) {
 	res, err := s.db.ExecContext(ctx, `
 		UPDATE affirmations

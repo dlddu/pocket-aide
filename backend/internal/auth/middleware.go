@@ -30,7 +30,7 @@ type Verifier interface {
 
 // Middleware returns a chi-compatible middleware that verifies the bearer
 // token, JIT-provisions a user row keyed by `sub`, and stores the User in
-// context. Requests without a token or with an invalid token get 401.
+// context.
 func Middleware(v Verifier, db *sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -102,8 +102,8 @@ func WithUser(ctx context.Context, u User) context.Context {
 }
 
 // NewVerifier builds a real OIDC verifier against the given issuer + audience.
-// The provider is fetched once at startup; JWKs rotation is handled internally
-// by go-oidc via background refresh.
+// The provider is fetched once at startup; go-oidc's remote key set refetches
+// the JWKS when it sees an unknown key ID, so key rotation needs no restart.
 func NewVerifier(ctx context.Context, issuer, audience string) (Verifier, error) {
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
