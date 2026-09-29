@@ -66,3 +66,19 @@ workflow manually (`workflow_dispatch`) to push a production build.
 `main` has a ruleset: no deletion, no force-push, linear history, required
 check `ci-success` (GitHub Actions). The bot never commits to `main`; only
 `deploy` is written by CI.
+
+## Checking a preview
+
+With `deploy/preview` on PR `<N>` (allow up to ~5 minutes for the input
+provider to poll):
+
+- **GitHub:** the `Preview` workflow (label attach) or `CI` (later pushes) shows
+  `BackendBaseURL=https://pocket-aide-pr-<N>.…` in the TestFlight job log.
+- **Flux:** `kubectl -n pocket-aide-preview get ks pocket-aide-<N>` is Ready at
+  the PR head SHA.
+- **Workload:** in namespace `pocket-aide-pr-<N>` the Deployment runs
+  `ghcr.io/dlddu/pocket-aide:<head sha>` and the PVC is `pocket-aide-pr-<N>`
+  (never `pocket-aide`) on StorageClass `efs`.
+- **HTTP:** `curl https://pocket-aide-pr-<N>.<domain>/healthz` answers, and
+  `/api/auth/config` returns production's OIDC issuer.
+- **Isolation:** the preview's log has no `SQS consumer starting` line.
