@@ -46,6 +46,7 @@ open docs/mockups/index.html
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
 - `_template.md` — 디자인 토큰 레퍼런스 (영역별 색·폰트). 정본은 `docs/design-system/tokens.md`
+- `_copy-map.md` — 목업 텍스트 ↔ 구현 문자열 리터럴 양방향 카피 대응표 (기계 판독용, 검산 포함)
 
 ## 디자인 토큰
 
