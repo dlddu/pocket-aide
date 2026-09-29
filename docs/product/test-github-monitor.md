@@ -14,6 +14,7 @@
 - AC11: CI 완료 알림 이력 보존 (PRD-10)
 - AC12: 알림 이력의 명시적 확인 처리 (PRD-10)
 - AC13: 이력 목록의 PR/커밋 단위 그룹핑 (PRD-10)
+- AC14: 그룹 단위 일괄 확인 (PRD-10)
 
 ## 달성 가치
 - V9: 개발 워크플로우 인지 부하 감소 — 검증 대상 AC 모두 V9를 달성한다.
@@ -21,8 +22,8 @@
 ## 작성 기준
 - 시나리오는 **사용자가 관찰할 수 있는 결과** 단위로 쓴다. 코드 레벨 테스트는 각 시나리오의
   「관련 코드 테스트」에 참고로만 적으며, 시나리오의 검증을 대신하지 않는다.
-- 「구현 상태」는 작성 시점(2026-09-29, `main` `7c6cfce`) 코드 기준이다. PRD-10 1차 구현 범위는
-  AC6·AC7·AC11·AC12·AC13이고, AC1~5·AC8~10은 PRD의 「후속 작업」이다.
+- 「구현 상태」는 작성 시점(2026-09-29, `main` `7c6cfce`) 코드 기준이다. PRD-10 구현 범위는
+  AC6·AC7·AC11·AC12·AC13·AC14이고, AC1~5·AC8~10은 PRD의 「후속 작업」이다.
 - 「워크플로우 완료 이벤트를 발생시킨다」는 실 GitHub Actions 실행 또는 같은 형태의 `workflow_run`
   페이로드를 SQS 경로로 흘려 넣는 것을 뜻한다. APNs 도달은 실기기 토큰이 필요한 외부 경계
   (모킹 정책 `EXT`)라서, 시뮬레이터 기반 검증에서는 발송 요청까지를 관찰 지점으로 삼는다.
@@ -102,14 +103,15 @@
   1. PR에 연결된 워크플로우를 성공으로 끝낸다.
   2. PR에 연결된 워크플로우를 실패로 끝낸다.
   3. PR 없이(main 직접 푸시) 워크플로우를 끝낸다.
+  4. 1~3단계 각 워크플로우가 **시작**되는 시점에 푸시 도달 여부를 본다.
 - **기대 결과**:
-  - 세 경우 모두 푸시가 1건씩 도달한다.
+  - 세 경우 모두 종료 시점에 푸시가 1건씩 도달한다.
+  - 4단계: 시작 시점에는 푸시가 오지 않는다(시작 이벤트는 이력에 진행 중 상태로만 남는다).
   - 1·2단계 알림에는 결과 상태, 레포 이름, PR 번호·제목 축약이 있다.
   - 3단계 알림에는 결과 상태, 레포 이름, 워크플로우 이름(`repo — conclusion · workflow_name`)이 있다.
 - **검증 AC**: AC6
-- **구현 상태**: 구현됨
-- **관련 코드 테스트**: `backend/internal/githubwebhook/consumer_internal_test.go` — `TestProcess_HappyPath`, `TestProcess_WithPullRequest`, `TestProcess_NonWorkflowRunEventSilentlyDropped`; `consumer_integration_test.go` — `TestIntegration_ConsumerDeliversValidMessage`; `backend/internal/handlers/device_tokens_test.go`; `backend/internal/apns/client_test.go`
-- **비고**: 현재 서버는 워크플로우 **시작**(`workflow_run` requested) 이벤트도 이력에 기록하고 푸시한다(`TestProcess_RequestedStartEventDispatched`, PR #40). AC6 문구는 「종료」만 다루므로 PRD와 구현의 범위가 어긋나 있다 — PRD 갱신 또는 구현 조정이 필요하다.
+- **구현 상태**: 구현됨. 단 4단계(시작 푸시 없음)는 `main` `7c6cfce` 기준 미충족 — 서버가 시작 이벤트도 푸시한다(#40). 수정은 `fix/prd-10-push-completed-only` 브랜치(별도 PR).
+- **관련 코드 테스트**: `backend/internal/githubwebhook/consumer_internal_test.go` — `TestProcess_HappyPath`, `TestProcess_WithPullRequest`, `TestProcess_NonWorkflowRunEventSilentlyDropped`, `TestProcess_RequestedStartEventDispatched`; `consumer_integration_test.go` — `TestIntegration_ConsumerDeliversValidMessage`; `backend/cmd/server/main_test.go` — `TestShouldPush`(수정 PR에서 추가); `backend/internal/handlers/device_tokens_test.go`; `backend/internal/apns/client_test.go`
 
 ### 시나리오 7: 제외한 레포의 워크플로우는 푸시되지 않는다
 - **사전 조건**: 로그인되어 디바이스 토큰이 등록된 상태. 레포 A는 PR 모니터 화면의 제외 레포 시트에서 제외, 레포 B는 제외하지 않음.
@@ -223,7 +225,7 @@
 - **검증 AC**: AC12, AC13
 - **구현 상태**: 구현됨
 - **관련 코드 테스트**: `backend/internal/notificationhistory/store_test.go` — `TestAcknowledge_OwnRowSetsTimestamp`, `TestAcknowledge_OtherUserReturnsNotFound`, `TestAcknowledge_IsIdempotent`; `backend/internal/handlers/notification_history_test.go` — `TestNotificationHistory_AckOwnRow`, `TestNotificationHistory_AckOtherUserReturns404`; `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testUnacknowledgedCountPerGroup`, `testGroupAllAcknowledgedWhenEveryItemAcked`
-- **비고**: 현재 그룹 카드 헤더에 「모두 확인」 버튼(`prmonitor.group.<id>.ack-all.button`)이 있다. PRD-10은 그룹 단위 일괄 확인을 1차 범위 밖(후속)으로 두고 있어 PRD와 구현이 어긋나 있다 — PRD에 AC를 추가하거나 버튼을 제거해야 한다.
+- **비고**: 그룹 「모두 확인」은 AC14로 따로 검증한다(시나리오 17).
 
 ### 시나리오 15: 이력의 외부 링크를 열어도 확인 처리되지 않는다
 - **사전 조건**: 미확인 이력 항목이 1개 이상 있음.
@@ -252,3 +254,18 @@
 - **검증 AC**: AC13
 - **구현 상태**: 구현됨 (클라이언트 측 그룹핑)
 - **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testItemsWithSamePRAreGroupedTogether`, `testPRLessItemsFallBackToHeadSHAGroup`, `testGroupCountsSuccessAndFailureSeparately`, `testGroupCountsInProgressSeparately`, `testInputOrderDoesNotAffectGrouping`, `testNeitherPRNorHeadSHAResultsInSingletonGroups`
+
+### 시나리오 17: 그룹 「모두 확인」은 그 그룹의 미확인 항목만 한 번에 확인한다
+- **사전 조건**: 그룹 A에 미확인 항목 2개와 확인된 항목 1개가 있음. 그룹 B에 미확인 항목 1개가 있음. 모두 확인된 그룹 C가 있음.
+- **실행 단계**:
+  1. 그룹 A·B·C 헤더에 「모두 확인」 버튼이 있는지 본다.
+  2. 그룹 A 헤더의 「모두 확인」을 누른다.
+  3. 그룹 A를 펼쳐 항목들의 확인 상태·확인 시각을 본다.
+- **기대 결과**:
+  - 1단계: 그룹 A·B에는 버튼이 있고, 그룹 C에는 없다.
+  - 2단계 뒤: 그룹 A 미확인 수가 0이 되고 「모두 확인」 버튼이 사라진다. 화면 상단 미확인 배지가 2 줄어든다.
+  - 3단계: 원래 미확인이던 2개에 확인 시각이 기록되고, 원래 확인돼 있던 1개의 확인 시각은 그대로다.
+  - 그룹 B는 미확인 1개 그대로다.
+- **검증 AC**: AC14
+- **구현 상태**: 구현됨 (`PRMonitorViewModel.acknowledgeGroup` — 미확인 row마다 개별 확인 API 호출)
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testGroupAllAcknowledgedWhenEveryItemAcked`; `backend/internal/notificationhistory/store_test.go` — `TestAcknowledge_IsIdempotent`
