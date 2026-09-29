@@ -1,3 +1,5 @@
+// mock-exception: EXT — 실 OIDC IdP 대체 mock 서버. 허용 사유는 docs/e2e-mocking-policy.md 허용목록.
+
 // Command oidcmock is a standalone HTTP server that exposes the oidcmock
 // package as a real listener on a configurable port. Used for local development
 // and CI integration tests where the mock IdP must be reachable from outside

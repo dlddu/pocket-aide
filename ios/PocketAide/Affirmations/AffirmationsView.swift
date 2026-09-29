@@ -9,12 +9,7 @@ struct AffirmationsView: View {
     @State private var sheetMode: PriorityEditSheet.Mode?
 
     init() {
-        let seed: UInt64? = {
-            guard let raw = ProcessInfo.processInfo.environment["ROTATION_SEED"],
-                  let parsed = UInt64(raw) else { return nil }
-            return parsed
-        }()
-        _viewModel = StateObject(wrappedValue: AffirmationsViewModel(api: nil, rotationSeed: seed))
+        _viewModel = StateObject(wrappedValue: AffirmationsViewModel(api: nil))
     }
 
     var body: some View {

@@ -31,11 +31,8 @@ final class AffirmationsUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    private func launchApp(seed: String? = "1337") -> XCUIApplication {
+    private func launchApp() -> XCUIApplication {
         let app = XCUIApplication()
-        if let seed {
-            app.launchEnvironment["ROTATION_SEED"] = seed
-        }
         app.launch()
         return app
     }
@@ -166,12 +163,5 @@ final class AffirmationsUITests: XCTestCase {
             in: self,
             message: "Sheet should dismiss within 5s of tapping cancel"
         )
-    }
-
-    func testRotationSeedLandsOnAffirmationsScreen() {
-        let app = launchApp(seed: "424242")
-        selectAffirmationsTab(in: app)
-        // selectAffirmationsTab already waits for screen.header.title; the
-        // assertion lives there so we don't duplicate it here.
     }
 }

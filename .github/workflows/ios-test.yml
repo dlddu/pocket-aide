@@ -12,14 +12,11 @@ jobs:
     name: iOS build + test
     runs-on: macos-26
     env:
+      # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; oidcmock 이 대신한다 (docs/e2e-mocking-policy.md)
       OIDC_ISSUER: http://localhost:5556
       OIDC_AUDIENCE: pocket-aide-dev
       OIDC_CLIENT_ID: pocket-aide-ios-dev
       OIDC_REDIRECT_URI: pocketaide-dev://callback
-      OPENROUTER_API_KEY: test-key-not-used
-      LANGFUSE_PUBLIC_KEY: test
-      LANGFUSE_SECRET_KEY: test
-      LANGFUSE_HOST: http://localhost:0
       DATABASE_PATH: /tmp/pocket-aide-ci.db
       PORT: "8080"
     steps:
