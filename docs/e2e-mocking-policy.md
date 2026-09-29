@@ -81,7 +81,7 @@ E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_AC
 
 | ID | 차단 요인 | 해소 | 해소일 |
 |----|-----------|------|--------|
-| BF-1 | GitHub 웹훅(SQS) 소비 → PR 모니터 이력: E2E 백엔드가 `SQS_QUEUE_URL` 없이 떠서 컨슈머가 꺼져 있었고, PR 모니터 화면은 빈 상태만 밟았다. | 실환경 대체 — ios-test 잡이 로컬 SQS(`start-test-sqs`: moto server. macOS 러너엔 Docker 가 없어 예고한 LocalStack 컨테이너 대신 같은 SQS 와이어 프로토콜을 서빙하는 moto 를 쓴다)를 띄우고, 백엔드 컨슈머를 무수정으로 켠다(APNs 발송만 `APNS_DISABLED` 로 끔 — 허용목록). 첫 로그인으로 사용자 행이 생기면 GitHub `workflow_run` envelope(`.github/fixtures/github-webhook/`)을 API Gateway 통합과 같은 모양(본문 + `x-github-event` 속성)으로 큐에 넣고, `PRMonitorUITests` 가 컨슈머 → 이력 저장 → 이력 API → PR 모니터 화면 행 → 「확인」 ack 를 실경로로 밟는다.__PR__ | 2026-09-29 |
+| BF-1 | GitHub 웹훅(SQS) 소비 → PR 모니터 이력: E2E 백엔드가 `SQS_QUEUE_URL` 없이 떠서 컨슈머가 꺼져 있었고, PR 모니터 화면은 빈 상태만 밟았다. | 실환경 대체 — ios-test 잡이 로컬 SQS(`start-test-sqs`: moto server. macOS 러너엔 Docker 가 없어 예고한 LocalStack 컨테이너 대신 같은 SQS 와이어 프로토콜을 서빙하는 moto 를 쓴다)를 띄우고, 백엔드 컨슈머를 무수정으로 켠다(APNs 발송만 `APNS_DISABLED` 로 끔 — 허용목록). 첫 로그인으로 사용자 행이 생기면 GitHub `workflow_run` envelope(`.github/fixtures/github-webhook/`)을 API Gateway 통합과 같은 모양(본문 + `x-github-event` 속성)으로 큐에 넣고, `PRMonitorUITests` 가 컨슈머 → 이력 저장 → 이력 API → PR 모니터 화면 행 → 「확인」 ack 를 실경로로 밟는다. (#58) | 2026-09-29 |
 
 원장 밖 메모: LLM(OpenRouter) 호출 경로는 현재 코드에 존재하지 않는다(백엔드가 관련 env 를 읽지 않는다). 없는 경로는
 차단 요인이 아니며, 구현이 들어오면 그때 `LLM` 카테고리 판정 대상이 된다.
