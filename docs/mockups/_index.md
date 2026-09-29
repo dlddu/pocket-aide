@@ -1,6 +1,6 @@
 ---
 type: mockup-index
-last_updated: 2026-05-13
+last_updated: 2026-09-29
 ---
 
 # Mockup 인덱스
@@ -14,11 +14,28 @@ last_updated: 2026-05-13
 ## 메타 도구 (mockup이 아닌 갤러리 페이지)
 
 - `index.html` — 라이트 갤러리. 각 `screen-*.html`로 링크.
-- `mockups-dark.html` — **다크 변형 통합 갤러리**. 11개 `screen-*.html`의 다크 버전을 `tokens.md §1.9` 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다.
+- `mockups-dark.html` — **다크 변형 통합 갤러리**. 11개 `screen-*.html`의 다크 버전을 `tokens.md §1.9` 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다. **현재 미반영**: `screen-pr-monitor-push`, `screen-pr-monitor-history` (2026-09-29 확인 — 다크 토큰은 tokens.md §1.11에 정의됨, 재생성 필요).
 
 ## 현재 미정의 영역
 
-- **사용자 여정**: 1개 작성됨 (`journey-affirmation-seeker-daily-exposure.md` — V4 달성). 나머지 mockup 10개의 "여정" 항목은 여전히 `(미정의)`. `screen-widget`은 V4 측면만 매핑되었고 V6 측면 여정은 미정의. PR 모니터 두 화면(V9)의 여정도 미정의.
+- **사용자 여정**: 1개 작성됨 (`JRN-affirmation-daily-exposure` — V4 달성). 나머지 화면 mockup 10개의 "여정" 항목은 여전히 `(미정의)`. `screen-widget`은 V4 측면만 매핑되었고 V6 측면 여정은 미정의. PR 모니터 두 화면(V9)의 여정도 미정의.
+- **여정 mockup**: 여정 하나 = 페이지 하나(`docs/journeys/<JRN-id>/index.html`) 체계를 2026-09-29 도입. 현재 1개. 화면 mockup(`screen-*.html`)은 여정 mockup의 원본 화면·디자인 레퍼런스로 유지한다.
+
+## 여정 mockup
+
+### journeys/JRN-affirmation-daily-exposure/
+- **여정**: `JRN-affirmation-daily-exposure` (`user-journeys/JRN-affirmation-daily-exposure.md`)
+- **달성 가치**: V4 (의도된 반복 노출)
+- **담은 단계**: `STP-add-affirmation`, `STP-set-priority`, `STP-rotation-in-app`, `STP-widget-glance`, `STP-widget-to-app`
+- **분기 상태**: `STP-add-affirmation/from-scratchpad`(우회), `STP-rotation-in-app/default-priority`(시트 취소), `STP-rotation-in-app/empty`(문장 없음), `STP-widget-glance/delayed`(위젯 갱신 대기), `STP-widget-glance/no-widget`(위젯 미설치 — 여정 밖 종료)
+- **원본 화면 mockup**: screen-affirmations, screen-affirmations-priority-edit, screen-widget, screen-scratchpad
+- **사용 디자인 시스템**:
+  - 패턴: `영역 화면` (§1), `다짐 회전 노출` (§7), `편집 시트` (§9 — 입력 시트·우선순위 시트), `임시공간 분류 흐름` (§8), `시스템 통합 — 위젯` (§6.2)
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader`, `AreaLabel`, `IconCircleButton`, `Card`(히어로·다짐 카드), `FilterPills`(단일 선택형), `Sheet`, `Backdrop`, `Handle`, `TabBar`, `TabBarItem`
+  - 토큰: §1.6 다짐, §1.4 임시공간, §1.8 위젯 보조 토큰, §2 중립, §3.1 sans/serif, §4.2 라운드
+  - 디자인 시스템 밖 값: 홈 화면 벽지 그라디언트·iOS 앱 아이콘 색(§1.8에 따라 iOS 컨벤션 차용, screen-widget.html과 동일), 하단 토스트(컴포넌트 미정의 — 추가 후보)
+- **공개 경로**: `journeys/JRN-affirmation-daily-exposure/`
+- **외부 의존**: 없음 (인라인 CSS·JS, `file://`로 동작)
 
 ## 디자인 시스템 매핑
 
@@ -50,7 +67,7 @@ last_updated: 2026-05-13
 - **시각화 대상**:
   - 여정: (미정의)
   - 가치: V1 (즉시 캡처), V3 (영역 분리 — 분류 흐름)
-  - PRD/AC (보조): PRD-4 / AC1 (즉시 캡처), AC3 (분류 흐름), AC4 (미분류 배지)
+  - PRD/AC (보조): PRD-4 / AC1 (항목 자동 수집), AC3 (항목 메타데이터), AC4 (분류 이동), AC5 (미분류 카운트 배지)
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `임시공간 분류 흐름` (patterns.md §8)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader`, `AreaLabel`, `Card.note-card`, `TabBar` (active=임시공간)
@@ -70,7 +87,7 @@ last_updated: 2026-05-13
 - **시각화 대상**:
   - 여정: (미정의)
   - 가치: V3 (영역 분리된 작업 관리 — 회사 영역)
-  - PRD/AC (보조): PRD-3 / AC1 (회사 영역), AC4 (영역 검색 분리, slate 톤)
+  - PRD/AC (보조): PRD-3 / AC1 (두 영역 완전 분리 — 회사 영역만 검색), AC3 (시각 구분, slate 톤), AC4 (영역 간 이동 불가 — 이동 UI 없음)
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `리스트 + 섹션` (patterns.md §3)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip` (slate), `AreaLabel`("WORK"), `ScreenHeader.with-icon-button-fab`, `IconCircleButton.solid`, `FilterPills`, `SectionHeader`, `Card.task-card`, `CheckCircle`, `TabBar` (active=회사)
@@ -88,7 +105,7 @@ last_updated: 2026-05-13
 
 ## screen-affirmations.html
 - **시각화 대상**:
-  - 여정: `affirmation-seeker:daily-exposure` (S1, S3, S5)
+  - 여정: `JRN-affirmation-daily-exposure` (`STP-add-affirmation`, `STP-rotation-in-app`, `STP-widget-to-app`)
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC2 (우선순위), AC3 (회전 노출)
 - **사용 디자인 시스템**:
@@ -98,7 +115,7 @@ last_updated: 2026-05-13
 
 ## screen-affirmations-priority-edit.html
 - **시각화 대상**:
-  - 여정: `affirmation-seeker:daily-exposure` (S2 — 추가한 다짐의 노출 우선순위 설정)
+  - 여정: `JRN-affirmation-daily-exposure` (`STP-set-priority` — 추가한 다짐의 노출 우선순위 설정)
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC2 (우선순위)
 - **사용 디자인 시스템**:
@@ -110,7 +127,7 @@ last_updated: 2026-05-13
 - **시각화 대상**:
   - 여정: (미정의)
   - 가치: V1 (핸즈프리 즉시 캡처), V2 (한·영 혼용 STT)
-  - PRD/AC (보조): PRD-6 / AC1 (잠금 화면 호출), AC4 (분류·확인 묻지 않음)
+  - PRD/AC (보조): PRD-6 / AC1 (숏컷 호출), AC2 (호출 즉시 녹음), AC3 (종료 시 되묻기 없음), AC4 (임시 공간 자동 저장)
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (patterns.md §6.1)
   - 컴포넌트: `IPhoneFrame`, `StatusBar` (잠금화면 변형) — 그 외는 iOS Shortcut 시스템 UI 차용
@@ -118,7 +135,7 @@ last_updated: 2026-05-13
 
 ## screen-widget.html
 - **시각화 대상**:
-  - 여정: `affirmation-seeker:daily-exposure` (S4, S5) — V4 측면(다짐 슬라이스)만. V6 측면(일정/메일/날씨/알림 통합) 여정은 미정의.
+  - 여정: `JRN-affirmation-daily-exposure` (`STP-widget-glance`, `STP-widget-to-app`) — V4 측면(다짐 슬라이스)만. V6 측면(일정/메일/날씨/알림 통합) 여정은 미정의.
   - 가치: V4 (의도된 반복 노출 — 다짐 회전), V6 (일상 정보 통합 시야)
   - PRD/AC (보조): PRD-8 / AC1 (5영역 통합), AC5 (다짐 회전), AC8 (영역 탭 진입)
 - **사용 디자인 시스템**:
@@ -153,7 +170,7 @@ last_updated: 2026-05-13
   - PRD/AC (보조): PRD-10 / AC7 도착지 (푸시 진입 시 해당 항목 강조 — 인디고 글로우, 5초 후 자동 해제, 미확인 유지), AC11 (서버 영속화된 이력 조회 — id·PR 링크 옵션·커밋 링크·런 링크·확인 여부·확인 시각, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지), AC12 (명시적 "확인" 버튼만 처리 트리거 — 외부 링크 탭 미트리거), AC13 (PR 있으면 PR 번호, 없으면 커밋 head_sha 기준으로 이력을 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태 표시)
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) — PR 모니터는 RootView의 7번째 일상 탭이므로 일반 영역 화면 패턴을 그대로 사용. `리스트 + 섹션` (patterns.md §3) — 미확인/확인 완료 섹션 + PR·커밋 단위 그룹 카드.
-  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip`(§1.11 인디고), `AreaLabel`("PR · MONITOR"), `ScreenHeader`(미확인 개수 배지 + 우측 IconCircleButton: 제외 레포 관리), `GroupCard`(PR/커밋 단위 그룹 — 헤더(키 정보·종합 상태·항목 수·미확인 수 배지) + 펼침 영역의 이벤트 row), `Card.history-item.unacked`(흰 배경 + 좌측 3px 인디고 보더 + 외부 링크 칩 + "확인" 버튼), `Card.history-item.acked`(점선 보더 + dim + 취소선), 펄스 글로우 카드 변형(푸시 진입 강조 — `--accent-strong`), 상태 원형 배지(성공 forest / 실패 destructive), `TabBar`(PR 모니터 탭 = 7번째 활성).
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip`(§1.11 인디고), `AreaLabel`("PR · MONITOR"), `ScreenHeader`(미확인 개수 배지 + 우측 IconCircleButton: 제외 레포 관리), `Card.history-group.unacked` / `Card.history-group.acked`(PR/커밋 단위 그룹 — 헤더(키 정보·종합 상태·항목 수·미확인 수 배지) + 펼침 영역의 이벤트 row), `Card.history-item.unacked`(흰 배경 + 좌측 3px 인디고 보더 + 외부 링크 칩 + "확인" 버튼), `Card.history-item.acked`(점선 보더 + dim + 취소선), 펄스 글로우 카드 변형(푸시 진입 강조 — `--accent-strong`), 상태 원형 배지(성공 forest / 실패 destructive), `TabBar`(PR 모니터 탭 = 7번째 활성).
   - 토큰: PR 모니터 (§1.11) — `--bg #EEEDF5`, `--ink #221F33`, `--accent #5B4DB8`, `--accent-strong #3D2F8E`, `--rule #D8D5E4`, `--soft #DDDAEB`. 상태 시그널은 §1.11 "상태 시그널 차용 규칙"에 따라 `--forest`/`--destructive` 차용.
 
 ---

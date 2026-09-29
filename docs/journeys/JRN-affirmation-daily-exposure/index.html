@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>다짐 문장의 일상 반복 노출 — 여정 mockup</title>
+<style>
+  /* ── 1. 디자인 시스템 토큰 (docs/design-system/tokens.md) ──────────
+     §1.6 다짐 · §1.4 임시공간 · §1.8 시스템 통합(위젯 보조 토큰) · §2 중립 · §3.1 폰트 · §4.2 라운드.
+     위젯 영역 라벨 강조색은 §1.8 규칙대로 각 데이터 출처 영역의 accent를 차용한다. */
+  :root {
+    --bg: #F4EBDD; --ink: #2E251A; --tan: #8B6F47; --rule: #E5D7C0; --soft: #EADCC2;   /* §1.6 다짐 */
+    --s-paper: #F5EFE0; --s-ink: #2A2723; --s-warm: #B6855E; --s-rule: #E0D8C2; --s-card: #FBF7EC; /* §1.4 임시공간 */
+    --widget-surface: #F5EFE0; --widget-rule: #E5D7C0;                                 /* §1.8 위젯 */
+    --slate: #355577; --sage: #5E8B73; --warm: #B6855E;                                 /* §1.2 · §1.3 · §1.4 accent 차용 */
+    --card: #FFFFFF;                                                                    /* §2 --card (라이트) */
+    --device: #0a0a0a; --bezel: #2a2a2a;                                                /* §2 디바이스 */
+    --stone-400: #a8a29e; --stone-500: #78716c; --stone-600: #57534e;                  /* §2 보조 텍스트(stone) */
+    --sans: 'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --serif: 'Iowan Old Style', 'Apple Garamond', 'New York', 'Apple SD Gothic Neo', ui-serif, Georgia, serif;
+
+    /* 셸(리뷰 도구) 별칭 — 제품 화면과 구분되는 무채색 */
+    --jm-bg: #f5f5f4;
+    --jm-fg: #1c1917;
+    --jm-muted: var(--stone-500);
+    --jm-line: #d6d3d1;
+    --jm-accent: var(--tan);
+    --jm-radius: 8px;
+    --jm-gap: 12px;
+    --jm-font: var(--sans);
+  }
+
+  /* ── 2. 셸(리뷰 도구) ── */
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--jm-font); color: var(--jm-fg); background: var(--jm-bg);
+         -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+  .jm-bar { position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; gap: 8px var(--jm-gap);
+            align-items: center; padding: 8px 16px; border-bottom: 1px dashed var(--jm-line);
+            background: var(--jm-bg); font-size: 13px; }
+  .jm-title code { color: var(--jm-muted); font-size: 12px; }
+  .jm-hub { color: var(--jm-muted); margin-right: 4px; }
+  .jm-steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .jm-steps a { display: block; padding: 2px 8px; border: 1px solid var(--jm-line); border-radius: 999px;
+                color: var(--jm-muted); text-decoration: none; }
+  .jm-steps a[aria-current="step"] { border-color: var(--jm-accent); color: var(--jm-fg); font-weight: 600; }
+  .jm-pos { color: var(--jm-muted); }
+  .jm-nav { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .jm-nav button, .jm-nav a { font: inherit; padding: 4px 10px; border: 1px solid var(--jm-line);
+            border-radius: var(--jm-radius); background: none; color: var(--jm-fg); text-decoration: none; cursor: pointer; }
+  .jm-nav button:disabled { opacity: .4; cursor: default; }
+  .jm-end { max-width: 393px; margin: 12px auto 32px; padding: 8px 12px; border: 1px dashed var(--jm-accent);
+            border-radius: var(--jm-radius); font-size: 13px; }
+  .jm-branches { max-width: 393px; margin: 12px auto 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
+  .jm-branches > span { color: var(--jm-muted); }
+  .jm-branches button { font: inherit; padding: 3px 10px; border: 1px dashed var(--jm-line); border-radius: 999px;
+            background: none; color: var(--jm-fg); cursor: pointer; }
+  .jm-note { max-width: 393px; margin: 8px auto 0; font-size: 12px; line-height: 1.6; color: var(--jm-muted); }
+
+  /* ── 3. 단계 표시 ── 한 번에 한 단계, 상태가 열리면 기본 화면을 숨긴다 */
+  main > section[data-step] { display: none; padding: 20px 8px 8px; }
+  main > section[data-step].is-active { display: block; }
+  .stage > [hidden] { display: none !important; }
+  .stage:has(> [data-state]:not([hidden])) > .default { display: none; }
+
+  /* ── 4. 제품 화면 — components.md / patterns.md ── */
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .serif { font-family: var(--serif); }
+  /* IPhoneFrame · StatusBar · DynamicIsland · HomeIndicator (components §1, tokens §4.2·§5.1·§6) */
+  .frame { position: relative; overflow: hidden; width: 393px; max-width: 100%; height: 812px; margin: 0 auto;
+           border-radius: 56px; background: var(--bg); color: var(--ink);
+           box-shadow: 0 30px 80px -20px rgba(28,38,36,.25), 0 0 0 12px var(--device), 0 0 0 13px var(--bezel); }
+  .status { position: absolute; top: 0; left: 0; right: 0; height: 54px; padding: 0 36px; z-index: 30;
+            display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; }
+  .status.light { color: #fff; }
+  .island { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: 118px; height: 35px; border-radius: 20px; background: var(--device); }
+  .batt { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; box-shadow: inset -6px 0 0 0 transparent; position: relative; }
+  .batt::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+  .home-bar-wrap, .home-bar-btn { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 60; }
+  .home-bar { display: block; width: 140px; height: 5px; border-radius: 3px; background: var(--device); }
+  .home-bar.light { background: #fff; }
+  .home-bar-btn { border: 0; background: none; padding: 10px 20px 2px; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .home-bar-btn span { order: -1; font-size: 10px; color: var(--stone-500); }
+  .home-bar-btn:focus-visible, .home-bar-btn:hover { outline: 2px dashed var(--tan); outline-offset: 2px; border-radius: 12px; }
+
+  /* ScreenHeader + AreaLabel (components §2·§3) */
+  .a-header { position: absolute; top: 54px; left: 0; right: 0; padding: 12px 20px 8px; z-index: 10;
+              display: flex; align-items: flex-end; justify-content: space-between; }
+  .area-label { font-size: 11px; text-transform: uppercase; letter-spacing: .22em; color: var(--tan); font-weight: 700; }
+  .area-label.mt { margin-top: 20px; margin-bottom: 8px; }
+  .a-header h1 { margin: 2px 0 0; font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--rule); background: rgba(255,255,255,.4);
+              display: grid; place-items: center; color: var(--ink); }
+  .a-main { position: absolute; top: 120px; bottom: 88px; left: 0; right: 0; overflow: hidden; padding: 8px 20px 24px; }
+
+  /* Card (components §5) + 다짐 회전 노출 패턴 (patterns §7) */
+  .hero { position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 24px; padding: 24px; }
+  .hero .quote { position: absolute; top: -18px; left: -6px; font-size: 120px; line-height: 1; color: var(--tan); opacity: .08; }
+  .hero-label { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 10px; letter-spacing: .22em;
+                text-transform: uppercase; color: var(--tan); font-weight: 700; }
+  .hero p { margin: 0; font-size: 22px; line-height: 1.45; font-weight: 500; }
+  .hero-meta { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 11px; color: var(--stone-500); }
+  .hero-meta b { color: var(--ink); }
+  .list-head { display: flex; align-items: baseline; justify-content: space-between; margin: 20px 0 8px; }
+  .list-head h2 { margin: 0; font-size: 14px; }
+  .seg { display: flex; gap: 6px; font-size: 11px; color: var(--stone-500); }
+  .seg b { padding: 1px 8px; border-radius: 999px; background: var(--soft); color: var(--ink); }
+  .a-card { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 14px; margin-bottom: 8px; }
+  .a-card.is-new { border: 2px solid var(--tan); box-shadow: 0 0 0 4px rgba(139,111,71,.15); }
+  .a-card .row { display: flex; align-items: flex-start; gap: 12px; }
+  .a-card p { margin: 0; flex: 1; font-size: 15.5px; line-height: 1.35; }
+  .card-meta { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--rule); font-size: 10.5px; color: var(--stone-500);
+               display: flex; align-items: center; gap: 6px; }
+  .card-meta.accent { color: var(--tan); font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .dots { display: inline-flex; gap: 2px; }
+  .dots.v { flex-direction: column; margin-top: 4px; }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--tan); }
+  .dot.dim { opacity: .3; }
+  .dot.neutral { background: var(--stone-500); }
+  .dot.pulse { animation: pulse 1.6s ease-in-out infinite; }
+  .dot.r { margin-left: auto; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .empty { margin-top: 80px; text-align: center; padding: 0 12px; }
+  .empty .quote { display: block; font-size: 96px; line-height: .8; color: var(--tan); opacity: .25; }
+  .empty p.serif { font-size: 20px; margin: 8px 0; }
+
+  /* TabBar · TabBarItem (components §7, tokens §7) */
+  .tabbar { position: absolute; bottom: 0; left: 0; right: 0; height: 88px; z-index: 10; padding: 0 8px 28px;
+            display: flex; align-items: flex-end; justify-content: space-around;
+            background: rgba(244,235,221,.95); border-top: 1px solid var(--rule); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 8px; font-size: 10px; color: var(--stone-400); }
+  .tab.is-active { color: var(--tan); font-weight: 700; }
+  .area-scratch .tab.is-active { color: var(--s-warm); }
+
+  /* Sheet · Backdrop · Handle (components §9) — 편집 시트 패턴 (patterns §9) */
+  .backdrop { position: absolute; inset: 0; background: rgba(46,37,26,.45); z-index: 20; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--bg); padding: 10px 24px 28px;
+           border-radius: 24px 24px 0 0; box-shadow: 0 -8px 24px -4px rgba(28,38,36,.18); }
+  .handle { width: 36px; height: 4px; border-radius: 999px; background: var(--rule); margin: 0 auto 14px; }
+  .sheet h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: -.02em; }
+  .field { min-height: 96px; background: var(--card); border: 1px solid var(--rule); border-radius: 24px; padding: 16px 18px;
+           font-size: 16.5px; line-height: 1.5; outline: none; }
+  .field:focus { border-color: var(--tan); }
+  .caret { display: inline-block; width: 1.5px; height: 18px; background: var(--tan); vertical-align: middle; margin-left: 2px; animation: pulse 1s steps(1) infinite; }
+  .preview { position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 16px; font-size: 16.5px; line-height: 1.5; }
+  .preview .quote { position: absolute; top: -10px; left: -2px; font-size: 64px; line-height: 1; color: var(--tan); opacity: .1; }
+  .hint { margin: 12px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--stone-500); }
+  /* FilterPills 단일 선택형 (components §4) */
+  .pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pill { padding: 12px 0; border-radius: 999px; border: 1px solid var(--rule); background: none; font-size: 14px; color: var(--stone-600);
+          display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .pill.is-on { background: var(--soft); border-color: rgba(139,111,71,.4); color: var(--ink); font-weight: 700; }
+  /* PillButton.solid(1차) · 텍스트 액션(2차) — patterns §9 위계 규칙 */
+  .actions { margin-top: 16px; padding-top: 8px; border-top: 1px solid rgba(229,215,192,.6); }
+  .btn-primary { width: 100%; padding: 14px 0; border: 0; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 15px; font-weight: 700; }
+  .empty .btn-primary { width: auto; padding: 12px 24px; margin-top: 20px; }
+  .btn-text { width: 100%; margin-top: 4px; padding: 10px 0; border: 0; background: none; font-size: 13px; color: var(--stone-500); }
+  .toast { position: absolute; left: 20px; right: 20px; bottom: 100px; z-index: 40; padding: 12px 16px; border-radius: 16px;
+           background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.5; box-shadow: 0 8px 24px -8px rgba(46,37,26,.4); }
+
+  /* 임시공간 (tokens §1.4, patterns §8 분류 흐름) */
+  .area-scratch { background: var(--s-paper); color: var(--s-ink); }
+  .area-scratch .tabbar { background: rgba(245,239,224,.95); border-top-color: var(--s-rule); }
+  .s-header { position: absolute; top: 54px; left: 0; right: 0; padding: 12px 20px; }
+  .s-header .area-label { color: var(--s-warm); letter-spacing: .2em; display: flex; align-items: center; gap: 8px; }
+  .badge { background: var(--s-warm); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 6px; letter-spacing: .05em; }
+  .s-header h1 { margin: 2px 0 0; font-size: 26px; }
+  .s-main { position: absolute; top: 140px; left: 0; right: 0; bottom: 88px; padding: 4px 20px; }
+  .s-card { background: var(--s-card); border: 1px solid var(--s-rule); border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+  .s-card p { margin: 0; font-size: 15px; line-height: 1.6; }
+  .s-meta { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 10.5px; font-weight: 600; color: var(--s-warm); text-transform: uppercase; letter-spacing: .05em; }
+  .s-meta .dot { background: var(--s-warm); margin-right: 6px; }
+  .s-meta time { color: var(--stone-400); font-weight: 400; }
+  .chips { display: flex; gap: 6px; margin-top: 12px; }
+  .chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--s-rule); background: rgba(255,255,255,.6); font-size: 11px; font-weight: 500; }
+  .chip.is-target { border-color: var(--tan); color: var(--tan); font-weight: 700; box-shadow: 0 0 0 3px rgba(139,111,71,.15); }
+
+  /* 시스템 통합 — 위젯 (patterns §6.2, tokens §1.8). 벽지·앱 아이콘은 iOS 컨벤션 차용(screen-widget.html과 동일) */
+  .home-screen { color: #fff; background:
+      radial-gradient(ellipse 90% 50% at 30% 80%, rgba(184,138,98,.5), transparent 70%),
+      radial-gradient(ellipse 70% 60% at 80% 20%, rgba(202,127,90,.4), transparent 70%),
+      linear-gradient(180deg,#3A2A23 0%,#1A1410 60%,#0E0A08 100%); }
+  .widget-wrap { position: absolute; top: 80px; left: 20px; right: 20px; z-index: 20; }
+  .widget { background: rgba(245,239,224,.94); color: var(--s-ink); border-radius: 22px; padding: 16px; box-shadow: 0 8px 30px -10px rgba(0,0,0,.4); }
+  .w-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .w-row:first-child { padding-bottom: 12px; border-bottom: 1px solid var(--widget-rule); }
+  .w-row:last-child { padding-top: 12px; }
+  .w-cell.bl { border-left: 1px solid var(--widget-rule); padding-left: 12px; }
+  .w-label { display: flex; align-items: center; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .w-big { font-size: 26px; font-weight: 700; margin-top: 4px; }
+  .w-title { font-size: 12.5px; font-weight: 700; margin-top: 4px; line-height: 1.25; }
+  .w-sub { font-size: 10.5px; color: var(--stone-500); margin-top: 2px; }
+  .w-affirm { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 12px 0; border-bottom: 1px solid var(--widget-rule); color: inherit; }
+  button.w-affirm:hover, button.w-affirm:focus-visible { outline: 2px dashed var(--tan); outline-offset: 2px; border-radius: 8px; }
+  .w-affirm p { margin: 8px 0 0; font-size: 15px; line-height: 1.35; }
+  .apps, .grid-apps { position: absolute; left: 0; right: 0; display: grid; grid-template-columns: repeat(4, 60px); justify-content: space-between; padding: 0 28px; z-index: 10; }
+  .apps { bottom: 110px; }
+  .grid-apps { top: 80px; }
+  .app { width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #fff;
+         background: linear-gradient(135deg, var(--c1), var(--c2)); }
+  .dock { position: absolute; left: 12px; right: 12px; bottom: 16px; height: 80px; border-radius: 28px; z-index: 10; padding: 10px;
+          display: grid; grid-template-columns: repeat(4, 60px); justify-content: space-around; background: rgba(255,255,255,.18); }
+</style>
+</head>
+<body>
+
+<header class="jm-bar" aria-label="여정 mockup 도구">
+  <div class="jm-title"><a class="jm-hub" href="../../">허브</a> 다짐 문장의 일상 반복 노출 <code>JRN-affirmation-daily-exposure</code></div>
+  <ol class="jm-steps" aria-label="단계 목록"></ol>
+  <div class="jm-pos" aria-live="polite"></div>
+  <nav class="jm-nav">
+    <button type="button" data-jm="prev">← 이전</button>
+    <button type="button" data-jm="next">다음 →</button>
+    <a class="jm-doc" href="#">여정 문서</a>
+  </nav>
+</header>
+
+<main data-journey="JRN-affirmation-daily-exposure" data-doc="user-journeys/JRN-affirmation-daily-exposure.md">
+
+  <section data-step="STP-add-affirmation" data-title="다짐 문장 등록">
+    <div class="stage">
+      <div class="default"><div class="frame area-affirm">
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">작게 시작해서 매일 1%씩. 1년에 37배.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><p class="serif">불필요한 회의는 거절해도 괜찮다. 팀의 시간은 내 시간이기도 하다.</p></div></div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+<div class="backdrop"></div>
+<div class="sheet" role="dialog" aria-label="새 다짐">
+  <div class="handle"></div>
+  <h2>새 다짐</h2>
+  <div class="field serif" contenteditable="true" aria-label="다짐 문장">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.<i class="caret"></i></div>
+  <p class="hint">잊고 싶지 않은 문장을 적어두세요. 다음 화면에서 얼마나 자주 볼지 정합니다.</p>
+  <div class="actions">
+    <button type="button" class="btn-primary" data-go="STP-set-priority">추가</button>
+    <button type="button" class="btn-text" data-go="STP-add-affirmation/from-scratchpad" data-branch>임시공간 메모에서 가져오기</button>
+  </div>
+</div>
+<div class="home-bar-wrap"><i class="home-bar"></i></div>
+</div></div>
+      <div class="frame area-scratch" data-state="from-scratchpad" hidden>
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="s-header"><div class="area-label">임시 공간 <b class="badge">12</b></div><h1>분류되지 않은 메모</h1></header>
+<main class="s-main">
+  <div class="s-card"><div class="s-meta"><span><i class="dot"></i>숏컷 · 음성</span><time>어제 22:51</time></div>
+    <p>결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p>
+    <div class="chips"><span class="chip">→ 개인</span><span class="chip">→ 루틴</span><button type="button" class="chip is-target" data-go="STP-set-priority">→ 다짐</button></div>
+  </div>
+  <div class="s-card"><div class="s-meta"><span><i class="dot neutral"></i>탭 내 입력</span><time>19:30</time></div>
+    <p>이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정</p></div>
+</main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+<div class="home-bar-wrap"><i class="home-bar"></i></div>
+</div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-add-affirmation/from-scratchpad" data-branch>우회: 임시공간 메모를 다짐으로 이동</button></div>
+    <p class="jm-note">PRD-5 AC1 · 헤더 <b>+</b>로 입력 시트를 열어 문장을 적는다. 입력 시트는 편집 시트 패턴(patterns §9)의 텍스트 입력 사례.</p>
+  </section>
+
+  <section data-step="STP-set-priority" data-title="노출 빈도 정하기">
+    <div class="stage"><div class="default"><div class="frame area-affirm">
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><div class="a-card is-new"><div class="row"><span class="dots v"><i class="dot dim"></i><i class="dot dim"></i><i class="dot dim"></i></span><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></div><div class="card-meta accent"><i class="dot pulse"></i>방금 추가됨 · 우선순위 설정 중</div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+<div class="backdrop"></div>
+<div class="sheet" role="dialog" aria-label="우선순위 설정">
+  <div class="handle"></div>
+  <h2>우선순위 설정</h2>
+  <div class="preview serif"><span class="quote serif">"</span>결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</div>
+  <div class="area-label mt">노출 빈도</div>
+  <div class="pills" data-pill-group><button type="button" class="pill" data-pill><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><span>높음</span></button><button type="button" class="pill is-on" data-pill><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><span>보통</span></button><button type="button" class="pill" data-pill><span class="dots h"><i class="dot"></i><i class="dot dim"></i><i class="dot dim"></i></span><span>가끔</span></button></div>
+  <p class="hint">위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.</p>
+  <div class="actions">
+    <button type="button" class="btn-primary" data-go="STP-rotation-in-app">저장</button>
+    <button type="button" class="btn-text" data-go="STP-rotation-in-app/default-priority" data-branch>취소</button>
+  </div>
+</div>
+<div class="home-bar-wrap"><i class="home-bar"></i></div>
+</div></div></div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-rotation-in-app/default-priority" data-branch>중도 이탈: 시트 취소</button></div>
+    <p class="jm-note">PRD-5 AC2 · 추가 직후 시트 자동 노출, 3단계 단일 선택. 원본 화면: mockups/screen-affirmations-priority-edit.html</p>
+  </section>
+
+  <section data-step="STP-rotation-in-app" data-title="앱에서 회전 문장 마주치기">
+    <div class="stage">
+      <div class="default"><div class="frame area-affirm">
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><section class="hero"><span class="quote serif">"</span>
+  <div class="hero-label"><i class="dot pulse"></i>오늘 회전 · 3/15</div>
+  <p class="serif">작게 시작해서 매일 1%씩. 1년에 37배.</p>
+  <div class="hero-meta">우선순위 <b>높음</b> · 13회 노출</div></section>
+<div class="list-head"><h2>전체 15개</h2><span class="seg"><b>우선순위 순</b><span>최신순</span></span></div>
+<div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></div><div class="card-meta">방금 추가 · 보통</div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.</p></div></div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+
+<button type="button" class="home-bar-btn" data-go="STP-widget-glance" aria-label="홈 화면으로 스와이프"><i class="home-bar"></i><span>홈 화면으로 스와이프</span></button>
+</div></div>
+      <div data-state="default-priority" hidden><div class="frame area-affirm">
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><section class="hero"><span class="quote serif">"</span>
+  <div class="hero-label"><i class="dot pulse"></i>오늘 회전 · 3/15</div>
+  <p class="serif">작게 시작해서 매일 1%씩. 1년에 37배.</p>
+  <div class="hero-meta">우선순위 <b>높음</b> · 13회 노출</div></section>
+<div class="list-head"><h2>전체 15개</h2><span class="seg"><b>우선순위 순</b><span>최신순</span></span></div>
+<div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></div><div class="card-meta">방금 추가 · 보통</div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.</p></div></div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+<div class="toast" role="status">우선순위를 정하지 않아 <b>보통</b>으로 저장했어요 · 카드를 길게 눌러 바꿀 수 있어요</div>
+<button type="button" class="home-bar-btn" data-go="STP-widget-glance" aria-label="홈 화면으로 스와이프"><i class="home-bar"></i><span>홈 화면으로 스와이프</span></button>
+</div></div>
+      <div data-state="empty" hidden><div class="frame area-affirm">
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><div class="empty">
+  <span class="quote serif">"</span>
+  <p class="serif">아직 다짐이 없어요</p>
+  <p class="hint">자주 되새기고 싶은 문장을 하나 적어두면, 이 자리와 홈 화면 위젯에 번갈아 나타납니다.</p>
+  <button type="button" class="btn-primary" data-go="STP-add-affirmation">첫 문장 적기</button>
+</div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+
+<div class="home-bar-wrap"><i class="home-bar"></i></div>
+</div></div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-rotation-in-app/empty" data-branch>실패: 등록된 문장이 없음</button><button type="button" data-go="STP-widget-glance/no-widget" data-branch>이탈: 위젯 미설치</button></div>
+    <p class="jm-note">PRD-5 AC3 · 진입마다 우선순위 가중 회전. 앱을 나가려면 화면 아래 홈 인디케이터를 누른다(홈 화면으로 스와이프).</p>
+  </section>
+
+  <section data-step="STP-widget-glance" data-title="홈 화면 위젯에서 마주치기">
+    <div class="stage">
+      <div class="default"><div class="frame home-screen">
+<div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<div class="widget-wrap"><div class="widget">
+  <div class="w-row">
+    <div class="w-cell"><div class="w-label" style="color:var(--tan)">서울</div><div class="w-big">18°</div><div class="w-sub">한때 비 · 최고 22 / 최저 14</div></div>
+    <div class="w-cell bl"><div class="w-label" style="color:var(--slate)">다음 일정</div><div class="w-title">분기 리뷰 · 회의실 4</div><div class="w-sub">14:00 — 15:30</div></div>
+  </div>
+  <button type="button" class="w-affirm" data-go="STP-widget-to-app"><div class="w-label" style="color:var(--tan)">오늘의 다짐 <i class="dot pulse r"></i></div><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></button>
+  <div class="w-row">
+    <div class="w-cell"><div class="w-label" style="color:var(--sage)">메일 · 3 미확인</div><div class="w-title">윤정 · 분기 리뷰 자료</div></div>
+    <div class="w-cell bl"><div class="w-label" style="color:var(--warm)">PocketAide 알림</div><div class="w-title">아침 루틴 1단계</div></div>
+  </div>
+</div></div>
+<div class="apps"><span class="app" style="--c1:#34c759;--c2:#1d8a3a">전화</span><span class="app" style="--c1:#65d96d;--c2:#2dac41">메시지</span><span class="app" style="--c1:#5ac8fa;--c2:#0a84ff">사진</span><span class="app" style="--c1:#ff9500;--c2:#ff5500">캘린더</span></div>
+<div class="dock"><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#fff;--c2:#fff;color:#000">메일</span><span class="app" style="--c1:#000;--c2:#333">사파리</span><span class="app" style="--c1:#ff2d55;--c2:#ff375f">음악</span></div>
+<div class="home-bar-wrap"><i class="home-bar light"></i></div>
+</div></div>
+      <div class="frame home-screen" data-state="delayed" hidden>
+<div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<div class="widget-wrap"><div class="widget">
+  <div class="w-row">
+    <div class="w-cell"><div class="w-label" style="color:var(--tan)">서울</div><div class="w-big">18°</div><div class="w-sub">한때 비 · 최고 22 / 최저 14</div></div>
+    <div class="w-cell bl"><div class="w-label" style="color:var(--slate)">다음 일정</div><div class="w-title">분기 리뷰 · 회의실 4</div><div class="w-sub">14:00 — 15:30</div></div>
+  </div>
+  <button type="button" class="w-affirm" data-go="STP-widget-to-app"><div class="w-label" style="color:var(--tan)">오늘의 다짐 <i class="dot pulse r"></i></div><p class="serif">작게 시작해서 매일 1%씩. 1년에 37배.</p></button>
+  <div class="w-row">
+    <div class="w-cell"><div class="w-label" style="color:var(--sage)">메일 · 3 미확인</div><div class="w-title">윤정 · 분기 리뷰 자료</div></div>
+    <div class="w-cell bl"><div class="w-label" style="color:var(--warm)">PocketAide 알림</div><div class="w-title">아침 루틴 1단계</div></div>
+  </div>
+</div></div>
+<div class="apps"><span class="app" style="--c1:#34c759;--c2:#1d8a3a">전화</span><span class="app" style="--c1:#65d96d;--c2:#2dac41">메시지</span><span class="app" style="--c1:#5ac8fa;--c2:#0a84ff">사진</span><span class="app" style="--c1:#ff9500;--c2:#ff5500">캘린더</span></div>
+<div class="dock"><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#fff;--c2:#fff;color:#000">메일</span><span class="app" style="--c1:#000;--c2:#333">사파리</span><span class="app" style="--c1:#ff2d55;--c2:#ff375f">음악</span></div>
+<div class="home-bar-wrap"><i class="home-bar light"></i></div>
+</div>
+      <div class="frame home-screen" data-state="no-widget" data-end="이탈: 위젯 미설치 — 앱 내 노출(STP-rotation-in-app)에서 여정 종료" hidden>
+<div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<div class="grid-apps"><span class="app" style="--c1:#8e8e93;--c2:#636366">설정</span><span class="app" style="--c1:#ffcc00;--c2:#ff9500">메모</span><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#0a84ff;--c2:#0060df">지도</span></div>
+<div class="apps"><span class="app" style="--c1:#34c759;--c2:#1d8a3a">전화</span><span class="app" style="--c1:#65d96d;--c2:#2dac41">메시지</span><span class="app" style="--c1:#5ac8fa;--c2:#0a84ff">사진</span><span class="app" style="--c1:#ff9500;--c2:#ff5500">캘린더</span></div>
+<div class="dock"><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#fff;--c2:#fff;color:#000">메일</span><span class="app" style="--c1:#000;--c2:#333">사파리</span><span class="app" style="--c1:#ff2d55;--c2:#ff375f">음악</span></div>
+<div class="home-bar-wrap"><i class="home-bar light"></i></div>
+</div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-widget-glance/delayed" data-branch>외부 지연: 위젯 갱신 대기</button><button type="button" data-go="STP-widget-glance/no-widget" data-branch>이탈: 위젯 미설치</button></div>
+    <p class="jm-note">PRD-5 AC4 · PRD-8 AC5 · 위젯의 <b>오늘의 다짐</b> 영역을 누르면 다짐 탭으로 들어간다. 갱신 대기 상태에서는 방금 등록한 문장 대신 이전 문장이 보인다.</p>
+  </section>
+
+  <section data-step="STP-widget-to-app" data-title="위젯에서 다짐 탭으로" data-end="여정 완료 — 위젯 노출 후 다짐 탭 진입">
+    <div class="stage"><div class="default"><div class="frame area-affirm">
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><section class="hero"><span class="quote serif">"</span>
+  <div class="hero-label"><i class="dot pulse"></i>위젯에서 열림</div>
+  <p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p>
+  <div class="hero-meta">우선순위 <b>보통</b> · 위젯 1회 노출</div></section><div class="list-head"><h2>전체 15개</h2><span class="seg"><b>우선순위 순</b><span>최신순</span></span></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.</p></div></div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+
+<div class="home-bar-wrap"><i class="home-bar"></i></div>
+</div></div></div>
+    <p class="jm-note">PRD-8 AC8 · 위젯에서 보던 문장을 히어로에 그대로 보여주는 것은 가정(PRD 미정의).</p>
+  </section>
+
+</main>
+
+<script>
+/* 단계 엔진 — 수정하지 않아도 된다.
+   요건 2(전환) 3(위치) 5(딥링크) 6(분기 상태·끝 표시) 8(문서 복귀 링크)을 처리한다. */
+(function () {
+  var main = document.querySelector('main[data-journey]');
+  var steps = Array.prototype.slice.call(main.querySelectorAll(':scope > section[data-step]'));
+  var ids = steps.map(function (s) { return s.getAttribute('data-step'); });
+  var list = document.querySelector('.jm-steps');
+  var pos = document.querySelector('.jm-pos');
+  var prev = document.querySelector('[data-jm="prev"]');
+  var next = document.querySelector('[data-jm="next"]');
+  var docLink = document.querySelector('.jm-doc');
+  var docPath = main.getAttribute('data-doc');
+  var READER = '../../reader.html';
+
+  steps.forEach(function (s, i) {
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = '#' + ids[i];
+    a.textContent = (i + 1) + '. ' + (s.getAttribute('data-title') || ids[i]);
+    li.appendChild(a); list.appendChild(li);
+  });
+
+  function parse() {
+    var h = decodeURIComponent(location.hash.slice(1));
+    var parts = h.split('/');
+    var i = ids.indexOf(parts[0]);
+    return { index: i < 0 ? 0 : i, state: i < 0 ? null : (parts[1] || null) };
+  }
+
+  function render() {
+    var cur = parse();
+    var step = steps[cur.index];
+    steps.forEach(function (s, i) { s.classList.toggle('is-active', i === cur.index); });
+    var stateEl = null;
+    step.querySelectorAll('[data-state]').forEach(function (el) {
+      var on = el.getAttribute('data-state') === cur.state;
+      el.hidden = !on; if (on) stateEl = el;
+    });
+    list.querySelectorAll('a').forEach(function (a, i) {
+      if (i === cur.index) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+    });
+    pos.textContent = (cur.index + 1) + ' / ' + steps.length + ' · ' + (step.getAttribute('data-title') || ids[cur.index])
+      + (cur.state ? ' (' + cur.state + ')' : '');
+    prev.disabled = cur.index === 0;
+    next.disabled = cur.index === steps.length - 1;
+    if (docPath) docLink.href = READER + '?doc=' + encodeURI(docPath) + '#' + ids[cur.index];
+
+    var old = document.querySelector('.jm-end'); if (old) old.remove();
+    var end = (stateEl && stateEl.getAttribute('data-end')) || step.getAttribute('data-end');
+    if (end) {
+      var box = document.createElement('div');
+      box.className = 'jm-end';
+      box.textContent = '■ 이 갈래의 끝: ' + end;
+      step.appendChild(box);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function go(target) { if (location.hash.slice(1) === target) render(); else location.hash = target; }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-go]');
+    if (el) { e.preventDefault(); go(el.getAttribute('data-go')); }
+  });
+  prev.addEventListener('click', function () { var i = parse().index; if (i > 0) go(ids[i - 1]); });
+  next.addEventListener('click', function () { var i = parse().index; if (i < ids.length - 1) go(ids[i + 1]); });
+  document.addEventListener('click', function (e) {
+    var p = e.target.closest('[data-pill]');
+    if (!p) return;
+    p.parentNode.querySelectorAll('[data-pill]').forEach(function (b) { b.classList.toggle('is-on', b === p); });
+  });
+  window.addEventListener('hashchange', render);
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,15 +1,75 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=./mockups/">
-  <title>Pocket Aide Mockups</title>
-  <script>
-    window.location.replace("./mockups/");
-  </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PocketAide 디자인 문서 허브</title>
+<style>
+  :root { --fg:#1c1917; --muted:#78716c; --line:#e7e5e4; --bg:#fafaf9; --accent:#8B6F47; --soft:#f5f5f4;
+          --sans:'Apple SD Gothic Neo','SF Pro Text',-apple-system,BlinkMacSystemFont,system-ui,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); color: var(--fg); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 36px 0 8px; }
+  p.sub { color: var(--muted); margin: 0; font-size: 14px; }
+  .table { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; background: var(--soft); padding: 1px 4px; border-radius: 4px; }
+  a { color: var(--accent); }
+  .pending { color: var(--muted); }
+  ul { padding-left: 18px; }
+</style>
 </head>
 <body>
-  <p><a href="./mockups/">Pocket Aide 목업 디자인 보기</a></p>
+<main>
+  <h1>PocketAide 디자인 문서 허브</h1>
+  <p class="sub">가치 → 사용자 여정 → 여정 mockup, 그리고 화면 단위 목업과 디자인 시스템으로 가는 입구.</p>
+
+  <h2>사용자 여정</h2>
+  <div class="table"><table>
+    <thead><tr><th>여정</th><th>달성 가치</th><th>여정 문서</th><th>여정 mockup</th></tr></thead>
+    <tbody>
+      <tr data-journey="JRN-affirmation-daily-exposure">
+        <td>다짐 문장의 일상 반복 노출<br><code>JRN-affirmation-daily-exposure</code></td>
+        <td>V4</td>
+        <td><a href="reader.html?doc=user-journeys/JRN-affirmation-daily-exposure.md">문서</a></td>
+        <td><a href="journeys/JRN-affirmation-daily-exposure/">mockup</a></td>
+      </tr>
+    </tbody>
+  </table></div>
+
+  <h2>가치별 여정 커버리지</h2>
+  <div class="table"><table>
+    <thead><tr><th>가치</th><th>여정</th></tr></thead>
+    <tbody>
+      <tr><td>V1 핸즈프리 즉시 캡처</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V2 한·영 혼용 음성 인식 정확도</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V3 영역 분리된 작업 관리</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V4 의도된 반복 노출</td><td><code>JRN-affirmation-daily-exposure</code></td></tr>
+      <tr><td>V5 자연어 대화 기반 작업 처리</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V6 일상 정보 통합 시야</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V7 시스템 전역 글쓰기 보조</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V8 일상 루틴의 구조화</td><td class="pending">여정 없음</td></tr>
+      <tr><td>V9 개발 워크플로우 인지 부하 감소</td><td class="pending">여정 없음</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>화면 단위 목업</h2>
+  <ul>
+    <li><a href="mockups/">라이트 갤러리</a> — <code>screen-*.html</code> 13개</li>
+    <li><a href="mockups/mockups-dark.html">다크 갤러리</a></li>
+    <li><a href="reader.html?doc=mockups/_index.md">mockup 인덱스</a> (가치·여정·PRD·디자인 시스템 연결)</li>
+  </ul>
+
+  <h2>문서</h2>
+  <ul>
+    <li><a href="reader.html?doc=product/values.md">제품 가치</a> · <a href="reader.html?doc=product/doc-tracker/index.md">제품 문서 상태 추적</a></li>
+    <li>디자인 시스템: <a href="reader.html?doc=design-system/tokens.md">토큰</a> · <a href="reader.html?doc=design-system/components.md">컴포넌트</a> · <a href="reader.html?doc=design-system/patterns.md">패턴</a></li>
+    <li><a href="reader.html?doc=user-journeys/README.md">사용자 여정 작성 규칙</a> · <a href="reader.html?doc=doc-structure-state.md">디자인 문서 체계 상태</a></li>
+  </ul>
+</main>
 </body>
 </html>

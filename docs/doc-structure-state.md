@@ -1,25 +1,24 @@
 # 문서 구조 상태 추적
 
-> 마지막 검증: 2026-05-07 (첫 사용자 여정 추가 후)
-> 검증 도구: design-doc-structure-validator
+> 마지막 검증: 2026-09-29 (여정 mockup 체계 도입 후)
+> 검증 기준: user-journey-writer · journey-mockup-builder 규약 (design-doc-structure-validator 부재로 수동 점검)
 > 대상: pocket-aide 레포
 
 ---
 
 ## 현재 상태 요약
 
-- **정의된 가치 (참조)**: 8개 (V1 ~ V8) — `docs/product/values.md`
-- **사용자 여정**: **1개** (V4 달성: `journey-affirmation-seeker-daily-exposure.md`) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
-- **Mockup**: 11개 (모두 `_index.md`에 매핑됨)
-  - 가치 매핑됨: 11 / 11 ✅
-  - 여정 매핑됨: **3 / 11** (이전 2/10): `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만)
-  - 디자인 시스템 매핑됨: 11 / 11 ✅
-- **디자인 시스템**:
-  - 토큰 파일 (`design-system/tokens.md`): 작성됨 ✅
-  - 컴포넌트 파일 (`design-system/components.md`): 작성됨 ✅ (23개)
-  - 패턴 파일 (`design-system/patterns.md`): 작성됨 ✅ (9개)
-  - README: 정식 안내
-- **건강 상태**: 🟡 **사용자 여정 부분 작성 (1/예상 5+). 디자인 시스템과 mockup 측은 건강.**
+- **정의된 가치 (참조)**: 9개 (V1 ~ V9) — `docs/product/values.md`
+- **사용자 여정**: **1개** (`JRN-affirmation-daily-exposure`, V4) — V1, V2, V3, V5, V6, V7, V8, V9는 여정 미정의
+- **여정 mockup**: **1개** (`journeys/JRN-affirmation-daily-exposure/`) — 여정 1 / 1 ✅, `check_mockup.py` 실패 0
+- **화면 mockup**: 13개 (모두 `_index.md`에 매핑됨)
+  - 가치 매핑됨: 13 / 13 ✅
+  - 여정 매핑됨: **3 / 13**: `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만)
+  - 디자인 시스템 매핑됨: 13 / 13 ✅
+  - 다크 갤러리 반영: 11 / 13 (PR 모니터 2화면 미반영)
+- **허브·리더**: `docs/index.html`(허브), `docs/reader.html`(문서 리더 — `STP-*` 앵커, 문서 → mockup 링크)
+- **디자인 시스템**: 토큰 · 컴포넌트 · 패턴 작성됨 ✅
+- **건강 상태**: 🟡 **여정 커버리지 1/9 가치. 구조(식별자·여정 mockup·허브·리더)는 갖춰짐.**
 
 ---
 
@@ -27,63 +26,38 @@
 
 ```
 docs/
+├── index.html                      ← 허브
+├── reader.html                     ← 문서 리더 (?doc=<docs 기준 경로>)
 ├── doc-structure-state.md          ← 이 문서
-├── product/                        ✅ 표준 위치
-│   ├── values.md
-│   ├── doc-tracker.md
-│   ├── prd-affirmations.md
-│   ├── prd-ai-chat.md
-│   ├── prd-keyboard-extension.md
-│   ├── prd-routines.md
-│   ├── prd-scratchpad.md
-│   ├── prd-shortcut-voice.md
-│   ├── prd-stt-engine.md
-│   ├── prd-todo.md
-│   └── prd-widget.md
-├── user-journeys/                  🟡 1/예상5+ 작성 (V4만)
+├── product/                        ✅ 가치·PRD (상태 추적: product/doc-tracker/)
+├── user-journeys/                  🟡 1개 (V4만)
 │   ├── README.md
-│   └── journey-affirmation-seeker-daily-exposure.md  ← V4 달성
-├── design-system/                  ✅ 정식 작성됨 (이번 갱신)
-│   ├── README.md                   (정식 안내)
-│   ├── tokens.md                   (영역별 색상 + 타이포 + 스페이싱)
-│   ├── components.md               (23개 컴포넌트)
-│   └── patterns.md                 (9개 화면/조합 패턴)
-└── mockups/                        ✅ _index.md 매핑 완료
-    ├── _index.md                   ← SSOT (디자인 시스템 매핑까지 포함)
-    ├── _template.md                (영역 색상 약식 — 향후 tokens.md로 단일화 가능)
-    ├── README.md
-    ├── index.html
-    ├── screen-affirmations.html
-    ├── screen-affirmations-priority-edit.html
-    ├── screen-chat-text.html
-    ├── screen-chat-voice.html
-    ├── screen-keyboard-extension.html
-    ├── screen-routines.html
-    ├── screen-scratchpad.html
-    ├── screen-shortcut-capture.html
-    ├── screen-todo-personal.html
-    ├── screen-todo-work.html
-    └── screen-widget.html
+│   └── JRN-affirmation-daily-exposure.md
+├── journeys/                       🟡 여정 mockup 1개
+│   └── JRN-affirmation-daily-exposure/index.html
+├── design-system/                  ✅ tokens · components · patterns
+└── mockups/                        ✅ 화면 mockup 13개 + _index.md(SSOT)
 ```
 
 ---
 
 ## 연결 매트릭스
 
-### 가치 → 여정 → Mockup
+### 가치 → 여정 → 여정 mockup / 화면 mockup
 
-| 가치 | 여정 | 단계 | Mockup | 상태 |
-|------|------|------|--------|------|
+| 가치 | 여정 | 여정 mockup | 화면 mockup | 상태 |
+|------|------|-------------|-------------|------|
 | V1 | (미정의) | - | screen-chat-voice, screen-scratchpad, screen-shortcut-capture | 🟡 여정 부재 |
 | V2 | (미정의) | - | screen-chat-voice, screen-shortcut-capture, screen-keyboard-extension | 🟡 여정 부재 |
 | V3 | (미정의) | - | screen-scratchpad, screen-todo-personal, screen-todo-work | 🟡 여정 부재 |
-| V4 | `affirmation-seeker:daily-exposure` | S1~S5 | screen-affirmations (S1, S3, S5), screen-affirmations-priority-edit (S2), screen-widget (S4, S5) | ✅ 매핑 완료 |
-| V5 | (미정의) | - | screen-chat-text, screen-chat-voice | 🟡 여정 부재 |
+| V4 | `JRN-affirmation-daily-exposure` | ✅ 5/5 단계 | screen-affirmations, screen-affirmations-priority-edit, screen-widget | ✅ |
+| V5 | (미정의) | - | screen-chat-text, screen-chat-voice, screen-keyboard-extension | 🟡 여정 부재 |
 | V6 | (미정의) | - | screen-widget | 🟡 여정 부재 (위젯의 V4 측면만 매핑됨) |
 | V7 | (미정의) | - | screen-keyboard-extension | 🟡 여정 부재 |
 | V8 | (미정의) | - | screen-routines | 🟡 여정 부재 |
+| V9 | (미정의) | - | screen-pr-monitor-push, screen-pr-monitor-history | 🟡 여정 부재 |
 
-### Mockup → 디자인 시스템
+### 화면 mockup → 디자인 시스템
 
 | Mockup | 패턴 | 토큰 영역 | 상태 |
 |--------|------|-----------|------|
@@ -98,6 +72,8 @@ docs/
 | screen-shortcut-capture | 시스템 통합 잠금화면 (§6.1) | 시스템 통합 | ✅ |
 | screen-widget | 시스템 통합 위젯 (§6.2) | 시스템 통합 + 영역 강조색 차용 | ✅ |
 | screen-keyboard-extension | 시스템 통합 키보드 (§6.3) | 시스템 통합 + sage 액센트 | ✅ |
+| screen-pr-monitor-push | 시스템 통합 잠금화면 (§6.1) | 시스템 통합 + §1.11 인디고 | ✅ |
+| screen-pr-monitor-history | 영역 화면 + 리스트 섹션 (§1+§3) | PR 모니터 (§1.11) | ✅ |
 
 상세 컴포넌트 매핑은 `mockups/_index.md` 참조.
 
@@ -105,38 +81,26 @@ docs/
 
 ## 위험 진단
 
-### 🟡 사용자 여정 부분 작성 (이전 🔴 → 부분 해소)
-- `journey-affirmation-seeker-daily-exposure.md` 1개 작성됨 (V4 달성).
-- `screen-affirmations`(S1, S3, S5), `screen-affirmations-priority-edit`(S2), `screen-widget`(S4, S5, V4 측면) 여정 매핑 완료.
-- 나머지 mockup 8개의 `_index.md` "여정" 항목은 여전히 `(미정의)`. V1, V2, V3, V5, V6, V7, V8을 다루는 여정 미작성.
-- **다음 우선순위**: 운전(V1·V2)/회사미팅(V1·V3)/메시지(V7)/루틴(V8)/위젯-V6 페르소나 정의.
+### 🟡 사용자 여정 부분 작성
+- 여정 1개(V4). V1, V2, V3, V5, V6, V7, V8, V9를 다루는 여정 미작성.
+- 화면 mockup 10개의 `_index.md` "여정" 항목은 `(미정의)`.
 
-### ✅ V4 여정 S2 시각화 — **해소 (이번 갱신)**
-- `journey-affirmation-seeker-daily-exposure.md`의 S2(우선순위 설정) 단계가 새 mockup `screen-affirmations-priority-edit.html`로 시각화됨.
-- 추가 직후 시트 자동 노출 + 3-tier 단일 선택형 옵션(높음/보통/낮음) UI로 PRD-5 AC2를 직접 시각화.
-- `screen-affirmations.html`의 우선순위 표시(점 인디케이터, "우선순위 높음" 라벨, "우선순위 순" 정렬)는 결과 시각화로 유지, S2(편집 액션) 매핑은 priority-edit로 이전.
+### 🟡 다크 갤러리 미동기화
+- `mockups-dark.html`에 `screen-pr-monitor-push`, `screen-pr-monitor-history` 다크 변형 없음. 다크 토큰은 `tokens.md` §1.11에 정의됨.
 
-### ✅ 디자인 시스템 부재 → **해소 (이번 갱신)**
-- `design-system/tokens.md`, `components.md`, `patterns.md` 작성 완료.
-- 모든 mockup의 디자인 시스템 매핑이 `_index.md`에 채워짐.
-- 추후 검증: mockup HTML의 인라인 색상 값이 `tokens.md`와 정확히 일치하는지 일괄 비교는 별도 작업으로 가능.
+### 🟡 여정 mockup의 디자인 시스템 밖 값
+- 하단 토스트(`STP-rotation-in-app/default-priority`) — `components.md`에 토스트 컴포넌트 없음. 추가 후보.
+- 홈 화면 벽지·앱 아이콘 색은 §1.8 규칙(iOS 컨벤션 차용)에 따름.
 
-### 🟡 시각화 누락 단계
-- 여정 자체가 없으므로 평가 불가. 위 🔴로 흡수.
-
-### 🟡 시각화 없는 가치
-- V1~V8 모두 mockup 1개 이상 존재. ✅ 해당 없음.
+### 🟢 화면 mockup의 외부 의존
+- 화면 mockup 13개는 Tailwind CDN에 의존(README에 명시된 의도적 선택). 여정 mockup은 외부 의존 없음.
 
 ### 🟢 임의 스타일 mockup
-- 각 mockup이 인라인 `<style>`을 갖지만 모두 `tokens.md` 영역 토큰의 값을 사용. `_index.md`에서 시스템 항목으로 명시.
-- `mockups/_template.md`의 약식 정의는 `tokens.md`로 정식화됨. 향후 `_template.md`를 `tokens.md` 참조로 줄이거나 삭제하는 정리 후보.
-
-### 🟢 사용처 없는 컴포넌트 / 미정의 토큰 사용
-- `components.md` 정의 22개 모두 1개 이상의 mockup에서 사용됨 (인덱스 기준).
-- 미정의 토큰 사용 사례: 없음 (인덱스 기준). 단, mockup HTML 인라인 스타일 자동 검증은 미실시.
+- 각 mockup이 인라인 `<style>`을 갖지만 모두 `tokens.md` 영역 토큰의 값을 사용.
+- `mockups/_template.md`는 `tokens.md`로 정식화됨 — 축소·제거 후보.
 
 ### ⚫ 가치 미정의
-- 해당 없음. ✅ V1~V8 정의됨.
+- 해당 없음. ✅ V1~V9 정의됨.
 
 ---
 
@@ -144,10 +108,11 @@ docs/
 
 | 순위 | 위험 | 권장 작업 |
 |-----|------|----------|
-| 1 | 나머지 페르소나 여정 부재 (V1·V2·V3·V5·V6·V7·V8) | 운전/회사미팅/메시지/루틴/위젯-V6 페르소나로 `journey-*.md` 추가. 매번 `mockups/_index.md` 여정 매핑 동기화. |
-| 2 (선택) | `_template.md` 정리 | `tokens.md`로 정식화됐으므로 `_template.md`를 단순 redirect 노트로 축소하거나 제거. |
-| 3 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 정확히 일치하는지 자동 비교 스크립트. |
-| 4 (미래) | 다른 mockup의 인라인 시트류 표현과 design-system §9 오버레이 정의 일관성 검증 | 5개 mockup(scratchpad, chat-text, chat-voice, routines, keyboard-extension)의 backdrop/dim 인라인 표현이 `Sheet`/`Backdrop` 정의와 정합한지 점검. 정합하지 않으면 인라인 표현을 정의에 맞춰 정리. |
+| 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8·V9) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. V9(PR 모니터)는 화면·구현이 이미 있어 우선 후보. |
+| 2 | 다크 갤러리 미동기화 | `mockups-dark.html`에 PR 모니터 2화면을 §1.11 다크 토큰으로 추가. |
+| 3 | 토스트 컴포넌트 미정의 | `components.md`에 토스트(일시 안내) 정의 추가 여부 결정. |
+| 4 (선택) | `_template.md` 정리 | `tokens.md` 참조 노트로 축소하거나 제거. |
+| 5 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 일치하는지 자동 비교. |
 
 ---
 
@@ -163,3 +128,4 @@ docs/
 | 2026-05-07 | **PRD-9 재작성에 따른 mockup·인덱스 동기화**: `screen-keyboard-extension.html`을 명령 칩 UI → 전면 대화 UI 버전으로 재제작. `_index.md`의 키보드 항목을 가치(V2/V5/V7), PRD/AC 매핑(PRD-9 AC2~6, AC9, AC10, AC12 + PRD-7 AC6), 컴포넌트 목록(ChatBubble·PillButton·Composer 변형 차용, KeyboardKey 미사용) 갱신. PRD-7 row를 "키보드 mockup이 AC6을 시각화"로 갱신. V5 커버리지 mockup에 keyboard-extension 추가. | 🟢 → 🟢 (정합성 유지) |
 | 2026-05-07 | **첫 사용자 여정 추가**: `journey-affirmation-seeker-daily-exposure.md`(V4 단일 가치, S1~S5) 작성. `mockups/_index.md`의 `screen-affirmations`(S1·S2·S3·S5)와 `screen-widget`(S4·S5, V4 측면) 여정 매핑 채움. V6 측면은 미정의로 남김. user-journeys/README.md 진행 상황 갱신. | 🔴 여정 0개 → 🟡 여정 1/예상5+. mockup 여정 매핑 0/10 → 2/10 |
 | 2026-05-09 | **V4 여정 S2 편집 액션 시각화 mockup 추가**: 새 mockup `screen-affirmations-priority-edit.html` 신설 (추가 직후 시트 자동 노출, 3-tier 단일 선택). design-system 보완: `components.md` §9 "오버레이" 신설 (`Sheet` + 하위 `Backdrop`/`Handle`), §10 매트릭스에 Sheet 행, §4 `FilterPills` 의미 확장(단일 선택형 옵션); `patterns.md` §9 "편집 시트 패턴" 신설. `_index.md` 새 엔트리 + screen-affirmations의 AC2/AC3 라벨 정정 (PRD-5와 일치). `mockups/index.html` 11번 카드 추가. | 🟡 V4 S2 시각화 검증 위험 → ✅ 해소. mockup 10→11, 컴포넌트 22→23, 패턴 8→9, 여정 매핑 2/10→3/11. |
+| 2026-09-29 | **여정 mockup 체계 도입 + 정합성 정리**: 여정 식별자 전환(`affirmation-seeker:daily-exposure` → `JRN-affirmation-daily-exposure`, S1~S5 → `STP-*` 슬러그), 여정 문서를 `user-journey-writer` 템플릿으로 재구성·파일명 변경. 여정 mockup `journeys/JRN-affirmation-daily-exposure/index.html` 신설(5단계·분기 상태 5개·외부 의존 없음). 문서 리더 `reader.html`, 허브 `index.html`(기존 `./mockups/` 리다이렉트 대체) 신설. `_index.md` AC 오기 3건(scratchpad·todo-work·shortcut-capture)·`GroupCard` 명칭·여정 참조 정정, 여정 mockup 항목 추가. `mockups/README.md` 13화면 기준 갱신. V9·PR 모니터 2화면 반영(5/13~5/20 변경분 추적 누락 보정). | 여정 mockup 0 → 1, 허브·리더 없음 → 있음, 여정 식별자 순번 → 슬러그 |
