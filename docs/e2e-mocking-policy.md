@@ -43,9 +43,17 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `backend/internal/oidcmock/oidcmock.go` | `oidcmock` | `EXT` | IdP 대체 서버 구현(discovery·JWKS·PKCE authorize·token). 사유 동일. |
 | `ios/PocketAideTests/UITestAuth.swift` | `oidcmock` | `EXT` | UI 테스트 공유 로그인 헬퍼 — 실 `ASWebAuthenticationSession` 왕복을 oidcmock 상대로 1회 수행한다. 사유 동일. |
 | `ios/PocketAideTests/LoginUITests.swift` | `oidcmock` | `EXT` | oidcmock 토큰으로 로그인한 뒤 실 탭 셸에 착지하는지 단정한다. 사유 동일. |
+| `.github/workflows/ios-test.yml` | `APNS_DISABLED` | `EXT` | 잡 env 가 백엔드의 APNs **발송만** 끈다 — SQS 컨슈머 · 이력 저장 · 이력 API · PR 모니터 화면은 실경로로 돈다. APNs 는 Apple 인증키(.p8)와 실 기기 토큰이라는 외부 신원 경계라 CI 안에서 발송할 수 없다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` `loadConfig` 의 `APNS_DISABLED`(미설정이면 기존대로 `APNS_*` 필수 — 운영 설정 불변). |
 
 각 행의 파일에는 `mock-exception: EXT` 주석이 함께 있다(표기 규약). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
-계정·테넌트가 마련되면 여섯 행 모두 실 상류로 대체하고 지운다.
+계정·테넌트가 마련되면 `oidcmock` 여섯 행 모두 실 상류로 대체하고 지운다. `APNS_DISABLED` 행은 차단 요인 BF-2
+(푸시 수신) 해소 때 함께 재판정한다.
+
+`APNS_DISABLED` 는 `tbm_pocket-aide-e2e-mock-policy` 의 as-is 지문 패턴(`oidcmock`·`launchEnvironment`·가짜 자격증명
+리터럴·`mock-exception:`)에 들지 않는 토큰이다. 그 행의 코드 지점은 `ios-test.yml` 의 `APNS_DISABLED:` 줄과 그 직전
+`mock-exception: EXT` 주석이며, 지문에는 같은 파일의 기존 `mock-exception: EXT` 토큰으로만 잡힌다(지문 사각지대).
+E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY` 는 에뮬레이터 요청 서명용이라 끄는
+상류가 없다 — 모킹 지점이 아니다.
 
 ## 해소된 지점 (등재 대신 제거)
 
@@ -67,8 +75,13 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 
 | ID | 차단 요인 | 해소 방향 | 선행 | 재검토 시점 | 등재일 |
 |----|-----------|-----------|------|-------------|--------|
-| BF-1 | GitHub 웹훅(SQS) 소비 → PR 모니터 이력: E2E 백엔드는 `SQS_QUEUE_URL` 을 비워 띄우므로 컨슈머가 꺼져 있고, PR 모니터 화면은 빈 상태만 밟는다. | 실환경 대체 — ios-test 잡에 LocalStack SQS 를 띄우고 실 웹훅 envelope 을 큐에 넣어 백엔드 컨슈머 → 이력 API → PR 모니터 화면을 실경로로 밟는다(APNs 발송 없이 컨슈머를 켜는 테스트 진입점 포함). | 없음 | 2026-10-13 | 2026-09-29 |
-| BF-2 | APNs 푸시 수신: 푸시 도착·탭 → 딥링크 하이라이트 경로를 E2E 가 밟지 못한다. | 등재(EXT) — APNs 는 Apple 인증키·실 기기 토큰이라는 외부 신원 경계라, 발송 지점만 `EXT` 로 등재하고 수신 이후는 실경로로 밟는다. | BF-1 | BF-1 해소 | 2026-09-29 |
+| BF-2 | APNs 푸시 수신: 푸시 도착·탭 → 딥링크 하이라이트 경로를 E2E 가 밟지 못한다(이력 행은 BF-1 해소로 실경로로 쌓이지만 푸시는 `APNS_DISABLED` 로 발송되지 않는다). | 등재(EXT) — APNs 는 Apple 인증키·실 기기 토큰이라는 외부 신원 경계라, 발송 지점만 `EXT` 로 등재하고(허용목록 `APNS_DISABLED` 행) 수신 이후는 실경로로 밟는다. | 없음 | 2026-10-13 | 2026-09-29 |
+
+### 해소된 차단 요인
+
+| ID | 차단 요인 | 해소 | 해소일 |
+|----|-----------|------|--------|
+| BF-1 | GitHub 웹훅(SQS) 소비 → PR 모니터 이력: E2E 백엔드가 `SQS_QUEUE_URL` 없이 떠서 컨슈머가 꺼져 있었고, PR 모니터 화면은 빈 상태만 밟았다. | 실환경 대체 — ios-test 잡이 로컬 SQS(`start-test-sqs`: moto server. macOS 러너엔 Docker 가 없어 예고한 LocalStack 컨테이너 대신 같은 SQS 와이어 프로토콜을 서빙하는 moto 를 쓴다)를 띄우고, 백엔드 컨슈머를 무수정으로 켠다(APNs 발송만 `APNS_DISABLED` 로 끔 — 허용목록). 첫 로그인으로 사용자 행이 생기면 GitHub `workflow_run` envelope(`.github/fixtures/github-webhook/`)을 API Gateway 통합과 같은 모양(본문 + `x-github-event` 속성)으로 큐에 넣고, `PRMonitorUITests` 가 컨슈머 → 이력 저장 → 이력 API → PR 모니터 화면 행 → 「확인」 ack 를 실경로로 밟는다. (#58) | 2026-09-29 |
 
 원장 밖 메모: LLM(OpenRouter) 호출 경로는 현재 코드에 존재하지 않는다(백엔드가 관련 env 를 읽지 않는다). 없는 경로는
 차단 요인이 아니며, 구현이 들어오면 그때 `LLM` 카테고리 판정 대상이 된다.
