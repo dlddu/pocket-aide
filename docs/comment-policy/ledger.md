@@ -14,10 +14,11 @@
 
 | 판정일 | 범위 | 주석 줄 | 지문 | 판정 | 결과 |
 | --- | --- | ---: | --- | :-: | --- |
-| — | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/backend-unit-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/journey-mockup.yml`, `.github/workflows/testflight-upload.yml` | 49 | `f04b14529e47` | — | 미판정 |
+| — | `.github/actions/start-test-sqs/action.yml` | 2 | `9692e5f59e30` | — | 미판정 |
+| — | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/backend-unit-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/journey-mockup.yml`, `.github/workflows/testflight-upload.yml` | 59 | `efea0a7429b4` | — | 미판정 |
 | — | `.gitignore` | 10 | `4ff410e66d15` | — | 미판정 |
 | — | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | — | 미판정 |
-| — | `backend/cmd/server/main.go` | 27 | `7ca2ee2b1d70` | — | 미판정 |
+| — | `backend/cmd/server/main.go` | 30 | `9d2f9280af56` | — | 미판정 |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/apns/client.go`, `backend/internal/apns/client_test.go` | 17 | `a268892ac7fb` | 완료 | 필요성 판정 — 제거 3줄 · 유지 17줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/auth/middleware.go` | 13 | `2cf46a05430f` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -37,7 +38,7 @@
 | — | `ios/PocketAide/AppAuthCoordinator.swift`, `ios/PocketAide/AppDelegate.swift`, `ios/PocketAide/DeepLinkRouter.swift`, `ios/PocketAide/PocketAideApp.swift`, `ios/PocketAide/PushRegistrar.swift`, `ios/PocketAide/RootView.swift` | 74 | `aeac7bc08c03` | — | 미판정 |
 | — | `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift`, `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift`, `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift`, `ios/PocketAide/PRMonitor/PRMonitorView.swift`, `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 70 | `2e520ce8871f` | — | 미판정 |
 | — | `ios/PocketAide/Todos/TodoEditSheet.swift`, `ios/PocketAide/Todos/TodoListView.swift` | 6 | `1413f9b4c157` | — | 미판정 |
-| — | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 81 | `5a2a742d4a99` | — | 미판정 |
+| — | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/PRMonitorUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 103 | `51d071d1c78c` | — | 미판정 |
 | — | `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift`, `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift`, `ios/PocketAideUnitTests/RotationSelectorTests.swift` | 25 | `d2b5e81aab09` | — | 미판정 |
 | — | `ios/PocketAideWidget/AffirmationProvider.swift`, `ios/PocketAideWidget/PocketAideWidget.swift` | 8 | `c4acf6399ab6` | — | 미판정 |
 | — | `ios/PocketAideWidget/Sections/AffirmationSection.swift`, `ios/PocketAideWidget/Sections/PlaceholderSection.swift` | 7 | `f8137dc73f3e` | — | 미판정 |
