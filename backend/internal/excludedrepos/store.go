@@ -1,7 +1,5 @@
 // Package excludedrepos is the storage layer for the PR-monitor blacklist
-// (PRD-10 AC6). Each user maintains a list of repos that should NOT trigger
-// CI-completion pushes for them; ListUserIDsExcluding is the inverse query the
-// dispatch pipeline uses to fan a workflow_run event out to matching users.
+// (PRD-10 AC6).
 package excludedrepos
 
 import (
@@ -13,9 +11,6 @@ import (
 	"strings"
 )
 
-// repoFormat matches GitHub's `owner/repo` shape conservatively: ASCII word
-// characters, dots and hyphens, with exactly one slash separator. Anything
-// outside this set is almost certainly a typo or injection attempt.
 var repoFormat = regexp.MustCompile(`^[\w.\-]+/[\w.\-]+$`)
 
 // ErrInvalidRepo is returned by Add when the supplied name doesn't look like
@@ -68,10 +63,7 @@ func (s *Store) List(ctx context.Context, userID int64) ([]ExcludedRepo, error) 
 	return out, nil
 }
 
-// Add inserts a new exclusion. Validates the repo shape and returns
-// ErrInvalidRepo on a bad name. (user_id, repo_full_name) is UNIQUE — a
-// duplicate add is reported as ErrAlreadyExcluded so handlers can pick a
-// stable status code (409).
+// Add inserts a new exclusion.
 func (s *Store) Add(ctx context.Context, userID int64, repo string) (ExcludedRepo, error) {
 	if !repoFormat.MatchString(repo) {
 		return ExcludedRepo{}, ErrInvalidRepo
@@ -81,9 +73,6 @@ func (s *Store) Add(ctx context.Context, userID int64, repo string) (ExcludedRep
 		VALUES (?, ?)
 	`, userID, repo)
 	if err != nil {
-		// SQLite returns a constraint failure for UNIQUE violations. We don't
-		// type-assert on the driver error — string match is enough for the
-		// single constraint on this table.
 		if isUniqueViolation(err) {
 			return ExcludedRepo{}, ErrAlreadyExcluded
 		}
@@ -126,13 +115,9 @@ func (s *Store) Delete(ctx context.Context, userID, id int64) error {
 }
 
 // ListUserIDsExcluding returns every user_id that has NOT excluded `repo`.
-// This is the matching query used by the PR-monitor dispatch pipeline: a
-// workflow_run completed event for `repo` becomes a push to every user in
-// the returned set.
-//
-// Implementation: every provisioned user MINUS the users who explicitly
-// added `repo` to their blacklist. Users with no exclusions at all therefore
-// receive notifications for every repo (blacklist default = empty).
+// A user with no exclusions at all matches every repo (blacklist default =
+// empty), so the query starts from all provisioned users rather than joining
+// on the exclusions table.
 func (s *Store) ListUserIDsExcluding(ctx context.Context, repo string) ([]int64, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id FROM users
@@ -160,10 +145,6 @@ func (s *Store) ListUserIDsExcluding(ctx context.Context, repo string) ([]int64,
 	return out, nil
 }
 
-// isUniqueViolation reports whether err is the modernc.org/sqlite error for
-// a UNIQUE constraint failure. The driver does not export a typed error for
-// constraint violations so we match on the message — narrowed to "UNIQUE"
-// to avoid catching other constraint failures.
 func isUniqueViolation(err error) bool {
 	if err == nil {
 		return false

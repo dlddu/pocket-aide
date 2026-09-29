@@ -40,7 +40,7 @@ last_updated: 2026-09-29
 | `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
 | `ios/PocketAide/AppDelegate.swift` | 비렌더링 | — | 앱 수명주기·푸시 등록 |
 | `ios/PocketAide/DeepLinkRouter.swift` | 비렌더링 | — | `pocketaide://` 딥링크 → 탭 선택 |
-| `ios/PocketAide/HelloWorldView.swift` | 목업 없음 | — | UI 테스트 전용 레거시 홈(`UI_TESTS_USE_LEGACY_HOME=1` 일 때만 `RootView` 가 띄움) |
+| `ios/PocketAide/HelloWorldView.swift` | 목업 없음 | — | 옛 레거시 홈. #54 가 `RootView` 의 레거시 홈 분기를 지운 뒤 자기 파일의 `#Preview` 밖에서 인스턴스화되지 않는다(도달 불가 — 화면에 뜨지 않는다) |
 | `ios/PocketAide/LoginView.swift` | 목업 없음 | — | 로그인 화면 |
 | `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift` | 목업 없음 | — | 제외 레포 관리 시트. 목업은 진입 버튼(`ScreenHeader` 우측 `IconCircleButton`)까지만 그린다 — 버튼은 `PRMonitorView.swift` 행 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | 부분 | `screen-pr-monitor-history` | PR/커밋 단위 그룹 카드 `Card.history-group.unacked`·`.acked` — 헤더(키 정보·종합 상태·항목 수·미확인 배지)·펼침 영역·그룹 글로우 |

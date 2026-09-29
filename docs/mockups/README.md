@@ -45,7 +45,10 @@ open docs/mockups/index.html
 - `mockups-dark.html` — 다크 변형 통합 갤러리 (PR 모니터 2화면 미반영 — `_index.md` 참조)
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
+- `_token-map.md` — `tokens.md` ↔ 구현 토큰(`Colors.xcassets`·`Tokens.swift`) 값 대응표 (기계 판독용, 검산 포함)
+- `_deviations.md` — 허용목록: 사유가 문서화된 목업 이탈
 - `_template.md` — 디자인 토큰 레퍼런스 (영역별 색·폰트). 정본은 `docs/design-system/tokens.md`
+- `_copy-map.md` — 목업 텍스트 ↔ 구현 문자열 리터럴 양방향 카피 대응표 (기계 판독용, 검산 포함)
 
 ## 디자인 토큰
 

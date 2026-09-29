@@ -1,0 +1,19 @@
+name: comment-policy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ledger:
+    name: comment-policy ledger
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check docs/comment-policy/ledger.md against the comment scan
+        run: python3 scripts/comment-policy/check_ledger.py
