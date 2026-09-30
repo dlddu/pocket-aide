@@ -1,7 +1,7 @@
 ---
 type: design-system-tokens
 last_updated: 2026-05-13
-source: docs/mockups/_template.md + 10 mockup HTML 인라인 스타일 추출 + 다크 변형(1.9) 추가
+source: docs/mockups/_template.md(2026-09-30 삭제 — 이 문서로 대체) + 10 mockup HTML 인라인 스타일 추출 + 다크 변형(1.9) 추가
 ---
 
 # 디자인 토큰 (Tokens)

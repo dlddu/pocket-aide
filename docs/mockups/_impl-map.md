@@ -43,8 +43,8 @@ last_updated: 2026-09-29
 | `ios/PocketAide/HelloWorldView.swift` | 목업 없음 | — | 옛 레거시 홈. #54 가 `RootView` 의 레거시 홈 분기를 지운 뒤 자기 파일의 `#Preview` 밖에서 인스턴스화되지 않는다(도달 불가 — 화면에 뜨지 않는다) |
 | `ios/PocketAide/LoginView.swift` | 목업 없음 | — | 로그인 화면 |
 | `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift` | 목업 없음 | — | 제외 레포 관리 시트. 목업은 진입 버튼(`ScreenHeader` 우측 `IconCircleButton`)까지만 그린다 — 버튼은 `PRMonitorView.swift` 행 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | 부분 | `screen-pr-monitor-history` | PR/커밋 단위 그룹 카드 `Card.history-group.unacked`·`.acked` — 헤더(키 정보·종합 상태·항목 수·미확인 배지)·펼침 영역·그룹 글로우 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | 부분 | `screen-pr-monitor-history` | 이벤트 row `Card.history-item.unacked`·`.acked`(외부 링크 칩·「확인」 버튼·취소선) + 푸시 진입 강조(펄스 글로우, PRD-10 AC7 도착지) |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | 부분 | `screen-pr-monitor-history` | PR/커밋 단위 그룹 카드 `Card.history-group.unacked`·`.acked` — 헤더(키 정보·종합 상태·항목 수·PR 링크 칩·미확인 배지·「모두 확인」)·펼침 영역·그룹 글로우 |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | 부분 | `screen-pr-monitor-history` | 이벤트 row `Card.history-item.unacked`·`.acked`(커밋·런 외부 링크 칩·「확인」 버튼·취소선) + 푸시 진입 강조(펄스 글로우, PRD-10 AC7 도착지) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 화면 | `screen-pr-monitor-history` | PR 모니터 탭 화면 셸 — `AreaStrip`·`AreaLabel`·`ScreenHeader`(미확인 배지·제외 레포 버튼)·미확인/확인 완료 섹션. 카드·row 는 위 두 행 |
 | `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 비렌더링 | — | 이력 조회·확인 처리 |
 | `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-routines` | 채팅·임시공간·개인·회사·루틴 탭의 「준비 중」 자리표시자 |
