@@ -95,7 +95,6 @@ docs/
 - `mockups-dark.html`에 `screen-pr-monitor-push`, `screen-pr-monitor-history` 다크 변형 없음. 다크 토큰은 `tokens.md` §1.11에 정의됨.
 
 ### 🟡 여정 mockup의 디자인 시스템 밖 값
-- 하단 토스트(`STP-rotation-in-app/default-priority`) — `components.md`에 토스트 컴포넌트 없음. 추가 후보.
 - 홈 화면 벽지·앱 아이콘 색은 §1.8 규칙(iOS 컨벤션 차용)에 따름.
 
 ### 🟢 화면 mockup의 외부 의존
@@ -116,9 +115,8 @@ docs/
 |-----|------|----------|
 | 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. |
 | 2 | 다크 갤러리 미동기화 | `mockups-dark.html`에 PR 모니터 2화면을 §1.11 다크 토큰으로 추가. |
-| 3 | 토스트 컴포넌트 미정의 | `components.md`에 토스트(일시 안내) 정의 추가 여부 결정. |
-| 4 (선택) | `_template.md` 정리 | `tokens.md` 참조 노트로 축소하거나 제거. |
-| 5 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 일치하는지 자동 비교. |
+| 3 (선택) | `_template.md` 정리 | `tokens.md` 참조 노트로 축소하거나 제거. |
+| 4 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 일치하는지 자동 비교. |
 
 ---
 
@@ -137,3 +135,4 @@ docs/
 | 2026-09-29 | **여정 mockup 체계 도입 + 정합성 정리**: 여정 식별자 전환(`affirmation-seeker:daily-exposure` → `JRN-affirmation-daily-exposure`, S1~S5 → `STP-*` 슬러그), 여정 문서를 `user-journey-writer` 템플릿으로 재구성·파일명 변경. 여정 mockup `journeys/JRN-affirmation-daily-exposure/index.html` 신설(5단계·분기 상태 5개·외부 의존 없음). 문서 리더 `reader.html`, 허브 `index.html`(기존 `./mockups/` 리다이렉트 대체) 신설. `_index.md` AC 오기 3건(scratchpad·todo-work·shortcut-capture)·`GroupCard` 명칭·여정 참조 정정, 여정 mockup 항목 추가. `mockups/README.md` 13화면 기준 갱신. V9·PR 모니터 2화면 반영(5/13~5/20 변경분 추적 누락 보정). | 여정 mockup 0 → 1, 허브·리더 없음 → 있음, 여정 식별자 순번 → 슬러그 |
 | 2026-09-29 | **V9 여정 추가**: `JRN-ci-push-to-ack`(4단계, 분기 7개) 작성 + 여정 mockup `journeys/JRN-ci-push-to-ack/`. `_index.md`에 여정 mockup 항목·PR 모니터 두 화면의 여정 매핑 추가, 허브·user-journeys/README 갱신. PRD-10과 구현의 차이 2건(CI 시작 푸시, 그룹 모두 확인)과 PR 링크 위치 불일치 발견·기록. | 여정 1 → 2, 화면 mockup 여정 매핑 3/13 → 5/13 |
 | 2026-09-29 | **`JRN-ci-push-to-ack` v0.2 — PRD-10 개정 동기화**: 그룹 "모두 확인"을 AC14로 연결, 외부 지연 분기를 「시작 시점 푸시 없음」으로 수정(#62). 여정 mockup `STP-push-glance/in-progress`를 CI 시작 알림 → 알림 없는 잠금 화면으로 교체, 메모의 「PRD 미반영」 문구 제거. `_index.md` 분기 설명 갱신. 단계·상태 식별자 변경 없음. 하네스 위반 0. | PRD-10 불일치 2 → 0 |
+| 2026-09-30 | **V4 여정 실제 동작 정합**: `JRN-affirmation-daily-exposure` v0.3 — 문장 입력과 우선순위 선택이 한 시트인 실제 앱에 맞춰 `STP-set-priority`를 `STP-add-affirmation`에 합침(폐기). "시트 취소 시 보통으로 저장" 가정과 이를 알리던 토스트 상태 제거 → 토스트 컴포넌트 미정의 위험 해소. 분기 상태: `cancelled`, `scratchpad-priority` 추가, `default-priority` 제거. `screen-affirmations-priority-edit`가 별도 시트 흐름으로 그려진 차이를 `_index.md`에 기록. | 단계 5 → 4, 토스트 위험 해소 |
