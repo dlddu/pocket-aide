@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-09-29
+last_updated: 2026-09-30
 ---
 
 # 구현 ↔ 목업 매핑
@@ -47,11 +47,14 @@ last_updated: 2026-09-29
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | 부분 | `screen-pr-monitor-history` | 이벤트 row `Card.history-item.unacked`·`.acked`(커밋·런 외부 링크 칩·「확인」 버튼·취소선) + 푸시 진입 강조(펄스 글로우, PRD-10 AC7 도착지) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 화면 | `screen-pr-monitor-history` | PR 모니터 탭 화면 셸 — `AreaStrip`·`AreaLabel`·`ScreenHeader`(미확인 배지·제외 레포 버튼)·미확인/확인 완료 섹션. 카드·row 는 위 두 행 |
 | `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 비렌더링 | — | 이력 조회·확인 처리 |
-| `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-routines` | 채팅·임시공간·개인·회사·루틴 탭의 「준비 중」 자리표시자 |
+| `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text`, `screen-scratchpad`, `screen-routines` | 채팅·임시공간·루틴 탭의 「준비 중」 자리표시자 |
 | `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`) |
 | `ios/PocketAide/PushRegistrar.swift` | 비렌더링 | — | APNs 토큰 등록 |
-| `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-pr-monitor-history` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업별 활성 탭: 다짐·다짐·PR 모니터). 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 목업 없음 |
+| `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-pr-monitor-history`, `screen-todo-personal`, `screen-todo-work` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업별 활성 탭: 다짐·다짐·PR 모니터·개인·회사). 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 목업 없음 |
 | `ios/PocketAide/ShowHelloIntent.swift` | 비렌더링 | — | App Intent |
+| `ios/PocketAide/Todos/TodoEditSheet.swift` | 목업 없음 | — | 투두 생성·편집 시트(PRD-3 AC2) — 대응 화면 목업이 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListView(area:)`와 진입점 `PersonalTab`·`WorkTab`: 헤더·섹션 목록·행·빈 상태. 편집 시트는 `TodoEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
+| `ios/PocketAide/Todos/TodoListViewModel.swift` | 비렌더링 | — | 영역별 투두 목록 상태·API 호출 |
 | `ios/PocketAideKeyboard/KeyboardViewController.swift` | 미구현 | `screen-keyboard-extension` | 키보드 확장 골격(삽입 버튼·다음 키보드 버튼)뿐 |
 | `ios/PocketAideWidget/AffirmationProvider.swift` | 비렌더링 | — | 위젯 타임라인·다짐 조회 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | 화면 | `screen-widget` | 위젯 본체(Large) — 슬라이스 배치·구분선·배경. 홈 화면 벽지·앱 아이콘 등 위젯 밖은 iOS 시스템 UI |
