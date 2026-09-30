@@ -27,8 +27,8 @@ open docs/mockups/index.html
 | `screen-todo-work.html` | 회사 — 할 일 | PRD-3 | AC1 영역 분리(회사만 검색), AC3 시각 분리 (slate), AC4 영역 간 이동 불가 |
 | `screen-routines.html` | 루틴 | PRD-2 | AC1~4 단계·주기·진행률·30일 히트맵 |
 | `screen-affirmations.html` | 다짐 | PRD-5 | AC2 우선순위, AC3 회전 노출 |
-| `screen-affirmations-priority-edit.html` | 다짐 — 우선순위 설정 시트 | PRD-5 | AC2 우선순위 (편집 시트 패턴) |
-| `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑 |
+| `screen-affirmations-priority-edit.html` | 다짐 — 추가·우선순위 시트 (생성·편집) | PRD-5 | AC1 추가, AC2 우선순위 (편집 시트 패턴) |
+| `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
 
 ### 시스템 통합
 
@@ -42,12 +42,11 @@ open docs/mockups/index.html
 ### 기타
 
 - `index.html` — 라이트 갤러리 진입 페이지
-- `mockups-dark.html` — 다크 변형 통합 갤러리 (PR 모니터 2화면 미반영 — `_index.md` 참조)
+- `mockups-dark.html` — 다크 변형 통합 갤러리 (13화면)
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
 - `_token-map.md` — `tokens.md` ↔ 구현 토큰(`Colors.xcassets`·`Tokens.swift`) 값 대응표 (기계 판독용, 검산 포함)
 - `_deviations.md` — 허용목록: 사유가 문서화된 목업 이탈
-- `_template.md` — 디자인 토큰 레퍼런스 (영역별 색·폰트). 정본은 `docs/design-system/tokens.md`
 - `_copy-map.md` — 목업 텍스트 ↔ 구현 문자열 리터럴 양방향 카피 대응표 (기계 판독용, 검산 포함)
 
 ## 디자인 토큰

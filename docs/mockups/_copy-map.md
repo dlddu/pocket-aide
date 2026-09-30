@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-09-29
+last_updated: 2026-09-30
 ---
 
 # 카피 ↔ 구현 대응표
@@ -35,25 +35,25 @@ last_updated: 2026-09-29
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 7행 · `목업 대기` 22행, 표 B `구현 대기` 23행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 7행 · `목업 대기` 20행, 표 B `구현 대기` 22행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 33 |
+| A | 일치 | 35 |
 | A | 데이터 | 2 |
 | A | 비표시 | 3 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 4 |
 | A | 기준 4 | 3 |
 | A | 구현 대기 | 7 |
-| A | 목업 대기 | 22 |
-| B | 일치 | 54 |
+| A | 목업 대기 | 20 |
+| B | 일치 | 56 |
 | B | 외부 | 6 |
 | B | 예시 데이터 | 33 |
-| B | 목업 전용 | 44 |
+| B | 목업 전용 | 48 |
 | B | 미구현 영역 | 21 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 23 |
+| B | 구현 대기 | 22 |
 
 ## 표 A — 정방향 (구현 리터럴 → 목업) · 76행
 
@@ -67,16 +67,16 @@ last_updated: 2026-09-29
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 목업 대기 | 빈 상태 본문 — 위와 같음 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 목업 대기 | 생성 모드 시트 제목 — 목업은 「방금 추가됨」 직후 편집 모드(「우선순위 설정」)만 그린다 |
+| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `우선순위 설정` | 일치 | 편집 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `\u{201C}` | 구현 대기 | 장식 인용부호 — 구현은 `“`(U+201C), 목업은 `"`(U+0022) |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `다짐 문장을 입력하세요` | 목업 대기 | 생성 모드 입력 필드 placeholder — 목업 시트에는 입력 필드가 없다(문장 미리보기만) |
+| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `노출 빈도` | 일치 | `AreaLabel` 섹션 라벨 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 카드를 길게 눌러 나중에 바꿀 수 있습니다.` | 구현 대기 | 도움말 어순·어휘 차이 — 목업 「나중에 카드를 길게 눌러 변경할 수 있습니다.」 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 목업 대기 | 편집 모드 파괴적 액션 — 목업 시트는 저장·취소 둘만 그린다 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼(목업에서는 확인 완료 그룹의 상태 라벨 — 위치·역할 차이는 기준 4) |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` · ` | 일치 | 제목 줄 구분자 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `#\(number)` | 일치 | PR 번호 「#42」 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `—` | 목업 대기 | PR 없는 그룹의 브랜치가 비었을 때 대체 문자 — 목업에 그 상태가 없다 |
@@ -88,7 +88,7 @@ last_updated: 2026-09-29
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `미확인 \(group.unacknowledgedCount)` | 일치 | 미확인 배지 「미확인 2」 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` \(title)` | 데이터 | PR 제목 접미사(보간만) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` @\(short)` | 일치 | PR 없는 그룹의 「@f77e024」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR` | 기준 4 | 외부 링크 칩 라벨 — 목업 「↗ PR」 과 낱말은 같고 `↗` 글리프 ↔ SF Symbol 아이콘 차이. 칩 위치(목업은 row, 구현은 그룹 헤더)도 기준 4 |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR` | 기준 4 | 그룹 헤더 외부 링크 칩 라벨 — 목업 「↗ PR」 과 낱말은 같고 `↗` 글리프 ↔ SF Symbol 아이콘 차이 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(verdictLabel) · 확인됨` | 일치 | 확인된 row 라벨 「CI 통과 · 확인됨」 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `workflow` | 목업 대기 | 워크플로 이름이 빈 경우의 대체 문자 — 목업에 그 상태가 없다 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `·` | 일치 | 메타 줄 구분자 |
@@ -136,7 +136,7 @@ last_updated: 2026-09-29
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `앱에서 로그인이 필요해요.` | 목업 대기 | 미로그인 상태 — 목업에 없다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `잠시 후 다시 시도할게요.` | 목업 대기 | 조회 오류 상태 — 목업에 없다 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 184행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 189행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -173,17 +173,20 @@ last_updated: 2026-09-29
 | `screen-affirmations-priority-edit` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `11 · 다짐 우선순위 편집` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-affirmations-priority-edit` | `생성 — 헤더 +` | 목업 전용 | 프레임 위 캡션(생성 모드 프레임 이름) |
 | `screen-affirmations-priority-edit` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-affirmations-priority-edit` | `다짐` | 일치 | 시트 아래 다짐 화면 헤더·탭 바 |
 | `screen-affirmations-priority-edit` | `자주 읽어줘야 할 것` | 외부 `ios/PocketAide/Affirmations/AffirmationsView.swift` | 시트 아래 다짐 화면 헤더 — `_impl-map.md` 가 그 영역을 `AffirmationsView.swift` 행으로 넘긴다 |
 | `screen-affirmations-priority-edit` | `결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations-priority-edit` | `방금 추가됨 · 우선순위 설정 중` | 구현 대기 | 시트 아래 방금 추가된 카드의 상태 줄 — 구현 목록 행에 없다 |
 | `screen-affirmations-priority-edit` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations-priority-edit` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `개인` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
+| `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
+| `screen-affirmations-priority-edit` | `편집 — 카드 길게 누르기` | 목업 전용 | 프레임 위 캡션(편집 모드 프레임 이름) |
 | `screen-affirmations-priority-edit` | `우선순위 설정` | 일치 | 시트 제목(편집 모드) |
 | `screen-affirmations-priority-edit` | `"` | 구현 대기 | 장식 인용부호 — 구현은 `“`(U+201C) |
 | `screen-affirmations-priority-edit` | `노출 빈도` | 일치 | 섹션 라벨 |
@@ -193,7 +196,7 @@ last_updated: 2026-09-29
 | `screen-affirmations-priority-edit` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 구현 대기 | 도움말 — 구현은 「카드를 길게 눌러 나중에 바꿀 수 있습니다.」 |
 | `screen-affirmations-priority-edit` | `저장` | 일치 | 1차 액션 |
 | `screen-affirmations-priority-edit` | `취소` | 일치 | 2차 액션 |
-| `screen-affirmations-priority-edit` | `PRD-5 · AC2 우선순위 — 추가 직후 시트 자동 노출 (편집 시트 패턴), 3-tier 단일 선택으로 노출 빈도 결정. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + §4 FilterPills 단일 선택형, patterns §9 편집 시트 패턴.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-affirmations-priority-edit` | `PRD-5 · AC1·AC2 — 생성: 헤더 + 로 연 시트 한 장에서 문장 입력과 노출 빈도를 함께 저장(취소하면 저장 안 함). 편집: 카드를 길게 눌러 같은 시트의 편집 모드. 3-tier 단일 선택으로 노출 빈도 결정. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + §4 FilterPills 단일 선택형, patterns §9 편집 시트 패턴.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `13 · PR 모니터링 이력` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -268,7 +271,7 @@ last_updated: 2026-09-29
 | `screen-pr-monitor-history` | `docs(prd-10): AC10·11·12` | 예시 데이터 | PR 제목 |
 | `screen-pr-monitor-history` | `통과 3` | 일치 | 종합 상태 |
 | `screen-pr-monitor-history` | `어제 14:32` | 예시 데이터 | 확인 완료 그룹의 시각(구현은 「최근 \(…)」 접두 — 기준 4 수치와 함께 대조) |
-| `screen-pr-monitor-history` | `모두 확인` | 일치 | 확인 완료 그룹 상태 라벨(구현은 미확인 그룹 버튼 — 역할 차이는 기준 4) |
+| `screen-pr-monitor-history` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 · 확인 완료 그룹 상태 라벨 |
 | `screen-pr-monitor-history` | `#37` | 일치 | 「#\(number)」 |
 | `screen-pr-monitor-history` | `feat(stt): 한·영 혼용 임시 어휘` | 예시 데이터 | PR 제목 |
 | `screen-pr-monitor-history` | `어제 11:08` | 예시 데이터 | 위와 같음 |
@@ -278,14 +281,16 @@ last_updated: 2026-09-29
 | `screen-pr-monitor-history` | `이벤트는 푸시 발송 이전에 서버에 영속화되며, 이력 목록은 PR(있으면) 또는 커밋(` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `head_sha` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `) 기준으로 그룹핑됩니다. 미확인 항목은 강조·우선 노출되고, 모두 확인된 그룹은 dim 처리되어 접힙니다. 확인은 항목별` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
-| `screen-pr-monitor-history` | `버튼만이 트리거합니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
+| `screen-pr-monitor-history` | `버튼 또는 그룹의` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
+| `screen-pr-monitor-history` | `"모두 확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
+| `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `개인` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `루틴` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
-| `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, "확인" 버튼이 유일한 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태 표시.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, 항목 "확인" 버튼이 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태·PR 링크 표시 · AC14 그룹 헤더 "모두 확인"으로 그룹 내 미확인 일괄 확인.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

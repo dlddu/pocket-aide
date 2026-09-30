@@ -15,7 +15,7 @@
   - 가치 매핑됨: 13 / 13 ✅
   - 여정 매핑됨: **5 / 13**: `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만), `screen-pr-monitor-push`, `screen-pr-monitor-history`
   - 디자인 시스템 매핑됨: 13 / 13 ✅
-  - 다크 갤러리 반영: 11 / 13 (PR 모니터 2화면 미반영)
+  - 다크 갤러리 반영: 13 / 13 ✅
 - **허브·리더**: `docs/index.html`(허브), `docs/reader.html`(문서 리더 — `STP-*` 앵커, 문서 → mockup 링크)
 - **디자인 시스템**: 토큰 · 컴포넌트 · 패턴 작성됨 ✅
 - **건강 상태**: 🟡 **여정 커버리지 2/9 가치. 구조(식별자·여정 mockup·허브·리더)는 갖춰짐.**
@@ -87,13 +87,6 @@ docs/
 - 여정 2개(V4, V9). V1, V2, V3, V5, V6, V7, V8을 다루는 여정 미작성.
 - 화면 mockup 8개의 `_index.md` "여정" 항목은 `(미정의)`.
 
-### 🟡 PR 모니터 화면 mockup과 컴포넌트 정의의 차이 (여정 작성 중 발견)
-- ~~구현됐지만 PRD-10에 없는 동작 2건~~ — 해소(2026-09-29): CI 시작 푸시는 구현에서 제거(#62, 이력은 진행 중 상태로 유지), 그룹 "모두 확인"은 PRD-10 AC14로 편입(#60). `JRN-ci-push-to-ack` v0.2가 「PRD 미반영」 표기를 걷어냈다.
-- `screen-pr-monitor-history.html`은 행마다 `↗ PR` 칩을 두지만, `components.md`의 `history-group`은 PR 링크를 그룹 헤더로 옮긴 정의다. 여정 mockup은 원본 화면을 따랐다.
-
-### 🟡 다크 갤러리 미동기화
-- `mockups-dark.html`에 `screen-pr-monitor-push`, `screen-pr-monitor-history` 다크 변형 없음. 다크 토큰은 `tokens.md` §1.11에 정의됨.
-
 ### 🟡 여정 mockup의 디자인 시스템 밖 값
 - 홈 화면 벽지·앱 아이콘 색은 §1.8 규칙(iOS 컨벤션 차용)에 따름.
 
@@ -102,7 +95,7 @@ docs/
 
 ### 🟢 임의 스타일 mockup
 - 각 mockup이 인라인 `<style>`을 갖지만 모두 `tokens.md` 영역 토큰의 값을 사용.
-- `mockups/_template.md`는 `tokens.md`로 정식화됨 — 축소·제거 후보.
+- `mockups/_template.md`는 2026-09-30 삭제(정본 `tokens.md`).
 
 ### ⚫ 가치 미정의
 - 해당 없음. ✅ V1~V9 정의됨.
@@ -114,9 +107,7 @@ docs/
 | 순위 | 위험 | 권장 작업 |
 |-----|------|----------|
 | 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. |
-| 2 | 다크 갤러리 미동기화 | `mockups-dark.html`에 PR 모니터 2화면을 §1.11 다크 토큰으로 추가. |
-| 3 (선택) | `_template.md` 정리 | `tokens.md` 참조 노트로 축소하거나 제거. |
-| 4 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 일치하는지 자동 비교. |
+| 2 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 일치하는지 자동 비교. |
 
 ---
 
@@ -136,3 +127,4 @@ docs/
 | 2026-09-29 | **V9 여정 추가**: `JRN-ci-push-to-ack`(4단계, 분기 7개) 작성 + 여정 mockup `journeys/JRN-ci-push-to-ack/`. `_index.md`에 여정 mockup 항목·PR 모니터 두 화면의 여정 매핑 추가, 허브·user-journeys/README 갱신. PRD-10과 구현의 차이 2건(CI 시작 푸시, 그룹 모두 확인)과 PR 링크 위치 불일치 발견·기록. | 여정 1 → 2, 화면 mockup 여정 매핑 3/13 → 5/13 |
 | 2026-09-29 | **`JRN-ci-push-to-ack` v0.2 — PRD-10 개정 동기화**: 그룹 "모두 확인"을 AC14로 연결, 외부 지연 분기를 「시작 시점 푸시 없음」으로 수정(#62). 여정 mockup `STP-push-glance/in-progress`를 CI 시작 알림 → 알림 없는 잠금 화면으로 교체, 메모의 「PRD 미반영」 문구 제거. `_index.md` 분기 설명 갱신. 단계·상태 식별자 변경 없음. 하네스 위반 0. | PRD-10 불일치 2 → 0 |
 | 2026-09-30 | **V4 여정 실제 동작 정합**: `JRN-affirmation-daily-exposure` v0.3 — 문장 입력과 우선순위 선택이 한 시트인 실제 앱에 맞춰 `STP-set-priority`를 `STP-add-affirmation`에 합침(폐기). "시트 취소 시 보통으로 저장" 가정과 이를 알리던 토스트 상태 제거 → 토스트 컴포넌트 미정의 위험 해소. 분기 상태: `cancelled`, `scratchpad-priority` 추가, `default-priority` 제거. `screen-affirmations-priority-edit`가 별도 시트 흐름으로 그려진 차이를 `_index.md`에 기록. | 단계 5 → 4, 토스트 위험 해소 |
+| 2026-09-30 | **목업 정리 + 다크 갤러리 동기화**: `screen-affirmations`에 남은 TTS 스피커 버튼 5개 제거(#35 누락분). `screen-affirmations-priority-edit`에 생성 모드 프레임 추가(시트 한 장 — 문장 입력 + 노출 빈도), 편집 프레임의 "방금 추가됨" 상태 줄 제거. `screen-pr-monitor-history`와 여정 mockup `JRN-ci-push-to-ack`: PR 링크 칩을 row → PR 그룹 헤더로 옮김, 화면 mockup 미확인 그룹 헤더에 "모두 확인" 추가(`components.md` history-group 정의·구현과 일치). `mockups-dark.html`: 다짐·우선순위 시트 재변환, PR 모니터 2화면 추가(13/13), 깨진 모달 부제(META) 복구. 라이트 갤러리 PR 카드 색을 §1.11 인디고로. `_template.md` 삭제, `values.md` 소유자 표기 정리. `_copy-map.md` 검산 ok, 여정 하네스 위반 0. | 다크 갤러리 11/13 → 13/13, PR 링크 위치 불일치·`_template.md` 위험 해소 |
