@@ -26,14 +26,14 @@ last_updated: 2026-09-29
 ### journeys/JRN-affirmation-daily-exposure/
 - **여정**: `JRN-affirmation-daily-exposure` (`user-journeys/JRN-affirmation-daily-exposure.md`)
 - **달성 가치**: V4 (의도된 반복 노출)
-- **담은 단계**: `STP-add-affirmation`, `STP-set-priority`, `STP-rotation-in-app`, `STP-widget-glance`, `STP-widget-to-app`
-- **분기 상태**: `STP-add-affirmation/from-scratchpad`(우회), `STP-rotation-in-app/default-priority`(시트 취소), `STP-rotation-in-app/empty`(문장 없음), `STP-widget-glance/delayed`(위젯 갱신 대기), `STP-widget-glance/no-widget`(위젯 미설치 — 여정 밖 종료)
+- **담은 단계**: `STP-add-affirmation`, `STP-rotation-in-app`, `STP-widget-glance`, `STP-widget-to-app`
+- **분기 상태**: `STP-add-affirmation/from-scratchpad`(우회 — 임시공간 화면), `STP-add-affirmation/scratchpad-priority`(우회 — 이동 즉시 보통 저장 + 우선순위 시트, PR #64 구현 기준), `STP-add-affirmation/cancelled`(시트 취소 — 저장 안 함, 여정 밖 종료), `STP-rotation-in-app/empty`(문장 없음), `STP-widget-glance/delayed`(위젯 갱신 대기), `STP-widget-glance/no-widget`(위젯 미설치 — 여정 밖 종료)
 - **원본 화면 mockup**: screen-affirmations, screen-affirmations-priority-edit, screen-widget, screen-scratchpad
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (§1), `다짐 회전 노출` (§7), `편집 시트` (§9 — 입력 시트·우선순위 시트), `임시공간 분류 흐름` (§8), `시스템 통합 — 위젯` (§6.2)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader`, `AreaLabel`, `IconCircleButton`, `Card`(히어로·다짐 카드), `FilterPills`(단일 선택형), `Sheet`, `Backdrop`, `Handle`, `TabBar`, `TabBarItem`
   - 토큰: §1.6 다짐, §1.4 임시공간, §1.8 위젯 보조 토큰, §2 중립, §3.1 sans/serif, §4.2 라운드
-  - 디자인 시스템 밖 값: 홈 화면 벽지 그라디언트·iOS 앱 아이콘 색(§1.8에 따라 iOS 컨벤션 차용, screen-widget.html과 동일), 하단 토스트(컴포넌트 미정의 — 추가 후보)
+  - 디자인 시스템 밖 값: 홈 화면 벽지 그라디언트·iOS 앱 아이콘 색(§1.8에 따라 iOS 컨벤션 차용, screen-widget.html과 동일)
 - **공개 경로**: `journeys/JRN-affirmation-daily-exposure/`
 - **외부 의존**: 없음 (인라인 CSS·JS, `file://`로 동작)
 
@@ -129,7 +129,7 @@ last_updated: 2026-09-29
 
 ## screen-affirmations-priority-edit.html
 - **시각화 대상**:
-  - 여정: `JRN-affirmation-daily-exposure` (`STP-set-priority` — 추가한 다짐의 노출 우선순위 설정)
+  - 여정: `JRN-affirmation-daily-exposure` (`STP-add-affirmation`의 우선순위 선택 부분). 이 화면은 추가 후 별도 우선순위 시트를 띄우는 흐름으로 그려졌으나, 실제 앱의 `+` 경로는 문장 입력과 우선순위 선택이 한 시트다. 별도 시트 흐름은 임시공간 → 다짐 이동 경로(PR #64)에만 해당한다.
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC2 (우선순위)
 - **사용 디자인 시스템**:
