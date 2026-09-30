@@ -1,13 +1,13 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-09-30
+last_updated: 2026-10-01
 ---
 
 # 카피 ↔ 구현 대응표
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 8개 ↔ 목업 4장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 9개 ↔ 목업 6장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -35,27 +35,27 @@ last_updated: 2026-09-30
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 7행 · `목업 대기` 20행, 표 B `구현 대기` 22행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 10행 · `목업 대기` 24행, 표 B `구현 대기` 35행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 35 |
+| A | 일치 | 42 |
 | A | 데이터 | 2 |
-| A | 비표시 | 3 |
+| A | 비표시 | 6 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 4 |
-| A | 기준 4 | 3 |
-| A | 구현 대기 | 7 |
-| A | 목업 대기 | 20 |
-| B | 일치 | 56 |
-| B | 외부 | 6 |
-| B | 예시 데이터 | 33 |
-| B | 목업 전용 | 48 |
+| A | 기준 4 | 4 |
+| A | 구현 대기 | 10 |
+| A | 목업 대기 | 24 |
+| B | 일치 | 75 |
+| B | 외부 | 9 |
+| B | 예시 데이터 | 51 |
+| B | 목업 전용 | 60 |
 | B | 미구현 영역 | 21 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 22 |
+| B | 구현 대기 | 35 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 76행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 94행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -135,8 +135,26 @@ last_updated: 2026-09-30
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `다짐을 앱에 등록해보세요.` | 목업 대기 | 다짐 0건 상태 — 목업에 없다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `앱에서 로그인이 필요해요.` | 목업 대기 | 미로그인 상태 — 목업에 없다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `잠시 후 다시 시도할게요.` | 목업 대기 | 조회 오류 상태 — 목업에 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 목업 대기 | 개인 탭 검색 필드 placeholder — 개인 목업은 검색 필드를 그리지 않는다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `회사 영역만 검색…` | 일치 | 회사 탭 검색 필드 placeholder |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 구현 대기 | 회사 요약 줄 — 목업 「12 OPEN · 8 DONE · DEADLINE 3」 의 마감 카운트가 구현에 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
+| `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 목업 대기 | 회사 완료 섹션 제목 — 회사 목업은 완료 섹션을 그리지 않는다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `완료` | 기준 4 | 개인 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「완료 · 4」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 목업 대기 | 빈 상태 안내 — 목업에 빈 상태가 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `checkmark.square.fill` | 비표시 | 완료 체크박스 SF Symbol 이름 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `square` | 비표시 | 미완료 체크박스 SF Symbol 이름 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
+| `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 189행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 254행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -329,6 +347,71 @@ last_updated: 2026-09-30
 | `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
 | `screen-widget` | `크기에 따라 영역의 표현 방식 축약 — AC1` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-todo-personal` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-personal` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-personal` | `04 · 개인 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-personal` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
+| `screen-todo-personal` | `PERSONAL` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
+| `screen-todo-personal` | `내 일` | 일치 | 헤더 제목 |
+| `screen-todo-personal` | `7개 남음 · 4개 완료` | 일치 | 요약 줄 |
+| `screen-todo-personal` | `전체 · 11` | 구현 대기 | 날짜 필터 칩 — 구현에 필터가 없다 |
+| `screen-todo-personal` | `오늘` | 구현 대기 | 날짜 필터 칩·날짜 섹션 제목 — 구현은 할 일/완료 두 섹션뿐 |
+| `screen-todo-personal` | `이번 주` | 구현 대기 | 위와 같음 |
+| `screen-todo-personal` | `날짜 없음` | 구현 대기 | 위와 같음 |
+| `screen-todo-personal` | `5월 6일 수` | 구현 대기 | 날짜 섹션 부제(날짜) — 날짜 섹션이 구현에 없다 |
+| `screen-todo-personal` | `우선` | 외부 `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 우선순위 라벨 — `TodoPriority.displayName` |
+| `screen-todo-personal` | `엄마 생신 케이크 예약 — 후암동 어니언` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `캠핑 의자 결정 — 빈티지 vs 새 거` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `메모: 임시공간에서 이동됨` | 일치 | 행 메타 「메모: \(item.memo)」 |
+| `screen-todo-personal` | `치과 예약 잡기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `금요일` | 예시 데이터 | 마감일(사용자 데이터) |
+| `screen-todo-personal` | `2개` | 구현 대기 | 날짜 섹션 항목 수 — 날짜 섹션이 구현에 없다 |
+| `screen-todo-personal` | `아침 산책 코스 — 한 정거장 더 가서 블루보틀` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `책장 정리 — 안 읽은 책 5권 추리기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `완료 · 4` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
+| `screen-todo-personal` | `접기` | 구현 대기 | 완료 섹션 접기 버튼 — 구현에 없다 |
+| `screen-todo-personal` | `세탁기 세제 주문` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `개인` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `회사` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `PRD-3 · AC3 시각적 영역 구분(테라코타 톤·상단 스트립·"PERSONAL" 라벨) — 회사 탭과 한눈에 구분되도록 설계` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-todo-work` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-work` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-work` | `05 · 회사 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-work` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
+| `screen-todo-work` | `WORK` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
+| `screen-todo-work` | `회사` | 일치 | 헤더 제목 · 탭 바 |
+| `screen-todo-work` | `12 OPEN · 8 DONE · DEADLINE 3` | 구현 대기 | 요약 줄 — 구현은 「\(open) OPEN · \(done) DONE」, 마감 카운트가 없다 |
+| `screen-todo-work` | `회사 영역만 검색…` | 일치 | 검색 필드 placeholder |
+| `screen-todo-work` | `DUE TODAY` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 OPEN/DONE 두 섹션뿐 |
+| `screen-todo-work` | `분기 리뷰 deck — KPI 슬라이드 4장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `오늘 17:00` | 예시 데이터 | 마감 시각(사용자 데이터) |
+| `screen-todo-work` | `·` | 일치 | 행 메타 구분자 「 · 」 |
+| `screen-todo-work` | `P1` | 구현 대기 | 우선순위 표기 — 구현은 두 영역 모두 「우선」 |
+| `screen-todo-work` | `고객 케이스 A 리뷰 회신` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `오늘 18:00` | 예시 데이터 | 마감 시각(사용자 데이터) |
+| `screen-todo-work` | `윤정님 대기` | 구현 대기 | 대기 상태 메타 — 구현 행 메타에 없다 |
+| `screen-todo-work` | `THIS WEEK` | 구현 대기 | 마감 기준 섹션 제목 — 위와 같음 |
+| `screen-todo-work` | `retention 데이터 fact-check 한 번 더` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `금요일` | 예시 데이터 | 마감일(사용자 데이터) |
+| `screen-todo-work` | `메모: 임시공간` | 일치 | 행 메타 「메모: \(item.memo)」 |
+| `screen-todo-work` | `다음 분기 우선순위 3개 안 정리` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `윤정 1:1 — 다음 주 화요일 일정 확정` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `onboarding 개선 결과 한 페이지로` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `BACKLOG · 5` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 「OPEN · n」 |
+| `screen-todo-work` | `결제 이슈 timeline 정리 — Slack 자료 모으기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다 |
+| `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
+| `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `개인` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `PRD-3 · AC1 별도 데이터·검색 분리(검색바에 "회사 영역만"), AC3 시각 차이(슬레이트·각진 카드·모노스페이스), AC4 영역 간 이동 UI 없음` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 
 ## 검산
 
