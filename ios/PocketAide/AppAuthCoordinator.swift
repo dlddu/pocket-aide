@@ -81,6 +81,7 @@ final class AppAuthCoordinator: ObservableObject {
         do {
             _ = try await oidc.signIn()
             signedIn = true
+            WidgetRefresher.reloadAll()
             await refreshMe()
             await registerForPush()
         } catch {
@@ -94,6 +95,7 @@ final class AppAuthCoordinator: ObservableObject {
         me = nil
         meError = nil
         signedIn = false
+        WidgetRefresher.reloadAll()
     }
 
     func refreshPushAuthorization() async {

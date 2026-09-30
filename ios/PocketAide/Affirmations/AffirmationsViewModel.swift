@@ -41,6 +41,7 @@ final class AffirmationsViewModel: ObservableObject {
             let created = try await api.createAffirmation(text: text, priority: priority)
             items.insert(created, at: 0)
             heroID = created.id
+            WidgetRefresher.reloadAll()
         } catch {
             errorMessage = String(describing: error)
         }
@@ -54,6 +55,7 @@ final class AffirmationsViewModel: ObservableObject {
                 items[idx] = updated
             }
             heroID = updated.id
+            WidgetRefresher.reloadAll()
         } catch {
             errorMessage = String(describing: error)
         }
@@ -64,6 +66,7 @@ final class AffirmationsViewModel: ObservableObject {
         do {
             try await api.deleteAffirmation(id: id)
             items.removeAll { $0.id == id }
+            WidgetRefresher.reloadAll()
             if heroID == id {
                 rotateHero()
             }
