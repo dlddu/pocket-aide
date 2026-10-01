@@ -1,12 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: pocket-aide
-# NOTE: secret.yaml is intentionally NOT built here.
-# In the Flux-managed cluster, the `pocket-aide-secrets` Secret is owned by the
-# ExternalSecret in dlddu/flux-cd-apps (apps/pocket-aide/external-secret.yaml),
-# which pulls the real values from SSM Parameter Store. Listing the placeholder
-# secret.yaml here made Flux (prune + force) overwrite that Secret with dummy
-# stubs, silently disabling pr-monitor. Keep it out of the build.
+# secret.yaml is intentionally NOT listed. In the Flux-managed cluster the
+# `pocket-aide-secrets` Secret is owned by the ExternalSecret in dlddu/flux-cd-apps
+# (apps/pocket-aide/external-secret.yaml); building the placeholder here lets
+# Flux (prune + force) overwrite it with dummy stubs and silently disable pr-monitor.
 resources:
   - configmap.yaml
   - pvc.yaml

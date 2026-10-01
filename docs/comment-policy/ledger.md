@@ -42,11 +42,11 @@
 | 2026-09-29 | `ios/Shared/Package.swift` | 1 | `9ea7cb80805c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 7 | `7eaa1de510bc` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Tokens.swift` | 14 | `542a9b308412` | 완료 | 필요성 판정 — 제거 3줄 · 유지 14줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| — | `ios/Shared/Sources/PocketAideAPI/HistoryGroup.swift`, `ios/Shared/Sources/PocketAideAPI/PRMonitor.swift`, `ios/Shared/Sources/PocketAideAPI/RotationSelector.swift`, `ios/Shared/Sources/PocketAideAPI/SeededRNG.swift`, `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 49 | `25a15d5d32c3` | — | 미판정 |
+| 2026-09-29 | `ios/Shared/Sources/PocketAideAPI/HistoryGroup.swift`, `ios/Shared/Sources/PocketAideAPI/PRMonitor.swift`, `ios/Shared/Sources/PocketAideAPI/RotationSelector.swift`, `ios/Shared/Sources/PocketAideAPI/SeededRNG.swift`, `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 27 | `0e62232c8a8f` | 완료 | 필요성 판정 — 제거 22줄 · 유지 27줄(개작 6블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-09-29 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 4 | `e2d993afe182` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| — | `ios/fastlane/Appfile`, `ios/fastlane/Fastfile` | 7 | `6e7a84af74bc` | — | 미판정 |
-| — | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 37 | `6eb32216d955` | — | 미판정 |
-| — | `tools/journey-mockup-harness/check.mjs` | 29 | `099ed72df19d` | — | 미판정 |
+| 2026-09-29 | `ios/fastlane/Fastfile` | 1 | `e7198c27c7fd` | 완료 | 필요성 판정 — 제거 6줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
+| 2026-09-29 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 13 | `d35a61f48de6` | 완료 | 필요성 판정 — 제거 24줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
+| 2026-09-29 | `tools/journey-mockup-harness/check.mjs` | 3 | `1b2b6f9a788a` | 완료 | 필요성 판정 — 제거 26줄 · 유지 3줄(개작 2블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 
 ## E — 줄 끝·줄 중간 주석
 

@@ -18,12 +18,9 @@ spec:
     spec:
       containers:
         - name: pocket-aide
-          # The tag on main is only a placeholder. Production tracks the `deploy`
-          # branch, where CI's `pin` job (backend-docker-push.yml) rewrites this
-          # line to the main commit SHA; PR previews retag it to the PR head SHA
-          # (flux-cd-apps apps/pocket-aide-preview). Tags are immutable, so the
-          # default IfNotPresent is correct. Keep no `images:` transformer in
-          # kustomization.yaml — this line is the single source of the tag.
+          # The tag on main is a placeholder: CI's `pin` job rewrites it on the `deploy`
+          # branch (docs/runbook-deploy-and-preview.md). Keep no `images:` transformer in
+          # kustomization.yaml — it would override the pinned tag.
           image: ghcr.io/dlddu/pocket-aide:dd069899e13d7e88434cc0deabf7ba19c3142f31
           imagePullPolicy: IfNotPresent
           ports:
