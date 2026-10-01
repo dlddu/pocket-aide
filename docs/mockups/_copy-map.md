@@ -35,22 +35,22 @@ last_updated: 2026-10-01
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 46행, 표 B `구현 대기` 54행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 34행, 표 B `구현 대기` 54행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 49 |
+| A | 일치 | 61 |
 | A | 데이터 | 4 |
 | A | 비표시 | 12 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 4 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 46 |
-| B | 일치 | 93 |
-| B | 외부 | 17 |
-| B | 예시 데이터 | 76 |
-| B | 목업 전용 | 70 |
+| A | 목업 대기 | 34 |
+| B | 일치 | 104 |
+| B | 외부 | 21 |
+| B | 예시 데이터 | 77 |
+| B | 목업 전용 | 73 |
 | B | 미구현 영역 | 21 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 54 |
@@ -127,19 +127,19 @@ last_updated: 2026-10-01
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 목업 대기 | 루틴 추가 시트 제목 — 시트 목업이 없다(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 목업 대기 | 루틴 추가 시트 이름 필드 placeholder — 시트 목업이 없다 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 목업 대기 | 루틴 추가 시트 섹션 라벨 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `매월 \(monthDay)일` | 목업 대기 | 루틴 추가 시트 매월 날짜 스테퍼 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계` | 목업 대기 | 루틴 추가 시트 섹션 라벨 — 위와 같음 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `매월 \(monthDay)일` | 일치 | 루틴 추가 프레임 매월 날짜 스테퍼 「매월 1일」(프레임은 주기 「매월」 선택 상태) |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계` | 일치 | 루틴 추가 프레임 섹션 라벨 |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(index + 1)` | 데이터 | 루틴 추가 시트 단계 번호 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 이름` | 목업 대기 | 루틴 추가 시트 단계 필드 placeholder — 시트 목업이 없다 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 추가` | 목업 대기 | 루틴 추가·단계 추가 시트 버튼 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `저장` | 목업 대기 | 루틴 추가 시트 1차 액션 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `취소` | 목업 대기 | 루틴 추가·단계 추가 시트 2차 액션 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · 단계` | 목업 대기 | 단계 추가 시트 제목 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 단계` | 목업 대기 | 단계 추가 시트 입력 필드 placeholder — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 목업 대기 | 단계 추가·이력 시트 닫기 버튼 — 목업 history strip 은 화면 안 인라인이라 닫기가 없다 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 이름` | 일치 | 루틴 추가 프레임 단계 필드 placeholder |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `저장` | 일치 | 루틴 추가 프레임 1차 액션 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `취소` | 일치 | 루틴 추가 프레임 2차 액션 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · 단계` | 일치 | 단계 추가 프레임 시트 제목 「아침 루틴 · 단계」 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 일치 | 단계 추가 프레임 2차 액션. 이력 시트의 같은 「닫기」 는 목업 history strip 이 화면 안 인라인이라 대응 자리가 없다(자리 차이는 기준 4) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · \(days.count)일 이력` | 구현 대기 | 이력 시트 제목 — 목업 history strip 제목은 「아침 루틴 · 30일」(「이력」 없음, 표 B 같은 행) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.scheduleSummary) · 예정 \(summary.scheduledDays)일 중 \(summary.completedDays)일 완료` | 목업 대기 | 이력 시트 요약 줄 — 목업 history strip 은 요약 줄 대신 시작일·「오늘 · 60%」 축 라벨을 그린다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `루틴` | 일치 | `ScreenHeader` 제목 — 목업 헤더 영역 라벨 「루틴」 |
@@ -152,7 +152,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · \(routine.done) / \(routine.total) 완료` | 일치 | 카드 메타 「매일 · 3 / 5 완료」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 목업 대기 | 다 끝낸 루틴의 진행률 자리 — 목업은 완료 상태 카드를 그리지 않는다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.progressPercent)%` | 일치 | 카드 진행률 「60%」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 목업 대기 | 카드 하단 단계 추가 버튼 — 목업 카드에 없다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 목업 대기 | 카드 하단 단계 추가 버튼 — 목업 카드에 없다(같은 낱말의 목업 시트 섹션 라벨은 `RoutineSheets.swift` 행) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `이력` | 구현 대기 | 카드 하단 이력 시트 버튼 — 목업의 이력 진입은 history strip 의 「전체 이력」(표 B 같은 행) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `checked` | 비표시 | 단계 행 `accessibilityValue` — 글자로 그려지지 않는다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `unchecked` | 비표시 | 위와 같음 |
@@ -195,7 +195,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 334행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 353행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -392,6 +392,7 @@ last_updated: 2026-10-01
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `06 · 루틴` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-routines` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-routines` | `루틴` | 일치 | 헤더 영역 라벨(`RoutinesView.swift` `ScreenHeader` 제목) · 탭 바 |
 | `screen-routines` | `5월 6일 · 수요일` | 예시 데이터 | 오늘 날짜 — 구현은 `dateFormat` 「M월 d일 · EEEE」 로 그린다(목업 큰 제목, 구현 헤더 우측 캡션 — 위계는 기준 4) |
@@ -430,6 +431,24 @@ last_updated: 2026-10-01
 | `screen-routines` | `개인` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-routines` | `루틴 추가 — 헤더 새 루틴` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder(`RoutineSheets.swift`) |
+| `screen-routines` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨(`RoutineSheets.swift`) |
+| `screen-routines` | `매일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `특정 요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `매주` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `매월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `매월 1일` | 일치 | 매월 날짜 스테퍼 「매월 \(monthDay)일」(`RoutineSheets.swift`) |
+| `screen-routines` | `단계` | 일치 | 루틴 추가 프레임 섹션 라벨(`RoutineSheets.swift`) |
+| `screen-routines` | `1` | 예시 데이터 | 단계 번호 「\(index + 1)」(런타임 값) |
+| `screen-routines` | `단계 이름` | 일치 | 루틴 추가 프레임 단계 필드 placeholder(`RoutineSheets.swift`) |
+| `screen-routines` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `저장` | 일치 | 루틴 추가 프레임 1차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `취소` | 일치 | 루틴 추가 프레임 2차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `단계 추가 — 루틴 카드에서` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `아침 루틴 · 단계` | 일치 | 단계 추가 프레임 시트 제목 「\(routine.name) · 단계」(`RoutineSheets.swift`) |
+| `screen-routines` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder(`RoutineSheets.swift`) |
+| `screen-routines` | `닫기` | 일치 | 단계 추가 프레임 2차 액션(`RoutineSheets.swift`) |
 | `screen-routines` | `PRD-2 · AC1 단계 정의(아침 루틴 5단계), AC2 반복 주기(매일/매주), AC3 단계 체크 → 진행률, AC4 30일 이력 히트맵` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-scratchpad` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
