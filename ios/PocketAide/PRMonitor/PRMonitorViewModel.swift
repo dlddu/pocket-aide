@@ -9,6 +9,9 @@ final class PRMonitorViewModel: ObservableObject {
     @Published private(set) var isLoadingExcluded = false
     @Published var errorMessage: String?
     @Published var excludedRepoError: String?
+    @Published private(set) var notificationSettings = NotificationSettings()
+    @Published private(set) var isLoadingSettings = false
+    @Published var settingsError: String?
 
     var groups: [HistoryGroup] {
         HistoryGrouping.group(items)
@@ -57,6 +60,46 @@ final class PRMonitorViewModel: ObservableObject {
             excludedRepos = try await api.listExcludedRepos()
         } catch {
             excludedRepoError = String(describing: error)
+        }
+    }
+
+    func loadNotificationSettings() async {
+        guard let api else { return }
+        isLoadingSettings = true
+        settingsError = nil
+        defer { isLoadingSettings = false }
+        do {
+            notificationSettings = try await api.notificationSettings()
+        } catch {
+            settingsError = String(describing: error)
+        }
+    }
+
+    func setNotificationsEnabled(_ enabled: Bool) async {
+        await updateNotificationSettings(NotificationSettingsPatch(enabled: enabled)) {
+            $0.enabled = enabled
+        }
+    }
+
+    func setNotificationOutcomes(_ outcomes: NotificationOutcomes) async {
+        await updateNotificationSettings(NotificationSettingsPatch(outcomes: outcomes)) {
+            $0.outcomes = outcomes
+        }
+    }
+
+    private func updateNotificationSettings(
+        _ patch: NotificationSettingsPatch,
+        apply: (inout NotificationSettings) -> Void
+    ) async {
+        guard let api else { return }
+        settingsError = nil
+        let prior = notificationSettings
+        apply(&notificationSettings)
+        do {
+            notificationSettings = try await api.updateNotificationSettings(patch)
+        } catch {
+            notificationSettings = prior
+            settingsError = String(describing: error)
         }
     }
 
