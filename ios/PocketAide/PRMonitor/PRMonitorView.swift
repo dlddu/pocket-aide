@@ -9,6 +9,7 @@ struct PRMonitorView: View {
     @Binding var highlightedEventID: Int64?
 
     @State private var showingExcludedSheet = false
+    @State private var showingSettingsSheet = false
     @State private var arrivalClearTask: Task<Void, Never>?
 
     private let arrivalHighlightDuration: TimeInterval = 5
@@ -28,19 +29,17 @@ struct PRMonitorView: View {
                             unreadBadge
                         }
                         Button {
+                            showingSettingsSheet = true
+                            Task { await viewModel.loadNotificationSettings() }
+                        } label: {
+                            headerIcon("bell")
+                        }
+                        .accessibilityIdentifier("prmonitor.settings.button")
+                        Button {
                             showingExcludedSheet = true
                             Task { await viewModel.loadExcludedRepos() }
                         } label: {
-                            Image(systemName: "line.3.horizontal.decrease")
-                                .font(.system(size: 14, weight: .bold))
-                                .frame(width: 36, height: 36)
-                                .background(DesignTokens.Color.card(.prMonitor))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
+                            headerIcon("line.3.horizontal.decrease")
                         }
                         .accessibilityIdentifier("prmonitor.excluded.button")
                     }
@@ -71,6 +70,26 @@ struct PRMonitorView: View {
                 isPresented: $showingExcludedSheet
             )
         }
+        .sheet(isPresented: $showingSettingsSheet) {
+            PRMonitorNotificationSettingsSheet(
+                viewModel: viewModel,
+                pushAuthorizationDenied: auth.pushAuthorizationDenied,
+                isPresented: $showingSettingsSheet
+            )
+        }
+    }
+
+    private func headerIcon(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 14, weight: .bold))
+            .frame(width: 36, height: 36)
+            .background(DesignTokens.Color.card(.prMonitor))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(DesignTokens.Color.rule(.prMonitor), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .foregroundStyle(DesignTokens.Color.ink(.prMonitor))
     }
 
     @ViewBuilder
