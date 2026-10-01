@@ -18,8 +18,6 @@ struct ScratchpadTab: View {
     var body: some View { ScratchpadView(viewModel: viewModel) }
 }
 
-/// PRD-4 임시 공간. Items are captured without choosing a destination and
-/// leave this list only when the user moves or deletes them.
 struct ScratchpadView: View {
     private enum SheetMode: Equatable {
         case add

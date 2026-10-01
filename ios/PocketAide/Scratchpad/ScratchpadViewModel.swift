@@ -52,8 +52,6 @@ final class ScratchpadViewModel: ObservableObject {
         }
     }
 
-    /// Returns the created affirmation when the target is 다짐, so the caller
-    /// can open the priority sheet on it.
     func move(_ item: ScratchpadItem, to target: ScratchpadMoveTarget) async -> Affirmation? {
         guard let api else { return nil }
         do {
