@@ -44,12 +44,14 @@ public enum ScratchpadMoveTarget: String, Codable, CaseIterable, Sendable, Hasha
     case personal
     case work
     case affirmation
+    case routine
 
     public var chipLabel: String {
         switch self {
         case .personal: return "→ 개인"
         case .work: return "→ 회사"
         case .affirmation: return "→ 다짐"
+        case .routine: return "→ 루틴"
         }
     }
 }
@@ -58,6 +60,7 @@ public struct ScratchpadMoveResult: Decodable, Equatable, Sendable {
     public let target: ScratchpadMoveTarget
     public let todo: TodoItem?
     public let affirmation: Affirmation?
+    public let routine: Routine?
 }
 
 /// A day's worth of items, newest day first, as the list shows them.

@@ -36,6 +36,7 @@ const (
 	TargetPersonal    Target = "personal"
 	TargetWork        Target = "work"
 	TargetAffirmation Target = "affirmation"
+	TargetRoutine     Target = "routine"
 )
 
 // moveInserts is the only place a target turns into SQL. Each statement copies
@@ -45,6 +46,7 @@ var moveInserts = map[Target]string{
 	TargetPersonal:    `INSERT INTO personal_todos (user_id, title) VALUES (?, ?)`,
 	TargetWork:        `INSERT INTO work_todos (user_id, title) VALUES (?, ?)`,
 	TargetAffirmation: `INSERT INTO affirmations (user_id, text, priority) VALUES (?, ?, 'normal')`,
+	TargetRoutine:     `INSERT INTO routines (user_id, name, start_day) VALUES (?, ?, date('now'))`,
 }
 
 // Valid reports whether t is a supported move target.

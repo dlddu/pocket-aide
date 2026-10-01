@@ -24,6 +24,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
+	"github.com/dlddu/pocket-aide/backend/internal/routines"
 	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
@@ -67,6 +68,7 @@ func main() {
 	settingsStore := notificationsettings.New(conn)
 	todoStore := todos.New(conn)
 	scratchStore := scratchpad.New(conn)
+	routineStore := routines.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -90,7 +92,15 @@ func main() {
 		p.Get("/api/scratchpad", handlers.ListScratchpad(scratchStore))
 		p.Post("/api/scratchpad", handlers.CreateScratchpadItem(scratchStore))
 		p.Delete("/api/scratchpad/{id}", handlers.DeleteScratchpadItem(scratchStore))
-		p.Post("/api/scratchpad/{id}/move", handlers.MoveScratchpadItem(scratchStore, todoStore, affStore))
+		p.Post("/api/scratchpad/{id}/move", handlers.MoveScratchpadItem(scratchStore, todoStore, affStore, routineStore))
+		p.Get("/api/routines", handlers.ListRoutines(routineStore))
+		p.Post("/api/routines", handlers.CreateRoutine(routineStore))
+		p.Delete("/api/routines/{id}", handlers.DeleteRoutine(routineStore))
+		p.Post("/api/routines/{id}/steps", handlers.AddRoutineStep(routineStore))
+		p.Delete("/api/routines/{id}/steps/{stepID}", handlers.DeleteRoutineStep(routineStore))
+		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
+		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
+		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
 	})
 
 	srv := &http.Server{
