@@ -60,6 +60,26 @@ enum TodoUI {
         app.launch()
     }
 
+    static func dismissKeyboard(in app: XCUIApplication) {
+        guard app.keyboards.firstMatch.exists else { return }
+        let keys = NSPredicate(format: "label IN %@", ["return", "Return", "search", "Search", "done", "Done", "완료", "검색", "확인"])
+        let key = app.keyboards.buttons.matching(keys).firstMatch
+        if key.exists {
+            key.tap()
+        } else {
+            app.typeText("\n")
+        }
+        _ = waitToDisappear(app.keyboards.firstMatch, timeout: 5)
+    }
+
+    static func clear(_ field: XCUIElement) {
+        let current = (field.value as? String) ?? ""
+        let placeholder = field.placeholderValue ?? ""
+        let length = current == placeholder ? 0 : current.count
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: max(length, 24) + 4))
+    }
+
     static func waitToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
         let expectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == false"),
@@ -87,7 +107,12 @@ struct TodoScreen {
             XCTAssertTrue(more.exists, "Neither the '\(area.tabLabel)' tab nor 'More' is present")
             more.tap()
             if !tapMoreRow(area.tabLabel, in: app) {
-                more.tap()
+                let back = app.navigationBars.buttons.firstMatch
+                if back.exists {
+                    back.tap()
+                } else {
+                    more.tap()
+                }
                 XCTAssertTrue(tapMoreRow(area.tabLabel, in: app), "'\(area.tabLabel)' row should be listed under More")
             }
         }
@@ -201,16 +226,11 @@ struct TodoScreen {
     }
 
     func dismissKeyboard() {
-        if app.keyboards.firstMatch.exists {
-            header.tap()
-        }
+        TodoUI.dismissKeyboard(in: app)
     }
 
     func clearText(_ field: XCUIElement) {
-        let current = (field.value as? String) ?? ""
-        let placeholder = field.placeholderValue ?? ""
-        guard !current.isEmpty, current != placeholder else { return }
-        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 2))
+        TodoUI.clear(field)
     }
 
     func assertListing(
@@ -315,16 +335,15 @@ struct TodoSheet {
     var deleteButton: XCUIElement { app.buttons["todo.sheet.delete.button"] }
     var cancelButton: XCUIElement { app.buttons["todo.sheet.cancel.button"] }
 
-    func replace(_ field: XCUIElement, with text: String) {
+    func replace(_ field: XCUIElement, with text: String, submit: Bool = true) {
         XCTAssertTrue(field.waitForExistence(timeout: 5), "Sheet field \(field.identifier) should exist")
         field.tap()
-        let current = (field.value as? String) ?? ""
-        let placeholder = field.placeholderValue ?? ""
-        if !current.isEmpty, current != placeholder {
-            field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 2))
-        }
+        TodoUI.clear(field)
         if !text.isEmpty {
             field.typeText(text)
+        }
+        if submit {
+            TodoUI.dismissKeyboard(in: app)
         }
     }
 
@@ -333,7 +352,7 @@ struct TodoSheet {
     }
 
     func setMemo(_ text: String) {
-        replace(memoField, with: text)
+        replace(memoField, with: text, submit: false)
     }
 
     var dueIsOn: Bool {
