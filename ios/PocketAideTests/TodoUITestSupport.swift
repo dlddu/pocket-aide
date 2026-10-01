@@ -77,7 +77,7 @@ enum TodoUI {
         let placeholder = field.placeholderValue ?? ""
         let length = current == placeholder ? 0 : current.count
         field.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
-        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: max(length, 24) + 4))
+        field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: max(length * 3, 24) + 4))
     }
 
     static func waitToDisappear(_ element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
