@@ -1,9 +1,8 @@
 import Foundation
 
 /// One row of `notification_history` belonging to the authenticated user
-/// (PRD-10 AC11). Optional fields are null when the underlying workflow_run
-/// did not have a PR linked (e.g. push to main) — the iOS card uses the
-/// fallback `repo — conclusion · workflow_name` text in that case.
+/// (PRD-10 AC11). The PR fields are nil when the workflow_run had no linked
+/// PR (e.g. a push to main).
 public struct NotificationHistoryItem: Codable, Identifiable, Equatable, Sendable, Hashable {
     public let id: Int64
     public let repoFullName: String
@@ -84,15 +83,9 @@ public struct ExcludedRepo: Codable, Identifiable, Equatable, Sendable, Hashable
     }
 }
 
-/// `{}` body — backend ignores the body for the ack endpoint but post()
-/// requires *something* Encodable.
 struct EmptyPayload: Encodable {}
 
-/// Pure helper exposed to both the app delegate (push tap → deep link) and
-/// to unit tests. Parses the `event_id` field from a push payload (which
-/// arrives as a heterogeneous `[AnyHashable: Any]`) and synthesizes the
-/// `pocketaide://pr-monitor?eventId=<id>` URL the app uses to route the
-/// notification into the PR monitor tab.
+/// Turns an APNs push payload into the PR monitor deep link.
 public enum PRMonitorPushPayload {
     public static func deepLinkURL(fromUserInfo info: [AnyHashable: Any]) -> URL? {
         guard let id = eventID(from: info) else { return nil }

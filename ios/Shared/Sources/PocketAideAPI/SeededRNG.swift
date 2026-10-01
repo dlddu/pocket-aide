@@ -1,9 +1,6 @@
 import Foundation
 
-/// Splitmix64 — a tiny seedable RNG. Same seed → same sequence, so callers
-/// that need deterministic rotation (tests, widget timeline entries) get
-/// stable picks. Production rotation in-app keeps using
-/// `SystemRandomNumberGenerator`.
+/// Splitmix64 — a tiny seedable RNG: the same seed yields the same sequence.
 public struct SeededRNG: RandomNumberGenerator {
     private var state: UInt64
 
