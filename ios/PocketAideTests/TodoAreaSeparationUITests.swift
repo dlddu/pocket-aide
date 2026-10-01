@@ -25,32 +25,28 @@ final class TodoAreaSeparationUITests: XCTestCase {
         let workAfter = TodoCounts(open: workBefore.open + 1, done: workBefore.done)
         XCTAssertTrue(work.waitForCounts(workAfter), "Work summary should count the new work item")
 
-        assertSeparated(app: app, token: token, personalTitle: personalTitle, workTitle: workTitle,
-                        personalCounts: personalAfter, workCounts: workAfter, refresh: true)
+        let titles: [TodoUIArea: String] = [.personal: personalTitle, .work: workTitle]
+        let counts: [TodoUIArea: TodoCounts] = [.personal: personalAfter, .work: workAfter]
+        assertSeparated(app: app, token: token, titles: titles, counts: counts, refresh: true)
 
         TodoUI.relaunch(app)
-        assertSeparated(app: app, token: token, personalTitle: personalTitle, workTitle: workTitle,
-                        personalCounts: personalAfter, workCounts: workAfter, refresh: false)
+        assertSeparated(app: app, token: token, titles: titles, counts: counts, refresh: false)
     }
 
     private func assertSeparated(
         app: XCUIApplication,
         token: String,
-        personalTitle: String,
-        workTitle: String,
-        personalCounts: TodoCounts,
-        workCounts: TodoCounts,
+        titles: [TodoUIArea: String],
+        counts: [TodoUIArea: TodoCounts],
         refresh: Bool
     ) {
         for area in TodoUIArea.allCases {
+            guard let mine = titles[area], let theirs = titles[area.other], let expected = counts[area] else { continue }
             let screen = TodoScreen.open(area, in: app)
             if refresh {
                 screen.pullToRefresh()
             }
-            let mine = area == .personal ? personalTitle : workTitle
-            let theirs = area == .personal ? workTitle : personalTitle
             screen.assertListing(token: token, present: [mine], absent: [theirs])
-            let expected = area == .personal ? personalCounts : workCounts
             XCTAssertTrue(screen.waitForCounts(expected), "The \(area.rawValue) summary should count only its own items")
         }
     }
