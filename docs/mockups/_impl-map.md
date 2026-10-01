@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-09-30
+last_updated: 2026-10-01
 ---
 
 # 구현 ↔ 목업 매핑
@@ -55,6 +55,7 @@ last_updated: 2026-09-30
 | `ios/PocketAide/Todos/TodoEditSheet.swift` | 목업 없음 | — | 투두 생성·편집 시트(PRD-3 AC2) — 대응 화면 목업이 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListView(area:)`와 진입점 `PersonalTab`·`WorkTab`: 헤더·섹션 목록·행·빈 상태. 편집 시트는 `TodoEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Todos/TodoListViewModel.swift` | 비렌더링 | — | 영역별 투두 목록 상태·API 호출 |
+| `ios/PocketAide/WidgetRefresher.swift` | 비렌더링 | — | 위젯 타임라인 즉시 재요청(`WidgetCenter.reloadAllTimelines`) — 다짐 변경·로그인 상태 변경 시 호출 |
 | `ios/PocketAideKeyboard/KeyboardViewController.swift` | 미구현 | `screen-keyboard-extension` | 키보드 확장 골격(삽입 버튼·다음 키보드 버튼)뿐 |
 | `ios/PocketAideWidget/AffirmationProvider.swift` | 비렌더링 | — | 위젯 타임라인·다짐 조회 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | 화면 | `screen-widget` | 위젯 본체(Large) — 슬라이스 배치·구분선·배경. 홈 화면 벽지·앱 아이콘 등 위젯 밖은 iOS 시스템 UI |
