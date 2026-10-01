@@ -154,8 +154,8 @@
   - 모든 단계에서 이력 항목은 설정과 무관하게 기록된다(AC11).
   - 4단계: 시스템 권한이 꺼져 있다는 안내가 보인다.
 - **검증 AC**: AC8
-- **구현 상태**: 미구현 (PRD-10 후속 작업). 레포 제외만 PR 모니터 화면 시트로 구현됨(시나리오 7).
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 (PR 모니터 화면 머리의 종 버튼 → 「알림 설정」 시트. 레포 제외는 시나리오 7의 제외 레포 시트)
+- **관련 코드 테스트**: `backend/internal/notificationsettings/store_test.go` — `TestAllowsPush`, `TestGet_DefaultsWhenNoRow`, `TestUpdate_PartialPatchKeepsOtherField`, `TestUpdate_RejectsUnknownOutcomes`; `backend/internal/handlers/notification_settings_test.go`; `ios/PocketAideUnitTests/NotificationSettingsTests.swift`
 
 ### 시나리오 10: 토큰 만료·권한 부족·레이트 리밋이 배너로 드러나고 해결 동작을 준다
 - **사전 조건**: GitHub 계정 연결됨.
