@@ -8,6 +8,7 @@ import (
 
 	"github.com/dlddu/pocket-aide/backend/internal/affirmations"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
+	"github.com/dlddu/pocket-aide/backend/internal/routines"
 	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
@@ -29,6 +30,7 @@ type moveResponse struct {
 	Target      scratchpad.Target         `json:"target"`
 	Todo        *todos.Todo               `json:"todo,omitempty"`
 	Affirmation *affirmations.Affirmation `json:"affirmation,omitempty"`
+	Routine     *routines.Routine         `json:"routine,omitempty"`
 }
 
 // ListScratchpad handles GET /api/scratchpad.
@@ -112,7 +114,7 @@ func DeleteScratchpadItem(store *scratchpad.Store) http.HandlerFunc {
 }
 
 // MoveScratchpadItem handles POST /api/scratchpad/{id}/move.
-func MoveScratchpadItem(store *scratchpad.Store, todoStore *todos.Store, affStore *affirmations.Store) http.HandlerFunc {
+func MoveScratchpadItem(store *scratchpad.Store, todoStore *todos.Store, affStore *affirmations.Store, routineStore *routines.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
 		if !ok {
@@ -132,7 +134,7 @@ func MoveScratchpadItem(store *scratchpad.Store, todoStore *todos.Store, affStor
 			return
 		}
 		if !p.Target.Valid() {
-			http.Error(w, "target must be one of personal|work|affirmation", http.StatusBadRequest)
+			http.Error(w, "target must be one of personal|work|affirmation|routine", http.StatusBadRequest)
 			return
 		}
 		newID, err := store.Move(r.Context(), u.ID, id, p.Target)
@@ -153,6 +155,13 @@ func MoveScratchpadItem(store *scratchpad.Store, todoStore *todos.Store, affStor
 				return
 			}
 			resp.Affirmation = &a
+		case scratchpad.TargetRoutine:
+			rt, err := routineStore.Get(r.Context(), u.ID, newID)
+			if err != nil {
+				http.Error(w, "read moved item failed", http.StatusInternalServerError)
+				return
+			}
+			resp.Routine = &rt
 		default:
 			t, err := todoStore.Get(r.Context(), todos.Area(p.Target), u.ID, newID)
 			if err != nil {

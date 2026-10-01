@@ -8,6 +8,7 @@ extension ScratchpadMoveTarget {
         case .personal: return .personal
         case .work: return .work
         case .affirmation: return .affirmations
+        case .routine: return .routines
         }
     }
 }

@@ -31,7 +31,3 @@ struct PlaceholderTab: View {
 struct ChatTab: View {
     var body: some View { PlaceholderTab(area: .aiChat, title: "AI 채팅") }
 }
-
-struct RoutinesTab: View {
-    var body: some View { PlaceholderTab(area: .routines, title: "루틴") }
-}
