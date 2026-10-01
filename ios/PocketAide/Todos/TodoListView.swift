@@ -88,7 +88,6 @@ struct TodoListView: View {
         }
         .overlay { sheet }
         .animation(.easeInOut(duration: 0.18), value: sheetMode)
-        .accessibilityIdentifier("\(idPrefix).screen")
     }
 
     private var header: some View {
@@ -260,10 +259,12 @@ private struct TodoRow: View {
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))
                     .foregroundStyle(DesignTokens.Color.ink(tone).opacity(item.isDone ? 0.45 : 1))
                     .strikethrough(item.isDone)
+                    .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
                 if !meta.isEmpty {
                     Text(meta)
                         .font(metaFont)
                         .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))
+                        .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).meta")
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -275,7 +276,6 @@ private struct TodoRow: View {
             RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous)
                 .stroke(DesignTokens.Color.rule(tone), lineWidth: 1)
         )
-        .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
     }
 
     private var meta: String {
