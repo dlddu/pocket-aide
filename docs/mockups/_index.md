@@ -82,6 +82,7 @@ last_updated: 2026-10-01
   - 여정: (미정의)
   - 가치: V1 (즉시 캡처), V3 (영역 분리 — 분류 흐름)
   - PRD/AC (보조): PRD-4 / AC1 (항목 자동 수집), AC3 (항목 메타데이터), AC4 (분류 이동), AC5 (미분류 카운트 배지)
+  - 두 프레임: **목록**, **빈 상태**(항목 0개 — 안내 한 줄, 미분류 배지 0·탭 배지 숨김). 2026-10-01 빈 상태 프레임 추가 — 구현이 먼저 있었고 목업이 그리지 않던 상태다.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `임시공간 분류 흐름` (patterns.md §8)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader`, `AreaLabel`, `Card.note-card`, `TabBar` (active=임시공간)
@@ -92,6 +93,7 @@ last_updated: 2026-10-01
   - 여정: (미정의)
   - 가치: V3 (영역 분리된 작업 관리 — 개인 영역)
   - PRD/AC (보조): PRD-3 / AC3 (영역별 시각 분리, terracotta 톤)
+  - 두 프레임: **목록**, **빈 상태**(할 일 0개 — 안내 한 줄, 요약 「0개 남음 · 0개 완료」, 필터 칩 없음). 2026-10-01 빈 상태 프레임 추가 — 구현이 먼저 있었고 목업이 그리지 않던 상태다.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `리스트 + 섹션` (patterns.md §3)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip` (clay), `AreaLabel`("PERSONAL"), `ScreenHeader.with-icon-button-fab`, `IconCircleButton.solid`, `FilterPills`, `SectionHeader`, `Card.task-card`, `Card.dimmed`, `CheckCircle.unchecked`, `CheckCircle.done`, `TabBar` (active=개인)
@@ -112,7 +114,7 @@ last_updated: 2026-10-01
   - 여정: (미정의)
   - 가치: V8 (일상 루틴의 구조화)
   - PRD/AC (보조): PRD-2 / AC1~AC4 (단계, 진행률, 30일 히트맵)
-  - 세 프레임: **목록**, **루틴 추가**(헤더 「새 루틴」 — 시트 한 장에서 이름·반복 주기·단계를 입력, 이름이 비면 저장 비활성), **단계 추가**(루틴 카드에서 — 기존 단계 삭제·새 단계 추가). 2026-10-01 두 시트 프레임 추가 — 구현(`RoutineSheets.swift`, #88)이 먼저 있었고 목업이 그리지 않던 상태다.
+  - 네 프레임: **목록**, **빈 상태**(루틴 0개 — 안내 한 줄), **루틴 추가**(헤더 「새 루틴」 — 시트 한 장에서 이름·반복 주기·단계를 입력, 이름이 비면 저장 비활성), **단계 추가**(루틴 카드에서 — 기존 단계 삭제·새 단계 추가). 2026-10-01 두 시트 프레임 추가 — 구현(`RoutineSheets.swift`, #88)이 먼저 있었고 목업이 그리지 않던 상태다. 빈 상태 프레임도 같은 날 추가.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `카드 + 진행률` (patterns.md §5) + `편집 시트` (patterns.md §9 — 루틴 추가·단계 추가 시트)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader.with-pill-button`, `AreaLabel`("루틴"), `PillButton.solid`, `Card.routine-card`, `ProgressBar`, `CheckCircle`, `HeatmapDay`, `TabBar` (active=루틴), `Sheet`, `Backdrop`, `Handle`
@@ -123,6 +125,7 @@ last_updated: 2026-10-01
   - 여정: `JRN-affirmation-daily-exposure` (`STP-add-affirmation`, `STP-rotation-in-app`, `STP-widget-to-app`)
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC2 (우선순위), AC3 (회전 노출)
+  - 두 프레임: **목록**, **빈 상태**(다짐 0개 — 히어로 자리 안내 카드, 목록 헤더·목록·범례 없음). 2026-10-01 빈 상태 프레임 추가 — 구현이 먼저 있었고 목업이 그리지 않던 상태다.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `다짐 회전 노출` (patterns.md §7)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader`, `AreaLabel`, `Card` (큰, 다짐 카드), `TabBar` (active=다짐)
