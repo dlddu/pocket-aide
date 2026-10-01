@@ -1,11 +1,5 @@
 #!/usr/bin/env node
-// 여정 mockup 하네스 — docs/journeys/<JRN-id>/index.html 을 jsdom 으로 실제로 열고 눌러 보며
-// 여정 문서(docs/user-journeys)와의 1:1 규칙과 프로토타입 충실도를 집행한다.
-// 규칙 번호와 각 검사의 한계는 README.md(이 디렉터리)의 표를 따른다.
-//
-//   node tools/journey-mockup-harness/check.mjs [--root <repo root>]
-//
-// 위반이 하나라도 있으면 exit 1, 없으면 exit 0.
+// 규칙 번호(`fail` 의 첫 인자)와 각 검사의 한계는 이 디렉터리 README.md 의 표가 정본이다 — 검사를 바꾸면 표도 같이 바꾼다.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -30,8 +24,6 @@ const INPUT_ROLES = new Set(['textbox', 'searchbox', 'combobox', 'listbox', 'che
 const INPUT_LOOKALIKE = new Set(['field', 'input', 'textbox', 'textarea', 'select', 'pill', 'toggle', 'switch', 'checkbox', 'radio']);
 const FORM_TAGS = ['INPUT', 'SELECT', 'TEXTAREA'];
 const CLICKABLE = 'button, a[href], [data-go], input[type=submit], input[type=button], [role=button]';
-
-// ---------- 여정 문서 ----------
 
 function section(md, headingRe) {
   const lines = md.split('\n');
@@ -69,8 +61,6 @@ function readExceptions() {
   return { ids: new Set(rows.map((r) => r.match(/`(JRN-[^`]+)`/)[1])), rows };
 }
 
-// ---------- DOM ----------
-
 function open(file, hash) {
   const errors = [];
   const vc = new VirtualConsole();
@@ -104,7 +94,6 @@ function visible(w, el) {
   return true;
 }
 
-// jm- 접두 클래스 = 여정 mockup 래퍼(도구 막대·분기 선택·메모). 그 밖이 제품 화면이다.
 const isWrapper = (el) => !!el.closest('[class*="jm-"]');
 const isBranchSelector = (el) => !!el.closest('.jm-branches');
 const key = (step, state) => (state ? `${step}/${state}` : step);
@@ -127,7 +116,6 @@ function where(pg) {
   };
 }
 
-// 화면 행동 + 분기 선택. 래퍼 네비게이션(이전/다음·단계 목록·허브·문서 링크)은 뺀다.
 function actions(pg, at) {
   const inSec = [...at.sec.querySelectorAll(CLICKABLE)];
   const branches = [...pg.d.querySelectorAll(`.jm-branches :is(${CLICKABLE})`)].filter((el) => !at.sec.contains(el));
@@ -145,7 +133,6 @@ function visibleText(w, root) {
   return out.filter((t) => visible(w, t.parentElement)).map((t) => t.data);
 }
 
-// 5(b) — 문서 메타(식별자·PRD·AC·단계 번호)는 접힌 보조 레이어에만 둔다
 function checkMeta(pg, at_) {
   checks++;
   for (const t of visibleText(pg.w, pg.d.body)) {
@@ -157,7 +144,6 @@ function checkMeta(pg, at_) {
   }
 }
 
-// 5(d) — 텍스트·선택·토글은 실제 폼 요소이고 포커스·타이핑·선택이 동작한다
 function checkInputs(pg, at, at_) {
   const { w, d } = pg;
   checks++;
@@ -199,7 +185,7 @@ function checkInputs(pg, at, at_) {
   }
 }
 
-// 노드 n 의 행동을 하나씩, 매번 새로 연 페이지에서 눌러 어디에 닿는지 잰다
+// 행동마다 페이지를 새로 연다 — 앞 클릭이 바꾼 상태가 다음 간선 측정에 섞이지 않게.
 async function outgoing(file, n, count) {
   const out = [];
   for (let i = 0; i < count; i++) {
@@ -215,21 +201,17 @@ async function outgoing(file, n, count) {
   return out;
 }
 
-// ---------- 페이지 1개 ----------
-
 async function checkPage(journey, file) {
   const rel = path.relative(ROOT, file);
   const base = await load(file);
   const { d } = base;
   for (const e of base.errors) fail('5h', rel, `스크립트 오류: ${e}`);
 
-  // 규칙 2 — 페이지 → 여정 유일
   const mains = d.querySelectorAll('main[data-journey]');
   checks++;
   if (mains.length !== 1) { fail('2', rel, `main[data-journey] 가 ${mains.length}개`); return null; }
   if (mains[0].dataset.journey !== journey.id) fail('2', rel, `선언한 여정 ${mains[0].dataset.journey} ≠ 디렉터리 ${journey.id}`);
 
-  // 5(h) — 원격 스크립트·스타일시트 금지(장식용 웹폰트만 허용). jsdom 은 외부 자원을 받지 않으므로 아래 검사가 오프라인에서 돈다.
   checks++;
   for (const s of d.querySelectorAll('script[src]')) {
     if (/^(https?:)?\/\//.test(s.getAttribute('src'))) fail('5h', rel, `외부 스크립트 ${s.getAttribute('src')}`);
@@ -239,7 +221,6 @@ async function checkPage(journey, file) {
     if (/^(https?:)?\/\//.test(href) && !/fonts\.(googleapis|gstatic)\.com/.test(href)) fail('5h', rel, `외부 스타일시트 ${href}`);
   }
 
-  // 규칙 3 · 5(a) — 단계 집합 양방향 일치
   const sections = [...mains[0].querySelectorAll(':scope > section[data-step]')];
   const pageSteps = sections.map((s) => s.dataset.step);
   checks++;
@@ -252,7 +233,6 @@ async function checkPage(journey, file) {
   const states = new Map(sections.map((s) => [s.dataset.step, [...s.querySelectorAll('[data-state]')].map((e) => e.dataset.state)]));
   const nodes = pageSteps.flatMap((s) => [key(s, null), ...states.get(s).map((st) => key(s, st))]);
 
-  // 규칙 6 — 모든 data-go 대상이 실재한다
   checks++;
   for (const el of d.querySelectorAll('[data-go]')) {
     const go = el.getAttribute('data-go');
@@ -261,12 +241,10 @@ async function checkPage(journey, file) {
     else if (st && !states.get(s).includes(st)) fail('6', rel, `data-go="${go}" — ${s} 에 없는 상태`);
   }
 
-  // 5(e) — 여정 문서 「4. 분기·예외 흐름」 행 수가 상태의 최소 개수다
   checks++;
   const stateCount = nodes.length - pageSteps.length;
   if (stateCount < journey.branchRows) fail('5e', rel, `분기·예외 ${journey.branchRows}행 > 상태 ${stateCount}개`);
 
-  // 노드마다: 딥링크 5(f) · 메타 5(b) · 입력 5(d) · 나가는 간선 · 끝 표시
   const edges = new Map();
   const ends = new Map();
   for (const n of nodes) {
@@ -283,7 +261,6 @@ async function checkPage(journey, file) {
     edges.set(n, await outgoing(file, n, actions(pg, at).length));
   }
 
-  // 5(c) — 각 단계는 그 화면 안의 행동을 눌러 다음 단계에 닿는다(래퍼 네비게이션·분기 선택 제외)
   for (let i = 0; i < pageSteps.length - 1; i++) {
     checks++;
     if (!(edges.get(pageSteps[i]) || []).some((e) => e.screen && e.to === pageSteps[i + 1])) {
@@ -291,7 +268,6 @@ async function checkPage(journey, file) {
     }
   }
 
-  // 5(e)·5(g) — 첫 단계에서 화면 행동·분기 선택만으로 모든 단계·상태에 닿는다
   const seen = new Set([pageSteps[0]]);
   const queue = [pageSteps[0]];
   while (queue.length) {
@@ -302,7 +278,6 @@ async function checkPage(journey, file) {
     if (!seen.has(n)) fail(n.includes('/') ? '5e' : '5c', `${rel}#${n}`, '첫 단계에서 화면 행동·분기 선택으로 도달할 수 없다');
   }
 
-  // 5(g) — 화면 안에서 더 나아갈 곳이 없는 갈래는 끝을 표시한다(분기 선택은 나아감이 아니다)
   for (const n of nodes) {
     checks++;
     const out = (edges.get(n) || []).filter((e) => e.screen && e.to !== n);
@@ -313,8 +288,6 @@ async function checkPage(journey, file) {
 
   return { pageSteps, states };
 }
-
-// ---------- 인덱스·허브 (규칙 7) ----------
 
 function checkIndexes(pages) {
   const idx = fs.existsSync(INDEX_MD) ? section(fs.readFileSync(INDEX_MD, 'utf8'), /^##\s*여정 mockup\s*$/) : null;
@@ -340,15 +313,12 @@ function checkIndexes(pages) {
   for (const id of linked) if (!pages.has(id)) fail('7', 'docs/index.html', `없는 페이지 journeys/${id}/ 로 링크한다`);
 }
 
-// ---------- 전체 ----------
-
 const journeys = readJourneys();
 const exceptions = readExceptions();
 const pageDirs = fs.existsSync(PAGES)
   ? fs.readdirSync(PAGES).filter((n) => fs.existsSync(path.join(PAGES, n, 'index.html'))).sort()
   : [];
 
-// 규칙 6·8 — 예외는 실재하는 여정만, 사유·재검토 시점을 채워 등재한다
 for (const r of exceptions.rows) {
   checks++;
   const id = r.match(/`(JRN-[^`]+)`/)[1];
@@ -357,7 +327,6 @@ for (const r of exceptions.rows) {
   if (cells.length < 3 || cells.some((c) => !c)) fail('8', 'docs/user-journeys/README.md', `${id} 예외 행에 사유·재검토 시점이 비어 있다`);
 }
 
-// 규칙 1·2 — 판정 대상 여정 ↔ 페이지 전단사(폐기 제외, 예외 등재 초안 제외)
 const judged = [...journeys.values()].filter((j) => !/폐기/.test(j.status) && !(exceptions.ids.has(j.id) && /초안/.test(j.status)));
 for (const j of judged) {
   checks++;

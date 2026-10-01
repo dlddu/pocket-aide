@@ -48,9 +48,7 @@ platform :ios do
       }
     )
 
-    # 호출하는 워크플로가 출처를 BUILD_SOURCE 로 넘긴다(예: "PR #12 프리뷰", "main").
-    # 비어 있으면(수동 dispatch 등) "수동". ENV는 빈 문자열로 들어오고 루비에서 ""는
-    # truthy라 `||`로는 안 걸러지므로 명시적으로 처리한다.
+    # ENV 는 빈 문자열로 올 수 있고 루비에서 "" 는 truthy 라 `||` 기본값으로는 안 걸러진다.
     build_source = ENV["BUILD_SOURCE"].to_s
     build_source = "수동" if build_source.empty?
 

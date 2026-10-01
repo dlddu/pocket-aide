@@ -1,12 +1,6 @@
 import Foundation
 
-/// PRD-10 AC13 그룹핑 결과. 같은 PR(있으면) 또는 같은 커밋(head_sha)에 도착한
-/// `workflow_run` 이벤트들을 한 그룹으로 묶는다.
-///
-/// 그룹 키 우선순위:
-///   1. PR 번호가 있으면 `pr:<repo>:<num>`
-///   2. PR 없고 `head_sha`만 있으면 `sha:<repo>:<sha>`
-///   3. 둘 다 없으면 `row:<id>` — 단독 그룹 (PRD-10 이전 row 백필되지 않은 케이스)
+/// PRD-10 AC13 그룹 — 같은 PR 또는 같은 커밋(head_sha)에 도착한 `workflow_run` 이벤트 묶음.
 public struct HistoryGroup: Identifiable, Equatable, Sendable {
     public let id: String
     public let repoFullName: String
@@ -63,9 +57,6 @@ public struct HistoryGroup: Identifiable, Equatable, Sendable {
 public enum HistoryGrouping {
     /// 평면 항목 리스트를 그룹으로 묶고, 정렬한다.
     ///
-    /// - 그룹 내: createdAt DESC.
-    /// - 그룹 간: 미확인 그룹 우선 → 각 섹션 내 latestCreatedAt DESC.
-    ///
     /// 입력 순서에 의존하지 않으므로 호출자는 정렬 없이 raw 응답을 그대로 넘겨도 된다.
     public static func group(_ items: [NotificationHistoryItem]) -> [HistoryGroup] {
         guard !items.isEmpty else { return [] }
@@ -103,7 +94,8 @@ public enum HistoryGrouping {
         }
     }
 
-    /// 그룹 키 산출 — PR 우선, 없으면 head_sha, 둘 다 없으면 행 단독.
+    /// 그룹 키 — PR 우선, 없으면 head_sha, 둘 다 없으면 행 단독.
+    /// 행 단독은 head_sha 가 빈 문자열인 PRD-10 이전 행(마이그레이션 0006 이 백필하지 않았다)을 위한 것이다.
     public static func groupKey(for item: NotificationHistoryItem) -> String {
         if let n = item.prNumber {
             return "pr:\(item.repoFullName):\(n)"
