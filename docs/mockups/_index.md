@@ -1,6 +1,6 @@
 ---
 type: mockup-index
-last_updated: 2026-09-29
+last_updated: 2026-10-01
 ---
 
 # Mockup 인덱스
@@ -112,10 +112,11 @@ last_updated: 2026-09-29
   - 여정: (미정의)
   - 가치: V8 (일상 루틴의 구조화)
   - PRD/AC (보조): PRD-2 / AC1~AC4 (단계, 진행률, 30일 히트맵)
+  - 세 프레임: **목록**, **루틴 추가**(헤더 「새 루틴」 — 시트 한 장에서 이름·반복 주기·단계를 입력, 이름이 비면 저장 비활성), **단계 추가**(루틴 카드에서 — 기존 단계 삭제·새 단계 추가). 2026-10-01 두 시트 프레임 추가 — 구현(`RoutineSheets.swift`, #88)이 먼저 있었고 목업이 그리지 않던 상태다.
 - **사용 디자인 시스템**:
-  - 패턴: `영역 화면` (patterns.md §1) + `카드 + 진행률` (patterns.md §5)
-  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader.with-pill-button`, `AreaLabel`("루틴"), `PillButton.solid`, `Card.routine-card`, `ProgressBar`, `CheckCircle`, `HeatmapDay`, `TabBar` (active=루틴)
-  - 토큰: 영역=루틴 (tokens.md §1.5) — `--bg #F0F2EC`, `--ink #243329`, `--forest #4F6E5C`, `--rule #D6DDD2`, `--soft #E0E7DA`
+  - 패턴: `영역 화면` (patterns.md §1) + `카드 + 진행률` (patterns.md §5) + `편집 시트` (patterns.md §9 — 루틴 추가·단계 추가 시트)
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `ScreenHeader.with-pill-button`, `AreaLabel`("루틴"), `PillButton.solid`, `Card.routine-card`, `ProgressBar`, `CheckCircle`, `HeatmapDay`, `TabBar` (active=루틴), `Sheet`, `Backdrop`, `Handle`
+  - 토큰: 영역=루틴 (tokens.md §1.5) — `--bg #F0F2EC`, `--ink #243329`, `--forest #4F6E5C`, `--rule #D6DDD2`, `--soft #E0E7DA`. 단계 추가 시트의 단계 삭제 아이콘은 §1.10 `--destructive` 차용(루틴 영역에는 정의가 없다).
 
 ## screen-affirmations.html
 - **시각화 대상**:
@@ -233,6 +234,6 @@ last_updated: 2026-09-29
 | §6 시스템 통합 | screen-shortcut-capture, screen-widget, screen-keyboard-extension, screen-pr-monitor-push (§6.1 잠금 화면 변형) |
 | §7 다짐 회전 노출 | screen-affirmations |
 | §8 임시공간 분류 흐름 | screen-scratchpad |
-| §9 편집 시트 | screen-affirmations-priority-edit |
+| §9 편집 시트 | screen-affirmations-priority-edit, screen-routines |
 
 모든 mockup이 1개 이상의 패턴에 매핑됨 — 임의 스타일 mockup 위험은 없음. ✅
