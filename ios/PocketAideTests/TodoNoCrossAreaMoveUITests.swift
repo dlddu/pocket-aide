@@ -94,7 +94,7 @@ final class TodoNoCrossAreaMoveUITests: XCTestCase {
         XCTAssertEqual(screen.buttonLabels(in: app), before, "Long press must not reveal a menu")
 
         let target = app.tabBars.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
-        row.press(forDuration: 1.0, thenDragTo: target)
+        row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 1.0, thenDragTo: target)
         let back = TodoScreen.open(screen.area, in: app)
         back.assertListing(token: token, present: [title], absent: [])
     }
