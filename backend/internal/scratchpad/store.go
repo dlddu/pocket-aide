@@ -38,9 +38,6 @@ const (
 	TargetAffirmation Target = "affirmation"
 )
 
-// moveInserts is the only place a target turns into SQL. Each statement copies
-// the item's text into the destination table's required columns; a moved
-// affirmation starts at "normal" priority, which the app then offers to change.
 var moveInserts = map[Target]string{
 	TargetPersonal:    `INSERT INTO personal_todos (user_id, title) VALUES (?, ?)`,
 	TargetWork:        `INSERT INTO work_todos (user_id, title) VALUES (?, ?)`,
