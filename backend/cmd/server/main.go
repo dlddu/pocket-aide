@@ -24,6 +24,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
+	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
 
@@ -65,6 +66,7 @@ func main() {
 	historyStore := notificationhistory.New(conn)
 	settingsStore := notificationsettings.New(conn)
 	todoStore := todos.New(conn)
+	scratchStore := scratchpad.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -85,6 +87,10 @@ func main() {
 		p.Post("/api/todos/{area}", handlers.CreateTodo(todoStore))
 		p.Patch("/api/todos/{area}/{id}", handlers.UpdateTodo(todoStore))
 		p.Delete("/api/todos/{area}/{id}", handlers.DeleteTodo(todoStore))
+		p.Get("/api/scratchpad", handlers.ListScratchpad(scratchStore))
+		p.Post("/api/scratchpad", handlers.CreateScratchpadItem(scratchStore))
+		p.Delete("/api/scratchpad/{id}", handlers.DeleteScratchpadItem(scratchStore))
+		p.Post("/api/scratchpad/{id}/move", handlers.MoveScratchpadItem(scratchStore, todoStore, affStore))
 	})
 
 	srv := &http.Server{
