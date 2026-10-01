@@ -61,9 +61,6 @@ struct PocketAideApp: App {
         case "affirmations":
             selectedTab = .affirmations
         case "pr-monitor":
-            // Optional eventId query item — set so PRMonitorView can
-            // highlight the matching card. PRMonitorView clears it after
-            // its arrival window expires.
             if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let raw = comps.queryItems?.first(where: { $0.name == "eventId" })?.value,
                let parsed = Int64(raw) {

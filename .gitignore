@@ -1,7 +1,5 @@
-# macOS
 .DS_Store
 
-# Xcode
 *.xcodeproj/
 *.xcworkspace/
 xcuserdata/
@@ -13,44 +11,36 @@ build/
 *.dSYM
 TestResults.xcresult
 
-# Swift Package Manager
 .build/
 .swiftpm/
 Package.resolved
 ios/Shared/.build/
 ios/Shared/.swiftpm/
 
-# Fastlane
 ios/fastlane/report.xml
 ios/fastlane/Preview.html
 ios/fastlane/screenshots
 ios/fastlane/test_output
 ios/fastlane/README.md
 
-# Mint / Bundler caches
 .mint/
 ios/.bundle/
 ios/vendor/
 
-# Go
 backend/bin/
 backend/tmp/
 *.test
 
-# SQLite (local dev)
 *.db
 *.db-journal
 *.db-shm
 *.db-wal
 
-# Environment
 .env
 .env.local
 .envrc
 
-# IDE
 .idea/
 .vscode/
 
-# K8s sealed secrets cache
 .kustomize-cache/
