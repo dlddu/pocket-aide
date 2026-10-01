@@ -23,6 +23,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
+	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
 
@@ -62,6 +63,7 @@ func main() {
 	deviceStore := devicetokens.New(conn)
 	excludedStore := excludedrepos.New(conn)
 	historyStore := notificationhistory.New(conn)
+	settingsStore := notificationsettings.New(conn)
 	todoStore := todos.New(conn)
 
 	r.Group(func(p chi.Router) {
@@ -77,6 +79,8 @@ func main() {
 		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
 		p.Get("/api/notification-history", handlers.ListNotificationHistory(historyStore))
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
+		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
+		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))
 		p.Get("/api/todos/{area}", handlers.ListTodos(todoStore))
 		p.Post("/api/todos/{area}", handlers.CreateTodo(todoStore))
 		p.Patch("/api/todos/{area}/{id}", handlers.UpdateTodo(todoStore))
@@ -150,6 +154,14 @@ func main() {
 			// the user will still see the unacked card on next app open.
 			title, body := formatPushText(evt)
 			for i, uid := range userIDs {
+				settings, err := settingsStore.Get(ctx, uid)
+				if err != nil {
+					log.Printf("apns: notification settings for user=%d: %v", uid, err)
+					continue
+				}
+				if !settings.AllowsPush(evt.Conclusion) {
+					continue
+				}
 				tokens, err := deviceStore.ListByUserID(ctx, uid)
 				if err != nil {
 					log.Printf("apns: list tokens for user=%d: %v", uid, err)
