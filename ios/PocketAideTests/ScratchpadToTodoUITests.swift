@@ -1,7 +1,7 @@
 // 검증 시나리오: test-todo.md#시나리오 9
 import XCTest
 
-final class TodoFromScratchpadUITests: XCTestCase {
+final class ScratchpadToTodoUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         UITestAuth.ensureSignedIn(self)

@@ -1,7 +1,7 @@
 // 검증 시나리오: test-affirmations.md#시나리오 4
 import XCTest
 
-final class AffirmationFromScratchpadUITests: XCTestCase {
+final class ScratchpadToAffirmationUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         UITestAuth.ensureSignedIn(self)
