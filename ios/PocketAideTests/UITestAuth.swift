@@ -1,15 +1,10 @@
 import XCTest
 
 // mock-exception: EXT — 실 OIDC IdP 대신 oidcmock 과 로그인 왕복을 한다 (docs/e2e-mocking-policy.md 허용목록)
-/// Shared OIDC sign-in helper used by every UI test class.
-///
 /// Sign-in is heavy (`ASWebAuthenticationSession` round trip against the
 /// oidcmock server) and the resulting token lives in the simulator keychain
 /// which persists across tests. We perform the dance exactly once per UI test
 /// process via a static guard, then every test launches on top of that token.
-///
-/// Sign-in is considered complete once the real signed-in shell (the TabView's
-/// tab bar) is on screen.
 enum UITestAuth {
     private static var didSignIn = false
 
@@ -28,8 +23,6 @@ enum UITestAuth {
         }
         defer { testCase.removeUIInterruptionMonitor(monitor) }
 
-        // First attempt: launch, optionally run the OIDC dance, watch for
-        // the signed-in tab bar.
         if attemptSignIn(longWait: 120) {
             didSignIn = true
             return
@@ -52,9 +45,6 @@ enum UITestAuth {
         XCTFail("Sign-in did not complete after two attempts (OIDC dance never produced the tab bar)")
     }
 
-    /// One sign-in attempt: launch the app, if already signed in return true,
-    /// otherwise run the OIDC dance and wait `longWait` seconds for the
-    /// signed-in tab bar. Returns whether it was seen.
     private static func attemptSignIn(longWait: TimeInterval) -> Bool {
         let app = XCUIApplication()
         app.launch()

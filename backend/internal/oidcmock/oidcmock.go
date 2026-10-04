@@ -1,9 +1,7 @@
 // mock-exception: EXT — 실 OIDC IdP 대체 mock 서버. 허용 사유는 docs/e2e-mocking-policy.md 허용목록.
 
 // Package oidcmock provides an OpenID Connect mock server for tests and local
-// development. It implements the minimum surface of an OIDC IdP: discovery,
-// JWKS, authorization (with PKCE), and token endpoints. Tokens are signed with
-// an in-memory RSA key.
+// development.
 package oidcmock
 
 import (
@@ -33,9 +31,7 @@ const (
 	keyID           = "pocket-aide-mock-key"
 )
 
-// Server is an in-process OIDC mock. Build it with New, expose the handler with
-// Handler, and register issuer overrides via SetIssuer when running on a
-// pre-existing host like httptest.Server.
+// Server is an in-process OIDC mock.
 type Server struct {
 	mu       sync.Mutex
 	issuer   string
@@ -55,7 +51,7 @@ type authCode struct {
 	createdAt           time.Time
 }
 
-// Options tweak the mock's defaults. Zero value is fine for tests.
+// Options tweak the mock's defaults.
 type Options struct {
 	Issuer   string
 	ClientID string
@@ -345,7 +341,7 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// PEMPublicKey returns the PEM-encoded public key. Useful for debugging.
+// PEMPublicKey returns the PEM-encoded public key.
 func (s *Server) PEMPublicKey() (string, error) {
 	der, err := x509.MarshalPKIXPublicKey(&s.signKey.PublicKey)
 	if err != nil {

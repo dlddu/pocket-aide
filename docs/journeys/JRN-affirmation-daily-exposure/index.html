@@ -160,8 +160,6 @@
   .btn-primary { width: 100%; padding: 14px 0; border: 0; border-radius: 999px; background: var(--ink); color: var(--bg); font-size: 15px; font-weight: 700; }
   .empty .btn-primary { width: auto; padding: 12px 24px; margin-top: 20px; }
   .btn-text { width: 100%; margin-top: 4px; padding: 10px 0; border: 0; background: none; font-size: 13px; color: var(--stone-500); }
-  .toast { position: absolute; left: 20px; right: 20px; bottom: 100px; z-index: 40; padding: 12px 16px; border-radius: 16px;
-           background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.5; box-shadow: 0 8px 24px -8px rgba(46,37,26,.4); }
 
   /* 임시공간 (tokens §1.4, patterns §8 분류 흐름) */
   .area-scratch { background: var(--s-paper); color: var(--s-ink); }
@@ -248,10 +246,12 @@
   <div class="handle"></div>
   <h2>새 다짐</h2>
   <textarea class="field serif" rows="3" aria-label="다짐 문장">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</textarea>
-  <p class="hint">잊고 싶지 않은 문장을 적어두세요. 다음 화면에서 얼마나 자주 볼지 정합니다.</p>
+  <div class="area-label mt">노출 빈도</div>
+  <div class="pills" role="radiogroup" aria-label="노출 빈도"><input type="radio" class="pill-input" name="priority" id="priority-high" value="high"><label class="pill" for="priority-high"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><span>높음</span></label><input type="radio" class="pill-input" name="priority" id="priority-normal" value="normal" checked><label class="pill" for="priority-normal"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><span>보통</span></label><input type="radio" class="pill-input" name="priority" id="priority-low" value="low"><label class="pill" for="priority-low"><span class="dots h"><i class="dot"></i><i class="dot dim"></i><i class="dot dim"></i></span><span>가끔</span></label></div>
+  <p class="hint">위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 바꿀 수 있습니다.</p>
   <div class="actions">
-    <button type="button" class="btn-primary" data-go="STP-set-priority">추가</button>
-    <button type="button" class="btn-text" data-go="STP-add-affirmation/from-scratchpad" data-branch>임시공간 메모에서 가져오기</button>
+    <button type="button" class="btn-primary" data-go="STP-rotation-in-app">저장</button>
+    <button type="button" class="btn-text" data-go="STP-add-affirmation/cancelled" data-branch>취소</button>
   </div>
 </div>
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
@@ -262,7 +262,7 @@
 <main class="s-main">
   <div class="s-card"><div class="s-meta"><span><i class="dot"></i>숏컷 · 음성</span><time>어제 22:51</time></div>
     <p>결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p>
-    <div class="chips"><span class="chip">→ 개인</span><span class="chip">→ 루틴</span><button type="button" class="chip is-target" data-go="STP-set-priority">→ 다짐</button></div>
+    <div class="chips"><span class="chip">→ 개인</span><span class="chip">→ 루틴</span><button type="button" class="chip is-target" data-go="STP-add-affirmation/scratchpad-priority">→ 다짐</button></div>
   </div>
   <div class="s-card"><div class="s-meta"><span><i class="dot neutral"></i>탭 내 입력</span><time>19:30</time></div>
     <p>이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정</p></div>
@@ -277,21 +277,13 @@
 </nav>
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
 </div>
-    </div>
-    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-add-affirmation/from-scratchpad" data-branch>우회: 임시공간 메모를 다짐으로 이동</button></div>
-    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
-      <p class="jm-note">PRD-5 AC1 · 헤더 <b>+</b>로 입력 시트를 열어 문장을 적는다. 입력 시트는 편집 시트 패턴(patterns §9)의 텍스트 입력 사례.</p>
-    </details>
-  </section>
-
-  <section data-step="STP-set-priority" data-title="노출 빈도 정하기">
-    <div class="stage"><div class="default"><div class="frame area-affirm">
+      <div class="frame area-affirm" data-state="scratchpad-priority" hidden>
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
   <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 </header>
-<main class="a-main"><div class="a-card is-new"><div class="row"><span class="dots v"><i class="dot dim"></i><i class="dot dim"></i><i class="dot dim"></i></span><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></div><div class="card-meta accent"><i class="dot pulse"></i>방금 추가됨 · 우선순위 설정 중</div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div></main>
+<main class="a-main"><div class="a-card is-new"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></div><div class="card-meta accent"><i class="dot pulse"></i>임시공간에서 옮김 · 보통으로 저장됨</div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div></main>
 <nav class="tabbar" aria-label="탭바">
   <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
   <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
@@ -306,18 +298,37 @@
   <h2>우선순위 설정</h2>
   <div class="preview serif"><span class="quote serif">"</span>결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</div>
   <div class="area-label mt">노출 빈도</div>
-  <div class="pills" role="radiogroup" aria-label="노출 빈도"><input type="radio" class="pill-input" name="priority" id="priority-high" value="high"><label class="pill" for="priority-high"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><span>높음</span></label><input type="radio" class="pill-input" name="priority" id="priority-normal" value="normal" checked><label class="pill" for="priority-normal"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><span>보통</span></label><input type="radio" class="pill-input" name="priority" id="priority-low" value="low"><label class="pill" for="priority-low"><span class="dots h"><i class="dot"></i><i class="dot dim"></i><i class="dot dim"></i></span><span>가끔</span></label></div>
-  <p class="hint">위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.</p>
+  <div class="pills" role="radiogroup" aria-label="노출 빈도"><input type="radio" class="pill-input" name="sp-priority" id="sp-priority-high" value="high"><label class="pill" for="sp-priority-high"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><span>높음</span></label><input type="radio" class="pill-input" name="sp-priority" id="sp-priority-normal" value="normal" checked><label class="pill" for="sp-priority-normal"><span class="dots h"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><span>보통</span></label><input type="radio" class="pill-input" name="sp-priority" id="sp-priority-low" value="low"><label class="pill" for="sp-priority-low"><span class="dots h"><i class="dot"></i><i class="dot dim"></i><i class="dot dim"></i></span><span>가끔</span></label></div>
+  <p class="hint">위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 바꿀 수 있습니다.</p>
   <div class="actions">
     <button type="button" class="btn-primary" data-go="STP-rotation-in-app">저장</button>
-    <button type="button" class="btn-text" data-go="STP-rotation-in-app/default-priority" data-branch>취소</button>
+    <button type="button" class="btn-text" data-go="STP-rotation-in-app">취소</button>
   </div>
 </div>
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
-</div></div></div>
-    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-rotation-in-app/default-priority" data-branch>중도 이탈: 시트 취소</button></div>
+</div>
+      <div class="frame area-affirm" data-state="cancelled" data-end="이탈: 저장하지 않고 닫음 — 다짐이 추가되지 않고 여정 종료" hidden>
+<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
+<header class="a-header">
+  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
+  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
+<main class="a-main"><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">작게 시작해서 매일 1%씩. 1년에 37배.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><p class="serif">불필요한 회의는 거절해도 괜찮다. 팀의 시간은 내 시간이기도 하다.</p></div></div></main>
+<nav class="tabbar" aria-label="탭바">
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
+  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
+  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
+</nav>
+
+<div class="home-bar-wrap"><i class="home-bar"></i></div>
+</div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-add-affirmation/from-scratchpad" data-branch>우회: 임시공간 메모를 다짐으로 이동</button><button type="button" data-go="STP-add-affirmation/cancelled" data-branch>중도 이탈: 시트 취소</button></div>
     <details class="jm-meta jm-note-wrap"><summary>메모</summary>
-      <p class="jm-note">PRD-5 AC2 · 추가 직후 시트 자동 노출, 3단계 단일 선택. 원본 화면: mockups/screen-affirmations-priority-edit.html</p>
+      <p class="jm-note">PRD-5 AC1 · AC2 · 헤더 <b>+</b>로 추가 시트를 열어 문장을 쓰고 노출 빈도를 골라 저장한다(편집 시트 패턴 §9). 취소하면 아무것도 저장되지 않는다. 원본 화면 mockups/screen-affirmations-priority-edit.html은 추가 후 별도 우선순위 시트로 그렸지만, 앱은 한 시트다. 임시공간에서 옮기는 경로만 이동 즉시 보통으로 저장된 뒤 우선순위 시트가 열린다(PR #64 구현 기준, 머지 전).</p>
     </details>
   </section>
 
@@ -344,29 +355,6 @@
   <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
 </nav>
 
-<button type="button" class="home-bar-btn" data-go="STP-widget-glance" aria-label="홈 화면으로 스와이프"><i class="home-bar"></i><span>홈 화면으로 스와이프</span></button>
-</div></div>
-      <div data-state="default-priority" hidden><div class="frame area-affirm">
-<div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
-<header class="a-header">
-  <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
-  <button type="button" class="icon-btn" aria-label="다짐 추가"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-</header>
-<main class="a-main"><section class="hero"><span class="quote serif">"</span>
-  <div class="hero-label"><i class="dot pulse"></i>오늘 회전 · 3/15</div>
-  <p class="serif">작게 시작해서 매일 1%씩. 1년에 37배.</p>
-  <div class="hero-meta">우선순위 <b>높음</b> · 13회 노출</div></section>
-<div class="list-head"><h2>전체 15개</h2><span class="seg"><b>우선순위 순</b><span>최신순</span></span></div>
-<div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">완벽보다 완료. 일단 보내고 나중에 다듬자.</p></div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot dim"></i></span><p class="serif">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</p></div><div class="card-meta">방금 추가 · 보통</div></div><div class="a-card"><div class="row"><span class="dots v"><i class="dot"></i><i class="dot"></i><i class="dot"></i></span><p class="serif">속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.</p></div></div></main>
-<nav class="tabbar" aria-label="탭바">
-  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span>
-  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>임시공간</span>
-  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>개인</span>
-  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>회사</span>
-  <span class="tab"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>루틴</span>
-  <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
-</nav>
-<div class="toast" role="status">우선순위를 정하지 않아 <b>보통</b>으로 저장했어요 · 카드를 길게 눌러 바꿀 수 있어요</div>
 <button type="button" class="home-bar-btn" data-go="STP-widget-glance" aria-label="홈 화면으로 스와이프"><i class="home-bar"></i><span>홈 화면으로 스와이프</span></button>
 </div></div>
       <div data-state="empty" hidden><div class="frame area-affirm">

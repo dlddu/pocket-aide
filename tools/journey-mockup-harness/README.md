@@ -9,7 +9,7 @@ npm ci --prefix tools/journey-mockup-harness
 node tools/journey-mockup-harness/check.mjs          # 위반 0이면 exit 0, 아니면 위반 목록과 exit 1
 ```
 
-CI: `.github/workflows/journey-mockup.yml`이 모든 PR과 main push에서 돈다.
+CI: `ci.yml`이 모든 PR과 main push에서 `.github/workflows/journey-mockup.yml`을 호출하고, 결과는 필수 체크 `ci-success`에 포함된다.
 
 ## 검사 항목
 

@@ -23,6 +23,9 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
+	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
+	"github.com/dlddu/pocket-aide/backend/internal/routines"
+	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
 
@@ -62,7 +65,10 @@ func main() {
 	deviceStore := devicetokens.New(conn)
 	excludedStore := excludedrepos.New(conn)
 	historyStore := notificationhistory.New(conn)
+	settingsStore := notificationsettings.New(conn)
 	todoStore := todos.New(conn)
+	scratchStore := scratchpad.New(conn)
+	routineStore := routines.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -77,10 +83,24 @@ func main() {
 		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
 		p.Get("/api/notification-history", handlers.ListNotificationHistory(historyStore))
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
+		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
+		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))
 		p.Get("/api/todos/{area}", handlers.ListTodos(todoStore))
 		p.Post("/api/todos/{area}", handlers.CreateTodo(todoStore))
 		p.Patch("/api/todos/{area}/{id}", handlers.UpdateTodo(todoStore))
 		p.Delete("/api/todos/{area}/{id}", handlers.DeleteTodo(todoStore))
+		p.Get("/api/scratchpad", handlers.ListScratchpad(scratchStore))
+		p.Post("/api/scratchpad", handlers.CreateScratchpadItem(scratchStore))
+		p.Delete("/api/scratchpad/{id}", handlers.DeleteScratchpadItem(scratchStore))
+		p.Post("/api/scratchpad/{id}/move", handlers.MoveScratchpadItem(scratchStore, todoStore, affStore, routineStore))
+		p.Get("/api/routines", handlers.ListRoutines(routineStore))
+		p.Post("/api/routines", handlers.CreateRoutine(routineStore))
+		p.Delete("/api/routines/{id}", handlers.DeleteRoutine(routineStore))
+		p.Post("/api/routines/{id}/steps", handlers.AddRoutineStep(routineStore))
+		p.Delete("/api/routines/{id}/steps/{stepID}", handlers.DeleteRoutineStep(routineStore))
+		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
+		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
+		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
 	})
 
 	srv := &http.Server{
@@ -158,6 +178,14 @@ func main() {
 			// the user will still see the unacked card on next app open.
 			title, body := formatPushText(evt)
 			for i, uid := range userIDs {
+				settings, err := settingsStore.Get(ctx, uid)
+				if err != nil {
+					log.Printf("apns: notification settings for user=%d: %v", uid, err)
+					continue
+				}
+				if !settings.AllowsPush(evt.Conclusion) {
+					continue
+				}
 				tokens, err := deviceStore.ListByUserID(ctx, uid)
 				if err != nil {
 					log.Printf("apns: list tokens for user=%d: %v", uid, err)

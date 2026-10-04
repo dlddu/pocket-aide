@@ -10,8 +10,7 @@ public enum DesignTokens {
         case affirmations
         case voice
         case system
-        /// §1.11 PR 모니터 영역 — cool indigo. Used by the GitHub PR-monitor
-        /// 7th-tab screen (PRD-10).
+        /// §1.11 PR 모니터 영역 — cool indigo.
         case prMonitor
     }
 
@@ -64,8 +63,6 @@ public enum DesignTokens {
             SwiftUI.Color(asset(area, "destructive"), bundle: .module)
         }
 
-        // §1.8 — widget surface/rule live outside the area system.
-        // Data-source accent inside the widget still uses `accent(area)`.
         public static func widgetSurface() -> SwiftUI.Color {
             SwiftUI.Color("widget/surface", bundle: .module)
         }

@@ -8,9 +8,9 @@ struct PocketAideWidgetEntryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                PlaceholderSection(area: .personal, label: "날씨")
+                WeatherSection(state: entry.weather)
                 ruleDivider(vertical: true)
-                PlaceholderSection(area: .work, label: "다음 일정")
+                CalendarSection(state: entry.calendar, now: entry.date)
             }
             .padding(.bottom, DesignTokens.Spacing.md)
 
@@ -24,7 +24,7 @@ struct PocketAideWidgetEntryView: View {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
                 PlaceholderSection(area: .aiChat, label: "메일")
                 ruleDivider(vertical: true)
-                PlaceholderSection(area: .scratchpad, label: "알림")
+                NotificationSection(state: entry.notifications)
             }
             .padding(.top, DesignTokens.Spacing.md)
         }

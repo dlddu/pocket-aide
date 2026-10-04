@@ -39,8 +39,6 @@ final class RotationSelectorTests: XCTestCase {
 
     func testWeightedDistribution() {
         let selector = RotationSelector()
-        // One item per tier, then a 3:2:1 weighted draw should hit them
-        // roughly 50% / 33% / 17% over many trials.
         let pool = [aff(1, .high), aff(2, .normal), aff(3, .low)]
         var rng = SeededRNG(seed: 12345)
         var counts: [Int64: Int] = [1: 0, 2: 0, 3: 0]
@@ -68,8 +66,6 @@ final class RotationSelectorTests: XCTestCase {
     }
 
     func testZeroWeightItemsAreSkipped() {
-        // Override weights so .low has zero chance. Even with many low items,
-        // a high item must always win.
         let selector = RotationSelector(weights: [.high: 5, .normal: 0, .low: 0])
         let pool = [aff(1, .high), aff(2, .normal), aff(3, .low), aff(4, .normal)]
         var rng = SeededRNG(seed: 7)

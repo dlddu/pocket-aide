@@ -2,10 +2,6 @@ import Foundation
 
 /// Pure function that picks a single affirmation from a pool, weighted by
 /// priority (high : normal : low = 3 : 2 : 1 by default).
-///
-/// Pure so its output is deterministic given the same seeded
-/// `RandomNumberGenerator`. The view model injects a generator at runtime so
-/// production gets `SystemRandomNumberGenerator` and tests get a seeded one.
 public struct RotationSelector: Sendable {
     public let weights: [AffirmationPriority: Int]
 

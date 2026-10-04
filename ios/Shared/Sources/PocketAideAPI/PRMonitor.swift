@@ -1,9 +1,8 @@
 import Foundation
 
 /// One row of `notification_history` belonging to the authenticated user
-/// (PRD-10 AC11). Optional fields are null when the underlying workflow_run
-/// did not have a PR linked (e.g. push to main) — the iOS card uses the
-/// fallback `repo — conclusion · workflow_name` text in that case.
+/// (PRD-10 AC11). The PR fields are nil when the workflow_run had no linked
+/// PR (e.g. a push to main).
 public struct NotificationHistoryItem: Codable, Identifiable, Equatable, Sendable, Hashable {
     public let id: Int64
     public let repoFullName: String
@@ -84,15 +83,9 @@ public struct ExcludedRepo: Codable, Identifiable, Equatable, Sendable, Hashable
     }
 }
 
-/// `{}` body — backend ignores the body for the ack endpoint but post()
-/// requires *something* Encodable.
 struct EmptyPayload: Encodable {}
 
-/// Pure helper exposed to both the app delegate (push tap → deep link) and
-/// to unit tests. Parses the `event_id` field from a push payload (which
-/// arrives as a heterogeneous `[AnyHashable: Any]`) and synthesizes the
-/// `pocketaide://pr-monitor?eventId=<id>` URL the app uses to route the
-/// notification into the PR monitor tab.
+/// Turns an APNs push payload into the PR monitor deep link.
 public enum PRMonitorPushPayload {
     public static func deepLinkURL(fromUserInfo info: [AnyHashable: Any]) -> URL? {
         guard let id = eventID(from: info) else { return nil }
@@ -165,5 +158,64 @@ public extension APIClient {
 
     func removeExcludedRepo(id: Int64) async throws {
         try await delete("/api/excluded-repos/\(id)", authenticated: true)
+    }
+}
+
+public struct WidgetNotificationsSummary: Equatable, Sendable {
+    public let latest: NotificationHistoryItem?
+    public let moreCount: Int
+
+    public init(latest: NotificationHistoryItem?, moreCount: Int) {
+        self.latest = latest
+        self.moreCount = moreCount
+    }
+}
+
+public enum WidgetNotifications {
+    public static let startConclusions: Set<String> = ["queued", "requested", "in_progress", "pending", "waiting"]
+    public static let failureConclusions: Set<String> = ["failure", "timed_out", "startup_failure"]
+
+    public static func wasPushed(_ item: NotificationHistoryItem, settings: NotificationSettings) -> Bool {
+        guard !startConclusions.contains(item.conclusion), settings.enabled else { return false }
+        switch settings.outcomes {
+        case .both: return true
+        case .success: return item.conclusion == "success"
+        case .failure: return failureConclusions.contains(item.conclusion)
+        }
+    }
+
+    public static func summarize(_ items: [NotificationHistoryItem], settings: NotificationSettings) -> WidgetNotificationsSummary {
+        let pending = items
+            .filter { $0.acknowledgedAt == nil && wasPushed($0, settings: settings) }
+            .sorted { lhs, rhs in
+                if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
+                return lhs.id > rhs.id
+            }
+        return WidgetNotificationsSummary(latest: pending.first, moreCount: max(0, pending.count - 1))
+    }
+}
+
+public enum PushText {
+    public static func title(for item: NotificationHistoryItem) -> String {
+        if let number = item.prNumber, number > 0 {
+            return "\(verdict(item.conclusion)) — \(item.repoFullName) #\(number)"
+        }
+        return "\(item.repoFullName) — \(item.conclusion)"
+    }
+
+    public static func body(for item: NotificationHistoryItem) -> String {
+        if let number = item.prNumber, number > 0, let title = item.prTitle, !title.isEmpty {
+            return title
+        }
+        return "\(item.workflowName) on \(item.headBranch)"
+    }
+
+    private static func verdict(_ conclusion: String) -> String {
+        switch conclusion {
+        case "success": return "CI 통과"
+        case "failure": return "CI 실패"
+        default:
+            return WidgetNotifications.startConclusions.contains(conclusion) ? "CI 시작" : "CI \(conclusion)"
+        }
     }
 }

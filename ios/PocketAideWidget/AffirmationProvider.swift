@@ -6,9 +6,8 @@ import WidgetKit
 
 private let logger = Logger(subsystem: "com.dlddu.PocketAide.Widget", category: "AffirmationProvider")
 
-/// Drives the Large widget timeline. Builds 24 entries × 30-minute strides
-/// using `SeededRNG(seed: entry.date.timeIntervalSince1970)` so each entry's
-/// pick is deterministic and survives across snapshot/timeline calls.
+/// Each entry's pick is seeded by its date (`SeededRNG`) so it is deterministic
+/// and survives across snapshot/timeline calls.
 struct AffirmationProvider: TimelineProvider {
     typealias Entry = PocketAideWidgetEntry
 
@@ -20,7 +19,10 @@ struct AffirmationProvider: TimelineProvider {
     func placeholder(in _: Context) -> PocketAideWidgetEntry {
         PocketAideWidgetEntry(
             date: Date(),
-            state: .loaded(Self.previewAffirmation)
+            state: .loaded(Self.previewAffirmation),
+            calendar: .loaded(Self.previewEvents),
+            weather: .loaded(Self.previewWeather, place: "서울"),
+            notifications: .loaded(WidgetNotificationsSummary(latest: Self.previewNotification, moreCount: 1))
         )
     }
 
@@ -30,53 +32,75 @@ struct AffirmationProvider: TimelineProvider {
             return
         }
         Task {
-            let state = await fetchState(at: Date())
-            completion(PocketAideWidgetEntry(date: Date(), state: state))
+            let now = Date()
+            let client = makeClient()
+            let state = await fetchState(client, at: now)
+            let notifications = await fetchNotifications(client)
+            let calendar = CalendarSnapshot.load(from: now, through: now).state(at: now)
+            let weather = await fetchWeather()
+            completion(PocketAideWidgetEntry(
+                date: now,
+                state: state,
+                calendar: calendar,
+                weather: weather,
+                notifications: notifications
+            ))
         }
     }
 
     func getTimeline(in _: Context, completion: @escaping (Timeline<PocketAideWidgetEntry>) -> Void) {
         Task {
             let now = Date()
-            let items = await fetchAffirmations()
+            let client = makeClient()
+            let items = await fetchAffirmations(client)
+            let notifications = await fetchNotifications(client)
+            let weather = await fetchWeather()
+            let lastEntryDate = now.addingTimeInterval(Double(Self.entryCount - 1) * Self.refreshInterval)
+            let snapshot = CalendarSnapshot.load(from: now, through: lastEntryDate)
+            let single = { (state: WidgetAffirmationState) in
+                [PocketAideWidgetEntry(
+                    date: now,
+                    state: state,
+                    calendar: snapshot.state(at: now),
+                    weather: weather,
+                    notifications: notifications
+                )]
+            }
+            let nextReload = now.addingTimeInterval(Self.refreshInterval)
             switch items {
             case .success(let pool):
                 if pool.isEmpty {
-                    let entry = PocketAideWidgetEntry(date: now, state: .empty)
-                    completion(Timeline(
-                        entries: [entry],
-                        policy: .after(now.addingTimeInterval(Self.refreshInterval))
-                    ))
+                    completion(Timeline(entries: single(.empty), policy: .after(nextReload)))
                     return
                 }
                 let entries = (0..<Self.entryCount).map { offset -> PocketAideWidgetEntry in
                     let date = now.addingTimeInterval(Double(offset) * Self.refreshInterval)
                     var rng = SeededRNG(seed: UInt64(date.timeIntervalSince1970))
                     let pick = selector.pick(from: pool, using: &rng) ?? pool[0]
-                    return PocketAideWidgetEntry(date: date, state: .loaded(pick))
+                    return PocketAideWidgetEntry(
+                        date: date,
+                        state: .loaded(pick),
+                        calendar: snapshot.state(at: date),
+                        weather: weather,
+                        notifications: notifications
+                    )
                 }
-                let last = entries.last?.date ?? now
-                completion(Timeline(entries: entries, policy: .after(last)))
+                completion(Timeline(entries: entries, policy: .after(nextReload)))
             case .needsLogin:
-                let entry = PocketAideWidgetEntry(date: now, state: .needsLogin)
-                completion(Timeline(
-                    entries: [entry],
-                    policy: .after(now.addingTimeInterval(Self.refreshInterval))
-                ))
+                completion(Timeline(entries: single(.needsLogin), policy: .after(nextReload)))
             case .error:
-                let entry = PocketAideWidgetEntry(date: now, state: .error)
                 // Back off on errors so a flapping backend doesn't burn the
                 // system's per-widget refresh budget.
                 completion(Timeline(
-                    entries: [entry],
+                    entries: single(.error),
                     policy: .after(now.addingTimeInterval(60 * 60))
                 ))
             }
         }
     }
 
-    private func fetchState(at date: Date) async -> WidgetAffirmationState {
-        let result = await fetchAffirmations()
+    private func fetchState(_ client: ClientResult, at date: Date) async -> WidgetAffirmationState {
+        let result = await fetchAffirmations(client)
         switch result {
         case .success(let pool):
             guard !pool.isEmpty else { return .empty }
@@ -96,7 +120,13 @@ struct AffirmationProvider: TimelineProvider {
         case error
     }
 
-    private func fetchAffirmations() async -> FetchResult {
+    private enum ClientResult {
+        case ready(APIClient)
+        case needsLogin
+        case error
+    }
+
+    private func makeClient() -> ClientResult {
         let accessGroup = Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String
         let resolvedGroup = accessGroup.flatMap { $0.isEmpty ? nil : $0 }
         let baseURL = Bundle.main.object(forInfoDictionaryKey: "BackendBaseURL") as? String ?? "<nil>"
@@ -114,14 +144,22 @@ struct AffirmationProvider: TimelineProvider {
             return .error
         }
 
-        let api: APIClient
         do {
-            api = try APIClient.fromBundle(.main, tokenStore: store)
+            let api = try APIClient.fromBundle(.main, tokenStore: store)
+            return .ready(api)
         } catch {
             logger.error("APIClient.fromBundle failed: \(String(describing: error), privacy: .public)")
             return .error
         }
+    }
 
+    private func fetchAffirmations(_ client: ClientResult) async -> FetchResult {
+        let api: APIClient
+        switch client {
+        case .ready(let ready): api = ready
+        case .needsLogin: return .needsLogin
+        case .error: return .error
+        }
         do {
             let items = try await api.listAffirmations()
             logger.info("fetched \(items.count, privacy: .public) affirmations")
@@ -135,11 +173,77 @@ struct AffirmationProvider: TimelineProvider {
         }
     }
 
+    private func fetchNotifications(_ client: ClientResult) async -> WidgetNotificationState {
+        let api: APIClient
+        switch client {
+        case .ready(let ready): api = ready
+        case .needsLogin: return .needsLogin
+        case .error: return .error
+        }
+        do {
+            let items = try await api.listNotificationHistory()
+            let settings = try await api.notificationSettings()
+            return .loaded(WidgetNotifications.summarize(items, settings: settings))
+        } catch APIError.badStatus(401, _) {
+            logger.info("listNotificationHistory → 401, needsLogin")
+            return .needsLogin
+        } catch {
+            logger.error("listNotificationHistory failed: \(String(describing: error), privacy: .public)")
+            return .error
+        }
+    }
+
+    private func fetchWeather() async -> WidgetWeatherState {
+        guard let location = WeatherLocationStore().load() else { return .needsLocation }
+        do {
+            return .loaded(try await WeatherClient.fetch(location), place: location.placeName)
+        } catch {
+            logger.error("weather fetch failed: \(String(describing: error), privacy: .public)")
+            return .error
+        }
+    }
+
+    private static let previewWeather = WeatherSummary(
+        temperature: 18,
+        condition: "비",
+        high: 22,
+        low: 14,
+        precipitationChance: 60
+    )
+
+    private static let previewNotification = NotificationHistoryItem(
+        id: 0,
+        repoFullName: "dlddu/pocket-aide",
+        prNumber: 7,
+        prTitle: "feat(widget): 알림 모음",
+        prURL: nil,
+        commitURL: nil,
+        runURL: nil,
+        workflowName: "CI",
+        headBranch: "main",
+        headSHA: "",
+        conclusion: "success",
+        acknowledgedAt: nil,
+        createdAt: 0
+    )
+
     private static let previewAffirmation = Affirmation(
         id: 0,
         text: "작게 시작해서 매일 1%씩. 1년에 37배.",
         priority: .high,
         createdAt: 0,
         updatedAt: 0
+    )
+
+    private static let previewEvents = UpcomingEventsSummary(
+        events: [
+            UpcomingEvent(
+                title: "분기 리뷰 · 회의실 4",
+                start: Date().addingTimeInterval(60 * 60),
+                end: Date().addingTimeInterval(150 * 60),
+                isAllDay: false
+            ),
+        ],
+        moreCount: 2
     )
 }

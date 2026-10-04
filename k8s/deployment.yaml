@@ -18,8 +18,11 @@ spec:
     spec:
       containers:
         - name: pocket-aide
-          image: ghcr.io/dlddu/pocket-aide:latest
-          imagePullPolicy: Always
+          # The tag on main is a placeholder: CI's `pin` job rewrites it on the `deploy`
+          # branch (docs/runbook-deploy-and-preview.md). Keep no `images:` transformer in
+          # kustomization.yaml — it would override the pinned tag.
+          image: ghcr.io/dlddu/pocket-aide:dd069899e13d7e88434cc0deabf7ba19c3142f31
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080

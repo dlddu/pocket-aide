@@ -10,10 +10,12 @@ struct RootView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
+    @StateObject private var scratchpad: ScratchpadViewModel
 
     init(selectedTab: Binding<RootTab>, highlightedEventID: Binding<Int64?> = .constant(nil)) {
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
+        _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
     }
 
     var body: some View {
@@ -59,11 +61,6 @@ struct RootView: View {
     }
 
     private var activeTint: Color {
-        // SwiftUI applies `.tint` globally to the TabView; we still want each
-        // tab's selected state to match its area accent. Picking the active
-        // tab's accent at render time keeps the visual identity consistent
-        // for the PR-monitor and affirmations tabs (the two with the loudest
-        // custom palettes).
         switch selectedTab {
         case .prMonitor: return DesignTokens.Color.accent(.prMonitor)
         case .affirmations: return DesignTokens.Color.accent(.affirmations)
@@ -76,11 +73,8 @@ struct RootView: View {
     }
 
     private var signedInTabs: some View {
-        // 탭 순서: 구현된 탭(다짐·PR 모니터)을 앞에 두고 placeholder를 뒤로.
-        // iPhone compact는 첫 5개를 직접 노출하고 6번째부터 More로 보내므로,
-        // PR 모니터가 직접 탭으로 노출되어 deep link selection이 즉시 작동한다.
-        // iOS 18+ Tab(value:) API — selection이 customization/More 안 자식까지
-        // 전파되어 deep link로 PR 모니터 탭을 외부에서 활성화할 수 있다.
+        // PR 모니터 탭은 More 로 밀리지 않는 앞자리에 둔다 — 푸시 탭 deep link 가
+        // selection 을 이 탭으로 바꿔 바로 연다.
         TabView(selection: $selectedTab) {
             Tab("다짐", systemImage: "heart.fill", value: RootTab.affirmations) {
                 AffirmationsView()
@@ -92,8 +86,9 @@ struct RootView: View {
                 ChatTab()
             }
             Tab("임시공간", systemImage: "doc.text", value: RootTab.scratchpad) {
-                ScratchpadTab()
+                ScratchpadTab(viewModel: scratchpad)
             }
+            .badge(scratchpad.unclassifiedCount)
             Tab("개인", systemImage: "person", value: RootTab.personal) {
                 PersonalTab()
             }
@@ -105,5 +100,11 @@ struct RootView: View {
             }
         }
         .tint(activeTint)
+        .task {
+            if scratchpad.api == nil, let api = auth.api {
+                scratchpad.replaceAPI(api)
+            }
+            await scratchpad.load()
+        }
     }
 }

@@ -1,9 +1,20 @@
 name: Backend Docker build + push
 
-# Builds the backend container image and pushes it to GHCR. Tags both
-# `:latest` and `:${{ github.sha }}` so deployments can pin to an exact
-# commit. Reusable workflow — caller decides when to invoke (gated on
-# backend code changes + green tests in ci.yml).
+# Builds the backend container image and pushes it to GHCR under the commit SHA
+# only. There is no `:latest` any more: PR builds used to overwrite it, and the
+# production Deployment pulled `:latest` with imagePullPolicy Always, so any pod
+# restart could bring up unmerged PR code. Tags are immutable now.
+#
+#   pull_request  → tag = PR head SHA. The preview environment for a PR labelled
+#                   `deploy/preview` (flux-cd-apps apps/pocket-aide-preview)
+#                   retags k8s/deployment.yaml to exactly this tag.
+#   push to main  → tag = main commit SHA, then the `pin` job publishes
+#                   「main@SHA + one commit pinning k8s/deployment.yaml to it」
+#                   to the `deploy` branch, which is what production Flux tracks.
+#
+# Reusable workflow — ci.yml (tests first) and preview.yml (label attached)
+# decide when to invoke it. Called workflows see the caller's github context,
+# so the event/ref conditions below behave the same from either caller.
 
 on:
   workflow_call:
@@ -17,7 +28,12 @@ jobs:
     name: Build & push image
     runs-on: ubuntu-24.04-arm
     steps:
+      # On pull_request the default ref is refs/pull/N/merge (a temporary merge
+      # commit), whose content would not match the head-SHA tag. Build exactly
+      # the commit the tag names.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: docker/setup-buildx-action@v3
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -32,8 +48,85 @@ jobs:
           file: ./Dockerfile
           platforms: linux/arm64
           push: true
-          tags: |
-            ghcr.io/dlddu/pocket-aide:latest
-            ghcr.io/dlddu/pocket-aide:${{ github.sha }}
+          tags: ghcr.io/dlddu/pocket-aide:${{ github.event.pull_request.head.sha || github.sha }}
+          labels: |
+            org.opencontainers.image.title=pocket-aide
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.event.pull_request.head.sha || github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Publish the single-platform image as-is. Provenance would wrap it in
+          # a manifest list for no benefit on a single arm64 target.
+          provenance: false
+
+  pin:
+    name: Pin deployment image (main only)
+    needs: [push]
+    # PR builds only publish <head sha> for the preview; they never touch the
+    # production manifests.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 5
+    permissions:
+      # Only this job pushes (to `deploy`). The workflow default stays read.
+      contents: write
+    steps:
+      # Use the commit that was just built as deploy's parent, not main's HEAD.
+      # Full history feeds the 「has a newer commit already been published」
+      # ancestry check below.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Pin k8s/deployment.yaml image to ${{ github.sha }}
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          f=k8s/deployment.yaml
+          sed -i -E "s#(ghcr\.io/dlddu/pocket-aide):[A-Za-z0-9._-]+#\1:${SHA}#g" "$f"
+
+          # Make sure sed did not silently miss. Rather than counting, require
+          # that no unpinned reference is left — a second reference is caught too.
+          leftover=$(grep -oE "ghcr\.io/dlddu/pocket-aide:[A-Za-z0-9._-]+" "$f" \
+                       | grep -v ":${SHA}\$" || true)
+          if [ -n "$leftover" ]; then
+            echo "::error::$f: unpinned image references remain:"
+            echo "$leftover"
+            exit 1
+          fi
+          # At least one reference must actually be pinned (guards a rewritten file).
+          n=$(grep -cE "ghcr\.io/dlddu/pocket-aide:${SHA}" "$f" || true)
+          [ "$n" -ge 1 ] || { echo "::error::$f: no pinned reference found"; exit 1; }
+
+          # ── publish to the deploy branch ────────────────────────────────────
+          # main is protected by a ruleset (required check ci-success), so the
+          # bot cannot commit to it, and we do not keep a long-lived credential
+          # for that. Instead 「main@SHA + one pin commit」 is force-pushed to
+          # `deploy`, and Flux tracks `deploy`. A GITHUB_TOKEN push triggers no
+          # workflows and nothing listens on `deploy` pushes, so no recursion.
+          git fetch --no-tags origin +refs/heads/deploy:refs/remotes/origin/deploy 2>/dev/null || true
+          old=$(git rev-parse -q --verify refs/remotes/origin/deploy || true)
+
+          # A slow, older run must not overwrite a newer deployment. If deploy's
+          # Source-Commit trailer is a descendant of this SHA, it is already ahead.
+          # (Rollback = a revert PR on main; its merge comes through here again.)
+          if [ -n "$old" ]; then
+            cur=$(git log -1 --format='%(trailers:key=Source-Commit,valueonly)' "$old" | tr -d '[:space:]')
+            if [ -n "$cur" ] && [ "$cur" != "$SHA" ] && git merge-base --is-ancestor "$SHA" "$cur" 2>/dev/null; then
+              echo "deploy already points at a newer main commit (${cur}) — skipping."
+              exit 0
+            fi
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -a --allow-empty \
+            -m "deploy: pin pocket-aide image to ${SHA}" \
+            -m "Source-Commit: ${SHA}"
+
+          # The lease fails the push if someone moved deploy after we read it
+          # (an empty old value means the branch must not exist yet).
+          git push --force-with-lease="refs/heads/deploy:${old}" origin HEAD:refs/heads/deploy

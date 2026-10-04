@@ -22,32 +22,31 @@ open docs/mockups/index.html
 |---|---|---|---|
 | `screen-chat-text.html` | AI 채팅 — 텍스트 | PRD-1 | AC1 텍스트 송수신, AC4 대화 세션 관리 |
 | `screen-chat-voice.html` | AI 채팅 — 음성 | PRD-1 | AC2 음성 모드 진입, AC3 한·영 혼용 인식, AC5 인터럽트 |
-| `screen-scratchpad.html` | 임시공간 | PRD-4 | AC1 자동 수집, AC3 메타데이터, AC4 분류 이동, AC5 미분류 카운트 |
-| `screen-todo-personal.html` | 개인 — 할 일 | PRD-3 | AC3 영역별 시각 분리 (terracotta) |
+| `screen-scratchpad.html` | 임시공간 (목록·빈 상태) | PRD-4 | AC1 자동 수집, AC3 메타데이터, AC4 분류 이동, AC5 미분류 카운트 |
+| `screen-todo-personal.html` | 개인 — 할 일 (목록·빈 상태) | PRD-3 | AC3 영역별 시각 분리 (terracotta) |
 | `screen-todo-work.html` | 회사 — 할 일 | PRD-3 | AC1 영역 분리(회사만 검색), AC3 시각 분리 (slate), AC4 영역 간 이동 불가 |
-| `screen-routines.html` | 루틴 | PRD-2 | AC1~4 단계·주기·진행률·30일 히트맵 |
-| `screen-affirmations.html` | 다짐 | PRD-5 | AC2 우선순위, AC3 회전 노출 |
-| `screen-affirmations-priority-edit.html` | 다짐 — 우선순위 설정 시트 | PRD-5 | AC2 우선순위 (편집 시트 패턴) |
-| `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑 |
+| `screen-routines.html` | 루틴 (목록·빈 상태·루틴 추가·단계 추가) | PRD-2 | AC1~4 단계·주기·진행률·30일 히트맵 |
+| `screen-affirmations.html` | 다짐 (목록·빈 상태) | PRD-5 | AC2 우선순위, AC3 회전 노출 |
+| `screen-affirmations-priority-edit.html` | 다짐 — 추가·우선순위 시트 (생성·편집) | PRD-5 | AC1 추가, AC2 우선순위 (편집 시트 패턴) |
+| `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
 
 ### 시스템 통합
 
 | 파일 | 화면 | PRD | 핵심 AC |
 |---|---|---|---|
 | `screen-shortcut-capture.html` | Shortcut 즉시 캡처 | PRD-6 | AC1 숏컷 호출, AC2 즉시 녹음, AC3 되묻기 없음, AC4 임시공간 자동 저장 |
-| `screen-widget.html` | 홈 화면 위젯 | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
+| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·중간 크기·다짐·일정·알림 슬라이스 상태) | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
 | `screen-keyboard-extension.html` | LLM 키보드 확장 | PRD-9 (+PRD-7 AC6) | AC2~6, AC9, AC10, AC12 |
 | `screen-pr-monitor-push.html` | PR 모니터 — CI 완료 푸시 | PRD-10 | AC6 워크플로우 완료 푸시, AC7 진입점 |
 
 ### 기타
 
 - `index.html` — 라이트 갤러리 진입 페이지
-- `mockups-dark.html` — 다크 변형 통합 갤러리 (PR 모니터 2화면 미반영 — `_index.md` 참조)
+- `mockups-dark.html` — 다크 변형 통합 갤러리 (13화면)
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
 - `_token-map.md` — `tokens.md` ↔ 구현 토큰(`Colors.xcassets`·`Tokens.swift`) 값 대응표 (기계 판독용, 검산 포함)
 - `_deviations.md` — 허용목록: 사유가 문서화된 목업 이탈
-- `_template.md` — 디자인 토큰 레퍼런스 (영역별 색·폰트). 정본은 `docs/design-system/tokens.md`
 - `_copy-map.md` — 목업 텍스트 ↔ 구현 문자열 리터럴 양방향 카피 대응표 (기계 판독용, 검산 포함)
 
 ## 디자인 토큰
