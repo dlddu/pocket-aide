@@ -35,11 +35,11 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 47행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 42행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 113 |
+| A | 일치 | 118 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
@@ -47,26 +47,30 @@ last_updated: 2026-10-04
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 163 |
+| B | 일치 | 168 |
 | B | 외부 | 24 |
 | B | 예시 데이터 | 98 |
 | B | 목업 전용 | 97 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 47 |
+| B | 구현 대기 | 42 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 149행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 154행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `오늘 회전` | 구현 대기 | 목업 히어로 라벨은 「오늘 회전 · 1/14」 — 회전 위치(n/전체)가 없다(표 B 같은 행) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(hero.priority.displayName)` | 일치 | 히어로 메타 「우선순위 높음」. 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `\"` | 일치 | 히어로 카드 장식 인용부호 — 카드 좌상단 serif 120 글리프(U+0022, 목업과 같은 문자) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨 — 목록 프레임 히어로 카드 하단 우측(자동 회전 AC3 과 별개인 수동 회전) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 목록의 스와이프된 행 패널 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 노출` | 일치 | 우선순위 점 범례 — 목록 아래 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `보통` | 일치 | 범례 항목 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `가끔` | 일치 | 범례 항목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `우선순위 설정` | 일치 | 편집 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `\"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 serif 64 글리프(U+0022, 목업과 같은 문자) |
@@ -163,6 +167,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Routines/RoutinesView.swift` | `checkmark.circle.fill` | 비표시 | 체크된 단계 SF Symbol 이름(삼항이라 제외 규칙 밖) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `circle` | 비표시 | 미체크 단계 SF Symbol 이름(위와 같음) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `임시 공간` | 일치 | `ScreenHeader` 제목 — 목업은 같은 문구를 미분류 배지 옆 작은 라벨로, 「분류되지 않은 메모」 를 큰 제목으로 그린다(위계 차이는 기준 4) |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(viewModel.unclassifiedCount)` | 데이터 | 미분류 개수 배지 「12」 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 — 목업 큰 제목 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 추가 버튼(구현은 목록 위 전폭 버튼 — 자리는 기준 4) |
@@ -220,7 +225,7 @@ last_updated: 2026-10-04
 | `screen-affirmations` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-affirmations` | `다짐` | 일치 | 헤더 영역 라벨(`AreaLabel` 기본 문구) · 탭 바 항목 |
 | `screen-affirmations` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
-| `screen-affirmations` | `"` | 구현 대기 | 히어로 카드 장식 인용부호 — 구현 히어로에 없다 |
+| `screen-affirmations` | `"` | 일치 | 히어로 카드 장식 인용부호 — 히어로 카드 좌상단 serif 120 글리프(`AffirmationsView.swift`) |
 | `screen-affirmations` | `오늘 회전 · 1/14` | 구현 대기 | 구현은 「오늘 회전」 — 회전 위치 `n/전체` 가 없다 |
 | `screen-affirmations` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `우선순위` | 일치 | 「우선순위 \(…)」 의 정적 조각 |
@@ -237,9 +242,9 @@ last_updated: 2026-10-04
 | `screen-affirmations` | `불필요한 회의는 거절해도 괜찮다. 팀의 시간은 내 시간이기도 하다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-affirmations` | `엄마한테 일주일에 한 번은 전화하기.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations` | `자주 노출` | 구현 대기 | 우선순위 점 범례 — 구현에 범례가 없다 |
-| `screen-affirmations` | `보통` | 구현 대기 | 범례 항목 — 위와 같음(`displayName` 과 문자열은 같지만 범례 자체가 없다) |
-| `screen-affirmations` | `가끔` | 구현 대기 | 범례 항목 — 위와 같음 |
+| `screen-affirmations` | `자주 노출` | 일치 | 우선순위 점 범례(`AffirmationsView.swift` `priorityLegend`) |
+| `screen-affirmations` | `보통` | 일치 | 범례 항목 — 위와 같음 |
+| `screen-affirmations` | `가끔` | 일치 | 범례 항목 — 위와 같음 |
 | `screen-affirmations` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `개인` | 일치 | `RootView.swift` 탭 바 |
@@ -547,7 +552,7 @@ last_updated: 2026-10-04
 | `screen-scratchpad` | `임시 공간` | 일치 | 헤더 제목(목업은 배지 옆 작은 라벨 — 위계는 기준 4) |
 | `screen-scratchpad` | `12` | 예시 데이터 | 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
 | `screen-scratchpad` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 |
-| `screen-scratchpad` | `캡처 부담 없이 일단 던져두는 곳` | 구현 대기 | 헤더 부제 — 구현 헤더에 없다 |
+| `screen-scratchpad` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
 | `screen-scratchpad` | `새 메모` | 일치 | 추가 버튼 |
 | `screen-scratchpad` | `오늘` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 일자 그룹 제목 `ScratchpadSections.title` |
 | `screen-scratchpad` | `5 ITEMS` | 일치 | 일자 그룹 개수 — 구현 「\(section.items.count) ITEMS」(표 A 같은 행) |
