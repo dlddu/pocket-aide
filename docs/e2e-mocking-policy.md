@@ -67,7 +67,9 @@ GitHub API 스텁 두 행도 같은 사각지대다 — `action.yml` 은 기존 
 `mock-exception: EXT` 주석으로만 지문에 잡힌다. 나머지 세 행의 토큰(`processInfo.environment["GITHUB_API_BASE_URL"]` ·
 `launchEnvironment["GITHUB_API_BASE_URL"]` 두 파일)은 지문 패턴 안이다.
 E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY` 는 에뮬레이터 요청 서명용이라 끄는
-상류가 없다 — 모킹 지점이 아니다.
+상류가 없다 — 모킹 지점이 아니다. 테스트 러너가 같은 큐에 `workflow_run` envelope 을 넣는 `ios/PocketAideTests/WebhookEventUITestSupport.swift`
+의 `Authorization` 헤더 리터럴(에뮬레이터가 서비스 라우팅에만 읽는 자격 범위 · 서명 값은 검증되지 않는다)도 같다 — 넣는 것은 API Gateway 통합과
+같은 원문 body + `x-github-event` 속성이고 컨슈머부터 화면까지는 실경로라, 구성요소를 대신하는 치환이 아니라 시드다.
 
 ## 해소된 지점 (등재 대신 제거)
 
