@@ -1,0 +1,32 @@
+name: data-model
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: data-model check (report)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-backend
+      - name: Run datamodelcheck
+        working-directory: backend
+        run: |
+          set +e
+          go run ./cmd/datamodelcheck > "$RUNNER_TEMP/report.txt"
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/report.txt"
+          { echo '```'; cat "$RUNNER_TEMP/report.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          case "$rc" in
+            0) ;;
+            1) echo "::warning title=data-model::위반이 있다 — report 모드라 머지를 막지 않는다(docs/data-model/README.md 「체커」)" ;;
+            *) echo "::error title=data-model::판정 불가(종료 코드 $rc)"; exit 1 ;;
+          esac

@@ -17,6 +17,7 @@ const (
 
 var ErrInvalidOutcomes = errors.New("outcomes must be one of both, success, failure")
 
+// Settings is one row of the user_notification_settings table; a user without a row gets Default().
 type Settings struct {
 	Enabled  bool     `json:"enabled"`
 	Outcomes Outcomes `json:"outcomes"`
