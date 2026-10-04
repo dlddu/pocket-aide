@@ -85,7 +85,7 @@ E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_AC
 
 | ID | 차단 요인 | 해소 | 해소일 |
 |----|-----------|------|--------|
-| BF-2 | APNs 푸시 수신: 푸시 도착·탭 → 딥링크 하이라이트 경로를 E2E 가 밟지 못했다(푸시는 `APNS_DISABLED` 로 발송되지 않았다). | 등재(EXT) — 발송(`APNS_DISABLED`)과 전달(`simctl push`)만 `EXT` 로 등재하고, 잡이 BF-1 경로가 저장한 이력 행의 id 로 백엔드 페이로드를 시뮬레이터에 넣는다. `PRMonitorUITests` 가 알림 권한 허용 → 홈 → 시스템 배너 탭 → PR 모니터 탭 전환 → 그 행이 미확인으로 남는지를 단정하고, 잡이 앱 로그의 `highlightedEventID=<id>` 로 강조 대상을 확인한다. (#PR) | 2026-10-04 |
+| BF-2 | APNs 푸시 수신: 푸시 도착·탭 → 딥링크 하이라이트 경로를 E2E 가 밟지 못했다(푸시는 `APNS_DISABLED` 로 발송되지 않았다). | 등재(EXT) — 발송(`APNS_DISABLED`)과 전달(`simctl push`)만 `EXT` 로 등재하고, 잡이 BF-1 경로가 저장한 이력 행의 id 로 백엔드 페이로드를 시뮬레이터에 넣는다. `PRMonitorUITests` 가 알림 권한 허용 → 홈 → 시스템 배너 탭 → PR 모니터 탭 전환 → 그 행이 미확인으로 남는지를 단정하고, 잡이 앱 로그의 `highlightedEventID=<id>` 로 강조 대상을 확인한다. (#122) | 2026-10-04 |
 | BF-1 | GitHub 웹훅(SQS) 소비 → PR 모니터 이력: E2E 백엔드가 `SQS_QUEUE_URL` 없이 떠서 컨슈머가 꺼져 있었고, PR 모니터 화면은 빈 상태만 밟았다. | 실환경 대체 — ios-test 잡이 로컬 SQS(`start-test-sqs`: moto server. macOS 러너엔 Docker 가 없어 예고한 LocalStack 컨테이너 대신 같은 SQS 와이어 프로토콜을 서빙하는 moto 를 쓴다)를 띄우고, 백엔드 컨슈머를 무수정으로 켠다(APNs 발송만 `APNS_DISABLED` 로 끔 — 허용목록). 첫 로그인으로 사용자 행이 생기면 GitHub `workflow_run` envelope(`.github/fixtures/github-webhook/`)을 API Gateway 통합과 같은 모양(본문 + `x-github-event` 속성)으로 큐에 넣고, `PRMonitorUITests` 가 컨슈머 → 이력 저장 → 이력 API → PR 모니터 화면 행 → 「확인」 ack 를 실경로로 밟는다. (#58) | 2026-10-04 |
 
 원장 밖 메모: LLM(OpenRouter) 호출 경로는 현재 코드에 존재하지 않는다(백엔드가 관련 env 를 읽지 않는다). 없는 경로는
