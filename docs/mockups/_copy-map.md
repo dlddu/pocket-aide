@@ -35,22 +35,22 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 2행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 0행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 104 |
+| A | 일치 | 106 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 2 |
-| B | 일치 | 153 |
+| A | 목업 대기 | 0 |
+| B | 일치 | 155 |
 | B | 외부 | 24 |
 | B | 예시 데이터 | 98 |
-| B | 목업 전용 | 96 |
+| B | 목업 전용 | 97 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 55 |
@@ -62,7 +62,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `오늘 회전` | 구현 대기 | 목업 히어로 라벨은 「오늘 회전 · 1/14」 — 회전 위치(n/전체)가 없다(표 B 같은 행) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(hero.priority.displayName)` | 일치 | 히어로 메타 「우선순위 높음」. 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 목업 대기 | 히어로 회전 버튼 라벨 — 목업 히어로에는 수동 회전 버튼이 없다(AC3 은 탭 진입 시 회전) |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨 — 목록 프레임 히어로 카드 하단 우측(자동 회전 AC3 과 별개인 수동 회전) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 목록의 스와이프된 행 패널 |
@@ -120,7 +120,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `확인 완료` | 구현 대기 | 섹션 헤더 — 목업 「확인 완료 · 어제」 는 날짜 구분이 붙는다(표 B 같은 행) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `\(viewModel.totalUnacknowledgedCount)` | 데이터 | 헤더 미확인 총 개수 배지 숫자(보간만) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `미확인` | 일치 | 헤더 배지 라벨 |
-| `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 목업 대기 | `PushDeniedBanner` — `_impl-map.md` `RootView.swift` 행이 「목업 없음」 으로 적은 배너 |
+| `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` — `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
 | `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목 |
@@ -206,7 +206,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 439행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 442행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -223,6 +223,7 @@ last_updated: 2026-10-04
 | `screen-affirmations` | `우선순위` | 일치 | 「우선순위 \(…)」 의 정적 조각 |
 | `screen-affirmations` | `높음` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | `AffirmationPriority.displayName` |
 | `screen-affirmations` | `· 13회 노출` | 구현 대기 | 노출 횟수 — 구현 히어로 메타에 없다 |
+| `screen-affirmations` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨(`AffirmationsView.swift`) |
 | `screen-affirmations` | `전체 14개` | 일치 | 목록 헤더 |
 | `screen-affirmations` | `우선순위 순` | 구현 대기 | 정렬 토글 — 구현에 없다(검산의 문자열 일치는 「우선순위 \(…)」 패턴 우연 일치) |
 | `screen-affirmations` | `최신순` | 구현 대기 | 정렬 토글 — 구현에 없다 |
@@ -404,6 +405,8 @@ last_updated: 2026-10-04
 | `screen-pr-monitor-history` | `09:47` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `9d2c4e1` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `ci #321` | 예시 데이터 | 워크플로 이름 + run 번호 |
+| `screen-pr-monitor-history` | `알림 권한 꺼짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-pr-monitor-history` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` 문구(`RootView.swift`) |
 | `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, 항목 "확인" 버튼이 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태·PR 링크 표시 · AC14 그룹 헤더 "모두 확인"으로 그룹 내 미확인 일괄 확인.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
