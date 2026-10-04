@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-01
+last_updated: 2026-10-04
 ---
 
 # 카피 ↔ 구현 대응표
@@ -35,27 +35,27 @@ last_updated: 2026-10-01
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 29행, 표 B `구현 대기` 54행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 22행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 66 |
+| A | 일치 | 73 |
 | A | 데이터 | 4 |
-| A | 비표시 | 12 |
+| A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 4 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 29 |
-| B | 일치 | 110 |
+| A | 목업 대기 | 22 |
+| B | 일치 | 117 |
 | B | 외부 | 21 |
-| B | 예시 데이터 | 78 |
-| B | 목업 전용 | 80 |
+| B | 예시 데이터 | 79 |
+| B | 목업 전용 | 87 |
 | B | 미구현 영역 | 21 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 54 |
+| B | 구현 대기 | 55 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 135행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 136행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -109,12 +109,13 @@ last_updated: 2026-10-01
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · #\(number)` | 구현 대기 | 위와 같음(제목 없는 PR) |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · \(item.headBranch)` | 구현 대기 | 위와 같음(PR 없는 커밋) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `PR 모니터` | 일치 | `ScreenHeader` 제목 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `arrow.triangle.pull` | 비표시 | 열린 PR 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `bell` | 비표시 | 알림 설정 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `line.3.horizontal.decrease` | 비표시 | 제외 레포 버튼 SF Symbol 이름 — 위와 같음 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `이력을 불러오지 못했습니다` | 목업 대기 | 오류 상태 — 목업에 없다 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `다시 시도` | 목업 대기 | 오류 상태 재시도 버튼 — 목업에 없다 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `아직 도착한 알림이 없습니다` | 목업 대기 | 빈 상태 제목 — 목업에 없다 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `CI가 완료되면 여기에 표시됩니다.` | 목업 대기 | 빈 상태 본문 — 목업에 없다 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `이력을 불러오지 못했습니다` | 일치 | 오류 상태 제목 — 「오류」 프레임 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `다시 시도` | 일치 | 오류 상태 재시도 버튼 — 「오류」 프레임 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `CI가 완료되면 여기에 표시됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `미확인 · \(unread.count)개 그룹` | 일치 | 섹션 헤더 「미확인 · 3개 그룹」 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `확인 완료` | 구현 대기 | 섹션 헤더 — 목업 「확인 완료 · 어제」 는 날짜 구분이 붙는다(표 B 같은 행) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `\(viewModel.totalUnacknowledgedCount)` | 데이터 | 헤더 미확인 총 개수 배지 숫자(보간만) |
@@ -173,9 +174,9 @@ last_updated: 2026-10-01
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `다짐을 앱에 등록해보세요.` | 목업 대기 | 다짐 0건 상태 — 목업에 없다 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `앱에서 로그인이 필요해요.` | 목업 대기 | 미로그인 상태 — 목업에 없다 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `잠시 후 다시 시도할게요.` | 목업 대기 | 조회 오류 상태 — 목업에 없다 |
+| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `다짐을 앱에 등록해보세요.` | 일치 | 다짐 0건 상태 — 「다짐 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「다짐 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「다짐 슬라이스 상태」 변형 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 목업 대기 | 개인 탭 검색 필드 placeholder — 개인 목업은 검색 필드를 그리지 않는다 |
@@ -195,7 +196,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 367행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 383행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -263,6 +264,7 @@ last_updated: 2026-10-01
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `13 · PR 모니터링 이력` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-pr-monitor-history` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-pr-monitor-history` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-pr-monitor-history` | `PR · MONITOR` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `ScreenHeader` 영역 라벨 `Area.prMonitor` 기본 문구(대문자화는 `.textCase(.uppercase)`) |
 | `screen-pr-monitor-history` | `PR 모니터` | 일치 | `ScreenHeader` 제목 · 탭 바 항목 |
@@ -271,6 +273,7 @@ last_updated: 2026-10-01
 | `screen-pr-monitor-history` | `웹훅 연결` | 구현 대기 | 헤더 부제(웹훅 연결 상태) — 구현에 없다 |
 | `screen-pr-monitor-history` | `5` | 예시 데이터 | 미확인 총 개수 |
 | `screen-pr-monitor-history` | `미확인` | 일치 | 헤더 배지 라벨 |
+| `screen-pr-monitor-history` | `열린 PR` | 구현 대기 | 열린 PR 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐). 같은 문구는 시트 제목(`OpenPullRequestsSheet.swift`, `목업 없음` 행)에만 있다 |
 | `screen-pr-monitor-history` | `알림 설정` | 구현 대기 | 알림 설정 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐). 같은 문구는 시트 제목(`PRMonitorNotificationSettingsSheet.swift`, `목업 없음` 행)에만 있다 |
 | `screen-pr-monitor-history` | `제외 레포 관리` | 구현 대기 | 제외 레포 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐) |
 | `screen-pr-monitor-history` | `미확인 · 3개 그룹` | 일치 | 섹션 헤더 |
@@ -354,6 +357,13 @@ last_updated: 2026-10-01
 | `screen-pr-monitor-history` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `루틴` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-pr-monitor-history` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-pr-monitor-history` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 |
+| `screen-pr-monitor-history` | `CI가 완료되면 여기에 표시됩니다.` | 일치 | 빈 상태 본문 |
+| `screen-pr-monitor-history` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-pr-monitor-history` | `이력을 불러오지 못했습니다` | 일치 | 오류 상태 제목 |
+| `screen-pr-monitor-history` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 설명 — 구현은 `Text(error)` 로 `PRMonitorViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
+| `screen-pr-monitor-history` | `다시 시도` | 일치 | 오류 상태 재시도 버튼 |
 | `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, 항목 "확인" 버튼이 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태·PR 링크 표시 · AC14 그룹 헤더 "모두 확인"으로 그룹 내 미확인 일괄 확인.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -392,6 +402,13 @@ last_updated: 2026-10-01
 | `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
 | `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
 | `screen-widget` | `크기에 따라 영역의 표현 방식 축약 — AC1` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-widget` | `다짐 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `다짐 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `다짐을 앱에 등록해보세요.` | 일치 | 다짐 0건 안내(`AffirmationSection` `.empty`) |
+| `screen-widget` | `미로그인` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 안내(`AffirmationSection` `.needsLogin`) |
+| `screen-widget` | `조회 오류` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 안내(`AffirmationSection` `.error`) |
 | `screen-widget` | `PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

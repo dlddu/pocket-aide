@@ -81,8 +81,8 @@
   - 2단계: 각 필터가 조건에 맞는 PR만 남긴다.
   - 3단계: 마지막 필터 상태가 유지되어 있다.
 - **검증 AC**: AC4
-- **구현 상태**: 미구현 (PRD-10 후속 작업)
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 (「열린 PR」 시트 목록 위 필터 「전체 · 내 PR만 · 리뷰 요청만 · CI 실패만」 — 하나만 켜지고 「전체」로 끈다. 갱신 시각 내림차순을 유지한 채 좁히고, 마지막 필터는 기기에 저장되어 시트 재진입·앱 재실행 뒤에도 유지된다)
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/GitHubPullRequestsTests.swift` — `testFiltersNarrowListAndKeepUpdatedOrder`, `testFilterRoundTripsThroughRawValue`
 
 ### 시나리오 5: 당겨서 새로고침하면 최신 상태와 갱신 시각이 반영된다
 - **사전 조건**: GitHub 계정 연결됨. 열린 PR이 1개 이상 있음.
@@ -167,8 +167,8 @@
   - 1·3단계: 화면 상단에 원인별 배너가 보인다.
   - 2단계: 해결 후 배너가 사라지고 목록이 정상 표시된다.
 - **검증 AC**: AC9
-- **구현 상태**: 미구현 (PRD-10 후속 작업)
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 (「열린 PR」 시트 맨 위 원인별 배너 — 토큰 거부(401) → 「토큰 다시 연결」, 권한 부족(403·SAML 등으로 볼 수 없는 PR) → 「토큰 바꾸기」, 레이트 리밋(남은 한도 0·`Retry-After`·GraphQL `RATE_LIMITED`) → 재설정 시각 + 「다시 시도」. 해결 뒤 새로고침이 성공하면 배너가 사라진다)
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/GitHubPullRequestsTests.swift` — `testClassifiesHTTPFailuresByCause`, `testGraphQLRateLimitErrorBecomesRateLimited`, `testAlertNamesCauseAndResolution`
 
 ### 시나리오 11: 열린 PR이 없을 때와 첫 로딩 중에 상태가 명확히 보인다
 - **사전 조건**: GitHub 계정 연결됨.
