@@ -50,6 +50,35 @@ public struct OpenPullRequest: Identifiable, Equatable, Sendable {
     public var id: String { "\(repository)#\(number)" }
 }
 
+public enum OpenPullRequestFilter: String, CaseIterable, Equatable, Sendable {
+    case all
+    case mine
+    case reviewRequested
+    case ciFailing
+
+    public var label: String {
+        switch self {
+        case .all: return "전체"
+        case .mine: return "내 PR만"
+        case .reviewRequested: return "리뷰 요청만"
+        case .ciFailing: return "CI 실패만"
+        }
+    }
+
+    public func matches(_ pullRequest: OpenPullRequest) -> Bool {
+        switch self {
+        case .all: return true
+        case .mine: return pullRequest.role == .author
+        case .reviewRequested: return pullRequest.role == .reviewer
+        case .ciFailing: return pullRequest.ciStatus == .failure
+        }
+    }
+
+    public func apply(to pullRequests: [OpenPullRequest]) -> [OpenPullRequest] {
+        pullRequests.filter(matches)
+    }
+}
+
 public struct OpenPullRequestsResult: Equatable, Sendable {
     public let pullRequests: [OpenPullRequest]
     public let inaccessibleCount: Int
@@ -57,6 +86,8 @@ public struct OpenPullRequestsResult: Equatable, Sendable {
 
 public enum GitHubError: Error, Equatable, CustomStringConvertible {
     case unauthorized
+    case forbidden
+    case rateLimited(resetAt: Date?)
     case badStatus(Int)
     case graphQL(String)
     case decoding(String)
@@ -66,6 +97,10 @@ public enum GitHubError: Error, Equatable, CustomStringConvertible {
         switch self {
         case .unauthorized:
             return "GitHub가 토큰을 거부했습니다(만료·폐기·오타). 토큰을 바꿔 다시 연결하세요."
+        case .forbidden:
+            return "GitHub가 이 토큰의 요청을 거부했습니다(권한 부족)."
+        case .rateLimited:
+            return "GitHub 요청 한도에 도달했습니다."
         case .badStatus(let status):
             return "GitHub 응답 오류 (HTTP \(status))"
         case .graphQL(let message):
@@ -74,6 +109,81 @@ public enum GitHubError: Error, Equatable, CustomStringConvertible {
             return "GitHub 응답을 해석하지 못했습니다: \(detail)"
         case .transport(let detail):
             return "GitHub에 연결하지 못했습니다: \(detail)"
+        }
+    }
+
+    public static func classify(statusCode: Int, remaining: String? = nil, reset: String? = nil, retryAfter: String? = nil, now: Date = Date()) -> GitHubError? {
+        if (200..<300).contains(statusCode) {
+            return nil
+        }
+        if statusCode == 401 {
+            return .unauthorized
+        }
+        if statusCode == 403 || statusCode == 429 {
+            if let seconds = retryAfter.flatMap({ TimeInterval($0) }) {
+                return .rateLimited(resetAt: now.addingTimeInterval(seconds))
+            }
+            if remaining == "0" || statusCode == 429 {
+                let resetAt = reset.flatMap { TimeInterval($0) }.map { Date(timeIntervalSince1970: $0) }
+                return .rateLimited(resetAt: resetAt)
+            }
+            return .forbidden
+        }
+        return .badStatus(statusCode)
+    }
+}
+
+public enum GitHubAlert: Equatable, Sendable {
+    case tokenRejected
+    case insufficientAccess(hiddenCount: Int)
+    case rateLimited(resetAt: Date?)
+
+    public static func make(error: GitHubError?, inaccessibleCount: Int) -> GitHubAlert? {
+        switch error {
+        case .unauthorized:
+            return .tokenRejected
+        case .forbidden:
+            return .insufficientAccess(hiddenCount: inaccessibleCount)
+        case .rateLimited(let resetAt):
+            return .rateLimited(resetAt: resetAt)
+        default:
+            return inaccessibleCount > 0 ? .insufficientAccess(hiddenCount: inaccessibleCount) : nil
+        }
+    }
+
+    public var kind: String {
+        switch self {
+        case .tokenRejected: return "token"
+        case .insufficientAccess: return "access"
+        case .rateLimited: return "ratelimit"
+        }
+    }
+
+    public var title: String {
+        switch self {
+        case .tokenRejected: return "GitHub 토큰이 거부되었습니다"
+        case .insufficientAccess: return "접근 권한이 부족합니다"
+        case .rateLimited: return "GitHub 요청 한도에 도달했습니다"
+        }
+    }
+
+    public func message(formatTime: (Date) -> String) -> String {
+        switch self {
+        case .tokenRejected:
+            return "토큰이 만료·폐기되었거나 잘못 입력되었습니다. 새 토큰으로 다시 연결하세요."
+        case .insufficientAccess(let hiddenCount):
+            let lead = hiddenCount > 0 ? "PR \(hiddenCount)개는 이 토큰으로 볼 수 없어 표시하지 않았습니다." : "이 토큰으로는 GitHub 조회가 허용되지 않습니다."
+            return "\(lead) 조직 SSO 승인이나 토큰 범위(classic은 repo)를 확인한 뒤 토큰을 바꾸세요."
+        case .rateLimited(let resetAt):
+            return resetAt.map { "\(formatTime($0)) 이후에 다시 시도하세요." } ?? "잠시 후 다시 시도하세요."
+        }
+    }
+
+    public var actionTitle: String {
+        switch self {
+        case .tokenRejected: return "토큰 다시 연결"
+        case .insufficientAccess: return "토큰 바꾸기"
+        case .rateLimited: return "다시 시도"
         }
     }
 }
@@ -113,6 +223,9 @@ public enum OpenPullRequests {
             throw GitHubError.decoding(String(describing: error))
         }
         guard let payload = response.data else {
+            if response.errors?.contains(where: { $0.type == "RATE_LIMITED" }) == true {
+                throw GitHubError.rateLimited(resetAt: nil)
+            }
             throw GitHubError.graphQL(response.errors?.first?.message ?? "data 없음")
         }
         let sources: [(SearchResponse.Connection?, PullRequestRole)] = [
@@ -272,11 +385,13 @@ public struct GitHubClient: Sendable {
         guard let http = response as? HTTPURLResponse else {
             throw GitHubError.transport("HTTP 응답이 아님")
         }
-        if http.statusCode == 401 {
-            throw GitHubError.unauthorized
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            throw GitHubError.badStatus(http.statusCode)
+        if let error = GitHubError.classify(
+            statusCode: http.statusCode,
+            remaining: http.value(forHTTPHeaderField: "X-RateLimit-Remaining"),
+            reset: http.value(forHTTPHeaderField: "X-RateLimit-Reset"),
+            retryAfter: http.value(forHTTPHeaderField: "Retry-After")
+        ) {
+            throw error
         }
         return data
     }

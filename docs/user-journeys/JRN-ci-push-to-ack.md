@@ -14,7 +14,7 @@
 
 ## 1. 서비스 개요 (참고)
 
-PocketAide 제품 개요와 가치는 [`../product/values.md`](../product/values.md)를 따른다. 이 여정은 PR 모니터 탭(RootView 7번째 탭)과 GitHub Actions `workflow_run` 푸시(PRD-10)의 **현재 구현 범위**를 다룬다. 열린 PR 목록(AC1~AC3·AC5·AC10, 「열린 PR」 시트)은 구현되어 있으나 푸시 → 확인 흐름 밖이라 다루지 않고, 필터(AC4)·오류 배너(AC9)는 아직 구현 전이다. 알림 설정(AC8)은 구현되어 있으나 이 여정은 기본 설정(켜짐·둘 다)을 전제로 한다.
+PocketAide 제품 개요와 가치는 [`../product/values.md`](../product/values.md)를 따른다. 이 여정은 PR 모니터 탭(RootView 7번째 탭)과 GitHub Actions `workflow_run` 푸시(PRD-10)의 **현재 구현 범위**를 다룬다. 열린 PR 목록(AC1~AC5·AC9·AC10, 「열린 PR」 시트 — 필터·오류 배너 포함)은 구현되어 있으나 푸시 → 확인 흐름 밖이라 다루지 않는다. 알림 설정(AC8)은 구현되어 있으나 이 여정은 기본 설정(켜짐·둘 다)을 전제로 한다.
 
 ## 2. 여정 정의
 
