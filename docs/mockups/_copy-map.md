@@ -35,21 +35,21 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 22행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 20행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 85 |
+| A | 일치 | 86 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
-| A | 기준 4 | 5 |
+| A | 기준 4 | 6 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 22 |
-| B | 일치 | 125 |
+| A | 목업 대기 | 20 |
+| B | 일치 | 127 |
 | B | 외부 | 24 |
-| B | 예시 데이터 | 84 |
+| B | 예시 데이터 | 86 |
 | B | 목업 전용 | 94 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
@@ -189,14 +189,14 @@ last_updated: 2026-10-04
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「날씨 슬라이스 상태」 변형 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 목업 대기 | 개인 탭 검색 필드 placeholder — 개인 목업은 검색 필드를 그리지 않는다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 일치 | 개인 탭 검색 필드 placeholder |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사 영역만 검색…` | 일치 | 회사 탭 검색 필드 placeholder |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 구현 대기 | 회사 요약 줄 — 목업 「12 OPEN · 8 DONE · DEADLINE 3」 의 마감 카운트가 구현에 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
 | `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 목업 대기 | 회사 완료 섹션 제목 — 회사 목업은 완료 섹션을 그리지 않는다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 기준 4 | 회사 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「DONE · 8」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `완료` | 기준 4 | 개인 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「완료 · 4」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 없다 |
@@ -206,7 +206,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 395행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 399행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -544,6 +544,7 @@ last_updated: 2026-10-04
 | `screen-todo-personal` | `PERSONAL` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
 | `screen-todo-personal` | `내 일` | 일치 | 헤더 제목 |
 | `screen-todo-personal` | `7개 남음 · 4개 완료` | 일치 | 요약 줄 |
+| `screen-todo-personal` | `개인 영역만 검색…` | 일치 | 검색 필드 placeholder |
 | `screen-todo-personal` | `전체 · 11` | 구현 대기 | 날짜 필터 칩 — 구현에 필터가 없다 |
 | `screen-todo-personal` | `오늘` | 구현 대기 | 날짜 필터 칩·날짜 섹션 제목 — 구현은 할 일/완료 두 섹션뿐 |
 | `screen-todo-personal` | `이번 주` | 구현 대기 | 위와 같음 |
@@ -597,6 +598,9 @@ last_updated: 2026-10-04
 | `screen-todo-work` | `onboarding 개선 결과 한 페이지로` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `BACKLOG · 5` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 「OPEN · n」 |
 | `screen-todo-work` | `결제 이슈 timeline 정리 — Slack 자료 모으기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `DONE · 8` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
+| `screen-todo-work` | `주간 지표 리포트 공유` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `채용 인터뷰 피드백 제출` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다 |
 | `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
 | `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
