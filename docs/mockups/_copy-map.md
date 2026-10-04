@@ -39,23 +39,23 @@ last_updated: 2026-10-04
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 82 |
+| A | 일치 | 85 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
-| A | 미구현 영역 | 2 |
+| A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 13 |
 | A | 목업 대기 | 22 |
-| B | 일치 | 123 |
-| B | 외부 | 22 |
-| B | 예시 데이터 | 82 |
-| B | 목업 전용 | 92 |
-| B | 미구현 영역 | 14 |
+| B | 일치 | 125 |
+| B | 외부 | 24 |
+| B | 예시 데이터 | 84 |
+| B | 목업 전용 | 94 |
+| B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 55 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 144행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 146행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -167,8 +167,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 기준 4 | 항목 메타 — 목업은 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다. 구현은 「 · 」 로 이어 한 줄 |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `날씨` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현` |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | 위와 같음(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
+| `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현`(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
@@ -185,6 +184,9 @@ last_updated: 2026-10-04
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `확인할 알림이 없어요.` | 일치 | 알림 0건 상태 — 「알림 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「알림 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「알림 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/WeatherSection.swift` | `날씨` | 일치 | 날씨 슬라이스 라벨의 지명 없음 대체값(#111 에서 `PocketAideWidget.swift` 의 자리표시자 라벨 「날씨」 를 대체했다) — 「날씨 슬라이스 상태」 변형. 지명이 있으면 지명(목업 「서울」 — 예시 데이터) |
+| `ios/PocketAideWidget/Sections/WeatherSection.swift` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 상태 — 「날씨 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/WeatherSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「날씨 슬라이스 상태」 변형 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 목업 대기 | 개인 탭 검색 필드 placeholder — 개인 목업은 검색 필드를 그리지 않는다 |
@@ -204,7 +206,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 391행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 395행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -378,19 +380,19 @@ last_updated: 2026-10-04
 | `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `홈 스크린 · 큰 위젯 (4×4)` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-widget` | `서울` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `18°` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `한때 비` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `최고 22 · 최저 14` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `서울` | 예시 데이터 | 날씨 슬라이스 지명 라벨(`WeatherSection` 이 앱이 저장한 위치의 역지오코딩 `placeName` 으로 그린다) |
+| `screen-widget` | `18°` | 외부 `ios/Shared/Sources/PocketAideAPI/Weather.swift` | 현재 기온 — 값은 데이터, 「°」 서식은 `Weather.temperatureLabel` |
+| `screen-widget` | `한때 비` | 예시 데이터 | 현재 날씨 상태(`WeatherSection` 이 `summary.condition` 으로 그린다 — WMO 코드 → `Weather.swift` 고정 어휘(맑음·흐림·비·소나기 등). 목업 예시 「한때 비」 는 그 어휘 밖이다 — 어휘 차이는 범위 밖 후속) |
+| `screen-widget` | `최고 22 · 최저 14` | 외부 `ios/Shared/Sources/PocketAideAPI/Weather.swift` | 최고·최저 기온 — 값은 데이터, 「최고 N · 최저 N」 서식은 `Weather.detailLabel`(강수 확률이 있으면 「 · 강수 N%」 가 붙는다 — 꼬리 유무는 기준 4 구조 대조의 몫) |
 | `screen-widget` | `다음 일정` | 일치 | 일정 슬라이스 라벨(`CalendarSection`) |
 | `screen-widget` | `분기 리뷰 · 회의실 4` | 예시 데이터 | 첫 일정 제목(사용자 캘린더 데이터 — `CalendarSection` 이 `first.title` 로 그린다) |
 | `screen-widget` | `14:00 — 15:30` | 외부 `ios/Shared/Sources/PocketAideAPI/UpcomingEvents.swift` | 첫 일정 시간 범위 — 시각은 데이터, 「 — 」 서식은 `UpcomingEvents.rangeLabel` |
 | `screen-widget` | `+ 2 더` | 일치 | 남은 일정 수(`CalendarSection` `+ \(summary.moreCount) 더`) |
 | `screen-widget` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
 | `screen-widget` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 날씨·메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
 | `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
 | `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
@@ -425,6 +427,10 @@ last_updated: 2026-10-04
 | `screen-widget` | `알림 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `알림 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
 | `screen-widget` | `확인할 알림이 없어요.` | 일치 | 알림 0건 안내(`NotificationSection` 빈 요약) |
+| `screen-widget` | `날씨 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `위치 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `날씨` | 일치 | 날씨 슬라이스 라벨 — 지명 없음(`WeatherSection` 대체값) |
+| `screen-widget` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 안내(`WeatherSection` `.needsLocation`) |
 | `screen-widget` | `PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
