@@ -31,8 +31,7 @@ runs:
         for i in {1..30}; do
           curl -fsS "$AWS_ENDPOINT_URL/moto-api/" >/dev/null && break || sleep 1
         done
-        # moto routes by the SigV4 credential scope, so the request is signed
-        # (with the job's throwaway emulator credentials) as service "sqs".
+        # moto routes by the SigV4 credential scope, so the request is signed as service "sqs".
         curl -fsS "$AWS_ENDPOINT_URL/" \
           --aws-sigv4 "aws:amz:$AWS_REGION:sqs" \
           --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
