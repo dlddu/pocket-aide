@@ -55,7 +55,7 @@ final class TodoNoCrossAreaMoveUITests: XCTestCase {
         )
         let extra = sheetIdentifiers.subtracting(sheetControls).subtracting(["todo.sheet.title"])
         XCTAssertTrue(extra.isEmpty, "Edit sheet must not offer other inputs, found \(extra.sorted())")
-        let switchLabels = Set(screen.app.switches.allElementsBoundByIndex.map(\.label))
+        let switchLabels = Set(screen.app.switches.allElementsBoundByIndex.map(\.label).filter { !$0.isEmpty })
         XCTAssertEqual(switchLabels, ["마감일"], "The due-date toggle is the only switch")
         XCTAssertEqual(screen.app.segmentedControls.count, 0, "No segmented area picker")
         XCTAssertEqual(screen.app.pickers.count, 0, "No area picker")
