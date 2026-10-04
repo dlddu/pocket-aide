@@ -28,7 +28,7 @@ open docs/mockups/index.html
 | `screen-routines.html` | 루틴 (목록·빈 상태·루틴 추가·단계 추가·상태 변형) | PRD-2 | AC1~4 단계·주기·진행률·30일 히트맵 |
 | `screen-affirmations.html` | 다짐 (목록·빈 상태) | PRD-5 | AC2 우선순위, AC3 회전 노출 |
 | `screen-affirmations-priority-edit.html` | 다짐 — 추가·우선순위 시트 (생성·편집) | PRD-5 | AC1 추가, AC2 우선순위 (편집 시트 패턴) |
-| `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류·CI 상태 변형) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
+| `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류·CI 상태 변형·알림 권한 꺼짐) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
 
 ### 시스템 통합
 
