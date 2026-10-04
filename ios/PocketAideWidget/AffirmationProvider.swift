@@ -19,7 +19,8 @@ struct AffirmationProvider: TimelineProvider {
     func placeholder(in _: Context) -> PocketAideWidgetEntry {
         PocketAideWidgetEntry(
             date: Date(),
-            state: .loaded(Self.previewAffirmation)
+            state: .loaded(Self.previewAffirmation),
+            calendar: .loaded(Self.previewEvents)
         )
     }
 
@@ -29,8 +30,10 @@ struct AffirmationProvider: TimelineProvider {
             return
         }
         Task {
-            let state = await fetchState(at: Date())
-            completion(PocketAideWidgetEntry(date: Date(), state: state))
+            let now = Date()
+            let state = await fetchState(at: now)
+            let calendar = CalendarSnapshot.load(from: now, through: now).state(at: now)
+            completion(PocketAideWidgetEntry(date: now, state: state, calendar: calendar))
         }
     }
 
@@ -38,10 +41,12 @@ struct AffirmationProvider: TimelineProvider {
         Task {
             let now = Date()
             let items = await fetchAffirmations()
+            let lastEntryDate = now.addingTimeInterval(Double(Self.entryCount - 1) * Self.refreshInterval)
+            let snapshot = CalendarSnapshot.load(from: now, through: lastEntryDate)
             switch items {
             case .success(let pool):
                 if pool.isEmpty {
-                    let entry = PocketAideWidgetEntry(date: now, state: .empty)
+                    let entry = PocketAideWidgetEntry(date: now, state: .empty, calendar: snapshot.state(at: now))
                     completion(Timeline(
                         entries: [entry],
                         policy: .after(now.addingTimeInterval(Self.refreshInterval))
@@ -52,18 +57,19 @@ struct AffirmationProvider: TimelineProvider {
                     let date = now.addingTimeInterval(Double(offset) * Self.refreshInterval)
                     var rng = SeededRNG(seed: UInt64(date.timeIntervalSince1970))
                     let pick = selector.pick(from: pool, using: &rng) ?? pool[0]
-                    return PocketAideWidgetEntry(date: date, state: .loaded(pick))
+                    return PocketAideWidgetEntry(date: date, state: .loaded(pick), calendar: snapshot.state(at: date))
                 }
                 let last = entries.last?.date ?? now
-                completion(Timeline(entries: entries, policy: .after(last)))
+                let reload = snapshot.authorized ? now.addingTimeInterval(Self.refreshInterval) : last
+                completion(Timeline(entries: entries, policy: .after(reload)))
             case .needsLogin:
-                let entry = PocketAideWidgetEntry(date: now, state: .needsLogin)
+                let entry = PocketAideWidgetEntry(date: now, state: .needsLogin, calendar: snapshot.state(at: now))
                 completion(Timeline(
                     entries: [entry],
                     policy: .after(now.addingTimeInterval(Self.refreshInterval))
                 ))
             case .error:
-                let entry = PocketAideWidgetEntry(date: now, state: .error)
+                let entry = PocketAideWidgetEntry(date: now, state: .error, calendar: snapshot.state(at: now))
                 // Back off on errors so a flapping backend doesn't burn the
                 // system's per-widget refresh budget.
                 completion(Timeline(
@@ -140,5 +146,17 @@ struct AffirmationProvider: TimelineProvider {
         priority: .high,
         createdAt: 0,
         updatedAt: 0
+    )
+
+    private static let previewEvents = UpcomingEventsSummary(
+        events: [
+            UpcomingEvent(
+                title: "분기 리뷰 · 회의실 4",
+                start: Date().addingTimeInterval(60 * 60),
+                end: Date().addingTimeInterval(150 * 60),
+                isAllDay: false
+            ),
+        ],
+        moreCount: 2
     )
 }
