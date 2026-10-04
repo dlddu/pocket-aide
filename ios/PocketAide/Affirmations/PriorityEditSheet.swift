@@ -59,10 +59,15 @@ struct PriorityEditSheet: View {
                 }
                 .padding(.horizontal, 24)
 
-                actions
-                    .padding(.horizontal, 24)
-                    .padding(.top, 8)
-                    .padding(.bottom, 28)
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .fill(DesignTokens.Color.rule(.affirmations).opacity(0.6))
+                        .frame(height: 1)
+                    actions
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
+                        .padding(.bottom, 28)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
