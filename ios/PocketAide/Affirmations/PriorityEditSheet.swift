@@ -73,28 +73,47 @@ struct PriorityEditSheet: View {
         }
     }
 
+    @ViewBuilder
     private var editorCard: some View {
-        ZStack(alignment: .topLeading) {
+        if isEditing {
             Card(area: .affirmations, padding: .medium) {
-                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                    Text("\"")
-                        .font(DesignTokens.Typography.font(size: 64, family: .serif))
-                        .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.1))
-                        .padding(.leading, -4)
-                        .padding(.top, -16)
-                        .accessibilityHidden(true)
-                    TextField(
-                        "다짐 문장을 입력하세요",
-                        text: $text,
-                        axis: .vertical
-                    )
-                    .font(DesignTokens.Typography.font(size: 16.5, family: .serif))
-                    .foregroundStyle(DesignTokens.Color.ink(.affirmations))
-                    .lineLimit(2...6)
-                    .accessibilityIdentifier("sheet.text.field")
-                }
+                textField
             }
+            .overlay {
+                Text("\"")
+                    .font(DesignTokens.Typography.font(size: 64, family: .serif))
+                    .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.1))
+                    .fixedSize()
+                    .padding(.leading, -4)
+                    .padding(.top, -8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+        } else {
+            textField
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                .padding(.vertical, 14)
+                .background(DesignTokens.Color.card(.affirmations))
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(DesignTokens.Color.accent(.affirmations), lineWidth: 1)
+                )
         }
+    }
+
+    private var textField: some View {
+        TextField(
+            "다짐 문장을 입력하세요",
+            text: $text,
+            axis: .vertical
+        )
+        .font(DesignTokens.Typography.font(size: 16.5, family: .serif))
+        .foregroundStyle(DesignTokens.Color.ink(.affirmations))
+        .lineLimit(2...6)
+        .accessibilityIdentifier("sheet.text.field")
     }
 
     private var prioritySection: some View {
