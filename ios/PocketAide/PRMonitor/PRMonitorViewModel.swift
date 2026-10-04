@@ -127,6 +127,7 @@ final class PRMonitorViewModel: ObservableObject {
         items[idx] = stamped
         do {
             try await api.acknowledgeNotification(id: id)
+            WidgetRefresher.reloadAll()
         } catch {
             if let revertIdx = items.firstIndex(where: { $0.id == id }) {
                 items[revertIdx] = original

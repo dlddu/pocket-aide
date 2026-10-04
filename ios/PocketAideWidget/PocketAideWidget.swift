@@ -24,7 +24,7 @@ struct PocketAideWidgetEntryView: View {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
                 PlaceholderSection(area: .aiChat, label: "메일")
                 ruleDivider(vertical: true)
-                PlaceholderSection(area: .scratchpad, label: "알림")
+                NotificationSection(state: entry.notifications)
             }
             .padding(.top, DesignTokens.Spacing.md)
         }

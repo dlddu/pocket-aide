@@ -20,7 +20,8 @@ struct AffirmationProvider: TimelineProvider {
         PocketAideWidgetEntry(
             date: Date(),
             state: .loaded(Self.previewAffirmation),
-            calendar: .loaded(Self.previewEvents)
+            calendar: .loaded(Self.previewEvents),
+            notifications: .loaded(WidgetNotificationsSummary(latest: Self.previewNotification, moreCount: 1))
         )
     }
 
@@ -31,57 +32,69 @@ struct AffirmationProvider: TimelineProvider {
         }
         Task {
             let now = Date()
-            let state = await fetchState(at: now)
+            let client = makeClient()
+            let state = await fetchState(client, at: now)
+            let notifications = await fetchNotifications(client)
             let calendar = CalendarSnapshot.load(from: now, through: now).state(at: now)
-            completion(PocketAideWidgetEntry(date: now, state: state, calendar: calendar))
+            completion(PocketAideWidgetEntry(
+                date: now,
+                state: state,
+                calendar: calendar,
+                notifications: notifications
+            ))
         }
     }
 
     func getTimeline(in _: Context, completion: @escaping (Timeline<PocketAideWidgetEntry>) -> Void) {
         Task {
             let now = Date()
-            let items = await fetchAffirmations()
+            let client = makeClient()
+            let items = await fetchAffirmations(client)
+            let notifications = await fetchNotifications(client)
             let lastEntryDate = now.addingTimeInterval(Double(Self.entryCount - 1) * Self.refreshInterval)
             let snapshot = CalendarSnapshot.load(from: now, through: lastEntryDate)
+            let single = { (state: WidgetAffirmationState) in
+                [PocketAideWidgetEntry(
+                    date: now,
+                    state: state,
+                    calendar: snapshot.state(at: now),
+                    notifications: notifications
+                )]
+            }
+            let nextReload = now.addingTimeInterval(Self.refreshInterval)
             switch items {
             case .success(let pool):
                 if pool.isEmpty {
-                    let entry = PocketAideWidgetEntry(date: now, state: .empty, calendar: snapshot.state(at: now))
-                    completion(Timeline(
-                        entries: [entry],
-                        policy: .after(now.addingTimeInterval(Self.refreshInterval))
-                    ))
+                    completion(Timeline(entries: single(.empty), policy: .after(nextReload)))
                     return
                 }
                 let entries = (0..<Self.entryCount).map { offset -> PocketAideWidgetEntry in
                     let date = now.addingTimeInterval(Double(offset) * Self.refreshInterval)
                     var rng = SeededRNG(seed: UInt64(date.timeIntervalSince1970))
                     let pick = selector.pick(from: pool, using: &rng) ?? pool[0]
-                    return PocketAideWidgetEntry(date: date, state: .loaded(pick), calendar: snapshot.state(at: date))
+                    return PocketAideWidgetEntry(
+                        date: date,
+                        state: .loaded(pick),
+                        calendar: snapshot.state(at: date),
+                        notifications: notifications
+                    )
                 }
-                let last = entries.last?.date ?? now
-                let reload = snapshot.authorized ? now.addingTimeInterval(Self.refreshInterval) : last
-                completion(Timeline(entries: entries, policy: .after(reload)))
+                completion(Timeline(entries: entries, policy: .after(nextReload)))
             case .needsLogin:
-                let entry = PocketAideWidgetEntry(date: now, state: .needsLogin, calendar: snapshot.state(at: now))
-                completion(Timeline(
-                    entries: [entry],
-                    policy: .after(now.addingTimeInterval(Self.refreshInterval))
-                ))
+                completion(Timeline(entries: single(.needsLogin), policy: .after(nextReload)))
             case .error:
-                let entry = PocketAideWidgetEntry(date: now, state: .error, calendar: snapshot.state(at: now))
                 // Back off on errors so a flapping backend doesn't burn the
                 // system's per-widget refresh budget.
                 completion(Timeline(
-                    entries: [entry],
+                    entries: single(.error),
                     policy: .after(now.addingTimeInterval(60 * 60))
                 ))
             }
         }
     }
 
-    private func fetchState(at date: Date) async -> WidgetAffirmationState {
-        let result = await fetchAffirmations()
+    private func fetchState(_ client: ClientResult, at date: Date) async -> WidgetAffirmationState {
+        let result = await fetchAffirmations(client)
         switch result {
         case .success(let pool):
             guard !pool.isEmpty else { return .empty }
@@ -101,7 +114,13 @@ struct AffirmationProvider: TimelineProvider {
         case error
     }
 
-    private func fetchAffirmations() async -> FetchResult {
+    private enum ClientResult {
+        case ready(APIClient)
+        case needsLogin
+        case error
+    }
+
+    private func makeClient() -> ClientResult {
         let accessGroup = Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String
         let resolvedGroup = accessGroup.flatMap { $0.isEmpty ? nil : $0 }
         let baseURL = Bundle.main.object(forInfoDictionaryKey: "BackendBaseURL") as? String ?? "<nil>"
@@ -119,14 +138,22 @@ struct AffirmationProvider: TimelineProvider {
             return .error
         }
 
-        let api: APIClient
         do {
-            api = try APIClient.fromBundle(.main, tokenStore: store)
+            let api = try APIClient.fromBundle(.main, tokenStore: store)
+            return .ready(api)
         } catch {
             logger.error("APIClient.fromBundle failed: \(String(describing: error), privacy: .public)")
             return .error
         }
+    }
 
+    private func fetchAffirmations(_ client: ClientResult) async -> FetchResult {
+        let api: APIClient
+        switch client {
+        case .ready(let ready): api = ready
+        case .needsLogin: return .needsLogin
+        case .error: return .error
+        }
         do {
             let items = try await api.listAffirmations()
             logger.info("fetched \(items.count, privacy: .public) affirmations")
@@ -139,6 +166,42 @@ struct AffirmationProvider: TimelineProvider {
             return .error
         }
     }
+
+    private func fetchNotifications(_ client: ClientResult) async -> WidgetNotificationState {
+        let api: APIClient
+        switch client {
+        case .ready(let ready): api = ready
+        case .needsLogin: return .needsLogin
+        case .error: return .error
+        }
+        do {
+            let items = try await api.listNotificationHistory()
+            let settings = try await api.notificationSettings()
+            return .loaded(WidgetNotifications.summarize(items, settings: settings))
+        } catch APIError.badStatus(401, _) {
+            logger.info("listNotificationHistory → 401, needsLogin")
+            return .needsLogin
+        } catch {
+            logger.error("listNotificationHistory failed: \(String(describing: error), privacy: .public)")
+            return .error
+        }
+    }
+
+    private static let previewNotification = NotificationHistoryItem(
+        id: 0,
+        repoFullName: "dlddu/pocket-aide",
+        prNumber: 7,
+        prTitle: "feat(widget): 알림 모음",
+        prURL: nil,
+        commitURL: nil,
+        runURL: nil,
+        workflowName: "CI",
+        headBranch: "main",
+        headSHA: "",
+        conclusion: "success",
+        acknowledgedAt: nil,
+        createdAt: 0
+    )
 
     private static let previewAffirmation = Affirmation(
         id: 0,
