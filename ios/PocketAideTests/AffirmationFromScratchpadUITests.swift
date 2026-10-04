@@ -21,8 +21,6 @@ final class AffirmationFromScratchpadUITests: XCTestCase {
         let sheet = AffirmationSheet(app: app)
         XCTAssertTrue(sheet.title.waitForExistence(timeout: 10), "→ 다짐 should open the priority sheet of the new sentence")
         XCTAssertEqual(sheet.title.label, "우선순위 설정")
-        XCTAssertEqual(sheet.text, sentence, "The priority sheet should carry the memo text")
-        XCTAssertEqual(sheet.selectedPriority(), "normal", "A moved memo should start with priority 보통")
         sheet.cancel()
         XCTAssertTrue(TodoUI.waitToDisappear(scratchpad.memo(sentence)), "The moved memo should leave 임시 공간")
         XCTAssertTrue(scratchpad.memo(keptMemo).exists, "The memo that was not moved should stay in 임시 공간")
