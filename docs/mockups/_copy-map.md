@@ -35,22 +35,22 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 8행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 0행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 98 |
+| A | 일치 | 106 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 8 |
-| B | 일치 | 147 |
+| A | 목업 대기 | 0 |
+| B | 일치 | 155 |
 | B | 외부 | 24 |
 | B | 예시 데이터 | 98 |
-| B | 목업 전용 | 95 |
+| B | 목업 전용 | 97 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 55 |
@@ -62,7 +62,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `오늘 회전` | 구현 대기 | 목업 히어로 라벨은 「오늘 회전 · 1/14」 — 회전 위치(n/전체)가 없다(표 B 같은 행) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(hero.priority.displayName)` | 일치 | 히어로 메타 「우선순위 높음」. 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 목업 대기 | 히어로 회전 버튼 라벨 — 목업 히어로에는 수동 회전 버튼이 없다(AC3 은 탭 진입 시 회전) |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨 — 목록 프레임 히어로 카드 하단 우측(자동 회전 AC3 과 별개인 수동 회전) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 목록의 스와이프된 행 패널 |
@@ -120,7 +120,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `확인 완료` | 구현 대기 | 섹션 헤더 — 목업 「확인 완료 · 어제」 는 날짜 구분이 붙는다(표 B 같은 행) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `\(viewModel.totalUnacknowledgedCount)` | 데이터 | 헤더 미확인 총 개수 배지 숫자(보간만) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `미확인` | 일치 | 헤더 배지 라벨 |
-| `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 목업 대기 | `PushDeniedBanner` — `_impl-map.md` `RootView.swift` 행이 「목업 없음」 으로 적은 배너 |
+| `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` — `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
 | `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목 |
@@ -142,18 +142,18 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 일치 | 단계 추가 프레임 2차 액션. 이력 시트의 같은 「닫기」 는 목업 history strip 이 화면 안 인라인이라 대응 자리가 없다(자리 차이는 기준 4) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · \(days.count)일 이력` | 구현 대기 | 이력 시트 제목 — 목업 history strip 제목은 「아침 루틴 · 30일」(「이력」 없음, 표 B 같은 행) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.scheduleSummary) · 예정 \(summary.scheduledDays)일 중 \(summary.completedDays)일 완료` | 목업 대기 | 이력 시트 요약 줄 — 목업 history strip 은 요약 줄 대신 시작일·「오늘 · 60%」 축 라벨을 그린다 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.scheduleSummary) · 예정 \(summary.scheduledDays)일 중 \(summary.completedDays)일 완료` | 일치 | 이력 시트 요약 줄 — 「상태 변형」 history strip 「매일 · 예정 30일 중 19일 완료」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `루틴` | 일치 | `ScreenHeader` 제목 — 목업 헤더 영역 라벨 「루틴」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `새 루틴` | 일치 | 헤더 추가 버튼 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 · \(viewModel.today.count)` | 목업 대기 | 오늘 루틴 섹션 제목 — 목업은 루틴 카드를 섹션 제목 없이 나열한다 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 쉬는 루틴` | 목업 대기 | 오늘 예정 없는 루틴 섹션 제목 — 목업은 주간 루틴을 같은 목록의 카드(「D-4」·7일 막대)로 그린다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 · \(viewModel.today.count)` | 일치 | 오늘 루틴 섹션 제목 — 「상태 변형」 「오늘 · 1」 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 쉬는 루틴` | 일치 | 오늘 예정 없는 루틴 섹션 제목 — 「상태 변형」 주간 카드 위 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · 단계 \(routine.steps.count)개` | 목업 대기 | 쉬는 루틴 행 메타 — 목업 주간 카드 메타는 「매주 일요일」 뿐이고 단계 수가 없다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · 단계 \(routine.steps.count)개` | 일치 | 쉬는 루틴 행 메타 — 「상태 변형」 주간 카드 메타 「매주 일요일 · 단계 3개」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 주간 카드의 스와이프된 행 패널 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · \(routine.done) / \(routine.total) 완료` | 일치 | 카드 메타 「매일 · 3 / 5 완료」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 목업 대기 | 다 끝낸 루틴의 진행률 자리 — 목업은 완료 상태 카드를 그리지 않는다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 일치 | 다 끝낸 루틴의 진행률 자리 — 「상태 변형」 완료 카드 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.progressPercent)%` | 일치 | 카드 진행률 「60%」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 목업 대기 | 카드 하단 단계 추가 버튼 — 목업 카드에 없다(같은 낱말의 목업 시트 섹션 라벨은 `RoutineSheets.swift` 행) |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 일치 | 카드 하단 단계 추가 버튼 — 「상태 변형」 완료 카드 하단 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `이력` | 구현 대기 | 카드 하단 이력 시트 버튼 — 목업의 이력 진입은 history strip 의 「전체 이력」(표 B 같은 행) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `checked` | 비표시 | 단계 행 `accessibilityValue` — 글자로 그려지지 않는다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `unchecked` | 비표시 | 위와 같음 |
@@ -206,7 +206,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 432행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 442행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -223,6 +223,7 @@ last_updated: 2026-10-04
 | `screen-affirmations` | `우선순위` | 일치 | 「우선순위 \(…)」 의 정적 조각 |
 | `screen-affirmations` | `높음` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | `AffirmationPriority.displayName` |
 | `screen-affirmations` | `· 13회 노출` | 구현 대기 | 노출 횟수 — 구현 히어로 메타에 없다 |
+| `screen-affirmations` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨(`AffirmationsView.swift`) |
 | `screen-affirmations` | `전체 14개` | 일치 | 목록 헤더 |
 | `screen-affirmations` | `우선순위 순` | 구현 대기 | 정렬 토글 — 구현에 없다(검산의 문자열 일치는 「우선순위 \(…)」 패턴 우연 일치) |
 | `screen-affirmations` | `최신순` | 구현 대기 | 정렬 토글 — 구현에 없다 |
@@ -404,6 +405,8 @@ last_updated: 2026-10-04
 | `screen-pr-monitor-history` | `09:47` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `9d2c4e1` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `ci #321` | 예시 데이터 | 워크플로 이름 + run 번호 |
+| `screen-pr-monitor-history` | `알림 권한 꺼짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-pr-monitor-history` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` 문구(`RootView.swift`) |
 | `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, 항목 "확인" 버튼이 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태·PR 링크 표시 · AC14 그룹 헤더 "모두 확인"으로 그룹 내 미확인 일괄 확인.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -525,6 +528,13 @@ last_updated: 2026-10-04
 | `screen-routines` | `아침 루틴 · 단계` | 일치 | 단계 추가 프레임 시트 제목 「\(routine.name) · 단계」(`RoutineSheets.swift`) |
 | `screen-routines` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder(`RoutineSheets.swift`) |
 | `screen-routines` | `닫기` | 일치 | 단계 추가 프레임 2차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `상태 변형` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `오늘 · 1` | 일치 | 오늘 루틴 섹션 제목 「오늘 · \(viewModel.today.count)」 |
+| `screen-routines` | `매일 · 5 / 5 완료` | 일치 | 카드 메타 「\(scheduleSummary) · \(done) / \(total) 완료」(다 끝낸 루틴) |
+| `screen-routines` | `완료` | 일치 | 다 끝낸 루틴의 진행률 자리 |
+| `screen-routines` | `오늘 쉬는 루틴` | 일치 | 오늘 예정 없는 루틴 섹션 제목 |
+| `screen-routines` | `매주 일요일 · 단계 3개` | 일치 | 쉬는 루틴 행 메타 「\(scheduleSummary) · 단계 \(steps.count)개」 |
+| `screen-routines` | `매일 · 예정 30일 중 19일 완료` | 일치 | 이력 요약 줄(`RoutineSheets.swift`) |
 | `screen-routines` | `PRD-2 · AC1 단계 정의(아침 루틴 5단계), AC2 반복 주기(매일/매주), AC3 단계 체크 → 진행률, AC4 30일 이력 히트맵` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-scratchpad` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
