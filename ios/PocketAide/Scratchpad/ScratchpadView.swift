@@ -115,10 +115,18 @@ struct ScratchpadView: View {
                             row(for: item)
                         }
                     } header: {
-                        Text("\(section.title) · \(section.items.count)")
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
-                            .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
-                            .textCase(nil)
+                        HStack(spacing: DesignTokens.Spacing.sm) {
+                            Text(section.title)
+                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
+                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
+                            Rectangle()
+                                .fill(DesignTokens.Color.rule(.scratchpad))
+                                .frame(height: 1)
+                            Text("\(section.items.count) ITEMS")
+                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
+                        }
+                        .textCase(nil)
                     }
                 }
             }

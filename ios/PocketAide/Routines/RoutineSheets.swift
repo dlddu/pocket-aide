@@ -281,7 +281,7 @@ struct RoutineHistorySheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(routine.name) · \(days.count)일 이력")
+                        Text("\(routine.name) · \(days.count)일")
                             .font(DesignTokens.Typography.font(size: 18, weight: .bold))
                             .foregroundStyle(DesignTokens.Color.ink(.routines))
                             .accessibilityIdentifier("routines.history.title")
