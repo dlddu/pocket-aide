@@ -1,6 +1,6 @@
 ---
 type: mockup-token-map
-last_updated: 2026-09-29
+last_updated: 2026-10-04
 ---
 
 # 토큰 ↔ 구현 대응표
@@ -161,10 +161,10 @@ last_updated: 2026-09-29
 | `StatusColor.failure` | 라이트 | `#9C3F2D` | §1.11 | 실패 `--destructive` 라이트 |
 | `StatusColor.inProgress` | 라이트 | `#8B6F47` | §1.11 | 진행 중 `--tan` 라이트 |
 | `StatusColor.arrivalGlow` | 라이트 | `#3D2F8E` | §1.11 | `--accent-strong` 라이트 |
-| `StatusColor.success` | 다크 | — | 구현 대기 | §1.11 다크 `#7CAB89` — 상수가 sRGB 리터럴 한 값이라 다크에서도 라이트 값이 그려진다 |
-| `StatusColor.failure` | 다크 | — | 구현 대기 | §1.11 다크 `#D87560` — 상수가 sRGB 리터럴 한 값이라 다크에서도 라이트 값이 그려진다 |
-| `StatusColor.inProgress` | 다크 | — | 구현 대기 | §1.11 다크 `#C49B6F` — 상수가 sRGB 리터럴 한 값이라 다크에서도 라이트 값이 그려진다 |
-| `StatusColor.arrivalGlow` | 다크 | — | 구현 대기 | §1.11 다크 `#A99FE6` — 상수가 sRGB 리터럴 한 값이라 다크에서도 라이트 값이 그려진다 |
+| `StatusColor.success` | 다크 | `#7CAB89` | §1.11 | 성공 `--forest` 다크 |
+| `StatusColor.failure` | 다크 | `#D87560` | §1.11 | 실패 `--destructive` 다크 |
+| `StatusColor.inProgress` | 다크 | `#C49B6F` | §1.11 | 진행 중 `--tan` 다크 |
+| `StatusColor.arrivalGlow` | 다크 | `#A99FE6` | §1.11 | `--accent-strong` 다크 |
 
 ## 표 B — 타이포그래피 · 간격 · 라운드
 
@@ -263,8 +263,8 @@ for p in glob.glob("ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets/*/
         k = c["color"]["components"]
         want.add((f"`{a}`", "다크" if c.get("appearances") else "라이트", "`#%02X%02X%02X`" % (h(k["red"]), h(k["green"]), h(k["blue"]))))
 sw = P("ios/Shared/Sources/DesignSystem/Tokens.swift").read_text()
-for n, r, g, b in re.findall(r"static let (\w+) = SwiftUI\.Color\(red: 0x(\w\w) / 255\.0, green: 0x(\w\w) / 255\.0, blue: 0x(\w\w) / 255\.0\)", sw):
-    want |= {(f"`StatusColor.{n}`", "라이트", f"`#{r}{g}{b}`".upper()), (f"`StatusColor.{n}`", "다크", None)}
+for n, lt, dk in re.findall(r"static let (\w+) = adaptive\(light: 0x(\w{6}), dark: 0x(\w{6})\)", sw):
+    want |= {(f"`StatusColor.{n}`", "라이트", f"`#{lt.upper()}`"), (f"`StatusColor.{n}`", "다크", f"`#{dk.upper()}`")}
 got = [(r[0], r[1], r[2]) for r in A]
 keys = [(g[0], g[1]) for g in got]
 errs += [f"중복 {k}" for k in {k for k in keys if keys.count(k) > 1}]
