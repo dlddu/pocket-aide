@@ -183,6 +183,7 @@ last_updated: 2026-10-04
 | `Typography.Family.serif` | `.system(design: .serif)` | 허용 T3 | — | New York — 폴백 체인 3순위 |
 | `Font.Weight` | `.medium` `.semibold` `.bold` | §3.4 | `font-medium` `font-semibold` `font-bold` | `Typography.font(size:weight:family:)` 가 받는다 |
 | `Spacing.xs` | `4` | 허용 T4 | — | |
+| `Spacing.cardGap` | `6` | §4.3 | `space-y-1.5` | 카드 간격(리스트) — 투두 목록 행 위·아래 인셋 3+3 |
 | `Spacing.sm` | `8` | 허용 T4 | — | |
 | `Spacing.md` | `12` | §4.1 | `pt-3 pb-3` | 헤더 위/아래 |
 | `Spacing.lg` | `16` | §4.3 | `space-y-4` | 섹션 간격 |
@@ -216,7 +217,6 @@ last_updated: 2026-10-04
 | §4.2 다이나믹 아일랜드 | `20px` | 목업 전용 | 디바이스 크롬 |
 | §4.2 홈 인디케이터 | `3px` | 목업 전용 | 디바이스 크롬 |
 | §4.2 입력 필드 | `24` | 값 공유 Radius.cardLarge | 입력 필드 전용 상수 없음 |
-| §4.3 카드 간격(리스트) | `space-y-1.5` | 구현 대기 | 6pt 전용 상수가 `Spacing` 에 없다 — 화면은 리터럴 `6` 을 쓴다 |
 | §4.3 채팅 버블 간격 | `space-y-3.5` | 미구현 화면 | AI 채팅 화면 미구현(`_impl-map.md` 행 없음) |
 
 ## 검산
