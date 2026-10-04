@@ -35,22 +35,22 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 15행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 8행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 91 |
+| A | 일치 | 98 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 15 |
-| B | 일치 | 132 |
+| A | 목업 대기 | 8 |
+| B | 일치 | 147 |
 | B | 외부 | 24 |
-| B | 예시 데이터 | 86 |
-| B | 목업 전용 | 94 |
+| B | 예시 데이터 | 98 |
+| B | 목업 전용 | 95 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 55 |
@@ -79,10 +79,10 @@ last_updated: 2026-10-04
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` · ` | 일치 | 제목 줄 구분자 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `#\(number)` | 일치 | PR 번호 「#42」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `—` | 목업 대기 | PR 없는 그룹의 브랜치가 비었을 때 대체 문자 — 목업에 그 상태가 없다 |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `—` | 일치 | PR 없는 그룹의 브랜치가 비었을 때 대체 문자 — 「CI 상태 변형」 커밋 그룹 제목 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `통과 \(group.successCount)` | 일치 | 종합 상태 「통과 1」 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `실패 \(group.failureCount)` | 일치 | 종합 상태 「실패 1」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `진행 \(group.inProgressCount)` | 목업 대기 | 진행 중 카운트 — 목업 그룹은 전부 완료 이벤트라 진행 상태를 그리지 않는다 |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `진행 \(group.inProgressCount)` | 일치 | 진행 중 카운트 — 「CI 상태 변형」 커밋 그룹 종합 상태(--tan) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `CI \(group.items.count)건` | 일치 | 항목 수 「CI 3건」 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `최근 \(relativeRecent)` | 일치 | 헤더 시각 「최근 9:41:02」(시각 서식 `HH:mm` ↔ `H:mm:ss` 은 범위 밖 — 기준 4 수치) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `미확인 \(group.unacknowledgedCount)` | 일치 | 미확인 배지 「미확인 2」 |
@@ -90,7 +90,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` @\(short)` | 일치 | PR 없는 그룹의 「@f77e024」 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR` | 기준 4 | 그룹 헤더 외부 링크 칩 라벨 — 목업 「↗ PR」 과 낱말은 같고 `↗` 글리프 ↔ SF Symbol 아이콘 차이 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(verdictLabel) · 확인됨` | 일치 | 확인된 row 라벨 「CI 통과 · 확인됨」 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `workflow` | 목업 대기 | 워크플로 이름이 빈 경우의 대체 문자 — 목업에 그 상태가 없다 |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `workflow` | 일치 | 워크플로 이름이 빈 경우의 대체 문자 — 「CI 상태 변형」 neutral row 의 run 메타 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `·` | 일치 | 메타 줄 구분자 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `확인 \(relativeAck(ackedAt))` | 일치 | 확인 시각 「확인 · 오늘 09:15:04」(상대 서식 ↔ 절대 시각은 범위 밖 — 기준 4 수치) |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `커밋` | 기준 4 | 외부 링크 칩 라벨 — 목업 「↗ 커밋」, 글리프 ↔ 아이콘 차이 |
@@ -101,10 +101,10 @@ last_updated: 2026-10-04
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `xmark` | 비표시 | 상태 배지 SF Symbol 이름 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 통과` | 일치 | row 판정 라벨 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 실패` | 일치 | row 판정 라벨 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 취소` | 목업 대기 | 취소된 run 라벨 — 목업은 통과·실패만 그린다 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 타임아웃` | 목업 대기 | 타임아웃 run 라벨 — 위와 같음 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 시작` | 목업 대기 | 진행 중 run 라벨 — 위와 같음 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI \(item.conclusion)` | 목업 대기 | 알 수 없는 conclusion 의 대체 라벨 — 목업에 그 상태가 없다 |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 취소` | 일치 | 취소된 run 라벨 — 「CI 상태 변형」 row |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 타임아웃` | 일치 | 타임아웃 run 라벨 — 「CI 상태 변형」 row |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 시작` | 일치 | 진행 중 run 라벨 — 「CI 상태 변형」 커밋 그룹 row(--tan · 시계) |
+| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI \(item.conclusion)` | 일치 | 알 수 없는 conclusion 의 대체 라벨 — 「CI 상태 변형」 「CI neutral」 row |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · #\(number) \(title)` | 구현 대기 | row 제목 줄 — 목업 row 는 그룹 카드 안에서 제목 없이 판정 라벨·시각·메타만 그린다(제목은 그룹 헤더). 검산의 문자열 일치는 그룹 헤더 노드에 걸리지만 자리가 다르다 |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · #\(number)` | 구현 대기 | 위와 같음(제목 없는 PR) |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · \(item.headBranch)` | 구현 대기 | 위와 같음(PR 없는 커밋) |
@@ -206,7 +206,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 404행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 432행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -376,6 +376,34 @@ last_updated: 2026-10-04
 | `screen-pr-monitor-history` | `이력을 불러오지 못했습니다` | 일치 | 오류 상태 제목 |
 | `screen-pr-monitor-history` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 설명 — 구현은 `Text(error)` 로 `PRMonitorViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-pr-monitor-history` | `다시 시도` | 일치 | 오류 상태 재시도 버튼 |
+| `screen-pr-monitor-history` | `CI 상태 변형` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-pr-monitor-history` | `4` | 예시 데이터 | 미확인 총 개수 |
+| `screen-pr-monitor-history` | `미확인 · 2개 그룹` | 일치 | 섹션 헤더 |
+| `screen-pr-monitor-history` | `최근 10:05` | 일치 | 그룹 헤더 시각 |
+| `screen-pr-monitor-history` | `#43` | 일치 | 「#\(number)」 |
+| `screen-pr-monitor-history` | `chore(ci): 워크플로 타임아웃 재조정` | 예시 데이터 | PR 제목 |
+| `screen-pr-monitor-history` | `실패 2` | 일치 | 종합 상태 |
+| `screen-pr-monitor-history` | `미확인 3` | 일치 | 미확인 배지 |
+| `screen-pr-monitor-history` | `CI 취소` | 일치 | row 판정 라벨(cancelled) |
+| `screen-pr-monitor-history` | `10:05` | 예시 데이터 | 이벤트 시각 |
+| `screen-pr-monitor-history` | `5e8b1d0` | 예시 데이터 | 커밋 SHA |
+| `screen-pr-monitor-history` | `ci #324` | 예시 데이터 | 워크플로 이름 + run 번호 |
+| `screen-pr-monitor-history` | `CI 타임아웃` | 일치 | row 판정 라벨(timed_out) |
+| `screen-pr-monitor-history` | `09:58` | 예시 데이터 | 이벤트 시각 |
+| `screen-pr-monitor-history` | `ios-tests #323` | 예시 데이터 | 워크플로 이름 + run 번호 |
+| `screen-pr-monitor-history` | `CI neutral` | 일치 | 「CI \(item.conclusion)」 — 알 수 없는 conclusion 의 대체 라벨 |
+| `screen-pr-monitor-history` | `09:52` | 예시 데이터 | 이벤트 시각 |
+| `screen-pr-monitor-history` | `workflow` | 일치 | 워크플로 이름이 빈 경우의 대체 문자 |
+| `screen-pr-monitor-history` | `#322` | 예시 데이터 | run 번호 |
+| `screen-pr-monitor-history` | `최근 09:47` | 일치 | 그룹 헤더 시각 |
+| `screen-pr-monitor-history` | `—` | 일치 | PR 없는 그룹의 빈 브랜치 대체 문자 |
+| `screen-pr-monitor-history` | `@9d2c4e1` | 일치 | 「 @\(short)」 |
+| `screen-pr-monitor-history` | `진행 1` | 일치 | 종합 상태(진행 중) |
+| `screen-pr-monitor-history` | `CI 1건` | 일치 | 항목 수 |
+| `screen-pr-monitor-history` | `CI 시작` | 일치 | row 판정 라벨(진행 중) |
+| `screen-pr-monitor-history` | `09:47` | 예시 데이터 | 이벤트 시각 |
+| `screen-pr-monitor-history` | `9d2c4e1` | 예시 데이터 | 커밋 SHA |
+| `screen-pr-monitor-history` | `ci #321` | 예시 데이터 | 워크플로 이름 + run 번호 |
 | `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, 항목 "확인" 버튼이 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태·PR 링크 표시 · AC14 그룹 헤더 "모두 확인"으로 그룹 내 미확인 일괄 확인.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
