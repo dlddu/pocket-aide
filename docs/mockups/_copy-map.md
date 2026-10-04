@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-01
+last_updated: 2026-10-04
 ---
 
 # 카피 ↔ 구현 대응표
@@ -35,13 +35,13 @@ last_updated: 2026-10-01
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 29행, 표 B `구현 대기` 54행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 29행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
 | A | 일치 | 66 |
 | A | 데이터 | 4 |
-| A | 비표시 | 12 |
+| A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 4 |
 | A | 기준 4 | 5 |
@@ -53,9 +53,9 @@ last_updated: 2026-10-01
 | B | 목업 전용 | 80 |
 | B | 미구현 영역 | 21 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 54 |
+| B | 구현 대기 | 55 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 135행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 136행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -109,6 +109,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · #\(number)` | 구현 대기 | 위와 같음(제목 없는 PR) |
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · \(item.headBranch)` | 구현 대기 | 위와 같음(PR 없는 커밋) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `PR 모니터` | 일치 | `ScreenHeader` 제목 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `arrow.triangle.pull` | 비표시 | 열린 PR 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `bell` | 비표시 | 알림 설정 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `line.3.horizontal.decrease` | 비표시 | 제외 레포 버튼 SF Symbol 이름 — 위와 같음 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `이력을 불러오지 못했습니다` | 목업 대기 | 오류 상태 — 목업에 없다 |
@@ -195,7 +196,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 367행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 368행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -271,6 +272,7 @@ last_updated: 2026-10-01
 | `screen-pr-monitor-history` | `웹훅 연결` | 구현 대기 | 헤더 부제(웹훅 연결 상태) — 구현에 없다 |
 | `screen-pr-monitor-history` | `5` | 예시 데이터 | 미확인 총 개수 |
 | `screen-pr-monitor-history` | `미확인` | 일치 | 헤더 배지 라벨 |
+| `screen-pr-monitor-history` | `열린 PR` | 구현 대기 | 열린 PR 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐). 같은 문구는 시트 제목(`OpenPullRequestsSheet.swift`, `목업 없음` 행)에만 있다 |
 | `screen-pr-monitor-history` | `알림 설정` | 구현 대기 | 알림 설정 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐). 같은 문구는 시트 제목(`PRMonitorNotificationSettingsSheet.swift`, `목업 없음` 행)에만 있다 |
 | `screen-pr-monitor-history` | `제외 레포 관리` | 구현 대기 | 제외 레포 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐) |
 | `screen-pr-monitor-history` | `미확인 · 3개 그룹` | 일치 | 섹션 헤더 |
