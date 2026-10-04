@@ -29,7 +29,9 @@ final class WebhookExcludedRepoUITests: XCTestCase {
     }
 
     private func closeSheet(in app: XCUIApplication) {
-        app.buttons["완료"].tap()
+        let done = app.navigationBars["제외한 레포"].buttons["완료"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5), "The excluded repositories sheet should offer 완료")
+        done.tap()
         XCTAssertTrue(
             TodoUI.waitToDisappear(app.textFields["prmonitor.excluded.input"]),
             "완료 should close the excluded repositories sheet"
@@ -77,6 +79,11 @@ final class WebhookExcludedRepoUITests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10), "\(repo) should still be listed as excluded")
         row.swipeLeft()
         let delete = app.buttons.matching(NSPredicate(format: "label == %@", "삭제")).firstMatch
+        if !delete.waitForExistence(timeout: 3) {
+            let edge = app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: app.frame.width * 0.85, dy: row.frame.midY))
+            edge.press(forDuration: 0.1, thenDragTo: edge.withOffset(CGVector(dx: -240, dy: 0)))
+        }
         XCTAssertTrue(delete.waitForExistence(timeout: 5), "Swiping the repository left should reveal 삭제")
         delete.tap()
         XCTAssertTrue(TodoUI.waitToDisappear(row), "\(repo) should leave the excluded list")
