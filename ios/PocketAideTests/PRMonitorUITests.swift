@@ -6,6 +6,8 @@ import XCTest
 /// GitHub workflow_run envelope → SQS → backend consumer → notification
 /// history → history API → PR 모니터 screen → 「확인」 acknowledge, and the
 /// push for that event: system banner → tap → PR 모니터 tab, unacknowledged.
+/// The 「열린 PR」 sheet runs the app's real GitHubClient against the local
+/// GitHub API stub: PAT connect, roles, HEAD CI status, filter, banners.
 ///
 /// Pre-conditions assumed by the test environment (ios-test workflow):
 ///   - backend consumer long-polls the local SQS queue (start-test-sqs)
@@ -14,7 +16,16 @@ import XCTest
 ///   - once that event's history row exists, its push payload is delivered
 ///     to the simulator with `xcrun simctl push` until the app logs the
 ///     highlight for it
+///   - the GitHub API stub (start-test-backend) answers on localhost:5557
+///     and decides each response by the token: see `GitHubToken`
 final class PRMonitorUITests: XCTestCase {
+    private enum GitHubToken {
+        static let valid = "ghp_e2e_valid"
+        static let revoked = "ghp_e2e_revoked"
+        static let expires = "ghp_e2e_expires"
+        static let rateLimited = "ghp_e2e_ratelimited"
+    }
+
     /// Title line the fixture produces: GitHub's workflow_run.pull_requests[]
     /// carries no PR title, so it reads "<repo> · #<number>". Matched by
     /// prefix because the group header formats the number with grouping
@@ -135,5 +146,116 @@ final class PRMonitorUITests: XCTestCase {
             app.staticTexts["CI 통과"].firstMatch.exists,
             "No unacknowledged row should remain after the persisted acknowledgement"
         )
+    }
+
+    private func openPullRequestsSheet() -> XCUIApplication {
+        let app = XCUIApplication()
+        // mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 앱의 GitHubClient 를 로컬 GitHub API 스텁으로 향하게 한다 (docs/e2e-mocking-policy.md)
+        app.launchEnvironment["GITHUB_API_BASE_URL"] = "http://localhost:5557"
+        app.launch()
+        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
+        tab.tap()
+        let open = app.buttons["prmonitor.openprs.button"]
+        XCTAssertTrue(open.waitForExistence(timeout: 10), "PR 모니터 header should offer the open-PR sheet")
+        open.tap()
+        XCTAssertTrue(app.navigationBars["열린 PR"].waitForExistence(timeout: 10), "The open-PR sheet should be presented")
+        let disconnect = app.buttons["openprs.disconnect.button"]
+        if disconnect.waitForExistence(timeout: 3) {
+            disconnect.tap()
+        }
+        XCTAssertTrue(
+            app.secureTextFields["openprs.token.field"].waitForExistence(timeout: 10),
+            "A disconnected sheet should show the token form"
+        )
+        return app
+    }
+
+    private func submitToken(_ token: String, in app: XCUIApplication) {
+        let field = app.secureTextFields["openprs.token.field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10), "Token field should be shown")
+        field.tap()
+        field.typeText(token)
+        app.buttons["openprs.connect.button"].tap()
+    }
+
+    private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
+    private func assertRow(_ number: Int, contains parts: [String], in app: XCUIApplication) {
+        let row = element("openprs.row.dlddu/pocket-aide-e2e#\(number)", in: app)
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "PR #\(number) should be listed")
+        for part in parts {
+            XCTAssertTrue(row.label.contains(part), "PR #\(number) row should read \(part): \(row.label)")
+        }
+    }
+
+    // The stub serves authored #11 (SUCCESS) · #14 (no checks), review-requested
+    // #12 (FAILURE) plus one SAML-hidden node, and reviewed #13 (PENDING).
+    func testOpenPullRequestsConnectListsRolesCIStatusAndFilters() {
+        var app = openPullRequestsSheet()
+
+        submitToken(GitHubToken.revoked, in: app)
+        let connectError = element("openprs.connect.error", in: app)
+        XCTAssertTrue(connectError.waitForExistence(timeout: 15), "A rejected PAT should not connect")
+        XCTAssertTrue(connectError.label.contains("토큰을 거부"), "Connect error should name the rejected token: \(connectError.label)")
+        XCTAssertFalse(app.buttons["openprs.disconnect.button"].exists, "A rejected PAT must not be stored")
+
+        app.terminate()
+        app = openPullRequestsSheet()
+        submitToken(GitHubToken.valid, in: app)
+        let login = element("openprs.account.login", in: app)
+        XCTAssertTrue(login.waitForExistence(timeout: 15), "A valid PAT should connect")
+        XCTAssertEqual(login.label, "@pocket-aide-e2e")
+
+        let all = app.buttons["filter.pill.all"]
+        if all.waitForExistence(timeout: 5) && !all.isSelected {
+            all.tap()
+        }
+        assertRow(11, contains: ["작성자", "성공"], in: app)
+        assertRow(14, contains: ["작성자", "상태 없음"], in: app)
+        assertRow(12, contains: ["리뷰어", "실패", "octocat"], in: app)
+        assertRow(13, contains: ["리뷰어", "진행 중", "hubot"], in: app)
+
+        let access = element("openprs.banner.access", in: app)
+        XCTAssertTrue(access.waitForExistence(timeout: 5), "The SAML-hidden PR should raise the access banner")
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "PR 1개는")).firstMatch.exists,
+            "The access banner should count the one hidden PR"
+        )
+
+        app.buttons["filter.pill.ciFailing"].tap()
+        XCTAssertTrue(element("openprs.row.dlddu/pocket-aide-e2e#12", in: app).waitForExistence(timeout: 5), "The failing PR should stay")
+        XCTAssertFalse(element("openprs.row.dlddu/pocket-aide-e2e#11", in: app).exists, "Passing PRs should be filtered out")
+        XCTAssertFalse(element("openprs.row.dlddu/pocket-aide-e2e#13", in: app).exists, "Pending PRs should be filtered out")
+        app.buttons["filter.pill.mine"].tap()
+        XCTAssertTrue(element("openprs.row.dlddu/pocket-aide-e2e#11", in: app).waitForExistence(timeout: 5), "Authored PRs should stay")
+        XCTAssertFalse(element("openprs.row.dlddu/pocket-aide-e2e#12", in: app).exists, "Review requests should be filtered out")
+        app.buttons["filter.pill.all"].tap()
+
+        app.buttons["openprs.disconnect.button"].tap()
+        XCTAssertTrue(app.secureTextFields["openprs.token.field"].waitForExistence(timeout: 10), "Disconnect should return to the token form")
+    }
+
+    func testOpenPullRequestsBannersForRevokedAndRateLimitedTokens() {
+        let app = openPullRequestsSheet()
+
+        submitToken(GitHubToken.expires, in: app)
+        let tokenBanner = element("openprs.banner.token", in: app)
+        XCTAssertTrue(tokenBanner.waitForExistence(timeout: 15), "A token GitHub rejects on refresh should raise the token banner")
+        let action = app.buttons["openprs.banner.action"]
+        XCTAssertEqual(action.label, "토큰 다시 연결")
+        action.tap()
+
+        submitToken(GitHubToken.rateLimited, in: app)
+        XCTAssertTrue(
+            element("openprs.banner.ratelimit", in: app).waitForExistence(timeout: 15),
+            "An exhausted rate limit should raise the rate-limit banner"
+        )
+        XCTAssertEqual(app.buttons["openprs.banner.action"].label, "다시 시도")
+
+        app.buttons["openprs.disconnect.button"].tap()
+        XCTAssertTrue(app.secureTextFields["openprs.token.field"].waitForExistence(timeout: 10), "Disconnect should return to the token form")
     }
 }

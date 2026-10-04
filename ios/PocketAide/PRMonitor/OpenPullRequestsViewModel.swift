@@ -26,7 +26,7 @@ final class OpenPullRequestsViewModel: ObservableObject {
 
     init(
         store: GitHubCredentialStoring = KeychainGitHubCredentialStore(),
-        client: GitHubClient = GitHubClient(),
+        client: GitHubClient = OpenPullRequestsViewModel.launchClient(),
         defaults: UserDefaults = .standard
     ) {
         self.store = store
@@ -34,6 +34,14 @@ final class OpenPullRequestsViewModel: ObservableObject {
         self.defaults = defaults
         self.login = (try? store.load())?.login
         self.filter = defaults.string(forKey: Self.filterKey).flatMap(OpenPullRequestFilter.init(rawValue:)) ?? .all
+    }
+
+    // mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; UI 테스트만 로컬 GitHub API 스텁으로 향한다 (docs/e2e-mocking-policy.md)
+    nonisolated static func launchClient() -> GitHubClient {
+        guard let raw = ProcessInfo.processInfo.environment["GITHUB_API_BASE_URL"], let url = URL(string: raw) else {
+            return GitHubClient()
+        }
+        return GitHubClient(baseURL: url)
     }
 
     var isConnected: Bool { login != nil }
