@@ -65,8 +65,10 @@ jobs:
         # Once the consumer has stored the fixture's history row, push the
         # payload the backend would send for it (formatPushText title/body +
         # SendWithData's event_id) until the app logs the deep-link highlight
-        # for that id, i.e. PRMonitorUITests tapped the banner. Pushes before
-        # the test grants notification permission are not presented.
+        # for that id, i.e. PRMonitorUITests tapped the banner, and keep that
+        # log line: xcodebuild shuts the simulator down when the tests end.
+        # Pushes before the test grants notification permission are not
+        # presented.
         run: |
           (
             id=''
@@ -82,7 +84,8 @@ jobs:
             for i in $(seq 1 60); do
               xcrun simctl push booted com.dlddu.PocketAide /tmp/pr-monitor.apns || true
               if xcrun simctl spawn booted log show --last 30s --style compact \
-                  --predicate 'process == "PocketAide"' 2>/dev/null | grep -cw "highlightedEventID=$id" >/dev/null; then
+                  --predicate 'process == "PocketAide"' 2>/dev/null \
+                  | grep -w "highlightedEventID=$id" > /tmp/push-highlight.log; then
                 echo "delivered event_id=$id"
                 break
               fi
@@ -120,11 +123,10 @@ jobs:
             test | xcbeautify
       - name: Verify push tap reached the deep-link highlight
         # The tap itself is asserted by PRMonitorUITests; the highlighted
-        # event id is only observable in the app's log.
+        # event id is only observable in the app's log, saved by the push step.
         run: |
           id=$(cat /tmp/push-event-id)
-          xcrun simctl spawn booted log show --last 2h --style compact \
-            --predicate 'process == "PocketAide"' | grep -w "highlightedEventID=$id"
+          grep -w "highlightedEventID=$id" /tmp/push-highlight.log
       - name: Dump PR-monitor pipeline logs on failure
         if: failure()
         run: |
