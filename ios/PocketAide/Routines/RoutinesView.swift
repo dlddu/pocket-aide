@@ -261,9 +261,11 @@ private struct RoutineCard: View {
                         .accessibilityIdentifier("routines.card.\(routine.id).summary")
                 }
                 Spacer(minLength: 0)
-                Text(routine.completed ? "완료" : "\(routine.progressPercent)%")
+                Text(routine.completed ? "완료" : routine.done == 0 ? "대기" : "\(routine.progressPercent)%")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.titleMd, weight: .bold))
-                    .foregroundStyle(DesignTokens.Color.accent(.routines))
+                    .foregroundStyle(!routine.completed && routine.done == 0
+                        ? DesignTokens.Color.ink(.routines).opacity(0.4)
+                        : DesignTokens.Color.accent(.routines))
                     .accessibilityIdentifier("routines.card.\(routine.id).progress")
             }
             progressBar
