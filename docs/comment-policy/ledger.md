@@ -29,7 +29,9 @@
 | 2026-09-29 | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 11 | `e12b892a3613` | 완료 | 필요성 판정 — 제거 1줄 · 유지 11줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/internal/llm/openrouter.go` | 11 | `9dcd360cbdb0` | 완료 | 필요성 판정 — 제거 2줄 · 유지 11줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 26 | `ebe1e7cd5f5e` | 완료 | 필요성 판정 — 제거 10줄 · 유지 26줄(개작 4블록 포함) — [상세](passes/2026-09-29-backend.md) |
+| — | `backend/internal/notificationsettings/store.go` | 1 | `2922bc9b4d31` | — | 미판정 |
 | 2026-09-29 | `backend/internal/oidcmock/oidcmock.go` | 17 | `dc59f9ab7528` | 완료 | 필요성 판정 — 제거 4줄 · 유지 17줄(개작 4블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
+| — | `backend/internal/routines/store.go` | 3 | `49861c75fd62` | — | 미판정 |
 | 2026-10-01 | `backend/internal/scratchpad/store.go` | 20 | `61dc59d49236` | 완료 | 필요성 판정 — 제거 3줄 · 유지 20줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 24줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |

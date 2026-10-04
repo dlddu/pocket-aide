@@ -13,12 +13,14 @@ var (
 	ErrNotScheduled = errors.New("routine is not scheduled on that day")
 )
 
+// Step is one row of the routine_steps table.
 type Step struct {
 	ID       int64  `json:"id"`
 	Title    string `json:"title"`
 	Position int    `json:"position"`
 }
 
+// Routine is one row of the routines table, with its steps in position order.
 type Routine struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
@@ -32,6 +34,7 @@ func (r Routine) ScheduledOn(day time.Time) bool {
 	return day.Format(dayLayout) >= r.StartDay && r.Matches(day)
 }
 
+// DayStep is a step with whether a routine_step_checks row marks it done on that day.
 type DayStep struct {
 	Step
 	Checked bool `json:"checked"`
