@@ -6,7 +6,6 @@ name: iOS build + test
 # SQS endpoint so the backend's PR-monitor consumer runs for real and a
 # GitHub workflow_run envelope reaches the PR monitor screen. The push for
 # that event is delivered to the simulator so PRMonitorUITests can tap it.
-# The open-PR sheet talks to a local GitHub API stub (start-test-backend).
 
 on:
   workflow_call:

@@ -6,8 +6,6 @@ import XCTest
 /// GitHub workflow_run envelope → SQS → backend consumer → notification
 /// history → history API → PR 모니터 screen → 「확인」 acknowledge, and the
 /// push for that event: system banner → tap → PR 모니터 tab, unacknowledged.
-/// The 「열린 PR」 sheet runs the app's real GitHubClient against the local
-/// GitHub API stub: PAT connect, roles, HEAD CI status, filter, banners.
 ///
 /// Pre-conditions assumed by the test environment (ios-test workflow):
 ///   - backend consumer long-polls the local SQS queue (start-test-sqs)
@@ -16,16 +14,7 @@ import XCTest
 ///   - once that event's history row exists, its push payload is delivered
 ///     to the simulator with `xcrun simctl push` until the app logs the
 ///     highlight for it
-///   - the GitHub API stub (start-test-backend) answers on localhost:5557
-///     and decides each response by the token: see `GitHubToken`
 final class PRMonitorUITests: XCTestCase {
-    private enum GitHubToken {
-        static let valid = "ghp_e2e_valid"
-        static let revoked = "ghp_e2e_revoked"
-        static let expires = "ghp_e2e_expires"
-        static let rateLimited = "ghp_e2e_ratelimited"
-    }
-
     /// Title line the fixture produces: GitHub's workflow_run.pull_requests[]
     /// carries no PR title, so it reads "<repo> · #<number>". Matched by
     /// prefix because the group header formats the number with grouping
@@ -148,6 +137,13 @@ final class PRMonitorUITests: XCTestCase {
         )
     }
 
+    private enum GitHubToken {
+        static let valid = "ghp_e2e_valid"
+        static let revoked = "ghp_e2e_revoked"
+        static let expires = "ghp_e2e_expires"
+        static let rateLimited = "ghp_e2e_ratelimited"
+    }
+
     private func openPullRequestsSheet() -> XCUIApplication {
         let app = XCUIApplication()
         // mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 앱의 GitHubClient 를 로컬 GitHub API 스텁으로 향하게 한다 (docs/e2e-mocking-policy.md)
@@ -191,8 +187,6 @@ final class PRMonitorUITests: XCTestCase {
         }
     }
 
-    // The stub serves authored #11 (SUCCESS) · #14 (no checks), review-requested
-    // #12 (FAILURE) plus one SAML-hidden node, and reviewed #13 (PENDING).
     func testOpenPullRequestsConnectListsRolesCIStatusAndFilters() {
         var app = openPullRequestsSheet()
 
