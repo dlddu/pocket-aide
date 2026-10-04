@@ -5,11 +5,13 @@ import SwiftUI
 struct PRMonitorView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @StateObject private var viewModel: PRMonitorViewModel
+    @StateObject private var openPullRequests = OpenPullRequestsViewModel()
 
     @Binding var highlightedEventID: Int64?
 
     @State private var showingExcludedSheet = false
     @State private var showingSettingsSheet = false
+    @State private var showingOpenPullRequests = false
     @State private var arrivalClearTask: Task<Void, Never>?
 
     private let arrivalHighlightDuration: TimeInterval = 5
@@ -28,6 +30,12 @@ struct PRMonitorView: View {
                         if viewModel.totalUnacknowledgedCount > 0 {
                             unreadBadge
                         }
+                        Button {
+                            showingOpenPullRequests = true
+                        } label: {
+                            headerIcon("arrow.triangle.pull")
+                        }
+                        .accessibilityIdentifier("prmonitor.openprs.button")
                         Button {
                             showingSettingsSheet = true
                             Task { await viewModel.loadNotificationSettings() }
@@ -68,6 +76,12 @@ struct PRMonitorView: View {
             PRMonitorExcludedReposSheet(
                 viewModel: viewModel,
                 isPresented: $showingExcludedSheet
+            )
+        }
+        .sheet(isPresented: $showingOpenPullRequests) {
+            OpenPullRequestsSheet(
+                viewModel: openPullRequests,
+                isPresented: $showingOpenPullRequests
             )
         }
         .sheet(isPresented: $showingSettingsSheet) {

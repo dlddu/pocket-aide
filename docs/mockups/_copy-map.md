@@ -35,22 +35,22 @@ last_updated: 2026-10-01
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 46행, 표 B `구현 대기` 54행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 29행, 표 B `구현 대기` 54행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 49 |
+| A | 일치 | 66 |
 | A | 데이터 | 4 |
 | A | 비표시 | 12 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 4 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 46 |
-| B | 일치 | 93 |
-| B | 외부 | 17 |
-| B | 예시 데이터 | 76 |
-| B | 목업 전용 | 70 |
+| A | 목업 대기 | 29 |
+| B | 일치 | 110 |
+| B | 외부 | 21 |
+| B | 예시 데이터 | 78 |
+| B | 목업 전용 | 80 |
 | B | 미구현 영역 | 21 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 54 |
@@ -63,8 +63,8 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `오늘 회전` | 구현 대기 | 목업 히어로 라벨은 「오늘 회전 · 1/14」 — 회전 위치(n/전체)가 없다(표 B 같은 행) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(hero.priority.displayName)` | 일치 | 히어로 메타 「우선순위 높음」. 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 목업 대기 | 히어로 회전 버튼 라벨 — 목업 히어로에는 수동 회전 버튼이 없다(AC3 은 탭 진입 시 회전) |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 목업 대기 | 빈 상태 제목 — 목업은 목록이 찬 상태만 그린다 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 목업 대기 | 빈 상태 본문 — 위와 같음 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
@@ -127,32 +127,32 @@ last_updated: 2026-10-01
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 목업 대기 | 루틴 추가 시트 제목 — 시트 목업이 없다(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 목업 대기 | 루틴 추가 시트 이름 필드 placeholder — 시트 목업이 없다 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 목업 대기 | 루틴 추가 시트 섹션 라벨 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `매월 \(monthDay)일` | 목업 대기 | 루틴 추가 시트 매월 날짜 스테퍼 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계` | 목업 대기 | 루틴 추가 시트 섹션 라벨 — 위와 같음 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `매월 \(monthDay)일` | 일치 | 루틴 추가 프레임 매월 날짜 스테퍼 「매월 1일」(프레임은 주기 「매월」 선택 상태) |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계` | 일치 | 루틴 추가 프레임 섹션 라벨 |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(index + 1)` | 데이터 | 루틴 추가 시트 단계 번호 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 이름` | 목업 대기 | 루틴 추가 시트 단계 필드 placeholder — 시트 목업이 없다 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 추가` | 목업 대기 | 루틴 추가·단계 추가 시트 버튼 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `저장` | 목업 대기 | 루틴 추가 시트 1차 액션 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `취소` | 목업 대기 | 루틴 추가·단계 추가 시트 2차 액션 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · 단계` | 목업 대기 | 단계 추가 시트 제목 — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 단계` | 목업 대기 | 단계 추가 시트 입력 필드 placeholder — 위와 같음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 목업 대기 | 단계 추가·이력 시트 닫기 버튼 — 목업 history strip 은 화면 안 인라인이라 닫기가 없다 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 이름` | 일치 | 루틴 추가 프레임 단계 필드 placeholder |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `저장` | 일치 | 루틴 추가 프레임 1차 액션 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `취소` | 일치 | 루틴 추가 프레임 2차 액션 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · 단계` | 일치 | 단계 추가 프레임 시트 제목 「아침 루틴 · 단계」 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 일치 | 단계 추가 프레임 2차 액션. 이력 시트의 같은 「닫기」 는 목업 history strip 이 화면 안 인라인이라 대응 자리가 없다(자리 차이는 기준 4) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · \(days.count)일 이력` | 구현 대기 | 이력 시트 제목 — 목업 history strip 제목은 「아침 루틴 · 30일」(「이력」 없음, 표 B 같은 행) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.scheduleSummary) · 예정 \(summary.scheduledDays)일 중 \(summary.completedDays)일 완료` | 목업 대기 | 이력 시트 요약 줄 — 목업 history strip 은 요약 줄 대신 시작일·「오늘 · 60%」 축 라벨을 그린다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `루틴` | 일치 | `ScreenHeader` 제목 — 목업 헤더 영역 라벨 「루틴」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `새 루틴` | 일치 | 헤더 추가 버튼 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 · \(viewModel.today.count)` | 목업 대기 | 오늘 루틴 섹션 제목 — 목업은 루틴 카드를 섹션 제목 없이 나열한다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 쉬는 루틴` | 목업 대기 | 오늘 예정 없는 루틴 섹션 제목 — 목업은 주간 루틴을 같은 목록의 카드(「D-4」·7일 막대)로 그린다 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 목업 대기 | 빈 상태 안내 — 목업은 루틴이 찬 상태만 그린다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · 단계 \(routine.steps.count)개` | 목업 대기 | 쉬는 루틴 행 메타 — 목업 주간 카드 메타는 「매주 일요일」 뿐이고 단계 수가 없다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · \(routine.done) / \(routine.total) 완료` | 일치 | 카드 메타 「매일 · 3 / 5 완료」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 목업 대기 | 다 끝낸 루틴의 진행률 자리 — 목업은 완료 상태 카드를 그리지 않는다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.progressPercent)%` | 일치 | 카드 진행률 「60%」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 목업 대기 | 카드 하단 단계 추가 버튼 — 목업 카드에 없다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 목업 대기 | 카드 하단 단계 추가 버튼 — 목업 카드에 없다(같은 낱말의 목업 시트 섹션 라벨은 `RoutineSheets.swift` 행) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `이력` | 구현 대기 | 카드 하단 이력 시트 버튼 — 목업의 이력 진입은 history strip 의 「전체 이력」(표 B 같은 행) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `checked` | 비표시 | 단계 행 `accessibilityValue` — 글자로 그려지지 않는다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `unchecked` | 비표시 | 위와 같음 |
@@ -163,7 +163,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 — 목업 큰 제목 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 추가 버튼(구현은 목록 위 전폭 버튼 — 자리는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(section.title) · \(section.items.count)` | 구현 대기 | 일자 그룹 헤더 — 목업은 「오늘」 과 「5 ITEMS」 두 노드로 그린다. 개수 서식(ITEMS)이 구현에 없다(표 B 같은 행) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 목업 대기 | 빈 상태 안내 — 목업은 항목이 찬 상태만 그린다 |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 기준 4 | 항목 메타 — 목업은 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다. 구현은 「 · 」 로 이어 한 줄 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `날씨` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현` |
@@ -187,7 +187,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 목업 대기 | 회사 완료 섹션 제목 — 회사 목업은 완료 섹션을 그리지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `완료` | 기준 4 | 개인 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「완료 · 4」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 목업 대기 | 빈 상태 안내 — 목업에 빈 상태가 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `checkmark.square.fill` | 비표시 | 완료 체크박스 SF Symbol 이름 |
@@ -195,13 +195,14 @@ last_updated: 2026-10-01
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 334행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 367행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
 | `screen-affirmations` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations` | `07 · 자주 읽는 문장` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-affirmations` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-affirmations` | `다짐` | 일치 | 헤더 영역 라벨(`AreaLabel` 기본 문구) · 탭 바 항목 |
 | `screen-affirmations` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
@@ -228,6 +229,9 @@ last_updated: 2026-10-01
 | `screen-affirmations` | `개인` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 카드 제목 |
+| `screen-affirmations` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 카드 본문 |
 | `screen-affirmations` | `PRD-5 · AC2 우선순위(점 3개), AC3 탭 진입 시 회전 노출(상단 히어로)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-affirmations-priority-edit` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -392,6 +396,7 @@ last_updated: 2026-10-01
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `06 · 루틴` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-routines` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-routines` | `루틴` | 일치 | 헤더 영역 라벨(`RoutinesView.swift` `ScreenHeader` 제목) · 탭 바 |
 | `screen-routines` | `5월 6일 · 수요일` | 예시 데이터 | 오늘 날짜 — 구현은 `dateFormat` 「M월 d일 · EEEE」 로 그린다(목업 큰 제목, 구현 헤더 우측 캡션 — 위계는 기준 4) |
@@ -430,10 +435,31 @@ last_updated: 2026-10-01
 | `screen-routines` | `개인` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-routines` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 |
+| `screen-routines` | `루틴 추가 — 헤더 새 루틴` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder(`RoutineSheets.swift`) |
+| `screen-routines` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨(`RoutineSheets.swift`) |
+| `screen-routines` | `매일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `특정 요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `매주` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `매월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
+| `screen-routines` | `매월 1일` | 일치 | 매월 날짜 스테퍼 「매월 \(monthDay)일」(`RoutineSheets.swift`) |
+| `screen-routines` | `단계` | 일치 | 루틴 추가 프레임 섹션 라벨(`RoutineSheets.swift`) |
+| `screen-routines` | `1` | 예시 데이터 | 단계 번호 「\(index + 1)」(런타임 값) |
+| `screen-routines` | `단계 이름` | 일치 | 루틴 추가 프레임 단계 필드 placeholder(`RoutineSheets.swift`) |
+| `screen-routines` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `저장` | 일치 | 루틴 추가 프레임 1차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `취소` | 일치 | 루틴 추가 프레임 2차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `단계 추가 — 루틴 카드에서` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `아침 루틴 · 단계` | 일치 | 단계 추가 프레임 시트 제목 「\(routine.name) · 단계」(`RoutineSheets.swift`) |
+| `screen-routines` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder(`RoutineSheets.swift`) |
+| `screen-routines` | `닫기` | 일치 | 단계 추가 프레임 2차 액션(`RoutineSheets.swift`) |
 | `screen-routines` | `PRD-2 · AC1 단계 정의(아침 루틴 5단계), AC2 반복 주기(매일/매주), AC3 단계 체크 → 진행률, AC4 30일 이력 히트맵` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-scratchpad` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `03 · 임시 공간` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-scratchpad` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-scratchpad` | `임시 공간` | 일치 | 헤더 제목(목업은 배지 옆 작은 라벨 — 위계는 기준 4) |
 | `screen-scratchpad` | `12` | 예시 데이터 | 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
@@ -467,10 +493,14 @@ last_updated: 2026-10-01
 | `screen-scratchpad` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-scratchpad` | `루틴` | 일치 | `RootView.swift` 탭 바 |
 | `screen-scratchpad` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-scratchpad` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-scratchpad` | `0` | 예시 데이터 | 빈 상태 프레임의 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
+| `screen-scratchpad` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 |
 | `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-personal` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `04 · 개인 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-personal` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-todo-personal` | `PERSONAL` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
 | `screen-todo-personal` | `내 일` | 일치 | 헤더 제목 |
@@ -499,6 +529,9 @@ last_updated: 2026-10-01
 | `screen-todo-personal` | `회사` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `루틴` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-personal` | `0개 남음 · 0개 완료` | 일치 | 빈 상태 프레임 요약 줄 |
+| `screen-todo-personal` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 |
 | `screen-todo-personal` | `PRD-3 · AC3 시각적 영역 구분(테라코타 톤·상단 스트립·"PERSONAL" 라벨) — 회사 탭과 한눈에 구분되도록 설계` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-work` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

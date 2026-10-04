@@ -52,7 +52,7 @@ last_updated: 2026-10-01
 | `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`) |
 | `ios/PocketAide/PushRegistrar.swift` | 비렌더링 | — | APNs 토큰 등록 |
 | `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업별 활성 탭: 다짐·다짐·PR 모니터·루틴·임시공간·개인·회사). 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 목업 없음 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | 부분 | `screen-routines` | 30일 이력 시트 `RoutineHistorySheet`(제목 「<루틴> · 30일 이력」·30칸 히트맵·일자별 행) — 목업 화면 하단 history strip(「아침 루틴 · 30일」·30칸 히트맵·「전체 이력」)의 구현. 목업은 화면 안 인라인, 구현은 카드 「이력」 버튼 뒤 시트다(자리 차이는 기준 4). 같은 파일의 루틴 추가·단계 추가 시트(`RoutineAddSheet`·`RoutineStepAddSheet`)는 대응 목업이 없다 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | 부분 | `screen-routines` | 30일 이력 시트 `RoutineHistorySheet`(제목 「<루틴> · 30일 이력」·30칸 히트맵·일자별 행) — 목업 화면 하단 history strip(「아침 루틴 · 30일」·30칸 히트맵·「전체 이력」)의 구현. 목업은 화면 안 인라인, 구현은 카드 「이력」 버튼 뒤 시트다(자리 차이는 기준 4). 같은 파일의 루틴 추가·단계 추가 시트(`RoutineAddSheet`·`RoutineStepAddSheet`)는 목업의 「루틴 추가」·「단계 추가」 프레임이 대응한다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | 화면 | `screen-routines` | 루틴 탭 화면 전체 — `RoutinesView`·진입점 `RoutinesTab`·`RoutineCard`: 헤더(날짜·「새 루틴」)·루틴 카드(진행률·단계 체크)·「오늘 쉬는 루틴」·빈 상태. 이력·추가 시트는 `RoutineSheets.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Routines/RoutinesViewModel.swift` | 비렌더링 | — | 루틴 목록·일자별 체크·이력 상태와 API 호출 |
 | `ios/PocketAide/Scratchpad/ScratchpadAddSheet.swift` | 목업 없음 | — | 임시공간 텍스트 추가 시트(PRD-4) — 대응 화면 목업이 없다 |

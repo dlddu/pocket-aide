@@ -92,6 +92,7 @@ final class AppAuthCoordinator: ObservableObject {
 
     func signOut() {
         try? oidc?.signOut()
+        try? KeychainGitHubCredentialStore().clear()
         me = nil
         meError = nil
         signedIn = false
