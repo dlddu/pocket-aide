@@ -26,6 +26,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
 	"github.com/dlddu/pocket-aide/backend/internal/routines"
 	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
+	"github.com/dlddu/pocket-aide/backend/internal/sessions"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
 
@@ -69,6 +70,8 @@ func main() {
 	todoStore := todos.New(conn)
 	scratchStore := scratchpad.New(conn)
 	routineStore := routines.New(conn)
+	sessionStore := sessions.New(conn)
+	platform := sessions.NewClient(cfg.SessionPlatformURL)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -101,6 +104,15 @@ func main() {
 		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
+		p.Get("/api/sessions/config", handlers.SessionConfig(platform))
+		p.Get("/api/sessions", handlers.ListSessions(sessionStore, platform))
+		p.Post("/api/sessions", handlers.CreateSession(sessionStore, platform))
+		p.Get("/api/sessions/{id}", handlers.GetSession(sessionStore, platform))
+		p.Delete("/api/sessions/{id}", handlers.DeleteSession(sessionStore, platform))
+		p.Post("/api/sessions/{id}/read", handlers.ReadSession(sessionStore, platform))
+		p.Post("/api/sessions/{id}/write", handlers.WriteSession(sessionStore, platform))
+		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(sessionStore, platform))
+		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(sessionStore, platform))
 	})
 
 	srv := &http.Server{
@@ -219,6 +231,8 @@ type config struct {
 	OIDCClientID    string
 	OIDCRedirectURI string
 
+	SessionPlatformURL string
+
 	// PR monitor pipeline. Disabled when SQS_QUEUE_URL is empty so local /
 	// test environments don't need APNs or SQS configured.
 	PRMonitorEnabled  bool
@@ -240,6 +254,8 @@ func loadConfig() config {
 		OIDCClientID:    mustEnv("OIDC_CLIENT_ID"),
 		OIDCRedirectURI: mustEnv("OIDC_REDIRECT_URI"),
 		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
+
+		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
 	}
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
