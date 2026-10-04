@@ -42,24 +42,24 @@ final class TodoDeleteUITests: XCTestCase {
         }
 
         screen.search(token)
+        screen.dismissKeyboard()
+        screen.openEditSheet(viaSheet).delete(in: self)
+        XCTAssertTrue(TodoUI.waitToDisappear(screen.row(viaSheet)), "The sheet-deleted item should leave the list")
+        XCTAssertTrue(
+            screen.waitForCounts(TodoCounts(open: before.open - 1, done: before.done)),
+            "The summary should drop the sheet-deleted item"
+        )
+
         let row = screen.row(swiped)
         XCTAssertTrue(row.waitForExistence(timeout: 10), "'\(swiped)' should be listed before swiping")
-        screen.dismissKeyboard()
         row.swipeLeft()
         let swipeDelete = screen.list.buttons["삭제"]
         XCTAssertTrue(swipeDelete.waitForExistence(timeout: 5), "Swiping left should reveal 삭제")
         swipeDelete.tap()
         XCTAssertTrue(TodoUI.waitToDisappear(row), "The swiped item should leave the list")
         XCTAssertTrue(
-            screen.waitForCounts(TodoCounts(open: before.open - 1, done: before.done)),
-            "The summary should drop the swiped item"
-        )
-
-        screen.openEditSheet(viaSheet).delete()
-        XCTAssertTrue(TodoUI.waitToDisappear(screen.row(viaSheet)), "The sheet-deleted item should leave the list")
-        XCTAssertTrue(
             screen.waitForCounts(TodoCounts(open: before.open - 2, done: before.done)),
-            "The summary should drop the sheet-deleted item"
+            "The summary should drop the swiped item"
         )
         XCTAssertTrue(screen.row(kept).exists, "Untouched items stay listed")
         screen.clearSearch()

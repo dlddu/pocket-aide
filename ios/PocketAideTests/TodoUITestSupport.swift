@@ -386,8 +386,19 @@ struct TodoSheet {
         XCTAssertTrue(TodoUI.waitToDisappear(title), "The sheet should close after cancel")
     }
 
-    func delete() {
+    func delete(in testCase: XCTestCase) {
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5), "The edit sheet should offer 삭제")
         deleteButton.tap()
-        XCTAssertTrue(TodoUI.waitToDisappear(title), "The sheet should close after delete")
+        if !TodoUI.waitToDisappear(title) {
+            let dump = XCTAttachment(string: app.debugDescription)
+            dump.name = "app-after-sheet-delete"
+            dump.lifetime = .keepAlways
+            testCase.add(dump)
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = "screen-after-sheet-delete"
+            shot.lifetime = .keepAlways
+            testCase.add(shot)
+            XCTFail("The sheet should close after delete")
+        }
     }
 }
