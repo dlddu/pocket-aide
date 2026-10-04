@@ -313,10 +313,12 @@ struct TodoScreen {
     }
 
     func priorityLabel(_ raw: String) -> String {
-        if area == .work { return raw.uppercased() }
-        switch raw {
-        case "high": return "우선"
-        case "normal": return "보통"
+        switch (area == .work, raw) {
+        case (true, "high"): return "P1"
+        case (true, "normal"): return "P2"
+        case (true, _): return "P3"
+        case (false, "high"): return "우선"
+        case (false, "normal"): return "보통"
         default: return "낮음"
         }
     }
