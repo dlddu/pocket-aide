@@ -12,4 +12,5 @@ enum WidgetAffirmationState: Equatable {
 struct PocketAideWidgetEntry: TimelineEntry {
     let date: Date
     let state: WidgetAffirmationState
+    let calendar: WidgetCalendarState
 }

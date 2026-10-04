@@ -10,7 +10,7 @@ struct PocketAideWidgetEntryView: View {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
                 PlaceholderSection(area: .personal, label: "날씨")
                 ruleDivider(vertical: true)
-                PlaceholderSection(area: .work, label: "다음 일정")
+                CalendarSection(state: entry.calendar, now: entry.date)
             }
             .padding(.bottom, DesignTokens.Spacing.md)
 
