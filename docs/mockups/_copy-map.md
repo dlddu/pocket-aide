@@ -35,19 +35,19 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 20행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 15행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 86 |
+| A | 일치 | 91 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 13 |
-| A | 목업 대기 | 20 |
-| B | 일치 | 127 |
+| A | 목업 대기 | 15 |
+| B | 일치 | 132 |
 | B | 외부 | 24 |
 | B | 예시 데이터 | 86 |
 | B | 목업 전용 | 94 |
@@ -65,7 +65,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 목업 대기 | 히어로 회전 버튼 라벨 — 목업 히어로에는 수동 회전 버튼이 없다(AC3 은 탭 진입 시 회전) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 목록의 스와이프된 행 패널 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `우선순위 설정` | 일치 | 편집 모드 시트 제목 |
@@ -74,7 +74,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `노출 빈도` | 일치 | `AreaLabel` 섹션 라벨 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 카드를 길게 눌러 나중에 바꿀 수 있습니다.` | 구현 대기 | 도움말 어순·어휘 차이 — 목업 「나중에 카드를 길게 눌러 변경할 수 있습니다.」 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 목업 대기 | 편집 모드 파괴적 액션 — 목업 시트는 저장·취소 둘만 그린다 |
+| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 일치 | 편집 모드 파괴적 액션 — 목업 편집 모드 프레임의 외곽선 버튼(생성 모드엔 없음) |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` · ` | 일치 | 제목 줄 구분자 |
@@ -149,7 +149,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 쉬는 루틴` | 목업 대기 | 오늘 예정 없는 루틴 섹션 제목 — 목업은 주간 루틴을 같은 목록의 카드(「D-4」·7일 막대)로 그린다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · 단계 \(routine.steps.count)개` | 목업 대기 | 쉬는 루틴 행 메타 — 목업 주간 카드 메타는 「매주 일요일」 뿐이고 단계 수가 없다 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 주간 카드의 스와이프된 행 패널 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · \(routine.done) / \(routine.total) 완료` | 일치 | 카드 메타 「매일 · 3 / 5 완료」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 목업 대기 | 다 끝낸 루틴의 진행률 자리 — 목업은 완료 상태 카드를 그리지 않는다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.progressPercent)%` | 일치 | 카드 진행률 「60%」 |
@@ -165,7 +165,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 추가 버튼(구현은 목록 위 전폭 버튼 — 자리는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(section.title) · \(section.items.count)` | 구현 대기 | 일자 그룹 헤더 — 목업은 「오늘」 과 「5 ITEMS」 두 노드로 그린다. 개수 서식(ITEMS)이 구현에 없다(표 B 같은 행) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 기준 4 | 항목 메타 — 목업은 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다. 구현은 「 · 」 로 이어 한 줄 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현`(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
@@ -199,14 +199,14 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 기준 4 | 회사 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「DONE · 8」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `완료` | 기준 4 | 개인 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「완료 · 4」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 개인 목업 「날짜 없음」 행의 스와이프 패널 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `checkmark.square.fill` | 비표시 | 완료 체크박스 SF Symbol 이름 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `square` | 비표시 | 미완료 체크박스 SF Symbol 이름 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 399행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 404행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -231,6 +231,7 @@ last_updated: 2026-10-04
 | `screen-affirmations` | `"compounding은 매일 1%면 1년에 37배" — 어디서 들었는지 까먹기 전에` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `임시공간에서 이동 · 어제 22:51` | 미구현 영역 | 임시공간 → 다짐 이동 출처 줄 — 임시공간 탭이 `미구현`(`PlaceholderTab.swift`) |
 | `screen-affirmations` | `불필요한 회의는 거절해도 괜찮다. 팀의 시간은 내 시간이기도 하다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
+| `screen-affirmations` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-affirmations` | `엄마한테 일주일에 한 번은 전화하기.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `자주 노출` | 구현 대기 | 우선순위 점 범례 — 구현에 범례가 없다 |
 | `screen-affirmations` | `보통` | 구현 대기 | 범례 항목 — 위와 같음(`displayName` 과 문자열은 같지만 범례 자체가 없다) |
@@ -263,6 +264,7 @@ last_updated: 2026-10-04
 | `screen-affirmations-priority-edit` | `편집 — 카드 길게 누르기` | 목업 전용 | 프레임 위 캡션(편집 모드 프레임 이름) |
 | `screen-affirmations-priority-edit` | `우선순위 설정` | 일치 | 시트 제목(편집 모드) |
 | `screen-affirmations-priority-edit` | `"` | 구현 대기 | 장식 인용부호 — 구현은 `“`(U+201C) |
+| `screen-affirmations-priority-edit` | `삭제` | 일치 | 편집 모드 destructive 버튼 |
 | `screen-affirmations-priority-edit` | `노출 빈도` | 일치 | 섹션 라벨 |
 | `screen-affirmations-priority-edit` | `높음` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | `AffirmationPriority.displayName` — 시트 3-tier 선택지 |
 | `screen-affirmations-priority-edit` | `보통` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | 위와 같음 |
@@ -455,6 +457,7 @@ last_updated: 2026-10-04
 | `screen-routines` | `내일 옷` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `임시공간 분류` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `책 10페이지` | 예시 데이터 | 단계 이름(사용자 데이터) |
+| `screen-routines` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-routines` | `주간 회고` | 예시 데이터 | 루틴 이름(사용자 데이터) |
 | `screen-routines` | `매주 일요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주기 요약 `RoutineWeekdays.summary` 「매주 \(symbols[day])요일」 — 구현은 쉬는 루틴 행 메타에 그린다 |
 | `screen-routines` | `D-4` | 구현 대기 | 다음 예정일까지 남은 날 — 구현 쉬는 루틴 행에 없다 |
@@ -524,6 +527,7 @@ last_updated: 2026-10-04
 | `screen-scratchpad` | `7 ITEMS` | 구현 대기 | 일자 그룹 개수 — 위와 같음 |
 | `screen-scratchpad` | `22:51` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `"compounding은 매일 1%면 1년에 37배" — 어디서 들었는지 까먹기 전에` | 예시 데이터 | 메모 본문(사용자 데이터) |
+| `screen-scratchpad` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-scratchpad` | `19:30` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정` | 예시 데이터 | 메모 본문(사용자 데이터) |
 | `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 바 |
@@ -558,6 +562,7 @@ last_updated: 2026-10-04
 | `screen-todo-personal` | `금요일` | 예시 데이터 | 마감일(사용자 데이터) |
 | `screen-todo-personal` | `2개` | 구현 대기 | 날짜 섹션 항목 수 — 날짜 섹션이 구현에 없다 |
 | `screen-todo-personal` | `아침 산책 코스 — 한 정거장 더 가서 블루보틀` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-todo-personal` | `책장 정리 — 안 읽은 책 5권 추리기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `완료 · 4` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
 | `screen-todo-personal` | `접기` | 구현 대기 | 완료 섹션 접기 버튼 — 구현에 없다 |
