@@ -49,12 +49,13 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `.github/actions/start-test-backend/github_api_stub.py` | GitHub API 스텁 | `EXT` | 앱의 `GitHubClient` 가 부르는 두 엔드포인트(`GET /user` · `POST /graphql`)만 실 응답 모양(2026-10-04 실 `api.github.com` 응답과 필드 대조)으로 서빙한다. 응답은 토큰이 정한다: 연결 성공(작성자·리뷰 요청·리뷰함 PR 과 HEAD 종합 CI 상태 4종, SAML 로 가려진 노드 1건) · 연결 거절 401 · 연결 뒤 401 · 한도 소진 403. GraphQL 질의가 세 검색 별칭과 연결된 login 의 한정자를 싣지 않으면 오류로 답해, 실 상류보다 관대하지 않다. 사유는 위 행과 같다. |
 | `ios/PocketAide/PRMonitor/OpenPullRequestsViewModel.swift` | `processInfo.environment["GITHUB_API_BASE_URL"]` | `EXT` | `launchClient()` 가 이 프로세스 env 가 있을 때만 `GitHubClient(baseURL:)` 를 그 주소로 만든다 — 없으면 기존대로 `https://api.github.com`(운영 동작 불변). 바뀌는 것은 호스트뿐이고 요청 헤더 · 상태 분류 · GraphQL 해석 · 키체인 저장 · 시트 화면은 실경로다. 사유는 위 행과 같다. |
 | `ios/PocketAideTests/PRMonitorUITests.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시트를 여는 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
+| `ios/PocketAideTests/OpenPullRequestsUITestSupport.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시나리오 전용 파일(github-monitor 시나리오 1·4·10)이 공유하는 실행 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
 
 각 행의 파일에는 `mock-exception: EXT` 주석이 함께 있다(표기 규약). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
 계정·테넌트가 마련되면 `oidcmock` 여섯 행 모두 실 상류로 대체하고 지운다. `APNS_DISABLED` 행은 차단 요인 BF-2
 (푸시 수신) 해소 때 재판정해 **유지**했다 — 백엔드의 실 발송은 여전히 Apple 인증키(.p8)를 요구하고, 수신 이후는
 `simctl push` 행이 실경로로 연다. 두 APNs 행은 CI 시크릿으로 쓸 수 있는 APNs 인증키가 마련되면 함께 실 발송으로 대체하고 지운다.
-GitHub API 스텁 네 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
+GitHub API 스텁 다섯 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
 (차단 요인 BF-3 해소 때 원장이 정한 해소 방향의 둘째 갈래 — 첫째 갈래의 선행이 사람의 계정 가입이라 이 갈래로 닫았다).
 
 `APNS_DISABLED` 는 `tbm_pocket-aide-e2e-mock-policy` 의 as-is 지문 패턴(`oidcmock`·`launchEnvironment`·가짜 자격증명
@@ -63,8 +64,8 @@ GitHub API 스텁 네 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크
 `simctl push` 도 같은 사각지대에 있다 — 코드 지점은 `ios-test.yml` 의 「Deliver PR-monitor push to the simulator」
 스텝과 그 직전 `mock-exception: EXT` 주석이다.
 GitHub API 스텁 두 행도 같은 사각지대다 — `action.yml` 은 기존 `mock-exception: EXT` 토큰으로, `github_api_stub.py` 는 파일 머리의
-`mock-exception: EXT` 주석으로만 지문에 잡힌다. 나머지 두 행의 토큰(`processInfo.environment["GITHUB_API_BASE_URL"]` ·
-`launchEnvironment["GITHUB_API_BASE_URL"]`)은 지문 패턴 안이다.
+`mock-exception: EXT` 주석으로만 지문에 잡힌다. 나머지 세 행의 토큰(`processInfo.environment["GITHUB_API_BASE_URL"]` ·
+`launchEnvironment["GITHUB_API_BASE_URL"]` 두 파일)은 지문 패턴 안이다.
 E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY` 는 에뮬레이터 요청 서명용이라 끄는
 상류가 없다 — 모킹 지점이 아니다.
 
