@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const fixtureReadme = "# 데이터 모델\n\n```data-model-scope\nmigrations: m\nchecker: chk\nscope: src\nexclude: _test\\.go$\nsite: \\.(QueryContext|ExecContext)\\(\nschema-exclude: ^(schema_migrations|sqlite_sequence)$\nsql: \\bFROM [a-z_]+\\b\n```\n"
+const fixtureReadme = "# 데이터 모델\n\n```data-model-scope\nmigrations: m\nchecker: chk\nscope: src\nexclude: _test\\.go$\nsite: \\.(QueryContext|ExecContext)\\(\nschema-exclude: ^(schema_migrations|sqlite_sequence)$\nsql: \\bFROM [a-z_]+\\b\n```\n\n| ID | 기준 | 관측 가능한 근거 |\n| --- | --- | --- |\n| F1 | 픽스처 기준 | 픽스처 |\n"
 
 const fixtureMigration = `CREATE TABLE parent (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -173,6 +173,8 @@ func TestUndecidable(t *testing.T) {
 		{"unparsable diagram", map[string]string{"docs/data-model/erd.md": strings.Replace(fixtureERD, "erDiagram\n", "erDiagram\n    parent }}--{{ child\n", 1)}},
 		{"catalog without pattern table", map[string]string{"docs/data-model/query-patterns.md": "# 쿼리 패턴\n"}},
 		{"catalog stray row", map[string]string{"docs/data-model/query-patterns.md": fixtureCatalog + "\n| x | y |\n"}},
+		{"criteria table missing", map[string]string{"docs/data-model/README.md": strings.Replace(fixtureReadme, "| ID | 기준 | 관측 가능한 근거 |", "| ID | 기준 |", 1)}},
+		{"criteria row malformed", map[string]string{"docs/data-model/README.md": strings.Replace(fixtureReadme, "| F1 |", "| X1 |", 1)}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -201,12 +203,14 @@ func TestSchemaChangeWins(t *testing.T) {
 }
 
 const fixtureCatalog = "# 쿼리 패턴\n\n| ID | 형태 | 지원 인덱스 또는 허용 사유 | 호출 지점 |\n| --- | --- | --- | --- |\n" +
-	"| Q-01 | `select child \\| - \\| - \\| -` | 미판정 | `src/a.go::Store::List` |\n" +
-	"| Q-02 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n" +
+	"| Q-01 | `select child \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::Store::List` |\n" +
+	"| Q-02 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n" +
 	"| Q-03 | `insert child \\| - \\| - \\| -` | — | `src/b.go::Store::Add` |\n" +
-	"| Q-04 | `select parent \\| eq(name) \\| - \\| -` | 미판정 | `src/b.go::Store::Find` |\n" +
+	"| Q-04 | `select parent \\| eq(name) \\| - \\| -` | UNIQUE(parent.name) | `src/b.go::Store::Find` |\n" +
 	"\n| 호출 지점 | 패턴 ID | 대표 SQL | 추출 불가 사유 |\n| --- | --- | --- | --- |\n" +
-	"| `src/b.go::Store::Add` | Q-03 | `INSERT INTO child (parent_id, at) VALUES (?, ?)` | 테이블을 런타임에 고른다 |\n"
+	"| `src/b.go::Store::Add` | Q-03 | `INSERT INTO child (parent_id, at) VALUES (?, ?)` | 테이블을 런타임에 고른다 |\n" +
+	"\n| 인덱스 | 테이블 | 비고 |\n| --- | --- | --- |\n" +
+	"| `idx_child_note` | `child` | - |\n"
 
 var fixtureDynamic = strings.Join([]string{
 	"package src",
@@ -241,9 +245,15 @@ func TestCatalogConsistent(t *testing.T) {
 	if r.Invariants["2"].Status != "ok" {
 		t.Fatalf("invariant 2: %+v", r.Invariants["2"].Violations)
 	}
-	k := kinds(r, "3")
-	if r.ExitCode != 1 || len(k) != 1 || !k["plan-unimplemented"] {
-		t.Fatalf("want exit 1 with only plan-unimplemented, got %d %+v", r.ExitCode, r.Invariants["3"].Violations)
+	if r.ExitCode != 0 || r.Invariants["3"].Status != "ok" {
+		t.Fatalf("want exit 0, got %d %+v", r.ExitCode, r.Invariants["3"].Violations)
+	}
+	sup := map[string]string{}
+	for _, p := range r.Plans {
+		sup[p.Pattern] = p.Support
+	}
+	if sup["Q-01"] != noSupport || sup["Q-02"] != noSupport || sup["Q-03"] != noAccess || sup["Q-04"] != "UNIQUE(parent.name)" {
+		t.Fatalf("plans %+v", r.Plans)
 	}
 	var stmt, dyn int
 	for _, s := range r.Sites {
@@ -263,10 +273,10 @@ func TestCatalogDrift(t *testing.T) {
 	cases := []struct {
 		name, file, old, new, inv, kind string
 	}{
-		{"pattern row removed", "docs/data-model/query-patterns.md", "| Q-02 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n", "", "2", "query-unregistered"},
+		{"pattern row removed", "docs/data-model/query-patterns.md", "| Q-02 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n", "", "2", "query-unregistered"},
 		{"site on wrong row", "docs/data-model/query-patterns.md", "`src/a.go::Store::List` |", "`src/a.go::Store::List`, `src/a.go::helper` |", "2", "dead-site"},
-		{"dead pattern", "docs/data-model/query-patterns.md", "| Q-02 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n", "| Q-02 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n| Q-05 | `delete child \\| - \\| - \\| -` | 미판정 | `src/a.go::gone` |\n", "2", "dead-pattern"},
-		{"ambiguous shape", "docs/data-model/query-patterns.md", "| Q-02 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n", "| Q-02 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n| Q-05 | `delete parent \\| - \\| - \\| -` | 미판정 | `src/a.go::helper` |\n", "2", "ambiguous-shape"},
+		{"dead pattern", "docs/data-model/query-patterns.md", "| Q-02 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n", "| Q-02 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n| Q-05 | `delete child \\| - \\| - \\| -` | 지원 없음 | `src/a.go::gone` |\n", "2", "dead-pattern"},
+		{"ambiguous shape", "docs/data-model/query-patterns.md", "| Q-02 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n", "| Q-02 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n| Q-05 | `delete parent \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 | `src/a.go::helper` |\n", "2", "ambiguous-shape"},
 		{"shape drift", "docs/data-model/query-patterns.md", "`select parent \\| eq(name) \\| - \\| -`", "`select parent \\| eq(id) \\| - \\| -`", "2", "query-unregistered"},
 		{"malformed shape", "docs/data-model/query-patterns.md", "`select child \\| - \\| - \\| -`", "`select child`", "2", "shape-malformed"},
 		{"bad id", "docs/data-model/query-patterns.md", "| Q-02 |", "| P2 |", "2", "pattern-id"},
@@ -277,8 +287,19 @@ func TestCatalogDrift(t *testing.T) {
 		{"manual sql broken", "docs/data-model/query-patterns.md", "`INSERT INTO child (parent_id, at) VALUES (?, ?)`", "`SELECT 1 UNION SELECT 2`", "2", "manual-sql"},
 		{"new query in code", "src/b.go", "func (s *Store) Find() {", "func (s *Store) Drop() {\n\ts.db.ExecContext(ctx, `DELETE FROM child WHERE parent_id = ?`, 1)\n}\n\nfunc (s *Store) Find() {", "2", "query-unregistered"},
 		{"code query became dynamic", "src/a.go", "\tdb.ExecContext(ctx, `DELETE FROM parent`)", "\tdb.ExecContext(ctx, q)", "2", "manual-missing"},
-		{"support dash on read", "docs/data-model/query-patterns.md", "| Q-04 | `select parent \\| eq(name) \\| - \\| -` | 미판정 |", "| Q-04 | `select parent \\| eq(name) \\| - \\| -` | — |", "3", "support-access"},
-		{"support missing dash on write", "docs/data-model/query-patterns.md", "| Q-03 | `insert child \\| - \\| - \\| -` | — |", "| Q-03 | `insert child \\| - \\| - \\| -` | 미판정 |", "3", "support-access"},
+		{"support dash on read", "docs/data-model/query-patterns.md", "| UNIQUE(parent.name) |", "| — |", "3", "support-mismatch"},
+		{"support missing dash on write", "docs/data-model/query-patterns.md", "| Q-03 | `insert child \\| - \\| - \\| -` | — |", "| Q-03 | `insert child \\| - \\| - \\| -` | PK(child) |", "3", "support-mismatch"},
+		{"support names other index", "docs/data-model/query-patterns.md", "| UNIQUE(parent.name) |", "| PK(parent) |", "3", "support-mismatch"},
+		{"index cell but engine scans", "docs/data-model/query-patterns.md", "`select child \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 |", "`select child \\| - \\| - \\| -` | idx_child_parent_at |", "3", "support-mismatch"},
+		{"full scan allowed but engine uses index", "docs/data-model/query-patterns.md", "| UNIQUE(parent.name) |", "| 풀스캔 허용(F1): 픽스처 |", "3", "support-mismatch"},
+		{"no support documented", "docs/data-model/query-patterns.md", "`select child \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 |", "`select child \\| - \\| - \\| -` | 지원 없음 |", "3", "no-support"},
+		{"unknown criterion", "docs/data-model/query-patterns.md", "`select child \\| - \\| - \\| -` | 풀스캔 허용(F1): 픽스처 |", "`select child \\| - \\| - \\| -` | 풀스캔 허용(F9): 픽스처 |", "3", "criterion-unknown"},
+		{"unjudged cell", "docs/data-model/query-patterns.md", "| UNIQUE(parent.name) |", "| 미판정 |", "3", "support-mismatch"},
+		{"unused row removed", "docs/data-model/query-patterns.md", "| `idx_child_note` | `child` | - |\n", "", "3", "unused-unregistered"},
+		{"used index listed as unused", "docs/data-model/query-patterns.md", "| `idx_child_note` | `child` | - |\n", "| `idx_child_note` | `child` | - |\n| `UNIQUE(parent.name)` | `parent` | - |\n", "3", "unused-stale"},
+		{"unused table removed", "docs/data-model/query-patterns.md", "\n| 인덱스 | 테이블 | 비고 |\n| --- | --- | --- |\n| `idx_child_note` | `child` | - |\n", "", "3", "unused-table-missing"},
+		{"same shape different plans", "src/b.go", "func (s *Store) Find() {", "func (s *Store) FindCI() {\n\ts.db.QueryContext(ctx, `SELECT id FROM parent WHERE name = ? COLLATE NOCASE`, 1)\n}\n\nfunc (s *Store) Find() {", "3", "split-plan"},
+		{"manual sql does not plan", "docs/data-model/query-patterns.md", "`INSERT INTO child (parent_id, at) VALUES (?, ?)`", "`INSERT INTO child (parent_id, nope) VALUES (?, ?)`", "3", "plan-error"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

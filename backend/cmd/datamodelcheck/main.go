@@ -31,6 +31,7 @@ type report struct {
 	Schema      *schemaSummary        `json:"schema,omitempty"`
 	Invariants  map[string]*invReport `json:"invariants"`
 	Sites       []site                `json:"sites"`
+	Plans       []sqlPlan             `json:"plans"`
 	Undecidable []string              `json:"undecidable"`
 }
 
@@ -77,6 +78,7 @@ func run(root string) *report {
 		Engine:      "SQLite (" + driverVersion() + ")",
 		Invariants:  map[string]*invReport{"1": {Status: "undecidable"}, "2": {Status: "undecidable"}, "3": {Status: "undecidable"}},
 		Sites:       []site{},
+		Plans:       []sqlPlan{},
 		Undecidable: []string{},
 	}
 	finish := func() *report {
@@ -121,10 +123,16 @@ func run(root string) *report {
 		return fail("C1 위치: 블록의 checker 경로 %s 가 없다", b.Checker)
 	}
 
+	criteria, err := readCriteria(filepath.Join(root, readmePath))
+	if err != nil {
+		return fail("README 풀스캔 허용 기준: %v", err)
+	}
+
 	s, err := observeSchema(root, b)
 	if err != nil {
 		return fail("C3 스키마 관측: %v", err)
 	}
+	defer s.close()
 	r.Engine = s.Engine
 	fks := 0
 	for _, t := range s.Tables {
@@ -156,11 +164,12 @@ func run(root string) *report {
 	} else if c, err := parseCatalog(filepath.Join(root, qpPath)); err != nil {
 		r.Undecidable = append(r.Undecidable, "카탈로그 해석: "+err.Error())
 	} else {
-		inv2, inv3 := checkCatalog(c, sites, s)
+		inv2, inv3, plans := checkCatalog(c, sites, s, criteria)
 		r.Invariants["2"].Status = ""
 		r.Invariants["2"].Violations = inv2
 		r.Invariants["3"].Status = ""
-		r.Invariants["3"].Violations = append(inv3, violation{Invariant: "3", Kind: "plan-unimplemented", Subject: qpPath, Detail: fmt.Sprintf("지원 칸의 플랜(C5) 판정과 미사용 인덱스 표 대조가 아직 구현되지 않았다 — 패턴 %d개 · 인덱스(PK 제외) %d개 미판정, 판정 슬라이스 (3)이 체커를 확장한다", len(c.patterns), s.numIdx)})
+		r.Invariants["3"].Violations = inv3
+		r.Plans = plans
 	}
 	return finish()
 }
