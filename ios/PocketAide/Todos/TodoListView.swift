@@ -282,10 +282,18 @@ private struct TodoRow: View {
         var parts: [String] = []
         if let due = item.dueDate { parts.append(due) }
         if let priority = item.priority {
-            parts.append(area == .work ? priority.rawValue.uppercased() : priority.displayName)
+            parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)
         }
         if !item.memo.isEmpty { parts.append("메모: \(item.memo)") }
         return parts.joined(separator: " · ")
+    }
+
+    private func workRank(_ priority: TodoPriority) -> Int {
+        switch priority {
+        case .high: return 1
+        case .normal: return 2
+        case .low: return 3
+        }
     }
 
     private var metaFont: Font {

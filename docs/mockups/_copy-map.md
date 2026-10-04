@@ -35,11 +35,11 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 37행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 121 |
+| A | 일치 | 122 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
@@ -47,15 +47,15 @@ last_updated: 2026-10-04
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 173 |
-| B | 외부 | 24 |
+| B | 일치 | 174 |
+| B | 외부 | 31 |
 | B | 예시 데이터 | 98 |
 | B | 목업 전용 | 97 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 37 |
+| B | 구현 대기 | 29 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 157행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 158행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -214,6 +214,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `checkmark.square.fill` | 비표시 | 완료 체크박스 SF Symbol 이름 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `square` | 비표시 | 미완료 체크박스 SF Symbol 이름 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
@@ -503,13 +504,13 @@ last_updated: 2026-10-04
 | `screen-routines` | `주간 회고` | 예시 데이터 | 루틴 이름(사용자 데이터) |
 | `screen-routines` | `매주 일요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주기 요약 `RoutineWeekdays.summary` 「매주 \(symbols[day])요일」 — 구현은 쉬는 루틴 행 메타에 그린다 |
 | `screen-routines` | `D-4` | 구현 대기 | 다음 예정일까지 남은 날 — 구현 쉬는 루틴 행에 없다 |
-| `screen-routines` | `월` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
-| `screen-routines` | `화` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
-| `screen-routines` | `수` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
-| `screen-routines` | `목` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
-| `screen-routines` | `금` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
-| `screen-routines` | `토` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
-| `screen-routines` | `일` | 구현 대기 | 주간 루틴 카드의 7일 막대 요일 — 구현 쉬는 루틴 행에 없다(요일 글자는 `RoutineWeekdays.symbols` 에 있고 루틴 추가 시트 요일 선택이 쓴다) |
+| `screen-routines` | `월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `화` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `수` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `목` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `금` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `토` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
 | `screen-routines` | `아침 루틴 · 30일` | 일치 | history strip 제목 — 구현 이력 시트 제목 「\(routine.name) · \(days.count)일」(표 A 같은 행) |
 | `screen-routines` | `전체 이력` | 구현 대기 | history strip 이력 진입 버튼 — 구현은 카드 하단 「이력」 버튼(표 A 같은 행) |
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
@@ -639,7 +640,7 @@ last_updated: 2026-10-04
 | `screen-todo-work` | `분기 리뷰 deck — KPI 슬라이드 4장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `오늘 17:00` | 예시 데이터 | 마감 시각(사용자 데이터) |
 | `screen-todo-work` | `·` | 일치 | 행 메타 구분자 「 · 」 |
-| `screen-todo-work` | `P1` | 구현 대기 | 우선순위 표기 — 구현은 두 영역 모두 「우선」 |
+| `screen-todo-work` | `P1` | 일치 | 우선순위 표기 — `TodoListView.swift` 회사 행 메타(우선 = P1 · 보통 = P2 · 낮음 = P3) |
 | `screen-todo-work` | `고객 케이스 A 리뷰 회신` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `오늘 18:00` | 예시 데이터 | 마감 시각(사용자 데이터) |
 | `screen-todo-work` | `윤정님 대기` | 구현 대기 | 대기 상태 메타 — 구현 행 메타에 없다 |
