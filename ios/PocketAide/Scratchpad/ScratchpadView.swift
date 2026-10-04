@@ -57,7 +57,7 @@ struct ScratchpadView: View {
     }
 
     private var header: some View {
-        ScreenHeader(area: .scratchpad, title: "임시 공간") {
+        ScreenHeader(area: .scratchpad, title: "임시 공간", subtitle: "캡처 부담 없이 일단 던져두는 곳") {
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(viewModel.unclassifiedCount)")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold))

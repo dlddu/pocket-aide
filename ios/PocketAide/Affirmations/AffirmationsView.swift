@@ -127,6 +127,13 @@ struct AffirmationsView: View {
                         .accessibilityIdentifier("affirmations.hero.rotate")
                     }
                 }
+                .background(alignment: .topLeading) {
+                    Text("\"")
+                        .font(DesignTokens.Typography.font(size: 120, family: .serif))
+                        .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.08))
+                        .offset(x: -36, y: -36)
+                        .accessibilityHidden(true)
+                }
             }
             .accessibilityIdentifier("affirmations.hero.card")
         } else if viewModel.isLoading {
@@ -191,6 +198,41 @@ struct AffirmationsView: View {
                 .listRowBackground(Color.clear)
                 .accessibilityIdentifier("affirmations.list.header")
             }
+
+            Section {
+                priorityLegend
+                    .listRowInsets(EdgeInsets(
+                        top: DesignTokens.Spacing.xl,
+                        leading: DesignTokens.Spacing.xl,
+                        bottom: DesignTokens.Spacing.xl,
+                        trailing: DesignTokens.Spacing.xl
+                    ))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+            }
+        }
+    }
+
+    private var priorityLegend: some View {
+        HStack(spacing: DesignTokens.Spacing.md) {
+            legendItem(.high, "자주 노출")
+            legendItem(.normal, "보통")
+            legendItem(.low, "가끔")
+            Spacer(minLength: 0)
+        }
+        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+        .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.7))
+        .padding(.horizontal, DesignTokens.Spacing.md)
+        .padding(.vertical, 10)
+        .background(DesignTokens.Color.soft(.affirmations).opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityIdentifier("affirmations.priority.legend")
+    }
+
+    private func legendItem(_ priority: AffirmationPriority, _ label: String) -> some View {
+        HStack(spacing: 6) {
+            PriorityDots.horizontal(for: priority)
+            Text(label)
         }
     }
 
