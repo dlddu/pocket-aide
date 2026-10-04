@@ -139,7 +139,7 @@ func run(root string) *report {
 		r.Invariants["1"].Violations = v
 	}
 
-	sites, err := listSites(root, b)
+	sites, err := listSites(root, b, s)
 	if err != nil {
 		return fail("C4 지점 추출: %v", err)
 	}
@@ -153,8 +153,14 @@ func run(root string) *report {
 		}
 		r.Invariants["3"].Status = ""
 		r.Invariants["3"].Violations = append(r.Invariants["3"].Violations, violation{Invariant: "3", Kind: "catalog-missing", Subject: qpPath, Detail: fmt.Sprintf("지원 칸·미사용 인덱스 표가 없다 — 인덱스(PK 제외) %d개 미판정", s.numIdx)})
+	} else if c, err := parseCatalog(filepath.Join(root, qpPath)); err != nil {
+		r.Undecidable = append(r.Undecidable, "카탈로그 해석: "+err.Error())
 	} else {
-		r.Undecidable = append(r.Undecidable, "불변식 2·3: 형태 추출(C4)과 플랜(C5) 판정이 아직 구현되지 않았다 — 판정 슬라이스 (2)·(3)이 체커를 확장한다")
+		inv2, inv3 := checkCatalog(c, sites, s)
+		r.Invariants["2"].Status = ""
+		r.Invariants["2"].Violations = inv2
+		r.Invariants["3"].Status = ""
+		r.Invariants["3"].Violations = append(inv3, violation{Invariant: "3", Kind: "plan-unimplemented", Subject: qpPath, Detail: fmt.Sprintf("지원 칸의 플랜(C5) 판정과 미사용 인덱스 표 대조가 아직 구현되지 않았다 — 패턴 %d개 · 인덱스(PK 제외) %d개 미판정, 판정 슬라이스 (3)이 체커를 확장한다", len(c.patterns), s.numIdx)})
 	}
 	return finish()
 }

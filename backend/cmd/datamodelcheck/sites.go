@@ -14,14 +14,21 @@ import (
 )
 
 type site struct {
-	File string `json:"file"`
-	Line int    `json:"line"`
-	Func string `json:"func"`
+	File          string `json:"file"`
+	Line          int    `json:"line"`
+	Func          string `json:"func"`
+	Shape         string `json:"shape,omitempty"`
+	SQL           string `json:"sql,omitempty"`
+	Unextractable string `json:"unextractable,omitempty"`
+
+	shape shape
 }
 
 func (s site) String() string { return fmt.Sprintf("%s::%s (%d행)", s.File, s.Func, s.Line) }
 
-func listSites(root string, b *scopeBlock) ([]site, error) {
+func (s site) ID() string { return s.File + "::" + s.Func }
+
+func listSites(root string, b *scopeBlock, sch *schema) ([]site, error) {
 	args := append([]string{"-C", root, "ls-files", "--"}, b.Scope...)
 	out, err := exec.Command("git", args...).Output()
 	if err != nil {
@@ -45,6 +52,7 @@ func listSites(root string, b *scopeBlock) ([]site, error) {
 			continue
 		}
 		var funcs []funcSpan
+		var gf *goFile
 		lines := strings.Split(string(data), "\n")
 		for i, l := range lines {
 			if !b.site.MatchString(l) {
@@ -52,8 +60,31 @@ func listSites(root string, b *scopeBlock) ([]site, error) {
 			}
 			if funcs == nil && strings.HasSuffix(f, ".go") {
 				funcs = goFuncs(data)
+				gf = parseGoFile(data)
 			}
-			sites = append(sites, site{File: f, Line: i + 1, Func: enclosing(funcs, i+1)})
+			base := site{File: f, Line: i + 1, Func: enclosing(funcs, i+1)}
+			if !strings.HasSuffix(f, ".go") {
+				base.Unextractable = "Go 소스가 아니다"
+				sites = append(sites, base)
+				continue
+			}
+			sqls, reason := gf.sqlAt(i + 1)
+			if reason != "" {
+				base.Unextractable = reason
+				sites = append(sites, base)
+				continue
+			}
+			for _, q := range sqls {
+				st := base
+				st.SQL = normSpace(q)
+				sh, err := extractShape(q, sch)
+				if err != nil {
+					st.Unextractable = "형태를 뽑지 못했다: " + err.Error()
+				} else {
+					st.shape, st.Shape = sh, sh.String()
+				}
+				sites = append(sites, st)
+			}
 		}
 	}
 	return sites, nil
