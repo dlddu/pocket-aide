@@ -121,6 +121,7 @@ jobs:
           echo '--- enqueue ---'; cat /tmp/enqueue.log || true
           echo '--- push ---'; cat /tmp/push.log || true
           echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
+          echo '--- github stub ---'; tail -n 100 /tmp/github-stub.log || true
       - name: Upload xcresult on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -134,5 +135,6 @@ jobs:
           [ -n "${OIDCMOCK_PID:-}" ] && kill ${OIDCMOCK_PID} || true
           [ -n "${BACKEND_PID:-}" ] && kill ${BACKEND_PID} || true
           [ -n "${MOTO_PID:-}" ] && kill ${MOTO_PID} || true
+          [ -n "${GITHUB_STUB_PID:-}" ] && kill ${GITHUB_STUB_PID} || true
           [ -n "${ENQUEUE_PID:-}" ] && kill ${ENQUEUE_PID} || true
           [ -n "${PUSH_PID:-}" ] && kill ${PUSH_PID} || true

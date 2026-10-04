@@ -1,8 +1,9 @@
 name: Build & start the test backend
 description: >
-  Compiles cmd/oidcmock + cmd/server, starts both in the background, and
-  exports OIDCMOCK_PID / BACKEND_PID via $GITHUB_ENV so a later step can
-  kill them. Assumes the caller already checked out the repo and ran
+  Compiles cmd/oidcmock + cmd/server, starts both in the background
+  together with the local GitHub API stub (github_api_stub.py), and
+  exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID via $GITHUB_ENV so
+  a later step can kill them. Assumes the caller already checked out the repo and ran
   ./.github/actions/setup-go-backend. Required env vars on the calling
   job (read by the binaries themselves, not this action):
     OIDC_ISSUER, OIDC_AUDIENCE, OIDC_CLIENT_ID, OIDC_REDIRECT_URI,
@@ -17,6 +18,12 @@ inputs:
     description: Port the backend server listens on. Must match $PORT.
     required: false
     default: '8080'
+  github_stub_port:
+    description: >
+      Port the GitHub API stub listens on. Must match the
+      GITHUB_API_BASE_URL that PRMonitorUITests passes to the app.
+    required: false
+    default: '5557'
 
 runs:
   using: composite
@@ -44,4 +51,13 @@ runs:
         echo "BACKEND_PID=$!" >> "$GITHUB_ENV"
         for i in {1..30}; do
           curl -fsS http://localhost:${{ inputs.backend_port }}/healthz && break || sleep 1
+        done
+    # mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 앱이 부르는 GitHub API 를 로컬 스텁이 대신한다 (docs/e2e-mocking-policy.md)
+    - name: Start GitHub API stub
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/github_api_stub.py" ${{ inputs.github_stub_port }} > /tmp/github-stub.log 2>&1 &
+        echo "GITHUB_STUB_PID=$!" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS -H 'Authorization: Bearer ghp_e2e_valid' http://localhost:${{ inputs.github_stub_port }}/user && break || sleep 1
         done
