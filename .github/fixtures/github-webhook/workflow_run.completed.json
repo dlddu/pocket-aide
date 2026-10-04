@@ -1,0 +1,30 @@
+{
+  "action": "completed",
+  "workflow_run": {
+    "id": 900100200,
+    "name": "CI",
+    "head_branch": "e2e/bf-1-webhook",
+    "head_sha": "e2ebf1e2ebf1e2ebf1e2ebf1e2ebf1e2ebf1e2eb",
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "run_number": 1,
+    "html_url": "https://github.com/dlddu/pocket-aide-e2e/actions/runs/900100200",
+    "pull_requests": [
+      {
+        "id": 900100300,
+        "number": 9001,
+        "url": "https://api.github.com/repos/dlddu/pocket-aide-e2e/pulls/9001",
+        "head": { "ref": "e2e/bf-1-webhook", "sha": "e2ebf1e2ebf1e2ebf1e2ebf1e2ebf1e2ebf1e2eb" },
+        "base": { "ref": "main", "sha": "0000000000000000000000000000000000000000" }
+      }
+    ]
+  },
+  "repository": {
+    "id": 900100400,
+    "name": "pocket-aide-e2e",
+    "full_name": "dlddu/pocket-aide-e2e",
+    "html_url": "https://github.com/dlddu/pocket-aide-e2e"
+  },
+  "sender": { "login": "dlddu" }
+}

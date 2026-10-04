@@ -90,6 +90,8 @@ jobs:
               - '.github/workflows/ios-test.yml'
               - '.github/actions/setup-go-backend/**'
               - '.github/actions/start-test-backend/**'
+              - '.github/actions/start-test-sqs/**'
+              - '.github/fixtures/github-webhook/**'
               - '.github/actions/generate-xcode-project/**'
             # k8s/** is here because production only moves when the `pin` job
             # republishes the deploy branch, and pin runs after an image build.

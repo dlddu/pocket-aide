@@ -83,3 +83,23 @@ func TestShouldPush(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadConfigAPNSDisabled(t *testing.T) {
+	t.Setenv("OIDC_ISSUER", "http://issuer")
+	t.Setenv("OIDC_AUDIENCE", "aud")
+	t.Setenv("OIDC_CLIENT_ID", "client")
+	t.Setenv("OIDC_REDIRECT_URI", "app://cb")
+	t.Setenv("SQS_QUEUE_URL", "http://localhost:4566/000000000000/q")
+	t.Setenv("APNS_DISABLED", "true")
+
+	c := loadConfig()
+	if !c.PRMonitorEnabled {
+		t.Fatalf("PRMonitorEnabled = false, want true")
+	}
+	if !c.APNSDisabled {
+		t.Fatalf("APNSDisabled = false, want true")
+	}
+	if c.APNSKeyID != "" || c.APNSAuthKeyP8 != "" {
+		t.Fatalf("APNs credentials should stay empty when disabled, got key=%q", c.APNSKeyID)
+	}
+}

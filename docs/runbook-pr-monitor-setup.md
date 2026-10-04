@@ -153,11 +153,12 @@ test environments run without any of this set up.
 | `AWS_REGION`            | ConfigMap  | always                    |
 | `SQS_QUEUE_URL`         | ConfigMap  | empty disables PR monitor |
 | `AWS_ROLE_ARN`          | ConfigMap  | optional; assumes role via STS when set |
-| `APNS_KEY_ID`           | ConfigMap  | PR monitor enabled        |
-| `APNS_TEAM_ID`          | ConfigMap  | PR monitor enabled        |
-| `APNS_BUNDLE_ID`        | ConfigMap  | PR monitor enabled        |
-| `APNS_USE_PRODUCTION`   | ConfigMap  | PR monitor enabled        |
-| `APNS_AUTH_KEY_P8`      | Secret     | PR monitor enabled        |
+| `APNS_KEY_ID`           | ConfigMap  | PR monitor enabled (unless `APNS_DISABLED`) |
+| `APNS_TEAM_ID`          | ConfigMap  | PR monitor enabled (unless `APNS_DISABLED`) |
+| `APNS_BUNDLE_ID`        | ConfigMap  | PR monitor enabled (unless `APNS_DISABLED`) |
+| `APNS_USE_PRODUCTION`   | ConfigMap  | PR monitor enabled (unless `APNS_DISABLED`) |
+| `APNS_AUTH_KEY_P8`      | Secret     | PR monitor enabled (unless `APNS_DISABLED`) |
+| `APNS_DISABLED`         | env        | never in production; `true` keeps the consumer + history but skips pushes (E2E CI only, see `docs/e2e-mocking-policy.md`) |
 
 Message authenticity is enforced by IAM/queue-policy on the SQS queue —
 there is no GitHub webhook secret in the backend.
