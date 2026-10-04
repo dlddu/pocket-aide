@@ -5,6 +5,16 @@ enum OpenPullRequestsUI {
         static let valid = "ghp_e2e_valid"
         static let expires = "ghp_e2e_expires"
         static let rateLimited = "ghp_e2e_ratelimited"
+        static let empty = "ghp_e2e_empty"
+        static let slow = "ghp_e2e_slow"
+
+        static func closing() -> String { "ghp_e2e_closing_" + runSuffix() }
+
+        static func rerun() -> String { "ghp_e2e_rerun_" + runSuffix() }
+
+        private static func runSuffix() -> String {
+            String(UUID().uuidString.prefix(8)).lowercased()
+        }
     }
 
     static let handle = "@pocket-aide-e2e"
@@ -54,6 +64,22 @@ enum OpenPullRequestsUI {
         field.tap()
         field.typeText(token)
         app.buttons["openprs.connect.button"].tap()
+    }
+
+    static func connect(_ token: String, in app: XCUIApplication) {
+        submit(token, in: app)
+        XCTAssertTrue(
+            element("openprs.account.login", in: app).waitForExistence(timeout: 15),
+            "The PAT \(token) should connect"
+        )
+    }
+
+    static func disconnect(in app: XCUIApplication) {
+        app.buttons["openprs.disconnect.button"].tap()
+        XCTAssertTrue(
+            app.secureTextFields["openprs.token.field"].waitForExistence(timeout: 10),
+            "Disconnect should return to the token form"
+        )
     }
 
     static func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {

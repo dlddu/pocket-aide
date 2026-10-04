@@ -2,6 +2,7 @@
 import json
 import socket
 import sys
+import threading
 import time
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -14,7 +15,19 @@ TOKENS = {
     "ghp_e2e_revoked": "revoked",
     "ghp_e2e_expires": "expires",
     "ghp_e2e_ratelimited": "ratelimited",
+    "ghp_e2e_empty": "empty",
+    "ghp_e2e_slow": "slow",
 }
+
+SCHEDULED_TOKENS = {
+    "ghp_e2e_closing_": "closing",
+    "ghp_e2e_rerun_": "rerun",
+}
+
+SLOW_SECONDS = 20
+
+SEARCH_COUNTS = {}
+SEARCH_COUNTS_LOCK = threading.Lock()
 
 SEARCH_ALIASES = {
     "authored": "author:{login}",
@@ -66,6 +79,38 @@ def search_payload():
     }
 
 
+def empty_payload():
+    return {"data": {alias: {"nodes": []} for alias in SEARCH_ALIASES}}
+
+
+def closing_payload(search_number):
+    if search_number > 1:
+        return empty_payload()
+    payload = empty_payload()
+    payload["data"]["authored"]["nodes"] = [
+        pull_request(21, "e2e authored to be merged", LOGIN, 3, "SUCCESS"),
+    ]
+    payload["data"]["requested"]["nodes"] = [
+        pull_request(22, "e2e review requested to be closed", "octocat", 7, "PENDING"),
+    ]
+    return payload
+
+
+def rerun_payload(search_number):
+    payload = empty_payload()
+    if search_number > 1:
+        payload["data"]["authored"]["nodes"] = [pull_request(31, "e2e authored rerun", LOGIN, 0, "SUCCESS")]
+    else:
+        payload["data"]["authored"]["nodes"] = [pull_request(31, "e2e authored rerun", LOGIN, 30, "PENDING")]
+    return payload
+
+
+def next_search_number(token):
+    with SEARCH_COUNTS_LOCK:
+        SEARCH_COUNTS[token] = SEARCH_COUNTS.get(token, 0) + 1
+        return SEARCH_COUNTS[token]
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -86,11 +131,22 @@ class Handler(BaseHTTPRequestHandler):
             "status": "401",
         })
 
-    def token_behavior(self):
+    def token(self):
         auth = self.headers.get("Authorization", "")
         if not auth.startswith("Bearer "):
             return None
-        return TOKENS.get(auth[len("Bearer "):])
+        return auth[len("Bearer "):]
+
+    def token_behavior(self):
+        token = self.token()
+        if token is None:
+            return None
+        if token in TOKENS:
+            return TOKENS[token]
+        for prefix, behavior in SCHEDULED_TOKENS.items():
+            if token.startswith(prefix) and len(token) > len(prefix):
+                return behavior
+        return None
 
     def do_GET(self):
         if self.path != "/user":
@@ -128,6 +184,17 @@ class Handler(BaseHTTPRequestHandler):
         if problem:
             self.send_json(200, {"errors": [{"message": problem}]})
             return
+        if behavior == "empty":
+            self.send_json(200, empty_payload())
+            return
+        if behavior == "closing":
+            self.send_json(200, closing_payload(next_search_number(self.token())))
+            return
+        if behavior == "rerun":
+            self.send_json(200, rerun_payload(next_search_number(self.token())))
+            return
+        if behavior == "slow":
+            time.sleep(SLOW_SECONDS)
         self.send_json(200, search_payload())
 
     def query_problem(self, raw):
