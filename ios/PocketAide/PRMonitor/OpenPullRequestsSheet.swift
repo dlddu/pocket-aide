@@ -96,10 +96,67 @@ struct OpenPullRequestsSheet: View {
 
     private var connectedContent: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if let alert = viewModel.alert {
+                alertBanner(alert)
+            }
             accountBar
             statusLine
+            filterBar
             OpenPullRequestsList(viewModel: viewModel)
         }
+    }
+
+    private func alertBanner(_ alert: GitHubAlert) -> some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                Text(alert.title)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .bold))
+                    .accessibilityIdentifier("openprs.banner.\(alert.kind)")
+            }
+            .foregroundStyle(DesignTokens.StatusColor.failure)
+            Text(alert.message { $0.formatted(date: .omitted, time: .shortened) })
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                .foregroundStyle(DesignTokens.Color.ink(.prMonitor).opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
+            Button(alert.actionTitle) {
+                if case .rateLimited = alert {
+                    Task { await viewModel.refresh() }
+                } else {
+                    tokenInput = ""
+                    replacingToken = true
+                }
+            }
+            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
+            .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
+            .disabled(viewModel.isLoading)
+            .accessibilityIdentifier("openprs.banner.action")
+        }
+        .padding(DesignTokens.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DesignTokens.Color.card(.prMonitor))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(DesignTokens.StatusColor.failure.opacity(0.4), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.top, DesignTokens.Spacing.md)
+    }
+
+    private var filterBar: some View {
+        FilterPills(
+            area: .prMonitor,
+            options: OpenPullRequestFilter.allCases,
+            selection: $viewModel.filter
+        ) { option in
+            Text(option.label)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, DesignTokens.Spacing.xl)
+        .padding(.bottom, DesignTokens.Spacing.sm)
     }
 
     private var accountBar: some View {
@@ -132,11 +189,7 @@ struct OpenPullRequestsSheet: View {
                 Text("마지막 갱신 \(refreshed.formatted(date: .omitted, time: .shortened))")
                     .accessibilityIdentifier("openprs.lastRefreshed")
             }
-            if viewModel.inaccessibleCount > 0 {
-                Text("접근 권한이 없는 PR \(viewModel.inaccessibleCount)개는 표시하지 않았습니다.")
-                    .accessibilityIdentifier("openprs.inaccessible.notice")
-            }
-            if let error = viewModel.errorMessage, !viewModel.pullRequests.isEmpty {
+            if let error = viewModel.errorMessage, viewModel.alert == nil, !viewModel.pullRequests.isEmpty {
                 Text(error)
                     .foregroundStyle(DesignTokens.StatusColor.failure)
                     .accessibilityIdentifier("openprs.refresh.error")
@@ -168,6 +221,12 @@ private struct OpenPullRequestsList: View {
         } else if viewModel.pullRequests.isEmpty {
             centered(title: "열려 있는 PR이 없습니다", detail: "작성했거나 리뷰어로 지정된 PR이 열리면 여기에 표시됩니다.")
                 .accessibilityIdentifier("openprs.empty.state")
+        } else if viewModel.visiblePullRequests.isEmpty {
+            centered(
+                title: "조건에 맞는 PR이 없습니다",
+                detail: "「\(viewModel.filter.label)」 필터를 끄면 열린 PR \(viewModel.pullRequests.count)개를 모두 볼 수 있습니다."
+            )
+            .accessibilityIdentifier("openprs.filter.empty")
         } else {
             list
         }
@@ -192,7 +251,7 @@ private struct OpenPullRequestsList: View {
     }
 
     private var list: some View {
-        List(viewModel.pullRequests) { pullRequest in
+        List(viewModel.visiblePullRequests) { pullRequest in
             Button {
                 if let url = pullRequest.url { openURL(url) }
             } label: {

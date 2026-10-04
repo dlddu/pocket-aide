@@ -11,19 +11,36 @@ final class OpenPullRequestsViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var hasLoaded = false
     @Published private(set) var isConnecting = false
+    @Published private(set) var lastError: GitHubError?
     @Published var errorMessage: String?
     @Published var connectError: String?
+    @Published var filter: OpenPullRequestFilter {
+        didSet { defaults.set(filter.rawValue, forKey: Self.filterKey) }
+    }
+
+    static let filterKey = "openprs.filter"
 
     private let store: GitHubCredentialStoring
     private let client: GitHubClient
+    private let defaults: UserDefaults
 
-    init(store: GitHubCredentialStoring = KeychainGitHubCredentialStore(), client: GitHubClient = GitHubClient()) {
+    init(
+        store: GitHubCredentialStoring = KeychainGitHubCredentialStore(),
+        client: GitHubClient = GitHubClient(),
+        defaults: UserDefaults = .standard
+    ) {
         self.store = store
         self.client = client
+        self.defaults = defaults
         self.login = (try? store.load())?.login
+        self.filter = defaults.string(forKey: Self.filterKey).flatMap(OpenPullRequestFilter.init(rawValue:)) ?? .all
     }
 
     var isConnected: Bool { login != nil }
+
+    var visiblePullRequests: [OpenPullRequest] { filter.apply(to: pullRequests) }
+
+    var alert: GitHubAlert? { GitHubAlert.make(error: lastError, inaccessibleCount: inaccessibleCount) }
 
     func connect(token raw: String) async -> Bool {
         let token = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -58,6 +75,7 @@ final class OpenPullRequestsViewModel: ObservableObject {
         }
         isLoading = true
         errorMessage = nil
+        lastError = nil
         defer { isLoading = false }
         do {
             let result = try await client.openPullRequests(token: credential.token, login: credential.login)
@@ -66,6 +84,7 @@ final class OpenPullRequestsViewModel: ObservableObject {
             lastRefreshedAt = Date()
             hasLoaded = true
         } catch {
+            lastError = error as? GitHubError
             errorMessage = Self.message(for: error)
         }
     }
@@ -76,6 +95,7 @@ final class OpenPullRequestsViewModel: ObservableObject {
         lastRefreshedAt = nil
         hasLoaded = false
         errorMessage = nil
+        lastError = nil
     }
 
     private static func message(for error: Error) -> String {
