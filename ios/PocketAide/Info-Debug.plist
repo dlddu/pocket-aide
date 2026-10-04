@@ -62,5 +62,7 @@
             </array>
         </dict>
     </array>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>위젯의 다음 일정 영역에 다가오는 캘린더 일정을 보여 주기 위해 사용합니다.</string>
 </dict>
 </plist>

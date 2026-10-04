@@ -39,23 +39,23 @@ last_updated: 2026-10-04
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 73 |
-| A | 데이터 | 4 |
+| A | 일치 | 77 |
+| A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
-| A | 미구현 영역 | 4 |
+| A | 미구현 영역 | 3 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 13 |
 | A | 목업 대기 | 22 |
-| B | 일치 | 117 |
-| B | 외부 | 21 |
-| B | 예시 데이터 | 79 |
-| B | 목업 전용 | 87 |
-| B | 미구현 영역 | 21 |
+| B | 일치 | 121 |
+| B | 외부 | 22 |
+| B | 예시 데이터 | 80 |
+| B | 목업 전용 | 90 |
+| B | 미구현 영역 | 17 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 55 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 136행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 140행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -168,7 +168,6 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 목업 대기 | 행 스와이프 삭제 액션 — 목업에 삭제 어포던스가 없다 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 기준 4 | 항목 메타 — 목업은 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다. 구현은 「 · 」 로 이어 한 줄 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `날씨` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현` |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `다음 일정` | 미구현 영역 | 위와 같음(검산의 문자열 일치는 목업 일정 슬라이스 라벨에 걸린다 — 슬라이스 본체는 미구현) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | 위와 같음(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `알림` | 미구현 영역 | 위와 같음 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
@@ -177,6 +176,11 @@ last_updated: 2026-10-04
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `다짐을 앱에 등록해보세요.` | 일치 | 다짐 0건 상태 — 「다짐 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「다짐 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「다짐 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `다음 일정` | 일치 | 일정 슬라이스 라벨(`AreaLabel` — #102 에서 `PocketAideWidget.swift` 의 자리표시자 라벨이 이 파일로 옮겨 왔다) |
+| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `앱에서 캘린더 접근을 허용해 주세요.` | 일치 | 캘린더 권한 없음 상태 — 「일정 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `\(UpcomingEvents.startLabel(event, now: now, calendar: calendar)) \(event.title)` | 데이터 | 둘째·셋째 일정 줄(시작 시각 + 제목) — 목업은 첫 일정만 그리고 나머지를 「+ 2 더」 로 접는다(줄 구성 차이는 기준 4 구조 대조의 몫) |
+| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `+ \(summary.moreCount) 더` | 일치 | 남은 일정 수 「+ 2 더」 |
+| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `다가오는 일정이 없어요.` | 일치 | 일정 0건 상태 — 「일정 슬라이스 상태」 변형 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 목업 대기 | 개인 탭 검색 필드 placeholder — 개인 목업은 검색 필드를 그리지 않는다 |
@@ -196,7 +200,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 383행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 388행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -370,22 +374,22 @@ last_updated: 2026-10-04
 | `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `홈 스크린 · 큰 위젯 (4×4)` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-widget` | `서울` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `18°` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `한때 비` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `최고 22 · 최저 14` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `다음 일정` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `분기 리뷰 · 회의실 4` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `14:00 — 15:30` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `+ 2 더` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `서울` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `18°` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `한때 비` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `최고 22 · 최저 14` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `다음 일정` | 일치 | 일정 슬라이스 라벨(`CalendarSection`) |
+| `screen-widget` | `분기 리뷰 · 회의실 4` | 예시 데이터 | 첫 일정 제목(사용자 캘린더 데이터 — `CalendarSection` 이 `first.title` 로 그린다) |
+| `screen-widget` | `14:00 — 15:30` | 외부 `ios/Shared/Sources/PocketAideAPI/UpcomingEvents.swift` | 첫 일정 시간 범위 — 시각은 데이터, 「 — 」 서식은 `UpcomingEvents.rangeLabel` |
+| `screen-widget` | `+ 2 더` | 일치 | 남은 일정 수(`CalendarSection` `+ \(summary.moreCount) 더`) |
 | `screen-widget` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
 | `screen-widget` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `PocketAide 알림` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `아침 루틴 1단계` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `17:00 분기 리뷰 마감` | 미구현 영역 | 날씨·일정·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `PocketAide 알림` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `아침 루틴 1단계` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `17:00 분기 리뷰 마감` | 미구현 영역 | 날씨·메일·알림 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
 | `screen-widget` | `전화` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `메시지` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `사진` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
@@ -409,6 +413,11 @@ last_updated: 2026-10-04
 | `screen-widget` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 안내(`AffirmationSection` `.needsLogin`) |
 | `screen-widget` | `조회 오류` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
 | `screen-widget` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 안내(`AffirmationSection` `.error`) |
+| `screen-widget` | `일정 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `캘린더 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `앱에서 캘린더 접근을 허용해 주세요.` | 일치 | 캘린더 권한 없음 안내(`CalendarSection` `.needsPermission`) |
+| `screen-widget` | `일정 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `다가오는 일정이 없어요.` | 일치 | 일정 0건 안내(`CalendarSection` 빈 요약) |
 | `screen-widget` | `PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

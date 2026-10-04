@@ -9,7 +9,15 @@ enum WidgetAffirmationState: Equatable {
     case error
 }
 
+enum WidgetNotificationState: Equatable {
+    case loaded(WidgetNotificationsSummary)
+    case needsLogin
+    case error
+}
+
 struct PocketAideWidgetEntry: TimelineEntry {
     let date: Date
     let state: WidgetAffirmationState
+    let calendar: WidgetCalendarState
+    let notifications: WidgetNotificationState
 }

@@ -39,6 +39,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
 | `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
 | `ios/PocketAide/AppDelegate.swift` | 비렌더링 | — | 앱 수명주기·푸시 등록 |
+| `ios/PocketAide/CalendarAccess.swift` | 비렌더링 | — | 캘린더 전체 접근 권한 요청(EventKit) — 허용되면 위젯 타임라인 재요청 |
 | `ios/PocketAide/DeepLinkRouter.swift` | 비렌더링 | — | `pocketaide://` 딥링크 → 탭 선택 |
 | `ios/PocketAide/HelloWorldView.swift` | 목업 없음 | — | 옛 레거시 홈. #54 가 `RootView` 의 레거시 홈 분기를 지운 뒤 자기 파일의 `#Preview` 밖에서 인스턴스화되지 않는다(도달 불가 — 화면에 뜨지 않는다) |
 | `ios/PocketAide/LoginView.swift` | 목업 없음 | — | 로그인 화면 |
@@ -67,9 +68,11 @@ last_updated: 2026-10-04
 | `ios/PocketAide/WidgetRefresher.swift` | 비렌더링 | — | 위젯 타임라인 즉시 재요청(`WidgetCenter.reloadAllTimelines`) — 다짐 변경·로그인 상태 변경 시 호출 |
 | `ios/PocketAideKeyboard/KeyboardViewController.swift` | 미구현 | `screen-keyboard-extension` | 키보드 확장 골격(삽입 버튼·다음 키보드 버튼)뿐 |
 | `ios/PocketAideWidget/AffirmationProvider.swift` | 비렌더링 | — | 위젯 타임라인·다짐 조회 |
+| `ios/PocketAideWidget/CalendarEvents.swift` | 비렌더링 | — | 위젯 캘린더 스냅샷 — EventKit 일정 조회·권한 상태(`WidgetCalendarState`) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | 화면 | `screen-widget` | 위젯 본체(Large) — 슬라이스 배치·구분선·배경. 홈 화면 벽지·앱 아이콘 등 위젯 밖은 iOS 시스템 UI |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | 부분 | `screen-widget` | 다짐 슬라이스(「오늘의 다짐」 라벨·다짐 문장) |
-| `ios/PocketAideWidget/Sections/PlaceholderSection.swift` | 미구현 | `screen-widget` | 날씨·다음 일정·메일·알림 슬라이스의 「곧 추가」 자리표시자 |
+| `ios/PocketAideWidget/Sections/CalendarSection.swift` | 부분 | `screen-widget` | 다음 일정 슬라이스(「다음 일정」 라벨·첫 일정 제목·시간 범위·「+ N 더」, 캘린더 권한 없음·일정 없음 안내) |
+| `ios/PocketAideWidget/Sections/PlaceholderSection.swift` | 미구현 | `screen-widget` | 날씨·메일·알림 슬라이스의 「곧 추가」 자리표시자 |
 | `ios/PocketAideWidget/WidgetEntry.swift` | 비렌더링 | — | 위젯 타임라인 엔트리 |
 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 컴포넌트 | — | `AreaLabel` |
 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | 컴포넌트 | — | `Card` |

@@ -160,3 +160,62 @@ public extension APIClient {
         try await delete("/api/excluded-repos/\(id)", authenticated: true)
     }
 }
+
+public struct WidgetNotificationsSummary: Equatable, Sendable {
+    public let latest: NotificationHistoryItem?
+    public let moreCount: Int
+
+    public init(latest: NotificationHistoryItem?, moreCount: Int) {
+        self.latest = latest
+        self.moreCount = moreCount
+    }
+}
+
+public enum WidgetNotifications {
+    public static let startConclusions: Set<String> = ["queued", "requested", "in_progress", "pending", "waiting"]
+    public static let failureConclusions: Set<String> = ["failure", "timed_out", "startup_failure"]
+
+    public static func wasPushed(_ item: NotificationHistoryItem, settings: NotificationSettings) -> Bool {
+        guard !startConclusions.contains(item.conclusion), settings.enabled else { return false }
+        switch settings.outcomes {
+        case .both: return true
+        case .success: return item.conclusion == "success"
+        case .failure: return failureConclusions.contains(item.conclusion)
+        }
+    }
+
+    public static func summarize(_ items: [NotificationHistoryItem], settings: NotificationSettings) -> WidgetNotificationsSummary {
+        let pending = items
+            .filter { $0.acknowledgedAt == nil && wasPushed($0, settings: settings) }
+            .sorted { lhs, rhs in
+                if lhs.createdAt != rhs.createdAt { return lhs.createdAt > rhs.createdAt }
+                return lhs.id > rhs.id
+            }
+        return WidgetNotificationsSummary(latest: pending.first, moreCount: max(0, pending.count - 1))
+    }
+}
+
+public enum PushText {
+    public static func title(for item: NotificationHistoryItem) -> String {
+        if let number = item.prNumber, number > 0 {
+            return "\(verdict(item.conclusion)) — \(item.repoFullName) #\(number)"
+        }
+        return "\(item.repoFullName) — \(item.conclusion)"
+    }
+
+    public static func body(for item: NotificationHistoryItem) -> String {
+        if let number = item.prNumber, number > 0, let title = item.prTitle, !title.isEmpty {
+            return title
+        }
+        return "\(item.workflowName) on \(item.headBranch)"
+    }
+
+    private static func verdict(_ conclusion: String) -> String {
+        switch conclusion {
+        case "success": return "CI 통과"
+        case "failure": return "CI 실패"
+        default:
+            return WidgetNotifications.startConclusions.contains(conclusion) ? "CI 시작" : "CI \(conclusion)"
+        }
+    }
+}

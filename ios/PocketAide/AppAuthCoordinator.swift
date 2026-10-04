@@ -45,6 +45,7 @@ final class AppAuthCoordinator: ObservableObject {
         if signedIn {
             await refreshMe()
             await registerForPush()
+            await CalendarAccess.requestIfNeeded()
         }
     }
 
@@ -84,6 +85,7 @@ final class AppAuthCoordinator: ObservableObject {
             WidgetRefresher.reloadAll()
             await refreshMe()
             await registerForPush()
+            await CalendarAccess.requestIfNeeded()
         } catch {
             signInError = String(describing: error)
             signedIn = (try? tokenStore.load()) != nil
