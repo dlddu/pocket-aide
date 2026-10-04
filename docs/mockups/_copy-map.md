@@ -35,27 +35,27 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 13행 · `목업 대기` 0행, 표 B `구현 대기` 55행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 11행 · `목업 대기` 0행, 표 B `구현 대기` 50행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 106 |
+| A | 일치 | 111 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
-| A | 구현 대기 | 13 |
+| A | 구현 대기 | 11 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 155 |
+| B | 일치 | 160 |
 | B | 외부 | 24 |
 | B | 예시 데이터 | 98 |
 | B | 목업 전용 | 97 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 55 |
+| B | 구현 대기 | 50 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 146행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 149행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -69,10 +69,10 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `우선순위 설정` | 일치 | 편집 모드 시트 제목 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `\u{201C}` | 구현 대기 | 장식 인용부호 — 구현은 `“`(U+201C), 목업은 `"`(U+0022) |
+| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `\"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 serif 64 글리프(U+0022, 목업과 같은 문자) |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `노출 빈도` | 일치 | `AreaLabel` 섹션 라벨 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 카드를 길게 눌러 나중에 바꿀 수 있습니다.` | 구현 대기 | 도움말 어순·어휘 차이 — 목업 「나중에 카드를 길게 눌러 변경할 수 있습니다.」 |
+| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 일치 | 노출 빈도 도움말 — 생성·편집 두 프레임 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 일치 | 편집 모드 파괴적 액션 — 목업 편집 모드 프레임의 외곽선 버튼(생성 모드엔 없음) |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
@@ -110,8 +110,11 @@ last_updated: 2026-10-04
 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · \(item.headBranch)` | 구현 대기 | 위와 같음(PR 없는 커밋) |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `PR 모니터` | 일치 | `ScreenHeader` 제목 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `arrow.triangle.pull` | 비표시 | 열린 PR 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `열린 PR` | 일치 | 열린 PR 버튼 접근성 라벨 — 목업 버튼 `title` |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `bell` | 비표시 | 알림 설정 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `알림 설정` | 일치 | 알림 설정 버튼 접근성 라벨 — 목업 버튼 `title` |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `line.3.horizontal.decrease` | 비표시 | 제외 레포 버튼 SF Symbol 이름 — 위와 같음 |
+| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `제외 레포 관리` | 일치 | 제외 레포 버튼 접근성 라벨 — 목업 버튼 `title` |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `이력을 불러오지 못했습니다` | 일치 | 오류 상태 제목 — 「오류」 프레임 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `다시 시도` | 일치 | 오류 상태 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 |
@@ -264,13 +267,13 @@ last_updated: 2026-10-04
 | `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
 | `screen-affirmations-priority-edit` | `편집 — 카드 길게 누르기` | 목업 전용 | 프레임 위 캡션(편집 모드 프레임 이름) |
 | `screen-affirmations-priority-edit` | `우선순위 설정` | 일치 | 시트 제목(편집 모드) |
-| `screen-affirmations-priority-edit` | `"` | 구현 대기 | 장식 인용부호 — 구현은 `“`(U+201C) |
+| `screen-affirmations-priority-edit` | `"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 글리프 |
 | `screen-affirmations-priority-edit` | `삭제` | 일치 | 편집 모드 destructive 버튼 |
 | `screen-affirmations-priority-edit` | `노출 빈도` | 일치 | 섹션 라벨 |
 | `screen-affirmations-priority-edit` | `높음` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | `AffirmationPriority.displayName` — 시트 3-tier 선택지 |
 | `screen-affirmations-priority-edit` | `보통` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | 위와 같음 |
 | `screen-affirmations-priority-edit` | `가끔` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | 위와 같음 |
-| `screen-affirmations-priority-edit` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 구현 대기 | 도움말 — 구현은 「카드를 길게 눌러 나중에 바꿀 수 있습니다.」 |
+| `screen-affirmations-priority-edit` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 일치 | 노출 빈도 도움말 |
 | `screen-affirmations-priority-edit` | `저장` | 일치 | 1차 액션 |
 | `screen-affirmations-priority-edit` | `취소` | 일치 | 2차 액션 |
 | `screen-affirmations-priority-edit` | `PRD-5 · AC1·AC2 — 생성: 헤더 + 로 연 시트 한 장에서 문장 입력과 노출 빈도를 함께 저장(취소하면 저장 안 함). 편집: 카드를 길게 눌러 같은 시트의 편집 모드. 3-tier 단일 선택으로 노출 빈도 결정. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + §4 FilterPills 단일 선택형, patterns §9 편집 시트 패턴.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
@@ -286,9 +289,9 @@ last_updated: 2026-10-04
 | `screen-pr-monitor-history` | `웹훅 연결` | 구현 대기 | 헤더 부제(웹훅 연결 상태) — 구현에 없다 |
 | `screen-pr-monitor-history` | `5` | 예시 데이터 | 미확인 총 개수 |
 | `screen-pr-monitor-history` | `미확인` | 일치 | 헤더 배지 라벨 |
-| `screen-pr-monitor-history` | `열린 PR` | 구현 대기 | 열린 PR 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐). 같은 문구는 시트 제목(`OpenPullRequestsSheet.swift`, `목업 없음` 행)에만 있다 |
-| `screen-pr-monitor-history` | `알림 설정` | 구현 대기 | 알림 설정 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐). 같은 문구는 시트 제목(`PRMonitorNotificationSettingsSheet.swift`, `목업 없음` 행)에만 있다 |
-| `screen-pr-monitor-history` | `제외 레포 관리` | 구현 대기 | 제외 레포 버튼 `title` — 구현 버튼에 접근성 라벨이 없다(`accessibilityIdentifier` 뿐) |
+| `screen-pr-monitor-history` | `열린 PR` | 일치 | 열린 PR 버튼 `title` — 구현 버튼 `accessibilityLabel` |
+| `screen-pr-monitor-history` | `알림 설정` | 일치 | 알림 설정 버튼 `title` — 구현 버튼 `accessibilityLabel` |
+| `screen-pr-monitor-history` | `제외 레포 관리` | 일치 | 제외 레포 버튼 `title` — 구현 버튼 `accessibilityLabel` |
 | `screen-pr-monitor-history` | `미확인 · 3개 그룹` | 일치 | 섹션 헤더 |
 | `screen-pr-monitor-history` | `방금 진입` | 구현 대기 | 푸시 진입 그룹의 상태 라벨 — 구현은 글로우만 그리고 라벨이 없다 |
 | `screen-pr-monitor-history` | `최근 9:41:02` | 일치 | 그룹 헤더 시각 |

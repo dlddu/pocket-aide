@@ -72,7 +72,7 @@ struct PriorityEditSheet: View {
         ZStack(alignment: .topLeading) {
             Card(area: .affirmations, padding: .medium) {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                    Text("\u{201C}")
+                    Text("\"")
                         .font(DesignTokens.Typography.font(size: 64, family: .serif))
                         .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.18))
                         .padding(.leading, -4)
@@ -109,7 +109,7 @@ struct PriorityEditSheet: View {
                         ))
                 }
             }
-            Text("위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 카드를 길게 눌러 나중에 바꿀 수 있습니다.")
+            Text("위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.")
                 .font(DesignTokens.Typography.font(
                     size: DesignTokens.Typography.captionXs,
                     weight: .regular

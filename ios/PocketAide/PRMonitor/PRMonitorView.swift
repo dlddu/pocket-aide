@@ -36,6 +36,7 @@ struct PRMonitorView: View {
                             headerIcon("arrow.triangle.pull")
                         }
                         .accessibilityIdentifier("prmonitor.openprs.button")
+                        .accessibilityLabel("열린 PR")
                         Button {
                             showingSettingsSheet = true
                             Task { await viewModel.loadNotificationSettings() }
@@ -43,6 +44,7 @@ struct PRMonitorView: View {
                             headerIcon("bell")
                         }
                         .accessibilityIdentifier("prmonitor.settings.button")
+                        .accessibilityLabel("알림 설정")
                         Button {
                             showingExcludedSheet = true
                             Task { await viewModel.loadExcludedRepos() }
@@ -50,6 +52,7 @@ struct PRMonitorView: View {
                             headerIcon("line.3.horizontal.decrease")
                         }
                         .accessibilityIdentifier("prmonitor.excluded.button")
+                        .accessibilityLabel("제외 레포 관리")
                     }
                 }
 
