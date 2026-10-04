@@ -26,6 +26,15 @@ struct PRMonitorGroupCard: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.sm) {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                    if isGroupHighlighted {
+                        Text("방금 진입")
+                            .font(DesignTokens.Typography.font(
+                                size: DesignTokens.Typography.caption2xs,
+                                weight: .bold
+                            ))
+                            .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
+                            .accessibilityIdentifier("prmonitor.group.\(group.id).arrival")
+                    }
                     titleLine
                     statusSummary
                     if !group.allAcknowledged {
