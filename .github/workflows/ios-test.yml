@@ -1,12 +1,5 @@
 name: iOS build + test
 
-# Reusable job that generates the Xcode project, lints Swift, builds the
-# app, and runs the simulator test bundles. Boots oidcmock + backend
-# locally so the in-app health/login/me endpoints all resolve, plus a local
-# SQS endpoint so the backend's PR-monitor consumer runs for real and a
-# GitHub workflow_run envelope reaches the PR monitor screen. The push for
-# that event is delivered to the simulator so PRMonitorUITests can tap it.
-
 on:
   workflow_call:
 
@@ -22,9 +15,8 @@ jobs:
       OIDC_REDIRECT_URI: pocketaide-dev://callback
       DATABASE_PATH: /tmp/pocket-aide-ci.db
       PORT: "8080"
-      # PR-monitor pipeline: the backend consumer long-polls a local SQS
-      # endpoint (start-test-sqs). The credentials only sign requests to that
-      # emulator; they reach no AWS account.
+      # Throwaway credentials: they only sign requests to the local SQS emulator
+      # (start-test-sqs) and reach no AWS account.
       SQS_QUEUE_URL: http://localhost:4566/123456789012/pocket-aide-e2e
       AWS_ENDPOINT_URL: http://localhost:4566
       AWS_REGION: us-east-1
@@ -62,13 +54,11 @@ jobs:
           echo "ENQUEUE_PID=$!" >> "$GITHUB_ENV"
       # mock-exception: EXT — APNs 전달(Apple 서버 → 기기)은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 백엔드가 보낼 페이로드를 `xcrun simctl push` 로 시뮬레이터에 넣고 수신·탭 이후는 실경로 (docs/e2e-mocking-policy.md)
       - name: Deliver PR-monitor push to the simulator
-        # Once the consumer has stored the fixture's history row, push the
-        # payload the backend would send for it (formatPushText title/body +
-        # SendWithData's event_id) until the app logs the deep-link highlight
-        # for that id, i.e. PRMonitorUITests tapped the banner, and keep that
-        # log line: xcodebuild shuts the simulator down when the tests end.
-        # Pushes before the test grants notification permission are not
-        # presented.
+        # Push the payload the backend would send for the fixture's history row
+        # (formatPushText title/body + SendWithData's event_id) until the app logs
+        # the deep-link highlight for that id. Pushes before the test grants
+        # notification permission are not presented, and the log line is saved
+        # here because xcodebuild shuts the simulator down when the tests end.
         run: |
           (
             id=''
@@ -109,9 +99,7 @@ jobs:
           set -o pipefail
           # -retry-tests-on-failure + -test-iterations 2 absorbs environment-
           # induced flakes (e.g. "Failed to get background assertion", UI
-          # query snapshot timeouts on a loaded simulator). Each failing test
-          # is re-run once; if the retry passes, the job goes green and the
-          # xcresult bundle still records both attempts.
+          # query snapshot timeouts on a loaded simulator): each failing test is re-run once.
           xcodebuild \
             -project PocketAide.xcodeproj \
             -scheme PocketAide \

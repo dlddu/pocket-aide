@@ -1,11 +1,5 @@
 name: Backend integration tests
 
-# Reusable job that boots a LocalStack SQS endpoint as a service container
-# and runs the `integration` build-tag tests in internal/githubwebhook.
-# Split from backend-unit-test so unit-only path changes don't pay the
-# LocalStack startup cost, and integration-only changes don't re-run the
-# whole unit + lint suite.
-
 on:
   workflow_call:
 

@@ -5,10 +5,8 @@ on:
     types: [opened, synchronize, reopened]
   push:
     branches: [main]
-  # Manual escape hatch. TestFlight builds expire 90 days after upload, so a
-  # quiet stretch with no ios/** changes leaves testers with a dead build and
-  # no way to refresh it. A dispatch skips path filtering and runs everything,
-  # including the TestFlight upload.
+  # Manual escape hatch: TestFlight builds expire 90 days after upload, so a
+  # quiet stretch with no ios/** changes would leave testers on a dead build.
   workflow_dispatch:
 
 concurrency:
@@ -50,13 +48,9 @@ jobs:
         id: filter
         if: github.event_name != 'workflow_dispatch'
         with:
-          # Each job has its own filter — paying for LocalStack on a pure
-          # README change, or rebuilding Xcode on a backend-only PR, is not
-          # free. Anchored to the reusable workflow + composite action
-          # files so changes to CI plumbing always trigger the job they
-          # affect. .github/workflows/ci.yml is included everywhere because
-          # orchestrator edits (gate logic, filter rules) can silently
-          # change which jobs run.
+          # Each filter lists the reusable workflow and composite actions its job uses,
+          # plus ci.yml everywhere: orchestrator edits (gate logic, filter rules) can
+          # silently change which jobs run.
           filters: |
             backend_unit:
               - 'backend/**'
@@ -135,7 +129,6 @@ jobs:
               # A labelled PR always needs an image under its head SHA, even
               # when backend/ is untouched: the preview retags to that SHA.
               # TestFlight goes to the preview when the app or backend changed.
-              # Unlabelled PRs no longer upload to TestFlight at all.
               if [ "$HAS_LABEL" = true ]; then
                 image=true preview_pr=$PR_NUMBER build_source="PR #$PR_NUMBER 프리뷰"
                 if [ "$IOS" = true ] || [ "$IOS_TESTS" = true ]; then testflight=true; fi

@@ -1,13 +1,5 @@
 name: Journey mockup
 
-# 여정 mockup(docs/journeys/*/index.html)을 실제 DOM(jsdom)에서 굴려 여정 문서와의 1:1 규칙과
-# 프로토타입 충실도(화면 행동 전진 · 실제 입력 요소 · 상태 도달)를 집행한다. 규칙 표는
-# tools/journey-mockup-harness/README.md.
-#
-# ci.yml 이 모든 PR·main push 에서 이 워크플로를 경로 필터 없이 호출하고, ci-success 가 결과를
-# needs 로 본다 — 필수 체크를 ci-success 하나로 유지하기 위해서다. 따로 돌던 시절에는 필수로
-# 지정되지 않아, 하네스 도입 전에 만든 브랜치(#49)가 검사 없이 머지되며 main 이 깨졌다.
-
 on:
   workflow_call:
   workflow_dispatch:

@@ -1,19 +1,9 @@
 // 검증 시나리오: 없음 (스모크/인프라)
-// 등재: docs/product/doc-tracker/ 최신 월 파일 「## e2e 매핑」 → 「비-시나리오(스모크·인프라) 등재」.
 import XCTest
 
-/// End-to-end coverage for the PR-monitor pipeline on the real path:
-/// GitHub workflow_run envelope → SQS → backend consumer → notification
-/// history → history API → PR 모니터 screen → 「확인」 acknowledge, and the
-/// push for that event: system banner → tap → PR 모니터 tab, unacknowledged.
-///
-/// Pre-conditions assumed by the test environment (ios-test workflow):
-///   - backend consumer long-polls the local SQS queue (start-test-sqs)
-///   - the fixture `.github/fixtures/github-webhook/workflow_run.completed.json`
-///     is enqueued once the first user row exists (i.e. after sign-in)
-///   - once that event's history row exists, its push payload is delivered
-///     to the simulator with `xcrun simctl push` until the app logs the
-///     highlight for it
+/// Needs the ios-test workflow environment: it enqueues
+/// `.github/fixtures/github-webhook/workflow_run.completed.json` after the first
+/// sign-in and pushes that event to the simulator ("Deliver PR-monitor push").
 final class PRMonitorUITests: XCTestCase {
     /// Title line the fixture produces: GitHub's workflow_run.pull_requests[]
     /// carries no PR title, so it reads "<repo> · #<number>". Matched by

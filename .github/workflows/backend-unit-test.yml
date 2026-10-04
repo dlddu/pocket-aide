@@ -1,9 +1,5 @@
 name: Backend unit tests
 
-# Reusable job that runs `go vet`, `go test` (default tags only), and
-# golangci-lint on the backend module. Callable from any orchestrator; ci.yml
-# invokes it when paths-filter sees a relevant backend file change.
-
 on:
   workflow_call:
 
