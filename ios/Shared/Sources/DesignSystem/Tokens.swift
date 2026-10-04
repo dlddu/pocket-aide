@@ -87,6 +87,7 @@ public enum DesignTokens {
 
     public enum Spacing {
         public static let xs: CGFloat = 4
+        public static let cardGap: CGFloat = 6
         public static let sm: CGFloat = 8
         public static let md: CGFloat = 12
         public static let lg: CGFloat = 16

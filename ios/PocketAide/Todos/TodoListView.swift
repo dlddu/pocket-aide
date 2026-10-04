@@ -188,7 +188,7 @@ struct TodoListView: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { sheetMode = .edit(item) }
-                    .listRowInsets(EdgeInsets(top: 4, leading: DesignTokens.Spacing.xl, bottom: 4, trailing: DesignTokens.Spacing.xl))
+                    .listRowInsets(EdgeInsets(top: DesignTokens.Spacing.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: DesignTokens.Spacing.cardGap / 2, trailing: DesignTokens.Spacing.xl))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
