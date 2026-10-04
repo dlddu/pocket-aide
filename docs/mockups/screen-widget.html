@@ -285,6 +285,35 @@
       </div>
     </div>
 
+    <!-- 6. 날씨 슬라이스 상태 — 구현 WeatherSection 의 .needsLocation / .error: 지명이 없으니 라벨은 「날씨」, 날씨 자리에 안내 문구(11px·잉크 60%·최대 2줄). 큰 위젯 안 날씨 슬라이스 폭(반폭)만 잘라 그린다 -->
+    <div class="flex flex-col items-center gap-3">
+      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">날씨 슬라이스 상태</div>
+      <div class="flex flex-col gap-4">
+        <!-- 앱에 저장된 위치 없음 — 위치 권한 거부·미요청(.needsLocation) -->
+        <div class="flex flex-col gap-1.5">
+          <div class="text-[10.5px] text-stone-500">위치 권한 없음</div>
+          <div class="w-[187px] widget widget-large px-4 py-3">
+            <div class="flex items-center gap-1.5">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" class="text-[#C97D60]"><path d="M6 14a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 10.4 2.04A4 4 0 0 1 17 16H7a4 4 0 0 1-1-2zM8.5 18l-1 3M12 18l-1 3M15.5 18l-1 3"/></svg>
+              <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#8B6F47]">날씨</span>
+            </div>
+            <div class="text-[11px] mt-1 leading-tight opacity-60">앱에서 위치 접근을 허용해 주세요.</div>
+          </div>
+        </div>
+        <!-- 예보 조회 실패(.error) -->
+        <div class="flex flex-col gap-1.5">
+          <div class="text-[10.5px] text-stone-500">조회 오류</div>
+          <div class="w-[187px] widget widget-large px-4 py-3">
+            <div class="flex items-center gap-1.5">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" class="text-[#C97D60]"><path d="M6 14a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 10.4 2.04A4 4 0 0 1 17 16H7a4 4 0 0 1-1-2zM8.5 18l-1 3M12 18l-1 3M15.5 18l-1 3"/></svg>
+              <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#8B6F47]">날씨</span>
+            </div>
+            <div class="text-[11px] mt-1 leading-tight opacity-60">잠시 후 다시 시도할게요.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입</p>
