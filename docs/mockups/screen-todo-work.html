@@ -158,6 +158,31 @@
         </div>
       </div>
 
+      <!-- done — 구현 「DONE · n」 섹션(요약 줄 8 DONE 과 같은 수). 개인 완료 섹션처럼 흐린 카드·취소선·채운 체크 -->
+      <div class="flex items-center gap-2 pt-3 pb-1.5">
+        <div class="w-1 h-3 bg-stone-400"></div>
+        <h2 class="text-[12px] font-bold tracking-wide stamp uppercase text-stone-400">DONE · 8</h2>
+        <div class="flex-1 h-px bg-[var(--rule)]"></div>
+      </div>
+
+      <div class="bg-white/50 border border-[var(--rule)] p-3.5 flex items-start gap-3 opacity-60">
+        <button class="check done w-5 h-5 grid place-items-center mt-0.5 shrink-0">
+          <svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+        </button>
+        <div class="flex-1 min-w-0">
+          <p class="text-[15px] leading-snug line-through decoration-stone-400">주간 지표 리포트 공유</p>
+        </div>
+      </div>
+
+      <div class="bg-white/50 border border-[var(--rule)] p-3.5 flex items-start gap-3 opacity-60">
+        <button class="check done w-5 h-5 grid place-items-center mt-0.5 shrink-0">
+          <svg width="12" height="12" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+        </button>
+        <div class="flex-1 min-w-0">
+          <p class="text-[15px] leading-snug line-through decoration-stone-400">채용 인터뷰 피드백 제출</p>
+        </div>
+      </div>
+
       <!-- separation guard rail (V3 reinforcement) -->
       <div class="mt-4 p-3 border border-dashed border-[var(--slate)]/40 rounded-md text-[11.5px] text-stone-500 leading-relaxed">
         <span class="font-bold text-[var(--slate)] stamp">N.B.</span> 개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.
