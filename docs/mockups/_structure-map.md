@@ -43,17 +43,17 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 16행 · `목업 대기` 1행, 표 S `불일치` 3행.
+남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 10행 · `목업 대기` 1행, 표 S `불일치` 2행.
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| M | 일치 | 86 |
+| M | 일치 | 91 |
 | M | 기본값 일치 | 2 |
-| M | 불일치 | 16 |
+| M | 불일치 | 10 |
 | M | 허용 | 3 |
 | M | 목업 대기 | 1 |
-| S | 일치 | 10 |
-| S | 불일치 | 3 |
+| S | 일치 | 11 |
+| S | 불일치 | 2 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -86,7 +86,7 @@ last_updated: 2026-10-04
 | 삭제 버튼(편집) | `w-full mt-1 py-3.5 rounded-full border-[1.4px] border-[#9C3F2D] text-[#9C3F2D] text-[15px] font-semibold active:scale-[0.98] transition` |
 | 취소 버튼 | `w-full mt-1 py-2.5 text-[13px] text-stone-500 active:text-stone-700 transition` |
 
-## 표 M — 수치 (`screen-affirmations-priority-edit`) · 108행
+## 표 M — 수치 (`screen-affirmations-priority-edit`) · 107행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -109,12 +109,12 @@ last_updated: 2026-10-04
 | 제목 | `tracking-tight` | -0.025em | — | — | — | 불일치 | 자간 −0.025em(18px 에서 약 −0.5pt) — 구현 제목에 `.tracking` 이 없다 |
 | SheetContent | `px-6` | 24 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `prioritySection } .padding(.horizontal, 24)` | 24 | 일치 | 본문 좌우 여백 |
 | SheetContent | `pb-3` | 12 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) { Text(mode.title)` | 12 | 일치 | 본문 ↔ 액션 간격 = 시트 스택 간격 `Spacing.md`(+ 액션 `pt-2` 8 = 20) |
-| 입력 필드(생성) | `bg-white` | #FFFFFF | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `.background(DesignTokens.Color.card(area))` | #FFFFFF | 일치 | 필드 배경 = 영역 card |
-| 입력 필드(생성) | `rounded-[24px]` | 24 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `case .medium: return DesignTokens.Radius.card` | 16 | 불일치 | 생성 모드 필드 라운드 — 구현은 두 모드 공통 `Card(.medium)` 라 16 |
-| 입력 필드(생성) | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `lineWidth: emphasized ? 2 : 1` | 1 | 일치 | 보더 두께(`emphasized` 기본 false) |
-| 입력 필드(생성) | `border-[var(--tan)]` | #8B6F47 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area)` | #E5D7C0 | 불일치 | 생성 모드 필드 보더 색 — 목업은 강조색(tan), 구현은 `emphasized` 를 넘기지 않아 rule |
-| 입력 필드(생성) | `px-4` | 16 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Card(area: .affirmations, padding: .medium)` | 16 | 일치 | 필드 좌우 안쪽 여백 = `CardPadding.medium` |
-| 입력 필드(생성) | `py-3.5` | 14 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Card(area: .affirmations, padding: .medium)` | 16 | 불일치 | 필드 상하 안쪽 여백 — 목업 14, 구현 `CardPadding.medium` 16 |
+| 입력 필드(생성) | `bg-white` | #FFFFFF | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.background(DesignTokens.Color.card(.affirmations))` | #FFFFFF | 일치 | 필드 배경 = 영역 card |
+| 입력 필드(생성) | `rounded-[24px]` | 24 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))` | 24 | 일치 | 생성 모드 필드 라운드 — 생성 모드 전용 필드(편집 모드 미리보기는 `Card(.medium)` 16) |
+| 입력 필드(생성) | `border` | 1 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.stroke(DesignTokens.Color.accent(.affirmations), lineWidth: 1)` | 1 | 일치 | 보더 두께 |
+| 입력 필드(생성) | `border-[var(--tan)]` | #8B6F47 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.stroke(DesignTokens.Color.accent(.affirmations), lineWidth: 1)` | #8B6F47 | 일치 | 생성 모드 필드 보더 색 = 영역 accent |
+| 입력 필드(생성) | `px-4` | 16 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.padding(.horizontal, DesignTokens.Spacing.lg)` | 16 | 일치 | 필드 좌우 안쪽 여백 = `Spacing.lg` |
+| 입력 필드(생성) | `py-3.5` | 14 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.padding(.vertical, 14) .background(DesignTokens.Color.card(.affirmations))` | 14 | 일치 | 필드 상하 안쪽 여백 |
 | 입력 필드(생성) | `serif` | serif | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.font(DesignTokens.Typography.font(size: 16.5, family: .serif))` | serif | 일치 | 다짐 문장 서체 |
 | 입력 필드(생성) | `text-[16.5px]` | 16.5 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.font(DesignTokens.Typography.font(size: 16.5, family: .serif))` | 16.5 | 일치 | 다짐 문장 크기 |
 | 입력 필드(생성) | `leading-[1.5]` | 1.5 | — | — | — | 불일치 | 줄 높이 1.5 — 구현 `TextField` 에 `.lineSpacing` 이 없다(시스템 기본 줄 높이) |
@@ -124,13 +124,12 @@ last_updated: 2026-10-04
 | 미리보기 카드(편집) | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `lineWidth: emphasized ? 2 : 1` | 1 | 일치 | 보더 두께 |
 | 미리보기 카드(편집) | `border-[var(--rule)]` | #E5D7C0 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area)` | #E5D7C0 | 일치 | 보더 색 = 영역 rule |
 | 미리보기 카드(편집) | `p-4` | 16 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Card(area: .affirmations, padding: .medium)` | 16 | 일치 | 카드 안쪽 여백 = `CardPadding.medium` |
-| 인용부호 글리프(편집) | `-top-2` | -8 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.padding(.top, -16)` · `Card(area: .affirmations, padding: .medium)` | 16 + -16 | 불일치 | 글리프 세로 자리 — 목업은 카드 경계 기준 −8 의 absolute 겹침, 구현은 카드 안쪽 여백 16 뒤 흐름 안에서 −16 |
-| 인용부호 글리프(편집) | `-left-1` | -4 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.padding(.leading, -4)` · `Card(area: .affirmations, padding: .medium)` | 16 + -4 | 불일치 | 글리프 가로 자리 — 목업은 카드 경계 기준 −4, 구현은 안쪽 여백 16 뒤 −4 |
+| 인용부호 글리프(편집) | `-top-2` | -8 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.padding(.top, -8)` · `.clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))` | -8 | 일치 | 글리프 세로 자리 — 카드 경계 기준 −8 의 겹침(카드 `.overlay`, 카드 라운드로 잘림 = 목업 `overflow-hidden`) |
+| 인용부호 글리프(편집) | `-left-1` | -4 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.padding(.leading, -4)` | -4 | 일치 | 글리프 가로 자리 — 카드 경계 기준 −4 |
 | 인용부호 글리프(편집) | `text-[64px]` | 64 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.font(DesignTokens.Typography.font(size: 64, family: .serif))` | 64 | 일치 | 글리프 크기 |
 | 인용부호 글리프(편집) | `leading-none` | 1 | — | — | — | 불일치 | 줄 높이 1 — 구현에 줄 높이 지정이 없다 |
 | 인용부호 글리프(편집) | `text-[var(--tan)]/10` | #8B6F47/0.1 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.1))` | #8B6F47/0.1 | 일치 | 글리프 색 = 영역 accent 10% |
 | 인용부호 글리프(편집) | `serif` | serif | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.font(DesignTokens.Typography.font(size: 64, family: .serif))` | serif | 일치 | 글리프 서체 |
-| — | — | — | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) { Text("\"")` | 8 | 불일치 | 글리프 ↔ 문장 간격 — 목업 글리프는 absolute 겹침이라 문장과의 간격이 없다(구현은 흐름 안 스택) |
 | 미리보기 문장(편집) | `serif` | serif | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.font(DesignTokens.Typography.font(size: 16.5, family: .serif))` | serif | 일치 | 다짐 문장 서체 |
 | 미리보기 문장(편집) | `text-[16.5px]` | 16.5 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.font(DesignTokens.Typography.font(size: 16.5, family: .serif))` | 16.5 | 일치 | 다짐 문장 크기 |
 | 미리보기 문장(편집) | `leading-[1.5]` | 1.5 | — | — | — | 불일치 | 줄 높이 1.5 — 구현에 `.lineSpacing` 이 없다 |
@@ -208,7 +207,7 @@ last_updated: 2026-10-04
 | 1 | Backdrop | `<div class="absolute inset-0 bg-[#2E251A]/45 z-20">` | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `Backdrop(area: area, onTap: onClose)` | 일치 | 시트 뒤 화면 전체를 덮는다(`.ignoresSafeArea()`) |
 | 2 | Handle | `<!-- Handle -->` | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `Handle(area: area)` | 일치 | 시트 맨 위 |
 | 3 | 제목 | `<!-- SheetHeader -->` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Text(mode.title)` | 일치 | 생성 「새 다짐」 · 편집 「우선순위 설정」(문구는 `_copy-map.md`) |
-| 4 | 문장 입력(생성 모드) | `<textarea rows="3" placeholder="다짐 문장을 입력하세요"` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) { editorCard` | 불일치 | 목업 생성 모드는 장식 없는 입력 필드 하나다. 구현은 두 모드 공통 `editorCard` 라 생성 모드에도 장식 인용부호 글리프를 그린다 |
+| 4 | 문장 입력(생성 모드) | `<textarea rows="3" placeholder="다짐 문장을 입력하세요"` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `} else { textField .padding(.horizontal, DesignTokens.Spacing.lg)` | 일치 | 생성 모드는 장식 없는 입력 필드 하나 — 인용부호 글리프는 편집 모드 분기에만 있다 |
 | 5 | 문장 미리보기(편집 모드) | `<!-- 편집 중인 다짐 문장 미리보기 (정서 본문 — serif 변형 허용) -->` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `TextField( "다짐 문장을 입력하세요", text: $text, axis: .vertical )` | 불일치 | 목업 편집 모드는 읽기 전용 미리보기 문단이다. 구현은 편집 모드에서도 문장을 고칠 수 있는 `TextField` 다 |
 | 6 | 노출 빈도 라벨 | `노출 빈도</div>` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `AreaLabel(area: .affirmations, text: "노출 빈도")` | 일치 | 문장 카드 아래 |
 | 7 | 3-tier 단일 선택 | `<div class="grid grid-cols-3 gap-2">` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `options: AffirmationPriority.allCases` | 일치 | 높음 · 보통 · 가끔 순(열거형 선언 순) 등폭 세 칸(`FilterPills` 의 `.frame(maxWidth: .infinity)`), 칸마다 점 줄 위 · 라벨 아래 |
