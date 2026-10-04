@@ -8,8 +8,8 @@
 
 ## 현재 상태 요약
 
-- **정의된 가치 (참조)**: 10개 (V1 ~ V10) — `docs/product/values.md`
-- **사용자 여정**: **2개** (`JRN-affirmation-daily-exposure` V4, `JRN-ci-push-to-ack` V9) — V1, V2, V3, V5, V6, V7, V8, V10은 여정 미정의
+- **정의된 가치 (참조)**: 9개 (V1 ~ V9) — `docs/product/values.md`
+- **사용자 여정**: **2개** (`JRN-affirmation-daily-exposure` V4, `JRN-ci-push-to-ack` V9) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
 - **여정 mockup**: **2개** — 여정 2 / 2 ✅, 둘 다 `check_mockup.py` 실패 0
 - **화면 mockup**: 13개 (모두 `_index.md`에 매핑됨)
   - 가치 매핑됨: 13 / 13 ✅
@@ -58,7 +58,6 @@ docs/
 | V7 | (미정의) | - | screen-keyboard-extension | 🟡 여정 부재 |
 | V8 | (미정의) | - | screen-routines | 🟡 여정 부재 |
 | V9 | `JRN-ci-push-to-ack` | ✅ 4/4 단계 | screen-pr-monitor-push, screen-pr-monitor-history | ✅ (열린 PR 목록 여정은 AC2~5 구현 후) |
-| V10 | (미정의) | - | (없음) | 🟡 여정·mockup 부재 (PRD-12 승인 탭: 독립 탭·하단 탭 바 노출로 결정, 탭 순서는 mockup 작성 시) |
 
 ### 화면 mockup → 디자인 시스템
 
@@ -85,7 +84,7 @@ docs/
 ## 위험 진단
 
 ### 🟡 사용자 여정 부분 작성
-- 여정 2개(V4, V9). V1, V2, V3, V5, V6, V7, V8, V10을 다루는 여정 미작성.
+- 여정 2개(V4, V9). V1, V2, V3, V5, V6, V7, V8을 다루는 여정 미작성.
 - 화면 mockup 8개의 `_index.md` "여정" 항목은 `(미정의)`.
 
 ### 🟡 여정 mockup의 디자인 시스템 밖 값
@@ -99,7 +98,7 @@ docs/
 - `mockups/_template.md`는 2026-09-30 삭제(정본 `tokens.md`).
 
 ### ⚫ 가치 미정의
-- 해당 없음. ✅ V1~V10 정의됨.
+- 해당 없음. ✅ V1~V9 정의됨.
 
 ---
 
@@ -107,7 +106,7 @@ docs/
 
 | 순위 | 위험 | 권장 작업 |
 |-----|------|----------|
-| 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8·V10) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. |
+| 1 | 나머지 가치의 여정 부재 (V1·V2·V3·V5·V6·V7·V8) | `user-journey-writer`로 `JRN-*.md` 추가 → `journey-mockup-builder`로 여정 mockup → 허브·`_index.md` 반영. |
 | 2 (미래) | mockup HTML 인라인 스타일 자동 검증 | mockup의 `:root` 값이 `tokens.md`와 일치하는지 자동 비교. |
 
 ---
@@ -134,4 +133,3 @@ docs/
 | 2026-10-01 | **목록 탭 빈 상태 프레임 추가**: `screen-affirmations`(히어로 자리 안내 카드)·`screen-routines`·`screen-scratchpad`(미분류 배지 0·탭 배지 숨김)·`screen-todo-personal`(요약 0·필터 칩 없음)에 「빈 상태」 프레임과 프레임 캡션을 더하고 `mockups-dark.html` 네 본문에 같은 프레임을 다크 토큰으로 반영. 구현(`AffirmationsView`·`RoutinesView`·`ScratchpadView`·`TodoListView`)의 빈 상태 문구가 먼저 있던 상태를 목업이 그리게 했다. `_copy-map.md` 표 A `목업 대기` 5행 → `일치`, 표 B 14행 신설, `_index.md`·README 갱신. 세 검산 ok. | 카피 `목업 대기` 34 → 29 |
 | 2026-10-04 | **PR 모니터 이력 빈 상태·오류 프레임 추가**: `screen-pr-monitor-history`에 「빈 상태」(이력 0건 — 가운데 안내 두 줄)·「오류」(첫 조회 실패 — 제목·오류 설명·다시 시도) 프레임과 프레임 캡션(목록·빈 상태·오류)을 더하고 `mockups-dark.html` PR 모니터 본문에 같은 프레임을 다크 토큰으로 반영. 구현(`PRMonitorView`)의 빈·오류 상태 문구가 먼저 있던 상태를 목업이 그리게 했다. `_copy-map.md` 표 A `목업 대기` 4행 → `일치`(29 → 25), 표 B 8행 신설, `_index.md`·README 갱신. 세 검산 ok. | 카피 `목업 대기` 29 → 25 |
 | 2026-10-04 | **통합 위젯 다짐 슬라이스 상태 추가**: `screen-widget`에 「다짐 슬라이스 상태」 변형(다짐 0건·미로그인·조회 오류 — 라벨·펄스 점은 그대로, 다짐 문장 자리에 안내 문구 잉크 55%)을 더하고 `mockups-dark.html` 위젯 본문에 같은 변형을 반영. 구현(`AffirmationSection`)의 세 상태 문구가 먼저 있던 상태를 목업이 그리게 했다. `_copy-map.md` 표 A `목업 대기` 3행 → `일치`(25 → 22), 표 B 7행 신설, `_index.md`·README 갱신. 세 검산 ok. | 카피 `목업 대기` 25 → 22 |
-| 2026-10-05 | **V10 반영 (PRD-12 승인 게이트, gatekeeper 통합)**: 가치 참조 9 → 10, 허브 `index.html` 가치 표에 V10 행(여정 없음), 연결 매트릭스에 V10 행 추가. 승인 탭은 독립 탭으로 하단 탭 바에 노출하고 임시공간을 "더 보기"로 옮기기로 결정(PRD-12 결정 사항). 여정·mockup은 후속. | 가치 9 → 10, V10 여정·mockup 부재 |
