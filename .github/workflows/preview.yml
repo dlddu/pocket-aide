@@ -1,16 +1,5 @@
 name: Preview
 
-# Runs when `deploy/preview` is attached to a PR. Attaching the label is what
-# makes flux-cd-apps (apps/pocket-aide-preview) start a preview environment at
-# https://pocket-aide-pr-<N>.<domain>, running ghcr.io/dlddu/pocket-aide:<head sha>.
-# This workflow makes sure that image exists and uploads a TestFlight build
-# pointed at the preview.
-#
-# Later pushes to a labelled PR are handled by ci.yml (it sees the label in the
-# pull_request payload), which also runs the tests first. This workflow covers
-# only the moment of labelling, and does not re-run tests: the head commit's
-# ci.yml run reports on its own, and ci-success stays the merge gate.
-#
 # Deliberately separate from ci.yml: adding `labeled` to ci.yml's triggers would
 # re-run the whole suite (and re-evaluate ci-success) for every unrelated label.
 
@@ -60,8 +49,6 @@ jobs:
           echo "run=true" >> "$GITHUB_OUTPUT"
           echo "build_source=PR #${PR_NUMBER} 프리뷰" >> "$GITHUB_OUTPUT"
 
-          # Does ghcr.io/dlddu/pocket-aide:<head sha> exist already? (ci.yml
-          # builds it for PRs that touch the backend.)
           token=$(curl -fsS -u "x:${GH_TOKEN}" \
             "https://ghcr.io/token?scope=repository:dlddu/pocket-aide:pull" \
             | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
