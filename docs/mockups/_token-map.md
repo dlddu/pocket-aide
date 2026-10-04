@@ -65,6 +65,8 @@ last_updated: 2026-09-29
 | `personal/accent` | 다크 | `#D67852` | §1.9 | 다크 변형 표 `personal` 행 accent 열 |
 | `personal/card` | 라이트 | `#FFFFFF` | §2 | `--card` 라이트 흰색 |
 | `personal/card` | 다크 | `#3D2218` | §1.9 | 다크 변형 표 `personal` 행 `card` 열 |
+| `personal/destructive` | 라이트 | `#9E2B3C` | §1.10 | 개인 라이트 `--destructive` |
+| `personal/destructive` | 다크 | `#E07583` | §1.10 | 개인 다크 `--destructive` |
 | `personal/ink` | 라이트 | `#3D2A22` | §1.1 | `--ink` 본문 |
 | `personal/ink` | 다크 | `#F4E2D4` | §1.9 | 다크 변형 표 `personal` 행 `ink` 열 |
 | `personal/rule` | 라이트 | `#EBD9CB` | §1.1 | `--rule` 보더 |
@@ -89,6 +91,8 @@ last_updated: 2026-09-29
 | `routines/accent` | 다크 | `#7CAB89` | §1.9 | 다크 변형 표 `routines` 행 accent 열 |
 | `routines/card` | 라이트 | `#FFFFFF` | §2 | `--card` 라이트 흰색 |
 | `routines/card` | 다크 | `#243029` | §1.9 | 다크 변형 표 `routines` 행 `card` 열 |
+| `routines/destructive` | 라이트 | `#9C3F2D` | §1.10 | 다짐 값 차용 — 라이트 `--destructive` |
+| `routines/destructive` | 다크 | `#D87560` | §1.10 | 다짐 값 차용 — 다크 `--destructive` |
 | `routines/ink` | 라이트 | `#243329` | §1.5 | `--ink` 본문 |
 | `routines/ink` | 다크 | `#D6DDD2` | §1.9 | 다크 변형 표 `routines` 행 `ink` 열 |
 | `routines/rule` | 라이트 | `#D6DDD2` | §1.5 | `--rule` 보더 |
@@ -101,6 +105,8 @@ last_updated: 2026-09-29
 | `scratchpad/accent` | 다크 | `#D6A57E` | §1.9 | 다크 변형 표 `scratchpad` 행 accent 열 |
 | `scratchpad/card` | 라이트 | `#FBF7EC` | §1.4 | 카드 배경 (종이톤) |
 | `scratchpad/card` | 다크 | `#272219` | §1.9 | 다크 변형 표 `scratchpad` 행 `card` 열 |
+| `scratchpad/destructive` | 라이트 | `#9C3F2D` | §1.10 | 다짐 값 차용 — 라이트 `--destructive` |
+| `scratchpad/destructive` | 다크 | `#D87560` | §1.10 | 다짐 값 차용 — 다크 `--destructive` |
 | `scratchpad/ink` | 라이트 | `#2A2723` | §1.4 | `--ink` 본문 |
 | `scratchpad/ink` | 다크 | `#E0D8C2` | §1.9 | 다크 변형 표 `scratchpad` 행 `ink` 열 |
 | `scratchpad/rule` | 라이트 | `#E0D8C2` | §1.4 | `--rule` 보더 |
@@ -141,6 +147,8 @@ last_updated: 2026-09-29
 | `work/accent` | 다크 | `#7A9BC2` | §1.9 | 다크 변형 표 `work` 행 accent 열 |
 | `work/card` | 라이트 | `#FFFFFF` | §2 | `--card` 라이트 흰색 |
 | `work/card` | 다크 | `#1A2638` | §1.9 | 다크 변형 표 `work` 행 `card` 열 |
+| `work/destructive` | 라이트 | `#9C3F2D` | §1.10 | 다짐 값 차용 — 라이트 `--destructive` |
+| `work/destructive` | 다크 | `#D87560` | §1.10 | 다짐 값 차용 — 다크 `--destructive` |
 | `work/ink` | 라이트 | `#1E2A3A` | §1.2 | `--ink` 본문 |
 | `work/ink` | 다크 | `#DDE5F0` | §1.9 | 다크 변형 표 `work` 행 `ink` 열 |
 | `work/rule` | 라이트 | `#D6DEE9` | §1.2 | `--rule` 보더 |
