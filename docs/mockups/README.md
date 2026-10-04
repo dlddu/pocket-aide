@@ -35,7 +35,7 @@ open docs/mockups/index.html
 | 파일 | 화면 | PRD | 핵심 AC |
 |---|---|---|---|
 | `screen-shortcut-capture.html` | Shortcut 즉시 캡처 | PRD-6 | AC1 숏컷 호출, AC2 즉시 녹음, AC3 되묻기 없음, AC4 임시공간 자동 저장 |
-| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·중간 크기·다짐·일정 슬라이스 상태) | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
+| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·중간 크기·다짐·일정·알림 슬라이스 상태) | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
 | `screen-keyboard-extension.html` | LLM 키보드 확장 | PRD-9 (+PRD-7 AC6) | AC2~6, AC9, AC10, AC12 |
 | `screen-pr-monitor-push.html` | PR 모니터 — CI 완료 푸시 | PRD-10 | AC6 워크플로우 완료 푸시, AC7 진입점 |
 
