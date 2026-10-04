@@ -25,6 +25,7 @@ type column struct {
 }
 
 type index struct {
+	Name   string
 	Label  string
 	Cols   []string
 	Unique bool
@@ -48,6 +49,7 @@ type table struct {
 	Columns []column
 	Indexes []index
 	FKs     []foreignKey
+	pkIndex string
 }
 
 type schema struct {
@@ -55,6 +57,15 @@ type schema struct {
 	Engine string
 	byName map[string]*table
 	numIdx int
+	db     *sql.DB
+	done   func()
+}
+
+func (s *schema) close() {
+	if s != nil && s.done != nil {
+		s.done()
+		s.done = nil
+	}
 }
 
 var wsRe = regexp.MustCompile(`\s+`)
@@ -72,14 +83,26 @@ func observeSchema(root string, b *scopeBlock) (*schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = os.RemoveAll(tmp) }()
-
 	conn, err := sql.Open("sqlite", "file:"+filepath.Join(tmp, "empty.db")+"?_pragma=foreign_keys(ON)")
 	if err != nil {
+		_ = os.RemoveAll(tmp)
 		return nil, fmt.Errorf("엔진을 열지 못했다: %w", err)
 	}
-	defer func() { _ = conn.Close() }()
+	conn.SetMaxOpenConns(1)
+	done := func() {
+		_ = conn.Close()
+		_ = os.RemoveAll(tmp)
+	}
+	s, err := readSchema(conn, dir, b)
+	if err != nil {
+		done()
+		return nil, err
+	}
+	s.db, s.done = conn, done
+	return s, nil
+}
 
+func readSchema(conn *sql.DB, dir string, b *scopeBlock) (*schema, error) {
 	src, err := iofs.New(os.DirFS(dir), ".")
 	if err != nil {
 		return nil, fmt.Errorf("마이그레이션 소스: %w", err)
@@ -141,7 +164,6 @@ func observeSchema(root string, b *scopeBlock) (*schema, error) {
 			}
 		}
 	}
-	_, _ = m.Close()
 	return s, nil
 }
 
@@ -213,6 +235,7 @@ func readIndexes(conn *sql.DB, t *table) error {
 
 	for _, x := range list {
 		if x.origin == "pk" {
+			t.pkIndex = x.name
 			continue
 		}
 		var ddl sql.NullString
@@ -254,7 +277,7 @@ func readIndexes(conn *sql.DB, t *table) error {
 		}
 		_ = xr.Close()
 
-		ix := index{Cols: cols, Unique: x.unique, Cond: "-"}
+		ix := index{Name: x.name, Cols: cols, Unique: x.unique, Cond: "-"}
 		if x.partial {
 			ix.Cond = cond
 		}

@@ -9,10 +9,7 @@ import (
 	"strings"
 )
 
-const (
-	unjudged = "미판정"
-	noAccess = "—"
-)
+const noAccess = "—"
 
 type patternRow struct {
 	ID, Shape, Support string
@@ -23,9 +20,15 @@ type manualRow struct {
 	Site, Pattern, SQL, Reason string
 }
 
+type unusedRow struct {
+	Index, Table, Note string
+}
+
 type catalog struct {
-	patterns []patternRow
-	manual   []manualRow
+	patterns  []patternRow
+	manual    []manualRow
+	unused    []unusedRow
+	hasUnused bool
 }
 
 var (
@@ -115,10 +118,14 @@ func parseCatalog(path string) (*catalog, error) {
 			}
 			c.manual = append(c.manual, manualRow{Site: unquote(cs[0]), Pattern: cs[1], SQL: unquote(cs[2]), Reason: cs[3]})
 		case mode == "unused":
+			if len(cs) != 3 {
+				return nil, fmt.Errorf("미사용 인덱스 표 행의 칸 수가 3이 아니다: %s", line)
+			}
+			c.unused = append(c.unused, unusedRow{Index: unquote(cs[0]), Table: unquote(cs[1]), Note: cs[2]})
 		default:
 			return nil, fmt.Errorf("어느 표에도 속하지 않는 표 행: %s", line)
 		}
-		if mode != "" && (sameHeader(cs, patternHeader) || sameHeader(cs, manualHeader)) {
+		if mode != "" && (sameHeader(cs, patternHeader) || sameHeader(cs, manualHeader) || sameHeader(cs, unusedHeader)) {
 			if seen[mode] {
 				return nil, fmt.Errorf("%s 표가 둘 이상이다", mode)
 			}
@@ -128,6 +135,7 @@ func parseCatalog(path string) (*catalog, error) {
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
+	c.hasUnused = seen["unused"]
 	if !seen["pattern"] {
 		return nil, fmt.Errorf("패턴 표(%s)가 없다", strings.Join(patternHeader, " | "))
 	}
@@ -143,7 +151,7 @@ func supportFor(accessless bool) string {
 	if accessless {
 		return noAccess
 	}
-	return unjudged
+	return noSupport
 }
 
 func patternLine(id, shape, support string, sites []string) string {
@@ -160,7 +168,7 @@ func manualLine(site, id, sql, reason string) string {
 
 type pair struct{ site, shape string }
 
-func checkCatalog(c *catalog, sites []site, sch *schema) (inv2, inv3 []violation) {
+func checkCatalog(c *catalog, sites []site, sch *schema, criteria map[string]bool) (inv2, inv3 []violation, plans []sqlPlan) {
 	add := func(kind, subject, detail, expected string) {
 		inv2 = append(inv2, violation{Invariant: "2", Kind: kind, Subject: subject, Detail: detail, Expected: expected})
 	}
@@ -169,12 +177,16 @@ func checkCatalog(c *catalog, sites []site, sch *schema) (inv2, inv3 []violation
 	codeSites := map[string]map[string]bool{}
 	accessless := map[string]bool{}
 	unextractable := map[string]string{}
+	sqlFor := map[string]string{}
 	for _, s := range sites {
 		if s.Unextractable != "" {
 			if _, ok := unextractable[s.ID()]; !ok {
 				unextractable[s.ID()] = s.Unextractable
 			}
 			continue
+		}
+		if _, ok := sqlFor[s.Shape]; !ok {
+			sqlFor[s.Shape] = s.SQL
 		}
 		code[pair{s.ID(), s.Shape}] = true
 		if codeSites[s.Shape] == nil {
@@ -228,6 +240,9 @@ func checkCatalog(c *catalog, sites []site, sch *schema) (inv2, inv3 []violation
 		}
 		manualPairs[pair{m.Site, r.Shape}] = true
 		accessless[r.Shape] = accessless[r.Shape] || err == nil && sh.accessless
+		if _, ok := sqlFor[r.Shape]; !ok && err == nil {
+			sqlFor[r.Shape] = normSpace(m.SQL)
+		}
 	}
 	var missingManual []string
 	for id := range unextractable {
@@ -252,7 +267,15 @@ func checkCatalog(c *catalog, sites []site, sch *schema) (inv2, inv3 []violation
 		}
 		return "Q-??"
 	}
-	expectedRow := func(shape string) string {
+	guess := func(shape string) string {
+		if q, ok := sqlFor[shape]; ok && sch != nil && sch.db != nil {
+			if acc, _, err := explain(sch, q); err == nil {
+				return supportOf(shape, acc)
+			}
+		}
+		return supportFor(accessless[shape])
+	}
+	rowFor := func(shape, support string) string {
 		set := map[string]bool{}
 		for s := range codeSites[shape] {
 			set[s] = true
@@ -267,8 +290,9 @@ func checkCatalog(c *catalog, sites []site, sch *schema) (inv2, inv3 []violation
 			ss = append(ss, s)
 		}
 		sort.Strings(ss)
-		return patternLine(idFor(shape), shape, supportFor(accessless[shape]), ss)
+		return patternLine(idFor(shape), shape, support, ss)
 	}
+	expectedRow := func(shape string) string { return rowFor(shape, guess(shape)) }
 	var unreg []pair
 	for p := range code {
 		if _, ok := doc[p]; !ok {
@@ -303,9 +327,7 @@ func checkCatalog(c *catalog, sites []site, sch *schema) (inv2, inv3 []violation
 		if live == 0 {
 			add("dead-pattern", r.ID, "살아 있는 지점이 없다 — 행을 지운다", "")
 		}
-		if want := supportFor(accessless[r.Shape]); live > 0 && (r.Support == noAccess) != (want == noAccess) {
-			inv3 = append(inv3, violation{Invariant: "3", Kind: "support-access", Subject: r.ID, Detail: fmt.Sprintf("지원 칸 %s — 접근 조건 없는 쓰기만 %s", r.Support, noAccess), Expected: expectedRow(r.Shape)})
-		}
 	}
-	return inv2, inv3
+	inv3, plans = judgePlans(c, sites, sch, criteria, rowFor)
+	return inv2, inv3, plans
 }
