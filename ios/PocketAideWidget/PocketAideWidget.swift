@@ -8,7 +8,7 @@ struct PocketAideWidgetEntryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                PlaceholderSection(area: .personal, label: "날씨")
+                WeatherSection(state: entry.weather)
                 ruleDivider(vertical: true)
                 CalendarSection(state: entry.calendar, now: entry.date)
             }

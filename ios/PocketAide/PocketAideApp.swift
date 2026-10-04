@@ -20,6 +20,9 @@ struct PocketAideApp: App {
                           String(describing: oldPhase), String(describing: newPhase))
                     if newPhase == .active {
                         Task { await auth.refreshPushAuthorization() }
+                        if auth.signedIn {
+                            WeatherLocationAccess.start()
+                        }
                         drainPendingURL(label: "scene-active")
                     }
                 }

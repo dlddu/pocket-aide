@@ -21,6 +21,7 @@ struct AffirmationProvider: TimelineProvider {
             date: Date(),
             state: .loaded(Self.previewAffirmation),
             calendar: .loaded(Self.previewEvents),
+            weather: .loaded(Self.previewWeather, place: "서울"),
             notifications: .loaded(WidgetNotificationsSummary(latest: Self.previewNotification, moreCount: 1))
         )
     }
@@ -36,10 +37,12 @@ struct AffirmationProvider: TimelineProvider {
             let state = await fetchState(client, at: now)
             let notifications = await fetchNotifications(client)
             let calendar = CalendarSnapshot.load(from: now, through: now).state(at: now)
+            let weather = await fetchWeather()
             completion(PocketAideWidgetEntry(
                 date: now,
                 state: state,
                 calendar: calendar,
+                weather: weather,
                 notifications: notifications
             ))
         }
@@ -51,6 +54,7 @@ struct AffirmationProvider: TimelineProvider {
             let client = makeClient()
             let items = await fetchAffirmations(client)
             let notifications = await fetchNotifications(client)
+            let weather = await fetchWeather()
             let lastEntryDate = now.addingTimeInterval(Double(Self.entryCount - 1) * Self.refreshInterval)
             let snapshot = CalendarSnapshot.load(from: now, through: lastEntryDate)
             let single = { (state: WidgetAffirmationState) in
@@ -58,6 +62,7 @@ struct AffirmationProvider: TimelineProvider {
                     date: now,
                     state: state,
                     calendar: snapshot.state(at: now),
+                    weather: weather,
                     notifications: notifications
                 )]
             }
@@ -76,6 +81,7 @@ struct AffirmationProvider: TimelineProvider {
                         date: date,
                         state: .loaded(pick),
                         calendar: snapshot.state(at: date),
+                        weather: weather,
                         notifications: notifications
                     )
                 }
@@ -186,6 +192,24 @@ struct AffirmationProvider: TimelineProvider {
             return .error
         }
     }
+
+    private func fetchWeather() async -> WidgetWeatherState {
+        guard let location = WeatherLocationStore().load() else { return .needsLocation }
+        do {
+            return .loaded(try await WeatherClient.fetch(location), place: location.placeName)
+        } catch {
+            logger.error("weather fetch failed: \(String(describing: error), privacy: .public)")
+            return .error
+        }
+    }
+
+    private static let previewWeather = WeatherSummary(
+        temperature: 18,
+        condition: "비",
+        high: 22,
+        low: 14,
+        precipitationChance: 60
+    )
 
     private static let previewNotification = NotificationHistoryItem(
         id: 0,
