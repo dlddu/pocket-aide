@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @main
 struct PocketAideApp: App {
@@ -9,11 +10,13 @@ struct PocketAideApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: RootTab = .affirmations
     @State private var highlightedEventID: Int64?
+    @State private var showsWeather = false
 
     var body: some Scene {
         WindowGroup {
             RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID)
                 .environmentObject(auth)
+                .sheet(isPresented: $showsWeather) { WeatherView() }
                 .task { await auth.bootstrap() }
                 .onChange(of: scenePhase) { oldPhase, newPhase in
                     NSLog("[PocketAideApp] scenePhase %@ -> %@",
@@ -62,8 +65,15 @@ struct PocketAideApp: App {
         guard url.scheme == "pocketaide" else { return }
         switch url.host {
         case "affirmations":
+            showsWeather = false
             selectedTab = .affirmations
+        case "weather":
+            showsWeather = true
+        case "calendar":
+            showsWeather = false
+            openCalendar()
         case "pr-monitor":
+            showsWeather = false
             if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
                let raw = comps.queryItems?.first(where: { $0.name == "eventId" })?.value,
                let parsed = Int64(raw) {
@@ -76,6 +86,16 @@ struct PocketAideApp: App {
                   highlightedEventID.map(String.init) ?? "<nil>")
         default:
             break
+        }
+    }
+
+    private func openCalendar() {
+        let seconds = Int(Date().timeIntervalSinceReferenceDate)
+        guard let url = URL(string: "calshow:\(seconds)") else { return }
+        UIApplication.shared.open(url) { opened in
+            if !opened {
+                selectedTab = .affirmations
+            }
         }
     }
 }

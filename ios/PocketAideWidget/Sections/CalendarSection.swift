@@ -9,11 +9,14 @@ struct CalendarSection: View {
     private let calendar = Calendar.current
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            AreaLabel(area: .work, text: "다음 일정", showsDot: false)
-            content
+        Link(destination: URL(string: "pocketaide://calendar")!) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                AreaLabel(area: .work, text: "다음 일정", showsDot: false)
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder

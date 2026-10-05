@@ -6,11 +6,14 @@ struct WeatherSection: View {
     let state: WidgetWeatherState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            AreaLabel(area: .personal, text: label, showsDot: false)
-            content
+        Link(destination: URL(string: "pocketaide://weather")!) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                AreaLabel(area: .personal, text: label, showsDot: false)
+                content
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.plain)
     }
 
     private var label: String {

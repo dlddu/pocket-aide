@@ -196,7 +196,7 @@ struct AffirmationProvider: TimelineProvider {
     private func fetchWeather() async -> WidgetWeatherState {
         guard let location = WeatherLocationStore().load() else { return .needsLocation }
         do {
-            return .loaded(try await WeatherClient.fetch(location), place: location.placeName)
+            return .loaded(try await WeatherClient.fetchForecast(location).forecast.summary, place: location.placeName)
         } catch {
             logger.error("weather fetch failed: \(String(describing: error), privacy: .public)")
             return .error

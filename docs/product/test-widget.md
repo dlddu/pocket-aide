@@ -175,10 +175,11 @@
     (앱이 잠깐 열렸다가 넘어갈 수 있다), 메일은 앱의 메일 화면(AC11), 알림은 PR 모니터 탭.
 - **검증 AC**: AC8
 - **구현 상태**: 부분 구현 — 다짐 영역은 `pocketaide://affirmations`로 다짐 탭에, 알림 영역은 `pocketaide://pr-monitor`로
-  PR 모니터 탭에 진입한다(2026-10-04). 나머지 세 영역(날씨·다음 일정·메일)은 위젯 전체의 기본 링크 `pocketaide://root`를
-  따르는데, 앱이 이 링크를 처리하지 않아 마지막으로 연 탭에 머문다.
+  PR 모니터 탭에 진입한다(2026-10-04). 날씨 영역은 `pocketaide://weather`로 앱의 날씨 화면을 열고, 다음 일정 영역은
+  `pocketaide://calendar`를 앱이 받아 `calshow:`로 iOS 캘린더 앱에 넘긴다 — 넘기지 못하면 앱 첫 화면(다짐 탭)에 머문다(2026-10-05).
+  남은 한 영역(메일)은 위젯 전체의 기본 링크 `pocketaide://root`를 따르는데, 앱이 이 링크를 처리하지 않아 마지막으로 연 탭에 머문다.
 - **관련 코드 테스트**: 없음
-- **비고**: 영역별 진입 대상은 PRD-8 AC8과 `prd-widget.md` 결정 사항(2026-10-05)에 있다. 날씨·메일 화면은 아직 앱에 없고(신설),
+- **비고**: 영역별 진입 대상은 PRD-8 AC8과 `prd-widget.md` 결정 사항(2026-10-05)에 있다. 메일 화면은 아직 앱에 없고(신설),
   다음 일정은 앱이 비공식 `calshow:` URL로 캘린더 앱을 연다 — 막히면 앱 첫 화면에 머무는 것이 PRD가 정한 후퇴 동작이다.
   메일 화면의 내용은 시나리오 11이 본다. (2026-10-05 이전에는 세 영역 모두 대상이 정해지지 않아 판정 불가였다.)
 
@@ -219,8 +220,12 @@
   - 5단계: 오류 중에는 「잠시 후 다시 시도할게요.」와 다시 시도 버튼이 보이고, 다시 시도하면 예보가 돌아온다.
   - 6단계: 「앱에서 위치 접근을 허용해 주세요.」와 설정으로 가는 버튼이 보인다.
 - **검증 AC**: AC10
-- **구현 상태**: 미구현 — 앱에 날씨 화면이 없고, 날씨 영역 탭은 위젯 기본 링크 `pocketaide://root` 를 따른다.
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 — 위젯 날씨 영역이 `pocketaide://weather`로 앱의 날씨 화면을 탭 위에 단독 화면으로 연다. 화면은 위젯과
+  같은 공유 위치로 Open-Meteo 예보를 가져와 동네 이름, 현재 기온·날씨 상태·체감 기온·「최고 N · 최저 N · 강수 N%」, 시간별 24개
+  (가로 스크롤), 주간 7일, 갱신 시각(「HH:mm 갱신」)을 보인다. 위젯과 화면이 같은 예보 응답을 30분 캐시로 공유해, 열릴 때 캐시를
+  먼저 보이고 새로 가져온다. 당겨서 새로고침은 다시 가져오고, 조회 오류에는 「잠시 후 다시 시도할게요.」와 「다시 시도」, 위치가
+  없으면 「앱에서 위치 접근을 허용해 주세요.」와 「설정 열기」를 보인다. (2026-10-05 — 이전에는 미구현)
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/WeatherForecastTests.swift` — `testForecastSummaryMatchesWidgetSummary`, `testHourlyHasTwentyFourRowsFromNow`, `testDailyHasSevenRowsStartingToday`, `testExtraRowsAreTrimmedAndEmptyForecastFails`, `testForecastRequestAsksForHourlyAndWeekly`, `testCacheServesSameLocationWithinThirtyMinutes`, `testUpdatedLabelShowsFetchTime`
 - **비고**: 위젯과의 값 일치(2단계)는 날씨 화면이 위젯과 같은 30분 캐시를 먼저 보인다는 PRD 결정 사항에 기댄다 — 화면을 연 직후
   새로 가져온 값이 들어오면 위젯이 다음 갱신 전까지 잠깐 다를 수 있다.
 

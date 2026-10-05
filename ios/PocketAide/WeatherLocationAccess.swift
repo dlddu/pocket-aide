@@ -1,8 +1,11 @@
 import CoreLocation
+import Foundation
 import PocketAideAPI
 
 @MainActor
 enum WeatherLocationAccess {
+    static let didRefresh = Notification.Name("weather.location.didRefresh")
+
     private static var running = false
 
     static func start() {
@@ -11,6 +14,7 @@ enum WeatherLocationAccess {
         Task {
             await refresh()
             running = false
+            NotificationCenter.default.post(name: didRefresh, object: nil)
         }
     }
 
