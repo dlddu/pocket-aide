@@ -1,6 +1,6 @@
 # 사용자 여정 (User Journeys)
 
-> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 2개 작성됨.
+> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 3개 작성됨.
 > 작성은 `user-journey-writer` 규약을, 여정 mockup은 `journey-mockup-builder` 규약을 따른다.
 
 ## 파일·식별자 규칙
@@ -37,8 +37,7 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 
 | 여정 | 사유 | 재검토 시점 |
 |---|---|---|
-
-현재 등재된 여정은 없다.
+| `JRN-approval-push-to-decision` | PRD-12(승인 게이트)가 구현 전이고, 승인 탭이 들어가는 하단 탭 바 새 구성(승인 탭 추가·임시공간 「더 보기」)이 화면 mockup에 아직 반영되지 않았다. 탭 바 구성과 탭 순서를 정하는 작업과 함께 여정 mockup을 만든다. | 화면 mockup 하단 탭 바 갱신 시(PRD-12 후속 작업) — 늦어도 PRD-12 구현 착수 전 |
 
 ## 작성된 여정
 
@@ -46,6 +45,7 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 |---|---|---|
 | [`JRN-affirmation-daily-exposure`](./JRN-affirmation-daily-exposure.md) — 다짐 문장의 일상 반복 노출 | V4 | [journeys/JRN-affirmation-daily-exposure/](../journeys/JRN-affirmation-daily-exposure/) |
 | [`JRN-ci-push-to-ack`](./JRN-ci-push-to-ack.md) — CI 결과 푸시에서 확인 처리까지 | V9 | [journeys/JRN-ci-push-to-ack/](../journeys/JRN-ci-push-to-ack/) |
+| [`JRN-approval-push-to-decision`](./JRN-approval-push-to-decision.md) — 승인 요청 푸시에서 결정까지 | V9 (「결정」) | 예외 등재 — 미작성 (위 「여정 mockup 예외」) |
 
 ## 남은 후보 (PRD에서 추론)
 
