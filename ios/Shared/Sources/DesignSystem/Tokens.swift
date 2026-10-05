@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 public enum DesignTokens {
     public enum Area: String, CaseIterable, Sendable {
@@ -20,13 +21,25 @@ public enum DesignTokens {
     /// them on the prMonitor asset would duplicate the source-of-truth in §1.11.
     public enum StatusColor {
         /// `--forest` borrowed from §1.5 routines area for CI success.
-        public static let success = SwiftUI.Color(red: 0x4F / 255.0, green: 0x6E / 255.0, blue: 0x5C / 255.0)
+        public static let success = adaptive(light: 0x4F6E5C, dark: 0x7CAB89)
         /// `--destructive` borrowed from §1.10 (affirmations) for CI failure.
-        public static let failure = SwiftUI.Color(red: 0x9C / 255.0, green: 0x3F / 255.0, blue: 0x2D / 255.0)
+        public static let failure = adaptive(light: 0x9C3F2D, dark: 0xD87560)
         /// `--tan` borrowed from §1.6 (affirmations) for CI in-progress / 시작.
-        public static let inProgress = SwiftUI.Color(red: 0x8B / 255.0, green: 0x6F / 255.0, blue: 0x47 / 255.0)
+        public static let inProgress = adaptive(light: 0x8B6F47, dark: 0xC49B6F)
         /// Deeper accent for the push-arrival pulse glow (`--accent-strong`).
-        public static let arrivalGlow = SwiftUI.Color(red: 0x3D / 255.0, green: 0x2F / 255.0, blue: 0x8E / 255.0)
+        public static let arrivalGlow = adaptive(light: 0x3D2F8E, dark: 0xA99FE6)
+
+        private static func adaptive(light: UInt32, dark: UInt32) -> SwiftUI.Color {
+            SwiftUI.Color(uiColor: UIColor { traits in
+                let hex = traits.userInterfaceStyle == .dark ? dark : light
+                return UIColor(
+                    red: CGFloat((hex >> 16) & 0xFF) / 255.0,
+                    green: CGFloat((hex >> 8) & 0xFF) / 255.0,
+                    blue: CGFloat(hex & 0xFF) / 255.0,
+                    alpha: 1
+                )
+            })
+        }
     }
 
     public enum Color {
@@ -74,6 +87,7 @@ public enum DesignTokens {
 
     public enum Spacing {
         public static let xs: CGFloat = 4
+        public static let cardGap: CGFloat = 6
         public static let sm: CGFloat = 8
         public static let md: CGFloat = 12
         public static let lg: CGFloat = 16

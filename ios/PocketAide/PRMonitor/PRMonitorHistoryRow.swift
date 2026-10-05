@@ -79,6 +79,14 @@ struct PRMonitorHistoryRow: View {
     @ViewBuilder
     private var metaLine: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
+            if !item.headSHA.isEmpty {
+                Text("commit \(String(item.headSHA.prefix(7)))")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                    .foregroundStyle(.secondary)
+                Text("·")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                    .foregroundStyle(.tertiary)
+            }
             Text(item.workflowName.isEmpty ? "workflow" : item.workflowName)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
                 .foregroundStyle(.secondary)

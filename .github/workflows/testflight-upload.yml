@@ -1,22 +1,7 @@
 name: TestFlight upload
 
-# Builds and uploads a Release-config TestFlight build via fastlane.
-# Pulls all signing material (cert + 3 provisioning profiles) and the
-# App Store Connect API key from secrets — the caller must invoke with
-# `secrets: inherit`.
-#
-# Which backend the build talks to:
-#   preview_pr empty → the repository variable BACKEND_BASE_URL (production).
-#                      Used for main merges and manual dispatches.
-#   preview_pr = N   → that PR's preview environment. The host is derived from
-#                      BACKEND_BASE_URL by turning `pocket-aide.` into
-#                      `pocket-aide-pr-N.` — the same host the ResourceSet in
-#                      flux-cd-apps apps/pocket-aide-preview serves. Used for PRs
-#                      labelled `deploy/preview`.
-#
-# A preview build stops working once its PR is merged or closed (the preview is
-# garbage-collected). ci.yml therefore uploads a production build on every main
-# merge of a labelled PR, so testers are moved back onto production.
+# Reads signing material and the App Store Connect key straight from secrets
+# without declaring them, so callers must pass `secrets: inherit`.
 
 on:
   workflow_call:

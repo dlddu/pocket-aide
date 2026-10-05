@@ -154,22 +154,44 @@ struct RoutinesView: View {
         }
     }
 
+    private func weekdayBar(_ weekdays: Int) -> some View {
+        HStack(spacing: DesignTokens.Spacing.xs) {
+            ForEach(RoutineWeekdays.displayOrder, id: \.self) { index in
+                let scheduled = RoutineWeekdays.contains(weekdays, index)
+                Text(RoutineWeekdays.symbols[index])
+                    .font(DesignTokens.Typography.font(
+                        size: DesignTokens.Typography.caption2xs,
+                        weight: scheduled ? .bold : .regular
+                    ))
+                    .foregroundStyle(scheduled
+                        ? DesignTokens.Color.accent(.routines)
+                        : DesignTokens.Color.ink(.routines).opacity(0.4))
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
     private func restingRow(_ routine: Routine) -> some View {
         Button {
             openHistory(routine.id)
         } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(routine.name)
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
-                        .foregroundStyle(DesignTokens.Color.ink(.routines))
-                    Text("\(routine.scheduleSummary) · 단계 \(routine.steps.count)개")
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
-                        .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55))
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(routine.name)
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
+                            .foregroundStyle(DesignTokens.Color.ink(.routines))
+                        Text("\(routine.scheduleSummary) · 단계 \(routine.steps.count)개")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                            .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55))
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: "calendar")
+                        .foregroundStyle(DesignTokens.Color.accent(.routines))
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "calendar")
-                    .foregroundStyle(DesignTokens.Color.accent(.routines))
+                if routine.cadence == .weekdays || routine.cadence == .weekly {
+                    weekdayBar(routine.weekdays)
+                }
             }
             .padding(14)
             .background(DesignTokens.Color.card(.routines))
@@ -261,9 +283,11 @@ private struct RoutineCard: View {
                         .accessibilityIdentifier("routines.card.\(routine.id).summary")
                 }
                 Spacer(minLength: 0)
-                Text(routine.completed ? "완료" : "\(routine.progressPercent)%")
+                Text(routine.completed ? "완료" : routine.done == 0 ? "대기" : "\(routine.progressPercent)%")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.titleMd, weight: .bold))
-                    .foregroundStyle(DesignTokens.Color.accent(.routines))
+                    .foregroundStyle(!routine.completed && routine.done == 0
+                        ? DesignTokens.Color.ink(.routines).opacity(0.4)
+                        : DesignTokens.Color.accent(.routines))
                     .accessibilityIdentifier("routines.card.\(routine.id).progress")
             }
             progressBar

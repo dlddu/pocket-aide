@@ -1,0 +1,40 @@
+name: Start the test SQS endpoint
+description: >
+  Starts a local SQS endpoint (moto server) on the macOS runner and creates
+  the queue the backend's PR-monitor consumer long-polls. macOS runners have
+  no Docker, so the LocalStack container used by backend-integration-test
+  cannot run here; moto serves the same SQS wire protocol from a venv.
+  Exports MOTO_PID via $GITHUB_ENV so a later step can kill it. Required env
+  vars on the calling job: AWS_ENDPOINT_URL (http://localhost:<port>),
+  AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, SQS_QUEUE_URL (its
+  last path segment is the queue name).
+
+inputs:
+  port:
+    description: Port the SQS endpoint listens on. Must match $AWS_ENDPOINT_URL.
+    required: false
+    default: '4566'
+
+runs:
+  using: composite
+  steps:
+    - name: Install moto server
+      shell: bash
+      run: |
+        python3 -m venv /tmp/moto-venv
+        /tmp/moto-venv/bin/pip install --quiet 'moto[server]>=5.1,<6'
+    - name: Start moto server and create the queue
+      shell: bash
+      run: |
+        /tmp/moto-venv/bin/moto_server -H 127.0.0.1 -p ${{ inputs.port }} > /tmp/moto.log 2>&1 &
+        echo "MOTO_PID=$!" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS "$AWS_ENDPOINT_URL/moto-api/" >/dev/null && break || sleep 1
+        done
+        # moto routes by the SigV4 credential scope, so the request is signed as service "sqs".
+        curl -fsS "$AWS_ENDPOINT_URL/" \
+          --aws-sigv4 "aws:amz:$AWS_REGION:sqs" \
+          --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
+          --data-urlencode 'Action=CreateQueue' \
+          --data-urlencode "QueueName=${SQS_QUEUE_URL##*/}" \
+          | grep -q "<QueueUrl>$SQS_QUEUE_URL</QueueUrl>"

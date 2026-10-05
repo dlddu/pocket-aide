@@ -1,6 +1,6 @@
 # 사용자 여정 (User Journeys)
 
-> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 2개 작성됨.
+> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 3개 작성됨.
 > 작성은 `user-journey-writer` 규약을, 여정 mockup은 `journey-mockup-builder` 규약을 따른다.
 
 ## 파일·식별자 규칙
@@ -46,6 +46,7 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 |---|---|---|
 | [`JRN-affirmation-daily-exposure`](./JRN-affirmation-daily-exposure.md) — 다짐 문장의 일상 반복 노출 | V4 | [journeys/JRN-affirmation-daily-exposure/](../journeys/JRN-affirmation-daily-exposure/) |
 | [`JRN-ci-push-to-ack`](./JRN-ci-push-to-ack.md) — CI 결과 푸시에서 확인 처리까지 | V9 | [journeys/JRN-ci-push-to-ack/](../journeys/JRN-ci-push-to-ack/) |
+| [`JRN-approval-push-to-decision`](./JRN-approval-push-to-decision.md) — 승인 요청 푸시에서 결정까지 | V9 (「결정」) | [journeys/JRN-approval-push-to-decision/](../journeys/JRN-approval-push-to-decision/) |
 
 ## 남은 후보 (PRD에서 추론)
 

@@ -57,7 +57,7 @@ struct ScratchpadView: View {
     }
 
     private var header: some View {
-        ScreenHeader(area: .scratchpad, title: "임시 공간") {
+        ScreenHeader(area: .scratchpad, title: "임시 공간", subtitle: "캡처 부담 없이 일단 던져두는 곳") {
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(viewModel.unclassifiedCount)")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold))
@@ -115,10 +115,18 @@ struct ScratchpadView: View {
                             row(for: item)
                         }
                     } header: {
-                        Text("\(section.title) · \(section.items.count)")
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
-                            .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
-                            .textCase(nil)
+                        HStack(spacing: DesignTokens.Spacing.sm) {
+                            Text(section.title)
+                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
+                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
+                            Rectangle()
+                                .fill(DesignTokens.Color.rule(.scratchpad))
+                                .frame(height: 1)
+                            Text("\(section.items.count) ITEMS")
+                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
+                        }
+                        .textCase(nil)
                     }
                 }
             }

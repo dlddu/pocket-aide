@@ -1,9 +1,5 @@
 name: iOS build + test
 
-# Reusable job that generates the Xcode project, lints Swift, builds the
-# app, and runs the simulator test bundles. Boots oidcmock + backend
-# locally so the in-app health/login/me endpoints all resolve.
-
 on:
   workflow_call:
 
@@ -19,10 +15,74 @@ jobs:
       OIDC_REDIRECT_URI: pocketaide-dev://callback
       DATABASE_PATH: /tmp/pocket-aide-ci.db
       PORT: "8080"
+      # Throwaway credentials: they only sign requests to the local SQS emulator
+      # (start-test-sqs) and reach no AWS account.
+      SQS_QUEUE_URL: http://localhost:4566/123456789012/pocket-aide-e2e
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      # mock-exception: EXT — APNs 발송은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 발송만 끄고 이력 저장은 실경로 (docs/e2e-mocking-policy.md)
+      APNS_DISABLED: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-go-backend
+      - uses: ./.github/actions/start-test-sqs
       - uses: ./.github/actions/start-test-backend
+      - name: Enqueue webhook fixture after first sign-in
+        # The consumer fans an event out to existing users only, and the
+        # first user row appears when the UI tests sign in. Wait for it in
+        # the background, then send the fixture the way the API Gateway
+        # integration does: raw workflow_run body + x-github-event attribute.
+        # PRMonitorUITests waits for the resulting history row.
+        run: |
+          (
+            for i in $(seq 1 1800); do
+              n=$(sqlite3 "$DATABASE_PATH" 'SELECT count(*) FROM users' 2>/dev/null || echo 0)
+              [ "${n:-0}" -gt 0 ] && break
+              sleep 1
+            done
+            curl -fsS "$SQS_QUEUE_URL" \
+              --aws-sigv4 "aws:amz:$AWS_REGION:sqs" \
+              --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
+              --data-urlencode 'Action=SendMessage' \
+              --data-urlencode 'MessageBody@.github/fixtures/github-webhook/workflow_run.completed.json' \
+              --data-urlencode 'MessageAttribute.1.Name=x-github-event' \
+              --data-urlencode 'MessageAttribute.1.Value.DataType=String' \
+              --data-urlencode 'MessageAttribute.1.Value.StringValue=workflow_run'
+          ) > /tmp/enqueue.log 2>&1 &
+          echo "ENQUEUE_PID=$!" >> "$GITHUB_ENV"
+      # mock-exception: EXT — APNs 전달(Apple 서버 → 기기)은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 백엔드가 보낼 페이로드를 `xcrun simctl push` 로 시뮬레이터에 넣고 수신·탭 이후는 실경로 (docs/e2e-mocking-policy.md)
+      - name: Deliver PR-monitor push to the simulator
+        # Push the payload the backend would send for the fixture's history row
+        # (formatPushText title/body + SendWithData's event_id) until the app logs
+        # the deep-link highlight for that id. Pushes before the test grants
+        # notification permission are not presented, and the log line is saved
+        # here because xcodebuild shuts the simulator down when the tests end.
+        run: |
+          (
+            id=''
+            for i in $(seq 1 1800); do
+              id=$(sqlite3 "$DATABASE_PATH" 'SELECT id FROM notification_history ORDER BY id LIMIT 1' 2>/dev/null || true)
+              [ -n "$id" ] && break
+              sleep 1
+            done
+            [ -n "$id" ] || { echo "no history row"; exit 1; }
+            echo "$id" > /tmp/push-event-id
+            printf '{"aps":{"alert":{"title":"%s","body":"%s"},"sound":"default"},"event_id":%s}\n' \
+              'CI 통과 — dlddu/pocket-aide-e2e #9001' 'CI on e2e/bf-1-webhook' "$id" > /tmp/pr-monitor.apns
+            for i in $(seq 1 60); do
+              xcrun simctl push booted com.dlddu.PocketAide /tmp/pr-monitor.apns || true
+              if xcrun simctl spawn booted log show --last 30s --style compact \
+                  --predicate 'process == "PocketAide"' 2>/dev/null \
+                  | grep -w "highlightedEventID=$id" > /tmp/push-highlight.log; then
+                echo "delivered event_id=$id"
+                break
+              fi
+              sleep 10
+            done
+          ) > /tmp/push.log 2>&1 &
+          echo "PUSH_PID=$!" >> "$GITHUB_ENV"
       - uses: ./.github/actions/generate-xcode-project
       - name: SwiftLint
         working-directory: ios
@@ -39,9 +99,7 @@ jobs:
           set -o pipefail
           # -retry-tests-on-failure + -test-iterations 2 absorbs environment-
           # induced flakes (e.g. "Failed to get background assertion", UI
-          # query snapshot timeouts on a loaded simulator). Each failing test
-          # is re-run once; if the retry passes, the job goes green and the
-          # xcresult bundle still records both attempts.
+          # query snapshot timeouts on a loaded simulator): each failing test is re-run once.
           xcodebuild \
             -project PocketAide.xcodeproj \
             -scheme PocketAide \
@@ -51,6 +109,19 @@ jobs:
             -retry-tests-on-failure \
             -test-iterations 2 \
             test | xcbeautify
+      - name: Verify push tap reached the deep-link highlight
+        # The tap itself is asserted by PRMonitorUITests; the highlighted
+        # event id is only observable in the app's log, saved by the push step.
+        run: |
+          id=$(cat /tmp/push-event-id)
+          grep -w "highlightedEventID=$id" /tmp/push-highlight.log
+      - name: Dump PR-monitor pipeline logs on failure
+        if: failure()
+        run: |
+          echo '--- enqueue ---'; cat /tmp/enqueue.log || true
+          echo '--- push ---'; cat /tmp/push.log || true
+          echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
+          echo '--- github stub ---'; tail -n 100 /tmp/github-stub.log || true
       - name: Upload xcresult on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -63,3 +134,7 @@ jobs:
         run: |
           [ -n "${OIDCMOCK_PID:-}" ] && kill ${OIDCMOCK_PID} || true
           [ -n "${BACKEND_PID:-}" ] && kill ${BACKEND_PID} || true
+          [ -n "${MOTO_PID:-}" ] && kill ${MOTO_PID} || true
+          [ -n "${GITHUB_STUB_PID:-}" ] && kill ${GITHUB_STUB_PID} || true
+          [ -n "${ENQUEUE_PID:-}" ] && kill ${ENQUEUE_PID} || true
+          [ -n "${PUSH_PID:-}" ] && kill ${PUSH_PID} || true

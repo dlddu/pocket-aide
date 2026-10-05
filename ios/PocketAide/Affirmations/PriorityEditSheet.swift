@@ -45,7 +45,7 @@ struct PriorityEditSheet: View {
 
     var body: some View {
         Sheet(area: .affirmations, onClose: onCancel) {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                 Text(mode.title)
                     .font(DesignTokens.Typography.font(size: 18, weight: .bold))
                     .foregroundStyle(DesignTokens.Color.ink(.affirmations))
@@ -53,65 +53,91 @@ struct PriorityEditSheet: View {
                     .padding(.top, 8)
                     .accessibilityIdentifier("sheet.title")
 
-                editorCard
-                    .padding(.horizontal, 24)
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) {
+                    editorCard
+                    prioritySection
+                }
+                .padding(.horizontal, 24)
 
-                prioritySection
-                    .padding(.horizontal, 24)
-
-                actions
-                    .padding(.horizontal, 24)
-                    .padding(.top, 8)
-                    .padding(.bottom, 32)
+                VStack(spacing: 0) {
+                    Rectangle()
+                        .fill(DesignTokens.Color.rule(.affirmations).opacity(0.6))
+                        .frame(height: 1)
+                    actions
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
+                        .padding(.bottom, 28)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
+    @ViewBuilder
     private var editorCard: some View {
-        ZStack(alignment: .topLeading) {
+        if isEditing {
             Card(area: .affirmations, padding: .medium) {
-                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                    Text("\u{201C}")
-                        .font(DesignTokens.Typography.font(size: 64, family: .serif))
-                        .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.18))
-                        .padding(.leading, -4)
-                        .padding(.top, -16)
-                        .accessibilityHidden(true)
-                    TextField(
-                        "다짐 문장을 입력하세요",
-                        text: $text,
-                        axis: .vertical
-                    )
-                    .font(DesignTokens.Typography.font(size: 16.5, family: .serif))
-                    .foregroundStyle(DesignTokens.Color.ink(.affirmations))
-                    .lineLimit(2...6)
-                    .accessibilityIdentifier("sheet.text.field")
-                }
+                textField
             }
+            .overlay {
+                Text("\"")
+                    .font(DesignTokens.Typography.font(size: 64, family: .serif))
+                    .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.1))
+                    .fixedSize()
+                    .padding(.leading, -4)
+                    .padding(.top, -8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+        } else {
+            textField
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                .padding(.vertical, 14)
+                .background(DesignTokens.Color.card(.affirmations))
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(DesignTokens.Color.accent(.affirmations), lineWidth: 1)
+                )
         }
     }
 
+    private var textField: some View {
+        TextField(
+            "다짐 문장을 입력하세요",
+            text: $text,
+            axis: .vertical
+        )
+        .font(DesignTokens.Typography.font(size: 16.5, family: .serif))
+        .foregroundStyle(DesignTokens.Color.ink(.affirmations))
+        .lineLimit(2...6)
+        .accessibilityIdentifier("sheet.text.field")
+    }
+
     private var prioritySection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            AreaLabel(area: .affirmations, text: "노출 빈도")
-            FilterPills(
-                area: .affirmations,
-                options: AffirmationPriority.allCases,
-                selection: $priority
-            ) { option in
-                VStack(spacing: 4) {
-                    priorityDots(for: option)
-                    Text(option.displayName)
-                        .font(DesignTokens.Typography.font(
-                            size: DesignTokens.Typography.body,
-                            weight: option == priority ? .bold : .medium
-                        ))
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                AreaLabel(area: .affirmations, text: "노출 빈도")
+                FilterPills(
+                    area: .affirmations,
+                    options: AffirmationPriority.allCases,
+                    selection: $priority
+                ) { option in
+                    VStack(spacing: 4) {
+                        priorityDots(for: option)
+                        Text(option.displayName)
+                            .font(DesignTokens.Typography.font(
+                                size: DesignTokens.Typography.body,
+                                weight: option == priority ? .bold : .medium
+                            ))
+                    }
                 }
             }
-            Text("위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 카드를 길게 눌러 나중에 바꿀 수 있습니다.")
+            Text("위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.")
                 .font(DesignTokens.Typography.font(
-                    size: DesignTokens.Typography.captionXs,
+                    size: 11.5,
                     weight: .regular
                 ))
                 .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
@@ -161,7 +187,7 @@ struct PriorityEditSheet: View {
             Button("취소", action: onCancel)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))
                 .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
-                .padding(.vertical, 8)
+                .padding(.vertical, 10)
                 .accessibilityIdentifier("sheet.cancel.button")
         }
     }
@@ -182,7 +208,7 @@ struct PriorityEditSheet: View {
         return HStack(spacing: 2) {
             ForEach(0..<3, id: \.self) { idx in
                 Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled ? 1 : 0.25))
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled ? 1 : 0.3))
                     .frame(width: 6, height: 6)
             }
         }
