@@ -1,6 +1,6 @@
 ---
 type: mockup-structure-map
-last_updated: 2026-10-04
+last_updated: 2026-10-05
 ---
 
 # 구조·수치 ↔ 구현 대응표
@@ -43,14 +43,14 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 2행 · `목업 대기` 1행, 표 S `불일치` 2행.
+남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 1행, 표 S `불일치` 2행.
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| M | 일치 | 99 |
+| M | 일치 | 100 |
 | M | 기본값 일치 | 2 |
-| M | 불일치 | 2 |
-| M | 허용 | 3 |
+| M | 불일치 | 0 |
+| M | 허용 | 4 |
 | M | 목업 대기 | 1 |
 | S | 일치 | 11 |
 | S | 불일치 | 2 |
@@ -71,7 +71,7 @@ last_updated: 2026-10-04
 | 인용부호 글리프(편집) | `absolute -top-2 -left-1 text-[64px] leading-none text-[var(--tan)]/10 serif select-none` |
 | 미리보기 문장(편집) | `serif text-[16.5px] leading-[1.5] text-[var(--ink)] relative` |
 | 빈도 구역 | `mt-5` |
-| 빈도 라벨 | `text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-semibold mb-2` |
+| 빈도 라벨 | `text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold mb-2` |
 | pill 줄 | `grid grid-cols-3 gap-2` |
 | 비활성 pill | `py-3 rounded-full border border-[var(--rule)] text-[14px] text-stone-600 active:scale-95 transition flex flex-col items-center gap-1` |
 | 활성 pill | `py-3 rounded-full bg-[var(--soft)] text-[14px] text-[var(--ink)] flex flex-col items-center gap-1 ring-1 ring-[var(--tan)]/40` |
@@ -93,7 +93,7 @@ last_updated: 2026-10-04
 | Backdrop | `bg-[#2E251A]/45` | #2E251A/0.45 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `DesignTokens.Color.ink(area)` · `.opacity(opacity)` · `opacity: Double = 0.45` | #2E251A/0.45 | 일치 | `Backdrop` — 영역 ink 45% |
 | Sheet | `bg-[var(--bg)]` | #F4EBDD | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `.background(DesignTokens.Color.surface(area))` | #F4EBDD | 일치 | 시트 배경 = 영역 surface |
 | Sheet | `border-radius:24px 24px 0 0` | 24 24 0 0 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `topLeadingRadius: 24` · `bottomLeadingRadius: 0` · `bottomTrailingRadius: 0` · `topTrailingRadius: 24` | 24 24 0 0 | 일치 | 위쪽 두 모서리만 24 |
-| Sheet | `box-shadow:0 -8px 24px -4px rgba(28,38,36,.18)` | 0 -8 24 -4 rgba(28,38,36,.18) | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `.shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: -4)` | 0 -4 12 — rgba(0,0,0,.12) | 불일치 | 그림자 — y(−8 ↔ −4)·색(`#1C2624` 18% ↔ 검정 12%)이 다르고 spread −4 는 SwiftUI `.shadow` 에 대응 인자가 없다(blur 24 ↔ radius 12 환산은 후속 판단) |
+| Sheet | `box-shadow:0 -8px 24px -4px rgba(28,38,36,.18)` | 0 -8 24 -4 rgba(28,38,36,.18) | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `.shadow(color: Color(red: 28 / 255, green: 38 / 255, blue: 36 / 255).opacity(0.18), radius: 24, x: 0, y: -8)` | 0 -8 24 — rgba(28,38,36,.18) | 허용 S2 | 그림자 — y −8 · blur 24(= `radius` 24, 1px = 1pt) · 색 `rgb(28,38,36)` 18% 는 같다. spread −4 만 SwiftUI `.shadow` 에 대응 인자가 없다 |
 | — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `VStack(spacing: 0)` | 0 | 기본값 일치 | Handle 과 시트 본문 사이 간격 — 목업은 인접 블록(여백 클래스 없음) |
 | Handle 여백 | `pt-2.5` | 10 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `.padding(.top, 10)` | 10 | 일치 | Handle 위 여백 |
 | Handle 여백 | `pb-1.5` | 6 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | `.padding(.bottom, 6)` | 6 | 일치 | Handle 아래 여백 |
@@ -139,7 +139,7 @@ last_updated: 2026-10-04
 | 빈도 라벨 | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | `AreaLabel` 대문자화 |
 | 빈도 라벨 | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(2.4)` | 2.4 | 일치 | 자간 0.22em × 11px = 2.42 → 2.4pt |
 | 빈도 라벨 | `text-[var(--tan)]` | #8B6F47 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #8B6F47 | 일치 | 라벨 색 = 영역 accent |
-| 빈도 라벨 | `font-semibold` | semibold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `weight: .bold` | bold | 불일치 | 라벨 굵기 — 목업 600, 구현 `AreaLabel` 700(`tokens.md` §3 은 영역 라벨을 `font-bold` 로 적는다 — 어느 쪽을 고칠지는 후속 판단) |
+| 빈도 라벨 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `weight: .bold` | bold | 일치 | 라벨 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) |
 | 빈도 라벨 | `mb-2` | 8 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) { AreaLabel(` | 8 | 일치 | 라벨 ↔ pill 간격 = `Spacing.sm` |
 | pill 줄 | `gap-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `HStack(spacing: DesignTokens.Spacing.sm)` | 8 | 일치 | pill 사이 간격 |
 | 비활성 pill | `py-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.padding(.vertical, DesignTokens.Spacing.md)` | 12 | 일치 | pill 상하 여백 = `Spacing.md` |

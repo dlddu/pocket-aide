@@ -69,7 +69,7 @@ public struct Sheet<Content: View>: View {
                 topTrailingRadius: 24,
                 style: .continuous
             ))
-            .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: -4)
+            .shadow(color: Color(red: 28 / 255, green: 38 / 255, blue: 36 / 255).opacity(0.18), radius: 24, x: 0, y: -8)
             // Sheet body respects container safe area so its bottom edge sits
             // above the TabView's tab bar (instead of being clipped behind it).
             // Backdrop has its own .ignoresSafeArea() and still fills the screen.
