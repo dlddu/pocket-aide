@@ -27,7 +27,7 @@ public struct FilterPills<Option: Hashable, Label: View>: View {
                 } label: {
                     label(option)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, DesignTokens.Spacing.md)
                         .background(
                             Capsule(style: .continuous)
                                 .fill(active ? DesignTokens.Color.soft(area) : Color.clear)
@@ -36,7 +36,7 @@ public struct FilterPills<Option: Hashable, Label: View>: View {
                             Capsule(style: .continuous)
                                 .stroke(
                                     active ? DesignTokens.Color.accent(area).opacity(0.4) : DesignTokens.Color.rule(area),
-                                    lineWidth: active ? 1.5 : 1
+                                    lineWidth: 1
                                 )
                         )
                         .foregroundStyle(active ? DesignTokens.Color.ink(area) : DesignTokens.Color.ink(area).opacity(0.55))
