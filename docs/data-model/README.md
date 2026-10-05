@@ -28,14 +28,14 @@ ERD 에는 의미 문장을 쓰지 않는다. 엔티티의 `의미:` 는 대응 
 
 기준 표는 [`fullscan-criteria.md`](fullscan-criteria.md) 에 있고 **사람이 소유한다**. data plane 은 기준을 착지시키지 않는다 — 인덱스로 닫히지 않는 패턴이 있으면 그 파일에 넣을 행을 제안 PR 로 올리고(수동 승인 케이스 MA5), 채택은 사람이 그 PR 을 승인하는 것으로 한다.
 
-현재 기준은 없다. 지원 인덱스가 없는 패턴은 인덱스를 추가하는 새 마이그레이션 PR 로 가거나, 사람이 기준을 채택한 뒤 그 기준으로 등재된다.
+현재 기준은 `F1`(결과가 정의상 테이블 전체인 조회) 하나다. 지원 인덱스가 없는 패턴은 인덱스를 추가하는 새 마이그레이션 PR 로 가거나, 채택된 기준에 해당하면 그 기준으로 등재된다.
 
 지원 인덱스가 없는 패턴은 지금 둘이고, 둘 다 인덱스로는 닫히지 않는다 — 형태에 그 테이블의 접근 조건이 없어서 결과가 정의상 테이블 전체(또는 전체에서 일부를 뺀 것)다.
 
 - `Q-09`(`devicetokens.Store::ListAll`): `SELECT token FROM device_tokens` 에 `WHERE` 가 없다. 엔진은 `UNIQUE(device_tokens.token)` 을 덮개로 훑는다(`SCAN … USING COVERING INDEX` — 풀스캔).
 - `Q-15`(`excludedrepos.Store::ListUserIDsExcluding`): 제외하지 않은 사용자 전부를 `users` 에서 `NOT IN` 으로 고른다. 안쪽 `user_excluded_repos` 는 `idx_user_excluded_repos_repo` 로 찾지만 바깥 `users` 는 `SCAN` 이다.
 
-닫는 길은 사람의 결정 둘 중 하나다: `fullscan-criteria.md` 에 기준을 더하거나, 쿼리를 바꾸는 것(이 지도의 범위 밖). 그 전까지 카탈로그의 지원 칸은 `지원 없음` 이고 체커는 두 건을 위반으로 보고한다.
+둘 다 `F1` 으로 등재돼 있다(카탈로그 지원 칸 `풀스캔 허용(F1): …`). 쿼리가 바뀌어 조건이 생기면 F1 에 더는 해당하지 않으니 인덱스 경로로 다시 판정한다.
 
 ## 3. 추출 제외 범위
 
@@ -74,4 +74,4 @@ cd backend && go run ./cmd/datamodelcheck --json   # 기계 판독형
 - **플랜 판정(불변식 3, C5)**: 패턴마다 그 지점들의 SQL(수동 형태는 대표 SQL)을 스키마를 관측한 같은 빈 DB 에서 `ANALYZE` 없이 `EXPLAIN QUERY PLAN` 으로 돌린다(자리표시자는 `NULL`). 테이블 접근마다 `SEARCH … USING [COVERING] INDEX`·`USING INTEGER PRIMARY KEY`·`USING PRIMARY KEY` 는 그 인덱스의 지원, 그 밖의 `SCAN`(`SCAN … USING INDEX` 포함)과 `AUTOMATIC` 인덱스는 풀스캔이다. 별칭은 SQL 의 `FROM`·`JOIN`·`UPDATE`·`INTO` 에서 테이블로 되돌린다. 지원 칸은 **패턴 형태의 테이블**에 대한 접근만으로 정한다 — 외래 키 동작이 엔진 쪽에서 낸 다른 테이블 접근(`DELETE FROM routines` 의 `routine_steps` 조회 등)은 `--json` 의 `plans` 에 싣지만 칸에 넣지 않는다. 같은 패턴의 지점끼리 판정이 다르면 위반(`split-plan`)이다. 별도 정렬 단계(`USE TEMP B-TREE FOR ORDER BY`)는 `plans` 의 `notes` 에 표시만 하고 판정에 넣지 않는다. 어떤 패턴의 플랜에도 나오지 않는 인덱스(PK 제외, 외래 키 동작이 쓴 것도 「나온다」)가 「미사용 인덱스」 표와 양방향으로 같은지도 본다. `풀스캔 허용(F<n>)` 은 `fullscan-criteria.md` 표에 그 ID 가 있을 때만 받는다.
 - **출력**: 위반마다 ERD·카탈로그에 옮겨 적을 **기대 행**을 낸다. `--json` 의 `sites[]` 는 지점마다 형태·펼친 SQL 또는 추출 불가 사유를, `plans[]` 는 패턴 × 지점마다 플랜한 SQL·테이블 접근·판정을 싣는다. 체커는 문서와 코드를 고치지 않는다. 모든 목록은 정렬된다.
 - **종료 코드**: `0` 정합 · `1` 위반 · `2` 판정 불가(블록·기준 표 파싱 실패, 체커 경로 없음, 마이그레이션 적용 실패, 문서 해석 실패).
-- **CI**: 워크플로 `data-model` 이 PR 과 `main` push 마다 돈다. 모드는 **report** — `1` 은 리포트만 남기고 통과, `2` 는 실패다. 세 불변식이 처음 참이 된 뒤 `gate`(`1` 도 실패)로 바꾼다 — 지금 남은 위반은 §2 의 `no-support` 두 건이라, 사람의 기준 결정(또는 쿼리 변경)이 먼저다.
+- **CI**: 워크플로 `data-model` 이 PR 과 `main` push 마다 돈다. 모드는 **report** — `1` 은 리포트만 남기고 통과, `2` 는 실패다. 세 불변식이 처음 참이 된 뒤 `gate`(`1` 도 실패)로 바꾼다 — `F1` 채택으로 세 불변식이 처음 참이 됐고, 전환은 별도 PR 로 한다.

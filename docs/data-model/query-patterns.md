@@ -19,13 +19,13 @@
 | Q-06 | `select users \| eq(oidc_sub) \| - \| -` | UNIQUE(users.oidc_sub) | `backend/internal/auth/middleware.go::upsertUser` |
 | Q-07 | `insert users \| - \| - \| -` | — | `backend/internal/auth/middleware.go::upsertUser` |
 | Q-08 | `upsert device_tokens \| eq(token) \| - \| -` | — | `backend/internal/devicetokens/store.go::Store::Upsert` |
-| Q-09 | `select device_tokens \| - \| - \| -` | 지원 없음 | `backend/internal/devicetokens/store.go::Store::ListAll` |
+| Q-09 | `select device_tokens \| - \| - \| -` | 풀스캔 허용(F1): `device_tokens` 에 조건이 없다 — 토큰 전부를 돌려준다 | `backend/internal/devicetokens/store.go::Store::ListAll` |
 | Q-10 | `select device_tokens \| eq(user_id) \| - \| -` | idx_device_tokens_user_id | `backend/internal/devicetokens/store.go::Store::ListByUserID` |
 | Q-11 | `select user_excluded_repos \| eq(user_id) \| - \| order(created_at desc, id desc)` | UNIQUE(user_excluded_repos.user_id,user_excluded_repos.repo_full_name) | `backend/internal/excludedrepos/store.go::Store::List` |
 | Q-12 | `insert user_excluded_repos \| - \| - \| -` | — | `backend/internal/excludedrepos/store.go::Store::Add` |
 | Q-13 | `select user_excluded_repos \| eq(id, user_id) \| - \| -` | PK(user_excluded_repos) | `backend/internal/excludedrepos/store.go::Store::Add` |
 | Q-14 | `delete user_excluded_repos \| eq(id, user_id) \| - \| -` | PK(user_excluded_repos) | `backend/internal/excludedrepos/store.go::Store::Delete` |
-| Q-15 | `select user_excluded_repos,users \| eq(user_excluded_repos.repo_full_name) \| - \| order(users.id asc)` | 지원 없음 | `backend/internal/excludedrepos/store.go::Store::ListUserIDsExcluding` |
+| Q-15 | `select user_excluded_repos,users \| eq(user_excluded_repos.repo_full_name) \| - \| order(users.id asc)` | 풀스캔 허용(F1): `users` 에 조건이 없다 — 그 저장소를 제외한 사용자를 뺀 나머지 전부를 돌려준다(`user_excluded_repos` 쪽은 `idx_user_excluded_repos_repo` 로 찾는다) | `backend/internal/excludedrepos/store.go::Store::ListUserIDsExcluding` |
 | Q-16 | `select notification_history \| eq(user_id) \| range(id) \| order(id desc)` | idx_notif_history_user_acked | `backend/internal/notificationhistory/store.go::Store::List` |
 | Q-17 | `select notification_history \| eq(user_id) \| - \| order(id desc)` | idx_notif_history_user_acked | `backend/internal/notificationhistory/store.go::Store::List` |
 | Q-18 | `update notification_history \| eq(id, user_id) \| - \| -` | PK(notification_history) | `backend/internal/notificationhistory/store.go::Store::Acknowledge` |
