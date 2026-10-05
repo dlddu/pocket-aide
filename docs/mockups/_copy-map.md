@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-04
+last_updated: 2026-10-05
 ---
 
 # 카피 ↔ 구현 대응표
@@ -35,25 +35,25 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 50행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 122 |
+| A | 일치 | 121 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
-| A | 기준 4 | 6 |
+| A | 기준 4 | 7 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 174 |
+| B | 일치 | 157 |
 | B | 외부 | 31 |
 | B | 예시 데이터 | 98 |
-| B | 목업 전용 | 97 |
+| B | 목업 전용 | 100 |
 | B | 미구현 영역 | 10 |
-| B | 기준 4 | 3 |
-| B | 구현 대기 | 29 |
+| B | 기준 4 | 4 |
+| B | 구현 대기 | 50 |
 
 ## 표 A — 정방향 (구현 리터럴 → 목업) · 158행
 
@@ -132,11 +132,11 @@ last_updated: 2026-10-04
 | `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` — `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
 | `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `임시공간` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 바 항목 |
+| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목(목업은 넷째 칸 — 셋째 「승인」 이 구현에 없어 구현은 셋째 칸, 표 B `승인` 행) |
+| `ios/PocketAide/RootView.swift` | `임시공간` | 기준 4 | 탭 라벨 — 낱말은 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임)과 같고 자리가 다르다: 구현은 하단 탭 바 넷째 칸, 목업은 「더 보기」 안(tokens.md §7 하단 노출) |
+| `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
+| `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
+| `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨 |
@@ -218,7 +218,7 @@ last_updated: 2026-10-04
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 442행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 450행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -249,11 +249,10 @@ last_updated: 2026-10-04
 | `screen-affirmations` | `자주 노출` | 일치 | 우선순위 점 범례(`AffirmationsView.swift` `priorityLegend`) |
 | `screen-affirmations` | `보통` | 일치 | 범례 항목 — 위와 같음 |
 | `screen-affirmations` | `가끔` | 일치 | 범례 항목 — 위와 같음 |
+| `screen-affirmations` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-affirmations` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `회사` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 카드 제목 |
 | `screen-affirmations` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 카드 본문 |
@@ -267,11 +266,10 @@ last_updated: 2026-10-04
 | `screen-affirmations-priority-edit` | `자주 읽어줘야 할 것` | 외부 `ios/PocketAide/Affirmations/AffirmationsView.swift` | 시트 아래 다짐 화면 헤더 — `_impl-map.md` 가 그 영역을 `AffirmationsView.swift` 행으로 넘긴다 |
 | `screen-affirmations-priority-edit` | `결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations-priority-edit` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
+| `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations-priority-edit` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-affirmations-priority-edit` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `회사` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations-priority-edit` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
 | `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
 | `screen-affirmations-priority-edit` | `편집 — 카드 길게 누르기` | 목업 전용 | 프레임 위 캡션(편집 모드 프레임 이름) |
@@ -376,11 +374,9 @@ last_updated: 2026-10-04
 | `screen-pr-monitor-history` | `버튼 또는 그룹의` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `"모두 확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
+| `screen-pr-monitor-history` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-pr-monitor-history` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-pr-monitor-history` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-pr-monitor-history` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-pr-monitor-history` | `회사` | 일치 | `RootView.swift` 탭 바 |
-| `screen-pr-monitor-history` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-pr-monitor-history` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-pr-monitor-history` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 |
@@ -441,6 +437,10 @@ last_updated: 2026-10-04
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
 | `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
 | `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
+| `screen-widget` | `임시 공간` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 라벨 |
+| `screen-widget` | `미분류` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 개수 앞 낱말 |
+| `screen-widget` | `12` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 미분류 수(값은 데이터) |
+| `screen-widget` | `개` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 개수 단위 |
 | `screen-widget` | `전화` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `메시지` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `사진` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
@@ -476,7 +476,10 @@ last_updated: 2026-10-04
 | `screen-widget` | `위치 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
 | `screen-widget` | `날씨` | 일치 | 날씨 슬라이스 라벨 — 지명 없음(`WeatherSection` 대체값) |
 | `screen-widget` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 안내(`WeatherSection` `.needsLocation`) |
-| `screen-widget` | `PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-widget` | `임시 공간 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `미분류 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `정리할 항목 없음` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 미분류 0건 안내 |
+| `screen-widget` | `PRD-8 · AC1 단일 위젯 6영역 (날씨·캘린더·다짐·메일·알림·임시 공간 미분류 수), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입, AC9 임시 공간 미분류 수` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `06 · 루틴` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -515,10 +518,10 @@ last_updated: 2026-10-04
 | `screen-routines` | `전체 이력` | 구현 대기 | history strip 이력 진입 버튼 — 구현은 카드 하단 「이력」 버튼(표 A 같은 행) |
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
 | `screen-routines` | `오늘 · 60%` | 구현 대기 | 30일 히트맵 끝 라벨 — 구현 이력 시트는 요약 줄 「\(scheduleSummary) · 예정 n일 중 m일 완료」 를 쓴다 |
+| `screen-routines` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-routines` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-routines` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-routines` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-routines` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-routines` | `회사` | 일치 | `RootView.swift` 탭 바 |
+| `screen-routines` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 |
@@ -580,16 +583,22 @@ last_updated: 2026-10-04
 | `screen-scratchpad` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-scratchpad` | `19:30` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정` | 예시 데이터 | 메모 본문(사용자 데이터) |
+| `screen-scratchpad` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-scratchpad` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `회사` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-scratchpad` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-scratchpad` | `임시공간` | 기준 4 | 「더 보기」 목록 항목 — 낱말은 `RootView.swift` 탭 라벨과 같고 자리가 다르다(구현은 하단 탭 바 넷째 칸 + `.badge`, 목업은 「더 보기」 목록 + 미분류 배지 — tokens.md §7) |
+| `screen-scratchpad` | `개인` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
+| `screen-scratchpad` | `회사` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
+| `screen-scratchpad` | `루틴` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
 | `screen-scratchpad` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-scratchpad` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `0` | 예시 데이터 | 빈 상태 프레임의 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
 | `screen-scratchpad` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 |
-| `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-scratchpad` | `더 보기 — 미분류 배지` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-scratchpad` | `편집` | 구현 대기 | 「더 보기」 목록 내비게이션 바 버튼 — 시스템 More 목록이 그리는 자리이고 구현은 `developmentLanguage: en` 이라 「Edit」다(앱 리터럴 없음) |
+| `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현에 없다(시스템 More 목록에는 꼬리말 자리가 없다) |
+| `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12 — 임시공간이 「더 보기」로 옮겨져 「더 보기」 목록의 임시공간 항목에 표시, 위젯 PRD-8 AC9로 보완)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-personal` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `04 · 개인 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -618,11 +627,10 @@ last_updated: 2026-10-04
 | `screen-todo-personal` | `접기` | 구현 대기 | 완료 섹션 접기 버튼 — 구현에 없다 |
 | `screen-todo-personal` | `세탁기 세제 주문` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-personal` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-todo-personal` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `회사` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `0개 남음 · 0개 완료` | 일치 | 빈 상태 프레임 요약 줄 |
@@ -658,10 +666,10 @@ last_updated: 2026-10-04
 | `screen-todo-work` | `채용 인터뷰 피드백 제출` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다 |
 | `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
+| `screen-todo-work` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
 | `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-work` | `임시공간` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-work` | `개인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-work` | `루틴` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `PRD-3 · AC1 별도 데이터·검색 분리(검색바에 "회사 영역만"), AC3 시각 차이(슬레이트·각진 카드·모노스페이스), AC4 영역 간 이동 UI 없음` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 
