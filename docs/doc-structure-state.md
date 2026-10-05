@@ -1,6 +1,6 @@
 # 문서 구조 상태 추적
 
-> 마지막 검증: 2026-10-05 (`JRN-approval-push-to-decision` v0.2 + 여정 mockup 추가 후)
+> 마지막 검증: 2026-10-05 (화면 mockup 탭바 새 구성·`screen-approval` 추가 후)
 > 검증 기준: user-journey-writer · journey-mockup-builder 규약 (design-doc-structure-validator 부재로 수동 점검)
 > 대상: pocket-aide 레포
 
@@ -11,7 +11,7 @@
 - **정의된 가치 (참조)**: 9개 (V1 ~ V9) — `docs/product/values.md`
 - **사용자 여정**: **3개** (`JRN-affirmation-daily-exposure` V4, `JRN-ci-push-to-ack` V9, `JRN-approval-push-to-decision` V9) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
 - **여정 mockup**: **2개** — 여정 2 / 2 ✅, 둘 다 `check_mockup.py` 실패 0
-- **화면 mockup**: 13개 (모두 `_index.md`에 매핑됨)
+- **화면 mockup**: 14개 (모두 `_index.md`에 매핑됨)
   - 가치 매핑됨: 13 / 13 ✅
   - 여정 매핑됨: **5 / 13**: `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-widget`(V4 측면만), `screen-pr-monitor-push`, `screen-pr-monitor-history`
   - 디자인 시스템 매핑됨: 13 / 13 ✅
@@ -40,7 +40,7 @@ docs/
 │   ├── JRN-ci-push-to-ack/index.html
 │   └── JRN-approval-push-to-decision/index.html
 ├── design-system/                  ✅ tokens · components · patterns
-└── mockups/                        ✅ 화면 mockup 13개 + _index.md(SSOT)
+└── mockups/                        ✅ 화면 mockup 14개 + _index.md(SSOT)
 ```
 
 ---
@@ -60,7 +60,7 @@ docs/
 | V7 | (미정의) | - | screen-keyboard-extension | 🟡 여정 부재 |
 | V8 | (미정의) | - | screen-routines | 🟡 여정 부재 |
 | V9 | `JRN-ci-push-to-ack` | ✅ 4/4 단계 | screen-pr-monitor-push, screen-pr-monitor-history | ✅ (열린 PR 목록 여정은 AC2~5 구현 후) |
-| V9 | `JRN-approval-push-to-decision` | ✅ 4/4 단계 · 분기 상태 13 | (없음 — 승인 탭 화면 mockup 미작성) | 🟡 화면 mockup 부재 (여정 mockup이 승인 화면의 첫 그림) |
+| V9 | `JRN-approval-push-to-decision` | ✅ 4/4 단계 · 분기 상태 13 | screen-approval | ✅ |
 
 ### 화면 mockup → 디자인 시스템
 
@@ -94,7 +94,7 @@ docs/
 - 홈 화면 벽지·앱 아이콘 색은 §1.8 규칙(iOS 컨벤션 차용)에 따름.
 
 ### 🟢 화면 mockup의 외부 의존
-- 화면 mockup 13개는 Tailwind CDN에 의존(README에 명시된 의도적 선택). 여정 mockup은 외부 의존 없음.
+- 화면 mockup 14개는 Tailwind CDN에 의존(README에 명시된 의도적 선택). 여정 mockup은 외부 의존 없음.
 
 ### 🟢 임의 스타일 mockup
 - 각 mockup이 인라인 `<style>`을 갖지만 모두 `tokens.md` 영역 토큰의 값을 사용.
@@ -138,3 +138,4 @@ docs/
 | 2026-10-04 | **통합 위젯 다짐 슬라이스 상태 추가**: `screen-widget`에 「다짐 슬라이스 상태」 변형(다짐 0건·미로그인·조회 오류 — 라벨·펄스 점은 그대로, 다짐 문장 자리에 안내 문구 잉크 55%)을 더하고 `mockups-dark.html` 위젯 본문에 같은 변형을 반영. 구현(`AffirmationSection`)의 세 상태 문구가 먼저 있던 상태를 목업이 그리게 했다. `_copy-map.md` 표 A `목업 대기` 3행 → `일치`(25 → 22), 표 B 7행 신설, `_index.md`·README 갱신. 세 검산 ok. | 카피 `목업 대기` 25 → 22 |
 | 2026-10-05 | **V9 「결정」 여정 추가**: `JRN-approval-push-to-decision`(4단계, 분기 8개, PRD-12 목표 동작 기준) 작성. PRD-12가 구현 전이고 승인 탭이 들어갈 하단 탭 바가 화면 mockup에 없어 여정 mockup은 `user-journeys/README.md` 「여정 mockup 예외」에 등재(재검토: 화면 mockup 탭 바 갱신 시). 허브 여정 표·가치 커버리지, README 작성된 여정 표 갱신. | 여정 2 → 3, V9 여정 2개(1개 mockup 예외) |
 | 2026-10-05 | **`JRN-approval-push-to-decision` 여정 mockup 추가**: `journeys/JRN-approval-push-to-decision/`(4단계, 분기 상태 13). 「여정 mockup 예외」 등재 해제, `_index.md` 여정 mockup 항목·허브 링크 추가. 승인 화면은 `tokens.md` §1.11 팔레트 차용(제약 개정)과 §7 탭바 하단 노출 구성(승인 탭 추가·임시공간 「더 보기」, 순서는 제안)을 먼저 반영한 뒤 그렸다. 화면 mockup 탭바와 승인 탭 화면 mockup은 후속. | 여정 mockup 2 → 3, 예외 0 |
+| 2026-10-05 | **화면 mockup 정리 (PRD-12 후속)**: 탭바가 있는 화면 mockup 8개 + 다크 갤러리를 `tokens.md` §7 하단 노출 구성(다짐 · PR 모니터 · 승인 · 채팅 · 더 보기)으로 교체 — 「더 보기」 안 화면은 「더 보기」 활성. `screen-approval`(14, 8프레임) 신설·라이트/다크 갤러리 카드 추가. `screen-scratchpad`에 「더 보기 — 미분류 배지」 프레임(PRD-4 AC5 개정), `screen-widget`에 여섯 번째 영역·임시 공간 슬라이스 상태(PRD-8 AC9). `_index.md`·README·갤러리 수치(13 → 14 화면, 5 → 6영역) 갱신. 앱 구현(`RootView` 탭 구성) 반영 전이라 `_copy-map`·`_structure-map` 대조는 소관 자동화 몫. | 화면 mockup 13 → 14 |
