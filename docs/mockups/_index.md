@@ -51,6 +51,20 @@ last_updated: 2026-10-04
 - **공개 경로**: `journeys/JRN-ci-push-to-ack/`
 - **외부 의존**: 없음
 
+### journeys/JRN-approval-push-to-decision/
+- **여정**: `JRN-approval-push-to-decision` (`user-journeys/JRN-approval-push-to-decision.md`)
+- **달성 가치**: V9 (개발 워크플로우 인지 부하 감소 — 범위의 「결정」)
+- **담은 단계**: `STP-request-glance`, `STP-open-request`, `STP-judge-context`, `STP-confirm-decision`
+- **분기 상태**: `STP-request-glance/actions`(잠금 화면 알림 액션 펼침), `STP-request-glance/unlock`(승인 전 잠금 해제 요구), `STP-request-glance/approved-lock`(잠금 화면 승인 — 여정 완료), `STP-request-glance/rejected-lock`(잠금 화면 거절 — 여정 완료), `STP-request-glance/auto-mode`(자동 응답 모드 — 여정 밖 종료), `STP-open-request/from-list`(푸시 놓침 후 승인 탭 대기 목록에서 진입), `STP-open-request/expired`(결정 전 만료 — 미완료 종료), `STP-judge-context/suspicious`(폐기 키·이름 불일치 경고), `STP-confirm-decision/confirm-reject`(거절 확인), `STP-confirm-decision/approved`(승인 — 여정 완료), `STP-confirm-decision/rejected`(거절 — 여정 완료), `STP-confirm-decision/send-failed`(전송 실패 — 결정되지 않음, 재시도), `STP-confirm-decision/already`(다른 기기에서 먼저 처리)
+- **원본 화면 mockup**: 없음 (PRD-12 승인 탭 화면 mockup 미작성 — 이 여정 mockup이 승인 화면의 첫 그림)
+- **사용 디자인 시스템**:
+  - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `AreaStrip`, `AreaLabel`, `ScreenHeader`, `TabBar`, `TabBarItem`
+  - 토큰: §1.11 PR 모니터 팔레트 차용(승인 화면 — §1.11 제약 개정) + 상태 시그널(forest·destructive), §2 중립, §3.1 sans/mono, §7 탭바(PRD-12 하단 노출 구성)
+  - 디자인 시스템 밖 값: 잠금 화면 벽지·알림 카드·알림 액션·잠금 해제 시트·확인 다이얼로그(§1.8/§6.1 iOS 컨벤션 차용), 승인 탭 아이콘(shield-check 형태 인라인 SVG), 탭 배지(iOS 시스템 빨강 대신 §1.11 강조색), 요청 상세·카운트다운·결정 버튼 레이아웃(components/patterns에 승인 화면 항목 없음 — 승인 탭 화면 mockup 작성 시 정식화)
+- **공개 경로**: `journeys/JRN-approval-push-to-decision/`
+- **외부 의존**: 없음
+
 ## 디자인 시스템 매핑
 
 `docs/design-system/`의 `tokens.md` / `components.md` / `patterns.md`가 정의되어 있으므로, 각 mockup의 "사용 디자인 시스템" 항목을 그 식별자로 매핑한다. 토큰은 영역명으로, 컴포넌트와 패턴은 본 시스템 문서의 식별자를 따른다.
