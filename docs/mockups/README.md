@@ -22,27 +22,28 @@ open docs/mockups/index.html
 |---|---|---|---|
 | `screen-chat-text.html` | AI 채팅 — 텍스트 | PRD-1 | AC1 텍스트 송수신, AC4 대화 세션 관리 |
 | `screen-chat-voice.html` | AI 채팅 — 음성 | PRD-1 | AC2 음성 모드 진입, AC3 한·영 혼용 인식, AC5 인터럽트 |
-| `screen-scratchpad.html` | 임시공간 (목록·빈 상태) | PRD-4 | AC1 자동 수집, AC3 메타데이터, AC4 분류 이동, AC5 미분류 카운트 |
+| `screen-scratchpad.html` | 임시공간 (목록·빈 상태·더 보기 미분류 배지) | PRD-4 | AC1 자동 수집, AC3 메타데이터, AC4 분류 이동, AC5 미분류 카운트 |
 | `screen-todo-personal.html` | 개인 — 할 일 (목록·빈 상태, 검색 필드) | PRD-3 | AC3 영역별 시각 분리 (terracotta) |
 | `screen-todo-work.html` | 회사 — 할 일 (완료 섹션 포함) | PRD-3 | AC1 영역 분리(회사만 검색), AC3 시각 분리 (slate), AC4 영역 간 이동 불가 |
 | `screen-routines.html` | 루틴 (목록·빈 상태·루틴 추가·단계 추가·상태 변형) | PRD-2 | AC1~4 단계·주기·진행률·30일 히트맵 |
 | `screen-affirmations.html` | 다짐 (목록·빈 상태) | PRD-5 | AC2 우선순위, AC3 회전 노출 |
 | `screen-affirmations-priority-edit.html` | 다짐 — 추가·우선순위 시트 (생성·편집) | PRD-5 | AC1 추가, AC2 우선순위 (편집 시트 패턴) |
 | `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류·CI 상태 변형·알림 권한 꺼짐) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
+| `screen-approval.html` | 승인 게이트 (대기 목록·상세·결정 확인·처리 이력·빈 상태·자동 응답 모드·설정·키 발급) | PRD-12 | AC5~AC9, AC12~AC14 (푸시·잠금 화면 AC10·AC11은 여정 mockup) |
 
 ### 시스템 통합
 
 | 파일 | 화면 | PRD | 핵심 AC |
 |---|---|---|---|
 | `screen-shortcut-capture.html` | Shortcut 즉시 캡처 | PRD-6 | AC1 숏컷 호출, AC2 즉시 녹음, AC3 되묻기 없음, AC4 임시공간 자동 저장 |
-| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·중간 크기·다짐·일정·알림·날씨 슬라이스 상태) | PRD-8 | AC1 5영역 통합, AC5 다짐 회전, AC8 영역 탭 진입 |
+| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·중간 크기·다짐·일정·알림·날씨·임시 공간 슬라이스 상태) | PRD-8 | AC1 6영역 통합, AC5 다짐 회전, AC8 영역 탭 진입, AC9 임시 공간 미분류 수 |
 | `screen-keyboard-extension.html` | LLM 키보드 확장 | PRD-9 (+PRD-7 AC6) | AC2~6, AC9, AC10, AC12 |
 | `screen-pr-monitor-push.html` | PR 모니터 — CI 완료 푸시 | PRD-10 | AC6 워크플로우 완료 푸시, AC7 진입점 |
 
 ### 기타
 
 - `index.html` — 라이트 갤러리 진입 페이지
-- `mockups-dark.html` — 다크 변형 통합 갤러리 (13화면)
+- `mockups-dark.html` — 다크 변형 통합 갤러리 (14화면)
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
 - `_token-map.md` — `tokens.md` ↔ 구현 토큰(`Colors.xcassets`·`Tokens.swift`) 값 대응표 (기계 판독용, 검산 포함)
@@ -62,7 +63,7 @@ open docs/mockups/index.html
 | 회사 | `#EEF2F8` | `#1E2A3A` | slate `#355577` | 직각·모노스페이스 |
 | 루틴 | `#F0F2EC` | `#243329` | forest `#4F6E5C` | 단정 |
 | 다짐 | `#F4EBDD` | `#2E251A` | tan `#8B6F47` | serif |
-| PR 모니터 | `#EEEDF5` | `#221F33` | indigo `#5B4DB8` | 도구·메타 |
+| PR 모니터 · 승인 | `#EEEDF5` | `#221F33` | indigo `#5B4DB8` | 도구·메타 (승인은 §1.11 차용) |
 | 음성 모드 | `#0F1614` | `#FFFFFF` | sage `#5E8B73` | 다크 + 호흡하는 오브 |
 
 공통 폰트: `'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, system-ui, sans-serif`
@@ -79,7 +80,7 @@ open docs/mockups/index.html
 | V6 일상 정보 통합 시야 | widget |
 | V7 시스템 전역 글쓰기 보조 | keyboard-extension |
 | V8 일상 루틴 구조화 | routines |
-| V9 개발 워크플로우 인지 부하 감소 | pr-monitor-push, pr-monitor-history |
+| V9 개발 워크플로우 인지 부하 감소 | pr-monitor-push, pr-monitor-history, approval |
 
 ## 메모
 

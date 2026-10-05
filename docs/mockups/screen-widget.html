@@ -113,6 +113,14 @@
                 <div class="text-[10.5px] text-stone-500 mt-0.5">17:00 분기 리뷰 마감</div>
               </button>
             </div>
+
+            <!-- bottom: 임시 공간 미분류 수 (PRD-8 AC9) — 누르면 임시공간 탭(「더 보기」 안). 임시공간이 하단 탭 바에 없어 배지 대신 여기서 정리 필요를 알린다 -->
+            <button class="text-left w-full active:scale-[0.99] transition pt-3 mt-3 border-t border-[#E5D7C0] flex items-center gap-1.5">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#B6855E]"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>
+              <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#B6855E]">임시 공간</span>
+              <span class="ml-auto text-[12px] font-semibold">미분류 <span class="tabular-nums">12</span>개</span>
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-stone-400"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
           </div>
         </div>
 
@@ -314,8 +322,24 @@
       </div>
     </div>
 
+    <!-- 7. 임시 공간 슬라이스 상태 — PRD-8 AC9: 미분류 0건이면 비어 있음을 명시. 큰 위젯 안 임시 공간 슬라이스(전폭)만 잘라 그린다 -->
+    <div class="flex flex-col items-center gap-3">
+      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">임시 공간 슬라이스 상태</div>
+      <div class="flex flex-col gap-4">
+        <!-- 미분류 0건 -->
+        <div class="flex flex-col gap-1.5">
+          <div class="text-[10.5px] text-stone-500">미분류 0건</div>
+          <div class="w-[353px] widget widget-large px-4 py-3 flex items-center gap-1.5">
+            <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#B6855E]"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>
+            <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#B6855E]">임시 공간</span>
+            <span class="ml-auto text-[11px] leading-tight opacity-60">정리할 항목 없음</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-8 · AC1 단일 위젯 5영역 (날씨·캘린더·다짐·메일·알림), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입</p>
+  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-8 · AC1 단일 위젯 6영역 (날씨·캘린더·다짐·메일·알림·임시 공간 미분류 수), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입, AC9 임시 공간 미분류 수</p>
 </body>
 </html>
