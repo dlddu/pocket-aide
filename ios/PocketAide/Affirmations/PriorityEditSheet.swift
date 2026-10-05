@@ -48,6 +48,7 @@ struct PriorityEditSheet: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                 Text(mode.title)
                     .font(DesignTokens.Typography.font(size: 18, weight: .bold))
+                    .tracking(-0.5)
                     .foregroundStyle(DesignTokens.Color.ink(.affirmations))
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
@@ -82,6 +83,7 @@ struct PriorityEditSheet: View {
             .overlay {
                 Text("\"")
                     .font(DesignTokens.Typography.font(size: 64, family: .serif))
+                    .lineHeight(.multiple(factor: 1))
                     .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.1))
                     .fixedSize()
                     .padding(.leading, -4)
@@ -111,6 +113,7 @@ struct PriorityEditSheet: View {
             axis: .vertical
         )
         .font(DesignTokens.Typography.font(size: 16.5, family: .serif))
+        .lineHeight(.multiple(factor: 1.5))
         .foregroundStyle(DesignTokens.Color.ink(.affirmations))
         .lineLimit(2...6)
         .accessibilityIdentifier("sheet.text.field")
@@ -140,6 +143,7 @@ struct PriorityEditSheet: View {
                     size: 11.5,
                     weight: .regular
                 ))
+                .lineHeight(.multiple(factor: 1.625))
                 .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
                 .fixedSize(horizontal: false, vertical: true)
         }
