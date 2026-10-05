@@ -59,4 +59,25 @@ final class RoutinesTests: XCTestCase {
         XCTAssertEqual(result.routine?.name, "저녁 정리")
         XCTAssertEqual(ScratchpadMoveTarget.routine.chipLabel, "→ 루틴")
     }
+
+    func testFailureCopyIsReadableAndHidesRawError() {
+        let offline = APIError.transport(URLError(.notConnectedToInternet))
+        XCTAssertEqual(
+            RoutineFailureCopy.message(for: .check, error: offline),
+            "단계 체크를 저장하지 못했습니다. 네트워크 연결을 확인해 주세요."
+        )
+        let unavailable = APIError.badStatus(503, "service unavailable")
+        let server = RoutineFailureCopy.message(for: .check, error: unavailable)
+        XCTAssertEqual(server, "단계 체크를 저장하지 못했습니다. 서버가 응답하지 않습니다. 잠시 후 다시 시도해 주세요.")
+        XCTAssertFalse(server.contains("503"))
+        XCTAssertFalse(server.contains("service unavailable"))
+        XCTAssertEqual(
+            RoutineFailureCopy.message(for: .load, error: APIError.badStatus(404, "not found")),
+            "루틴을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+        )
+        XCTAssertEqual(
+            RoutineFailureCopy.message(for: .history, error: URLError(.timedOut)),
+            "이력을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+        )
+    }
 }

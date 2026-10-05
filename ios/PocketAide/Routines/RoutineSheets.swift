@@ -289,6 +289,10 @@ struct RoutineHistorySheet: View {
                             .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
                             .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55))
                             .accessibilityIdentifier("routines.history.summary")
+                        Text("지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                            .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55))
+                            .accessibilityIdentifier("routines.history.note")
                     }
                     .padding(.top, 8)
                     LazyVGrid(columns: columns, spacing: 4) {

@@ -10,6 +10,24 @@ final class RoutinesViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private(set) var api: APIClient?
+    private var retryAction: (() async -> Void)?
+
+    var canRetry: Bool { retryAction != nil }
+
+    func retry() async {
+        guard let retryAction else { return }
+        await retryAction()
+    }
+
+    private func clearFailure() {
+        retryAction = nil
+        errorMessage = nil
+    }
+
+    private func fail(_ action: RoutineFailureCopy.Action, _ error: Error, retry: (() async -> Void)?) {
+        retryAction = retry
+        errorMessage = RoutineFailureCopy.message(for: action, error: error)
+    }
 
     init(api: APIClient?) {
         self.api = api
@@ -31,7 +49,7 @@ final class RoutinesViewModel: ObservableObject {
     func load() async {
         guard let api else { return }
         isLoading = true
-        errorMessage = nil
+        clearFailure()
         defer { isLoading = false }
         let key = RoutineDayFormat.string(from: Date())
         do {
@@ -41,7 +59,7 @@ final class RoutinesViewModel: ObservableObject {
             routines = all
             today = scheduled
         } catch {
-            errorMessage = String(describing: error)
+            fail(.load, error) { [weak self] in await self?.load() }
         }
     }
 
@@ -51,7 +69,7 @@ final class RoutinesViewModel: ObservableObject {
             _ = try await api.createRoutine(draft)
             await load()
         } catch {
-            errorMessage = String(describing: error)
+            fail(.create, error) { [weak self] in await self?.create(draft) }
         }
     }
 
@@ -61,8 +79,9 @@ final class RoutinesViewModel: ObservableObject {
             try await api.deleteRoutine(id: id)
             routines.removeAll { $0.id == id }
             today.removeAll { $0.id == id }
+            clearFailure()
         } catch {
-            errorMessage = String(describing: error)
+            fail(.delete, error) { [weak self] in await self?.delete(id: id) }
         }
     }
 
@@ -72,7 +91,7 @@ final class RoutinesViewModel: ObservableObject {
             _ = try await api.addRoutineStep(routineID: routineID, title: title)
             await load()
         } catch {
-            errorMessage = String(describing: error)
+            fail(.addStep, error) { [weak self] in await self?.addStep(to: routineID, title: title) }
         }
     }
 
@@ -82,24 +101,29 @@ final class RoutinesViewModel: ObservableObject {
             try await api.deleteRoutineStep(routineID: routineID, stepID: stepID)
             await load()
         } catch {
-            errorMessage = String(describing: error)
+            fail(.deleteStep, error) { [weak self] in await self?.deleteStep(stepID, from: routineID) }
         }
     }
 
     func toggle(_ step: RoutineDayStep, in routine: RoutineDay) async {
+        await setStep(step, in: routine, checked: !step.checked)
+    }
+
+    private func setStep(_ step: RoutineDayStep, in routine: RoutineDay, checked: Bool) async {
         guard let api else { return }
         do {
             let updated = try await api.setRoutineStep(
                 routineID: routine.id,
                 stepID: step.id,
                 day: routine.day,
-                checked: !step.checked
+                checked: checked
             )
             if let index = today.firstIndex(where: { $0.id == updated.id }) {
                 today[index] = updated
             }
+            clearFailure()
         } catch {
-            errorMessage = String(describing: error)
+            fail(.check, error) { [weak self] in await self?.setStep(step, in: routine, checked: checked) }
         }
     }
 
@@ -108,7 +132,7 @@ final class RoutinesViewModel: ObservableObject {
         do {
             return try await api.routineHistory(routineID: routineID, endingOn: dayKey)
         } catch {
-            errorMessage = String(describing: error)
+            fail(.history, error, retry: nil)
             return []
         }
     }
