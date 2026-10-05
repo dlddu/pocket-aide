@@ -50,7 +50,7 @@ last_updated: 2026-10-05
 | B | 일치 | 157 |
 | B | 외부 | 31 |
 | B | 예시 데이터 | 98 |
-| B | 목업 전용 | 100 |
+| B | 목업 전용 | 101 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 50 |
@@ -218,7 +218,7 @@ last_updated: 2026-10-05
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 450행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 451행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -272,6 +272,7 @@ last_updated: 2026-10-05
 | `screen-affirmations-priority-edit` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
 | `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
+| `screen-affirmations-priority-edit` | `생성 — 문장이 비어 있을 때` | 목업 전용 | 프레임 위 캡션(생성 모드 빈 문장 상태 프레임 이름) |
 | `screen-affirmations-priority-edit` | `편집 — 카드 길게 누르기` | 목업 전용 | 프레임 위 캡션(편집 모드 프레임 이름) |
 | `screen-affirmations-priority-edit` | `우선순위 설정` | 일치 | 시트 제목(편집 모드) |
 | `screen-affirmations-priority-edit` | `"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 글리프 |
