@@ -159,6 +159,48 @@ public struct RoutineHistoryDay: Codable, Identifiable, Equatable, Sendable, Has
     }
 }
 
+public enum RoutineFailureCopy {
+    public enum Action: Sendable {
+        case load
+        case create
+        case delete
+        case addStep
+        case deleteStep
+        case check
+        case history
+
+        var title: String {
+            switch self {
+            case .load: return "루틴을 불러오지 못했습니다."
+            case .create: return "루틴을 저장하지 못했습니다."
+            case .delete: return "루틴을 삭제하지 못했습니다."
+            case .addStep: return "단계를 추가하지 못했습니다."
+            case .deleteStep: return "단계를 삭제하지 못했습니다."
+            case .check: return "단계 체크를 저장하지 못했습니다."
+            case .history: return "이력을 불러오지 못했습니다."
+            }
+        }
+    }
+
+    public static func message(for action: Action, error: Error) -> String {
+        "\(action.title) \(reason(for: error))"
+    }
+
+    private static func reason(for error: Error) -> String {
+        guard let apiError = error as? APIError else {
+            return "잠시 후 다시 시도해 주세요."
+        }
+        switch apiError {
+        case .transport:
+            return "네트워크 연결을 확인해 주세요."
+        case .badStatus(let status, _) where status >= 500:
+            return "서버가 응답하지 않습니다. 잠시 후 다시 시도해 주세요."
+        default:
+            return "잠시 후 다시 시도해 주세요."
+        }
+    }
+}
+
 public struct RoutineHistorySummary: Equatable, Sendable {
     public let scheduledDays: Int
     public let completedDays: Int

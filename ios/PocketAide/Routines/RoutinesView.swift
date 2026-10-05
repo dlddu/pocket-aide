@@ -77,11 +77,10 @@ struct RoutinesView: View {
     private var list: some View {
         List {
             if let message = viewModel.errorMessage {
-                Text(message)
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
-                    .foregroundStyle(DesignTokens.Color.destructive(.routines))
-                    .listRowBackground(Color.clear)
-                    .accessibilityIdentifier("routines.error")
+                RoutineErrorRow(message: message, canRetry: viewModel.canRetry) {
+                    Task { await viewModel.retry() }
+                }
+                .listRowBackground(Color.clear)
             }
             if viewModel.routines.isEmpty {
                 emptyState
