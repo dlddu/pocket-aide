@@ -590,7 +590,14 @@
     <main class="absolute top-[140px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-4">
 
       <!-- 상태 변형 — 목록 프레임이 그리지 않는 구현 상태: 섹션 제목(오늘 · n / 오늘 쉬는 루틴), 다 끝낸 루틴 카드(진행률 자리 「완료」 · 2px forest 테두리),
-           카드 하단 단계 추가 진입(「단계 추가 — 루틴 카드에서」 프레임의 출발점), 쉬는 루틴 메타의 단계 수, 이력 요약 줄. 이력 진입은 history strip 의 「전체 이력」 그대로다. -->
+           카드 하단 단계 추가 진입(「단계 추가 — 루틴 카드에서」 프레임의 출발점), 쉬는 루틴 메타의 단계 수, 이력 요약 줄과 분모 안내 줄, 목록 위 오류 행. 이력 진입은 history strip 의 「전체 이력」 그대로다. -->
+      <!-- 오류 행 — 구현 `RoutineErrorRow`(목록 위): 실패 문구 11(루틴 `--destructive` 차용값 · tokens.md §1.10) + 다시 시도 12 semibold forest(재시도할 수 있는 실패에만).
+           문구는 `RoutineFailureCopy` 의 「무엇이 실패했는지」 + 「원인 안내」 두 문장 — 여기서는 단계 체크 · 연결 실패 -->
+      <div class="px-1 -mb-1 flex items-baseline gap-2">
+        <p class="flex-1 text-[11px] text-[#9C3F2D]"><span>단계 체크를 저장하지 못했습니다.</span> <span>네트워크 연결을 확인해 주세요.</span></p>
+        <button class="text-[12px] font-semibold text-[var(--forest)]">다시 시도</button>
+      </div>
+
       <h2 class="px-1 -mb-2 text-[12px] font-bold text-[var(--ink)] opacity-70">오늘 · 1</h2>
 
       <!-- 다 끝낸 루틴 — 진행률 자리에 「완료」, 테두리는 forest 2px -->
@@ -693,7 +700,9 @@
           <button class="text-[11px] text-[var(--forest)] font-semibold">전체 이력</button>
         </div>
         <!-- 요약 줄 — 구현 이력 시트 RoutineHistorySheet 의 「주기 · 예정 n일 중 m일 완료」(m = 진한 칸 수) -->
-        <p class="-mt-1 mb-2.5 text-[11px] text-stone-500">매일 · 예정 30일 중 19일 완료</p>
+        <p class="-mt-1 mb-1 text-[11px] text-stone-500">매일 · 예정 30일 중 19일 완료</p>
+        <!-- 분모 안내 — 구현 이력 시트 요약 줄 아래 한 줄(11 · 잉크 55%). 지난날의 분모도 현재 단계 수다(prd-routines AC4) -->
+        <p class="mb-2.5 text-[11px] opacity-[.55]">지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.</p>
         <div class="grid grid-cols-10 gap-1">
           <!-- 30 days mini heatmap -->
           <!-- generate 30 cells with varying opacity -->

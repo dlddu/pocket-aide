@@ -39,7 +39,7 @@ last_updated: 2026-10-05
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 121 |
+| A | 일치 | 123 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
@@ -47,15 +47,15 @@ last_updated: 2026-10-05
 | A | 기준 4 | 7 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 157 |
-| B | 외부 | 31 |
+| B | 일치 | 159 |
+| B | 외부 | 33 |
 | B | 예시 데이터 | 98 |
 | B | 목업 전용 | 101 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 50 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 158행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 160행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -137,6 +137,7 @@ last_updated: 2026-10-05
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
+| `ios/PocketAide/Routines/RoutineErrorRow.swift` | `다시 시도` | 일치 | 오류 행 재시도 버튼 — 「상태 변형」 프레임 오류 행(실패 문구는 `RoutineFailureCopy` 가 만든 문자열을 받아 그린다 — 표 B 외부 행) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨 |
@@ -152,6 +153,7 @@ last_updated: 2026-10-05
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 일치 | 단계 추가 프레임 2차 액션. 이력 시트의 같은 「닫기」 는 목업 history strip 이 화면 안 인라인이라 대응 자리가 없다(자리 차이는 기준 4) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · \(days.count)일` | 일치 | 이력 시트 제목 — 목업 history strip 제목 「아침 루틴 · 30일」(구현은 strip 대신 시트 — 자리는 기준 4) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.scheduleSummary) · 예정 \(summary.scheduledDays)일 중 \(summary.completedDays)일 완료` | 일치 | 이력 시트 요약 줄 — 「상태 변형」 history strip 「매일 · 예정 30일 중 19일 완료」 |
+| `ios/PocketAide/Routines/RoutineSheets.swift` | `지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.` | 일치 | 이력 시트 분모 안내 줄 — 「상태 변형」 history strip 요약 줄 아래 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `루틴` | 일치 | `ScreenHeader` 제목 — 목업 헤더 영역 라벨 「루틴」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `새 루틴` | 일치 | 헤더 추가 버튼 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 · \(viewModel.today.count)` | 일치 | 오늘 루틴 섹션 제목 — 「상태 변형」 「오늘 · 1」 |
@@ -218,7 +220,7 @@ last_updated: 2026-10-05
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 451행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 455행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -545,12 +547,16 @@ last_updated: 2026-10-05
 | `screen-routines` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder(`RoutineSheets.swift`) |
 | `screen-routines` | `닫기` | 일치 | 단계 추가 프레임 2차 액션(`RoutineSheets.swift`) |
 | `screen-routines` | `상태 변형` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-routines` | `단계 체크를 저장하지 못했습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 「상태 변형」 오류 행 문구 앞 문장 — `RoutineFailureCopy.Action.check` 의 실패 문구(`RoutineErrorRow.swift` 가 그린다. 동작별 7종 중 하나) |
+| `screen-routines` | `네트워크 연결을 확인해 주세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 「상태 변형」 오류 행 문구 뒤 문장 — `RoutineFailureCopy` 의 연결 실패 안내(원인 안내 3종 중 하나) |
+| `screen-routines` | `다시 시도` | 일치 | 「상태 변형」 오류 행 재시도 버튼(`RoutineErrorRow.swift`) |
 | `screen-routines` | `오늘 · 1` | 일치 | 오늘 루틴 섹션 제목 「오늘 · \(viewModel.today.count)」 |
 | `screen-routines` | `매일 · 5 / 5 완료` | 일치 | 카드 메타 「\(scheduleSummary) · \(done) / \(total) 완료」(다 끝낸 루틴) |
 | `screen-routines` | `완료` | 일치 | 다 끝낸 루틴의 진행률 자리 |
 | `screen-routines` | `오늘 쉬는 루틴` | 일치 | 오늘 예정 없는 루틴 섹션 제목 |
 | `screen-routines` | `매주 일요일 · 단계 3개` | 일치 | 쉬는 루틴 행 메타 「\(scheduleSummary) · 단계 \(steps.count)개」 |
 | `screen-routines` | `매일 · 예정 30일 중 19일 완료` | 일치 | 이력 요약 줄(`RoutineSheets.swift`) |
+| `screen-routines` | `지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.` | 일치 | 이력 분모 안내 줄(`RoutineSheets.swift`) |
 | `screen-routines` | `PRD-2 · AC1 단계 정의(아침 루틴 5단계), AC2 반복 주기(매일/매주), AC3 단계 체크 → 진행률, AC4 30일 이력 히트맵` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-scratchpad` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
