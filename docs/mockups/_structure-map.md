@@ -43,13 +43,13 @@ last_updated: 2026-10-04
 
 ## 집계
 
-남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 5행 · `목업 대기` 1행, 표 S `불일치` 2행.
+남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 2행 · `목업 대기` 1행, 표 S `불일치` 2행.
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| M | 일치 | 96 |
+| M | 일치 | 99 |
 | M | 기본값 일치 | 2 |
-| M | 불일치 | 5 |
+| M | 불일치 | 2 |
 | M | 허용 | 3 |
 | M | 목업 대기 | 1 |
 | S | 일치 | 11 |
@@ -142,20 +142,20 @@ last_updated: 2026-10-04
 | 빈도 라벨 | `font-semibold` | semibold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `weight: .bold` | bold | 불일치 | 라벨 굵기 — 목업 600, 구현 `AreaLabel` 700(`tokens.md` §3 은 영역 라벨을 `font-bold` 로 적는다 — 어느 쪽을 고칠지는 후속 판단) |
 | 빈도 라벨 | `mb-2` | 8 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) { AreaLabel(` | 8 | 일치 | 라벨 ↔ pill 간격 = `Spacing.sm` |
 | pill 줄 | `gap-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `HStack(spacing: DesignTokens.Spacing.sm)` | 8 | 일치 | pill 사이 간격 |
-| 비활성 pill | `py-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.padding(.vertical, 10)` | 10 | 불일치 | pill 상하 여백 — 목업 12, 구현 10 |
+| 비활성 pill | `py-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.padding(.vertical, DesignTokens.Spacing.md)` | 12 | 일치 | pill 상하 여백 = `Spacing.md` |
 | 비활성 pill | `rounded-full` | full | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `Capsule(style: .continuous)` | full | 일치 | pill 모양 |
-| 비활성 pill | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `lineWidth: active ? 1.5 : 1` | 1 | 일치 | 비활성 보더 두께 |
+| 비활성 pill | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `lineWidth: 1` | 1 | 일치 | 비활성 보더 두께 |
 | 비활성 pill | `border-[var(--rule)]` | #E5D7C0 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `active ? DesignTokens.Color.accent(area).opacity(0.4) : DesignTokens.Color.rule(area)` | #E5D7C0 | 일치 | 비활성 보더 색 = 영역 rule |
 | 비활성 pill | `text-[14px]` | 14 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `size: DesignTokens.Typography.body` | 14 | 일치 | pill 라벨 크기 |
 | 비활성 pill | `text-stone-600` | #57534E | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `DesignTokens.Color.ink(area).opacity(0.55)` | #2E251A/0.55 | 허용 S1 | 비활성 라벨 색 — 목업 stone-600, 구현 영역 ink 55% |
 | 비활성 pill | `gap-1` | 4 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(spacing: 4) { priorityDots(for: option)` | 4 | 일치 | 점 줄 ↔ 라벨 간격 |
-| 활성 pill | `py-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.padding(.vertical, 10)` | 10 | 불일치 | pill 상하 여백 — 목업 12, 구현 10 |
+| 활성 pill | `py-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.padding(.vertical, DesignTokens.Spacing.md)` | 12 | 일치 | pill 상하 여백 = `Spacing.md` |
 | 활성 pill | `rounded-full` | full | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `Capsule(style: .continuous)` | full | 일치 | pill 모양 |
 | 활성 pill | `bg-[var(--soft)]` | #EADCC2 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.fill(active ? DesignTokens.Color.soft(area) : Color.clear)` | #EADCC2 | 일치 | 활성 배경 = 영역 soft |
 | 활성 pill | `text-[14px]` | 14 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `size: DesignTokens.Typography.body` | 14 | 일치 | pill 라벨 크기 |
 | 활성 pill | `text-[var(--ink)]` | #2E251A | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `.foregroundStyle(active ? DesignTokens.Color.ink(area) :` | #2E251A | 일치 | 활성 라벨 색 = 영역 ink |
 | 활성 pill | `gap-1` | 4 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(spacing: 4) { priorityDots(for: option)` | 4 | 일치 | 점 줄 ↔ 라벨 간격 |
-| 활성 pill | `ring-1` | 1 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `lineWidth: active ? 1.5 : 1` | 1.5 | 불일치 | 활성 외곽선 두께 — 목업 1, 구현 1.5 |
+| 활성 pill | `ring-1` | 1 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `lineWidth: 1` | 1 | 일치 | 활성 외곽선 두께 |
 | 활성 pill | `ring-[var(--tan)]/40` | #8B6F47/0.4 | `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | `active ? DesignTokens.Color.accent(area).opacity(0.4) : DesignTokens.Color.rule(area)` | #8B6F47/0.4 | 일치 | 활성 외곽선 색 = 영역 accent 40% |
 | 점 줄 | `gap-0.5` | 2 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `HStack(spacing: 2)` | 2 | 일치 | 점 사이 간격 |
 | 채운 점 | `w-1.5` | 6 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `.frame(width: 6, height: 6)` | 6 | 일치 | 점 너비 |
