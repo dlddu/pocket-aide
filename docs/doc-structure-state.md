@@ -1,6 +1,6 @@
 # 문서 구조 상태 추적
 
-> 마지막 검증: 2026-10-05 (`JRN-approval-push-to-decision` v0.1 추가 후)
+> 마지막 검증: 2026-10-05 (`JRN-approval-push-to-decision` v0.2 + 여정 mockup 추가 후)
 > 검증 기준: user-journey-writer · journey-mockup-builder 규약 (design-doc-structure-validator 부재로 수동 점검)
 > 대상: pocket-aide 레포
 
@@ -9,7 +9,7 @@
 ## 현재 상태 요약
 
 - **정의된 가치 (참조)**: 9개 (V1 ~ V9) — `docs/product/values.md`
-- **사용자 여정**: **3개** (`JRN-affirmation-daily-exposure` V4, `JRN-ci-push-to-ack` V9, `JRN-approval-push-to-decision` V9 — 여정 mockup 예외 등재) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
+- **사용자 여정**: **3개** (`JRN-affirmation-daily-exposure` V4, `JRN-ci-push-to-ack` V9, `JRN-approval-push-to-decision` V9) — V1, V2, V3, V5, V6, V7, V8은 여정 미정의
 - **여정 mockup**: **2개** — 여정 2 / 2 ✅, 둘 다 `check_mockup.py` 실패 0
 - **화면 mockup**: 13개 (모두 `_index.md`에 매핑됨)
   - 가치 매핑됨: 13 / 13 ✅
@@ -34,10 +34,11 @@ docs/
 │   ├── README.md
 │   ├── JRN-affirmation-daily-exposure.md
 │   ├── JRN-ci-push-to-ack.md
-│   └── JRN-approval-push-to-decision.md   (여정 mockup 예외 등재)
-├── journeys/                       🟡 여정 mockup 2개
+│   └── JRN-approval-push-to-decision.md
+├── journeys/                       🟡 여정 mockup 3개
 │   ├── JRN-affirmation-daily-exposure/index.html
-│   └── JRN-ci-push-to-ack/index.html
+│   ├── JRN-ci-push-to-ack/index.html
+│   └── JRN-approval-push-to-decision/index.html
 ├── design-system/                  ✅ tokens · components · patterns
 └── mockups/                        ✅ 화면 mockup 13개 + _index.md(SSOT)
 ```
@@ -59,7 +60,7 @@ docs/
 | V7 | (미정의) | - | screen-keyboard-extension | 🟡 여정 부재 |
 | V8 | (미정의) | - | screen-routines | 🟡 여정 부재 |
 | V9 | `JRN-ci-push-to-ack` | ✅ 4/4 단계 | screen-pr-monitor-push, screen-pr-monitor-history | ✅ (열린 PR 목록 여정은 AC2~5 구현 후) |
-| V9 | `JRN-approval-push-to-decision` | 예외 등재 (0/4 단계) | (없음 — 승인 탭 화면 mockup 미작성) | 🟡 여정 mockup 예외 — PRD-12 하단 탭 바 새 구성과 함께 작성 |
+| V9 | `JRN-approval-push-to-decision` | ✅ 4/4 단계 · 분기 상태 13 | (없음 — 승인 탭 화면 mockup 미작성) | 🟡 화면 mockup 부재 (여정 mockup이 승인 화면의 첫 그림) |
 
 ### 화면 mockup → 디자인 시스템
 
@@ -136,3 +137,4 @@ docs/
 | 2026-10-04 | **PR 모니터 이력 빈 상태·오류 프레임 추가**: `screen-pr-monitor-history`에 「빈 상태」(이력 0건 — 가운데 안내 두 줄)·「오류」(첫 조회 실패 — 제목·오류 설명·다시 시도) 프레임과 프레임 캡션(목록·빈 상태·오류)을 더하고 `mockups-dark.html` PR 모니터 본문에 같은 프레임을 다크 토큰으로 반영. 구현(`PRMonitorView`)의 빈·오류 상태 문구가 먼저 있던 상태를 목업이 그리게 했다. `_copy-map.md` 표 A `목업 대기` 4행 → `일치`(29 → 25), 표 B 8행 신설, `_index.md`·README 갱신. 세 검산 ok. | 카피 `목업 대기` 29 → 25 |
 | 2026-10-04 | **통합 위젯 다짐 슬라이스 상태 추가**: `screen-widget`에 「다짐 슬라이스 상태」 변형(다짐 0건·미로그인·조회 오류 — 라벨·펄스 점은 그대로, 다짐 문장 자리에 안내 문구 잉크 55%)을 더하고 `mockups-dark.html` 위젯 본문에 같은 변형을 반영. 구현(`AffirmationSection`)의 세 상태 문구가 먼저 있던 상태를 목업이 그리게 했다. `_copy-map.md` 표 A `목업 대기` 3행 → `일치`(25 → 22), 표 B 7행 신설, `_index.md`·README 갱신. 세 검산 ok. | 카피 `목업 대기` 25 → 22 |
 | 2026-10-05 | **V9 「결정」 여정 추가**: `JRN-approval-push-to-decision`(4단계, 분기 8개, PRD-12 목표 동작 기준) 작성. PRD-12가 구현 전이고 승인 탭이 들어갈 하단 탭 바가 화면 mockup에 없어 여정 mockup은 `user-journeys/README.md` 「여정 mockup 예외」에 등재(재검토: 화면 mockup 탭 바 갱신 시). 허브 여정 표·가치 커버리지, README 작성된 여정 표 갱신. | 여정 2 → 3, V9 여정 2개(1개 mockup 예외) |
+| 2026-10-05 | **`JRN-approval-push-to-decision` 여정 mockup 추가**: `journeys/JRN-approval-push-to-decision/`(4단계, 분기 상태 13). 「여정 mockup 예외」 등재 해제, `_index.md` 여정 mockup 항목·허브 링크 추가. 승인 화면은 `tokens.md` §1.11 팔레트 차용(제약 개정)과 §7 탭바 하단 노출 구성(승인 탭 추가·임시공간 「더 보기」, 순서는 제안)을 먼저 반영한 뒤 그렸다. 화면 mockup 탭바와 승인 탭 화면 mockup은 후속. | 여정 mockup 2 → 3, 예외 0 |

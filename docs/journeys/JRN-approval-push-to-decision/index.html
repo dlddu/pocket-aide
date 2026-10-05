@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>승인 요청 푸시에서 결정까지 — 여정 mockup</title>
+<style>
+  /* ── 1. 디자인 시스템 토큰 (docs/design-system/tokens.md) ──────────
+     승인 화면은 §1.11 PR 모니터 팔레트를 차용(V9 개발 자동화 도구 — §1.11 제약 개정) + 상태 시그널(§1.5 forest · §1.10 destructive) · §2 중립 · §3.1 sans · §4.2 라운드.
+     잠금 화면 알림 카드·알림 액션·잠금 해제 시트는 §1.8/§6.1 규칙대로 iOS 컨벤션 차용. 탭바는 §7(PRD-12 노출 구성). */
+  :root {
+    --bg: #EEEDF5; --ink: #221F33; --accent: #5B4DB8; --accent-strong: #3D2F8E; --rule: #D8D5E4; --soft: #DDDAEB; /* §1.11 */
+    --forest: #4F6E5C; --destructive: #9C3F2D; --tan: #8B6F47;                                                 /* 상태 시그널 */
+    --card: #FFFFFF;
+    --device: #0a0a0a; --bezel: #2a2a2a;
+    --stone-300: #d6d3d1; --stone-400: #a8a29e; --stone-500: #78716c; --stone-600: #57534e;
+    --sans: 'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'SF Mono', Menlo, ui-monospace, monospace;
+
+    --jm-bg: #f5f5f4; --jm-fg: #1c1917; --jm-muted: var(--stone-500); --jm-line: #d6d3d1;
+    --jm-accent: var(--accent); --jm-radius: 8px; --jm-gap: 12px; --jm-font: var(--sans);
+  }
+
+  /* ── 2. 셸(리뷰 도구) ── */
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--jm-font); color: var(--jm-fg); background: var(--jm-bg);
+         -webkit-font-smoothing: antialiased; letter-spacing: -0.01em; }
+  .jm-bar { position: sticky; top: 0; z-index: 100; display: flex; flex-wrap: wrap; gap: 8px var(--jm-gap);
+            align-items: center; padding: 8px 16px; border-bottom: 1px dashed var(--jm-line);
+            background: var(--jm-bg); font-size: 13px; }
+  .jm-title code { color: var(--jm-muted); font-size: 12px; }
+  .jm-hub { color: var(--jm-muted); margin-right: 4px; }
+  .jm-meta { color: var(--jm-muted); font-size: 12px; }
+  .jm-meta > summary { cursor: pointer; }
+  .jm-meta[open] { flex-basis: 100%; }
+  .jm-meta > code { display: block; margin: 6px 0; }
+  .jm-steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .jm-steps a { display: block; padding: 2px 8px; border: 1px solid var(--jm-line); border-radius: 999px;
+                color: var(--jm-muted); text-decoration: none; }
+  .jm-steps a[aria-current="step"] { border-color: var(--jm-accent); color: var(--jm-fg); font-weight: 600; }
+  .jm-pos { color: var(--jm-muted); }
+  .jm-nav { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .jm-nav button, .jm-nav a { font: inherit; padding: 4px 10px; border: 1px solid var(--jm-line);
+            border-radius: var(--jm-radius); background: none; color: var(--jm-fg); text-decoration: none; cursor: pointer; }
+  .jm-nav button:disabled { opacity: .4; cursor: default; }
+  .jm-end { max-width: 393px; margin: 12px auto 32px; padding: 8px 12px; border: 1px dashed var(--jm-accent);
+            border-radius: var(--jm-radius); font-size: 13px; }
+  .jm-branches { max-width: 393px; margin: 12px auto 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; }
+  .jm-branches > span { color: var(--jm-muted); }
+  .jm-branches button { font: inherit; padding: 3px 10px; border: 1px dashed var(--jm-line); border-radius: 999px;
+            background: none; color: var(--jm-fg); cursor: pointer; }
+  .jm-note { max-width: 393px; margin: 8px auto 0; font-size: 12px; line-height: 1.6; color: var(--jm-muted); }
+
+  /* ── 3. 단계 표시 ── 한 번에 한 단계, 상태가 열리면 기본 화면을 숨긴다 */
+  main > section[data-step] { display: none; padding: 20px 8px 8px; }
+  main > section[data-step].is-active { display: block; }
+  .stage > [hidden] { display: none !important; }
+  .stage:has(> [data-state]:not([hidden])) > .default { display: none; }
+
+  /* ── 4. 제품 화면 — components.md / patterns.md ── */
+  button, a.chip { font: inherit; color: inherit; cursor: pointer; }
+  .mono { font-family: var(--mono); }
+  .stamp { font-family: var(--mono); letter-spacing: .04em; }
+  /* IPhoneFrame · StatusBar · DynamicIsland · HomeIndicator (components §1) */
+  .frame { position: relative; overflow: hidden; width: 393px; max-width: 100%; height: 812px; margin: 0 auto;
+           border-radius: 56px; background: var(--bg); color: var(--ink);
+           box-shadow: 0 30px 80px -20px rgba(28,38,36,.25), 0 0 0 12px var(--device), 0 0 0 13px var(--bezel); }
+  .status { position: absolute; top: 0; left: 0; right: 0; height: 54px; padding: 0 36px; z-index: 30;
+            display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; }
+  .island { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: 118px; height: 35px; border-radius: 20px; background: var(--device); }
+  .batt { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+  .batt::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+  .home-bar-wrap { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 60; }
+  .home-bar { display: block; width: 140px; height: 5px; border-radius: 3px; background: var(--device); }
+  .lock .home-bar { background: #fff; }
+
+  /* 시스템 통합 — 잠금 화면 (patterns §6.1) */
+  .lock { color: #fff; background:
+      radial-gradient(ellipse 90% 50% at 50% 0%, rgba(91,77,184,.55), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(132,120,216,.25), transparent 70%),
+      linear-gradient(180deg,#15102B 0%,#06060E 100%); }
+  .clock { position: absolute; top: 68px; left: 0; right: 0; text-align: center; }
+  .clock div { font-size: 13.5px; color: rgba(255,255,255,.75); }
+  .clock b { display: block; font-size: 80px; font-weight: 300; line-height: 1; margin-top: 4px; }
+  .notes { position: absolute; top: 230px; left: 14px; right: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .note { display: flex; gap: 10px; text-align: left; width: 100%; padding: 12px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,.08);
+          background: rgba(28,28,30,.72); color: #fff; box-shadow: 0 8px 24px -8px rgba(0,0,0,.5); }
+  button.note:hover, button.note:focus-visible { outline: 2px dashed rgba(221,218,235,.8); outline-offset: 3px; }
+  .note.new { animation: arrive 1s ease-out both; }
+  @keyframes arrive { 0% { transform: translateY(-12px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  .app-icon { width: 36px; height: 36px; border-radius: 9px; flex: none; background: linear-gradient(135deg, #8478D8, var(--accent-strong)); }
+  .note-body { flex: 1; min-width: 0; }
+  .note-head { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,.85); font-weight: 600; }
+  .note-head time { color: rgba(255,255,255,.55); font-weight: 400; }
+  .note-title { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 14.5px; font-weight: 700; }
+  .note p { margin: 4px 0 0; font-size: 13px; line-height: 1.35; color: rgba(255,255,255,.72); }
+  .note p .mono { color: rgba(255,255,255,.55); }
+  .sig { width: 14px; height: 14px; border-radius: 50%; flex: none; display: inline-block; }
+  .sig.fail { background: var(--destructive); } .sig.ok { background: var(--forest); } .sig.run { background: var(--tan); }
+  .lock-hint { position: absolute; bottom: 60px; left: 32px; right: 32px; text-align: center; font-size: 11px; line-height: 1.6; color: rgba(255,255,255,.45); }
+
+  /* 영역 화면 + 리스트 섹션 (patterns §1 · §3) — PR 모니터 */
+  .strip { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); z-index: 31; }
+  .p-header { position: absolute; top: 54px; left: 0; right: 0; padding: 12px 20px; z-index: 20; display: flex; align-items: flex-end; justify-content: space-between; }
+  .area-label { display: flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: .22em; color: var(--accent); font-weight: 700; font-family: var(--mono); }
+  .area-label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  .p-header h1 { margin: 6px 0 0; font-size: 26px; line-height: 1; letter-spacing: -.02em; }
+  .p-header .who { margin-top: 6px; font-size: 11.5px; color: var(--stone-500); font-family: var(--mono); }
+  .p-header .who b { color: var(--accent); }
+  .p-actions { display: flex; align-items: center; gap: 8px; }
+  .badge-count { display: flex; flex-direction: column; align-items: center; padding: 4px 10px; border-radius: 6px; background: var(--accent); color: #fff; font-family: var(--mono); }
+  .badge-count b { font-size: 15px; line-height: 1; }
+  .badge-count span { font-size: 8px; font-weight: 700; margin-top: 2px; letter-spacing: .06em; }
+  .badge-count.dec b { animation: tick .6s ease-out; }
+  @keyframes tick { 0% { transform: scale(1.4); } 100% { transform: none; } }
+  .icon-btn { width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--rule); background: var(--card); display: grid; place-items: center; color: var(--ink); }
+  .p-main { position: absolute; top: 160px; bottom: 88px; left: 0; right: 0; overflow: hidden; padding: 8px 20px 24px; }
+  .sec { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; font-size: 11px; font-weight: 700; color: var(--accent); font-family: var(--mono); }
+  .sec::before { content: ""; width: 4px; height: 12px; background: var(--accent); }
+  .sec::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .sec.muted { color: var(--stone-400); } .sec.muted::before { background: var(--stone-400); }
+  /* Card.history-group.* · Card.history-item.* (components §5) */
+  .group { background: var(--card); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 6px; margin-bottom: 10px; }
+  .group.pulse { animation: glow 2.6s ease-in-out infinite; box-shadow: 0 0 0 3px rgba(61,47,142,.16), 0 8px 24px -10px rgba(61,47,142,.35); }
+  @keyframes glow { 50% { box-shadow: 0 0 0 5px rgba(61,47,142,.22), 0 10px 26px -10px rgba(61,47,142,.45); } }
+  .group.acked { background: rgba(238,237,245,.6); border: 1px dashed var(--rule); opacity: .7; }
+  .g-head { display: flex; gap: 10px; padding: 12px 14px 10px; }
+  .g-main { flex: 1; min-width: 0; }
+  .g-flag { display: flex; font-size: 10px; font-family: var(--mono); color: var(--accent); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+  .g-flag time { margin-left: auto; color: var(--stone-400); font-weight: 400; }
+  .g-title { margin: 0; font-size: 13.5px; line-height: 1.35; font-weight: 600; }
+  .g-title .mono { color: var(--accent); }
+  .g-sum { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; font-size: 10.5px; font-family: var(--mono); color: var(--stone-500); }
+  .g-sum .ok { color: var(--forest); font-weight: 700; } .g-sum .fail { color: var(--destructive); font-weight: 700; }
+  .g-links { margin-top: 8px; display: flex; gap: 4px; }
+  .g-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex: none; }
+  .pill-unacked { font-size: 10.5px; font-weight: 700; font-family: var(--mono); padding: 4px 8px; border-radius: 2px; background: var(--accent); color: #fff; }
+  .pill-acked { font-size: 10.5px; font-family: var(--mono); padding: 3px 8px; border: 1px solid var(--stone-300); color: var(--stone-500); border-radius: 2px; }
+  .btn-all { font-size: 10.5px; font-family: var(--mono); padding: 3px 8px; border: 1px solid var(--accent); background: var(--card); color: var(--accent); border-radius: 2px; }
+  .row { display: flex; gap: 10px; padding: 10px 14px; border-top: 1px solid rgba(216,213,228,.6); }
+  .g-body > .row:first-child { border-top: 1px solid var(--rule); }
+  .row.focus { background: rgba(221,218,235,.45); box-shadow: inset 2px 0 0 var(--accent); }
+  .row .sig { width: 20px; height: 20px; margin-top: 2px; }
+  .row-main { flex: 1; min-width: 0; }
+  .row-head { display: flex; font-size: 10px; font-weight: 700; font-family: var(--mono); text-transform: uppercase; }
+  .row-head.fail { color: var(--destructive); } .row-head.ok { color: var(--forest); }
+  .row-head time { margin-left: auto; color: var(--stone-400); font-weight: 400; }
+  .row-meta { display: flex; gap: 10px; margin-top: 4px; font-size: 10.5px; font-family: var(--mono); color: var(--stone-500); }
+  .row-meta i { font-style: normal; color: var(--stone-400); }
+  .row-acts { display: flex; align-items: center; gap: 4px; margin-top: 8px; }
+  .chip { font-size: 10.5px; font-weight: 600; font-family: var(--mono); padding: 2px 6px; border: 1px solid var(--rule); border-radius: 2px; color: var(--stone-500); background: none; text-decoration: none; }
+  .chip.visited { border-color: var(--accent); color: var(--accent); }
+  .chip.target { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px rgba(91,77,184,.15); }
+  .grow { flex: 1; }
+  .btn-ack { font-size: 11px; font-weight: 700; font-family: var(--mono); padding: 4px 10px; border-radius: 2px; border: 1px solid var(--accent); background: var(--card); color: var(--accent); }
+  .btn-ack.primary { background: var(--accent); color: #fff; }
+  .row.acked { opacity: .6; }
+  .row.acked .row-head { color: var(--stone-400); }
+  .row.acked .sig { background: var(--stone-300); }
+  .row.acked .row-meta { text-decoration: line-through; text-decoration-color: var(--stone-300); }
+  .ack-at { margin-top: 6px; font-size: 10px; font-family: var(--mono); color: var(--stone-400); }
+  .tabbar { position: absolute; bottom: 0; left: 0; right: 0; height: 88px; z-index: 10; padding: 0 4px 28px;
+            display: flex; align-items: flex-end; justify-content: space-around; background: rgba(238,237,245,.95); border-top: 1px solid var(--rule); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 4px; font-size: 10px; color: var(--stone-400); }
+  .tab.is-active { color: var(--accent); font-weight: 700; }
+
+  /* 앱 내 브라우저 — iOS 컨벤션 차용 (SFSafariViewController) */
+  .browser { background: #fff; color: #1c1917; }
+  .b-bar { position: absolute; top: 54px; left: 0; right: 0; padding: 8px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e7e5e4; background: #f5f5f4; z-index: 20; }
+  .b-done { border: 0; background: none; color: #0a84ff; font-size: 15px; font-weight: 600; padding: 4px 0; }
+  .b-url { flex: 1; text-align: center; font-size: 12px; color: var(--stone-500); font-family: var(--mono); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .b-page { position: absolute; top: 104px; left: 0; right: 0; bottom: 40px; padding: 16px; font-size: 13px; overflow: hidden; }
+  .b-page h2 { font-size: 16px; margin: 0 0 4px; }
+  .b-page .sub { color: var(--stone-500); font-size: 12px; font-family: var(--mono); }
+  .job { margin-top: 14px; border: 1px solid #e7e5e4; border-radius: 6px; }
+  .job-step { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-top: 1px solid #f5f5f4; font-family: var(--mono); font-size: 12px; }
+  .job-step:first-child { border-top: 0; }
+  .job-step .sig { width: 10px; height: 10px; }
+  .job-step.fail { background: #fbf1ee; color: var(--destructive); font-weight: 700; }
+  .log { margin-top: 10px; padding: 10px; background: #1c1917; color: #e7e5e4; border-radius: 6px; font-family: var(--mono); font-size: 11px; line-height: 1.6; white-space: pre-wrap; }
+
+  /* 승인 화면 — §1.11 PR 모니터 팔레트 차용(V9 개발 자동화 도구, tokens.md §1.11 제약 참고) */
+  .lock-hint { bottom: 60px; }
+  .note.expanded { flex-direction: column; gap: 0; padding: 0; overflow: hidden; }
+  .note.expanded.dim { padding: 12px 14px; flex-direction: row; gap: 10px; opacity: .55; }
+  .note-open { display: flex; gap: 10px; text-align: left; width: 100%; padding: 12px 14px; border: 0; background: none; color: #fff; }
+  .note-acts { display: flex; border-top: 1px solid rgba(255,255,255,.12); }
+  .note-acts button { flex: 1; padding: 12px; border: 0; background: none; color: #fff; font-size: 15px; font-weight: 600; }
+  .note-acts button + button { border-left: 1px solid rgba(255,255,255,.12); }
+  .unlock { position: absolute; left: 24px; right: 24px; top: 420px; padding: 20px; border-radius: 22px; text-align: center;
+            background: rgba(28,28,30,.88); border: 1px solid rgba(255,255,255,.1); display: flex; flex-direction: column; gap: 8px; }
+  .unlock b { font-size: 15px; } .unlock p { margin: 0; font-size: 12.5px; color: rgba(255,255,255,.65); }
+  .faceid { width: 44px; height: 44px; margin: 0 auto 4px; border: 2px solid rgba(255,255,255,.8); border-radius: 12px; }
+  .unlock-go { margin-top: 6px; padding: 11px; border: 0; border-radius: 12px; background: #fff; color: #000; font-weight: 600; }
+  .unlock-cancel { padding: 8px; border: 0; background: none; color: rgba(255,255,255,.75); }
+  .p-main { overflow: hidden; }
+  .d-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--accent); }
+  .kchip { font-family: var(--mono); font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 2px; background: var(--soft); color: var(--accent-strong); }
+  .d-title { margin: 0 0 10px; font-size: 18px; line-height: 1.3; letter-spacing: -.01em; }
+  .count { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); font-size: 11px; color: var(--stone-500); }
+  .count b { font-size: 18px; color: var(--accent); }
+  .count-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--soft); overflow: hidden; } .count-bar > i { display: block; width: 42%; height: 100%; background: var(--accent); }
+  .count.over b { color: var(--stone-400); } .count.over .count-bar > i { width: 0; }
+  .ctx-prev { margin: 10px 0; font-size: 12.5px; line-height: 1.5; color: var(--ink); }
+  .ctx { margin: 10px 0; padding: 10px 12px; max-height: 168px; overflow: hidden; border: 1px solid var(--rule); border-radius: 6px; background: var(--card);
+         font-family: var(--mono); font-size: 10.5px; line-height: 1.5; white-space: pre-wrap; color: var(--ink); }
+  .d-meta { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: 11px; }
+  .d-meta dt { color: var(--stone-500); } .d-meta dd { margin: 2px 0 0; color: var(--ink); }
+  .flag { font-style: normal; margin-left: 4px; font-size: 10px; font-weight: 700; color: var(--destructive); }
+  .d-acts { display: flex; gap: 10px; margin-top: 14px; }
+  .d-acts button { flex: 1; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 700; }
+  .d-acts button:disabled { opacity: .35; cursor: default; }
+  .btn-line { border: 1px solid var(--accent); background: var(--card); color: var(--accent); }
+  .btn-solid { border: 1px solid var(--accent); background: var(--accent); color: #fff; }
+  .btn-wide { display: block; width: 100%; margin-top: 14px; padding: 12px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 15px; font-weight: 700; }
+  .banner { margin: 10px 0; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--soft); font-size: 12px; line-height: 1.5; }
+  .banner.warn { border-color: var(--destructive); background: var(--card); color: var(--destructive); }
+  .req { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; margin-bottom: 10px; padding: 12px 14px; border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 6px; background: var(--card); color: var(--ink); }
+  .req-head { display: flex; justify-content: space-between; align-items: center; } .req-head time { font-size: 10.5px; color: var(--accent); }
+  .req b { font-size: 13.5px; } .req-sub { font-size: 11px; color: var(--stone-500); }
+  .scrim { position: absolute; inset: 0; z-index: 40; background: rgba(34,31,51,.35); }
+  .dialog { position: absolute; z-index: 41; left: 40px; right: 40px; top: 300px; padding: 18px 16px 0; border-radius: 14px; background: var(--card); text-align: center; }
+  .dialog b { font-size: 16px; } .dialog p { margin: 6px 0 14px; font-size: 12.5px; line-height: 1.5; color: var(--stone-600); }
+  .dialog-acts { display: flex; margin: 0 -16px; border-top: 1px solid var(--rule); }
+  .dialog-acts button { flex: 1; padding: 12px; border: 0; background: none; font-size: 15px; color: var(--accent); }
+  .dialog-acts button + button { border-left: 1px solid var(--rule); }
+  .dialog-acts .ok { font-weight: 700; }
+  .result { display: flex; align-items: baseline; gap: 10px; margin: 10px 0; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--card); font-size: 11.5px; color: var(--stone-500); }
+  .result b { font-size: 15px; } .result.ok b { color: var(--forest); } .result.no b { color: var(--destructive); }
+  .after { margin: 10px 0 0; font-size: 11.5px; color: var(--stone-500); }
+  .tab { position: relative; }
+  .tab-ico { position: relative; display: block; height: 22px; }
+  .tab-badge { position: absolute; top: -4px; right: -10px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 10px; line-height: 16px; text-align: center; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="jm-bar" aria-label="여정 mockup 도구">
+  <div class="jm-title"><a class="jm-hub" href="../../">허브</a> 승인 요청 푸시에서 결정까지</div>
+  <details class="jm-meta">
+    <summary>문서 정보</summary>
+    <code>JRN-approval-push-to-decision</code>
+    <ol class="jm-steps" aria-label="단계 목록"></ol>
+    <div class="jm-pos" aria-live="polite"></div>
+  </details>
+  <nav class="jm-nav">
+    <button type="button" data-jm="prev">← 이전</button>
+    <button type="button" data-jm="next">다음 →</button>
+    <a class="jm-doc" href="#">여정 문서</a>
+  </nav>
+</header>
+
+<main data-journey="JRN-approval-push-to-decision" data-doc="user-journeys/JRN-approval-push-to-decision.md">
+
+  <section data-step="STP-request-glance" data-title="잠금 화면에서 승인 요청 알아보기">
+    <div class="stage">
+      <div class="default"><div class="frame lock"><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><div class="clock"><div>10월 5일 월요일</div><b>9:41</b></div><div class="notes"><button type="button" data-go="STP-open-request" class="note new"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>방금</time></span><span class="note-title">승인 요청 · k3s-mcp</span><p>deployment/dear-baby-api 삭제 (namespace: prod) — 정리 작업 3/5 단계. 남은 리소스: service/dear-baby-api, configmap…</p></span></button><div class="note"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>22분 전</time></span><span class="note-title">CI 통과 — pocket-aide #151</span><p>docs(journeys): 승인 요청 푸시에서 결정까지</p></span></div></div><p class="lock-hint">누르면 요청 상세로 들어갑니다. 길게 누르면 승인·거절을 바로 고를 수 있습니다.</p><div class="home-bar-wrap"><i class="home-bar"></i></div></div></div>
+      <div class="frame lock" data-state="actions" hidden><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><div class="clock"><div>10월 5일 월요일</div><b>9:41</b></div><div class="notes"><div class="note expanded"><button type="button" class="note-open" data-go="STP-open-request"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>방금</time></span><span class="note-title">승인 요청 · k3s-mcp</span><p>deployment/dear-baby-api 삭제 (namespace: prod) — 정리 작업 3/5 단계. 남은 리소스: service/dear-baby-api, configmap…</p></span></button><span class="note-acts"><button type="button" data-go="STP-request-glance/rejected-lock">거절</button><button type="button" data-go="STP-request-glance/unlock">승인</button></span></div></div><p class="lock-hint">거절은 잠금 상태에서 바로 됩니다. 승인은 잠금 해제가 필요합니다.</p><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame lock" data-state="unlock" hidden><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><div class="clock"><div>10월 5일 월요일</div><b>9:41</b></div><div class="notes"><div class="note expanded dim"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>방금</time></span><span class="note-title">승인 요청 · k3s-mcp</span><p>deployment/dear-baby-api 삭제 (namespace: prod) — 정리 작업 3/5 단계. 남은 리소스: service/dear-baby-api, configmap…</p></span></div></div><div class="unlock"><div class="faceid" aria-hidden="true"></div><b>승인하려면 잠금을 해제하세요</b><p>deployment/dear-baby-api 삭제를 허락합니다.</p><button type="button" class="unlock-go" data-go="STP-request-glance/approved-lock">Face ID로 잠금 해제</button><button type="button" class="unlock-cancel" data-go="STP-open-request">취소</button></div><p class="lock-hint"></p><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame lock" data-state="approved-lock" data-end="여정 완료(우회) — 잠금 해제 후 잠금 화면에서 승인" hidden><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><div class="clock"><div>10월 5일 월요일</div><b>9:41</b></div><div class="notes"><div class="note"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>방금</time></span><span class="note-title">승인됨 · k3s-mcp</span><p>deployment/dear-baby-api 삭제 — 09:41:40 승인. 요청한 쪽이 다음 조회에서 결과를 받습니다.</p></span></div><div class="note"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>22분 전</time></span><span class="note-title">CI 통과 — pocket-aide #151</span><p>docs(journeys): 승인 요청 푸시에서 결정까지</p></span></div></div><p class="lock-hint">앱을 열지 않고 결정했습니다.</p><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame lock" data-state="rejected-lock" data-end="여정 완료(우회) — 잠금 화면에서 바로 거절" hidden><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><div class="clock"><div>10월 5일 월요일</div><b>9:41</b></div><div class="notes"><div class="note"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>방금</time></span><span class="note-title">거절됨 · k3s-mcp</span><p>deployment/dear-baby-api 삭제 — 09:41:31 거절. 요청한 쪽은 작업을 멈춥니다.</p></span></div><div class="note"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>22분 전</time></span><span class="note-title">CI 통과 — pocket-aide #151</span><p>docs(journeys): 승인 요청 푸시에서 결정까지</p></span></div></div><p class="lock-hint">앱을 열지 않고 결정했습니다.</p><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame lock" data-state="auto-mode" data-end="이탈(여정 밖): 자동 응답 모드 — 요청이 즉시 자동 처리되고 알림이 없음" hidden><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><div class="clock"><div>10월 5일 월요일</div><b>9:41</b></div><div class="notes"><div class="note"><span class="app-icon"></span><span class="note-body"><span class="note-head">POCKETAIDE<time>22분 전</time></span><span class="note-title">CI 통과 — pocket-aide #151</span><p>docs(journeys): 승인 요청 푸시에서 결정까지</p></span></div></div><p class="lock-hint">자동 응답 모드(자동 거절)가 켜져 있어 승인 요청 알림이 오지 않습니다. 요청은 만들어지는 즉시 자동으로 처리됩니다.</p><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-request-glance/actions" data-branch>우회: 잠금 화면에서 바로 결정</button><button type="button" data-go="STP-request-glance/auto-mode" data-branch>이탈: 자동 응답 모드 켜짐</button></div>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-12 AC10 · AC11 · 제목은 호출자가 밝힌 이름이 아니라 사용자가 붙인 키 이름. 본문은 요청 내용 앞부분(4KB 이내). 잠금 화면 노출은 iOS 「미리보기 표시」 설정을 따른다. 길게 누르면 알림 액션 — 거절은 바로, 승인은 잠금 해제 후.</p>
+    </details>
+  </section>
+
+  <section data-step="STP-open-request" data-title="푸시를 눌러 요청 상세 열기">
+    <div class="stage">
+      <div class="default"><div class="frame "><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="count "><span>남은 시간</span><b class="mono">04:12</b><i class="count-bar"><i></i></i></div><p class="ctx-prev">작업: dear-baby 구버전 리소스 정리 (3/5) · 대상: deployment/dear-baby-api · 네임스페이스: prod · 동작: delete…</p><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><button type="button" class="btn-wide" data-go="STP-judge-context">전체 내용 보고 결정하기</button></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div></div>
+      <div class="frame " data-state="from-list" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="sec">대기 · 3건</div><button type="button" class="req" data-go="STP-open-request"><span class="req-head"><span class="kchip">k3s-mcp</span><time class="mono">04:12 남음</time></span><b>deployment/dear-baby-api 삭제</b><span class="req-sub">Claude Code · homelab 정리 세션 · 09:41</span></button><div class="req"><span class="req-head"><span class="kchip">infra-ci</span><time class="mono">27:40 남음</time></span><b>prod 배포 v1.42</b><span class="req-sub">Deploy Bot · 09:20</span></div><div class="req"><span class="req-head"><span class="kchip">session-agent</span><time class="mono">기한 없음</time></span><b>세션 sp-7 의 git push --force 허용</b><span class="req-sub">session-platform agent · 어제 18:02</span></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame " data-state="expired" data-end="여정 미완료 종료 — 결정 전에 만료(침묵은 승인으로 해석되지 않음)" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 2"><b>2</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="count over"><span>남은 시간</span><b class="mono">00:00</b><i class="count-bar"><i></i></i></div><div class="banner">기한이 지나 결정할 수 없습니다. 요청한 쪽은 만료 결과를 받고 작업을 멈췄습니다. 여전히 필요하면 요청한 쪽에서 새로 요청합니다.</div><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><div class="d-acts"><button type="button" class="btn-line" disabled>거절</button><button type="button" class="btn-solid" disabled>승인</button></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">2</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-open-request/from-list" data-branch>중도 이탈: 푸시를 놓치고 승인 탭에서 열기</button><button type="button" data-go="STP-open-request/expired" data-branch>외부 지연: 결정 전에 만료</button></div>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-12 AC5 · AC6 · AC4 · 푸시를 누르면 해당 요청 상세로 곧바로 들어간다(누른 것만으로는 결정되지 않음). 남은 시간은 초 단위로 줄고, 0이 되면 서버 응답을 기다리지 않고 버튼을 막는다. 대기 목록은 하단 탭 바에 보이는 독립 「승인」 탭에 있고 배지가 대기 수다.</p>
+    </details>
+  </section>
+
+  <section data-step="STP-judge-context" data-title="요청 내용을 읽고 판단하기">
+    <div class="stage">
+      <div class="default"><div class="frame "><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="count "><span>남은 시간</span><b class="mono">03:48</b><i class="count-bar"><i></i></i></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><div class="d-acts"><button type="button" class="btn-line" data-go="STP-confirm-decision/confirm-reject">거절</button><button type="button" class="btn-solid" data-go="STP-confirm-decision">승인</button></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div></div>
+      <div class="frame " data-state="suspicious" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">old-ci</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="banner warn">폐기된 키로 생성된 요청입니다 — <span class="mono">old-ci</span> 키는 10월 3일에 폐기됐습니다.</div><div class="count "><span>남은 시간</span><b class="mono">03:48</b><i class="count-bar"><i></i></i></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">old-ci <em class="flag">폐기됨</em></dd></div><div><dt>요청자</dt><dd>k3s-mcp <em class="flag">키 이름과 다름</em></dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><div class="d-acts"><button type="button" class="btn-line" data-go="STP-confirm-decision/confirm-reject">거절</button><button type="button" class="btn-solid" data-go="STP-confirm-decision">승인</button></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-judge-context/suspicious" data-branch>위험 신호: 출처 의심(폐기 키·이름 불일치)</button></div>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-12 AC6 · AC13 · AC14 · 요청 내용 전문과 함께 보낸 키(사용자가 붙인 이름)와 요청자(호출자가 밝힌 이름)를 나란히 보여 출처를 확인한다. 폐기된 키로 생성된 대기 요청은 자동 처리 없이 경고와 함께 남는다. 판단할 정보가 부족하면 거절이 안전한 기본값.</p>
+    </details>
+  </section>
+
+  <section data-step="STP-confirm-decision" data-title="승인·거절을 확정하기" data-end="여정 완료 — 사용자의 명시적 결정">
+    <div class="stage">
+      <div class="default"><div class="frame "><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="count "><span>남은 시간</span><b class="mono">03:31</b><i class="count-bar"><i></i></i></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><div class="d-acts"><button type="button" class="btn-line" disabled>거절</button><button type="button" class="btn-solid" disabled>승인</button></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div><div class="scrim"></div><div class="dialog" role="alertdialog"><b>승인할까요?</b><p>deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.</p><div class="dialog-acts"><button type="button" data-go="STP-judge-context">취소</button><button type="button" class="ok" data-go="STP-confirm-decision/approved">승인</button></div></div></div></div>
+      <div class="frame " data-state="confirm-reject" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="count "><span>남은 시간</span><b class="mono">03:31</b><i class="count-bar"><i></i></i></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><div class="d-acts"><button type="button" class="btn-line" disabled>거절</button><button type="button" class="btn-solid" disabled>승인</button></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div><div class="scrim"></div><div class="dialog" role="alertdialog"><b>거절할까요?</b><p>요청한 쪽은 거절 결과를 받고 작업을 멈춥니다.</p><div class="dialog-acts"><button type="button" data-go="STP-judge-context">취소</button><button type="button" class="ok" data-go="STP-confirm-decision/rejected">거절</button></div></div></div>
+      <div class="frame " data-state="approved" data-end="여정 완료 — 수동 결정(승인), 대기 배지 3→2" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 2"><b>2</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="result ok"><b>승인됨</b><span class="mono">09:44:20</span><span>수동 결정</span></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><p class="after">요청한 쪽이 다음 조회에서 이 결과를 받습니다.</p></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">2</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame " data-state="rejected" data-end="여정 완료 — 수동 결정(거절), 대기 배지 3→2" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 2"><b>2</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="result no"><b>거절됨</b><span class="mono">09:44:20</span><span>수동 결정</span></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><p class="after">요청한 쪽이 다음 조회에서 이 결과를 받습니다.</p></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">2</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame " data-state="send-failed" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 3"><b>3</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><div class="banner warn">결정을 보내지 못했습니다. 아직 결정되지 않았어요.</div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="count "><span>남은 시간</span><b class="mono">03:20</b><i class="count-bar"><i></i></i></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl><div class="d-acts"><button type="button" class="btn-line" data-go="STP-judge-context">취소</button><button type="button" class="btn-solid" data-go="STP-confirm-decision/approved">다시 시도</button></div></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">3</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+      <div class="frame " data-state="already" data-end="여정 완료(다른 기기) — 먼저 내려진 결정이 유효" hidden><i class="strip"></i><div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div><header class="p-header"><div><div class="area-label">APPROVAL · GATE</div><h1>승인</h1><div class="who">자동 응답 <b>없음</b></div></div><div class="p-actions"><div class="badge-count" aria-label="대기 2"><b>2</b><span>대기</span></div></div></header><main class="p-main"><div class="d-top"><span class="d-back">‹ 승인</span><span class="kchip">k3s-mcp</span></div><h2 class="d-title">deployment/dear-baby-api 삭제</h2><div class="result no"><b>이미 처리된 요청입니다</b><span class="mono">09:42:58</span><span>다른 기기에서 거절 · 수동 결정</span></div><pre class="ctx">작업: dear-baby 구버전 리소스 정리 (3/5)
+대상: deployment/dear-baby-api
+네임스페이스: prod
+동작: delete (propagationPolicy=Foreground)
+
+사유: v2 롤아웃(dear-baby-api-v2) 완료 후
+      트래픽 0 확인 — 최근 24시간 요청 0건
+
+남은 단계:
+  4/5 service/dear-baby-api 삭제
+  5/5 configmap/dear-baby-api-env 삭제</pre><dl class="d-meta"><div><dt>보낸 키</dt><dd class="mono">k3s-mcp</dd></div><div><dt>요청자</dt><dd>Claude Code · homelab 정리 세션</dd></div><div><dt>요청 ID</dt><dd class="mono">cleanup-20261005-3</dd></div><div><dt>요청 시각</dt><dd class="mono">09:41:02</dd></div></dl></main><nav class="tabbar" aria-label="탭바"><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>PR 모니터</span><span class="tab is-active"><span class="tab-ico"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><b class="tab-badge">2</b></span>승인</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>채팅</span><span class="tab"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>더 보기</span></nav><div class="home-bar-wrap"><i class="home-bar"></i></div></div>
+    </div>
+    <div class="jm-branches" aria-label="분기 보기"><span>갈래</span><button type="button" data-go="STP-confirm-decision/send-failed" data-branch>실패: 결정 전송 중 오류</button><button type="button" data-go="STP-confirm-decision/already" data-branch>실패: 다른 기기에서 먼저 처리</button></div>
+    <details class="jm-meta jm-note-wrap"><summary>메모</summary>
+      <p class="jm-note">PRD-12 AC7 · AC12 · 확인 단계를 거쳐 확정하며 되돌릴 수 없다. 전송이 실패하면 결정되지 않은 상태로 버튼이 돌아오고 재시도한다. 다른 기기에서 먼저 처리됐으면 409 — 먼저 내려진 결정을 보여준다.</p>
+    </details>
+  </section>
+</main>
+
+<script>
+/* 단계 엔진 — 수정하지 않아도 된다.
+   요건 2(전환) 3(위치) 5(딥링크) 6(분기 상태·끝 표시) 8(문서 복귀 링크)을 처리한다. */
+(function () {
+  var main = document.querySelector('main[data-journey]');
+  var steps = Array.prototype.slice.call(main.querySelectorAll(':scope > section[data-step]'));
+  var ids = steps.map(function (s) { return s.getAttribute('data-step'); });
+  var list = document.querySelector('.jm-steps');
+  var pos = document.querySelector('.jm-pos');
+  var prev = document.querySelector('[data-jm="prev"]');
+  var next = document.querySelector('[data-jm="next"]');
+  var docLink = document.querySelector('.jm-doc');
+  var docPath = main.getAttribute('data-doc');
+  var READER = '../../reader.html';
+
+  steps.forEach(function (s, i) {
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = '#' + ids[i];
+    a.textContent = (i + 1) + '. ' + (s.getAttribute('data-title') || ids[i]);
+    li.appendChild(a); list.appendChild(li);
+  });
+
+  function parse() {
+    var h = decodeURIComponent(location.hash.slice(1));
+    var parts = h.split('/');
+    var i = ids.indexOf(parts[0]);
+    return { index: i < 0 ? 0 : i, state: i < 0 ? null : (parts[1] || null) };
+  }
+
+  function render() {
+    var cur = parse();
+    var step = steps[cur.index];
+    steps.forEach(function (s, i) { s.classList.toggle('is-active', i === cur.index); });
+    var stateEl = null;
+    step.querySelectorAll('[data-state]').forEach(function (el) {
+      var on = el.getAttribute('data-state') === cur.state;
+      el.hidden = !on; if (on) stateEl = el;
+    });
+    list.querySelectorAll('a').forEach(function (a, i) {
+      if (i === cur.index) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current');
+    });
+    pos.textContent = (cur.index + 1) + ' / ' + steps.length + ' · ' + (step.getAttribute('data-title') || ids[cur.index])
+      + (cur.state ? ' (' + cur.state + ')' : '');
+    prev.disabled = cur.index === 0;
+    next.disabled = cur.index === steps.length - 1;
+    if (docPath) docLink.href = READER + '?doc=' + encodeURI(docPath) + '#' + ids[cur.index];
+
+    var old = document.querySelector('.jm-end'); if (old) old.remove();
+    var end = (stateEl && stateEl.getAttribute('data-end')) || step.getAttribute('data-end');
+    if (end) {
+      var box = document.createElement('div');
+      box.className = 'jm-end';
+      box.textContent = '■ 이 갈래의 끝: ' + end;
+      step.appendChild(box);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function go(target) { if (location.hash.slice(1) === target) render(); else location.hash = target; }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-go]');
+    if (el) { e.preventDefault(); go(el.getAttribute('data-go')); }
+  });
+  prev.addEventListener('click', function () { var i = parse().index; if (i > 0) go(ids[i - 1]); });
+  next.addEventListener('click', function () { var i = parse().index; if (i < ids.length - 1) go(ids[i + 1]); });
+  window.addEventListener('hashchange', render);
+  render();
+})();
+</script>
+</body>
+</html>

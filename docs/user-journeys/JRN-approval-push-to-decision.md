@@ -6,11 +6,11 @@
 |---|---|
 | 여정 식별자 | `JRN-approval-push-to-decision` |
 | 여정명 | 승인 요청 푸시에서 결정까지 |
-| 상태 | 초안 (v0.1) |
+| 상태 | 초안 (v0.2) |
 | 담당자 | 사용자 본인(단독 소유자) |
 | 최종 수정일 | 2026-10-05 |
 | 달성 가치 | `V9` 개발 워크플로우 인지 부하 감소 — 범위의 「결정」 |
-| 연결 문서 | PRD-12(`prd-approval-gate.md`) AC5, AC6, AC7, AC10, AC11 (분기: AC4, AC9, AC12, AC14) · 테스트 `test-approval-gate.md` 시나리오 6, 8, 9, 10, 11, 13, 14, 15, 16 · mockup 미연결(여정 mockup 예외 등재 — PRD-12 하단 탭 바 새 구성과 함께 작성 예정) |
+| 연결 문서 | PRD-12(`prd-approval-gate.md`) AC5, AC6, AC7, AC10, AC11 (분기: AC4, AC9, AC12, AC14) · 테스트 `test-approval-gate.md` 시나리오 6, 8, 9, 10, 11, 13, 14, 15, 16 · mockup `JRN-approval-push-to-decision` (`journeys/JRN-approval-push-to-decision/`) |
 
 ## 1. 서비스 개요 (참고)
 
@@ -95,3 +95,4 @@ PocketAide 제품 개요와 가치는 [`../product/values.md`](../product/values
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |---|---|---|---|
 | v0.1 | 2026-10-05 | 최초 작성. PRD-12 목표 동작(구현 전) 기준, 4단계·분기 8개. 여정 mockup은 PRD-12 하단 탭 바 새 구성과 함께 작성하기로 하고 `README.md` 「여정 mockup 예외」에 등재. | Claude |
+| v0.2 | 2026-10-05 | 여정 mockup 작성에 따라 연결 문서에 mockup 연결, 「여정 mockup 예외」 등재 해제. 단계·식별자·분기 변경 없음. | Claude |

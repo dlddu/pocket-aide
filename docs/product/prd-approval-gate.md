@@ -171,5 +171,5 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 2. 만료 임박 리마인드 푸시. (도입 시 만료 백그라운드 정리 필요)
 3. 호출자 키 만료 기한·권한 범위(생성만/조회만) 지정.
 4. 기존 호출자 세 레포의 클라이언트 전환(운영 노트 "전환 절차").
-5. 승인자 여정 mockup(`journeys/JRN-approval-push-to-decision/index.html`). 여정 문서 `user-journeys/JRN-approval-push-to-decision.md`는 2026-10-05 작성됨.
+5. 승인 탭 화면 mockup(`screen-approval-*`)과 화면 mockup 탭바 갱신. 승인자 여정 문서·여정 mockup(`JRN-approval-push-to-decision`)은 2026-10-05 작성됨.
 6. 위젯(PRD-8)에 대기 승인 수 노출 여부 검토.
