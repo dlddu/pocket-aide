@@ -152,11 +152,11 @@ last_updated: 2026-10-05
   - 여정: `JRN-affirmation-daily-exposure` (`STP-add-affirmation`)
   - 가치: V4 (의도된 반복 노출)
   - PRD/AC (보조): PRD-5 / AC1 (추가), AC2 (우선순위)
-  - 두 프레임: **생성**(헤더 `+` — 시트 한 장에서 문장 입력 + 노출 빈도, 취소하면 저장 안 함)과 **편집**(카드 길게 누르기 — 같은 시트의 편집 모드, 문장 미리보기). 2026-09-30 생성 프레임 추가 — 이전에는 "추가 직후 별도 우선순위 시트"만 그려 실제 앱과 달랐다.
+  - 세 프레임: **생성**(헤더 `+` — 시트 한 장에서 문장 입력 + 노출 빈도, 취소하면 저장 안 함), **생성 — 문장이 비어 있을 때**(저장 비활성 50%), **편집**(카드 길게 누르기 — 같은 시트의 편집 모드, 카드 안 입력 필드에서 문장도 고친다). 2026-09-30 생성 프레임 추가 — 이전에는 "추가 직후 별도 우선순위 시트"만 그려 실제 앱과 달랐다.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1, 다짐) + `편집 시트` (patterns.md §9)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `Sheet` (다짐 영역 변형, components.md §9), `Backdrop`, `Handle`, `FilterPills` (단일 선택형 3-tier — components.md §4 의미 확장), 1차 액션 버튼, 2차 텍스트 액션, `TabBar` (active=다짐, backdrop 아래 dim)
-  - 토큰: 영역=다짐 (tokens.md §1.6) — backdrop은 `--ink #2E251A`에 alpha 적용. 시트 본체 `--bg`. 시트 안 정서 본문(생성 모드 입력 필드·편집 모드 문장 미리보기)은 serif 변형 허용, 시스템 UI 텍스트(헤더·옵션 라벨·버튼)는 sans 일관 — tokens.md §3.1.
+  - 토큰: 영역=다짐 (tokens.md §1.6) — backdrop은 `--ink #2E251A`에 alpha 적용. 시트 본체 `--bg`. 시트 안 정서 본문(생성·편집 모드 문장 입력 필드)은 serif 변형 허용, 시스템 UI 텍스트(헤더·옵션 라벨·버튼)는 sans 일관 — tokens.md §3.1.
 
 ## screen-shortcut-capture.html
 - **시각화 대상**:
