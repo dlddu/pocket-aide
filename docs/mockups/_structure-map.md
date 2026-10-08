@@ -20,7 +20,7 @@ last_updated: 2026-10-08
 | 목업 | 구현 파일 | 범위 |
 |---|---|---|
 | `screen-affirmations-priority-edit` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` (+ 그 화면이 쓰는 `Sheet.swift`·`Card.swift`·`FilterPills.swift`·`AreaLabel.swift`) | 시트 본체 — `Backdrop`·`Sheet`·`Handle`·제목·문장 카드·3-tier pill·도움말·액션(생성 · 생성 빈 문장 · 편집 세 프레임). 시트 아래 다짐 화면·탭 바·상태바는 범위 밖 |
-| `screen-routines` | `ios/PocketAide/Routines/RoutineSheets.swift` 의 `RoutineAddSheet`·`RoutineStepAddSheet` (+ 그 시트가 쓰는 `Sheet.swift`·`Card.swift`) | 시트 두 프레임 — 「새 루틴 시트」(이름·반복 주기·단계·액션) · 「단계 추가 — 루틴 카드에서」(기존 단계·새 단계 입력·액션)의 `Backdrop`·`Sheet` 하위 트리. 루틴 목록 화면·상태 변형 프레임·history strip, 같은 파일의 이력 시트 `RoutineHistorySheet`, 시트 아래 탭 바·상태바는 범위 밖 |
+| `screen-routines` | `ios/PocketAide/Routines/RoutineSheets.swift` 의 `RoutineAddSheet`·`RoutineStepAddSheet` (+ 그 시트가 쓰는 `Sheet.swift`·`Card.swift`) | 시트 세 프레임 — 「새 루틴 시트」(이름·반복 주기·단계·액션) · 「루틴 추가 — 특정 요일」(같은 시트, 반복 주기 자리에 요일 원형 버튼 7개) · 「단계 추가 — 루틴 카드에서」(기존 단계·새 단계 입력·액션)의 `Backdrop`·`Sheet` 하위 트리. 루틴 목록 화면·상태 변형 프레임·history strip, 같은 파일의 이력 시트 `RoutineHistorySheet`, 시트 아래 탭 바·상태바는 범위 밖 |
 
 ## 판독 규약
 
@@ -47,7 +47,7 @@ last_updated: 2026-10-08
 ## 집계
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 1행.
-남은 구조·수치 drift(`screen-routines` 시트 두 프레임): 표 M `불일치` 0행 · `목업 대기` 3행, 표 S `불일치` 1행.
+남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 1행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -58,11 +58,11 @@ last_updated: 2026-10-08
 | `screen-affirmations-priority-edit` | M | 목업 대기 | 0 |
 | `screen-affirmations-priority-edit` | S | 일치 | 12 |
 | `screen-affirmations-priority-edit` | S | 불일치 | 1 |
-| `screen-routines` | M | 일치 | 65 |
+| `screen-routines` | M | 일치 | 83 |
 | `screen-routines` | M | 기본값 일치 | 2 |
 | `screen-routines` | M | 불일치 | 0 |
 | `screen-routines` | M | 허용 | 12 |
-| `screen-routines` | M | 목업 대기 | 3 |
+| `screen-routines` | M | 목업 대기 | 0 |
 | `screen-routines` | S | 일치 | 17 |
 | `screen-routines` | S | 불일치 | 1 |
 
@@ -229,7 +229,7 @@ last_updated: 2026-10-08
 | 12 | 취소(2차 액션) | `취소` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Button("취소", action: onCancel)` | 일치 | 글자만 있는 버튼, 맨 아래 |
 | 13 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40"` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.overlay { if let mode = sheetMode { PriorityEditSheet(` | 불일치 | 목업 시트는 탭 바(z-10) 위를 덮고 화면 바닥에 붙는다. 구현은 탭 콘텐츠의 `.overlay` 라 시스템 탭 바 위에서 끝난다 |
 
-## 표 E — 요소 (`screen-routines`) · 24행
+## 표 E — 요소 (`screen-routines`) · 27행
 
 | 요소 | 목업 선택 인용 |
 |---|---|
@@ -249,6 +249,9 @@ last_updated: 2026-10-08
 | 스테퍼 | `flex items-center rounded-[9px] bg-[var(--soft)] divide-x divide-[var(--rule)]` |
 | 스테퍼 감소 칸 | `w-11 h-8 grid place-items-center opacity-40` |
 | 스테퍼 증가 칸 | `w-11 h-8 grid place-items-center` |
+| 요일 줄 | `flex gap-1.5` |
+| 요일 버튼 | `w-[34px] h-[34px] grid place-items-center rounded-full bg-white border border-[var(--rule)] text-[14px] font-semibold` |
+| 선택된 요일 버튼 | `w-[34px] h-[34px] grid place-items-center rounded-full bg-[var(--forest)] border border-[var(--rule)] text-[14px] font-semibold text-[var(--bg)]` |
 | 단계 행 | `flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white` |
 | 단계 번호 | `w-[18px] text-center text-[12px] font-bold opacity-55` |
 | 단계 이름 필드 | `flex-1 bg-transparent text-[14px] outline-none placeholder:text-stone-400` |
@@ -258,7 +261,7 @@ last_updated: 2026-10-08
 | 2차 버튼 | `w-full py-2 text-[13px] opacity-55` |
 | 단계 목록(단계 시트) | `space-y-2 text-[14px]` |
 
-## 표 M — 수치 (`screen-routines`) · 82행
+## 표 M — 수치 (`screen-routines`) · 97행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -313,6 +316,24 @@ last_updated: 2026-10-08
 | 스테퍼 증가 칸 | `w-11` | 44 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 44, height: 32)` | 44 | 일치 | 칸 폭(두 칸 공통 `stepperCell`) |
 | 스테퍼 증가 칸 | `h-8` | 32 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 44, height: 32)` | 32 | 일치 | 칸 높이(두 칸 공통 `stepperCell`) |
 | — | — | 0 | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: 0) { stepperCell(` | 0 | 기본값 일치 | 두 칸 사이 간격 — 목업은 간격 클래스 없이 붙여 그린다(경계는 `divide-x`) |
+| 요일 줄 | `gap-1.5` | 6 | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: 6)` | 6 | 일치 | 요일 원형 버튼 7개 사이 간격(`weekdayPicker`) |
+| 요일 버튼 | `w-[34px]` | 34 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 34, height: 34)` | 34 | 일치 | 버튼 지름 — 선택하지 않은 요일 |
+| 요일 버튼 | `h-[34px]` | 34 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 34, height: 34)` | 34 | 일치 | 버튼 지름 — 선택하지 않은 요일 |
+| 요일 버튼 | `rounded-full` | full | `ios/PocketAide/Routines/RoutineSheets.swift` | `.background(Circle().fill(selected ? DesignTokens.Color.accent(.routines) : DesignTokens.Color.card(.routines)))` | full | 일치 | 원형 버튼 — 선택하지 않은 요일 |
+| 요일 버튼 | `bg-white` | #FFFFFF | `ios/PocketAide/Routines/RoutineSheets.swift` | `.background(Circle().fill(selected ? DesignTokens.Color.accent(.routines) : DesignTokens.Color.card(.routines)))` | #FFFFFF | 일치 | 비선택 채움 = 영역 card |
+| 요일 버튼 | `border` | 1 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.overlay(Circle().stroke(DesignTokens.Color.rule(.routines), lineWidth: 1))` | 1 | 일치 | 테두리 1pt — 선택 여부와 무관하게 긋는다(선택하지 않은 요일) |
+| 요일 버튼 | `border-[var(--rule)]` | #D6DDD2 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.overlay(Circle().stroke(DesignTokens.Color.rule(.routines), lineWidth: 1))` | #D6DDD2 | 일치 | 테두리 색 = 영역 rule(선택하지 않은 요일) |
+| 요일 버튼 | `text-[14px]` | 14 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold)) .frame(width: 34, height: 34)` | 14 | 일치 | 요일 글자 크기 = `body`(선택하지 않은 요일) |
+| 요일 버튼 | `font-semibold` | semibold | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold)) .frame(width: 34, height: 34)` | semibold | 일치 | 요일 글자 굵기(선택하지 않은 요일) |
+| 선택된 요일 버튼 | `w-[34px]` | 34 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 34, height: 34)` | 34 | 일치 | 버튼 지름 — 선택한 요일 |
+| 선택된 요일 버튼 | `h-[34px]` | 34 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 34, height: 34)` | 34 | 일치 | 버튼 지름 — 선택한 요일 |
+| 선택된 요일 버튼 | `rounded-full` | full | `ios/PocketAide/Routines/RoutineSheets.swift` | `.background(Circle().fill(selected ? DesignTokens.Color.accent(.routines) : DesignTokens.Color.card(.routines)))` | full | 일치 | 원형 버튼 — 선택한 요일 |
+| 선택된 요일 버튼 | `bg-[var(--forest)]` | #4F6E5C | `ios/PocketAide/Routines/RoutineSheets.swift` | `.background(Circle().fill(selected ? DesignTokens.Color.accent(.routines) : DesignTokens.Color.card(.routines)))` | #4F6E5C | 일치 | 선택 채움 = 영역 accent(forest) |
+| 선택된 요일 버튼 | `border` | 1 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.overlay(Circle().stroke(DesignTokens.Color.rule(.routines), lineWidth: 1))` | 1 | 일치 | 테두리 1pt — 선택 여부와 무관하게 긋는다(선택한 요일) |
+| 선택된 요일 버튼 | `border-[var(--rule)]` | #D6DDD2 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.overlay(Circle().stroke(DesignTokens.Color.rule(.routines), lineWidth: 1))` | #D6DDD2 | 일치 | 테두리 색 = 영역 rule(선택한 요일) |
+| 선택된 요일 버튼 | `text-[14px]` | 14 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold)) .frame(width: 34, height: 34)` | 14 | 일치 | 요일 글자 크기 = `body`(선택한 요일) |
+| 선택된 요일 버튼 | `font-semibold` | semibold | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold)) .frame(width: 34, height: 34)` | semibold | 일치 | 요일 글자 굵기(선택한 요일) |
+| 선택된 요일 버튼 | `text-[var(--bg)]` | #F0F2EC | `ios/PocketAide/Routines/RoutineSheets.swift` | `.foregroundStyle(selected ? DesignTokens.Color.surface(.routines) : DesignTokens.Color.ink(.routines))` | #F0F2EC | 일치 | 선택 글자 = 영역 surface(비선택은 상속 ink — 클래스 없음) |
 | 단계 행 | `gap-2` | 8 | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Text("\(index + 1)")` | 8 | 일치 | 번호 ↔ 필드 간격 = `Spacing.sm` |
 | 단계 행 | `px-3` | 12 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.padding(.horizontal, DesignTokens.Spacing.md)` | 12 | 일치 | 행 좌우 안쪽 여백 = `Spacing.md` |
 | 단계 행 | `py-2.5` | 10 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.padding(.vertical, 10)` | 10 | 일치 | 행 상하 안쪽 여백 |
@@ -341,9 +362,6 @@ last_updated: 2026-10-08
 | 2차 버튼 | `opacity-55` | 0.55 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55)) .padding(.vertical, 8)` | 0.55 | 일치 | 2차 버튼 글자 = 영역 ink 55% |
 | 단계 목록(단계 시트) | `space-y-2` | 8 | `ios/PocketAide/Routines/RoutineSheets.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) { ForEach(routine.steps)` | 8 | 일치 | 기존 단계 행 간격 = `Spacing.sm` |
 | 단계 목록(단계 시트) | `text-[14px]` | 14 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Text(step.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 기존 단계 글자 크기 = `body` |
-| — | — | — | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: 6)` | 6 | 목업 대기 | 요일 원형 버튼 7개의 간격 — 목업은 「특정 요일·매주는 이 자리에 요일 원형 버튼 7개」 주석만 두고 그 상태를 그리지 않는다 |
-| — | — | — | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold)) .frame(width: 34, height: 34)` | 14 semibold 34 34 | 목업 대기 | 요일 버튼 글자 14 semibold · 지름 34 — 같은 미작도 상태 |
-| — | — | — | `ios/PocketAide/Routines/RoutineSheets.swift` | `.overlay(Circle().stroke(DesignTokens.Color.rule(.routines), lineWidth: 1))` | 1 | 목업 대기 | 요일 버튼 테두리 1 — 같은 미작도 상태 |
 
 ## 표 S — 요소 순서·유무 (`screen-routines`) · 18행
 
@@ -357,7 +375,7 @@ last_updated: 2026-10-08
 | 4 | 이름 입력 | `placeholder="루틴 이름 — 예: 아침 루틴"` | `ios/PocketAide/Routines/RoutineSheets.swift` | `TextField("루틴 이름 — 예: 아침 루틴", text: $name)` | 일치 | 제목 아래 카드 안 한 줄 입력 |
 | 5 | 반복 주기 라벨 | `반복 주기</div>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `label("반복 주기")` | 일치 | 이름 입력 아래 |
 | 6 | 세그먼트 4칸 | `<!-- 세그먼트 컨트롤(iOS 시스템 컨트롤) — 매월 선택 -->` | `ios/PocketAide/Routines/RoutineSheets.swift` | `ForEach(RoutineCadence.allCases, id: \.self)` | 일치 | 매일 · 특정 요일 · 매주 · 매월 순(열거형 선언 순) |
-| 7 | 주기별 입력 | `<!-- 매월: 날짜 스테퍼(1~31). 특정 요일·매주는 이 자리에 요일 원형 버튼 7개 -->` | `ios/PocketAide/Routines/RoutineSheets.swift` | `case .weekdays, .weekly: weekdayPicker case .monthly: monthDayStepper` | 일치 | 세그먼트 아래 같은 자리 — 매월은 날짜 스테퍼(1~31), 특정 요일·매주는 요일 버튼 7개, 매일은 없음 |
+| 7 | 주기별 입력 | `<!-- 매월: 날짜 스테퍼(1~31). 특정 요일·매주는 이 자리에 요일 원형 버튼 7개 -->` | `ios/PocketAide/Routines/RoutineSheets.swift` | `case .weekdays, .weekly: weekdayPicker case .monthly: monthDayStepper` | 일치 | 세그먼트 아래 같은 자리 — 매월은 날짜 스테퍼(1~31), 특정 요일·매주는 요일 버튼 7개(「루틴 추가 — 특정 요일」 프레임), 매일은 없음 |
 | 8 | 단계 라벨 | `<div class="text-[12px] font-bold opacity-70">단계</div>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `label("단계")` | 일치 | 반복 주기 구역 아래 |
 | 9 | 단계 행 | `placeholder="단계 이름"` | `ios/PocketAide/Routines/RoutineSheets.swift` | `TextField("단계 이름", text: $steps[index])` | 일치 | 번호 왼쪽 · 이름 입력 오른쪽, 처음에 빈 행 하나 |
 | 10 | 단계 추가(인라인) | `<button class="flex items-center gap-1 text-[12px] font-semibold text-[var(--forest)]">` | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: DesignTokens.Spacing.xs) { Image(systemName: "plus") Text("단계 추가") }` | 일치 | 단계 행들 아래 — 더하기 글리프 + 글자 |

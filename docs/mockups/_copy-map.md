@@ -50,7 +50,7 @@ last_updated: 2026-10-05
 | B | 일치 | 159 |
 | B | 외부 | 33 |
 | B | 예시 데이터 | 98 |
-| B | 목업 전용 | 101 |
+| B | 목업 전용 | 102 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 50 |
@@ -220,7 +220,7 @@ last_updated: 2026-10-05
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 455행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 456행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -510,13 +510,13 @@ last_updated: 2026-10-05
 | `screen-routines` | `주간 회고` | 예시 데이터 | 루틴 이름(사용자 데이터) |
 | `screen-routines` | `매주 일요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주기 요약 `RoutineWeekdays.summary` 「매주 \(symbols[day])요일」 — 구현은 쉬는 루틴 행 메타에 그린다 |
 | `screen-routines` | `D-4` | 구현 대기 | 다음 예정일까지 남은 날 — 구현 쉬는 루틴 행에 없다 |
-| `screen-routines` | `월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
-| `screen-routines` | `화` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
-| `screen-routines` | `수` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
-| `screen-routines` | `목` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
-| `screen-routines` | `금` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
-| `screen-routines` | `토` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
-| `screen-routines` | `일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) |
+| `screen-routines` | `월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
+| `screen-routines` | `화` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
+| `screen-routines` | `수` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
+| `screen-routines` | `목` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
+| `screen-routines` | `금` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
+| `screen-routines` | `토` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
+| `screen-routines` | `일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
 | `screen-routines` | `아침 루틴 · 30일` | 일치 | history strip 제목 — 구현 이력 시트 제목 「\(routine.name) · \(days.count)일」(표 A 같은 행) |
 | `screen-routines` | `전체 이력` | 구현 대기 | history strip 이력 진입 버튼 — 구현은 카드 하단 「이력」 버튼(표 A 같은 행) |
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
@@ -542,6 +542,7 @@ last_updated: 2026-10-05
 | `screen-routines` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션(`RoutineSheets.swift`) |
 | `screen-routines` | `저장` | 일치 | 루틴 추가 프레임 1차 액션(`RoutineSheets.swift`) |
 | `screen-routines` | `취소` | 일치 | 루틴 추가 프레임 2차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `루틴 추가 — 특정 요일` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `단계 추가 — 루틴 카드에서` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `아침 루틴 · 단계` | 일치 | 단계 추가 프레임 시트 제목 「\(routine.name) · 단계」(`RoutineSheets.swift`) |
 | `screen-routines` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder(`RoutineSheets.swift`) |
