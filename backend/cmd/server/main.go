@@ -144,9 +144,8 @@ func main() {
 			}
 		}
 		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
-			// PRD-10 AC6: blacklist match — every user who hasn't excluded
-			// this repo gets a row + push. Done outside the transaction so
-			// the tx scope is just the writes (keeps SQLite locking tight).
+			// Looked up outside InsertBatchTx so the transaction holds
+			// SQLite's write lock only for the inserts.
 			userIDs, err := excludedStore.ListUserIDsExcluding(ctx, evt.Repo)
 			if err != nil {
 				return fmt.Errorf("list matched users: %w", err)
@@ -156,8 +155,7 @@ func main() {
 				return nil
 			}
 
-			// PRD-10 AC11: persist history *before* pushing. All-or-nothing
-			// across users so SQS retry sees a clean state on failure.
+			// PRD-10 AC11: history must be persisted before any push goes out.
 			historyEvt := notificationhistory.Event{
 				RepoFullName: evt.Repo,
 				PRNumber:     evt.PRNumber,
@@ -185,9 +183,8 @@ func main() {
 				return nil
 			}
 
-			// Best-effort APNs fan-out. A failed push for one user does not
-			// block other users; the history row is already persisted so
-			// the user will still see the unacked card on next app open.
+			// Push failures are logged, not returned: the history rows are
+			// already committed, so an SQS redelivery would insert them again.
 			title, body := formatPushText(evt)
 			for i, uid := range userIDs {
 				settings, err := settingsStore.Get(ctx, uid)
@@ -241,8 +238,6 @@ type config struct {
 
 	SessionPlatformURL string
 
-	// PR monitor pipeline. Disabled when SQS_QUEUE_URL is empty so local /
-	// test environments don't need APNs or SQS configured.
 	PRMonitorEnabled  bool
 	SQSQueueURL       string
 	AWSRoleARN        string
@@ -299,12 +294,12 @@ func mustEnv(k string) string {
 	return v
 }
 
-// safePrefix returns the first 8 chars of a token (or fewer) so log lines can
-// identify devices without leaking the full token.
 func shouldPush(evt githubwebhook.WorkflowRunEvent) bool {
 	return evt.Completed
 }
 
+// safePrefix returns the first 8 chars of a token (or fewer) so log lines can
+// identify devices without leaking the full token.
 func safePrefix(t string) string {
 	if len(t) <= 8 {
 		return t
@@ -312,15 +307,8 @@ func safePrefix(t string) string {
 	return t[:8]
 }
 
-// formatPushText builds the title/body shown by the iOS notification banner.
-// When a PR is linked we lead with "CI <result> — repo #N" + the PR title;
-// otherwise we fall back to "repo — <result>" + workflow/branch — the
-// workflow_run.pull_requests array is empty for runs triggered by a direct
-// push to a branch (e.g. main).
-//
-// For a requested (CI 시작) event evt.Conclusion holds the run status
-// (queued / in_progress) instead of a terminal conclusion, so those map to
-// the "CI 시작" verdict.
+// The PR-less fallback is not an edge case: GitHub leaves
+// workflow_run.pull_requests empty for runs triggered by a direct push (e.g. main).
 func formatPushText(evt githubwebhook.WorkflowRunEvent) (title, body string) {
 	verdict := "CI " + evt.Conclusion
 	switch evt.Conclusion {
@@ -345,9 +333,8 @@ func formatPushText(evt githubwebhook.WorkflowRunEvent) (title, body string) {
 	return
 }
 
-// loggerSkipping wraps middleware.Logger so that requests to the given paths
-// bypass access logging. Registered at the router root so unmatched routes
-// (404) are logged too.
+// Registered at the router root, not on a route group, so unmatched (404)
+// requests are still logged.
 func loggerSkipping(paths ...string) func(http.Handler) http.Handler {
 	skip := make(map[string]struct{}, len(paths))
 	for _, p := range paths {
