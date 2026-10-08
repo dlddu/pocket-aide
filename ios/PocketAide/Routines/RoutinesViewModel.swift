@@ -5,7 +5,7 @@ import PocketAideAPI
 final class RoutinesViewModel: ObservableObject {
     @Published private(set) var today: [RoutineDay] = []
     @Published private(set) var routines: [Routine] = []
-    @Published private(set) var dayKey: String = RoutineDayFormat.string(from: Date())
+    @Published private(set) var dayKey: String = RoutineDayFormat.string(from: RoutinesViewModel.launchToday())
     @Published private(set) var isLoading = false
     @Published var errorMessage: String?
 
@@ -33,6 +33,16 @@ final class RoutinesViewModel: ObservableObject {
         self.api = api
     }
 
+    // mock-exception: DET — 「오늘」은 기기 달력이 정하고 XCUITest 는 시뮬레이터 시계를 바꿀 수 없다; UI 테스트만 「오늘」로 쓸 날짜 값을 주입한다 (docs/e2e-mocking-policy.md)
+    nonisolated static func launchToday() -> Date {
+        let parts = (ProcessInfo.processInfo.environment["ROUTINES_TODAY"] ?? "").split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3,
+              let day = Calendar.current.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12)) else {
+            return Date()
+        }
+        return day
+    }
+
     func replaceAPI(_ client: APIClient) {
         self.api = client
     }
@@ -51,7 +61,7 @@ final class RoutinesViewModel: ObservableObject {
         isLoading = true
         clearFailure()
         defer { isLoading = false }
-        let key = RoutineDayFormat.string(from: Date())
+        let key = RoutineDayFormat.string(from: Self.launchToday())
         do {
             let all = try await api.listRoutines()
             let scheduled = try await api.listRoutines(on: key)

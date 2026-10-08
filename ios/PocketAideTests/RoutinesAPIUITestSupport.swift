@@ -53,6 +53,7 @@ extension BackendAPI {
         name: String,
         cadence: String,
         weekdays: Int = 0,
+        monthDay: Int = 0,
         startDay: Date,
         steps: [String],
         file: StaticString = #filePath,
@@ -62,7 +63,7 @@ extension BackendAPI {
             "name": name,
             "cadence": cadence,
             "weekdays": weekdays,
-            "month_day": 0,
+            "month_day": monthDay,
             "start_day": RoutineDays.key(startDay),
             "steps": steps
         ])
@@ -85,6 +86,16 @@ extension BackendAPI {
 
     func deleteRoutine(_ routine: SeededRoutine) {
         _ = call("DELETE", "/api/routines/\(routine.id)")
+    }
+
+    func removeAllRoutines(file: StaticString = #filePath, line: UInt = #line) {
+        let reply = call("GET", "/api/routines")
+        XCTAssertEqual(reply.status, 200, "GET /api/routines should list the routines: \(reply.text)", file: file, line: line)
+        for item in (reply.json?["items"] as? [[String: Any]]) ?? [] {
+            if let id = (item["id"] as? NSNumber)?.int64Value {
+                _ = call("DELETE", "/api/routines/\(id)")
+            }
+        }
     }
 }
 

@@ -51,13 +51,16 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `ios/PocketAide/PRMonitor/OpenPullRequestsViewModel.swift` | `processInfo.environment["GITHUB_API_BASE_URL"]` | `EXT` | `launchClient()` 가 이 프로세스 env 가 있을 때만 `GitHubClient(baseURL:)` 를 그 주소로 만든다 — 없으면 기존대로 `https://api.github.com`(운영 동작 불변). 바뀌는 것은 호스트뿐이고 요청 헤더 · 상태 분류 · GraphQL 해석 · 키체인 저장 · 시트 화면은 실경로다. 사유는 위 행과 같다. |
 | `ios/PocketAideTests/PRMonitorUITests.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시트를 여는 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
 | `ios/PocketAideTests/OpenPullRequestsUITestSupport.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시나리오 전용 파일(github-monitor 시나리오 1·2·4·5·10·11)이 공유하는 실행 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
+| `ios/PocketAide/Routines/RoutinesViewModel.swift` | `processInfo.environment["ROUTINES_TODAY"]` | `DET` | 루틴 탭의 「오늘」(서버에 보내는 날짜 키와 머리 날짜 표시)은 기기 달력이 정하고, 서버는 그 날짜 문자열로 요일·일자를 판정해 「오늘」·「오늘 쉬는 루틴」 섹션을 가른다. XCUITest 는 시뮬레이터 시계를 바꿀 수 없어 「고른 요일이 된 날」·「31일 → 짧은 달의 말일」 같은 결과를 결정적으로 만들 수 없다. `launchToday()` 가 이 프로세스 env(`yyyy-MM-dd`)가 있을 때만 그 날을 「오늘」로 쓴다 — 없으면 기기 달력(운영 동작 불변). 바뀌는 것은 날짜 값뿐이고 API 호출 · 서버 판정 · 섹션 화면은 실경로다. 그 값에 기대는 단정은 `RoutineScheduleDayUITests.swift`(`test-routines.md#시나리오 4`)다. |
+| `ios/PocketAideTests/RoutineScheduleDayUITests.swift` | `launchEnvironment["ROUTINES_TODAY"]` | `DET` | 고정 날짜 셋(2026-09-28 · 2026-09-30 · 2027-02-28)으로 앱을 다시 띄워 그 날의 섹션을 단정한다. 사유는 위 행과 같다. |
 
-각 행의 파일에는 `mock-exception: EXT` 주석이 함께 있다(표기 규약). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
+각 행의 파일에는 그 행의 카테고리로 `mock-exception:` 주석이 함께 있다(표기 규약 — `DET` 두 행 외에는 모두 `EXT`). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
 계정·테넌트가 마련되면 `oidcmock` 일곱 행 모두 실 상류로 대체하고 지운다. `APNS_DISABLED` 행은 차단 요인 BF-2
 (푸시 수신) 해소 때 재판정해 **유지**했다 — 백엔드의 실 발송은 여전히 Apple 인증키(.p8)를 요구하고, 수신 이후는
 `simctl push` 행이 실경로로 연다. 두 APNs 행은 CI 시크릿으로 쓸 수 있는 APNs 인증키가 마련되면 함께 실 발송으로 대체하고 지운다.
 GitHub API 스텁 다섯 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
 (차단 요인 BF-3 해소 때 원장이 정한 해소 방향의 둘째 갈래 — 첫째 갈래의 선행이 사람의 계정 가입이라 이 갈래로 닫았다).
+`ROUTINES_TODAY` 두 행(`DET`)은 「오늘」 값에 기대는 E2E 단정이 사라지면(시나리오 4 가 예외·삭제로 옮겨지면) 함께 지운다.
 
 `APNS_DISABLED` 는 `tbm_pocket-aide-e2e-mock-policy` 의 as-is 지문 패턴(`oidcmock`·`launchEnvironment`·가짜 자격증명
 리터럴·`mock-exception:`)에 들지 않는 토큰이다. 그 행의 코드 지점은 `ios-test.yml` 의 `APNS_DISABLED:` 줄과 그 직전
