@@ -36,9 +36,9 @@ struct AffirmationsView: View {
                 List {
                     Section {
                         heroSection
-                            .padding(.bottom, DesignTokens.Spacing.lg)
+                            .padding(.bottom, DesignTokens.Spacing.xl)
                             .listRowInsets(EdgeInsets(
-                                top: 0,
+                                top: DesignTokens.Spacing.sm,
                                 leading: DesignTokens.Spacing.xl,
                                 bottom: 0,
                                 trailing: DesignTokens.Spacing.xl
@@ -95,80 +95,15 @@ struct AffirmationsView: View {
     }
 
     @ViewBuilder
-    private var heroSection: some View {
-        if let hero = viewModel.heroItem {
-            Card(area: .affirmations, padding: .large) {
-                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(DesignTokens.Color.accent(.affirmations))
-                            .frame(width: 6, height: 6)
-                        AreaLabel(area: .affirmations, text: "오늘 회전")
-                    }
-                    Text(hero.text)
-                        .font(DesignTokens.Typography.font(size: 22, weight: .medium, family: .serif))
-                        .foregroundStyle(DesignTokens.Color.ink(.affirmations))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("affirmations.hero.text")
-                    Divider().background(DesignTokens.Color.rule(.affirmations))
-                    HStack(spacing: 6) {
-                        PriorityDots.horizontal(for: hero.priority)
-                        Text("우선순위 \(hero.priority.displayName)")
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
-                            .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
-                    }
-                    HStack {
-                        Spacer()
-                        Button {
-                            viewModel.rotateHero()
-                        } label: {
-                            Label("다른 다짐 보기", systemImage: "arrow.triangle.2.circlepath")
-                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
-                                .foregroundStyle(DesignTokens.Color.accent(.affirmations))
-                        }
-                        .accessibilityIdentifier("affirmations.hero.rotate")
-                    }
-                }
-                .background(alignment: .topLeading) {
-                    Text("\"")
-                        .font(DesignTokens.Typography.font(size: 120, family: .serif))
-                        .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.08))
-                        .offset(x: -36, y: -36)
-                        .accessibilityHidden(true)
-                }
-            }
-            .accessibilityIdentifier("affirmations.hero.card")
-        } else if viewModel.isLoading {
-            Card(area: .affirmations) {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, DesignTokens.Spacing.xl)
-            }
-        } else {
-            Card(area: .affirmations, padding: .large) {
-                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                    Text("첫 다짐을 추가해 보세요")
-                        .font(DesignTokens.Typography.font(size: 18, weight: .bold, family: .serif))
-                        .foregroundStyle(DesignTokens.Color.ink(.affirmations))
-                    Text("우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.")
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
-                        .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
-                }
-            }
-            .accessibilityIdentifier("affirmations.empty.state")
-        }
-    }
-
-    @ViewBuilder
     private var listSection: some View {
         if !viewModel.items.isEmpty {
             Section {
                 ForEach(viewModel.items) { item in
                     listRow(for: item)
                         .listRowInsets(EdgeInsets(
-                            top: DesignTokens.Spacing.xs,
+                            top: DesignTokens.Spacing.sm / 2,
                             leading: DesignTokens.Spacing.xl,
-                            bottom: DesignTokens.Spacing.xs,
+                            bottom: DesignTokens.Spacing.sm / 2,
                             trailing: DesignTokens.Spacing.xl
                         ))
                         .listRowSeparator(.hidden)
@@ -206,7 +141,7 @@ struct AffirmationsView: View {
                     .listRowInsets(EdgeInsets(
                         top: DesignTokens.Spacing.xl,
                         leading: DesignTokens.Spacing.xl,
-                        bottom: DesignTokens.Spacing.xl,
+                        bottom: DesignTokens.Spacing.xxl,
                         trailing: DesignTokens.Spacing.xl
                     ))
                     .listRowSeparator(.hidden)
@@ -244,6 +179,7 @@ struct AffirmationsView: View {
                 PriorityDots.vertical(for: item.priority)
                 Text(item.text)
                     .font(DesignTokens.Typography.font(size: 15.5, family: .serif))
+                    .lineHeight(.multiple(factor: 1.375))
                     .foregroundStyle(DesignTokens.Color.ink(.affirmations))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -257,6 +193,96 @@ struct AffirmationsView: View {
 
 }
 
+private extension AffirmationsView {
+    @ViewBuilder
+    var heroSection: some View {
+        if let hero = viewModel.heroItem {
+            Card(area: .affirmations, padding: .large) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: DesignTokens.Spacing.sm) {
+                        Circle()
+                            .fill(DesignTokens.Color.accent(.affirmations))
+                            .frame(width: 6, height: 6)
+                        Text("오늘 회전")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))
+                            .textCase(.uppercase)
+                            .tracking(2.2)
+                            .foregroundStyle(DesignTokens.Color.accent(.affirmations))
+                    }
+                    .padding(.bottom, DesignTokens.Spacing.md)
+                    Text(hero.text)
+                        .font(DesignTokens.Typography.font(size: 22, weight: .medium, family: .serif))
+                        .lineHeight(.multiple(factor: 1.45))
+                        .foregroundStyle(DesignTokens.Color.ink(.affirmations))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("affirmations.hero.text")
+                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                        let priorityValue = Text(hero.priority.displayName).bold().foregroundStyle(DesignTokens.Color.ink(.affirmations))
+                        Text("우선순위 \(priorityValue)")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                            .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
+                        HStack {
+                            Spacer()
+                            Button {
+                                viewModel.rotateHero()
+                            } label: {
+                                HStack(spacing: DesignTokens.Spacing.xs) {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .font(.system(size: 12, weight: .semibold))
+                                    Text("다른 다짐 보기")
+                                }
+                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                                .foregroundStyle(DesignTokens.Color.accent(.affirmations))
+                            }
+                            .accessibilityIdentifier("affirmations.hero.rotate")
+                        }
+                    }
+                    .padding(.top, DesignTokens.Spacing.xl)
+                    .overlay(alignment: .top) {
+                        Rectangle()
+                            .fill(DesignTokens.Color.rule(.affirmations))
+                            .frame(height: 1)
+                    }
+                    .padding(.top, DesignTokens.Spacing.xl)
+                }
+            }
+            .overlay {
+                Text("\"")
+                    .font(DesignTokens.Typography.font(size: 120, family: .serif))
+                    .lineHeight(.multiple(factor: 1))
+                    .foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.08))
+                    .fixedSize()
+                    .padding(.leading, -12)
+                    .padding(.top, -12)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+            .accessibilityIdentifier("affirmations.hero.card")
+        } else if viewModel.isLoading {
+            Card(area: .affirmations) {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.xl)
+            }
+        } else {
+            Card(area: .affirmations, padding: .large) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                    Text("첫 다짐을 추가해 보세요")
+                        .font(DesignTokens.Typography.font(size: 18, weight: .bold, family: .serif))
+                        .foregroundStyle(DesignTokens.Color.ink(.affirmations))
+                    Text("우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.")
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                        .lineHeight(.multiple(factor: 1.625))
+                        .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))
+                }
+            }
+            .accessibilityIdentifier("affirmations.empty.state")
+        }
+    }
+}
+
 private enum PriorityDots {
     static func filled(_ priority: AffirmationPriority) -> Int {
         switch priority {
@@ -267,10 +293,10 @@ private enum PriorityDots {
     }
 
     static func horizontal(for priority: AffirmationPriority) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 6) {
             ForEach(0..<3, id: \.self) { idx in
                 Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.25))
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.3))
                     .frame(width: 6, height: 6)
             }
         }
@@ -280,7 +306,7 @@ private enum PriorityDots {
         VStack(spacing: 2) {
             ForEach(0..<3, id: \.self) { idx in
                 Circle()
-                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.25))
+                    .fill(DesignTokens.Color.accent(.affirmations).opacity(idx < filled(priority) ? 1 : 0.3))
                     .frame(width: 6, height: 6)
             }
         }

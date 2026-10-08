@@ -61,7 +61,7 @@ last_updated: 2026-10-08
 |---|---|---|---|
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `오늘 회전` | 구현 대기 | 목업 히어로 라벨은 「오늘 회전 · 1/14」 — 회전 위치(n/전체)가 없다(표 B 같은 행) |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(hero.priority.displayName)` | 일치 | 히어로 메타 「우선순위 높음」. 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(priorityValue)` | 일치 | 히어로 메타 「우선순위 높음」(값 「높음」은 굵은 ink `Text` 를 끼운 보간). 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `\"` | 일치 | 히어로 카드 장식 인용부호 — 카드 좌상단 serif 120 글리프(U+0022, 목업과 같은 문자) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨 — 목록 프레임 히어로 카드 하단 우측(자동 회전 AC3 과 별개인 수동 회전) |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
