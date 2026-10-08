@@ -19,6 +19,7 @@ struct RoutineAddSheet: View {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                     Text("새 루틴")
                         .font(DesignTokens.Typography.font(size: 18, weight: .bold))
+                        .tracking(-0.5)
                         .foregroundStyle(DesignTokens.Color.ink(.routines))
                         .padding(.top, 8)
                         .accessibilityIdentifier("routines.sheet.title")
@@ -57,10 +58,7 @@ struct RoutineAddSheet: View {
             case .weekdays, .weekly:
                 weekdayPicker
             case .monthly:
-                Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
-                    .foregroundStyle(DesignTokens.Color.ink(.routines))
-                    .accessibilityIdentifier("routines.sheet.monthday.stepper")
+                monthDayStepper
             }
         }
         .onChange(of: cadence) { _, newValue in
@@ -90,6 +88,43 @@ struct RoutineAddSheet: View {
         }
     }
 
+    private var monthDayLabel: String {
+        "매월 \(monthDay)일"
+    }
+
+    private var monthDayStepper: some View {
+        HStack {
+            Text(monthDayLabel)
+            Spacer()
+            HStack(spacing: 0) {
+                stepperCell(Image(systemName: "minus"), enabled: monthDay > 1) { monthDay -= 1 }
+                stepperCell(Image(systemName: "plus"), enabled: monthDay < 31) { monthDay += 1 }
+                    .overlay(alignment: .leading) {
+                        Rectangle().fill(DesignTokens.Color.rule(.routines)).frame(width: 1)
+                    }
+            }
+            .background(DesignTokens.Color.soft(.routines))
+            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .accessibilityRepresentation {
+                Stepper(monthDayLabel, value: $monthDay, in: 1...31)
+            }
+            .accessibilityIdentifier("routines.sheet.monthday.stepper")
+        }
+        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
+        .foregroundStyle(DesignTokens.Color.ink(.routines))
+    }
+
+    private func stepperCell(_ glyph: Image, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            glyph
+                .frame(width: 44, height: 32)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.4)
+    }
+
     private var stepsSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
             label("단계")
@@ -112,9 +147,12 @@ struct RoutineAddSheet: View {
             Button {
                 steps.append("")
             } label: {
-                Label("단계 추가", systemImage: "plus")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
-                    .foregroundStyle(DesignTokens.Color.accent(.routines))
+                HStack(spacing: DesignTokens.Spacing.xs) {
+                    Image(systemName: "plus")
+                    Text("단계 추가")
+                }
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
+                .foregroundStyle(DesignTokens.Color.accent(.routines))
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("routines.sheet.step.add.button")
@@ -204,6 +242,7 @@ struct RoutineStepAddSheet: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 Text("\(routine.name) · 단계")
                     .font(DesignTokens.Typography.font(size: 18, weight: .bold))
+                    .tracking(-0.5)
                     .foregroundStyle(DesignTokens.Color.ink(.routines))
                     .padding(.top, 8)
                     .accessibilityIdentifier("routines.steps.sheet.title")
