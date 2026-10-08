@@ -50,7 +50,7 @@ last_updated: 2026-10-08
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
-남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 25행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 22행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -68,9 +68,9 @@ last_updated: 2026-10-08
 | `screen-routines` | M | 목업 대기 | 0 |
 | `screen-routines` | S | 일치 | 18 |
 | `screen-routines` | S | 불일치 | 0 |
-| `screen-affirmations` | M | 일치 | 119 |
+| `screen-affirmations` | M | 일치 | 122 |
 | `screen-affirmations` | M | 기본값 일치 | 1 |
-| `screen-affirmations` | M | 불일치 | 25 |
+| `screen-affirmations` | M | 불일치 | 22 |
 | `screen-affirmations` | M | 허용 | 8 |
 | `screen-affirmations` | M | 목업 대기 | 0 |
 | `screen-affirmations` | S | 일치 | 14 |
@@ -404,7 +404,7 @@ last_updated: 2026-10-08
 | 요소 | 목업 선택 인용 |
 |---|---|
 | ScreenHeader | `absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-20 flex items-end justify-between` |
-| 영역 라벨(헤더) | `text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-semibold` |
+| 영역 라벨(헤더) | `text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold` |
 | 제목 | `text-[24px] font-bold tracking-tight serif mt-0.5` |
 | 추가 버튼 | `w-9 h-9 rounded-full border border-[var(--rule)] grid place-items-center bg-white/40` |
 | 추가 글리프 | `style=width:14px;height:14px` |
@@ -455,15 +455,15 @@ last_updated: 2026-10-08
 | ScreenHeader | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
 | ScreenHeader | `pb-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.bottom, DesignTokens.Spacing.sm)` | 8 | 일치 | 헤더 아래 여백 = `Spacing.sm` |
 | 영역 라벨(헤더) | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | 11 | 일치 | `AreaLabel` 크기 = `captionXs` |
-| 영역 라벨(헤더) | `font-semibold` | semibold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 불일치 | `AreaLabel` 굵기 — 목업 헤더 라벨 600, 구현·`tokens.md` §3.4 700(목업이 화면마다 600/700 으로 갈린다 — 우선순위 시트 빈도 라벨은 `font-bold`) |
+| 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | `AreaLabel` 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) — 목업 헤더 라벨을 600 에서 토큰 규칙으로 맞췄다(PERSONAL·WORK·PR·APPROVAL·노출 빈도 라벨과 같은 값) |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
 | 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(2.4)` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42, 0.1pt 단위로 2.4 |
 | 영역 라벨(헤더) | `text-[var(--tan)]` | #8B6F47 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #8B6F47 | 일치 | 라벨 색 = 영역 accent(tan) |
 | 제목 | `text-[24px]` | 24 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: 24, weight: .bold, family: titleFamily` | 24 | 일치 | 화면 제목 크기 |
 | 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: 24, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
-| 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.01 * 24)` | -0.01em | 불일치 | 제목 자간 — 목업 −0.025em(× 24 = −0.6), 구현 −0.01em(× 24 = −0.24) |
+| 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * 24)` | -0.025em | 일치 | 제목 자간 −0.025em(× 24 = −0.6) — `ScreenHeader` 를 쓰는 화면 목업 h1 이 모두 `tracking-tight` |
 | 제목 | `serif` | serif | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ScreenHeader(area: .affirmations, title: "자주 읽어줘야 할 것", titleFamily: .serif)` | serif | 일치 | 다짐 화면 제목은 serif |
-| 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 4)` | 4 | 불일치 | 라벨 ↔ 제목 간격 — 목업 2, 구현 4 |
+| 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 라벨 ↔ 제목 간격 |
 | 추가 버튼 | `w-9` | 36 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.frame(width: 36, height: 36)` | 36 | 일치 | 버튼 너비 |
 | 추가 버튼 | `h-9` | 36 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.frame(width: 36, height: 36)` | 36 | 일치 | 버튼 높이 |
 | 추가 버튼 | `rounded-full` | full | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.clipShape(Circle())` | full | 일치 | 원형 |
@@ -611,7 +611,7 @@ last_updated: 2026-10-08
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-semibold">다짐</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold">다짐</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area)` | 일치 | 헤더 맨 위 — 영역 이름 |
 | 2 | 화면 제목 | `자주 읽어줘야 할 것</h1>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ScreenHeader(area: .affirmations, title: "자주 읽어줘야 할 것", titleFamily: .serif)` | 일치 | 라벨 아래 |
 | 3 | 추가 버튼 | `<button class="w-9 h-9 rounded-full border border-[var(--rule)] grid place-items-center bg-white/40">` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `sheetMode = .create` | 일치 | 헤더 오른쪽 끝 — 원형 더하기 |
 | 4 | 히어로 카드 | `<!-- HERO: rotating affirmation -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `if let hero = viewModel.heroItem {` | 일치 | 본문 맨 위 |
