@@ -7,6 +7,7 @@ struct AffirmationsView: View {
     @StateObject private var viewModel: AffirmationsViewModel
 
     @State private var sheetMode: PriorityEditSheet.Mode?
+    @State private var sortOrder: AffirmationSortOrder = .priority
 
     init() {
         _viewModel = StateObject(wrappedValue: AffirmationsViewModel(api: nil))
@@ -98,7 +99,7 @@ struct AffirmationsView: View {
     private var listSection: some View {
         if !viewModel.items.isEmpty {
             Section {
-                ForEach(viewModel.items) { item in
+                ForEach(sortOrder.sorted(viewModel.items)) { item in
                     listRow(for: item)
                         .listRowInsets(EdgeInsets(
                             top: DesignTokens.Spacing.sm / 2,
@@ -124,6 +125,7 @@ struct AffirmationsView: View {
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .bold))
                         .foregroundStyle(DesignTokens.Color.ink(.affirmations))
                     Spacer()
+                    sortChips
                 }
                 .textCase(nil)
                 .listRowInsets(EdgeInsets(
@@ -147,6 +149,34 @@ struct AffirmationsView: View {
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
             }
+        }
+    }
+
+    private var sortChips: some View {
+        HStack(spacing: 6) {
+            ForEach(AffirmationSortOrder.allCases, id: \.self) { order in
+                let selected = order == sortOrder
+                Button {
+                    sortOrder = order
+                } label: {
+                    Text(sortLabel(order))
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: selected ? .bold : .regular))
+                        .foregroundStyle(selected ? DesignTokens.Color.ink(.affirmations) : DesignTokens.Color.ink(.affirmations).opacity(0.55))
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, 2)
+                        .background(Capsule(style: .continuous).fill(selected ? DesignTokens.Color.soft(.affirmations) : Color.clear))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("affirmations.sort.\(order.rawValue)")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+    }
+
+    private func sortLabel(_ order: AffirmationSortOrder) -> String {
+        switch order {
+        case .priority: return "우선순위 순"
+        case .newest: return "최신순"
         }
     }
 

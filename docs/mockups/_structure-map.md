@@ -50,7 +50,7 @@ last_updated: 2026-10-08
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
-남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 19행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -68,13 +68,13 @@ last_updated: 2026-10-08
 | `screen-routines` | M | 목업 대기 | 0 |
 | `screen-routines` | S | 일치 | 18 |
 | `screen-routines` | S | 불일치 | 0 |
-| `screen-affirmations` | M | 일치 | 122 |
+| `screen-affirmations` | M | 일치 | 133 |
 | `screen-affirmations` | M | 기본값 일치 | 1 |
-| `screen-affirmations` | M | 불일치 | 19 |
-| `screen-affirmations` | M | 허용 | 11 |
+| `screen-affirmations` | M | 불일치 | 7 |
+| `screen-affirmations` | M | 허용 | 12 |
 | `screen-affirmations` | M | 목업 대기 | 0 |
-| `screen-affirmations` | S | 일치 | 14 |
-| `screen-affirmations` | S | 불일치 | 3 |
+| `screen-affirmations` | S | 일치 | 15 |
+| `screen-affirmations` | S | 불일치 | 2 |
 | `screen-affirmations` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
@@ -521,18 +521,18 @@ last_updated: 2026-10-08
 | 목록 머리 | `mb-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `top: 0, leading: DesignTokens.Spacing.xl, bottom: DesignTokens.Spacing.sm, trailing: DesignTokens.Spacing.xl` | 8 | 일치 | 목록 머리 ↔ 첫 행 간격 = 머리 인셋 아래 `Spacing.sm` |
 | 목록 제목 | `text-[14px]` | 14 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `size: DesignTokens.Typography.body, weight: .bold` | 14 | 일치 | 「전체 N개」 크기 = `body` |
 | 목록 제목 | `font-bold` | bold | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `size: DesignTokens.Typography.body, weight: .bold` | bold | 일치 | 「전체 N개」 굵기 |
-| 정렬 칩 줄 | `gap-1.5` | 6 | — | — | — | 불일치 | 정렬 칩 사이 간격 — 구현 목록 머리에 정렬 칩이 없다(표 S) |
-| 정렬 칩 줄 | `text-[11px]` | 11 | — | — | — | 불일치 | 정렬 칩 글자 크기 — 구현에 칩이 없다 |
-| 정렬 칩(선택) | `px-2` | 8 | — | — | — | 불일치 | 선택된 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(선택) | `py-0.5` | 2 | — | — | — | 불일치 | 선택된 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(선택) | `rounded-full` | full | — | — | — | 불일치 | 선택된 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(선택) | `bg-[var(--soft)]` | #EADCC2 | — | — | — | 불일치 | 선택된 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(선택) | `font-bold` | bold | — | — | — | 불일치 | 선택된 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(선택) | `text-[var(--ink)]` | #2E251A | — | — | — | 불일치 | 선택된 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(비선택) | `px-2` | 8 | — | — | — | 불일치 | 선택되지 않은 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(비선택) | `py-0.5` | 2 | — | — | — | 불일치 | 선택되지 않은 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(비선택) | `rounded-full` | full | — | — | — | 불일치 | 선택되지 않은 정렬 칩 — 구현에 칩이 없다 |
-| 정렬 칩(비선택) | `text-stone-500` | #78716C | — | — | — | 불일치 | 선택되지 않은 정렬 칩 — 구현에 칩이 없다 |
+| 정렬 칩 줄 | `gap-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `HStack(spacing: 6) { ForEach(AffirmationSortOrder.allCases` | 6 | 일치 | 정렬 칩 사이 간격 — 목록 머리 `Spacer()` 뒤 `sortChips` 스택 |
+| 정렬 칩 줄 | `text-[11px]` | 11 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `size: DesignTokens.Typography.captionXs, weight: selected ? .bold : .regular` | 11 | 일치 | 정렬 칩 글자 크기 = `captionXs`(목업은 칩 줄에, 구현은 칩마다) |
+| 정렬 칩(선택) | `px-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.padding(.horizontal, DesignTokens.Spacing.sm) .padding(.vertical, 2)` | 8 | 일치 | 칩 가로 안쪽 여백 = `Spacing.sm`(선택·비선택 공통 수식) |
+| 정렬 칩(선택) | `py-0.5` | 2 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.padding(.horizontal, DesignTokens.Spacing.sm) .padding(.vertical, 2)` | 2 | 일치 | 칩 세로 안쪽 여백 2 |
+| 정렬 칩(선택) | `rounded-full` | full | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.background(Capsule(style: .continuous).fill(selected ? DesignTokens.Color.soft(.affirmations) : Color.clear))` | full | 일치 | 칩 모양 = `Capsule` |
+| 정렬 칩(선택) | `bg-[var(--soft)]` | #EADCC2 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.background(Capsule(style: .continuous).fill(selected ? DesignTokens.Color.soft(.affirmations) : Color.clear))` | #EADCC2 | 일치 | 선택된 칩 배경 = 영역 soft(비선택은 투명) |
+| 정렬 칩(선택) | `font-bold` | bold | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `size: DesignTokens.Typography.captionXs, weight: selected ? .bold : .regular` | bold | 일치 | 선택된 칩만 굵게(비선택은 기본 굵기 — 목업 비선택 칩에 굵기 클래스 없음) |
+| 정렬 칩(선택) | `text-[var(--ink)]` | #2E251A | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.foregroundStyle(selected ? DesignTokens.Color.ink(.affirmations) : DesignTokens.Color.ink(.affirmations).opacity(0.55))` | #2E251A | 일치 | 선택된 칩 글자 색 = 영역 ink |
+| 정렬 칩(비선택) | `px-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.padding(.horizontal, DesignTokens.Spacing.sm) .padding(.vertical, 2)` | 8 | 일치 | 칩 가로 안쪽 여백 = `Spacing.sm`(선택 칩과 같은 수식) |
+| 정렬 칩(비선택) | `py-0.5` | 2 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.padding(.horizontal, DesignTokens.Spacing.sm) .padding(.vertical, 2)` | 2 | 일치 | 칩 세로 안쪽 여백 2 |
+| 정렬 칩(비선택) | `rounded-full` | full | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.background(Capsule(style: .continuous).fill(selected ? DesignTokens.Color.soft(.affirmations) : Color.clear))` | full | 일치 | 칩 모양 = `Capsule`(비선택은 채움 투명) |
+| 정렬 칩(비선택) | `text-stone-500` | #78716C | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.foregroundStyle(selected ? DesignTokens.Color.ink(.affirmations) : DesignTokens.Color.ink(.affirmations).opacity(0.55))` | #2E251A/0.55 | 허용 S5 | 비선택 칩 글자 색 — 목업 stone-500, 구현 영역 ink 55%(다크 목업은 같은 자리를 `#BFA890`) |
 | 목록 | `space-y-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `top: DesignTokens.Spacing.sm / 2, leading: DesignTokens.Spacing.xl, bottom: DesignTokens.Spacing.sm / 2, trailing: DesignTokens.Spacing.xl` | 8 | 일치 | 행 사이 간격 = `Spacing.sm`(인접 행의 인셋 위·아래 `sm / 2` 씩 — 투두 목록 `cardGap / 2`(#128) 선례) |
 | 목록 행 카드 | `bg-white` | #FFFFFF | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `.background(DesignTokens.Color.card(area))` | #FFFFFF | 일치 | 목록 행 카드 배경 = 영역 card |
 | 목록 행 카드 | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area), lineWidth: emphasized ? 2 : 1` | 1 | 일치 | 목록 행 카드 외곽선 두께(강조 아님) |
@@ -621,8 +621,8 @@ last_updated: 2026-10-08
 | 8 | 히어로 메타 글자 | `우선순위 <span class="font-bold text-[var(--ink)]">높음</span>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우선순위 \(priorityValue)")` | 일치 | 구분선 아래 — 우선순위 값만 굵은 ink(구현은 메타 글자 앞 점 묶음 없이 글자만 — 목업과 같다) |
 | 9 | 다른 다짐 보기 | `다른 다짐 보기` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `viewModel.rotateHero()` | 일치 | 카드 맨 아래 오른쪽 |
 | 10 | 목록 머리 | `전체 14개</h2>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("전체 \(viewModel.items.count)개")` | 일치 | 히어로 아래 왼쪽 |
-| 11 | 정렬 칩 | `우선순위 순</button>` | — | — | 불일치 | 목업 목록 머리 오른쪽에 정렬 칩 둘(우선순위 순 · 최신순) — 구현 머리는 「전체 N개」 + `Spacer()` 뿐 |
-| 12 | 목록 행 | `<!-- priority dots: high -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `listRow(for: item)` | 일치 | 점 세로 묶음 왼쪽 · 문장 오른쪽, 우선순위 순 |
+| 11 | 정렬 칩 | `우선순위 순</button>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Spacer() sortChips` | 일치 | 목록 머리 오른쪽에 정렬 칩 둘(우선순위 순 · 최신순) — 「우선순위 순」이 기본 선택 |
+| 12 | 목록 행 | `<!-- priority dots: high -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ForEach(sortOrder.sorted(viewModel.items))` | 일치 | 점 세로 묶음 왼쪽 · 문장 오른쪽, 기본 우선순위 순(높음 → 보통 → 가끔, 동률은 최신 먼저 — `AffirmationSortOrder`) |
 | 13 | 이동 출처 줄 | `임시공간에서 이동 · 어제 22:51</div>` | — | — | 불일치 | 목업 행은 임시공간에서 옮긴 다짐에 점선 아래 출처 줄을 단다 — 구현 행은 문장만 |
 | 14 | 스와이프 삭제 | `<!-- 스와이프된 행` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 「삭제」 |
 | 15 | 범례 | `<!-- legend -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `priorityLegend` | 일치 | 목록 아래 — 자주 노출 · 보통 · 가끔 |
