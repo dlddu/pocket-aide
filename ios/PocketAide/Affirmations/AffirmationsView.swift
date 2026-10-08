@@ -230,9 +230,7 @@ private extension AffirmationsView {
             Card(area: .affirmations, padding: .large) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: DesignTokens.Spacing.sm) {
-                        Circle()
-                            .fill(DesignTokens.Color.accent(.affirmations))
-                            .frame(width: 6, height: 6)
+                        RotationPulseDot()
                         Text("오늘 회전")
                             .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))
                             .textCase(.uppercase)
@@ -341,5 +339,18 @@ private enum PriorityDots {
             }
         }
         .padding(.top, 4)
+    }
+}
+
+private struct RotationPulseDot: View {
+    @State private var isDimmed = false
+
+    var body: some View {
+        Circle()
+            .fill(DesignTokens.Color.accent(.affirmations))
+            .frame(width: 6, height: 6)
+            .opacity(isDimmed ? 0.5 : 1)
+            .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: isDimmed)
+            .onAppear { isDimmed = true }
     }
 }
