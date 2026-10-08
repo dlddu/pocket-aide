@@ -17,7 +17,7 @@
 | 2026-10-04 | `.github/actions/start-test-sqs/action.yml` | 1 | `4a8622eeb479` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-10-04-test-sqs-action.md) |
 | 2026-10-04 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 74 | `becfd0de51ce` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| — | `backend/cmd/server/main.go` | 30 | `9d2f9280af56` | — | 미판정 |
+| 2026-10-08 | `backend/cmd/server/main.go` | 17 | `9600452f468b` | 완료 | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/apns/client.go`, `backend/internal/apns/client_test.go` | 17 | `a268892ac7fb` | 완료 | 필요성 판정 — 제거 3줄 · 유지 17줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/auth/middleware.go` | 13 | `2cf46a05430f` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -34,7 +34,7 @@
 | 2026-09-29 | `backend/internal/oidcmock/oidcmock.go` | 17 | `dc59f9ab7528` | 완료 | 필요성 판정 — 제거 4줄 · 유지 17줄(개작 4블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-04 | `backend/internal/routines/store.go` | 3 | `49861c75fd62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-10-01 | `backend/internal/scratchpad/store.go` | 20 | `61dc59d49236` | 완료 | 필요성 판정 — 제거 3줄 · 유지 20줄 — [상세](passes/2026-10-01-scratchpad.md) |
-| — | `backend/internal/sessions/store.go` | 1 | `54a62f1c49b2` | — | 미판정 |
+| 2026-10-08 | `backend/internal/sessions/store.go` | 1 | `54a62f1c49b2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-10-08-server-main-sessions.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 24줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/migrations/0007_todos.up.sql` | 3 | `b37ba16e4205` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
