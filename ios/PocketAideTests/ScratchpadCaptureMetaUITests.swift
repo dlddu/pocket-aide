@@ -24,7 +24,7 @@ final class ScratchpadCaptureMetaUITests: XCTestCase {
 
     func testMetaLinesAndDaySectionsFollowCaptureTimeAndSource() throws {
         ScratchpadCapture.waitPastMidnight()
-        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token from oidcmock")
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token from the test IdP")
         api.clearScratchpad()
 
         let token = TodoUI.uniqueToken()
