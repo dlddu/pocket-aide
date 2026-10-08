@@ -52,7 +52,7 @@ last_updated: 2026-10-08
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 두 프레임): 표 M `불일치` 77행 · `목업 대기` 0행, 표 S `불일치` 8행 · `목업 대기` 2행.
+남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 두 프레임): 표 M `불일치` 64행 · `목업 대기` 0행, 표 S `불일치` 8행 · `목업 대기` 2행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -80,8 +80,8 @@ last_updated: 2026-10-08
 | `screen-affirmations` | S | 목업 대기 | 0 |
 | `screen-scratchpad` | M | 일치 | 39 |
 | `screen-scratchpad` | M | 기본값 일치 | 1 |
-| `screen-scratchpad` | M | 불일치 | 77 |
-| `screen-scratchpad` | M | 허용 | 0 |
+| `screen-scratchpad` | M | 불일치 | 64 |
+| `screen-scratchpad` | M | 허용 | 13 |
 | `screen-scratchpad` | M | 목업 대기 | 0 |
 | `screen-scratchpad` | S | 일치 | 6 |
 | `screen-scratchpad` | S | 불일치 | 8 |
@@ -705,7 +705,7 @@ last_updated: 2026-10-08
 | 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 라벨 ↔ 제목 간격 |
 | 제목 | `font-family:'SF Pro Display',serif` | sans | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `titleFamily: DesignTokens.Typography.Family = .sans` | sans | 일치 | 제목 서체 — 목업 체인 1순위 `SF Pro Display` 는 iOS 시스템 sans(뒤의 `serif` 는 폴백), 구현 기본 `titleFamily` `.sans`(`.system`, 허용 `T3`) |
 | 부제 | `text-[12px]` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | 12 | 일치 | 부제 크기 = `captionSm` |
-| 부제 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | #2A2723/0.55 | 불일치 | 부제 색 — 목업 stone, 구현 영역 ink 투명도(다짐 탭 `S5` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 부제 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | #2A2723/0.55 | 허용 S5 | 부제 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 임시공간 다크 톤 `#BFAE91` 로 그린다) |
 | 부제 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 제목 ↔ 부제 간격 |
 | 새 메모 버튼 | `bg-[var(--ink)]` | #2A2723 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, 12) .background(DesignTokens.Color.card(.scratchpad))` | #FBF7EC | 불일치 | 버튼 바탕 — 목업은 헤더 오른쪽 어두운 캡슐(ink), 구현은 헤더 아래 전폭 카드형(card) 버튼(표 S #5) |
 | 새 메모 버튼 | `text-[var(--paper)]` | #F5EFE0 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.ink(.scratchpad)) }` | #2A2723 | 불일치 | 버튼 글자 색 — 목업 paper(어두운 바탕 위), 구현 영역 ink |
@@ -729,12 +729,12 @@ last_updated: 2026-10-08
 | 일자 머리(오늘) | `pt-1` | 4 | — | — | — | 불일치 | 첫 일자 머리 위 여백 — 구현 일자 머리는 `List` `Section` 헤더라 위 여백을 시스템이 정한다 |
 | 일자 라벨 | `text-[10.5px]` | 10.5 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(section.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))` | 12 | 불일치 | 일자 라벨 크기 — 목업 10.5, 구현 `captionSm`(12) |
 | 일자 라벨 | `font-semibold` | semibold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(section.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))` | bold | 불일치 | 일자 라벨 굵기 |
-| 일자 라벨 | `text-stone-500` | #78716C | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(section.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))` | #2A2723/0.7 | 불일치 | 일자 라벨 색 — 목업 stone, 구현 영역 ink 투명도(다짐 탭 `S5` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 일자 라벨 | `text-stone-500` | #78716C | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(section.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))` | #2A2723/0.7 | 허용 S5 | 일자 라벨 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 `#BFAE91` 로 그린다) |
 | 일자 라벨 | `tracking-[0.2em]` | 0.2em | — | — | — | 불일치 | 일자 라벨 자간 — 구현에 자간 수식이 없다 |
 | 일자 라벨 | `uppercase` | uppercase | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.textCase(nil)` | none | 불일치 | 대문자 변환 — 구현 일자 머리는 `.textCase(nil)` 로 시스템 헤더 대문자화를 끈다(「오늘」·「어제」는 한글이라 보이는 차이는 개수의 `ITEMS` 뿐) |
 | 일자 구분선 | `bg-[var(--rule)]` | #E0D8C2 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(.scratchpad)) .frame(height: 1)` | #E0D8C2 | 일치 | 구분선 색 = 영역 rule(굵기 1 — 목업 `h-px`) |
 | 일자 개수 | `text-[10.5px]` | 10.5 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(section.items.count) ITEMS") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))` | 12 | 불일치 | 개수 크기 — 목업 10.5, 구현 `captionSm`(12) |
-| 일자 개수 | `text-stone-400` | #A8A29E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(section.items.count) ITEMS") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))` | #2A2723/0.5 | 불일치 | 개수 색 — 목업 stone, 구현 영역 ink 투명도(다짐 탭 `S5` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 일자 개수 | `text-stone-400` | #A8A29E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(section.items.count) ITEMS") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))` | #2A2723/0.5 | 허용 S5 | 개수 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 `#8C7F6A` 로 그린다) |
 | 메모 카드(음성) | `p-4` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(14) .frame(maxWidth: .infinity, alignment: .leading)` | 14 | 불일치 | 카드 안쪽 여백 — 목업 16, 구현 14 |
 | 메모 카드(음성) | `rounded-2xl` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)) .overlay( RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous) .stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1) ) .accessibilityIdentifier("scratchpad.row.\(item.id)")` | 16 | 일치 | 카드 라운드 = `Radius.card` — 목업 `card` 클래스(`<style>` 의 `.card{background:#FBF7EC;border:1px solid var(--rule)}`)는 측정 대상 토큰이 아니어서 배경·외곽선 행이 없다 — 참고로 구현 `card`·`rule` 1 과 같은 값 |
 | 카드 머리 줄 | `gap-3` | 12 | — | — | — | 불일치 | 출처 묶음 ↔ 시각 간격 — 구현은 시각을 출처 라벨 문장 뒤에 붙인다(표 S #9) |
@@ -750,7 +750,7 @@ last_updated: 2026-10-08
 | 출처 라벨(숏컷) | `tracking-wider` | 0.05em | — | — | — | 불일치 | 출처 라벨 자간 — 구현에 자간 수식이 없다 |
 | 출처 라벨(숏컷) | `uppercase` | uppercase | — | — | — | 불일치 | 출처 라벨 대문자 변환 — 구현에 수식이 없다(문구가 한글이라 보이는 차이 없음) |
 | 시각 | `text-[11px]` | 11 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | 11 | 일치 | 시각 크기 — 구현 시각은 출처 라벨과 한 `Text`(`captionXs`) |
-| 시각 | `text-stone-400` | #A8A29E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | #2A2723/0.55 | 불일치 | 시각 색 — 목업 stone, 구현 영역 ink 투명도(다짐 탭 `S5` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 시각 | `text-stone-400` | #A8A29E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | #2A2723/0.55 | 허용 S5 | 시각 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 `#8C7F6A` 로 그린다) |
 | 메모 본문 | `text-[15px]` | 15 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(item.text) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))` | 15 | 일치 | 본문 크기 = `bodyLg` |
 | 메모 본문 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 본문 줄 높이 — 구현에 줄 간격 수식이 없다 |
 | 인식 메모 줄 | `mt-2.5` | 10 | — | — | — | 불일치 | 음성 인식 메모 줄 — 구현 카드에 이 줄이 없다(표 S #10) |
@@ -770,7 +770,7 @@ last_updated: 2026-10-08
 | 출처 점(탭 입력) | `bg-stone-500` | #78716C | — | — | — | 불일치 | 탭 내 입력 점 — 구현에 없다 |
 | 출처 라벨(탭 입력) | `text-[10.5px]` | 10.5 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | 11 | 불일치 | 출처 라벨 크기 — 목업 10.5, 구현 `captionXs`(11) |
 | 출처 라벨(탭 입력) | `font-semibold` | semibold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | semibold | 일치 | 출처 라벨 굵기 |
-| 출처 라벨(탭 입력) | `text-stone-600` | #57534E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | #2A2723/0.55 | 불일치 | 탭 내 입력 출처 라벨 색 — 목업 stone, 구현 영역 ink 투명도(다짐 탭 `S5` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 출처 라벨(탭 입력) | `text-stone-600` | #57534E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(item.source.displayName) · \(time)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)) .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))` | #2A2723/0.55 | 불일치 | 탭 내 입력 출처 라벨 색 — 목업 stone, 구현 영역 ink 투명도(`S5` 대상 아님 — 다크 목업도 이 자리를 stone `text-stone-400` 으로 그려 영역 다크 톤 근거가 서지 않는다) |
 | 출처 라벨(탭 입력) | `tracking-wider` | 0.05em | — | — | — | 불일치 | 출처 라벨 자간 — 구현에 자간 수식이 없다 |
 | 출처 라벨(탭 입력) | `uppercase` | uppercase | — | — | — | 불일치 | 출처 라벨 대문자 변환 — 구현에 수식이 없다 |
 | 이동 칩 줄 | `mt-3` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) { HStack(spacing: 6)` | 8 | 불일치 | 본문 ↔ 이동 칩 간격 — 구현 카드 세로 간격 `Spacing.sm`(8) |
@@ -785,20 +785,20 @@ last_updated: 2026-10-08
 | 이동 칩 | `rounded-full` | full | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.accent(target.designArea), lineWidth: 1))` | full | 일치 | 칩 캡슐 |
 | 일자 머리(어제) | `gap-2` | 8 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Text(section.title)` | 8 | 일치 | 일자 라벨 · 구분선 · 개수 사이 간격 |
 | 일자 머리(어제) | `pt-3` | 12 | — | — | — | 불일치 | 둘째 일자 머리 위 여백 — 구현 일자 머리는 `List` `Section` 헤더라 시스템이 정한다 |
-| 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 스와이프 행 라운드 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
-| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 삭제 패널 너비 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 스와이프 행 라운드 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 삭제 패널 너비 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 삭제 패널 | `bg-[#9C3F2D]` | #9C3F2D | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.tint(DesignTokens.Color.destructive(.scratchpad))` | #9C3F2D | 일치 | 삭제 패널 채움 = 임시공간 destructive(`tokens.md` §1.10) |
-| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 ↔ 라벨 간격 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
-| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 패널 글자·글리프 색 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
-| 삭제 글리프 | `width:18px` | 18 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
-| 삭제 글리프 | `height:18px` | 18 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
-| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 크기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
-| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 굵기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(다짐 탭 `S4` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 ↔ 라벨 간격 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 패널 글자·글리프 색 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 글리프 | `width:18px` | 18 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 글리프 | `height:18px` | 18 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 크기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 굵기 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 밀린 행 카드 | `p-4` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(14) .frame(maxWidth: .infinity, alignment: .leading)` | 14 | 불일치 | 밀린 행 카드 안쪽 여백 — 목업 16, 구현 14 |
 | 밀린 행 카드 | `rounded-2xl` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)) .overlay( RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous) .stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1) ) .accessibilityIdentifier("scratchpad.row.\(item.id)")` | 16 | 일치 | 밀린 행 카드 라운드 = `Radius.card` |
 | 빈 상태 안내 | `py-5` | 20 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 안내 위·아래 여백 = `Spacing.xl` |
 | 빈 상태 안내 | `text-[14px]` | 14 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 안내 크기 = `body` |
-| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55)) .accessibilityIdentifier("scratchpad.empty.state")` | #2A2723/0.55 | 불일치 | 안내 색 — 목업 stone, 구현 영역 ink 투명도(다짐 탭 `S5` 와 같은 사정, 이 화면은 아직 등재 전) |
+| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55)) .accessibilityIdentifier("scratchpad.empty.state")` | #2A2723/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 `#BFAE91` 로 그린다) |
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 안내 줄 높이 — 구현에 줄 간격 수식이 없다 |
 
 ## 표 S — 요소 순서·유무 (`screen-scratchpad`) · 16행
