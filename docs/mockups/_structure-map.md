@@ -50,7 +50,7 @@ last_updated: 2026-10-08
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
-남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 22행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 19행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -70,8 +70,8 @@ last_updated: 2026-10-08
 | `screen-routines` | S | 불일치 | 0 |
 | `screen-affirmations` | M | 일치 | 122 |
 | `screen-affirmations` | M | 기본값 일치 | 1 |
-| `screen-affirmations` | M | 불일치 | 22 |
-| `screen-affirmations` | M | 허용 | 8 |
+| `screen-affirmations` | M | 불일치 | 19 |
+| `screen-affirmations` | M | 허용 | 11 |
 | `screen-affirmations` | M | 목업 대기 | 0 |
 | `screen-affirmations` | S | 일치 | 14 |
 | `screen-affirmations` | S | 불일치 | 3 |
@@ -507,7 +507,7 @@ last_updated: 2026-10-08
 | 히어로 메타 구역 | `border-t` | top 1 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(.affirmations)) .frame(height: 1)` | top 1 | 일치 | 구분선 = 메타 구역 위쪽에 겹친 1pt 선(`PRMonitorGroupCard` 선 관용구) |
 | 히어로 메타 구역 | `border-[var(--rule)]` | #E5D7C0 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(.affirmations)) .frame(height: 1)` | #E5D7C0 | 일치 | 구분선 색 = 영역 rule |
 | 히어로 메타 글자 | `text-[11px]` | 11 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우선순위 \(priorityValue)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))` | 11 | 일치 | 메타 글자 크기 = `captionXs` |
-| 히어로 메타 글자 | `text-stone-500` | #78716C | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우선순위 \(priorityValue)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))` | #2E251A/0.55 | 불일치 | 메타 글자 색 — 목업 stone-500, 구현 영역 ink 55%(`S1` 은 시트 안 보조 텍스트에 한정) |
+| 히어로 메타 글자 | `text-stone-500` | #78716C | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우선순위 \(priorityValue)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))` | #2E251A/0.55 | 허용 S5 | 메타 글자 색 — 목업 stone-500, 구현 영역 ink 55% |
 | 히어로 메타 강조 | `font-bold` | bold | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `let priorityValue = Text(hero.priority.displayName).bold().foregroundStyle(DesignTokens.Color.ink(.affirmations))` | bold | 일치 | 우선순위 값(「높음」)만 굵게 — 값 `Text` 를 메타 문장에 끼운다 |
 | 히어로 메타 강조 | `text-[var(--ink)]` | #2E251A | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `let priorityValue = Text(hero.priority.displayName).bold().foregroundStyle(DesignTokens.Color.ink(.affirmations))` | #2E251A | 일치 | 우선순위 값 색 = 영역 ink(메타 글자 나머지는 ink 55%) |
 | 회전 버튼 줄 | `mt-3` | 12 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) { let priorityValue` | 12 | 일치 | 메타 글자 ↔ 회전 버튼 줄 간격 = 메타 구역 스택 간격 `Spacing.md` |
@@ -580,7 +580,7 @@ last_updated: 2026-10-08
 | 범례 | `rounded-xl` | 12 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))` | 12 | 일치 | 범례 라운드 |
 | 범례 | `bg-[var(--soft)]/60` | #EADCC2/0.6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.background(DesignTokens.Color.soft(.affirmations).opacity(0.6))` | #EADCC2/0.6 | 일치 | 범례 바탕 = 영역 soft 60% |
 | 범례 | `text-[11px]` | 11 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.7))` | 11 | 일치 | 범례 글자 크기 = `captionXs` |
-| 범례 | `text-stone-600` | #57534E | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.7))` | #2E251A/0.7 | 불일치 | 범례 글자 색 — 목업 stone-600, 구현 영역 ink 70% |
+| 범례 | `text-stone-600` | #57534E | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.7))` | #2E251A/0.7 | 허용 S5 | 범례 글자 색 — 목업 stone-600, 구현 영역 ink 70% |
 | 범례 | `gap-3` | 12 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `HStack(spacing: DesignTokens.Spacing.md) { legendItem(.high, "자주 노출")` | 12 | 일치 | 범례 항목 사이 간격 = `Spacing.md` |
 | 범례 항목 | `gap-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `HStack(spacing: 6) { PriorityDots.horizontal(for: priority) Text(label)` | 6 | 일치 | 점 묶음 ↔ 글자 간격 |
 | 범례 항목 | `gap-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `static func horizontal(for priority: AffirmationPriority) -> some View { HStack(spacing: 6)` | 6 | 일치 | 가로 점 사이 간격 = 6 — 목업은 점·글자가 한 flex 줄(`gap-1.5`)이라 점 사이도 6 |
@@ -595,7 +595,7 @@ last_updated: 2026-10-08
 | 빈 상태 제목 | `text-[var(--ink)]` | #2E251A | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("첫 다짐을 추가해 보세요") .font(DesignTokens.Typography.font(size: 18, weight: .bold, family: .serif)) .foregroundStyle(DesignTokens.Color.ink(.affirmations))` | #2E251A | 일치 | 안내 제목 색 = 영역 ink |
 | 빈 상태 안내 | `mt-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `spacing: DesignTokens.Spacing.sm) { Text("첫 다짐을 추가해 보세요")` | 8 | 일치 | 제목 ↔ 안내 간격 = `Spacing.sm` |
 | 빈 상태 안내 | `text-[11px]` | 11 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))` | 11 | 일치 | 안내 크기 = `captionXs` |
-| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .lineHeight(.multiple(factor: 1.625)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))` | #2E251A/0.55 | 불일치 | 안내 색 — 목업 stone-500, 구현 영역 ink 55% |
+| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)) .lineHeight(.multiple(factor: 1.625)) .foregroundStyle(DesignTokens.Color.ink(.affirmations).opacity(0.55))` | #2E251A/0.55 | 허용 S5 | 안내 색 — 목업 stone-500, 구현 영역 ink 55% |
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배 |
 | — | — | 0 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `VStack(spacing: 0) { ScreenHeader(` | 0 | 기본값 일치 | 헤더 ↔ 목록 사이 간격 — 목업은 header·main 이 맞닿는다(사이 여백은 각자의 `pb-2` · `pt-2`) |
 | 불러오는 중 카드 | `bg-white` | #FFFFFF | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `.background(DesignTokens.Color.card(area))` | #FFFFFF | 일치 | 불러오는 중 카드 배경 = 영역 card |
