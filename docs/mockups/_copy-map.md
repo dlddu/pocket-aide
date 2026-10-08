@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-05
+last_updated: 2026-10-08
 ---
 
 # 카피 ↔ 구현 대응표
@@ -50,7 +50,7 @@ last_updated: 2026-10-05
 | B | 일치 | 159 |
 | B | 외부 | 33 |
 | B | 예시 데이터 | 98 |
-| B | 목업 전용 | 102 |
+| B | 목업 전용 | 103 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 50 |
@@ -220,7 +220,7 @@ last_updated: 2026-10-05
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 456행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 457행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -258,6 +258,7 @@ last_updated: 2026-10-05
 | `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 카드 제목 |
 | `screen-affirmations` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 카드 본문 |
+| `screen-affirmations` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `PRD-5 · AC2 우선순위(점 3개), AC3 탭 진입 시 회전 노출(상단 히어로)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-affirmations-priority-edit` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

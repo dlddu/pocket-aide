@@ -21,7 +21,7 @@ last_updated: 2026-10-08
 |---|---|---|
 | `screen-affirmations-priority-edit` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` (+ 그 화면이 쓰는 `Sheet.swift`·`Card.swift`·`FilterPills.swift`·`AreaLabel.swift`) | 시트 본체 — `Backdrop`·`Sheet`·`Handle`·제목·문장 카드·3-tier pill·도움말·액션(생성 · 생성 빈 문장 · 편집 세 프레임). 시트 아래 다짐 화면·탭 바·상태바는 범위 밖 |
 | `screen-routines` | `ios/PocketAide/Routines/RoutineSheets.swift` 의 `RoutineAddSheet`·`RoutineStepAddSheet` (+ 그 시트가 쓰는 `Sheet.swift`·`Card.swift`) | 시트 세 프레임 — 「새 루틴 시트」(이름·반복 주기·단계·액션) · 「루틴 추가 — 특정 요일」(같은 시트, 반복 주기 자리에 요일 원형 버튼 7개) · 「단계 추가 — 루틴 카드에서」(기존 단계·새 단계 입력·액션)의 `Backdrop`·`Sheet` 하위 트리. 루틴 목록 화면·상태 변형 프레임·history strip, 같은 파일의 이력 시트 `RoutineHistorySheet`, 시트 아래 탭 바·상태바는 범위 밖 |
-| `screen-affirmations` | `ios/PocketAide/Affirmations/AffirmationsView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`Card.swift`·`AreaLabel.swift`) | 다짐 탭 본체 두 프레임 — 「목록」(헤더·히어로 카드·목록 머리·목록 행·스와이프된 행·범례) · 「빈 상태」(헤더·안내 카드)의 `<header>`·`<main>` 하위 트리. 상태바·하단 탭 바(`RootView.swift` 행)·우선순위 시트(위 행)는 범위 밖 |
+| `screen-affirmations` | `ios/PocketAide/Affirmations/AffirmationsView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`Card.swift`·`AreaLabel.swift`) | 다짐 탭 본체 세 프레임 — 「목록」(헤더·히어로 카드·목록 머리·목록 행·스와이프된 행·범례) · 「빈 상태」(헤더·안내 카드) · 「불러오는 중」(헤더·진행 표시 카드)의 `<header>`·`<main>` 하위 트리. 상태바·하단 탭 바(`RootView.swift` 행)·우선순위 시트(위 행)는 범위 밖 |
 
 ## 판독 규약
 
@@ -50,7 +50,7 @@ last_updated: 2026-10-08
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
-남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 두 프레임): 표 M `불일치` 58행 · `목업 대기` 1행, 표 S `불일치` 4행 · `목업 대기` 1행.
+남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 50행 · `목업 대기` 0행, 표 S `불일치` 4행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -68,14 +68,14 @@ last_updated: 2026-10-08
 | `screen-routines` | M | 목업 대기 | 0 |
 | `screen-routines` | S | 일치 | 18 |
 | `screen-routines` | S | 불일치 | 0 |
-| `screen-affirmations` | M | 일치 | 89 |
+| `screen-affirmations` | M | 일치 | 95 |
 | `screen-affirmations` | M | 기본값 일치 | 1 |
-| `screen-affirmations` | M | 불일치 | 58 |
-| `screen-affirmations` | M | 허용 | 0 |
-| `screen-affirmations` | M | 목업 대기 | 1 |
-| `screen-affirmations` | S | 일치 | 13 |
+| `screen-affirmations` | M | 불일치 | 50 |
+| `screen-affirmations` | M | 허용 | 8 |
+| `screen-affirmations` | M | 목업 대기 | 0 |
+| `screen-affirmations` | S | 일치 | 14 |
 | `screen-affirmations` | S | 불일치 | 4 |
-| `screen-affirmations` | S | 목업 대기 | 1 |
+| `screen-affirmations` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -399,7 +399,7 @@ last_updated: 2026-10-08
 | 17 | 닫기(2차 액션) | `opacity-55">닫기</button>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Button("닫기", action: onCancel)` | 일치 | 글자만 있는 버튼, 맨 아래 |
 | 18 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40"` | `ios/PocketAide/Routines/RoutinesView.swift` | `.overlay { sheet.ignoresSafeArea(.container, edges: .bottom) }` · `.toolbarVisibility(sheetMode == nil ? .automatic : .hidden, for: .tabBar)` | 일치 | 목업 시트는 탭 바(z-10) 위를 덮고 화면 바닥에 붙는다. 구현은 시트가 열린 동안 시스템 탭 바를 숨기고, 시트 overlay 가 아래 컨테이너 안전 영역을 무시해 화면 바닥까지 내려간다(우선순위 시트 표 S 13행과 같은 처리 — 공용 `Sheet` 무접촉) |
 
-## 표 E — 요소 (`screen-affirmations`) · 41행
+## 표 E — 요소 (`screen-affirmations`) · 43행
 
 | 요소 | 목업 선택 인용 |
 |---|---|
@@ -441,11 +441,13 @@ last_updated: 2026-10-08
 | 밀린 행 카드 | `relative -translate-x-[74px] bg-white rounded-2xl border border-[var(--rule)] p-3.5` |
 | 범례 | `mt-5 px-3 py-2.5 rounded-xl bg-[var(--soft)]/60 text-[11px] text-stone-600 flex items-center gap-3` |
 | 범례 항목 | `flex items-center gap-1.5` |
+| 불러오는 중 카드 | `rounded-2xl bg-white border border-[var(--rule)] p-4` |
+| 진행 표시 자리 | `py-5 flex justify-center` |
 | 빈 상태 카드 | `rounded-[28px] bg-white border border-[var(--rule)] p-6` |
 | 빈 상태 제목 | `serif text-[18px] font-bold text-[var(--ink)]` |
 | 빈 상태 안내 | `mt-2 text-[11px] text-stone-500 leading-relaxed` |
 
-## 표 M — 수치 (`screen-affirmations`) · 149행
+## 표 M — 수치 (`screen-affirmations`) · 154행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -558,15 +560,15 @@ last_updated: 2026-10-08
 | 이동 출처 줄 | `border-[var(--rule)]` | #E5D7C0 | — | — | — | 불일치 | 「임시공간에서 이동 · 어제 22:51」 출처 줄 — 구현 행은 문장만 그린다(표 S) |
 | 이동 출처 줄 | `text-[10.5px]` | 10.5 | — | — | — | 불일치 | 「임시공간에서 이동 · 어제 22:51」 출처 줄 — 구현 행은 문장만 그린다(표 S) |
 | 이동 출처 줄 | `text-stone-500` | #78716C | — | — | — | 불일치 | 「임시공간에서 이동 · 어제 22:51」 출처 줄 — 구현 행은 문장만 그린다(표 S) |
-| 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 스와이프 행 라운드 — 구현 스와이프 액션은 시스템 `List` 가 그린다 |
-| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 삭제 패널 너비 — 시스템 스와이프 버튼 폭 |
+| 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 스와이프 행 라운드 — 구현 스와이프 액션은 시스템 `List` 가 그린다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
+| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 삭제 패널 너비 — 시스템 스와이프 버튼 폭 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
 | 삭제 패널 | `bg-[#9C3F2D]` | #9C3F2D | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.tint(DesignTokens.Color.destructive(.affirmations))` | #9C3F2D | 일치 | 삭제 패널 채움 = 다짐 destructive(`tokens.md` §1.10) |
-| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 ↔ 라벨 간격 — 시스템 스와이프 버튼 배치 |
-| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 패널 글자·글리프 색 — 시스템 스와이프 버튼 전경색 |
-| 삭제 글리프 | `width:18px` | 18 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기 — 시스템 스와이프 버튼 |
-| 삭제 글리프 | `height:18px` | 18 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기 |
-| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 크기 — 시스템 스와이프 버튼 |
-| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 굵기 — 시스템 스와이프 버튼 |
+| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 ↔ 라벨 간격 — 시스템 스와이프 버튼 배치 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
+| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 패널 글자·글리프 색 — 시스템 스와이프 버튼 전경색 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
+| 삭제 글리프 | `width:18px` | 18 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
+| 삭제 글리프 | `height:18px` | 18 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
+| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 크기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
+| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 굵기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」. 수치는 시스템이 정한다 |
 | 밀린 행 카드 | `bg-white` | #FFFFFF | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `.background(DesignTokens.Color.card(area))` | #FFFFFF | 일치 | 밀린 행 카드 배경 = 영역 card |
 | 밀린 행 카드 | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area), lineWidth: emphasized ? 2 : 1` | 1 | 일치 | 밀린 행 카드 외곽선 두께(강조 아님) |
 | 밀린 행 카드 | `border-[var(--rule)]` | #E5D7C0 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area), lineWidth: emphasized ? 2 : 1` | #E5D7C0 | 일치 | 밀린 행 카드 외곽선 색 = 영역 rule |
@@ -597,11 +599,16 @@ last_updated: 2026-10-08
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 안내 줄 높이 — 목업 1.625배, 구현은 줄 높이 수식이 없다 |
 | — | — | 0 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `VStack(spacing: 0) { ScreenHeader(` | 0 | 기본값 일치 | 헤더 ↔ 목록 사이 간격 — 목업은 header·main 이 맞닿는다(사이 여백은 각자의 `pb-2` · `pt-2`) |
 | — | — | — | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `HStack(spacing: 6) { PriorityDots.horizontal(for: hero.priority)` | 6 | 불일치 | 히어로 메타의 점 묶음 ↔ 글자 간격 — 목업 히어로 메타에는 점 묶음이 없다(표 S) |
-| — | — | — | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ProgressView() .frame(maxWidth: .infinity) .padding(.vertical, DesignTokens.Spacing.xl)` | 20 | 목업 대기 | 불러오는 중 상태(히어로 자리 카드 안 진행 표시) — 목업이 그리지 않는다 |
+| 불러오는 중 카드 | `bg-white` | #FFFFFF | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `.background(DesignTokens.Color.card(area))` | #FFFFFF | 일치 | 불러오는 중 카드 배경 = 영역 card |
+| 불러오는 중 카드 | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area), lineWidth: emphasized ? 2 : 1` | 1 | 일치 | 불러오는 중 카드 외곽선 두께(강조 아님) |
+| 불러오는 중 카드 | `border-[var(--rule)]` | #E5D7C0 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `emphasized ? DesignTokens.Color.accent(area) : DesignTokens.Color.rule(area), lineWidth: emphasized ? 2 : 1` | #E5D7C0 | 일치 | 불러오는 중 카드 외곽선 색 = 영역 rule |
+| 불러오는 중 카드 | `p-4` | 16 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `case .medium: return 16` | 16 | 일치 | 불러오는 중 카드 안쪽 여백 — 구현 `Card(area: .affirmations)` 는 `padding` 인자를 생략해 기본값 `.medium`(16)이다 |
+| 불러오는 중 카드 | `rounded-2xl` | 16 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `case .medium: return DesignTokens.Radius.card` | 16 | 일치 | 불러오는 중 카드 라운드 = `CardPadding` 기본값 `.medium` 의 라운드 |
+| 진행 표시 자리 | `py-5` | 20 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ProgressView() .frame(maxWidth: .infinity) .padding(.vertical, DesignTokens.Spacing.xl)` | 20 | 일치 | 진행 표시 위·아래 여백 — 카드 가운데 시스템 `ProgressView`(크기·색은 시스템, 목업은 수치 없는 `spinner` 로 그린다) |
 
 ## 표 S — 요소 순서·유무 (`screen-affirmations`) · 18행
 
-행 순서가 목업 화면의 위 → 아래 순서다(1~16 「목록」 프레임 — 1~3 헤더는 두 프레임 공통 · 17 「빈 상태」 프레임 · 18 구현 전용 상태).
+행 순서가 목업 화면의 위 → 아래 순서다(1~16 「목록」 프레임 — 1~3 헤더는 세 프레임 공통 · 17 「빈 상태」 프레임 · 18 「불러오는 중」 프레임).
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
@@ -622,7 +629,7 @@ last_updated: 2026-10-08
 | 15 | 스와이프 삭제 | `<!-- 스와이프된 행` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 「삭제」 |
 | 16 | 범례 | `<!-- legend -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `priorityLegend` | 일치 | 목록 아래 — 자주 노출 · 보통 · 가끔 |
 | 17 | 빈 상태 카드 | `<!-- 빈 상태: 히어로 자리의 안내 카드` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.accessibilityIdentifier("affirmations.empty.state")` | 일치 | 다짐이 없으면 히어로 자리에 안내 카드만 — 목록 머리·목록·범례 없음(`if !viewModel.items.isEmpty`) |
-| 18 | 불러오는 중 | — | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `} else if viewModel.isLoading {` | 목업 대기 | 구현은 불러오는 동안 히어로 자리에 진행 표시 카드를 그린다 — 목업에 프레임이 없다 |
+| 18 | 불러오는 중 | `<!-- 불러오는 중: 히어로 자리의 진행 표시 카드` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `} else if viewModel.isLoading {` | 일치 | 불러오는 동안 히어로 자리에 진행 표시 카드만 — 목록 머리·목록·범례 없음 |
 
 ## 검산
 
