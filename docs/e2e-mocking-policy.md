@@ -43,6 +43,7 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `backend/internal/oidcmock/oidcmock.go` | `oidcmock` | `EXT` | IdP 대체 서버 구현(discovery·JWKS·PKCE authorize·token). 사유 동일. |
 | `ios/PocketAideTests/UITestAuth.swift` | `oidcmock` | `EXT` | UI 테스트 공유 로그인 헬퍼 — 실 `ASWebAuthenticationSession` 왕복을 oidcmock 상대로 1회 수행한다. 사유 동일. |
 | `ios/PocketAideTests/LoginUITests.swift` | `oidcmock` | `EXT` | oidcmock 토큰으로 로그인한 뒤 실 탭 셸에 착지하는지 단정한다. 사유 동일. |
+| `ios/PocketAideTests/BackendAPIUITestSupport.swift` | `oidcmock` | `EXT` | 테스트 러너 쪽 백엔드 API 헬퍼 — oidcmock 과 PKCE 왕복(authorize 의 code → token)을 해 앱과 같은 subject 의 토큰을 받는다. 그 토큰으로 부르는 것은 실 백엔드 API 라 시드이고 치환이 아니며, IdP 쪽 사유는 위 행과 같다. |
 | `.github/workflows/ios-test.yml` | `simctl push` | `EXT` | APNs **전달**(Apple 서버 → 기기)만 대신한다 — 잡이 컨슈머가 저장한 이력 행의 id 로 백엔드가 보낼 페이로드(`formatPushText` 제목·본문 + `event_id`)를 만들어 `xcrun simctl push` 로 시뮬레이터에 넣는다. 시스템 알림 표시 · 배너 탭 · `UNUserNotificationCenterDelegate` · 딥링크 · PR 모니터 탭 전환 · 강조는 실경로로 돈다. 실 전달은 Apple 인증키와 실 기기 토큰이라는 외부 신원 경계다. |
 | `.github/workflows/ios-test.yml` | `APNS_DISABLED` | `EXT` | 잡 env 가 백엔드의 APNs **발송만** 끈다 — SQS 컨슈머 · 이력 저장 · 이력 API · PR 모니터 화면은 실경로로 돈다. APNs 는 Apple 인증키(.p8)와 실 기기 토큰이라는 외부 신원 경계라 CI 안에서 발송할 수 없다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` `loadConfig` 의 `APNS_DISABLED`(미설정이면 기존대로 `APNS_*` 필수 — 운영 설정 불변). |
 | `.github/actions/start-test-backend/action.yml` | GitHub API 스텁 | `EXT` | 「Start GitHub API stub」 스텝이 같은 폴더의 `github_api_stub.py` 를 `localhost:5557` 에 띄운다. 실 상류(`api.github.com`)는 사용자 PAT 를 요구하는데, CI 가 가진 GitHub 신원은 Actions `GITHUB_TOKEN` 과 App 설치 토큰뿐이고 둘 다 앱의 연결 첫 호출 `GET /user` 에서 `403 Resource not accessible by integration` 으로 거절된다(2026-10-04 실측). 레포 시크릿(2026-10-04 실측 12개 — App Store·서명용)에 GitHub 사용자 PAT 는 없고, 전용 테스트 계정은 사람이 가입해야 만들어진다. |
@@ -52,7 +53,7 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `ios/PocketAideTests/OpenPullRequestsUITestSupport.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시나리오 전용 파일(github-monitor 시나리오 1·2·4·5·10·11)이 공유하는 실행 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
 
 각 행의 파일에는 `mock-exception: EXT` 주석이 함께 있다(표기 규약). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
-계정·테넌트가 마련되면 `oidcmock` 여섯 행 모두 실 상류로 대체하고 지운다. `APNS_DISABLED` 행은 차단 요인 BF-2
+계정·테넌트가 마련되면 `oidcmock` 일곱 행 모두 실 상류로 대체하고 지운다. `APNS_DISABLED` 행은 차단 요인 BF-2
 (푸시 수신) 해소 때 재판정해 **유지**했다 — 백엔드의 실 발송은 여전히 Apple 인증키(.p8)를 요구하고, 수신 이후는
 `simctl push` 행이 실경로로 연다. 두 APNs 행은 CI 시크릿으로 쓸 수 있는 APNs 인증키가 마련되면 함께 실 발송으로 대체하고 지운다.
 GitHub API 스텁 다섯 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
