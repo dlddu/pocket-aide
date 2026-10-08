@@ -48,6 +48,7 @@ type authCode struct {
 	clientID            string
 	redirectURI         string
 	scope               string
+	subject             string
 	createdAt           time.Time
 }
 
@@ -160,6 +161,10 @@ func (s *Server) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	codeChallengeMethod := q.Get("code_challenge_method")
 	scope := q.Get("scope")
 	responseType := q.Get("response_type")
+	subject := q.Get("login_hint")
+	if subject == "" {
+		subject = s.subject
+	}
 
 	if responseType != "code" {
 		http.Error(w, "unsupported response_type", http.StatusBadRequest)
@@ -186,6 +191,7 @@ func (s *Server) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 		clientID:            clientID,
 		redirectURI:         redirectURI,
 		scope:               scope,
+		subject:             subject,
 		createdAt:           time.Now(),
 	}
 	s.mu.Unlock()
@@ -245,7 +251,7 @@ func (s *Server) handleTokenAuthCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := s.mintTokenResponse(stored.scope)
+	resp, err := s.mintTokenResponse(stored.scope, stored.subject)
 	if err != nil {
 		http.Error(w, "token mint failed", http.StatusInternalServerError)
 		return
@@ -259,7 +265,7 @@ func (s *Server) handleTokenRefresh(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid_grant", http.StatusBadRequest)
 		return
 	}
-	resp, err := s.mintTokenResponse("openid profile email")
+	resp, err := s.mintTokenResponse("openid profile email", s.subject)
 	if err != nil {
 		http.Error(w, "token mint failed", http.StatusInternalServerError)
 		return
@@ -267,12 +273,12 @@ func (s *Server) handleTokenRefresh(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
-func (s *Server) mintTokenResponse(scope string) (map[string]any, error) {
-	access, err := s.SignAccessToken(s.subject, time.Hour)
+func (s *Server) mintTokenResponse(scope, subject string) (map[string]any, error) {
+	access, err := s.SignAccessToken(subject, time.Hour)
 	if err != nil {
 		return nil, err
 	}
-	idTok, err := s.signIDToken(s.subject, time.Hour)
+	idTok, err := s.signIDToken(subject, time.Hour)
 	if err != nil {
 		return nil, err
 	}
