@@ -35,11 +35,11 @@ last_updated: 2026-10-08
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 50행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 48행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 123 |
+| A | 일치 | 125 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
@@ -47,15 +47,15 @@ last_updated: 2026-10-08
 | A | 기준 4 | 7 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 159 |
+| B | 일치 | 161 |
 | B | 외부 | 33 |
 | B | 예시 데이터 | 98 |
 | B | 목업 전용 | 103 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
-| B | 구현 대기 | 50 |
+| B | 구현 대기 | 48 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 160행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 162행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -68,6 +68,8 @@ last_updated: 2026-10-08
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 목록의 스와이프된 행 패널 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 순` | 일치 | 목록 머리 정렬 칩(기본 선택) |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `최신순` | 일치 | 목록 머리 정렬 칩 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 노출` | 일치 | 우선순위 점 범례 — 목록 아래 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `보통` | 일치 | 범례 항목 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `가끔` | 일치 | 범례 항목 |
@@ -239,8 +241,8 @@ last_updated: 2026-10-08
 | `screen-affirmations` | `· 13회 노출` | 구현 대기 | 노출 횟수 — 구현 히어로 메타에 없다 |
 | `screen-affirmations` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨(`AffirmationsView.swift`) |
 | `screen-affirmations` | `전체 14개` | 일치 | 목록 헤더 |
-| `screen-affirmations` | `우선순위 순` | 구현 대기 | 정렬 토글 — 구현에 없다(검산의 문자열 일치는 「우선순위 \(…)」 패턴 우연 일치) |
-| `screen-affirmations` | `최신순` | 구현 대기 | 정렬 토글 — 구현에 없다 |
+| `screen-affirmations` | `우선순위 순` | 일치 | 목록 머리 정렬 칩(`sortLabel`) |
+| `screen-affirmations` | `최신순` | 일치 | 목록 머리 정렬 칩(`sortLabel`) |
 | `screen-affirmations` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `"compounding은 매일 1%면 1년에 37배" — 어디서 들었는지 까먹기 전에` | 예시 데이터 | 다짐 문장(사용자 데이터) |

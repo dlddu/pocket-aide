@@ -34,7 +34,7 @@ last_updated: 2026-10-08
 
 | 구현 파일 | 분류 | 목업 | 대조 범위 |
 |---|---|---|---|
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록·우선순위 점 범례·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록(머리 정렬 칩)·우선순위 점 범례·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
 | `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
