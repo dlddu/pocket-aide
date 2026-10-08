@@ -16,6 +16,9 @@ final class RoutineCreateUITests: XCTestCase {
         screen.removeAll()
 
         screen.openAddSheet()
+        let tabBar = app.tabBars.firstMatch
+        let covered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in !(tabBar.exists && tabBar.isHittable) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [covered], timeout: 5), .completed, "The sheet must cover the tab bar while open")
         XCTAssertFalse(screen.sheetSaveButton.isEnabled, "저장 must be disabled while the name is empty")
         screen.type(" ", into: RoutinesScreen.nameField)
         XCTAssertFalse(screen.sheetSaveButton.isEnabled, "저장 must stay disabled while the name is only whitespace")

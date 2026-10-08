@@ -83,6 +83,7 @@ struct AffirmationsView: View {
                         Task { await viewModel.delete(id: existing.id) }
                     }
                 )
+                .ignoresSafeArea(.container, edges: .bottom)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 // No outer accessibilityIdentifier here — iOS 26 cascades it
                 // to every leaf inside the sheet, clobbering sheet.title,
@@ -90,6 +91,7 @@ struct AffirmationsView: View {
             }
         }
         .animation(.easeInOut(duration: 0.18), value: sheetMode)
+        .toolbarVisibility(sheetMode == nil ? .automatic : .hidden, for: .tabBar)
     }
 
     @ViewBuilder
