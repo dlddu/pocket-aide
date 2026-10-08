@@ -8,7 +8,9 @@ import (
 	"testing"
 )
 
-const fixtureReadme = "# 데이터 모델\n\n```data-model-scope\nmigrations: m\nchecker: chk\nscope: src\nexclude: _test\\.go$\nsite: \\.(QueryContext|ExecContext)\\(\nschema-exclude: ^(schema_migrations|sqlite_sequence)$\nsql: \\bFROM [a-z_]+\\b\n```\n\n| ID | 기준 | 관측 가능한 근거 |\n| --- | --- | --- |\n| F1 | 픽스처 기준 | 픽스처 |\n"
+const fixtureReadme = "# 데이터 모델\n\n```data-model-scope\nmigrations: m\nchecker: chk\nscope: src\nexclude: _test\\.go$\nsite: \\.(QueryContext|ExecContext)\\(\nschema-exclude: ^(schema_migrations|sqlite_sequence)$\nsql: \\bFROM [a-z_]+\\b\n```\n"
+
+const fixtureCriteria = "# 풀스캔 허용 기준\n\n| ID | 기준 | 관측 가능한 근거 |\n| --- | --- | --- |\n| F1 | 픽스처 기준 | 픽스처 |\n"
 
 const fixtureMigration = `CREATE TABLE parent (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,13 +59,14 @@ func writeFixture(t *testing.T, files map[string]string) string {
 	t.Helper()
 	root := t.TempDir()
 	base := map[string]string{
-		"docs/data-model/README.md": fixtureReadme,
-		"docs/data-model/erd.md":    fixtureERD,
-		"m/0001_init.up.sql":        fixtureMigration,
-		"m/0001_init.down.sql":      "DROP TABLE solo; DROP TABLE child; DROP TABLE parent;\n",
-		"chk/check.txt":             "x\n",
-		"src/a.go":                  fixtureSource,
-		"src/a_test.go":             "package src\n\nfunc t() { db.QueryContext(ctx, `SELECT 1`) }\n",
+		"docs/data-model/README.md":            fixtureReadme,
+		"docs/data-model/fullscan-criteria.md": fixtureCriteria,
+		"docs/data-model/erd.md":               fixtureERD,
+		"m/0001_init.up.sql":                   fixtureMigration,
+		"m/0001_init.down.sql":                 "DROP TABLE solo; DROP TABLE child; DROP TABLE parent;\n",
+		"chk/check.txt":                        "x\n",
+		"src/a.go":                             fixtureSource,
+		"src/a_test.go":                        "package src\n\nfunc t() { db.QueryContext(ctx, `SELECT 1`) }\n",
 	}
 	for k, v := range files {
 		if v == "" {
@@ -173,8 +176,9 @@ func TestUndecidable(t *testing.T) {
 		{"unparsable diagram", map[string]string{"docs/data-model/erd.md": strings.Replace(fixtureERD, "erDiagram\n", "erDiagram\n    parent }}--{{ child\n", 1)}},
 		{"catalog without pattern table", map[string]string{"docs/data-model/query-patterns.md": "# 쿼리 패턴\n"}},
 		{"catalog stray row", map[string]string{"docs/data-model/query-patterns.md": fixtureCatalog + "\n| x | y |\n"}},
-		{"criteria table missing", map[string]string{"docs/data-model/README.md": strings.Replace(fixtureReadme, "| ID | 기준 | 관측 가능한 근거 |", "| ID | 기준 |", 1)}},
-		{"criteria row malformed", map[string]string{"docs/data-model/README.md": strings.Replace(fixtureReadme, "| F1 |", "| X1 |", 1)}},
+		{"criteria file missing", map[string]string{"docs/data-model/fullscan-criteria.md": ""}},
+		{"criteria table missing", map[string]string{"docs/data-model/fullscan-criteria.md": strings.Replace(fixtureCriteria, "| ID | 기준 | 관측 가능한 근거 |", "| ID | 기준 |", 1)}},
+		{"criteria row malformed", map[string]string{"docs/data-model/fullscan-criteria.md": strings.Replace(fixtureCriteria, "| F1 |", "| X1 |", 1)}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

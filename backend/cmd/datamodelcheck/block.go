@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	docDir     = "docs/data-model"
-	readmePath = docDir + "/README.md"
-	erdPath    = docDir + "/erd.md"
-	qpPath     = docDir + "/query-patterns.md"
-	fence      = "```data-model-scope"
+	docDir       = "docs/data-model"
+	readmePath   = docDir + "/README.md"
+	criteriaPath = docDir + "/fullscan-criteria.md"
+	erdPath      = docDir + "/erd.md"
+	qpPath       = docDir + "/query-patterns.md"
+	fence        = "```data-model-scope"
 )
 
 type scopeBlock struct {

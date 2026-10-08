@@ -256,9 +256,9 @@ func judgePlans(c *catalog, sites []site, sch *schema, criteria map[string]bool,
 		switch {
 		case want == noSupport && fm != nil && criteria[fm[1]]:
 		case want == noSupport && fm != nil:
-			add("criterion-unknown", r.ID, fmt.Sprintf("%s 는 README 「풀스캔 허용 기준」 표에 없다", fm[1]), "")
+			add("criterion-unknown", r.ID, fmt.Sprintf("%s 는 %s 표에 없다", fm[1], criteriaPath), "")
 		case want == noSupport && r.Support == noSupport:
-			add("no-support", r.ID, "엔진이 풀스캔한다 — 지원 인덱스를 더하는 마이그레이션이나 README 풀스캔 허용 기준(사람의 결정)이 닫는다", "")
+			add("no-support", r.ID, "엔진이 풀스캔한다 — 지원 인덱스를 더하는 마이그레이션이나 fullscan-criteria.md 풀스캔 허용 기준(사람의 결정)이 닫는다", "")
 		case want == noSupport:
 			add("support-mismatch", r.ID, fmt.Sprintf("지원 칸 %s — 엔진은 풀스캔", r.Support), expectedRow(r.Shape, noSupport))
 		case r.Support != want:
