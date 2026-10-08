@@ -7,6 +7,7 @@ erDiagram
     routine_steps ||--o{ routine_step_checks : step_id
     routines ||--o{ routine_steps : routine_id
     users ||--o{ affirmations : user_id
+    users ||--o{ agent_sessions : user_id
     users ||--o{ device_tokens : user_id
     users ||--o{ notification_history : user_id
     users ||--o{ personal_todos : user_id
@@ -35,6 +36,20 @@ erDiagram
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
 | `idx_affirmations_user_id` | `user_id` | NO | - |
+
+### `agent_sessions`
+
+의미: [`sessions.Store`](../../backend/internal/sessions/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `session_id` | TEXT | YES | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `created_at` | INTEGER | NO |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `idx_agent_sessions_user_id` | `user_id` | NO | - |
 
 ### `device_tokens`
 

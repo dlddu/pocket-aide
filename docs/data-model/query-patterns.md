@@ -58,6 +58,10 @@
 | Q-45 | `update work_todos \| eq(id, user_id) \| - \| -` | PK(work_todos) | `backend/internal/todos/store.go::Store::Update` |
 | Q-46 | `delete personal_todos \| eq(id, user_id) \| - \| -` | PK(personal_todos) | `backend/internal/todos/store.go::Store::Delete` |
 | Q-47 | `delete work_todos \| eq(id, user_id) \| - \| -` | PK(work_todos) | `backend/internal/todos/store.go::Store::Delete` |
+| Q-48 | `insert agent_sessions \| - \| - \| -` | — | `backend/internal/sessions/store.go::Store::Add` |
+| Q-49 | `select agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Owns` |
+| Q-50 | `select agent_sessions \| eq(user_id) \| - \| -` | idx_agent_sessions_user_id | `backend/internal/sessions/store.go::Store::Owned` |
+| Q-51 | `delete agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Remove` |
 
 ## 수동 형태
 

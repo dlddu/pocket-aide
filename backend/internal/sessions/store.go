@@ -7,6 +7,7 @@ import (
 	"fmt"
 )
 
+// Store keeps the agent_sessions table: which session-platform sessions each user owns.
 type Store struct {
 	db *sql.DB
 }
