@@ -50,7 +50,7 @@ last_updated: 2026-10-08
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
-남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -73,8 +73,8 @@ last_updated: 2026-10-08
 | `screen-affirmations` | M | 불일치 | 7 |
 | `screen-affirmations` | M | 허용 | 12 |
 | `screen-affirmations` | M | 목업 대기 | 0 |
-| `screen-affirmations` | S | 일치 | 15 |
-| `screen-affirmations` | S | 불일치 | 2 |
+| `screen-affirmations` | S | 일치 | 16 |
+| `screen-affirmations` | S | 불일치 | 1 |
 | `screen-affirmations` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
@@ -486,12 +486,12 @@ last_updated: 2026-10-08
 | 인용부호 글리프(히어로) | `leading-none` | 1 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.lineHeight(.multiple(factor: 1))` | 1 | 일치 | 글리프 줄 높이 = 글자 크기의 1배 |
 | 인용부호 글리프(히어로) | `text-[var(--tan)]/8` | #8B6F47/0.08 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.foregroundStyle(DesignTokens.Color.accent(.affirmations).opacity(0.08))` | #8B6F47/0.08 | 일치 | 글리프 색 = 영역 accent 8% |
 | 인용부호 글리프(히어로) | `serif` | serif | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.font(DesignTokens.Typography.font(size: 120, family: .serif))` | serif | 일치 | 글리프 서체 |
-| 회전 표지 줄 | `gap-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Circle()` | 8 | 일치 | 점 ↔ 라벨 간격 = `Spacing.sm` |
+| 회전 표지 줄 | `gap-2` | 8 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { RotationPulseDot()` | 8 | 일치 | 점 ↔ 라벨 간격 = `Spacing.sm` |
 | 회전 표지 줄 | `mb-3` | 12 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.padding(.bottom, DesignTokens.Spacing.md) Text(hero.text)` | 12 | 일치 | 표지 줄 ↔ 문장 간격 = 표지 줄 아래 여백 `Spacing.md` |
-| 회전 점 | `w-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) Text("오늘 회전")` | 6 | 일치 | 점 너비 |
-| 회전 점 | `h-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) Text("오늘 회전")` | 6 | 일치 | 점 높이 |
-| 회전 점 | `rounded-full` | full | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) Text("오늘 회전")` | full | 일치 | 원형 |
-| 회전 점 | `bg-[var(--tan)]` | #8B6F47 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) Text("오늘 회전")` | #8B6F47 | 일치 | 점 색 = 영역 accent |
+| 회전 점 | `w-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) .opacity(isDimmed ? 0.5 : 1)` | 6 | 일치 | 점 너비 |
+| 회전 점 | `h-1.5` | 6 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) .opacity(isDimmed ? 0.5 : 1)` | 6 | 일치 | 점 높이 |
+| 회전 점 | `rounded-full` | full | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) .opacity(isDimmed ? 0.5 : 1)` | full | 일치 | 원형 |
+| 회전 점 | `bg-[var(--tan)]` | #8B6F47 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Circle() .fill(DesignTokens.Color.accent(.affirmations)) .frame(width: 6, height: 6) .opacity(isDimmed ? 0.5 : 1)` | #8B6F47 | 일치 | 점 색 = 영역 accent |
 | 회전 라벨 | `text-[10px]` | 10 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))` | 10 | 일치 | 회전 라벨 크기 = `caption2xs`(헤더 영역 라벨 `AreaLabel` 11 과 달라 화면 안 `Text` 로 그린다) |
 | 회전 라벨 | `font-bold` | bold | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))` | bold | 일치 | 회전 라벨 굵기 |
 | 회전 라벨 | `uppercase` | uppercase | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
@@ -616,7 +616,7 @@ last_updated: 2026-10-08
 | 3 | 추가 버튼 | `<button class="w-9 h-9 rounded-full border border-[var(--rule)] grid place-items-center bg-white/40">` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `sheetMode = .create` | 일치 | 헤더 오른쪽 끝 — 원형 더하기 |
 | 4 | 히어로 카드 | `<!-- HERO: rotating affirmation -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `if let hero = viewModel.heroItem {` | 일치 | 본문 맨 위 |
 | 5 | 회전 표지 | `오늘 회전 · 1/14</span>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("오늘 회전")` | 일치 | 카드 맨 위 — 점 + 라벨(「· 1/14」 위치 표기는 `_copy-map.md` 몫) |
-| 6 | 회전 점 깜빡임 | `animate-pulse` | — | — | 불일치 | 목업 회전 점은 깜빡인다(`animate-pulse`), 구현 점은 정지 |
+| 6 | 회전 점 깜빡임 | `animate-pulse` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.opacity(isDimmed ? 0.5 : 1) .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: isDimmed)` | 일치 | 목업 `animate-pulse`(불투명도 1 → 0.5 → 1, 2초 주기 무한 반복)를 회전 점 `RotationPulseDot` 이 1초 왕복(autoreverses)으로 옮긴다 |
 | 7 | 히어로 문장 | `<p class="serif text-[22px] leading-[1.45] font-medium text-[var(--ink)]">` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.accessibilityIdentifier("affirmations.hero.text")` | 일치 | 표지 아래 |
 | 8 | 히어로 메타 글자 | `우선순위 <span class="font-bold text-[var(--ink)]">높음</span>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `Text("우선순위 \(priorityValue)")` | 일치 | 구분선 아래 — 우선순위 값만 굵은 ink(구현은 메타 글자 앞 점 묶음 없이 글자만 — 목업과 같다) |
 | 9 | 다른 다짐 보기 | `다른 다짐 보기` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `viewModel.rotateHero()` | 일치 | 카드 맨 아래 오른쪽 |
