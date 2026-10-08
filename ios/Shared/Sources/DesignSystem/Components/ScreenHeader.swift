@@ -23,7 +23,7 @@ public struct ScreenHeader<Trailing: View>: View {
 
     public var body: some View {
         HStack(alignment: .bottom) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 AreaLabel(area: area)
                 Text(title)
                     .font(DesignTokens.Typography.font(
@@ -32,7 +32,7 @@ public struct ScreenHeader<Trailing: View>: View {
                         family: titleFamily
                     ))
                     .foregroundStyle(DesignTokens.Color.ink(area))
-                    .tracking(-0.01 * 24)
+                    .tracking(-0.025 * 24)
                     .accessibilityIdentifier("screen.header.title")
                 if let subtitle {
                     Text(subtitle)
