@@ -1,6 +1,6 @@
 ---
 type: mockup-structure-map
-last_updated: 2026-10-06
+last_updated: 2026-10-08
 ---
 
 # 구조·수치 ↔ 구현 대응표
@@ -26,7 +26,7 @@ last_updated: 2026-10-06
 
 - **요소**(표 E): 그 화면 목업의 `Backdrop` 과 `Sheet`(`border-radius:24px 24px 0 0`) 하위 트리에서, 측정 대상 토큰을 하나라도 가진 요소를 `class` 문자열(없으면 `style=…`)로 식별해 이름을 붙인다.
   여러 프레임에 같은 문자열로 나오는 요소는 한 요소다.
-- **측정 대상 토큰**: 여백·간격·크기·자리(`p*`·`m*`·`gap`·`space-x`·`space-y`·`w`·`h`·`top`·`left` 의 숫자 스케일, `w-[Npx]`·`h-[Npx]`), `opacity-N`, `text-[Npx]`, `font-*` 굵기, `rounded*`, `border*`, `ring-*`,
+- **측정 대상 토큰**: 여백·간격·크기·자리(`p*`·`m*`·`gap`·`space-x`·`space-y`·`w`·`h`·`top`·`left` 의 숫자 스케일, `w-[Npx]`·`h-[Npx]`), `opacity-N`, `text-[Npx]`, `font-*` 굵기, `rounded*`, `border*`, `ring-*`, `divide-*`(`divide-x` 는 칸 사이 왼쪽 1px 경계 `left 1`),
   `bg-*`·`text-*` 색, `leading-*`, `tracking-*`, `serif`, `uppercase`, 그리고 `style` 선언 전부. 배치 클래스(`flex`·`grid`·`absolute`·`w-full`·`z-*` 등)와
   상호작용 클래스(`active:*`·`transition`)는 표 M 의 대상이 아니다 — 요소 순서·유무는 표 S 가 적는다.
 - **역방향**(목업 → 구현): 표 E 의 요소마다 측정 대상 토큰이 표 M 에 한 행씩 나온다. `목업 값` 은 토큰을 px(색은 `#RRGGBB[/불투명도]`)로 환산한 값이다.
@@ -47,7 +47,7 @@ last_updated: 2026-10-06
 ## 집계
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 1행.
-남은 구조·수치 drift(`screen-routines` 시트 두 프레임): 표 M `불일치` 9행 · `목업 대기` 3행, 표 S `불일치` 1행.
+남은 구조·수치 drift(`screen-routines` 시트 두 프레임): 표 M `불일치` 0행 · `목업 대기` 3행, 표 S `불일치` 1행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -58,9 +58,9 @@ last_updated: 2026-10-06
 | `screen-affirmations-priority-edit` | M | 목업 대기 | 0 |
 | `screen-affirmations-priority-edit` | S | 일치 | 12 |
 | `screen-affirmations-priority-edit` | S | 불일치 | 1 |
-| `screen-routines` | M | 일치 | 54 |
-| `screen-routines` | M | 기본값 일치 | 1 |
-| `screen-routines` | M | 불일치 | 9 |
+| `screen-routines` | M | 일치 | 65 |
+| `screen-routines` | M | 기본값 일치 | 2 |
+| `screen-routines` | M | 불일치 | 0 |
 | `screen-routines` | M | 허용 | 12 |
 | `screen-routines` | M | 목업 대기 | 3 |
 | `screen-routines` | S | 일치 | 17 |
@@ -258,7 +258,7 @@ last_updated: 2026-10-06
 | 2차 버튼 | `w-full py-2 text-[13px] opacity-55` |
 | 단계 목록(단계 시트) | `space-y-2 text-[14px]` |
 
-## 표 M — 수치 (`screen-routines`) · 79행
+## 표 M — 수치 (`screen-routines`) · 82행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -279,7 +279,7 @@ last_updated: 2026-10-06
 | SheetContent | `space-y-4` | 16 | `ios/PocketAide/Routines/RoutineSheets.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) { Text("새 루틴")` · `VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) { Text("\(routine.name) · 단계")` | 16 | 일치 | 본문 블록 간격 = `Spacing.lg`(두 시트) |
 | 제목 | `text-[18px]` | 18 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: 18, weight: .bold))` | 18 | 일치 | 시트 제목 크기 |
 | 제목 | `font-bold` | bold | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: 18, weight: .bold))` | bold | 일치 | 시트 제목 굵기 |
-| 제목 | `tracking-tight` | -0.025em | — | — | — | 불일치 | 제목 자간 — 두 시트 제목에 `.tracking` 이 없다(우선순위 시트 제목은 `.tracking(-0.5)`) |
+| 제목 | `tracking-tight` | -0.025em | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: 18, weight: .bold)) .tracking(-0.5)` | -0.5 | 일치 | 제목 자간 — −0.025em × 18 = −0.45 → −0.5(우선순위 시트 제목 `.tracking(-0.5)` 선례). 두 시트 제목 모두 |
 | 입력 필드 | `bg-white` | #FFFFFF | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `.background(DesignTokens.Color.card(area))` | #FFFFFF | 일치 | 필드 배경 = 영역 card(이름·새 단계 입력 모두 `Card`) |
 | 입력 필드 | `rounded-2xl` | 16 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `case .medium: return DesignTokens.Radius.card` | 16 | 일치 | 카드 라운드 |
 | 입력 필드 | `border` | 1 | `ios/Shared/Sources/DesignSystem/Components/Card.swift` | `lineWidth: emphasized ? 2 : 1` | 1 | 일치 | 보더 두께 |
@@ -302,14 +302,17 @@ last_updated: 2026-10-06
 | 선택된 세그먼트 칸 | `rounded-[7px]` | 7 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.pickerStyle(.segmented)` | 시스템 | 허용 S3 | 반복 주기는 시스템 세그먼트 컨트롤 `Picker(.segmented)` — 목업 주석 「세그먼트 컨트롤(iOS 시스템 컨트롤)」. 수치는 시스템이 정한다 |
 | 선택된 세그먼트 칸 | `bg-white` | #FFFFFF | `ios/PocketAide/Routines/RoutineSheets.swift` | `.pickerStyle(.segmented)` | 시스템 | 허용 S3 | 반복 주기는 시스템 세그먼트 컨트롤 `Picker(.segmented)` — 목업 주석 「세그먼트 컨트롤(iOS 시스템 컨트롤)」. 수치는 시스템이 정한다 |
 | 선택된 세그먼트 칸 | `font-semibold` | semibold | `ios/PocketAide/Routines/RoutineSheets.swift` | `.pickerStyle(.segmented)` | 시스템 | 허용 S3 | 반복 주기는 시스템 세그먼트 컨트롤 `Picker(.segmented)` — 목업 주석 「세그먼트 컨트롤(iOS 시스템 컨트롤)」. 수치는 시스템이 정한다 |
-| 스테퍼 줄 | `text-[14px]` | 14 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 「매월 n일」 글자 크기 = `body` |
-| 스테퍼 | `rounded-[9px]` | 9 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 매월 날짜는 시스템 `Stepper` — 버튼 묶음의 모양·크기를 시스템이 정하고 구현에 대응 수식이 없다. 목업 주석은 이 자리를 시스템 컨트롤이라 적지 않았다 |
-| 스테퍼 | `bg-[var(--soft)]` | #E0E7DA | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 매월 날짜는 시스템 `Stepper` — 버튼 묶음의 모양·크기를 시스템이 정하고 구현에 대응 수식이 없다. 목업 주석은 이 자리를 시스템 컨트롤이라 적지 않았다 |
-| 스테퍼 감소 칸 | `w-11` | 44 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 매월 날짜는 시스템 `Stepper` — 버튼 묶음의 모양·크기를 시스템이 정하고 구현에 대응 수식이 없다. 목업 주석은 이 자리를 시스템 컨트롤이라 적지 않았다 |
-| 스테퍼 감소 칸 | `h-8` | 32 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 매월 날짜는 시스템 `Stepper` — 버튼 묶음의 모양·크기를 시스템이 정하고 구현에 대응 수식이 없다. 목업 주석은 이 자리를 시스템 컨트롤이라 적지 않았다 |
-| 스테퍼 감소 칸 | `opacity-40` | 0.4 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 하한(1일)에서 감소 칸이 흐려지는 정도 — 시스템 `Stepper` 가 범위 `1...31` 로 정한다. 구현에 대응 수식이 없다 |
-| 스테퍼 증가 칸 | `w-11` | 44 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 매월 날짜는 시스템 `Stepper` — 버튼 묶음의 모양·크기를 시스템이 정하고 구현에 대응 수식이 없다. 목업 주석은 이 자리를 시스템 컨트롤이라 적지 않았다 |
-| 스테퍼 증가 칸 | `h-8` | 32 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Stepper("매월 \(monthDay)일", value: $monthDay, in: 1...31)` | 시스템 | 불일치 | 매월 날짜는 시스템 `Stepper` — 버튼 묶음의 모양·크기를 시스템이 정하고 구현에 대응 수식이 없다. 목업 주석은 이 자리를 시스템 컨트롤이라 적지 않았다 |
+| 스테퍼 줄 | `text-[14px]` | 14 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.accessibilityIdentifier("routines.sheet.monthday.stepper") } .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 「매월 n일」 글자·칸 글리프 크기 = `body`(스테퍼 줄 전체에 건다) |
+| 스테퍼 | `rounded-[9px]` | 9 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))` | 9 | 일치 | 두 칸 묶음 라운드 |
+| 스테퍼 | `bg-[var(--soft)]` | #E0E7DA | `ios/PocketAide/Routines/RoutineSheets.swift` | `.background(DesignTokens.Color.soft(.routines))` | #E0E7DA | 일치 | 두 칸 묶음 바탕 = 영역 soft |
+| 스테퍼 | `divide-x` | left 1 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.overlay(alignment: .leading) { Rectangle().fill(DesignTokens.Color.rule(.routines)).frame(width: 1) }` | left 1 | 일치 | 두 칸 사이 1pt 경계 — 증가 칸 왼쪽에 긋는다 |
+| 스테퍼 | `divide-[var(--rule)]` | #D6DDD2 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Rectangle().fill(DesignTokens.Color.rule(.routines))` | #D6DDD2 | 일치 | 경계선 색 = 영역 rule |
+| 스테퍼 감소 칸 | `w-11` | 44 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 44, height: 32)` | 44 | 일치 | 칸 폭(두 칸 공통 `stepperCell`) |
+| 스테퍼 감소 칸 | `h-8` | 32 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 44, height: 32)` | 32 | 일치 | 칸 높이(두 칸 공통 `stepperCell`) |
+| 스테퍼 감소 칸 | `opacity-40` | 0.4 | `ios/PocketAide/Routines/RoutineSheets.swift` | `stepperCell(Image(systemName: "minus"), enabled: monthDay > 1)` · `.opacity(enabled ? 1 : 0.4)` | 0.4 | 일치 | 하한(1일)에서 감소 칸이 흐려진다(`.disabled` 동반). 상한(31일)의 증가 칸도 같은 규칙 |
+| 스테퍼 증가 칸 | `w-11` | 44 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 44, height: 32)` | 44 | 일치 | 칸 폭(두 칸 공통 `stepperCell`) |
+| 스테퍼 증가 칸 | `h-8` | 32 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.frame(width: 44, height: 32)` | 32 | 일치 | 칸 높이(두 칸 공통 `stepperCell`) |
+| — | — | 0 | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: 0) { stepperCell(` | 0 | 기본값 일치 | 두 칸 사이 간격 — 목업은 간격 클래스 없이 붙여 그린다(경계는 `divide-x`) |
 | 단계 행 | `gap-2` | 8 | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Text("\(index + 1)")` | 8 | 일치 | 번호 ↔ 필드 간격 = `Spacing.sm` |
 | 단계 행 | `px-3` | 12 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.padding(.horizontal, DesignTokens.Spacing.md)` | 12 | 일치 | 행 좌우 안쪽 여백 = `Spacing.md` |
 | 단계 행 | `py-2.5` | 10 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.padding(.vertical, 10)` | 10 | 일치 | 행 상하 안쪽 여백 |
@@ -320,9 +323,9 @@ last_updated: 2026-10-06
 | 단계 번호 | `font-bold` | bold | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold)) .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55)) .frame(width: 18)` | bold | 일치 | 번호 굵기 |
 | 단계 번호 | `opacity-55` | 0.55 | `ios/PocketAide/Routines/RoutineSheets.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold)) .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55)) .frame(width: 18)` | 0.55 | 일치 | 번호 = 영역 ink 55% |
 | 단계 이름 필드 | `text-[14px]` | 14 | `ios/PocketAide/Routines/RoutineSheets.swift` | `TextField("단계 이름", text: $steps[index]) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 단계 이름 글자 크기 = `body` |
-| 단계 추가(인라인) | `gap-1` | 4 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Label("단계 추가", systemImage: "plus")` | 시스템 | 불일치 | 글리프 ↔ 글자 간격 — 구현은 시스템 `Label` 의 기본 간격이고 수식이 없다(목업 4) |
-| 단계 추가(인라인) | `text-[12px]` | 12 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Label("단계 추가", systemImage: "plus") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | 12 | 일치 | 글자 크기 = `captionSm` |
-| 단계 추가(인라인) | `font-semibold` | semibold | `ios/PocketAide/Routines/RoutineSheets.swift` | `Label("단계 추가", systemImage: "plus") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | semibold | 일치 | 글자 굵기 |
+| 단계 추가(인라인) | `gap-1` | 4 | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: DesignTokens.Spacing.xs) { Image(systemName: "plus") Text("단계 추가") }` | 4 | 일치 | 글리프 ↔ 글자 간격 = `Spacing.xs` |
+| 단계 추가(인라인) | `text-[12px]` | 12 | `ios/PocketAide/Routines/RoutineSheets.swift` | `Text("단계 추가") } .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | 12 | 일치 | 글자 크기 = `captionSm` |
+| 단계 추가(인라인) | `font-semibold` | semibold | `ios/PocketAide/Routines/RoutineSheets.swift` | `Text("단계 추가") } .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | semibold | 일치 | 글자 굵기 |
 | 단계 추가(인라인) | `text-[var(--forest)]` | #4F6E5C | `ios/PocketAide/Routines/RoutineSheets.swift` | `.foregroundStyle(DesignTokens.Color.accent(.routines))` | #4F6E5C | 일치 | 글자·글리프 색 = 영역 accent(forest) |
 | SheetActions | `pt-2` | 8 | `ios/PocketAide/Routines/RoutineSheets.swift` | `actions .padding(.top, 8)` · `.padding(.top, 8) .padding(.bottom, 32)` | 8 | 일치 | 액션 묶음 위 여백(두 시트) |
 | SheetActions | `space-y-1` | 4 | `ios/PocketAide/Routines/RoutineSheets.swift` | `VStack(spacing: 4) { Button(action: handleSave)` | 4 | 일치 | 1차 ↔ 2차 버튼 간격(두 시트) |
@@ -354,10 +357,10 @@ last_updated: 2026-10-06
 | 4 | 이름 입력 | `placeholder="루틴 이름 — 예: 아침 루틴"` | `ios/PocketAide/Routines/RoutineSheets.swift` | `TextField("루틴 이름 — 예: 아침 루틴", text: $name)` | 일치 | 제목 아래 카드 안 한 줄 입력 |
 | 5 | 반복 주기 라벨 | `반복 주기</div>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `label("반복 주기")` | 일치 | 이름 입력 아래 |
 | 6 | 세그먼트 4칸 | `<!-- 세그먼트 컨트롤(iOS 시스템 컨트롤) — 매월 선택 -->` | `ios/PocketAide/Routines/RoutineSheets.swift` | `ForEach(RoutineCadence.allCases, id: \.self)` | 일치 | 매일 · 특정 요일 · 매주 · 매월 순(열거형 선언 순) |
-| 7 | 주기별 입력 | `<!-- 매월: 날짜 스테퍼(1~31). 특정 요일·매주는 이 자리에 요일 원형 버튼 7개 -->` | `ios/PocketAide/Routines/RoutineSheets.swift` | `case .weekdays, .weekly: weekdayPicker case .monthly: Stepper(` | 일치 | 세그먼트 아래 같은 자리 — 매월은 날짜 스테퍼(1~31), 특정 요일·매주는 요일 버튼 7개, 매일은 없음 |
+| 7 | 주기별 입력 | `<!-- 매월: 날짜 스테퍼(1~31). 특정 요일·매주는 이 자리에 요일 원형 버튼 7개 -->` | `ios/PocketAide/Routines/RoutineSheets.swift` | `case .weekdays, .weekly: weekdayPicker case .monthly: monthDayStepper` | 일치 | 세그먼트 아래 같은 자리 — 매월은 날짜 스테퍼(1~31), 특정 요일·매주는 요일 버튼 7개, 매일은 없음 |
 | 8 | 단계 라벨 | `<div class="text-[12px] font-bold opacity-70">단계</div>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `label("단계")` | 일치 | 반복 주기 구역 아래 |
 | 9 | 단계 행 | `placeholder="단계 이름"` | `ios/PocketAide/Routines/RoutineSheets.swift` | `TextField("단계 이름", text: $steps[index])` | 일치 | 번호 왼쪽 · 이름 입력 오른쪽, 처음에 빈 행 하나 |
-| 10 | 단계 추가(인라인) | `<button class="flex items-center gap-1 text-[12px] font-semibold text-[var(--forest)]">` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Label("단계 추가", systemImage: "plus")` | 일치 | 단계 행들 아래 — 더하기 글리프 + 글자 |
+| 10 | 단계 추가(인라인) | `<button class="flex items-center gap-1 text-[12px] font-semibold text-[var(--forest)]">` | `ios/PocketAide/Routines/RoutineSheets.swift` | `HStack(spacing: DesignTokens.Spacing.xs) { Image(systemName: "plus") Text("단계 추가") }` | 일치 | 단계 행들 아래 — 더하기 글리프 + 글자 |
 | 11 | 저장(1차 액션) | `opacity-50">저장</button>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Button(action: handleSave)` | 일치 | 전폭 채움 버튼, 이름이 비면 비활성 |
 | 12 | 취소(2차 액션) | `opacity-55">취소</button>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Button("취소", action: onCancel)` | 일치 | 글자만 있는 버튼, 맨 아래 |
 | 13 | 제목(단계 추가) | `<h2 class="text-[18px] font-bold tracking-tight">아침 루틴 · 단계</h2>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Text("\(routine.name) · 단계")` | 일치 | 「<루틴 이름> · 단계」 |
@@ -399,7 +402,7 @@ def code(path):
 errs = []
 VOID = {"br", "img", "input", "meta", "link", "hr", "path", "rect", "circle"}
 MEAS = re.compile(r"-?(p[xytblr]?|m[xytblr]?|gap|w|h|top|left|space-[xy])-\d+(\.\d+)?|[wh]-\[[\d.]+px\]|opacity-\d+|text-\[[\d.]+px\]"
-                  r"|font-(bold|semibold|medium)|rounded(-.+)?|border(-.+)?|ring-.+|(bg|text)-(\[.+\](/\d+)?|white|stone-\d+)"
+                  r"|font-(bold|semibold|medium)|rounded(-.+)?|border(-.+)?|ring-.+|divide-[xy]|(bg|text|divide)-(\[.+\](/\d+)?|white|stone-\d+)"
                   r"|leading-.+|tracking-.+|serif|uppercase")
 num = lambda x: ("%g" % float(x))
 STONE = {"white": "#FFFFFF", "stone-500": "#78716C", "stone-600": "#57534E"}
@@ -462,7 +465,7 @@ def measure(sc):
         m = re.fullmatch(r"opacity-(\d+)", t)
         if m:
             return num(int(m.group(1)) / 100)
-        fixed = {"rounded-xl": "12", "rounded-2xl": "16", "rounded-full": "full", "border": "1", "border-t": "top 1", "ring-1": "1",
+        fixed = {"rounded-xl": "12", "rounded-2xl": "16", "rounded-full": "full", "border": "1", "border-t": "top 1", "divide-x": "left 1", "ring-1": "1",
                  "serif": "serif", "uppercase": "uppercase", "leading-none": "1", "leading-relaxed": "1.625", "tracking-tight": "-0.025em",
                  "width:36px": "36", "height:4px": "4", "border-radius:9999px": "9999", "border-radius:24px 24px 0 0": "24 24 0 0",
                  "background:var(--rule)": root["rule"].upper(), "opacity:.5": "0.5",
@@ -478,7 +481,7 @@ def measure(sc):
         m = re.fullmatch(r"(?:leading|tracking)-\[([\d.]+(?:em)?)\]", t)
         if m:
             return m.group(1)
-        m = re.fullmatch(r"(?:bg|text|border|ring)-(.+)", t)
+        m = re.fullmatch(r"(?:bg|text|border|ring|divide)-(.+)", t)
         return color(m.group(1)) if m else None
     def asset(slot):
         j = json.loads(P(f"ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets/{sc['area']}/{slot}.colorset/Contents.json").read_text())
