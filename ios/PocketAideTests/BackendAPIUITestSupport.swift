@@ -45,7 +45,7 @@ struct BackendAPI {
 
     let token: String
 
-    static func signIn(file: StaticString = #filePath, line: UInt = #line) -> BackendAPI? {
+    static func signIn(subject: String? = nil, file: StaticString = #filePath, line: UInt = #line) -> BackendAPI? {
         let verifier = (UUID().uuidString + UUID().uuidString).replacingOccurrences(of: "-", with: "")
         let challenge = Data(SHA256.hash(data: Data(verifier.utf8))).base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
@@ -61,6 +61,9 @@ struct BackendAPI {
             URLQueryItem(name: "code_challenge", value: challenge),
             URLQueryItem(name: "code_challenge_method", value: "S256")
         ]
+        if let subject {
+            authorize?.queryItems?.append(URLQueryItem(name: "login_hint", value: subject))
+        }
         guard let authorizeURL = authorize?.url, let tokenURL = URL(string: issuer + "/token") else {
             XCTFail("The oidcmock endpoints should form URLs", file: file, line: line)
             return nil
