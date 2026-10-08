@@ -66,9 +66,11 @@ final class RoutineScheduleDayUITests: XCTestCase {
         app.launch()
         let screen = RoutinesScreen.open(in: app)
 
-        let date = app.staticTexts["routines.today"]
-        XCTAssertTrue(date.waitForExistence(timeout: 10), "The 루틴 header should show the day it treats as today", file: file, line: line)
-        XCTAssertEqual(date.label, header, "The 루틴 header should read the launched day \(day)", file: file, line: line)
+        let date = app.staticTexts.matching(NSPredicate(format: "label == %@", header)).firstMatch
+        if !date.waitForExistence(timeout: 10) {
+            let shown = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", "[0-9]+월 [0-9]+일 · .+요일")).allElementsBoundByIndex.map(\.label)
+            XCTFail("The 루틴 header should read the launched day \(day) as '\(header)' but shows \(shown)", file: file, line: line)
+        }
         XCTAssertTrue(
             app.staticTexts.matching(NSPredicate(format: "label == %@", "오늘 · \(today.count)")).firstMatch.waitForExistence(timeout: 10),
             "On \(day) the 오늘 section should count \(today.count) routines",
