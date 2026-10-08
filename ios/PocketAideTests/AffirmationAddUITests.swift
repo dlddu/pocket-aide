@@ -13,6 +13,9 @@ final class AffirmationAddUITests: XCTestCase {
         var screen = AffirmationsScreen.open(in: app)
 
         let blank = screen.openCreateSheet()
+        let tabBar = app.tabBars.firstMatch
+        let covered = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in !(tabBar.exists && tabBar.isHittable) }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [covered], timeout: 5), .completed, "The sheet must cover the tab bar while open")
         XCTAssertFalse(blank.saveButton.isEnabled, "An empty sentence cannot be saved")
         blank.saveButton.tap()
         XCTAssertTrue(blank.title.exists, "Tapping 저장 with an empty sentence must keep the sheet open")

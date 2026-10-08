@@ -43,8 +43,9 @@ struct RoutinesView: View {
             await viewModel.load()
         }
         .accessibilityIdentifier("routines.screen")
-        .overlay { sheet }
+        .overlay { sheet.ignoresSafeArea(.container, edges: .bottom) }
         .animation(.easeInOut(duration: 0.18), value: sheetMode)
+        .toolbarVisibility(sheetMode == nil ? .automatic : .hidden, for: .tabBar)
     }
 
     private var header: some View {

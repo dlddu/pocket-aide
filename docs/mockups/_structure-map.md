@@ -46,8 +46,8 @@ last_updated: 2026-10-08
 
 ## 집계
 
-남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 1행.
-남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 1행.
+남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
+남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -56,15 +56,15 @@ last_updated: 2026-10-08
 | `screen-affirmations-priority-edit` | M | 불일치 | 0 |
 | `screen-affirmations-priority-edit` | M | 허용 | 4 |
 | `screen-affirmations-priority-edit` | M | 목업 대기 | 0 |
-| `screen-affirmations-priority-edit` | S | 일치 | 12 |
-| `screen-affirmations-priority-edit` | S | 불일치 | 1 |
+| `screen-affirmations-priority-edit` | S | 일치 | 13 |
+| `screen-affirmations-priority-edit` | S | 불일치 | 0 |
 | `screen-routines` | M | 일치 | 83 |
 | `screen-routines` | M | 기본값 일치 | 2 |
 | `screen-routines` | M | 불일치 | 0 |
 | `screen-routines` | M | 허용 | 12 |
 | `screen-routines` | M | 목업 대기 | 0 |
-| `screen-routines` | S | 일치 | 17 |
-| `screen-routines` | S | 불일치 | 1 |
+| `screen-routines` | S | 일치 | 18 |
+| `screen-routines` | S | 불일치 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -227,7 +227,7 @@ last_updated: 2026-10-08
 | 10 | 저장(1차 액션) | `저장` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Button(action: handleSave)` | 일치 | 전폭 채움 버튼 |
 | 11 | 삭제(편집 모드 전용) | `<!-- 편집 모드 전용 destructive` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `if isEditing, let onDelete` | 일치 | 저장과 취소 사이, 편집 모드에만 |
 | 12 | 취소(2차 액션) | `취소` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `Button("취소", action: onCancel)` | 일치 | 글자만 있는 버튼, 맨 아래 |
-| 13 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40"` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.overlay { if let mode = sheetMode { PriorityEditSheet(` | 불일치 | 목업 시트는 탭 바(z-10) 위를 덮고 화면 바닥에 붙는다. 구현은 탭 콘텐츠의 `.overlay` 라 시스템 탭 바 위에서 끝난다 |
+| 13 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40"` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.ignoresSafeArea(.container, edges: .bottom)` · `.toolbarVisibility(sheetMode == nil ? .automatic : .hidden, for: .tabBar)` | 일치 | 목업 시트는 탭 바(z-10) 위를 덮고 화면 바닥에 붙는다. 구현은 시트가 열린 동안 시스템 탭 바를 숨기고, 시트 overlay 가 아래 컨테이너 안전 영역을 무시해 화면 바닥까지 내려간다(키보드 회피는 유지) |
 
 ## 표 E — 요소 (`screen-routines`) · 27행
 
@@ -386,7 +386,7 @@ last_updated: 2026-10-08
 | 15 | 새 단계 입력 | `placeholder="새 단계"` | `ios/PocketAide/Routines/RoutineSheets.swift` | `TextField("새 단계", text: $title)` | 일치 | 기존 단계 목록 아래 카드 안 한 줄 입력 |
 | 16 | 단계 추가(1차 액션) | `opacity-50">단계 추가</button>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Text("단계 추가")` | 일치 | 전폭 채움 버튼, 입력이 비면 비활성 |
 | 17 | 닫기(2차 액션) | `opacity-55">닫기</button>` | `ios/PocketAide/Routines/RoutineSheets.swift` | `Button("닫기", action: onCancel)` | 일치 | 글자만 있는 버튼, 맨 아래 |
-| 18 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40"` | `ios/PocketAide/Routines/RoutinesView.swift` | `.overlay { sheet }` | 불일치 | 목업 시트는 탭 바(z-10) 위를 덮고 화면 바닥에 붙는다. 구현은 탭 콘텐츠의 `.overlay` 라 시스템 탭 바 위에서 끝난다(우선순위 시트 표 S 13행과 같은 원인 — 공용 `Sheet`) |
+| 18 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--bg)] z-40"` | `ios/PocketAide/Routines/RoutinesView.swift` | `.overlay { sheet.ignoresSafeArea(.container, edges: .bottom) }` · `.toolbarVisibility(sheetMode == nil ? .automatic : .hidden, for: .tabBar)` | 일치 | 목업 시트는 탭 바(z-10) 위를 덮고 화면 바닥에 붙는다. 구현은 시트가 열린 동안 시스템 탭 바를 숨기고, 시트 overlay 가 아래 컨테이너 안전 영역을 무시해 화면 바닥까지 내려간다(우선순위 시트 표 S 13행과 같은 처리 — 공용 `Sheet` 무접촉) |
 
 ## 검산
 
