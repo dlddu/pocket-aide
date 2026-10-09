@@ -4,4 +4,4 @@
 
 | 문서 | 다루는 것 | 관련 PRD | 상태 |
 |---|---|---|---|
-| [`keyboard-voice-input.md`](./keyboard-voice-input.md) | 키보드 확장의 음성 입력 — 본 앱이 녹음·인식하고 App Group으로 결과를 넘기는 구조 | PRD-9 AC5, PRD-7 AC6 | 초안 (v0.1) |
+| [`keyboard-voice-input.md`](./keyboard-voice-input.md) | 키보드 확장의 음성 입력 — 본 앱이 녹음·인식하고 App Group으로 결과를 넘기는 구조 | PRD-9 AC5, PRD-7 AC2·AC6 | 초안 (v0.2) |
