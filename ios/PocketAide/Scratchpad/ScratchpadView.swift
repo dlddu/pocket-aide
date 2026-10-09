@@ -117,13 +117,14 @@ struct ScratchpadView: View {
                     } header: {
                         HStack(spacing: DesignTokens.Spacing.sm) {
                             Text(section.title)
-                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
+                                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
+                                .tracking(2.1)
                                 .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
                             Rectangle()
                                 .fill(DesignTokens.Color.rule(.scratchpad))
                                 .frame(height: 1)
                             Text("\(section.items.count) ITEMS")
-                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                                .font(DesignTokens.Typography.font(size: 10.5))
                                 .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
                         }
                         .textCase(nil)
@@ -228,15 +229,15 @@ private struct ScratchpadCard: View {
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
                 .foregroundStyle(DesignTokens.Color.ink(.scratchpad))
                 .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: 6) {
                 ForEach(ScratchpadMoveTarget.allCases, id: \.self) { target in
                     Button {
                         onMove(target)
                     } label: {
                         Text(target.chipLabel)
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .medium))
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
+                            .padding(.vertical, DesignTokens.Spacing.xs)
                             .overlay(Capsule().stroke(DesignTokens.Color.accent(target.designArea), lineWidth: 1))
                             .foregroundStyle(DesignTokens.Color.accent(target.designArea))
                     }
@@ -245,7 +246,7 @@ private struct ScratchpadCard: View {
                 }
             }
         }
-        .padding(14)
+        .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(DesignTokens.Color.card(.scratchpad))
         .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
