@@ -82,6 +82,16 @@
 | `.github/workflows/ios-test.yml` 118 | 「Coverage stays on in the scheme for local runs; nothing in CI reads it.」 | `-enableCodeCoverage NO` 가 scheme 의 `gatherCoverageData: true` 를 CI 에서만 끈다는 짝과 근거 — 지우면 scheme 과 어긋난 실수로 보고 플래그를 지우거나, CI 산출물에 커버리지가 있다고 기대하게 된다 |
 | `scripts/ci/ios_test_shards.py` 27–28 | 「A class missing from the durations file is a new one: weigh it like a」 | 소요 시간 표에 없는 클래스를 버리지 않고 중앙값 가중치로 배정하는 계약 — 지우면 표에 없는 클래스를 건너뛰도록 바꿔 새 테스트가 CI 에서 조용히 빠지게 된다 |
 
+## 증분 재판정 — 2026-10-09 (main push 에서 ios-test 생략)
+
+- **기준 커밋**: `d081178` 위의 브랜치 `ci/skip-ios-test-on-main` (줄 번호는 그 브랜치 기준이다)
+- **범위**: `.github/workflows/ci.yml` 에 더한 주석 3줄과 개작 1블록(2줄).
+
+| 자리 | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` 36–38 | 「Not on main pushes: the PR already ran the suite on its merge ref, and a」 | `ios_tests` 출력만 push 이벤트를 빼는 이유(PR 이 merge ref 로 이미 돌렸고, 재실행이 대기 중인 PR 의 macOS 슬롯을 40분가량 잡는다)와 그 대가(각각 통과한 두 PR 이 합쳐져 깨지는 경우를 main 에서 못 잡는다) — 지우면 다른 출력과 어긋난 실수로 보고 되돌려 슬롯 경합을 되살리거나, 대가를 모른 채 같은 생략을 다른 테스트로 넓히게 된다 |
+| `.github/workflows/ci.yml` 213–214 → 개작 | 「ios-test is skipped on every main push (see the ios_tests output) and on」 | TestFlight 가 `ios-test` 의 `skipped` 를 받아 주는 이유(main push 에서는 항상 건너뛴다) — 옛 문면은 문서 전용 라벨 PR 만 예로 들어, 지우거나 그대로 두면 main 에서 skipped 를 막아 운영 TestFlight 를 멈추게 할 수 있다 |
+
 ## 증분 재판정 — 2026-10-10 (푸시 준비 신호)
 
 - **기준 커밋**: `b5a4fc4` 위의 브랜치 `ci/push-on-ready` (줄 번호는 그 브랜치 기준이다)
