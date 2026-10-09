@@ -105,6 +105,12 @@ public enum ScratchpadSections {
     }
 }
 
+public enum WidgetScratchpad {
+    public static func countText(_ unclassified: Int) -> String {
+        unclassified > 0 ? "미분류 \(unclassified)개" : "정리할 항목 없음"
+    }
+}
+
 struct ScratchpadListResponse: Decodable {
     let items: [ScratchpadItem]
 }

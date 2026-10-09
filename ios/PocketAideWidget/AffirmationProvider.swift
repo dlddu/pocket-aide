@@ -22,7 +22,8 @@ struct AffirmationProvider: TimelineProvider {
             state: .loaded(Self.previewAffirmation),
             calendar: .loaded(Self.previewEvents),
             weather: .loaded(Self.previewWeather, place: "서울"),
-            notifications: .loaded(WidgetNotificationsSummary(latest: Self.previewNotification, moreCount: 1))
+            notifications: .loaded(WidgetNotificationsSummary(latest: Self.previewNotification, moreCount: 1)),
+            scratchpad: .loaded(unclassified: 12)
         )
     }
 
@@ -36,6 +37,7 @@ struct AffirmationProvider: TimelineProvider {
             let client = makeClient()
             let state = await fetchState(client, at: now)
             let notifications = await fetchNotifications(client)
+            let scratchpad = await fetchScratchpad(client)
             let calendar = CalendarSnapshot.load(from: now, through: now).state(at: now)
             let weather = await fetchWeather()
             completion(PocketAideWidgetEntry(
@@ -43,7 +45,8 @@ struct AffirmationProvider: TimelineProvider {
                 state: state,
                 calendar: calendar,
                 weather: weather,
-                notifications: notifications
+                notifications: notifications,
+                scratchpad: scratchpad
             ))
         }
     }
@@ -54,6 +57,7 @@ struct AffirmationProvider: TimelineProvider {
             let client = makeClient()
             let items = await fetchAffirmations(client)
             let notifications = await fetchNotifications(client)
+            let scratchpad = await fetchScratchpad(client)
             let weather = await fetchWeather()
             let lastEntryDate = now.addingTimeInterval(Double(Self.entryCount - 1) * Self.refreshInterval)
             let snapshot = CalendarSnapshot.load(from: now, through: lastEntryDate)
@@ -63,7 +67,8 @@ struct AffirmationProvider: TimelineProvider {
                     state: state,
                     calendar: snapshot.state(at: now),
                     weather: weather,
-                    notifications: notifications
+                    notifications: notifications,
+                    scratchpad: scratchpad
                 )]
             }
             let nextReload = now.addingTimeInterval(Self.refreshInterval)
@@ -82,19 +87,15 @@ struct AffirmationProvider: TimelineProvider {
                         state: .loaded(pick),
                         calendar: snapshot.state(at: date),
                         weather: weather,
-                        notifications: notifications
+                        notifications: notifications,
+                        scratchpad: scratchpad
                     )
                 }
                 completion(Timeline(entries: entries, policy: .after(nextReload)))
             case .needsLogin:
                 completion(Timeline(entries: single(.needsLogin), policy: .after(nextReload)))
             case .error:
-                // Back off on errors so a flapping backend doesn't burn the
-                // system's per-widget refresh budget.
-                completion(Timeline(
-                    entries: single(.error),
-                    policy: .after(now.addingTimeInterval(60 * 60))
-                ))
+                completion(Timeline(entries: single(.error), policy: .after(nextReload)))
             }
         }
     }
@@ -189,6 +190,24 @@ struct AffirmationProvider: TimelineProvider {
             return .needsLogin
         } catch {
             logger.error("listNotificationHistory failed: \(String(describing: error), privacy: .public)")
+            return .error
+        }
+    }
+
+    private func fetchScratchpad(_ client: ClientResult) async -> WidgetScratchpadState {
+        let api: APIClient
+        switch client {
+        case .ready(let ready): api = ready
+        case .needsLogin: return .needsLogin
+        case .error: return .error
+        }
+        do {
+            return .loaded(unclassified: try await api.listScratchpad().count)
+        } catch APIError.badStatus(401, _) {
+            logger.info("listScratchpad → 401, needsLogin")
+            return .needsLogin
+        } catch {
+            logger.error("listScratchpad failed: \(String(describing: error), privacy: .public)")
             return .error
         }
     }

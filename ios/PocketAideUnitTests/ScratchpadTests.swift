@@ -51,4 +51,13 @@ final class ScratchpadTests: XCTestCase {
         XCTAssertEqual(aff.affirmation?.priority, .normal)
         XCTAssertNil(aff.todo)
     }
+
+    func testWidgetCountTextShowsUnclassifiedCount() {
+        XCTAssertEqual(WidgetScratchpad.countText(3), "미분류 3개")
+        XCTAssertEqual(WidgetScratchpad.countText(1), "미분류 1개")
+    }
+
+    func testWidgetCountTextMarksEmptyScratchpad() {
+        XCTAssertEqual(WidgetScratchpad.countText(0), "정리할 항목 없음")
+    }
 }
