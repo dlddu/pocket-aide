@@ -37,6 +37,7 @@ final class ScratchpadViewModel: ObservableObject {
         do {
             let created = try await api.createScratchpadItem(text: text)
             items.insert(created, at: 0)
+            WidgetRefresher.reloadAll()
         } catch {
             errorMessage = String(describing: error)
         }
@@ -47,6 +48,7 @@ final class ScratchpadViewModel: ObservableObject {
         do {
             try await api.deleteScratchpadItem(id: id)
             items.removeAll { $0.id == id }
+            WidgetRefresher.reloadAll()
         } catch {
             errorMessage = String(describing: error)
         }
@@ -57,6 +59,7 @@ final class ScratchpadViewModel: ObservableObject {
         do {
             let result = try await api.moveScratchpadItem(id: item.id, to: target)
             items.removeAll { $0.id == item.id }
+            WidgetRefresher.reloadAll()
             return result.affirmation
         } catch {
             errorMessage = String(describing: error)

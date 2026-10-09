@@ -21,10 +21,17 @@ enum WidgetNotificationState: Equatable {
     case error
 }
 
+enum WidgetScratchpadState: Equatable {
+    case loaded(unclassified: Int)
+    case needsLogin
+    case error
+}
+
 struct PocketAideWidgetEntry: TimelineEntry {
     let date: Date
     let state: WidgetAffirmationState
     let calendar: WidgetCalendarState
     let weather: WidgetWeatherState
     let notifications: WidgetNotificationState
+    let scratchpad: WidgetScratchpadState
 }
