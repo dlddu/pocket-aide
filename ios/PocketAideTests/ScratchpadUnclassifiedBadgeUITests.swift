@@ -49,9 +49,11 @@ private struct UnclassifiedCounts {
     let app: XCUIApplication
 
     var header: Int? {
-        let number = app.staticTexts["scratchpad.badge"]
-        guard number.exists else { return nil }
-        return Int(number.label.trimmingCharacters(in: .whitespaces))
+        app.staticTexts
+            .matching(NSPredicate(format: "identifier IN %@ AND label MATCHES %@", ["scratchpad.badge", "scratchpad.screen"], "[0-9]+"))
+            .allElementsBoundByIndex
+            .min { $0.frame.minY < $1.frame.minY }
+            .flatMap { Int($0.label) }
     }
 
     var tab: XCUIElement {
