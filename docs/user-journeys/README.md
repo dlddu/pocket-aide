@@ -1,6 +1,6 @@
 # 사용자 여정 (User Journeys)
 
-> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 5개 작성됨.
+> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 6개 작성됨.
 > 작성은 `user-journey-writer` 규약을, 여정 mockup은 `journey-mockup-builder` 규약을 따른다.
 
 ## 파일·식별자 규칙
@@ -39,6 +39,7 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 |---|---|---|
 | `JRN-morning-routine-start` | 여정 문서 초안 단계 — 단계·분기를 검토로 확정한 뒤 `journey-mockup-builder`로 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
 | `JRN-voice-capture-while-driving` | 여정 문서 초안 단계이고 PRD-6·PRD-7 구현 전 — 호출·녹음·종료 신호(음향·햅틱)와 실패 처리를 검토로 확정한 뒤 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
+| `JRN-meeting-notes-triage` | 여정 문서 초안 단계 — 단계·분기(잘못 분류한 항목의 복구, 저장 실패 시 입력 유실)를 검토로 확정한 뒤 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
 
 ## 작성된 여정
 
@@ -49,10 +50,10 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 | [`JRN-approval-push-to-decision`](./JRN-approval-push-to-decision.md) — 승인 요청 푸시에서 결정까지 | V9 (「결정」) | [journeys/JRN-approval-push-to-decision/](../journeys/JRN-approval-push-to-decision/) |
 | [`JRN-morning-routine-start`](./JRN-morning-routine-start.md) — 아침 루틴 시작에서 그날 완료까지 | V8 | 예외 등재(초안) |
 | [`JRN-voice-capture-while-driving`](./JRN-voice-capture-while-driving.md) — 운전 중 떠오른 생각을 음성으로 캡처하기 | V1, V2 | 예외 등재(초안) |
+| [`JRN-meeting-notes-triage`](./JRN-meeting-notes-triage.md) — 회사 미팅 직후 메모를 영역별로 분류하기 | V3, V1 | 예외 등재(초안) |
 
 ## 남은 후보 (PRD에서 추론)
 
-- 회사 미팅 직후 메모 분류 (V1, V3 — 임시공간 → 투두 분류)
 - 메시지 작성 중 글쓰기 보조 (V7, V5 — 키보드 확장)
 - 하루 시작 시 통합 시야 (V6 — 위젯의 일정/메일/날씨/알림 측면)
 - 열린 PR 목록으로 상태 훑기 (V9 — PRD-10 AC2~AC5 구현 후)
