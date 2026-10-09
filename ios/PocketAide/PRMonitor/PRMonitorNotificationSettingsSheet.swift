@@ -7,6 +7,9 @@ struct PRMonitorNotificationSettingsSheet: View {
     @ObservedObject var viewModel: PRMonitorViewModel
     let pushAuthorizationDenied: Bool
     @Binding var isPresented: Bool
+    let onSignOut: () -> Void
+
+    @State private var confirmingSignOut = false
 
     var body: some View {
         NavigationStack {
@@ -26,6 +29,7 @@ struct PRMonitorNotificationSettingsSheet: View {
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                     .foregroundStyle(DesignTokens.Color.ink(.prMonitor).opacity(0.55))
                 Spacer()
+                signOutRow
             }
             .padding(.horizontal, DesignTokens.Spacing.xl)
             .padding(.top, DesignTokens.Spacing.lg)
@@ -40,6 +44,30 @@ struct PRMonitorNotificationSettingsSheet: View {
                         .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
                 }
             }
+        }
+    }
+
+    private var signOutRow: some View {
+        Button("로그아웃", role: .destructive) {
+            confirmingSignOut = true
+        }
+        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))
+        .frame(maxWidth: .infinity)
+        .padding(.bottom, DesignTokens.Spacing.lg)
+        .accessibilityIdentifier("prmonitor.settings.signOut")
+        .confirmationDialog(
+            "로그아웃할까요?",
+            isPresented: $confirmingSignOut,
+            titleVisibility: .visible
+        ) {
+            Button("로그아웃", role: .destructive) {
+                isPresented = false
+                onSignOut()
+            }
+            .accessibilityIdentifier("prmonitor.settings.signOut.confirm")
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("이 기기에 저장된 GitHub 토큰도 함께 지워집니다. 다른 계정으로 다시 로그인할 수 있습니다.")
         }
     }
 
