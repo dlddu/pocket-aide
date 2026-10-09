@@ -1,6 +1,6 @@
 ---
 type: mockup-structure-map
-last_updated: 2026-10-08
+last_updated: 2026-10-09
 ---
 
 # 구조·수치 ↔ 구현 대응표
@@ -22,7 +22,7 @@ last_updated: 2026-10-08
 | `screen-affirmations-priority-edit` | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` (+ 그 화면이 쓰는 `Sheet.swift`·`Card.swift`·`FilterPills.swift`·`AreaLabel.swift`) | 시트 본체 — `Backdrop`·`Sheet`·`Handle`·제목·문장 카드·3-tier pill·도움말·액션(생성 · 생성 빈 문장 · 편집 세 프레임). 시트 아래 다짐 화면·탭 바·상태바는 범위 밖 |
 | `screen-routines` | `ios/PocketAide/Routines/RoutineSheets.swift` 의 `RoutineAddSheet`·`RoutineStepAddSheet` (+ 그 시트가 쓰는 `Sheet.swift`·`Card.swift`) | 시트 세 프레임 — 「새 루틴 시트」(이름·반복 주기·단계·액션) · 「루틴 추가 — 특정 요일」(같은 시트, 반복 주기 자리에 요일 원형 버튼 7개) · 「단계 추가 — 루틴 카드에서」(기존 단계·새 단계 입력·액션)의 `Backdrop`·`Sheet` 하위 트리. 루틴 목록 화면·상태 변형 프레임·history strip, 같은 파일의 이력 시트 `RoutineHistorySheet`, 시트 아래 탭 바·상태바는 범위 밖 |
 | `screen-affirmations` | `ios/PocketAide/Affirmations/AffirmationsView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`Card.swift`·`AreaLabel.swift`) | 다짐 탭 본체 세 프레임 — 「목록」(헤더·히어로 카드·목록 머리·목록 행·스와이프된 행·범례) · 「빈 상태」(헤더·안내 카드) · 「불러오는 중」(헤더·진행 표시 카드)의 `<header>`·`<main>` 하위 트리. 상태바·하단 탭 바(`RootView.swift` 행)·우선순위 시트(위 행)는 범위 밖 |
-| `screen-scratchpad` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 임시공간 탭 두 프레임 — 「목록」(헤더·일자 머리·메모 카드·이동 칩·스와이프된 행) · 「빈 상태」(헤더·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 「더 보기 — 미분류 배지」 프레임(`RootView.swift` 행의 시스템 오버플로 목록)·추가 시트(`ScratchpadAddSheet.swift` — 목업 없음)·「→ 다짐」 시트(우선순위 시트 행)·상태바·하단 탭 바는 범위 밖 |
+| `screen-scratchpad` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 임시공간 탭 네 프레임 — 「목록」(헤더·일자 머리·메모 카드·이동 칩·스와이프된 행) · 「빈 상태」(헤더·안내 한 줄) · 「불러오는 중」(헤더·진행 표시) · 「오류」(헤더·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 「더 보기 — 미분류 배지」 프레임(`RootView.swift` 행의 시스템 오버플로 목록)·추가 시트(`ScratchpadAddSheet.swift` — 목업 없음)·「→ 다짐」 시트(우선순위 시트 행)·상태바·하단 탭 바는 범위 밖 |
 
 ## 판독 규약
 
@@ -52,7 +52,7 @@ last_updated: 2026-10-08
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 두 프레임): 표 M `불일치` 49행 · `목업 대기` 0행, 표 S `불일치` 8행 · `목업 대기` 2행.
+남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 49행 · `목업 대기` 0행, 표 S `불일치` 8행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -78,14 +78,14 @@ last_updated: 2026-10-08
 | `screen-affirmations` | S | 일치 | 16 |
 | `screen-affirmations` | S | 불일치 | 1 |
 | `screen-affirmations` | S | 목업 대기 | 0 |
-| `screen-scratchpad` | M | 일치 | 54 |
+| `screen-scratchpad` | M | 일치 | 57 |
 | `screen-scratchpad` | M | 기본값 일치 | 1 |
 | `screen-scratchpad` | M | 불일치 | 49 |
 | `screen-scratchpad` | M | 허용 | 13 |
 | `screen-scratchpad` | M | 목업 대기 | 0 |
-| `screen-scratchpad` | S | 일치 | 6 |
+| `screen-scratchpad` | S | 일치 | 8 |
 | `screen-scratchpad` | S | 불일치 | 8 |
-| `screen-scratchpad` | S | 목업 대기 | 2 |
+| `screen-scratchpad` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -639,7 +639,7 @@ last_updated: 2026-10-08
 | 16 | 빈 상태 카드 | `<!-- 빈 상태: 히어로 자리의 안내 카드` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.accessibilityIdentifier("affirmations.empty.state")` | 일치 | 다짐이 없으면 히어로 자리에 안내 카드만 — 목록 머리·목록·범례 없음(`if !viewModel.items.isEmpty`) |
 | 17 | 불러오는 중 | `<!-- 불러오는 중: 히어로 자리의 진행 표시 카드` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `} else if viewModel.isLoading {` | 일치 | 불러오는 동안 히어로 자리에 진행 표시 카드만 — 목록 머리·목록·범례 없음 |
 
-## 표 E — 요소 (`screen-scratchpad`) · 35행
+## 표 E — 요소 (`screen-scratchpad`) · 37행
 
 | 요소 | 목업 선택 인용 |
 |---|---|
@@ -678,8 +678,10 @@ last_updated: 2026-10-08
 | 삭제 라벨 | `text-[12px] font-semibold` |
 | 밀린 행 카드 | `relative -translate-x-[74px] card rounded-2xl p-4` |
 | 빈 상태 안내 | `py-5 text-[14px] text-stone-500 leading-relaxed` |
+| 진행 표시 자리 | `py-5 flex justify-center` |
+| 오류 줄 | `text-[11px] text-[#9C3F2D]` |
 
-## 표 M — 수치 (`screen-scratchpad`) · 117행
+## 표 M — 수치 (`screen-scratchpad`) · 120행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -800,10 +802,13 @@ last_updated: 2026-10-08
 | 빈 상태 안내 | `text-[14px]` | 14 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 안내 크기 = `body` |
 | 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55)) .accessibilityIdentifier("scratchpad.empty.state")` | #2A2723/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 `#BFAE91` 로 그린다) |
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body)) .lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배 |
+| 진행 표시 자리 | `py-5` | 20 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `ProgressView().frame(maxWidth: .infinity)` · `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 진행 표시 위·아래 여백 — `emptyState` 의 `Group` 에 걸린 `Spacing.xl` 이 안내 줄과 진행 표시에 함께 걸린다(진행 표시 크기·색은 시스템 `ProgressView`, 목업은 수치 없는 `spinner` 로 그린다) |
+| 오류 줄 | `text-[11px]` | 11 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(message) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))` | 11 | 일치 | 오류 줄 크기 = `captionXs` |
+| 오류 줄 | `text-[#9C3F2D]` | #9C3F2D | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.destructive(.scratchpad)) .listRowBackground(Color.clear) .accessibilityIdentifier("scratchpad.error")` | #9C3F2D | 일치 | 오류 줄 색 = 임시공간 destructive(`tokens.md` §1.10 — 다짐 값 차용) |
 
 ## 표 S — 요소 순서·유무 (`screen-scratchpad`) · 16행
 
-행 순서가 목업 화면의 위 → 아래 순서다(1~13 「목록」 프레임 — 1~5 헤더는 두 프레임 공통 · 14 「빈 상태」 프레임 · 15~16 목업에 없는 구현 상태).
+행 순서가 목업 화면의 위 → 아래 순서다(1~13 「목록」 프레임 — 1~5 헤더는 네 프레임 공통 · 14 「빈 상태」 프레임 · 15 「불러오는 중」 프레임 · 16 「오류」 프레임).
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
@@ -821,8 +826,8 @@ last_updated: 2026-10-08
 | 12 | 이동 칩 | `→ 개인</button>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `ForEach(ScratchpadMoveTarget.allCases, id: \.self)` | 불일치 | 목업은 펼친 카드 하나에만 칩 셋(개인 · 루틴 · 다짐), 구현은 모든 카드에 칩 넷(개인 · 회사 · 다짐 · 루틴) |
 | 13 | 스와이프 삭제 | `<!-- 스와이프된 행` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 「삭제」 |
 | 14 | 빈 상태 | `<!-- 빈 상태: 일자 그룹·메모 카드 대신 안내 한 줄` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.accessibilityIdentifier("scratchpad.empty.state")` | 일치 | 메모가 없으면 일자 머리·카드 대신 안내 한 줄 |
-| 15 | 불러오는 중 | — | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `ProgressView().frame(maxWidth: .infinity)` | 목업 대기 | 구현은 첫 불러오기 동안 안내 자리에 시스템 진행 표시를 그린다 — 목업에 이 상태 프레임이 없다 |
-| 16 | 오류 줄 | — | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.accessibilityIdentifier("scratchpad.error")` | 목업 대기 | 구현은 불러오기·이동 실패 시 목록 맨 위에 destructive 글자 한 줄을 그린다 — 목업에 이 상태가 없다 |
+| 15 | 불러오는 중 | `<!-- 불러오는 중: 첫 불러오기 동안 안내 자리에 시스템 진행 표시` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `ProgressView().frame(maxWidth: .infinity)` | 일치 | 첫 불러오기 동안 안내 자리에 진행 표시만 — 일자 머리·카드 없음(`if viewModel.isLoading`) |
+| 16 | 오류 줄 | `<!-- 오류 줄 — 구현 `scratchpad.error`(목록 맨 위)` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.accessibilityIdentifier("scratchpad.error")` | 일치 | 실패 시 목록 맨 위에 destructive 글자 한 줄 — 그 아래는 그때의 목록(첫 불러오기 실패면 빈 상태 안내) |
 
 ## 검산
 
