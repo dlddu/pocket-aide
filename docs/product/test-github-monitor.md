@@ -139,8 +139,8 @@
   - 3단계: 항목은 미확인 그대로이고, 미확인 배지 수도 줄지 않는다.
   - 푸시 페이로드에 이벤트 ID가 없으면 PR 모니터 탭으로만 진입하고 강조는 없다.
 - **검증 AC**: AC7, AC12
-- **구현 상태**: 구현됨 (`pocketaide://pr-monitor?eventId=<id>` 딥링크)
-- **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift` — `testDeepLinkURLShape`, `testDeepLinkURLNilWhenNoEventID`, `testEventIDReturnsNilWhenMissing`
+- **구현 상태**: 구현됨 (`pocketaide://pr-monitor?eventId=<id>` 딥링크, 이벤트 ID가 없거나 읽을 수 없으면 `pocketaide://pr-monitor` — 탭 진입만, 강조 없음)
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift` — `testDeepLinkURLShape`, `testDeepLinkURLFallsBackToTabWhenNoEventID`, `testEventIDReturnsNilWhenMissing`
 
 ### 시나리오 9: 알림 설정에 따라 푸시 도달 여부가 달라진다
 - **사전 조건**: 로그인되어 디바이스 토큰이 등록된 상태.

@@ -47,7 +47,11 @@ final class PRMonitorPushPayloadTests: XCTestCase {
         XCTAssertEqual(url?.absoluteString, "pocketaide://pr-monitor?eventId=42")
     }
 
-    func testDeepLinkURLNilWhenNoEventID() {
-        XCTAssertNil(PRMonitorPushPayload.deepLinkURL(fromUserInfo: [:]))
+    func testDeepLinkURLFallsBackToTabWhenNoEventID() {
+        XCTAssertEqual(PRMonitorPushPayload.deepLinkURL(fromUserInfo: [:])?.absoluteString, "pocketaide://pr-monitor")
+        XCTAssertEqual(
+            PRMonitorPushPayload.deepLinkURL(fromUserInfo: ["event_id": "not-a-number"])?.absoluteString,
+            "pocketaide://pr-monitor"
+        )
     }
 }

@@ -76,8 +76,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
             Task { @MainActor in
                 DeepLinkRouter.shared.receive(url)
             }
-        } else {
-            NSLog("[AppDelegate] didReceive response: no event_id in payload, skipping deep link")
         }
         completionHandler()
     }
