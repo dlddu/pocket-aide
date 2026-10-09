@@ -7,6 +7,7 @@ enum OpenPullRequestsUI {
         static let rateLimited = "ghp_e2e_ratelimited"
         static let empty = "ghp_e2e_empty"
         static let slow = "ghp_e2e_slow"
+        static let rollup = "ghp_e2e_rollup"
 
         static func closing() -> String { "ghp_e2e_closing_" + runSuffix() }
 
