@@ -83,6 +83,39 @@ jobs:
             done
           ) > /tmp/push.log 2>&1 &
           echo "PUSH_PID=$!" >> "$GITHUB_ENV"
+      # mock-exception: EXT — APNs 전달(Apple 서버 → 기기)은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 테스트가 고른 시점에 넣은 `dlddu/push-e2e-` 이벤트마다 백엔드가 보낼 페이로드를 `xcrun simctl push` 로 시뮬레이터에 넣고 수신·탭 이후는 실경로 (docs/e2e-mocking-policy.md)
+      - name: Deliver pushes for test-sent push-e2e events
+        run: |
+          (
+            tab="$(printf '\t')"
+            seen=0
+            for i in $(seq 1 7200); do
+              sqlite3 -separator "$tab" "$DATABASE_PATH" \
+                "SELECT h.id, h.conclusion, h.repo_full_name, coalesce(h.pr_number, 0), h.workflow_name, h.head_branch
+                 FROM notification_history h JOIN users u ON u.id = h.user_id
+                 WHERE u.oidc_sub = 'mock-user-123' AND h.repo_full_name LIKE 'dlddu/push-e2e-%' AND h.id > $seen
+                 ORDER BY h.id" > /tmp/push-relay.rows 2>/dev/null || true
+              while IFS="$tab" read -r id conclusion repo number workflow branch; do
+                [ -n "$id" ] || continue
+                case "$conclusion" in
+                  success) verdict='CI 통과' ;;
+                  failure) verdict='CI 실패' ;;
+                  *) verdict="CI $conclusion" ;;
+                esac
+                title="$repo — $conclusion"
+                [ "$number" -gt 0 ] && title="$verdict — $repo #$number"
+                data=",\"event_id\":$id"
+                case "$repo" in dlddu/push-e2e-noid-*) data='' ;; esac
+                printf '{"aps":{"alert":{"title":"%s","body":"%s on %s"},"sound":"default"}%s}\n' \
+                  "$title" "$workflow" "$branch" "$data" > /tmp/push-relay.apns
+                xcrun simctl push booted com.dlddu.PocketAide /tmp/push-relay.apns || break
+                echo "pushed id=$id $(cat /tmp/push-relay.apns)"
+                seen=$id
+              done < /tmp/push-relay.rows
+              sleep 1
+            done
+          ) > /tmp/push-relay.log 2>&1 &
+          echo "PUSH_RELAY_PID=$!" >> "$GITHUB_ENV"
       - uses: ./.github/actions/generate-xcode-project
       - name: SwiftLint
         working-directory: ios
@@ -120,6 +153,7 @@ jobs:
         run: |
           echo '--- enqueue ---'; cat /tmp/enqueue.log || true
           echo '--- push ---'; cat /tmp/push.log || true
+          echo '--- push relay ---'; cat /tmp/push-relay.log || true
           echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
           echo '--- github stub ---'; tail -n 100 /tmp/github-stub.log || true
       - name: Upload xcresult on failure
@@ -138,3 +172,4 @@ jobs:
           [ -n "${GITHUB_STUB_PID:-}" ] && kill ${GITHUB_STUB_PID} || true
           [ -n "${ENQUEUE_PID:-}" ] && kill ${ENQUEUE_PID} || true
           [ -n "${PUSH_PID:-}" ] && kill ${PUSH_PID} || true
+          [ -n "${PUSH_RELAY_PID:-}" ] && kill ${PUSH_RELAY_PID} || true
