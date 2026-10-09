@@ -1,6 +1,7 @@
 name: Generate the Xcode project
 description: >
-  Installs xcodegen via mint and runs `xcodegen generate` in ios/. Required
+  Installs xcodegen from its Homebrew bottle and runs `xcodegen generate` in
+  ios/. Required
   before any xcodebuild step because the project is generated, not
   committed. Used by both the test job (which builds for the simulator)
   and the TestFlight upload job (which signs for distribution); the
@@ -11,10 +12,10 @@ description: >
 runs:
   using: composite
   steps:
-    - uses: irgaly/setup-mint@v1
     - name: Run xcodegen
       shell: bash
       working-directory: ios
       run: |
-        mint install yonaskolb/xcodegen
-        mint run xcodegen generate
+        brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+        xcodegen version
+        xcodegen generate
