@@ -41,10 +41,10 @@ last_updated: 2026-10-09
 |---|---|---|
 | A | 일치 | 128 |
 | A | 데이터 | 5 |
-| A | 비표시 | 13 |
+| A | 비표시 | 14 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
-| A | 기준 4 | 7 |
+| A | 기준 4 | 6 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
 | B | 일치 | 162 |
@@ -181,7 +181,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(section.items.count) ITEMS` | 일치 | 일자 그룹 헤더 개수 「5 ITEMS」 — 목업처럼 제목(`ScratchpadSections.title` 데이터) · 구분선 · 개수 세 요소로 그린다(글꼴 SF Mono·대문자화는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 기준 4 | 항목 메타 — 목업은 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다. 구현은 「 · 」 로 이어 한 줄 |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 비표시 | 항목 메타 줄의 접근성 라벨(`accessibilityLabel`) — 화면에는 목업처럼 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다(`Text(item.source.displayName)` · `Text(time)` — 보간 아닌 데이터) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현`(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |

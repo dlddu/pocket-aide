@@ -151,7 +151,7 @@ private extension ScratchpadScreen {
         let element = memo(text)
         XCTAssertTrue(element.waitForExistence(timeout: 10) && reveal(element), "'\(text)' should be listed", file: file, line: line)
         let floor = element.frame.minY + 1
-        let nearest = app.staticTexts.matching(NSPredicate(format: "label == %@", meta)).allElementsBoundByIndex
+        let nearest = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", meta)).allElementsBoundByIndex
             .filter { $0.frame.maxY <= floor }
             .max { $0.frame.maxY < $1.frame.maxY }
         XCTAssertNotNil(nearest, "'\(text)' should carry the meta line '\(meta)'", file: file, line: line)
