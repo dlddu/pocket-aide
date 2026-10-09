@@ -88,7 +88,7 @@ struct EmptyPayload: Encodable {}
 /// Turns an APNs push payload into the PR monitor deep link.
 public enum PRMonitorPushPayload {
     public static func deepLinkURL(fromUserInfo info: [AnyHashable: Any]) -> URL? {
-        guard let id = eventID(from: info) else { return nil }
+        guard let id = eventID(from: info) else { return URL(string: "pocketaide://pr-monitor") }
         return URL(string: "pocketaide://pr-monitor?eventId=\(id)")
     }
 
