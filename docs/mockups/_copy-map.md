@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-08
+last_updated: 2026-10-09
 ---
 
 # 카피 ↔ 구현 대응표
@@ -35,11 +35,11 @@ last_updated: 2026-10-08
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 48행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 43행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 125 |
+| A | 일치 | 128 |
 | A | 데이터 | 5 |
 | A | 비표시 | 13 |
 | A | 시스템 UI | 2 |
@@ -47,15 +47,15 @@ last_updated: 2026-10-08
 | A | 기준 4 | 7 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 161 |
-| B | 외부 | 33 |
-| B | 예시 데이터 | 98 |
+| B | 일치 | 162 |
+| B | 외부 | 36 |
+| B | 예시 데이터 | 99 |
 | B | 목업 전용 | 103 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
-| B | 구현 대기 | 48 |
+| B | 구현 대기 | 43 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 162행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 165행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -199,6 +199,9 @@ last_updated: 2026-10-08
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `확인할 알림이 없어요.` | 일치 | 알림 0건 상태 — 「알림 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「알림 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「알림 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | `임시 공간` | 일치 | 임시 공간 슬라이스 라벨(`AreaLabel`). 「미분류 N개」·「정리할 항목 없음」 은 `PocketAideAPI/Scratchpad.swift` 의 `WidgetScratchpad.countText` 리터럴이라 이 파일 행이 없다(표 B 에서 `외부`) |
+| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「임시 공간 슬라이스 상태」 변형 |
+| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「임시 공간 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `날씨` | 일치 | 날씨 슬라이스 라벨의 지명 없음 대체값(#111 에서 `PocketAideWidget.swift` 의 자리표시자 라벨 「날씨」 를 대체했다) — 「날씨 슬라이스 상태」 변형. 지명이 있으면 지명(목업 「서울」 — 예시 데이터) |
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 상태 — 「날씨 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「날씨 슬라이스 상태」 변형 |
@@ -443,10 +446,10 @@ last_updated: 2026-10-08
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
 | `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
 | `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
-| `screen-widget` | `임시 공간` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 라벨 |
-| `screen-widget` | `미분류` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 개수 앞 낱말 |
-| `screen-widget` | `12` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 미분류 수(값은 데이터) |
-| `screen-widget` | `개` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 개수 단위 |
+| `screen-widget` | `임시 공간` | 일치 | 임시 공간 슬라이스 라벨(`ScratchpadCountSection`) |
+| `screen-widget` | `미분류` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 미분류 수 앞 낱말 — 「미분류 N개」 서식은 `WidgetScratchpad.countText`(`ScratchpadCountSection` 이 그린다) |
+| `screen-widget` | `12` | 예시 데이터 | 미분류 수(`ScratchpadCountSection` 이 `.loaded(n)` 의 n 으로 그린다) |
+| `screen-widget` | `개` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 개수 단위 — 같은 `WidgetScratchpad.countText` 서식 |
 | `screen-widget` | `전화` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `메시지` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `사진` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
@@ -484,7 +487,7 @@ last_updated: 2026-10-08
 | `screen-widget` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 안내(`WeatherSection` `.needsLocation`) |
 | `screen-widget` | `임시 공간 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `미분류 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `정리할 항목 없음` | 구현 대기 | 임시 공간 슬라이스(PRD-8 AC9) — `ios/PocketAideWidget/Sections/` 에 대응 섹션이 없다(구현은 다섯 슬라이스) · 미분류 0건 안내 |
+| `screen-widget` | `정리할 항목 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 미분류 0건 안내(`WidgetScratchpad.countText(0)` — `ScratchpadCountSection` 이 안내 스타일로 그린다) |
 | `screen-widget` | `PRD-8 · AC1 단일 위젯 6영역 (날씨·캘린더·다짐·메일·알림·임시 공간 미분류 수), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입, AC9 임시 공간 미분류 수` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
