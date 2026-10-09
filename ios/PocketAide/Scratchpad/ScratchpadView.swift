@@ -145,6 +145,7 @@ struct ScratchpadView: View {
             } else {
                 Text("분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
+                    .lineHeight(.multiple(factor: 1.625))
                     .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))
                     .accessibilityIdentifier("scratchpad.empty.state")
             }
@@ -213,7 +214,7 @@ private struct ScratchpadCard: View {
     let onMove: (ScratchpadMoveTarget) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 if item.source == .shortcut {
                     Circle()
@@ -225,8 +226,10 @@ private struct ScratchpadCard: View {
                     .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))
                     .accessibilityIdentifier("scratchpad.row.\(item.id).meta")
             }
+            .padding(.bottom, 6)
             Text(item.text)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
+                .lineHeight(.multiple(factor: 1.625))
                 .foregroundStyle(DesignTokens.Color.ink(.scratchpad))
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 6) {
@@ -245,6 +248,7 @@ private struct ScratchpadCard: View {
                     .accessibilityIdentifier("scratchpad.row.\(item.id).move.\(target.rawValue)")
                 }
             }
+            .padding(.top, DesignTokens.Spacing.md)
         }
         .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
