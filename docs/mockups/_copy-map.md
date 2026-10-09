@@ -39,7 +39,7 @@ last_updated: 2026-10-09
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 128 |
+| A | 일치 | 127 |
 | A | 데이터 | 5 |
 | A | 비표시 | 14 |
 | A | 시스템 UI | 2 |
@@ -47,15 +47,15 @@ last_updated: 2026-10-09
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 162 |
-| B | 외부 | 36 |
+| B | 일치 | 161 |
+| B | 외부 | 37 |
 | B | 예시 데이터 | 100 |
 | B | 목업 전용 | 105 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 43 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 165행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 164행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -173,11 +173,10 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Routines/RoutinesView.swift` | `unchecked` | 비표시 | 위와 같음 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `checkmark.circle.fill` | 비표시 | 체크된 단계 SF Symbol 이름(삼항이라 제외 규칙 밖) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `circle` | 비표시 | 미체크 단계 SF Symbol 이름(위와 같음) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `임시 공간` | 일치 | `ScreenHeader` 제목 — 목업은 같은 문구를 미분류 배지 옆 작은 라벨로, 「분류되지 않은 메모」 를 큰 제목으로 그린다(위계 차이는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(viewModel.unclassifiedCount)` | 데이터 | 미분류 개수 배지 「12」 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 — 목업 큰 제목 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 추가 버튼(구현은 목록 위 전폭 버튼 — 자리는 기준 4) |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 제목(`ScreenHeader` 26 bold) |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 오른쪽 추가 캡슐 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(section.items.count) ITEMS` | 일치 | 일자 그룹 헤더 개수 「5 ITEMS」 — 목업처럼 제목(`ScratchpadSections.title` 데이터) · 구분선 · 개수 세 요소로 그린다(글꼴 SF Mono·대문자화는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
@@ -570,9 +569,9 @@ last_updated: 2026-10-09
 | `screen-scratchpad` | `03 · 임시 공간` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-scratchpad` | `임시 공간` | 일치 | 헤더 제목(목업은 배지 옆 작은 라벨 — 위계는 기준 4) |
+| `screen-scratchpad` | `임시 공간` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구(배지 옆 작은 라벨) |
 | `screen-scratchpad` | `12` | 예시 데이터 | 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
-| `screen-scratchpad` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 |
+| `screen-scratchpad` | `분류되지 않은 메모` | 일치 | 헤더 제목 |
 | `screen-scratchpad` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
 | `screen-scratchpad` | `새 메모` | 일치 | 추가 버튼 |
 | `screen-scratchpad` | `오늘` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 일자 그룹 제목 `ScratchpadSections.title` |
