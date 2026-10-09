@@ -67,7 +67,7 @@ struct RoutinesView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("routines.add.button")
-                Text(Self.weekdayFormatter.string(from: Date()))
+                Text(Self.weekdayFormatter.string(from: RoutinesViewModel.launchToday()))
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
                     .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55))
                     .accessibilityIdentifier("routines.today")
