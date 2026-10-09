@@ -215,17 +215,26 @@ private struct ScratchpadCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 6) {
-                if item.source == .shortcut {
+            HStack(alignment: .top, spacing: 12) {
+                HStack(spacing: 6) {
                     Circle()
-                        .fill(DesignTokens.Color.accent(.scratchpad))
+                        .fill(item.source == .shortcut ? DesignTokens.Color.accent(.scratchpad) : DesignTokens.Color.ink(.scratchpad).opacity(0.55))
                         .frame(width: 6, height: 6)
+                    Text(item.source.displayName)
+                        .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
+                        .tracking(0.5)
+                        .textCase(.uppercase)
+                        .foregroundStyle(item.source == .shortcut ? DesignTokens.Color.accent(.scratchpad) : DesignTokens.Color.ink(.scratchpad).opacity(0.7))
                 }
-                Text("\(item.source.displayName) · \(time)")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                Spacer(minLength: 0)
+                Text(time)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                     .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))
-                    .accessibilityIdentifier("scratchpad.row.\(item.id).meta")
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(item.source.displayName) · \(time)")
+            .accessibilityAddTraits(.isStaticText)
+            .accessibilityIdentifier("scratchpad.row.\(item.id).meta")
             .padding(.bottom, 6)
             Text(item.text)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
