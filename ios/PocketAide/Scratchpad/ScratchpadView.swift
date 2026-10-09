@@ -29,6 +29,8 @@ struct ScratchpadView: View {
     @ObservedObject var viewModel: ScratchpadViewModel
     @State private var sheetMode: SheetMode?
 
+    private static let cardGap: CGFloat = 10
+
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ko_KR")
@@ -110,24 +112,9 @@ struct ScratchpadView: View {
                 emptyState
             } else {
                 ForEach(viewModel.sections) { section in
-                    Section {
-                        ForEach(section.items) { item in
-                            row(for: item)
-                        }
-                    } header: {
-                        HStack(spacing: DesignTokens.Spacing.sm) {
-                            Text(section.title)
-                                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
-                                .tracking(2.1)
-                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
-                            Rectangle()
-                                .fill(DesignTokens.Color.rule(.scratchpad))
-                                .frame(height: 1)
-                            Text("\(section.items.count) ITEMS")
-                                .font(DesignTokens.Typography.font(size: 10.5))
-                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
-                        }
-                        .textCase(nil)
+                    dayHeader(section)
+                    ForEach(section.items) { item in
+                        row(for: item)
                     }
                 }
             }
@@ -155,15 +142,37 @@ struct ScratchpadView: View {
         .listRowBackground(Color.clear)
     }
 
+    private func dayHeader(_ section: ScratchpadSection) -> some View {
+        let isFirst = section.id == viewModel.sections.first?.id
+        return HStack(spacing: DesignTokens.Spacing.sm) {
+            Text(section.title)
+                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
+                .tracking(2.1)
+                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
+                .textCase(.uppercase)
+            Rectangle()
+                .fill(DesignTokens.Color.rule(.scratchpad))
+                .frame(height: 1)
+            Text("\(section.items.count) ITEMS")
+                .font(DesignTokens.Typography.font(size: 10.5))
+                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
+        }
+        .padding(.top, isFirst ? DesignTokens.Spacing.xs : DesignTokens.Spacing.md)
+        .listRowInsets(EdgeInsets(top: isFirst ? DesignTokens.Spacing.xs : Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+    }
+
     private func row(for item: ScratchpadItem) -> some View {
-        ScratchpadCard(item: item, time: timeLabel(item)) { target in
+        let isLast = item.id == viewModel.sections.last?.items.last?.id
+        return ScratchpadCard(item: item, time: timeLabel(item)) { target in
             Task {
                 if let affirmation = await viewModel.move(item, to: target) {
                     sheetMode = .priority(affirmation)
                 }
             }
         }
-        .listRowInsets(EdgeInsets(top: 4, leading: DesignTokens.Spacing.xl, bottom: 4, trailing: DesignTokens.Spacing.xl))
+        .listRowInsets(EdgeInsets(top: Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: isLast ? DesignTokens.Spacing.xxl : Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
