@@ -26,7 +26,12 @@ struct PocketAideWidgetEntryView: View {
                 ruleDivider(vertical: true)
                 NotificationSection(state: entry.notifications)
             }
-            .padding(.top, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.md)
+
+            ruleDivider(vertical: false)
+
+            ScratchpadCountSection(state: entry.scratchpad)
+                .padding(.top, DesignTokens.Spacing.md)
         }
         .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

@@ -72,6 +72,9 @@ struct PocketAideApp: App {
         case "calendar":
             showsWeather = false
             openCalendar()
+        case "scratchpad":
+            showsWeather = false
+            selectedTab = .scratchpad
         case "pr-monitor":
             showsWeather = false
             if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),

@@ -123,9 +123,9 @@ func run(root string) *report {
 		return fail("C1 위치: 블록의 checker 경로 %s 가 없다", b.Checker)
 	}
 
-	criteria, err := readCriteria(filepath.Join(root, readmePath))
+	criteria, err := readCriteria(filepath.Join(root, criteriaPath))
 	if err != nil {
-		return fail("README 풀스캔 허용 기준: %v", err)
+		return fail("풀스캔 허용 기준(%s): %v", criteriaPath, err)
 	}
 
 	s, err := observeSchema(root, b)
