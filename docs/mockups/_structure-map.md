@@ -37,7 +37,7 @@ last_updated: 2026-10-09
   `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
   `.opacity(…)`·`lineWidth:`·`…Radius:`·`padding: .…`)은 모두 표 M 어느 행의 `구현 인용` 안에 나온다. 목업 토큰과 짝이 없는 수식은 `요소`·`목업 인용` 이 `—` 인 행이다.
 - `구현 인용` 은 소스의 공백을 접은 조각이고, `구현 값` 의 숫자는 그 조각의 숫자(`DesignTokens` 상수·`CardPadding` 은 값으로 풀어서)에서, 색은 조각이 부르는
-  그 화면 영역(다짐 · 루틴) 색 에셋의 라이트 값에서 온다. 시스템 컨트롤처럼 구현에 수식이 없는 자리의 `구현 값` 은 `시스템` 이고, 구현에 그 요소·수식 자체가 없으면 구현 열 셋이 `—` 다(`불일치`). 값은 단일 수식의 값만 읽는다 — 인접 인셋의 합·오프셋과 안쪽 여백의 합처럼 실효 값이 같아도 단일 수식이 아니면 `불일치` 이고 근거 열이 실효 값을 적는다. `em` 자간은 그 요소의 글자 크기를 곱해 소수 첫째 자리까지 본다(구현도 `em` 계수로 적으면 계수끼리 비교한다).
+  그 화면 영역(다짐 · 루틴) 색 에셋의 라이트 값에서 온다(`.white` 는 `#FFFFFF`). 값이 화면에서 공용 컴포넌트로 인자로 넘어가는 자리는 `구현 파일` 칸에 파일을 ` · ` 로 함께 적고, 인용마다 그중 한 파일에 있다. 시스템 컨트롤처럼 구현에 수식이 없는 자리의 `구현 값` 은 `시스템` 이고, 구현에 그 요소·수식 자체가 없으면 구현 열 셋이 `—` 다(`불일치`). 값은 단일 수식의 값만 읽는다 — 인접 인셋의 합·오프셋과 안쪽 여백의 합처럼 실효 값이 같아도 단일 수식이 아니면 `불일치` 이고 근거 열이 실효 값을 적는다. `em` 자간은 그 요소의 글자 크기를 곱해 소수 첫째 자리까지 본다(구현도 `em` 계수로 적으면 계수끼리 비교한다).
 - **판정** 열은 다음 중 하나다. 남은 구조·수치 drift 는 `불일치`·`목업 대기` 행이다.
   - `일치` — 목업 값과 구현 값이 같다(표 S: 같은 요소가 같은 순서·조건으로 있다).
   - `기본값 일치` — 정방향 전용. 목업은 클래스 없이 CSS 기본값(굵기 400·간격 0)으로 그리고 구현 값이 그 기본값과 같다.
@@ -52,7 +52,7 @@ last_updated: 2026-10-09
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 32행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -71,20 +71,20 @@ last_updated: 2026-10-09
 | `screen-routines` | S | 일치 | 18 |
 | `screen-routines` | S | 불일치 | 0 |
 | `screen-affirmations` | M | 일치 | 133 |
-| `screen-affirmations` | M | 기본값 일치 | 1 |
+| `screen-affirmations` | M | 기본값 일치 | 2 |
 | `screen-affirmations` | M | 불일치 | 7 |
 | `screen-affirmations` | M | 허용 | 12 |
 | `screen-affirmations` | M | 목업 대기 | 0 |
 | `screen-affirmations` | S | 일치 | 16 |
 | `screen-affirmations` | S | 불일치 | 1 |
 | `screen-affirmations` | S | 목업 대기 | 0 |
-| `screen-scratchpad` | M | 일치 | 74 |
+| `screen-scratchpad` | M | 일치 | 90 |
 | `screen-scratchpad` | M | 기본값 일치 | 1 |
-| `screen-scratchpad` | M | 불일치 | 32 |
+| `screen-scratchpad` | M | 불일치 | 13 |
 | `screen-scratchpad` | M | 허용 | 13 |
 | `screen-scratchpad` | M | 목업 대기 | 0 |
-| `screen-scratchpad` | S | 일치 | 10 |
-| `screen-scratchpad` | S | 불일치 | 6 |
+| `screen-scratchpad` | S | 일치 | 13 |
+| `screen-scratchpad` | S | 불일치 | 3 |
 | `screen-scratchpad` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
@@ -169,7 +169,7 @@ last_updated: 2026-10-09
 | 빈도 구역 | `mt-5` | 20 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.xl) { editorCard` | 20 | 일치 | 문장 카드 ↔ 노출 빈도 간격 = 본문 스택 간격 `Spacing.xl` |
 | 빈도 라벨 | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs` | 11 | 일치 | `AreaLabel` 크기 |
 | 빈도 라벨 | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | `AreaLabel` 대문자화 |
-| 빈도 라벨 | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(2.4)` | 2.4 | 일치 | 자간 0.22em × 11px = 2.42 → 2.4pt |
+| 빈도 라벨 | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(tracking)` · `tracking: CGFloat = 2.4` | 2.4 | 일치 | 자간 0.22em × 11px = 2.42 → 2.4pt(`AreaLabel` 기본 자간) |
 | 빈도 라벨 | `text-[var(--tan)]` | #8B6F47 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #8B6F47 | 일치 | 라벨 색 = 영역 accent |
 | 빈도 라벨 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `weight: .bold` | bold | 일치 | 라벨 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) |
 | 빈도 라벨 | `mb-2` | 8 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) { AreaLabel(` | 8 | 일치 | 라벨 ↔ pill 간격 = `Spacing.sm` |
@@ -457,21 +457,22 @@ last_updated: 2026-10-09
 | 빈 상태 제목 | `serif text-[18px] font-bold text-[var(--ink)]` |
 | 빈 상태 안내 | `mt-2 text-[11px] text-stone-500 leading-relaxed` |
 
-## 표 M — 수치 (`screen-affirmations`) · 153행
+## 표 M — 수치 (`screen-affirmations`) · 154행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
 | ScreenHeader | `px-5` | 20 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl)` | 20 | 일치 | 헤더 좌우 여백 = `Spacing.xl` |
 | ScreenHeader | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
-| ScreenHeader | `pb-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.bottom, DesignTokens.Spacing.sm)` | 8 | 일치 | 헤더 아래 여백 = `Spacing.sm` |
+| ScreenHeader | `pb-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.bottom, bottomPadding)` · `bottomPadding: CGFloat = DesignTokens.Spacing.sm` | 8 | 일치 | 헤더 아래 여백 = `ScreenHeader` 기본 `bottomPadding`(`Spacing.sm`) |
 | 영역 라벨(헤더) | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | 11 | 일치 | `AreaLabel` 크기 = `captionXs` |
 | 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | `AreaLabel` 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) — 목업 헤더 라벨을 600 에서 토큰 규칙으로 맞췄다(PERSONAL·WORK·PR·APPROVAL·노출 빈도 라벨과 같은 값) |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
-| 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(2.4)` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42, 0.1pt 단위로 2.4 |
+| 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(tracking)` · `tracking: CGFloat = 2.4` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42, 0.1pt 단위로 2.4(`AreaLabel` 기본 자간 — `ScreenHeader` `labelTracking` 기본값도 2.4) |
+| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 다짐 탭은 라벨 옆 부속이 없다(`EmptyView`). 목업도 라벨 하나뿐이라 간격 수식이 없다 |
 | 영역 라벨(헤더) | `text-[var(--tan)]` | #8B6F47 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #8B6F47 | 일치 | 라벨 색 = 영역 accent(tan) |
-| 제목 | `text-[24px]` | 24 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: 24, weight: .bold, family: titleFamily` | 24 | 일치 | 화면 제목 크기 |
-| 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: 24, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
-| 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * 24)` | -0.025em | 일치 | 제목 자간 −0.025em(× 24 = −0.6) — `ScreenHeader` 를 쓰는 화면 목업 h1 이 모두 `tracking-tight` |
+| 제목 | `text-[24px]` | 24 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` · `titleSize: CGFloat = 24` | 24 | 일치 | 화면 제목 크기 = `ScreenHeader` 기본 `titleSize` |
+| 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
+| 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * titleSize)` | -0.025em | 일치 | 제목 자간 −0.025em(× 24 = −0.6) — `ScreenHeader` 를 쓰는 화면 목업 h1 이 모두 `tracking-tight` |
 | 제목 | `serif` | serif | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ScreenHeader(area: .affirmations, title: "자주 읽어줘야 할 것", titleFamily: .serif)` | serif | 일치 | 다짐 화면 제목은 serif |
 | 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 라벨 ↔ 제목 간격 |
 | 추가 버튼 | `w-9` | 36 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.frame(width: 36, height: 36)` | 36 | 일치 | 버튼 너비 |
@@ -621,7 +622,7 @@ last_updated: 2026-10-09
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold">다짐</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold">다짐</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area, tracking: labelTracking)` | 일치 | 헤더 맨 위 — 영역 이름 |
 | 2 | 화면 제목 | `자주 읽어줘야 할 것</h1>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ScreenHeader(area: .affirmations, title: "자주 읽어줘야 할 것", titleFamily: .serif)` | 일치 | 라벨 아래 |
 | 3 | 추가 버튼 | `<button class="w-9 h-9 rounded-full border border-[var(--rule)] grid place-items-center bg-white/40">` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `sheetMode = .create` | 일치 | 헤더 오른쪽 끝 — 원형 더하기 |
 | 4 | 히어로 카드 | `<!-- HERO: rotating affirmation -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `if let hero = viewModel.heroItem {` | 일치 | 본문 맨 위 |
@@ -681,48 +682,45 @@ last_updated: 2026-10-09
 | 진행 표시 자리 | `py-5 flex justify-center` |
 | 오류 줄 | `text-[11px] text-[#9C3F2D]` |
 
-## 표 M — 수치 (`screen-scratchpad`) · 120행
+## 표 M — 수치 (`screen-scratchpad`) · 117행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
 | 헤더 | `px-5` | 20 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl)` | 20 | 일치 | 헤더 좌우 여백 = `Spacing.xl` |
 | 헤더 | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
-| 헤더 | `pb-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.bottom, DesignTokens.Spacing.sm)` | 8 | 불일치 | 헤더 아래 여백 — 공용 `ScreenHeader` 는 8(다짐 탭 목업 `pb-2`), 임시공간 목업은 `pb-3`(12) |
-| 라벨 줄 | `gap-2` | 8 | — | — | — | 불일치 | 영역 라벨 ↔ 미분류 배지 간격 — 구현 헤더 라벨 옆에 배지가 없다(표 S #2) |
+| 헤더 | `pb-3` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `bottomPadding: DesignTokens.Spacing.md` · `.padding(.bottom, bottomPadding)` | 12 | 일치 | 헤더 아래 여백 = `Spacing.md` — 화면이 `ScreenHeader` 의 `bottomPadding` 인자로 넘긴다(기본값 8 은 다짐 탭 `pb-2`) |
+| 라벨 줄 | `gap-2` | 8 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.leading, DesignTokens.Spacing.sm)` · `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 8 | 일치 | 영역 라벨 ↔ 미분류 배지 간격 = 배지 앞 여백 `Spacing.sm` — 공용 라벨 줄 `HStack` 은 간격 0(부속 없는 화면에 간격이 생기지 않게) 이고 배지가 제 앞 여백을 단다 |
 | 영역 라벨(헤더) | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | 11 | 일치 | `AreaLabel` 크기 = `captionXs` |
 | 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | `AreaLabel` 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
-| 영역 라벨(헤더) | `tracking-[0.2em]` | 0.2em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(2.4)` | 2.4 | 불일치 | 자간 — 0.2em × 11 = 2.2, 공용 `AreaLabel` 은 2.4(다짐 목업 0.22em 의 값) |
+| 영역 라벨(헤더) | `tracking-[0.2em]` | 0.2em | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: 2.2` · `AreaLabel(area: area, tracking: labelTracking)` · `.tracking(tracking)` | 2.2 | 일치 | 자간 — 0.2em × 11 = 2.2, 화면이 `ScreenHeader` 의 `labelTracking` 인자로 넘겨 `AreaLabel` 까지 내려간다(기본값 2.4 는 다른 화면 목업의 0.22em) |
 | 영역 라벨(헤더) | `text-[var(--warm)]` | #B6855E | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #B6855E | 일치 | 라벨 색 = 영역 accent(warm) |
-| 미분류 배지 | `bg-[var(--warm)]` | #B6855E | — | — | — | 불일치 | 배지 채움 — 구현 미분류 수는 채움 없는 글자다(헤더 오른쪽 큰 숫자, 표 S #2) |
-| 미분류 배지 | `text-white` | #FFFFFF | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold)) .foregroundStyle(DesignTokens.Color.accent(.scratchpad))` | #B6855E | 불일치 | 미분류 수 글자 색 — 목업 흰 글자(warm 배지 위), 구현 영역 accent |
-| 미분류 배지 | `text-[10px]` | 10 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold)) .foregroundStyle(DesignTokens.Color.accent(.scratchpad))` | 27 | 불일치 | 미분류 수 크기 — 목업 10, 구현 `h1`(27) |
-| 미분류 배지 | `font-bold` | bold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold)) .foregroundStyle(DesignTokens.Color.accent(.scratchpad))` | bold | 일치 | 미분류 수 굵기 |
-| 미분류 배지 | `px-1.5` | 6 | — | — | — | 불일치 | 배지 좌우 여백 — 구현에 배지 틀이 없다 |
-| 미분류 배지 | `py-0.5` | 2 | — | — | — | 불일치 | 배지 위아래 여백 — 구현에 배지 틀이 없다 |
-| 미분류 배지 | `rounded-md` | 6 | — | — | — | 불일치 | 배지 라운드 — 구현에 배지 틀이 없다 |
-| 제목 | `text-[26px]` | 26 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: 24, weight: .bold, family: titleFamily` | 24 | 불일치 | 화면 제목 크기 — 공용 `ScreenHeader` 24, 임시공간 목업 26 |
-| 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: 24, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
-| 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * 24)` | -0.025em | 일치 | 제목 자간 −0.025em |
+| 미분류 배지 | `bg-[var(--warm)]` | #B6855E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.background(DesignTokens.Color.accent(.scratchpad))` | #B6855E | 일치 | 배지 채움 = 영역 accent(warm) |
+| 미분류 배지 | `text-white` | #FFFFFF | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(.white)` | #FFFFFF | 일치 | 배지 글자 색 = 흰색(라이트·다크 목업 모두 `text-white`) |
+| 미분류 배지 | `text-[10px]` | 10 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))` | 10 | 일치 | 미분류 수 크기 = `caption2xs` |
+| 미분류 배지 | `font-bold` | bold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))` | bold | 일치 | 미분류 수 굵기 |
+| 미분류 배지 | `px-1.5` | 6 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.horizontal, 6)` | 6 | 일치 | 배지 좌우 여백 |
+| 미분류 배지 | `py-0.5` | 2 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, 2)` | 2 | 일치 | 배지 위아래 여백 |
+| 미분류 배지 | `rounded-md` | 6 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))` | 6 | 일치 | 배지 라운드 |
+| 제목 | `text-[26px]` | 26 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `titleSize: 26` · `size: titleSize, weight: .bold, family: titleFamily` | 26 | 일치 | 화면 제목 크기 — 화면이 `ScreenHeader` 의 `titleSize` 인자로 넘긴다(기본값 24 는 다짐 탭) |
+| 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
+| 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * titleSize)` | -0.025em | 일치 | 제목 자간 −0.025em(글자 크기에 비례) |
 | 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 라벨 ↔ 제목 간격 |
 | 제목 | `font-family:'SF Pro Display',serif` | sans | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `titleFamily: DesignTokens.Typography.Family = .sans` | sans | 일치 | 제목 서체 — 목업 체인 1순위 `SF Pro Display` 는 iOS 시스템 sans(뒤의 `serif` 는 폴백), 구현 기본 `titleFamily` `.sans`(`.system`, 허용 `T3`) |
 | 부제 | `text-[12px]` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | 12 | 일치 | 부제 크기 = `captionSm` |
 | 부제 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | #2A2723/0.55 | 허용 S5 | 부제 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 임시공간 다크 톤 `#BFAE91` 로 그린다) |
 | 부제 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 제목 ↔ 부제 간격 |
-| 새 메모 버튼 | `bg-[var(--ink)]` | #2A2723 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, 12) .background(DesignTokens.Color.card(.scratchpad))` | #FBF7EC | 불일치 | 버튼 바탕 — 목업은 헤더 오른쪽 어두운 캡슐(ink), 구현은 헤더 아래 전폭 카드형(card) 버튼(표 S #5) |
-| 새 메모 버튼 | `text-[var(--paper)]` | #F5EFE0 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.ink(.scratchpad)) }` | #2A2723 | 불일치 | 버튼 글자 색 — 목업 paper(어두운 바탕 위), 구현 영역 ink |
-| 새 메모 버튼 | `text-[12px]` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("새 메모") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))` | 14 | 불일치 | 버튼 글자 크기 — 목업 12, 구현 `body`(14) |
-| 새 메모 버튼 | `font-semibold` | semibold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("새 메모") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))` | semibold | 일치 | 버튼 글자 굵기 |
-| 새 메모 버튼 | `gap-1` | 4 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Image(systemName: "plus")` | 8 | 불일치 | 더하기 ↔ 「새 메모」 간격 |
+| 새 메모 버튼 | `bg-[var(--ink)]` | #2A2723 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.background(DesignTokens.Color.ink(.scratchpad))` | #2A2723 | 일치 | 버튼 바탕 = 영역 ink — 헤더 오른쪽 어두운 캡슐(`ScreenHeader` trailing) |
+| 새 메모 버튼 | `text-[var(--paper)]` | #F5EFE0 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(DesignTokens.Color.surface(.scratchpad))` | #F5EFE0 | 일치 | 버튼 글자 색 = 영역 surface(paper) — 다크 목업도 ink ↔ paper 반전이라 에셋 다크 값과 같다 |
+| 새 메모 버튼 | `text-[12px]` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("새 메모") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | 12 | 일치 | 버튼 글자 크기 = `captionSm` |
+| 새 메모 버튼 | `font-semibold` | semibold | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("새 메모") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | semibold | 일치 | 버튼 글자 굵기 |
+| 새 메모 버튼 | `gap-1` | 4 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `HStack(spacing: DesignTokens.Spacing.xs) { Image(systemName: "plus")` | 4 | 일치 | 더하기 ↔ 「새 메모」 간격 = `Spacing.xs` |
 | 새 메모 버튼 | `px-3` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.horizontal, DesignTokens.Spacing.md)` | 12 | 일치 | 버튼 좌우 안쪽 여백 = `Spacing.md` |
-| 새 메모 버튼 | `py-1.5` | 6 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, 12)` | 12 | 불일치 | 버튼 위아래 안쪽 여백 |
-| 새 메모 버튼 | `rounded-full` | full | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)) .overlay( RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous) .stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1) ) .foregroundStyle` | 16 | 불일치 | 버튼 모양 — 목업 캡슐, 구현 라운드 16 사각(외곽선 rule 1 — 목업 캡슐엔 외곽선이 없다) |
-| — | — | — | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.buttonStyle(.plain) .padding(.horizontal, DesignTokens.Spacing.xl) .padding(.bottom, DesignTokens.Spacing.sm)` | 20 | 불일치 | 새 메모 버튼 바깥 여백(좌우 20 · 아래 8) — 목업엔 헤더 아래 버튼 줄이 없다(표 S #5) |
+| 새 메모 버튼 | `py-1.5` | 6 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, 6)` | 6 | 일치 | 버튼 위아래 안쪽 여백 |
+| 새 메모 버튼 | `rounded-full` | full | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.clipShape(Capsule())` | full | 일치 | 버튼 모양 = 캡슐 |
 | 추가 글리프 | `width:13px` | 13 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Image(systemName: "plus") .font(.system(size: 13, weight: .bold))` | 13 | 일치 | 더하기 글리프 크기 — 목업 svg 13 × 13, 구현 SF Symbol 13pt(다짐 탭 추가 글리프 선례) |
 | 추가 글리프 | `height:13px` | 13 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Image(systemName: "plus") .font(.system(size: 13, weight: .bold))` | 13 | 일치 | 더하기 글리프 크기 |
-| — | — | — | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `VStack(alignment: .trailing, spacing: 2) { Text("\(viewModel.unclassifiedCount)")` | 2 | 불일치 | 헤더 오른쪽 미분류 수 ↔ 캡션 간격 — 목업엔 이 묶음이 없다(미분류 수는 라벨 옆 배지, 「분류되지 않은 메모」는 제목) |
-| — | — | — | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("분류되지 않은 메모") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))` | 11 | 불일치 | 헤더 오른쪽 캡션 — 목업은 같은 문구를 제목(26 bold)으로 그린다(표 S #3) |
-| — | — | 0 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `VStack(spacing: 0) { header addButton list }` | 0 | 기본값 일치 | 헤더 · 새 메모 버튼 · 목록 사이 간격 — 목업은 header·main 사이에 간격 수식이 없다(다짐 탭 본체 선례) |
+| — | — | 0 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `VStack(spacing: 0) { header list }` | 0 | 기본값 일치 | 헤더 · 목록 사이 간격 — 목업은 header·main 사이에 간격 수식이 없다(다짐 탭 본체 선례) |
 | 본문 | `px-5` | 20 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.listRowInsets(EdgeInsets(top: Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: isLast ? DesignTokens.Spacing.xxl : Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))` · `.listRowInsets(EdgeInsets(top: isFirst ? DesignTokens.Spacing.xs : Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))` | 20 | 일치 | 카드·일자 머리 좌우 여백 — 목록 행 인셋 leading·trailing = `Spacing.xl` |
 | 본문 | `pt-1` | 4 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.listRowInsets(EdgeInsets(top: isFirst ? DesignTokens.Spacing.xs : Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))` | 4 | 일치 | 목록 위 여백 = 첫 일자 머리 행 인셋 위 `Spacing.xs`(목록 맨 위 행 — 다짐 탭 본체 `pt-2` 히어로 행 인셋 선례) |
 | 본문 | `pb-6` | 24 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.listRowInsets(EdgeInsets(top: Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: isLast ? DesignTokens.Spacing.xxl : Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))` | 24 | 일치 | 목록 아래 여백 = 마지막 메모 카드 행 인셋 아래 `Spacing.xxl`(`isLast` — 다짐 탭 본체 `pb-6` 범례 행 인셋 선례) |
@@ -812,11 +810,11 @@ last_updated: 2026-10-09
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold">임시 공간</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area)` | 일치 | 헤더 맨 위 — 영역 이름(문구 「임시 공간」↔「임시공간」은 `_copy-map.md` 몫) |
-| 2 | 미분류 배지 | `<span class="bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp">12</span>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)")` | 불일치 | 목업은 영역 라벨 바로 옆 작은 warm 배지, 구현은 헤더 오른쪽 끝 큰 숫자(`h1`) + 캡션 「분류되지 않은 메모」 |
-| 3 | 화면 제목 | `분류되지 않은 메모</h1>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(title)` | 불일치 | 목업 제목 자리는 「분류되지 않은 메모」(26 bold), 구현 제목 자리는 「임시 공간」이고 「분류되지 않은 메모」는 헤더 오른쪽 캡션으로 옮겨 있다 — 제목 자리가 맡는 내용이 다르다 |
+| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold">임시 공간</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area, tracking: labelTracking)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 2 | 미분류 배지 | `<span class="bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp">12</span>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)")` | 일치 | 영역 라벨 바로 옆 작은 warm 배지 — `ScreenHeader` 의 라벨 부속(`labelAccessory`) |
+| 3 | 화면 제목 | `분류되지 않은 메모</h1>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `title: "분류되지 않은 메모"` | 일치 | 라벨 아래 큰 제목(26 bold) — 「분류되지 않은 메모」 |
 | 4 | 부제 | `캡처 부담 없이 일단 던져두는 곳</p>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `subtitle: "캡처 부담 없이 일단 던져두는 곳"` | 일치 | 제목 아래 |
-| 5 | 새 메모 버튼 | `<button class="px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[12px] font-semibold flex items-center gap-1">` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.accessibilityIdentifier("scratchpad.add.button")` | 불일치 | 목업은 헤더 오른쪽 끝 어두운 캡슐, 구현은 헤더 아래 전폭 카드형 버튼(헤더 오른쪽 끝은 미분류 수) |
+| 5 | 새 메모 버튼 | `<button class="px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[12px] font-semibold flex items-center gap-1">` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.accessibilityIdentifier("scratchpad.add.button")` | 일치 | 헤더 오른쪽 끝(제목 묶음과 아래 맞춤) 어두운 캡슐 — `ScreenHeader` trailing |
 | 6 | 일자 머리 | `<!-- group: today -->` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `ForEach(viewModel.sections) { section in` | 일치 | 일자마다 라벨 · 구분선 · 개수 한 줄(오늘 · 어제) |
 | 7 | 메모 카드 | `<!-- voice item -->` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `ScratchpadCard(item: item, time: timeLabel(item))` | 일치 | 일자 머리 아래 카드 — 출처 · 본문 순 |
 | 8 | 출처 점 | `<span class="w-1.5 h-1.5 rounded-full bg-stone-500"></span>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `HStack(spacing: 6) { Circle()` | 일치 | 출처 점은 출처와 무관하게 늘 있다 — 숏컷은 영역 accent, 그 밖은 흐린 점(색 차이는 표 M) |
@@ -1008,16 +1006,19 @@ for sc in SCREENS:
         if (iq == "—") != (iv == "—") or (iq == "—") != (f == "—"):
             err(f"구현 열 {row}")
         if iq != "—":
-            body = code(bt(f)[0])
             qs = bt(iq)
             for q in qs:
-                if ws(q) not in body:
+                hit = [x for x in bt(f) if ws(q) in code(x)]
+                if not hit:
                     err(f"구현 인용 {row}: {q}")
-            quoted.setdefault(bt(f)[0], []).extend(ws(q) for q in qs)
+                for x in hit:
+                    quoted.setdefault(x, []).append(ws(q))
             joined = " ".join(resolve(q) for q in qs)
             if not nums(iv) <= nums(joined) | {abs(x) for x in nums(joined)}:
                 err(f"구현 값 {row}: {iv}")
             hexes = {asset(s) for s in re.findall(r"Color\.(surface|ink|accent|rule|soft|card|destructive)\(", joined)}
+            if re.search(r"\(\.white\)|Color\.white\b", joined):
+                hexes.add("#FFFFFF")
             for h in re.findall(r"#[0-9A-Fa-f]{6}", iv):
                 if h not in hexes:
                     err(f"구현 색 {row}: {h}")

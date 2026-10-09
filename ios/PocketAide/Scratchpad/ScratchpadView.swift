@@ -43,7 +43,6 @@ struct ScratchpadView: View {
             DesignTokens.Color.surface(.scratchpad).ignoresSafeArea()
             VStack(spacing: 0) {
                 header
-                addButton
                 list
             }
         }
@@ -59,16 +58,26 @@ struct ScratchpadView: View {
     }
 
     private var header: some View {
-        ScreenHeader(area: .scratchpad, title: "임시 공간", subtitle: "캡처 부담 없이 일단 던져두는 곳") {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(viewModel.unclassifiedCount)")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold))
-                    .foregroundStyle(DesignTokens.Color.accent(.scratchpad))
-                    .accessibilityIdentifier("scratchpad.badge")
-                Text("분류되지 않은 메모")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
-                    .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))
-            }
+        ScreenHeader(
+            area: .scratchpad,
+            title: "분류되지 않은 메모",
+            titleSize: 26,
+            labelTracking: 2.2,
+            subtitle: "캡처 부담 없이 일단 던져두는 곳",
+            bottomPadding: DesignTokens.Spacing.md
+        ) {
+            Text("\(viewModel.unclassifiedCount)")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(DesignTokens.Color.accent(.scratchpad))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .padding(.leading, DesignTokens.Spacing.sm)
+                .accessibilityIdentifier("scratchpad.badge")
+        } trailing: {
+            addButton
         }
     }
 
@@ -76,26 +85,19 @@ struct ScratchpadView: View {
         Button {
             sheetMode = .add
         } label: {
-            HStack(spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "plus")
                     .font(.system(size: 13, weight: .bold))
                 Text("새 메모")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))
-                Spacer(minLength: 0)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
             }
             .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, 12)
-            .background(DesignTokens.Color.card(.scratchpad))
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
-                    .stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1)
-            )
-            .foregroundStyle(DesignTokens.Color.ink(.scratchpad))
+            .padding(.vertical, 6)
+            .background(DesignTokens.Color.ink(.scratchpad))
+            .clipShape(Capsule())
+            .foregroundStyle(DesignTokens.Color.surface(.scratchpad))
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, DesignTokens.Spacing.xl)
-        .padding(.bottom, DesignTokens.Spacing.sm)
         .accessibilityIdentifier("scratchpad.add.button")
     }
 
