@@ -182,8 +182,8 @@ last_updated: 2026-10-05
 ## screen-keyboard-extension.html
 - **시각화 대상**:
   - 여정: (미정의)
-  - 가치: V2 (한·영 혼용 STT — 키보드 전용 인식기), V5 (자연어 대화 기반 작업 처리), V7 (시스템 전역 글쓰기 보조)
-  - PRD/AC (보조): PRD-9 / AC2~AC6, AC9, AC10, AC12 (임의 앱 호출, 호스트 컨텍스트, 전면 대화 UI, 음성 받아쓰기, 자연어 미시 편집, 미리보기·적용·거절·이어서, 적용 모드, Full Access) + PRD-7 / AC6 (키보드 전용 인식기)
+  - 가치: V2 (한·영 혼용 STT — 키보드 음성 입력, 본 앱 엔진 경유), V5 (자연어 대화 기반 작업 처리), V7 (시스템 전역 글쓰기 보조)
+  - PRD/AC (보조): PRD-9 / AC2~AC6, AC9, AC10, AC12 (임의 앱 호출, 호스트 컨텍스트, 전면 대화 UI, 음성 받아쓰기, 자연어 미시 편집, 미리보기·적용·거절·이어서, 적용 모드, Full Access) + PRD-7 / AC6 (키보드 음성 입력의 본 앱 경유 처리)
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 키보드` (patterns.md §6.3)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ChatBubble.me`, `ChatBubble.ai`(압축 변형, `Avatar`(소형 PA), `PillButton.solid`(적용), `PillButton.outline`(거절), `IconCircleButton.accent-ring`(음성 진입 — 컴포저 안 작은 변형 27px), `Composer`(키보드 확장 변형 — 입력+음성+전송), `Disclaimer`. **자판이 가려진 상태이므로 `KeyboardKey`는 본 화면에서 미사용.**
@@ -252,7 +252,7 @@ last_updated: 2026-10-05
 | PRD-4 Scratchpad | screen-scratchpad | |
 | PRD-5 다짐 | screen-affirmations, screen-affirmations-priority-edit | priority-edit는 AC2 우선순위 편집 시트 |
 | PRD-6 Shortcut Voice | screen-shortcut-capture | |
-| PRD-7 STT 엔진 | screen-keyboard-extension (AC6 키보드 전용 인식기 진입점만) | 메인 앱 진입점들은 백엔드 컴포넌트로 02·08·10에 결과로 노출 |
+| PRD-7 STT 엔진 | screen-keyboard-extension (AC6 키보드 음성 입력 진입점만) | 메인 앱 진입점들은 백엔드 컴포넌트로 02·08·10에 결과로 노출 |
 | PRD-8 위젯 | screen-widget | AC9 임시 공간 미분류 수 영역 포함 |
 | PRD-9 키보드 확장 | screen-keyboard-extension | |
 | PRD-10 GitHub PR·CI 모니터 | screen-pr-monitor-push, screen-pr-monitor-history | push=AC6·AC7 진입점, history=AC7 도착지·AC11·AC12·AC13(PR/커밋 단위 그룹핑). AC1·AC2·AC3·AC4·AC5·AC8·AC9·AC10은 별도 mockup 필요 (열린 PR 목록·필터·인증 오류 배너·빈/로딩 상태 등) — follow-up. |
