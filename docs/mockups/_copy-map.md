@@ -49,8 +49,8 @@ last_updated: 2026-10-09
 | A | 목업 대기 | 0 |
 | B | 일치 | 162 |
 | B | 외부 | 36 |
-| B | 예시 데이터 | 99 |
-| B | 목업 전용 | 103 |
+| B | 예시 데이터 | 100 |
+| B | 목업 전용 | 105 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 43 |
@@ -225,7 +225,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 457행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 460행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -609,6 +609,9 @@ last_updated: 2026-10-09
 | `screen-scratchpad` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `0` | 예시 데이터 | 빈 상태 프레임의 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
 | `screen-scratchpad` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 |
+| `screen-scratchpad` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-scratchpad` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-scratchpad` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `ScratchpadViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-scratchpad` | `더 보기 — 미분류 배지` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `편집` | 구현 대기 | 「더 보기」 목록 내비게이션 바 버튼 — 시스템 More 목록이 그리는 자리이고 구현은 `developmentLanguage: en` 이라 「Edit」다(앱 리터럴 없음) |
 | `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현에 없다(시스템 More 목록에는 꼬리말 자리가 없다) |

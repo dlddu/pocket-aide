@@ -14,6 +14,7 @@
   .card{background:#FBF7EC;border:1px solid var(--rule)}
   .scroll::-webkit-scrollbar{display:none}
   .stamp{font-family:'SF Mono','Menlo',monospace;letter-spacing:.05em}
+  .spinner{width:20px;height:20px;border-radius:9999px;border:2px solid rgba(42,39,35,.12);border-top-color:rgba(42,39,35,.55)}
 </style>
 </head>
 <body class="bg-stone-200/70 min-h-screen flex flex-col items-center gap-5 py-8">
@@ -229,6 +230,161 @@
     <main class="absolute top-[180px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-2.5">
 
       <!-- 빈 상태: 일자 그룹·메모 카드 대신 안내 한 줄(본문 14 · 위아래 20). 미분류 배지는 0, 탭 배지는 숨김(`.badge(0)`) -->
+      <p class="py-5 text-[14px] text-stone-500 leading-relaxed">분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.</p>
+
+    </main>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7) -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[#FBF7EC]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>
+        <span class="text-[10px] font-medium">채팅</span>
+      </button>
+      <button class="text-[var(--ink)] flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-semibold">더 보기</span>
+      </button>
+    </div>
+
+    <!-- home indicator -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">불러오는 중</p>
+
+  <div class="frame relative overflow-hidden">
+
+    <!-- subtle paper texture -->
+    <div class="absolute inset-0 opacity-[0.4] pointer-events-none" style="background-image:repeating-linear-gradient(transparent 0,transparent 27px,rgba(166,140,90,.07) 27px,rgba(166,140,90,.07) 28px)"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold">임시 공간</div>
+            <span class="bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp">0</span>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight mt-0.5" style="font-family:'SF Pro Display',serif">분류되지 않은 메모</h1>
+          <p class="text-[12px] text-stone-500 mt-0.5">캡처 부담 없이 일단 던져두는 곳</p>
+        </div>
+        <button class="px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[12px] font-semibold flex items-center gap-1">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          새 메모
+        </button>
+      </div>
+    </header>
+
+    <!-- list -->
+    <main class="absolute top-[180px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-2.5">
+
+      <!-- 불러오는 중: 첫 불러오기 동안 안내 자리에 시스템 진행 표시(구현 `emptyState` 의 `ProgressView` — 크기·색은 시스템이 정한다, 위아래 20은 안내 줄과 같은 `Spacing.xl`). 일자 그룹·메모 카드는 그리지 않는다. 미분류 배지는 0 -->
+      <div class="py-5 flex justify-center"><span class="spinner animate-spin"></span></div>
+
+    </main>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7) -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[#FBF7EC]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>
+        <span class="text-[10px] font-medium">채팅</span>
+      </button>
+      <button class="text-[var(--ink)] flex flex-col items-center gap-0.5 py-1 px-2">
+        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-semibold">더 보기</span>
+      </button>
+    </div>
+
+    <!-- home indicator -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">오류</p>
+
+  <div class="frame relative overflow-hidden">
+
+    <!-- subtle paper texture -->
+    <div class="absolute inset-0 opacity-[0.4] pointer-events-none" style="background-image:repeating-linear-gradient(transparent 0,transparent 27px,rgba(166,140,90,.07) 27px,rgba(166,140,90,.07) 28px)"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold">임시 공간</div>
+            <span class="bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp">0</span>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight mt-0.5" style="font-family:'SF Pro Display',serif">분류되지 않은 메모</h1>
+          <p class="text-[12px] text-stone-500 mt-0.5">캡처 부담 없이 일단 던져두는 곳</p>
+        </div>
+        <button class="px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[12px] font-semibold flex items-center gap-1">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          새 메모
+        </button>
+      </div>
+    </header>
+
+    <!-- list -->
+    <main class="absolute top-[180px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-2.5">
+
+      <!-- 오류 줄 — 구현 `scratchpad.error`(목록 맨 위): 불러오기·추가·삭제·이동 실패 시 런타임 오류 문자열(`String(describing:)` — `APIError` 서식 「HTTP 상태: 본문」)을 11 · 임시공간 `--destructive`(다짐 값 차용 · tokens.md §1.10)로 한 줄. 여기서는 첫 불러오기 실패라 항목 0개 — 아래 빈 상태 안내가 함께 그려진다 -->
+      <p class="text-[11px] text-[#9C3F2D]">HTTP 503: service unavailable</p>
       <p class="py-5 text-[14px] text-stone-500 leading-relaxed">분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.</p>
 
     </main>
