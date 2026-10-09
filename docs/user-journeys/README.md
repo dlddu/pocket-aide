@@ -1,6 +1,6 @@
 # 사용자 여정 (User Journeys)
 
-> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 8개 작성됨.
+> 제품 가치(`../product/values.md`)를 달성하는 사용자 흐름을 문서로 남긴다. 현재 9개 작성됨.
 > 작성은 `user-journey-writer` 규약을, 여정 mockup은 `journey-mockup-builder` 규약을 따른다.
 
 ## 파일·식별자 규칙
@@ -42,6 +42,7 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 | `JRN-meeting-notes-triage` | 여정 문서 초안 단계 — 단계·분기(잘못 분류한 항목의 복구, 저장 실패 시 입력 유실)를 검토로 확정한 뒤 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
 | `JRN-open-prs-status-scan` | 여정 문서 초안 단계이고 「열린 PR」 시트의 화면 mockup이 아직 없다(`mockups/_index.md` follow-up) — 단계·분기(재진입 시 자동 새로고침, 리뷰어 역할 구분)를 검토로 확정한 뒤 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
 | `JRN-morning-widget-glance` | 여정 문서 초안 단계이고 위젯의 메일(PRD-8 AC3·AC11)·임시 공간(AC9) 영역이 구현 전이다 — 단계·분기(오류 백오프, 위치 신선도)를 검토로 확정한 뒤 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
+| `JRN-keyboard-writing-assist` | 여정 문서 초안 단계이고 PRD-9 구현 전 — 키보드 확장의 iOS 제약(입력창 읽기·쓰기 범위, 마이크 접근)과 PRD-9 열린 질문(적용 모드 기본값, 대화 이력, 인증 공유)을 확정한 뒤 페이지를 만든다 | 여정 문서가 「검토중」으로 바뀔 때 |
 
 ## 작성된 여정
 
@@ -55,7 +56,11 @@ mockup 페이지를 두지 않기로 한 여정을 **여정별 사유와 재검�
 | [`JRN-meeting-notes-triage`](./JRN-meeting-notes-triage.md) — 회사 미팅 직후 메모를 영역별로 분류하기 | V3, V1 | 예외 등재(초안) |
 | [`JRN-open-prs-status-scan`](./JRN-open-prs-status-scan.md) — 열린 PR 목록으로 내 PR과 리뷰 상태 훑기 | V9 (「파악」) | 예외 등재(초안) |
 | [`JRN-morning-widget-glance`](./JRN-morning-widget-glance.md) — 하루 시작에 위젯 하나로 오늘을 훑기 | V6 | 예외 등재(초안) |
+| [`JRN-keyboard-writing-assist`](./JRN-keyboard-writing-assist.md) — 메시지 작성 중 키보드에서 글쓰기 보조 받기 | V7, V5 | 예외 등재(초안) |
 
 ## 남은 후보 (PRD에서 추론)
 
-- 메시지 작성 중 글쓰기 보조 (V7, V5 — 키보드 확장. PRD-9 구현 전 — `KeyboardViewController`는 뼈대뿐이고 테스트 문서 없음)
+처음 추린 후보는 모두 작성했다. 여정이 아직 없는 PRD에서 다음 후보를 추린다.
+
+- AI 채팅 탭에서 음성으로 묻고 답 듣기 (V5, V2 — PRD-1. 구현 전 — 채팅 탭은 자리표시)
+- 폰에서 코딩 에이전트 세션에 지시하고 이어 가기 (V9 「지시」 — PRD-11. 백엔드 세션 플랫폼 프록시만 착지)
