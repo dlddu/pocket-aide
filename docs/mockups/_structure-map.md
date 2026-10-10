@@ -55,8 +55,8 @@ last_updated: 2026-10-10
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 65행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 65행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 62행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 61행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -90,17 +90,17 @@ last_updated: 2026-10-10
 | `screen-scratchpad` | S | 일치 | 13 |
 | `screen-scratchpad` | S | 불일치 | 3 |
 | `screen-scratchpad` | S | 목업 대기 | 0 |
-| `screen-todo-personal` | M | 일치 | 65 |
+| `screen-todo-personal` | M | 일치 | 68 |
 | `screen-todo-personal` | M | 기본값 일치 | 3 |
-| `screen-todo-personal` | M | 불일치 | 65 |
+| `screen-todo-personal` | M | 불일치 | 62 |
 | `screen-todo-personal` | M | 허용 | 12 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
 | `screen-todo-personal` | S | 일치 | 15 |
 | `screen-todo-personal` | S | 불일치 | 6 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
-| `screen-todo-work` | M | 일치 | 72 |
+| `screen-todo-work` | M | 일치 | 76 |
 | `screen-todo-work` | M | 기본값 일치 | 3 |
-| `screen-todo-work` | M | 불일치 | 65 |
+| `screen-todo-work` | M | 불일치 | 61 |
 | `screen-todo-work` | M | 허용 | 11 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 16 |
@@ -988,7 +988,7 @@ last_updated: 2026-10-10
 | 우선 태그 | `uppercase` | uppercase | — | — | — | 불일치 | 「우선」 태그 — 구현에 없다(우선순위는 메타 줄 문구) |
 | 우선 태그 | `tracking-wider` | 0.05em | — | — | — | 불일치 | 「우선」 태그 — 구현에 없다(우선순위는 메타 줄 문구) |
 | 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 행 제목 크기 = `bodyLg` |
-| 행 제목 | `leading-snug` | 1.375 | — | — | — | 불일치 | 행 제목 줄 높이 — 구현에 `lineHeight` 수식이 없다 |
+| 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 메타 줄 | `gap-3` | 12 | — | — | — | 불일치 | 메타 항목 사이 간격 — 구현은 메타를 한 `Text` 에 ` · ` 로 이어 붙여 간격 수식이 없다 |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: 6)` | 6 | 일치 | 제목 ↔ 메타 줄 간격 6 |
 | 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)` | 11 | 일치 | 메타 줄 크기 = `captionXs` 11 |
@@ -1028,11 +1028,11 @@ last_updated: 2026-10-10
 | 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 완료 체크 표시 — 구현은 채운 사각 SF Symbol(`checkmark.square.fill`) 하나라 따로 그리는 체크 글리프가 없다 |
 | 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 완료 체크 표시 |
 | 완료 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 완료 행 제목 크기 = `bodyLg` |
-| 완료 행 제목 | `leading-snug` | 1.375 | — | — | — | 불일치 | 완료 행 제목 줄 높이 — 구현에 `lineHeight` 수식이 없다 |
+| 완료 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 빈 상태 안내 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 안내 위·아래 여백 = `Spacing.xl`(`emptyState` 의 `Group` — 진행 표시에도 걸린다) |
 | 빈 상태 안내 | `text-[14px]` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 안내 크기 = `body` |
 | 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #3D2A22/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
-| 빈 상태 안내 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 안내 줄 높이 — 구현에 `lineHeight` 수식이 없다(임시공간은 `.lineHeight(.multiple(factor: 1.625))`) |
+| 빈 상태 안내 | `leading-relaxed` | 1.625 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body)) .lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배(임시공간·다짐 빈 상태 안내와 같은 수식) |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(spacing: 0) { Rectangle()` | 0 | 기본값 일치 | 맨 위 영역 띠 · 헤더 · 검색 필드 · 목록 사이 간격 — 목업은 블록 사이 간격 수식이 없다(다짐·임시공간 선례) |
 | — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
 | — | — | regular | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Tokens.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `weight: Font.Weight = .regular,` | regular | 기본값 일치 | 요약 줄 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 공용 부제는 굵기를 넘기지 않아 `font(size:)` 기본값 regular |
@@ -1212,12 +1212,12 @@ last_updated: 2026-10-10
 | 체크(완료) | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 20 사각, 구현 SF Symbol 사각 18pt |
 | 체크(완료) | `mt-0.5` | 2 | — | — | — | 불일치 | 체크 위 여백 — 구현은 `HStack(alignment: .top)` 정렬뿐 오프셋 수식이 없다 |
 | 급한 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 제목 크기 = `bodyLg` |
-| 급한 행 제목 | `leading-snug` | 1.375 | — | — | — | 불일치 | 줄 높이 1.375 — 구현에 줄 간격 수식이 없다 |
+| 급한 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 급한 행 제목 | `font-medium` | medium | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | medium | 일치 | 오늘 마감 제목 굵기 medium — 구현은 모든 행 제목이 medium(아래 정방향 행) |
 | 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 제목 크기 = `bodyLg` |
-| 행 제목 | `leading-snug` | 1.375 | — | — | — | 불일치 | 줄 높이 1.375 — 구현에 줄 간격 수식이 없다 |
+| 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 완료 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 제목 크기 = `bodyLg` |
-| 완료 행 제목 | `leading-snug` | 1.375 | — | — | — | 불일치 | 줄 높이 1.375 — 구현에 줄 간격 수식이 없다 |
+| 완료 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 메타 줄 | `gap-3` | 12 | — | — | — | 불일치 | 메타 항목 사이 간격 — 구현은 항목을 「 · 」 로 이어 한 `Text` 로 그린다 |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: 6)` | 6 | 일치 | 제목 ↔ 메타 줄 간격 6 |
 | 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)` | 11 | 일치 | 메타 줄 크기 = `captionXs` 11(회사는 고정폭 `base.monospaced()`) |
@@ -1266,7 +1266,7 @@ last_updated: 2026-10-10
 | 빈 상태 안내 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 안내 위·아래 여백 = `Spacing.xl`(`emptyState` 의 `Group` — 진행 표시에도 걸린다) |
 | 빈 상태 안내 | `text-[14px]` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 안내 크기 = `body` |
 | 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #1E2A3A/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 회사 ink 55%(`S5` — 다크 목업은 같은 자리를 `#A8B5C7` 로 그린다) |
-| 빈 상태 안내 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 안내 줄 높이 — 구현에 `lineHeight` 수식이 없다(임시공간은 `.lineHeight(.multiple(factor: 1.625))`) — 개인 투두 「빈 상태」 안내와 같다 |
+| 빈 상태 안내 | `leading-relaxed` | 1.625 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body)) .lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배(임시공간·다짐 빈 상태 안내와 같은 수식) |
 | 진행 표시 자리 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `ProgressView().frame(maxWidth: .infinity)` · `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 진행 표시 위·아래 여백 — `emptyState` 의 `Group` 에 걸린 `Spacing.xl` 이 안내 줄과 진행 표시에 함께 걸린다(진행 표시 크기·색은 시스템이 정한다) |
 | 오류 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(message) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))` | 11 | 일치 | 오류 줄 크기 = `captionXs` — 「오류」 프레임 목록 맨 위 한 줄(`todos.work.error`) |
 | 오류 줄 | `text-[#9C3F2D]` | #9C3F2D | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.destructive(tone)) .listRowBackground(Color.clear) .accessibilityIdentifier("\(idPrefix).error")` | #9C3F2D | 일치 | 오류 줄 색 = 회사 destructive(`tokens.md` §1.10 — 다짐 값 차용, 다크 목업은 `#D87560`) |

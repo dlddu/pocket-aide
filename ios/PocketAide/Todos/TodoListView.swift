@@ -168,6 +168,7 @@ struct TodoListView: View {
             } else {
                 Text("아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
+                    .lineHeight(.multiple(factor: 1.625))
                     .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))
                     .accessibilityIdentifier("\(idPrefix).empty.state")
             }
@@ -256,6 +257,7 @@ private struct TodoRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(item.title)
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))
+                    .lineHeight(.multiple(factor: 1.375))
                     .foregroundStyle(DesignTokens.Color.ink(tone))
                     .strikethrough(item.isDone)
                     .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
