@@ -1,4 +1,5 @@
 // 검증 시나리오: 없음 (스모크/인프라)
+import CoreLocation
 import XCTest
 
 /// Needs the ios-test workflow environment: it enqueues
@@ -245,5 +246,48 @@ final class PRMonitorUITests: XCTestCase {
 
         app.buttons["openprs.disconnect.button"].tap()
         XCTAssertTrue(app.secureTextFields["openprs.token.field"].waitForExistence(timeout: 10), "Disconnect should return to the token form")
+    }
+
+    func testWeatherFetchFailsWhileOpenMeteoIsCutAndRetryRestoresTheForecast() {
+        XCUIDevice.shared.location = XCUILocation(location: CLLocation(latitude: 37.5665, longitude: 126.9780))
+        let app = XCUIApplication()
+        app.resetAuthorizationStatus(for: .location)
+        app.launch()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let locationAlert = springboard.alerts
+            .matching(NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS %@", "location", "위치")).firstMatch
+        XCTAssertTrue(locationAlert.waitForExistence(timeout: 30), "A signed-in launch should ask for location access")
+        let whileUsing = locationAlert.buttons
+            .matching(NSPredicate(format: "label IN %@", ["Allow While Using App", "앱을 사용하는 동안 허용"])).firstMatch
+        XCTAssertTrue(whileUsing.waitForExistence(timeout: 5), "The location prompt should offer while-using access")
+        whileUsing.tap()
+        XCTAssertTrue(locationAlert.waitForNonExistence(timeout: 10), "The location prompt should close")
+
+        app.open(URL(string: "pocketaide://weather")!)
+        let temperature = app.staticTexts["weather.current.temperature"]
+        XCTAssertTrue(temperature.waitForExistence(timeout: 60), "The forecast should load from Open-Meteo before the cut")
+
+        let run = UUID().uuidString
+        addTeardownBlock { NSLog("pocketaide-e2e network-restore %@", run) }
+        NSLog("pocketaide-e2e network-cut %@", run)
+        let retry = app.buttons["weather.retry"]
+        for _ in 0..<8 where !retry.exists && temperature.exists {
+            let start = temperature.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            start.press(forDuration: 0.1, thenDragTo: start.withOffset(CGVector(dx: 0, dy: 420)))
+            _ = retry.waitForExistence(timeout: 10)
+        }
+        XCTAssertTrue(retry.exists, "Pulling the forecast while Open-Meteo is unreachable should show the retry button")
+        XCTAssertEqual(retry.label, "다시 시도")
+        XCTAssertEqual(app.staticTexts["weather.notice"].label, "잠시 후 다시 시도할게요.")
+        XCTAssertFalse(temperature.exists, "The failed fetch should replace the forecast with the notice")
+
+        NSLog("pocketaide-e2e network-restore %@", run)
+        for _ in 0..<8 where retry.exists {
+            retry.tap()
+            _ = temperature.waitForExistence(timeout: 10)
+        }
+        XCTAssertTrue(temperature.exists, "Retrying after the route is back should bring the forecast back")
+        XCTAssertTrue(app.staticTexts["weather.updated"].exists, "The restored forecast should show its update time")
+        XCTAssertFalse(retry.exists, "The retry button should leave with the error")
     }
 }
