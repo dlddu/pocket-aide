@@ -33,6 +33,13 @@ extension TodoArea {
         }
     }
 
+    var checkSize: CGFloat {
+        switch self {
+        case .personal: return 24
+        case .work: return 20
+        }
+    }
+
     func summary(open: Int, done: Int) -> String {
         switch self {
         case .personal: return "\(open)개 남음 · \(done)개 완료"
@@ -249,10 +256,11 @@ private struct TodoRow: View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
             Button(action: onToggle) {
                 Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 18))
+                    .font(.system(size: area.checkSize))
                     .foregroundStyle(DesignTokens.Color.accent(tone))
             }
             .buttonStyle(.plain)
+            .padding(.top, 2)
             .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).toggle")
             VStack(alignment: .leading, spacing: 6) {
                 Text(item.title)
