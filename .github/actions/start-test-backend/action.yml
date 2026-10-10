@@ -1,8 +1,9 @@
 name: Build & start the test backend
 description: >
   Compiles cmd/oidcmock + cmd/server, starts both in the background
-  together with the local GitHub API stub (github_api_stub.py), and
-  exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID via $GITHUB_ENV so
+  together with the local GitHub API stub (github_api_stub.py) and the
+  fake APNs receiver (apns_receiver.py), and exports OIDCMOCK_PID /
+  BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID via $GITHUB_ENV so
   a later step can kill them. Assumes the caller already checked out the repo and ran
   ./.github/actions/setup-go-backend. Required env vars on the calling
   job (read by the binaries themselves, not this action):
@@ -24,6 +25,12 @@ inputs:
       GITHUB_API_BASE_URL that PRMonitorUITests passes to the app.
     required: false
     default: '5557'
+  apns_receiver_port:
+    description: >
+      Port the fake APNs receiver listens on. Must match the APNS_HOST
+      the backend sends to and the port WebhookPushSettingsUITests reads.
+    required: false
+    default: '5558'
 
 runs:
   using: composite
@@ -43,6 +50,15 @@ runs:
         echo "OIDCMOCK_PID=$!" >> "$GITHUB_ENV"
         for i in {1..30}; do
           curl -fsS http://localhost:${{ inputs.oidcmock_port }}/.well-known/openid-configuration && break || sleep 1
+        done
+    # mock-exception: EXT — APNs 발송은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 백엔드가 APNS_HOST 로 보내는 요청을 로컬 가짜 수신부가 받아 기록한다 (docs/e2e-mocking-policy.md)
+    - name: Start fake APNs receiver
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/apns_receiver.py" ${{ inputs.apns_receiver_port }} > /tmp/apns-receiver.log 2>&1 &
+        echo "APNS_RECEIVER_PID=$!" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS http://localhost:${{ inputs.apns_receiver_port }}/healthz && break || sleep 1
         done
     - name: Start backend
       shell: bash

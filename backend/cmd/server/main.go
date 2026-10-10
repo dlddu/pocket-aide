@@ -142,6 +142,10 @@ func main() {
 			if err != nil {
 				log.Fatalf("apns: %v", err)
 			}
+			if cfg.APNSHost != "" {
+				log.Printf("pr-monitor: APNs pushes go to %s (APNS_HOST)", cfg.APNSHost)
+				apnsClient = apnsClient.WithHost(cfg.APNSHost)
+			}
 		}
 		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
 			// Looked up outside InsertBatchTx so the transaction holds
@@ -246,6 +250,7 @@ type config struct {
 	APNSBundleID      string
 	APNSAuthKeyP8     string
 	APNSUseProduction bool
+	APNSHost          string
 	// APNSDisabled keeps the consumer and history writes on but skips the
 	// push fan-out, so the E2E backend can run the pipeline without Apple
 	// credentials (docs/e2e-mocking-policy.md).
@@ -274,6 +279,7 @@ func loadConfig() config {
 			c.APNSBundleID = mustEnv("APNS_BUNDLE_ID")
 			c.APNSAuthKeyP8 = mustEnv("APNS_AUTH_KEY_P8")
 			c.APNSUseProduction = envOr("APNS_USE_PRODUCTION", "false") == "true"
+			c.APNSHost = os.Getenv("APNS_HOST")
 		}
 	}
 	return c

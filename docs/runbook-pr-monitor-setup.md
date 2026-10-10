@@ -158,7 +158,8 @@ test environments run without any of this set up.
 | `APNS_BUNDLE_ID`        | ConfigMap  | PR monitor enabled (unless `APNS_DISABLED`) |
 | `APNS_USE_PRODUCTION`   | ConfigMap  | PR monitor enabled (unless `APNS_DISABLED`) |
 | `APNS_AUTH_KEY_P8`      | Secret     | PR monitor enabled (unless `APNS_DISABLED`) |
-| `APNS_DISABLED`         | env        | never in production; `true` keeps the consumer + history but skips pushes (E2E CI only, see `docs/e2e-mocking-policy.md`) |
+| `APNS_DISABLED`         | env        | never in production; `true` keeps the consumer + history but skips pushes (local runs without Apple credentials) |
+| `APNS_HOST`             | env        | never in production; sends pushes to this APNs-compatible host instead of Apple's (`http://` = plain HTTP). E2E CI points it at the fake receiver, see `docs/e2e-mocking-policy.md` |
 
 Message authenticity is enforced by IAM/queue-policy on the SQS queue —
 there is no GitHub webhook secret in the backend.

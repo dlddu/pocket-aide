@@ -30,14 +30,21 @@ jobs:
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
-      # mock-exception: EXT — APNs 발송은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 발송만 끄고 이력 저장은 실경로 (docs/e2e-mocking-policy.md)
-      APNS_DISABLED: "true"
+      # mock-exception: EXT — APNs 발송은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 발송 대상만 로컬 가짜 수신부로 바꾸고 알림 설정 판정·발송 호출은 실경로 (docs/e2e-mocking-policy.md)
+      APNS_HOST: http://localhost:5558
+      APNS_KEY_ID: E2EKEY0001
+      APNS_TEAM_ID: E2ETEAM001
+      APNS_BUNDLE_ID: com.dlddu.PocketAide
     steps:
       - uses: actions/checkout@v4
       - name: Pick this shard's test classes
         id: shard
         run: python3 scripts/ci/ios_test_shards.py --index ${{ strategy.job-index }} --total ${{ strategy.job-total }}
       - uses: ./.github/actions/setup-go-backend
+      - name: Generate a throwaway APNs signing key for the fake receiver
+        run: |
+          key=$(openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt)
+          { echo 'APNS_AUTH_KEY_P8<<APNS_KEY_EOF'; echo "$key"; echo 'APNS_KEY_EOF'; } >> "$GITHUB_ENV"
       - uses: ./.github/actions/start-test-sqs
       - uses: ./.github/actions/start-test-backend
       - name: Enqueue webhook fixture after first sign-in
@@ -236,6 +243,7 @@ jobs:
           echo '--- network cut ---'; cat /tmp/network-cut.log || true; cat /tmp/network-switch.log || true
           echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
           echo '--- github stub ---'; tail -n 100 /tmp/github-stub.log || true
+          echo '--- apns receiver ---'; tail -n 100 /tmp/apns-receiver.log || true
       - name: Upload xcresult on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -250,6 +258,7 @@ jobs:
           [ -n "${BACKEND_PID:-}" ] && kill ${BACKEND_PID} || true
           [ -n "${MOTO_PID:-}" ] && kill ${MOTO_PID} || true
           [ -n "${GITHUB_STUB_PID:-}" ] && kill ${GITHUB_STUB_PID} || true
+          [ -n "${APNS_RECEIVER_PID:-}" ] && kill ${APNS_RECEIVER_PID} || true
           [ -n "${ENQUEUE_PID:-}" ] && kill ${ENQUEUE_PID} || true
           [ -n "${PUSH_PID:-}" ] && kill ${PUSH_PID} || true
           pkill -f 'pocketaide-e2e push-ready' || true
