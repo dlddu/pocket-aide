@@ -40,6 +40,20 @@ extension TodoArea {
         }
     }
 
+    var sectionTitleSize: CGFloat {
+        switch self {
+        case .personal: return 14
+        case .work: return DesignTokens.Typography.captionSm
+        }
+    }
+
+    var listTopInset: CGFloat {
+        switch self {
+        case .personal: return DesignTokens.Spacing.xs
+        case .work: return DesignTokens.Spacing.sm
+        }
+    }
+
     func summary(open: Int, done: Int) -> String {
         switch self {
         case .personal: return "\(open)개 남음 · \(done)개 완료"
@@ -158,8 +172,8 @@ struct TodoListView: View {
             if viewModel.items.isEmpty {
                 emptyState
             } else {
-                section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems)
-                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems)
+                section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, isLastSection: viewModel.doneItems.isEmpty)
+                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, isLastSection: true)
             }
         }
         .listStyle(.plain)
@@ -183,19 +197,21 @@ struct TodoListView: View {
         .padding(.vertical, DesignTokens.Spacing.xl)
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: area.listTopInset, leading: DesignTokens.Spacing.xl, bottom: DesignTokens.Spacing.xxl, trailing: DesignTokens.Spacing.xl))
     }
 
     @ViewBuilder
-    private func section(title: String, items: [TodoItem]) -> some View {
+    private func section(title: String, items: [TodoItem], isLastSection: Bool) -> some View {
         if !items.isEmpty {
             Section {
                 ForEach(items) { item in
+                    let isLast = isLastSection && item.id == items.last?.id
                     TodoRow(area: area, item: item) {
                         Task { await viewModel.toggleDone(item) }
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { sheetMode = .edit(item) }
-                    .listRowInsets(EdgeInsets(top: DesignTokens.Spacing.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: DesignTokens.Spacing.cardGap / 2, trailing: DesignTokens.Spacing.xl))
+                    .listRowInsets(EdgeInsets(top: DesignTokens.Spacing.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: isLast ? DesignTokens.Spacing.xxl : DesignTokens.Spacing.cardGap / 2, trailing: DesignTokens.Spacing.xl))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -209,7 +225,7 @@ struct TodoListView: View {
                 }
             } header: {
                 Text("\(title) · \(items.count)")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
+                    .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))
                     .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7))
                     .textCase(nil)
             }
