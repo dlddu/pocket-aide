@@ -207,14 +207,18 @@ final class WebhookPushSettingsUITests: XCTestCase {
     }
 
     private func revealCell(_ labels: [String], in list: XCUIApplication) -> XCUIElement {
-        let cell = list.cells.containing(NSPredicate(format: "label IN %@", labels)).firstMatch
-        let item = cell.exists ? cell : list.staticTexts.matching(NSPredicate(format: "label IN %@", labels)).firstMatch
+        revealCell(NSPredicate(format: "label IN %@", labels), named: labels.joined(separator: " / "), in: list)
+    }
+
+    private func revealCell(_ match: NSPredicate, named name: String, in list: XCUIApplication) -> XCUIElement {
+        let cell = list.cells.containing(match).firstMatch
+        let item = cell.exists ? cell : list.staticTexts.matching(match).firstMatch
         var drags = 0
         while !(item.exists && item.isHittable) && drags < 12 {
             list.swipeUp()
             drags += 1
         }
-        XCTAssertTrue(item.exists, "Settings should list \(labels.joined(separator: " / "))")
+        XCTAssertTrue(item.exists, "Settings should list \(name)")
         return item
     }
 
@@ -227,7 +231,7 @@ final class WebhookPushSettingsUITests: XCTestCase {
             search.tap()
             search.typeText("PocketAide")
         }
-        revealCell(["PocketAide"], in: settingsApp).tap()
+        revealCell(NSPredicate(format: "label BEGINSWITH %@", "PocketAide"), named: "PocketAide", in: settingsApp).tap()
         revealCell(["Notifications", "알림"], in: settingsApp).tap()
         let allow = settingsApp.switches
             .matching(NSPredicate(format: "label IN %@", ["Allow Notifications", "알림 허용"])).firstMatch
