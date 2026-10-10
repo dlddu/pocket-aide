@@ -55,8 +55,8 @@ last_updated: 2026-10-10
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 62행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 61행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 56행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 55행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -90,17 +90,17 @@ last_updated: 2026-10-10
 | `screen-scratchpad` | S | 일치 | 13 |
 | `screen-scratchpad` | S | 불일치 | 3 |
 | `screen-scratchpad` | S | 목업 대기 | 0 |
-| `screen-todo-personal` | M | 일치 | 68 |
+| `screen-todo-personal` | M | 일치 | 74 |
 | `screen-todo-personal` | M | 기본값 일치 | 3 |
-| `screen-todo-personal` | M | 불일치 | 62 |
+| `screen-todo-personal` | M | 불일치 | 56 |
 | `screen-todo-personal` | M | 허용 | 12 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
 | `screen-todo-personal` | S | 일치 | 15 |
 | `screen-todo-personal` | S | 불일치 | 6 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
-| `screen-todo-work` | M | 일치 | 76 |
+| `screen-todo-work` | M | 일치 | 82 |
 | `screen-todo-work` | M | 기본값 일치 | 3 |
-| `screen-todo-work` | M | 불일치 | 61 |
+| `screen-todo-work` | M | 불일치 | 55 |
 | `screen-todo-work` | M | 허용 | 11 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 16 |
@@ -976,10 +976,10 @@ last_updated: 2026-10-10
 | 행 카드 | `border` | 1 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | 1 | 일치 | 행 카드 외곽선 두께 |
 | 행 카드 | `border-[var(--rule)]` | #EBD9CB | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #EBD9CB | 일치 | 행 카드 외곽선 색 = 개인 rule |
 | 행 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 행 카드 체크 ↔ 본문 간격 = `Spacing.md` |
-| 체크 | `w-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 24 원, 구현 SF Symbol 18pt |
-| 체크 | `h-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 |
+| 체크 | `w-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize`(개인 24 — 회사 20, `rowRadius` 와 같은 영역 분기) |
+| 체크 | `h-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize` |
 | 체크 | `rounded-full` | full | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 체크 모양 — 목업은 clay 1.6 외곽선 원(`.check`), 구현은 모서리 둥근 사각 SF Symbol(`square` · `checkmark.square.fill`) |
-| 체크 | `mt-0.5` | 2 | — | — | — | 불일치 | 체크 위 여백 — 구현은 `HStack(alignment: .top)` 위에 맞춤만 하고 내림 수식이 없다 |
+| 체크 | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
 | 태그 줄 | `gap-1.5` | 6 | — | — | — | 불일치 | 제목 위 태그 줄 — 구현은 우선순위를 메타 줄 문구(「높음」 등)로 그리고 태그 줄이 없다 |
 | 태그 줄 | `mb-0.5` | 2 | — | — | — | 불일치 | 태그 줄 — 구현에 없다 |
 | 우선 태그 | `text-[10px]` | 10 | — | — | — | 불일치 | 「우선」 태그 — 구현에 없다(우선순위는 메타 줄 문구) |
@@ -1021,10 +1021,10 @@ last_updated: 2026-10-10
 | 완료 카드 | `border-[var(--rule)]` | #EBD9CB | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #EBD9CB | 일치 | 완료 카드 외곽선 색 = 개인 rule |
 | 완료 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 완료 카드 체크 ↔ 본문 간격 = `Spacing.md` |
 | 완료 카드 | `opacity-60` | 0.6 | `ios/PocketAide/Todos/TodoListView.swift` | `.opacity(item.isDone ? 0.6 : 1)` | 0.6 | 일치 | 완료 흐림 = 카드 전체 60%(완료 행만) |
-| 체크(완료) | `w-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 24 원, 구현 SF Symbol 18pt |
-| 체크(완료) | `h-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 |
+| 체크(완료) | `w-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize`(개인 24 — 회사 20, `rowRadius` 와 같은 영역 분기) |
+| 체크(완료) | `h-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize` |
 | 체크(완료) | `rounded-full` | full | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 체크 모양 — 목업은 clay 1.6 외곽선 원(`.check`), 구현은 모서리 둥근 사각 SF Symbol(`square` · `checkmark.square.fill`) |
-| 체크(완료) | `mt-0.5` | 2 | — | — | — | 불일치 | 체크 위 여백 — 구현은 `HStack(alignment: .top)` 위에 맞춤만 하고 내림 수식이 없다 |
+| 체크(완료) | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
 | 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 완료 체크 표시 — 구현은 채운 사각 SF Symbol(`checkmark.square.fill`) 하나라 따로 그리는 체크 글리프가 없다 |
 | 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 완료 체크 표시 |
 | 완료 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 완료 행 제목 크기 = `bodyLg` |
@@ -1205,12 +1205,12 @@ last_updated: 2026-10-10
 | 행 카드 | `border-[var(--rule)]` | #D6DEE9 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #D6DEE9 | 일치 | 외곽선 색 = 회사 `rule` |
 | 행 카드 | `p-3.5` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14)` | 14 | 일치 | 카드 안쪽 여백 14 |
 | 행 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
-| 체크 | `w-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 20 사각, 구현 SF Symbol 사각 18pt |
-| 체크 | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 20 사각, 구현 SF Symbol 사각 18pt |
-| 체크 | `mt-0.5` | 2 | — | — | — | 불일치 | 체크 위 여백 — 구현은 `HStack(alignment: .top)` 정렬뿐 오프셋 수식이 없다 |
-| 체크(완료) | `w-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 20 사각, 구현 SF Symbol 사각 18pt |
-| 체크(완료) | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: 18))` | 18 | 불일치 | 체크 크기 — 목업 20 사각, 구현 SF Symbol 사각 18pt |
-| 체크(완료) | `mt-0.5` | 2 | — | — | — | 불일치 | 체크 위 여백 — 구현은 `HStack(alignment: .top)` 정렬뿐 오프셋 수식이 없다 |
+| 체크 | `w-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize`(회사 20 — 개인 24, `rowRadius` 와 같은 영역 분기) |
+| 체크 | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize` |
+| 체크 | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
+| 체크(완료) | `w-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize`(회사 20 — 개인 24, `rowRadius` 와 같은 영역 분기) |
+| 체크(완료) | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize` |
+| 체크(완료) | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
 | 급한 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | 15 | 일치 | 제목 크기 = `bodyLg` |
 | 급한 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 급한 행 제목 | `font-medium` | medium | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | medium | 일치 | 오늘 마감 제목 굵기 medium — 구현은 모든 행 제목이 medium(아래 정방향 행) |
