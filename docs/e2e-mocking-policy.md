@@ -45,7 +45,9 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `ios/PocketAideTests/LoginUITests.swift` | `oidcmock` | `EXT` | oidcmock 토큰으로 로그인한 뒤 실 탭 셸에 착지하는지 단정한다. 사유 동일. |
 | `ios/PocketAideTests/BackendAPIUITestSupport.swift` | `oidcmock` | `EXT` | 테스트 러너 쪽 백엔드 API 헬퍼 — oidcmock 과 PKCE 왕복(authorize 의 code → token)을 해 앱과 같은 subject 의 토큰을 받는다(`login_hint` 를 실으면 둘째 사용자의 토큰). `setNextAppLoginSubject` 는 oidcmock 에 다음 앱 로그인의 subject 를 지정한다(위 `oidcmock.go` 행). 그 토큰으로 부르는 것은 실 백엔드 API 라 시드이고 치환이 아니며, IdP 쪽 사유는 위 행과 같다. |
 | `.github/workflows/ios-test.yml` | `simctl push` | `EXT` | APNs **전달**(Apple 서버 → 기기)만 대신한다 — 잡이 컨슈머가 저장한 이력 행의 id 로 백엔드가 보낼 페이로드(`formatPushText` 제목·본문 + `event_id`)를 만들어 `xcrun simctl push` 로 시뮬레이터에 넣는다. 시스템 알림 표시 · 배너 탭 · `UNUserNotificationCenterDelegate` · 딥링크 · PR 모니터 탭 전환 · 강조는 실경로로 돈다. 같은 파일의 둘째 스텝 「Deliver pushes for test-sent push-e2e events」는 테스트가 고른 시점에 러너가 넣은 이벤트 중 레포 이름이 `dlddu/push-e2e-` 로 시작하는 이력 행(앱 사용자 `mock-user-123` 몫)마다 같은 모양의 페이로드를 한 번씩 넣는다 — `dlddu/push-e2e-noid-` 레포는 `event_id` 없이 넣는다(백엔드 `apns.Client.Send` 의 데이터 없는 모양). 레포 이름은 테스트가 고르는 시드이고 치환되는 것은 같은 전달 구간뿐이다. 실 전달은 Apple 인증키와 실 기기 토큰이라는 외부 신원 경계다. |
-| `.github/workflows/ios-test.yml` | `APNS_DISABLED` | `EXT` | 잡 env 가 백엔드의 APNs **발송만** 끈다 — SQS 컨슈머 · 이력 저장 · 이력 API · PR 모니터 화면은 실경로로 돈다. APNs 는 Apple 인증키(.p8)와 실 기기 토큰이라는 외부 신원 경계라 CI 안에서 발송할 수 없다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` `loadConfig` 의 `APNS_DISABLED`(미설정이면 기존대로 `APNS_*` 필수 — 운영 설정 불변). |
+| `.github/workflows/ios-test.yml` | `APNS_HOST` | `EXT` | 잡 env 가 백엔드의 APNs **발송 대상만** 로컬 가짜 수신부(`http://localhost:5558`)로 바꾼다 — SQS 컨슈머 · 이력 저장 · 알림 설정 판정(`AllowsPush`) · 기기 토큰 조회 · 페이로드(`formatPushText` + `event_id`) 생성 · 토큰 서명 · 발송 호출은 실경로로 돈다. 실 APNs 는 Apple 인증키(.p8)와 실 기기 토큰이라는 외부 신원 경계라 CI 안에서 발송할 수 없다. 서명 키(`APNS_AUTH_KEY_P8`)는 잡이 `openssl` 로 만든 일회용 P-256 키이고 `APNS_KEY_ID`·`APNS_TEAM_ID` 는 자리표시자다 — 가짜 수신부에만 가는 요청을 서명할 뿐 끄는 상류가 없어 모킹 지점이 아니다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` `loadConfig` 의 `APNS_HOST` → `apns.Client.WithHost`(미설정이면 기존대로 `APNS_USE_PRODUCTION` 이분의 Apple 호스트 — 운영 설정 불변). |
+| `.github/actions/start-test-backend/action.yml` | 가짜 APNs 수신부 | `EXT` | 「Start fake APNs receiver」 스텝이 같은 폴더의 `apns_receiver.py` 를 `localhost:5558` 에 띄운다. 사유는 위 `APNS_HOST` 행과 같다. |
+| `.github/actions/start-test-backend/apns_receiver.py` | 가짜 APNs 수신부 | `EXT` | APNs 프로바이더 API 의 발송 엔드포인트(`POST /3/device/<token>`)만 받는다 — `apns-topic` 과 `bearer` 프로바이더 토큰이 없으면 실 APNs 처럼 거부하고, 받은 요청(토큰 · 토픽 · 페이로드)을 기록해 200 과 `apns-id` 로 답한다. 테스트 러너는 `GET /e2e/received?device=<token>` 으로 그 기록을 읽어 발송 결정(알림 설정에 따른 도달 여부)을 단정한다(github-monitor 시나리오 9). 기기로의 전달은 하지 않는다 — 전달 구간은 위 `simctl push` 행이다. 사유는 위 `APNS_HOST` 행과 같다. |
 | `.github/actions/start-test-backend/action.yml` | GitHub API 스텁 | `EXT` | 「Start GitHub API stub」 스텝이 같은 폴더의 `github_api_stub.py` 를 `localhost:5557` 에 띄운다. 실 상류(`api.github.com`)는 사용자 PAT 를 요구하는데, CI 가 가진 GitHub 신원은 Actions `GITHUB_TOKEN` 과 App 설치 토큰뿐이고 둘 다 앱의 연결 첫 호출 `GET /user` 에서 `403 Resource not accessible by integration` 으로 거절된다(2026-10-04 실측). 레포 시크릿(2026-10-04 실측 12개 — App Store·서명용)에 GitHub 사용자 PAT 는 없고, 전용 테스트 계정은 사람이 가입해야 만들어진다. |
 | `.github/actions/start-test-backend/github_api_stub.py` | GitHub API 스텁 | `EXT` | 앱의 `GitHubClient` 가 부르는 두 엔드포인트(`GET /user` · `POST /graphql`)만 실 응답 모양(2026-10-04 실 `api.github.com` 응답과 필드 대조)으로 서빙한다. 응답은 토큰이 정한다: 연결 성공(작성자·리뷰 요청·리뷰함 PR 과 HEAD 종합 CI 상태 4종, SAML 로 가려진 노드 1건) · 연결 거절 401 · 연결 뒤 401 · 한도 소진 403 · 열린 PR 0건 · 검색 응답 지연(첫 로딩 관측) · HEAD 커밋 체크 조합이 다른 PR 여섯(전부 성공 · 하나 실패 · 실행 중 · 체크 없음 · 성공+실행 중 · 성공+실행 중+실패 — 종합 상태는 스텁이 체크 목록에서 GitHub 의 롤업 규칙으로 지어 `statusCheckRollup.state` 만 싣는다; 혼합 규칙은 상류가 계산하는 값이라 앱 쪽에서는 그 결과의 표시만 관측된다) · 실행 고유 접미사가 붙는 두 접두 토큰은 그 토큰의 첫 검색과 둘째 이후 검색에 다른 결과를 준다(열린 PR 2건 → 0건 · 한 PR 의 CI 상태 진행 중 → 성공) — PR 이 닫히거나 체크가 끝나는 것은 상류에서 일어나는 변화라 E2E 가 만들 길이 스텁뿐이고, 전환을 토큰의 검색 횟수에 묶어 테스트 러너가 스텁을 직접 부르는 제어 경로는 두지 않는다. GraphQL 질의가 세 검색 별칭과 연결된 login 의 한정자를 싣지 않으면 오류로 답해, 실 상류보다 관대하지 않다. 사유는 위 행과 같다. |
 | `ios/PocketAide/PRMonitor/OpenPullRequestsViewModel.swift` | `processInfo.environment["GITHUB_API_BASE_URL"]` | `EXT` | `launchClient()` 가 이 프로세스 env 가 있을 때만 `GitHubClient(baseURL:)` 를 그 주소로 만든다 — 없으면 기존대로 `https://api.github.com`(운영 동작 불변). 바뀌는 것은 호스트뿐이고 요청 헤더 · 상태 분류 · GraphQL 해석 · 키체인 저장 · 시트 화면은 실경로다. 사유는 위 행과 같다. |
@@ -55,16 +57,20 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `ios/PocketAideTests/RoutineScheduleDayUITests.swift` | `launchEnvironment["ROUTINES_TODAY"]` | `DET` | 고정 날짜 셋(2026-09-28 · 2026-09-30 · 2027-02-28)으로 앱을 다시 띄워 그 날의 섹션을 단정한다. 사유는 위 행과 같다. |
 
 각 행의 파일에는 그 행의 카테고리로 `mock-exception:` 주석이 함께 있다(표기 규약 — `DET` 두 행 외에는 모두 `EXT`). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
-계정·테넌트가 마련되면 `oidcmock` 일곱 행 모두 실 상류로 대체하고 지운다. `APNS_DISABLED` 행은 차단 요인 BF-2
-(푸시 수신) 해소 때 재판정해 **유지**했다 — 백엔드의 실 발송은 여전히 Apple 인증키(.p8)를 요구하고, 수신 이후는
-`simctl push` 행이 실경로로 연다. 두 APNs 행은 CI 시크릿으로 쓸 수 있는 APNs 인증키가 마련되면 함께 실 발송으로 대체하고 지운다.
+계정·테넌트가 마련되면 `oidcmock` 일곱 행 모두 실 상류로 대체하고 지운다. APNs 발송 쪽은
+차단 요인 BF-2(푸시 수신) 해소 때 `APNS_DISABLED`(발송 끄기)로 **유지**했다가, github-monitor 시나리오 9(알림 설정에 따른
+도달 여부)가 발송 결정을 관측해야 해서 `APNS_HOST`(발송 대상 재지정) 세 행으로 바꿨다 — 끄기보다 치환 구간이 좁다(알림
+설정 판정 · 서명 · 발송 호출이 실경로로 들어왔다). 수신 이후는 여전히 `simctl push` 행이 실경로로 연다. APNs 네 행은 CI
+시크릿으로 쓸 수 있는 APNs 인증키가 마련되면 함께 실 발송으로 대체하고 지운다.
 GitHub API 스텁 다섯 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
 (차단 요인 BF-3 해소 때 원장이 정한 해소 방향의 둘째 갈래 — 첫째 갈래의 선행이 사람의 계정 가입이라 이 갈래로 닫았다).
 `ROUTINES_TODAY` 두 행(`DET`)은 「오늘」 값에 기대는 E2E 단정이 사라지면(시나리오 4 가 예외·삭제로 옮겨지면) 함께 지운다.
 
-`APNS_DISABLED` 는 `tbm_pocket-aide-e2e-mock-policy` 의 as-is 지문 패턴(`oidcmock`·`launchEnvironment`·가짜 자격증명
-리터럴·`mock-exception:`)에 들지 않는 토큰이다. 그 행의 코드 지점은 `ios-test.yml` 의 `APNS_DISABLED:` 줄과 그 직전
+`APNS_HOST` 는 `tbm_pocket-aide-e2e-mock-policy` 의 as-is 지문 패턴(`oidcmock`·`launchEnvironment`·가짜 자격증명
+리터럴·`mock-exception:`)에 들지 않는 토큰이다. 그 행의 코드 지점은 `ios-test.yml` 의 `APNS_HOST:` 줄과 그 직전
 `mock-exception: EXT` 주석이며, 지문에는 같은 파일의 기존 `mock-exception: EXT` 토큰으로만 잡힌다(지문 사각지대).
+가짜 APNs 수신부 두 행도 같다 — `action.yml` 은 기존 `mock-exception: EXT` 토큰으로, `apns_receiver.py` 는 파일 머리의
+`mock-exception: EXT` 주석으로만 지문에 잡힌다.
 `simctl push` 도 같은 사각지대에 있다 — 코드 지점은 `ios-test.yml` 의 「Deliver PR-monitor push to the simulator」·「Deliver pushes for test-sent push-e2e events」
 두 스텝과 각 직전 `mock-exception: EXT` 주석이다.
 GitHub API 스텁 두 행도 같은 사각지대다 — `action.yml` 은 기존 `mock-exception: EXT` 토큰으로, `github_api_stub.py` 는 파일 머리의

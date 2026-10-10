@@ -8,6 +8,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
 
 	"github.com/sideshow/apns2"
 	"github.com/sideshow/apns2/payload"
@@ -46,6 +48,14 @@ func New(keyID, teamID, bundleID string, p8PEM []byte, useProduction bool) (*Cli
 		cli = cli.Development()
 	}
 	return &Client{cli: cli, bundleID: bundleID}, nil
+}
+
+func (c *Client) WithHost(host string) *Client {
+	c.cli.Host = strings.TrimRight(host, "/")
+	if strings.HasPrefix(host, "http://") {
+		c.cli.HTTPClient = &http.Client{Timeout: apns2.HTTPClientTimeout}
+	}
+	return c
 }
 
 // Send delivers a simple alert (title + body) to a single device token.
