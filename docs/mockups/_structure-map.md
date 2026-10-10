@@ -55,8 +55,8 @@ last_updated: 2026-10-10
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 83행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 82행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 71행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 71행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -92,16 +92,16 @@ last_updated: 2026-10-10
 | `screen-scratchpad` | S | 목업 대기 | 0 |
 | `screen-todo-personal` | M | 일치 | 59 |
 | `screen-todo-personal` | M | 기본값 일치 | 3 |
-| `screen-todo-personal` | M | 불일치 | 83 |
-| `screen-todo-personal` | M | 허용 | 0 |
+| `screen-todo-personal` | M | 불일치 | 71 |
+| `screen-todo-personal` | M | 허용 | 12 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
 | `screen-todo-personal` | S | 일치 | 15 |
 | `screen-todo-personal` | S | 불일치 | 6 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
 | `screen-todo-work` | M | 일치 | 66 |
 | `screen-todo-work` | M | 기본값 일치 | 3 |
-| `screen-todo-work` | M | 불일치 | 82 |
-| `screen-todo-work` | M | 허용 | 0 |
+| `screen-todo-work` | M | 불일치 | 71 |
+| `screen-todo-work` | M | 허용 | 11 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 16 |
 | `screen-todo-work` | S | 불일치 | 6 |
@@ -914,7 +914,7 @@ last_updated: 2026-10-10
 | 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` | bold | 일치 | 제목 굵기 |
 | 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * titleSize)` | -0.025em | 일치 | 제목 자간 −0.025em(글자 크기에 비례) |
 | 요약 줄 | `text-[12px]` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | 12 | 일치 | 「N개 남음 · N개 완료」 크기 — 요약 줄을 공용 헤더 부제로 넘겨 `captionSm` 12 |
-| 요약 줄 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` · `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | #3D2A22/0.55 | 불일치 | 요약 줄 색 — 목업 stone, 구현 공용 부제 개인 ink 55% — S5(다짐·임시공간 보조 글자)와 같은 모양이나 이 화면은 아직 대상이 아니다(다크 목업 대조 뒤 등재 여부는 후속) |
+| 요약 줄 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` · `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | #3D2A22/0.55 | 허용 S5 | 요약 줄 색 — 목업 stone, 구현 공용 부제 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
 | 요약 줄 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 제목 ↔ 요약 줄 간격 = 공용 헤더 `VStack` 간격 2(요약 줄이 부제 자리 — 표 S 4) |
 | 추가 버튼 | `w-10` | 40 | `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: 40, height: 40)` | 40 | 일치 | 추가 버튼 크기 — 목업 40 원 |
 | 추가 버튼 | `h-10` | 40 | `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: 40, height: 40)` | 40 | 일치 | 추가 버튼 크기 — 목업 40 원 |
@@ -923,8 +923,8 @@ last_updated: 2026-10-10
 | 추가 버튼 | `text-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `.clipShape(Circle()) .foregroundStyle(.white)` | #FFFFFF | 일치 | 더하기 색 = 흰색 |
 | 글리프 18(추가 · 삭제) | `width:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "plus") .font(.system(size: 18, weight: .bold))` | 18 | 일치 | 더하기 글리프 크기 — 목업 svg 18 × 18, 구현 SF Symbol 18pt |
 | 글리프 18(추가 · 삭제) | `height:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "plus") .font(.system(size: 18, weight: .bold))` | 18 | 일치 | 더하기 글리프 크기 — 목업 svg 18 × 18, 구현 SF Symbol 18pt |
-| 글리프 18(추가 · 삭제) | `width:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기(스와이프된 행 — 같은 `style` 문자열이라 한 요소) — 시스템 스와이프 버튼 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 글리프 18(추가 · 삭제) | `height:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
+| 글리프 18(추가 · 삭제) | `width:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기(스와이프된 행 — 같은 `style` 문자열이라 한 요소) — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 글리프 18(추가 · 삭제) | `height:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 검색 필드 | `mt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.bottom, bottomPadding)` · `bottomPadding: DesignTokens.Spacing.md` | 12 | 일치 | 제목 묶음 ↔ 검색 필드 간격 — 화면이 `bottomPadding: Spacing.md` 12 를 넘긴다(공용 기본값 8) |
 | 검색 필드 | `gap-2` | 8 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Image(systemName: "magnifyingglass")` | 8 | 일치 | 돋보기 ↔ 입력 간격 = `Spacing.sm` |
 | 검색 필드 | `bg-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.sm) .background(DesignTokens.Color.card(tone))` | #FFFFFF | 일치 | 검색 필드 배경 = 개인 card |
@@ -935,7 +935,7 @@ last_updated: 2026-10-10
 | 검색 필드 | `rounded-2xl` | 16 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.sm) .background(DesignTokens.Color.card(tone)) .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))` · `var rowRadius: CGFloat { switch self { case .personal: return DesignTokens.Radius.card` | 16 | 일치 | 검색 필드 라운드 = `rowRadius`(개인 16 — 목업 주석 「라운드만 개인 카드(16)」) |
 | 검색 글리프 | `width:14px` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass")` | 시스템 | 불일치 | 돋보기 크기 — 구현 SF Symbol 에 크기 수식이 없어 시스템 기본 글꼴 크기를 따른다 |
 | 검색 글리프 | `height:14px` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass")` | 시스템 | 불일치 | 돋보기 크기 |
-| 검색 글리프 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass") .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))` | #3D2A22/0.45 | 불일치 | 돋보기 색 — 목업 stone, 구현 개인 ink 45% — S5(다짐·임시공간 보조 글자)와 같은 모양이나 이 화면은 아직 대상이 아니다(다크 목업 대조 뒤 등재 여부는 후속) |
+| 검색 글리프 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass") .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))` | #3D2A22/0.45 | 허용 S5 | 돋보기 색 — 목업 stone, 구현 개인 ink 45%(`S5` — 다크 목업은 같은 자리를 `#9C7A6A` 로 그린다) |
 | 검색 안내 | `text-[13px]` | 13 | `ios/PocketAide/Todos/TodoListView.swift` | `TextField(area.searchPrompt, text: $viewModel.query) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))` | 13 | 일치 | 「개인 영역만 검색…」 크기 = `bodySm` 13 |
 | 검색 안내 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `TextField(area.searchPrompt, text: $viewModel.query)` | 시스템 | 불일치 | 자리표시 글자 색 — 구현은 시스템 placeholder 색(수식 없음) |
 | 필터 칩 줄 | `gap-1.5` | 6 | — | — | — | 불일치 | 필터 칩 줄 — 구현에 기한 필터(전체 · 오늘 · 이번 주 · 날짜 없음)가 없다 |
@@ -992,19 +992,19 @@ last_updated: 2026-10-10
 | 메타 줄 | `gap-3` | 12 | — | — | — | 불일치 | 메타 항목 사이 간격 — 구현은 메타를 한 `Text` 에 ` · ` 로 이어 붙여 간격 수식이 없다 |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: 4)` | 4 | 불일치 | 제목 ↔ 메타 줄 간격 — 구현 4 |
 | 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)` | 12 | 불일치 | 메타 줄 크기 — 구현 `captionSm` 12 |
-| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #3D2A22/0.55 | 불일치 | 메타 줄 색 — 목업 stone, 구현 개인 ink 55% — S5(다짐·임시공간 보조 글자)와 같은 모양이나 이 화면은 아직 대상이 아니다(다크 목업 대조 뒤 등재 여부는 후속) |
+| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #3D2A22/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone, 구현 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
 | 메타 항목 | `gap-1` | 4 | — | — | — | 불일치 | 달력 글리프 ↔ 기한 간격 — 구현 메타에 글리프가 없다 |
 | 달력 글리프 | `width:11px` | 11 | — | — | — | 불일치 | 기한 앞 달력 글리프 — 구현에 없다 |
 | 달력 글리프 | `height:11px` | 11 | — | — | — | 불일치 | 기한 앞 달력 글리프 — 구현에 없다 |
 | 섹션 머리 | `pt-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `} header: { Text("\(title) · \(items.count)")` | 시스템 | 불일치 | 둘째 섹션부터의 머리 위 여백 — 시스템 `Section` 머리 |
 | 섹션 머리 | `pb-1` | 4 | `ios/PocketAide/Todos/TodoListView.swift` | `} header: { Text("\(title) · \(items.count)")` | 시스템 | 불일치 | 섹션 머리 아래 여백 — 시스템 `Section` 머리 |
-| 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 스와이프 행 라운드 — 시스템 `List` 가 그린다 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 삭제 패널 너비 — 시스템 스와이프 버튼 폭 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
+| 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 스와이프 행 라운드 — 시스템 `List` 가 그린다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 삭제 패널 너비 — 시스템 스와이프 버튼 폭 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 삭제 패널 | `bg-[#9E2B3C]` | #9E2B3C | `ios/PocketAide/Todos/TodoListView.swift` | `.tint(DesignTokens.Color.destructive(tone))` | #9E2B3C | 일치 | 삭제 패널 채움 = 개인 destructive(`tokens.md` §1.10) |
-| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 ↔ 라벨 간격 — 시스템 스와이프 버튼 배치 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 패널 글자·글리프 색 — 시스템 스와이프 버튼 전경색 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 크기 — 시스템 스와이프 버튼 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 굵기 — 시스템 스와이프 버튼 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
+| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 ↔ 라벨 간격 — 시스템 스와이프 버튼 배치 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 패널 글자·글리프 색 — 시스템 스와이프 버튼 전경색 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 크기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 굵기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 밀린 행 카드 | `bg-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone))` | #FFFFFF | 일치 | 밀린 행 카드 배경 = 개인 card |
 | 밀린 행 카드 | `rounded-2xl` | 16 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone)) .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))` · `var rowRadius: CGFloat { switch self { case .personal: return DesignTokens.Radius.card` | 16 | 일치 | 밀린 행 카드 라운드 = `rowRadius`(개인 `Radius.card` — 회사는 `Radius.key`) |
 | 밀린 행 카드 | `p-3.5` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14)` | 14 | 일치 | 밀린 행 카드 안쪽 여백 |
@@ -1031,7 +1031,7 @@ last_updated: 2026-10-10
 | 완료 행 제목 | `leading-snug` | 1.375 | — | — | — | 불일치 | 완료 행 제목 줄 높이 — 구현에 `lineHeight` 수식이 없다 |
 | 빈 상태 안내 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 안내 위·아래 여백 = `Spacing.xl`(`emptyState` 의 `Group` — 진행 표시에도 걸린다) |
 | 빈 상태 안내 | `text-[14px]` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 안내 크기 = `body` |
-| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #3D2A22/0.55 | 불일치 | 안내 색 — 목업 stone, 구현 개인 ink 55% — S5(다짐·임시공간 보조 글자)와 같은 모양이나 이 화면은 아직 대상이 아니다(다크 목업 대조 뒤 등재 여부는 후속) |
+| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #3D2A22/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 안내 줄 높이 — 구현에 `lineHeight` 수식이 없다(임시공간은 `.lineHeight(.multiple(factor: 1.625))`) |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(spacing: 0) { Rectangle()` | 0 | 기본값 일치 | 맨 위 영역 띠 · 헤더 · 검색 필드 · 목록 사이 간격 — 목업은 블록 사이 간격 수식이 없다(다짐·임시공간 선례) |
 | — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
@@ -1137,7 +1137,7 @@ last_updated: 2026-10-10
 | 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` | bold | 일치 | 제목 굵기 |
 | 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * titleSize)` | -0.025em | 일치 | 제목 자간 |
 | 요약 줄 | `text-[12px]` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | 12 | 일치 | 「N OPEN · N DONE」 크기 — 요약 줄을 공용 헤더 부제로 넘겨 `captionSm` 12(회사는 `subtitleMonospaced: area == .work` 로 고정폭) |
-| 요약 줄 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` · `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | #1E2A3A/0.55 | 불일치 | 요약 줄 색 — 목업 stone, 구현 공용 부제 회사 ink 55% — S5(다짐·임시공간 보조 글자)와 같은 모양이나 이 화면은 아직 대상이 아니다(다크 목업 대조 뒤 등재 여부는 후속) |
+| 요약 줄 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` · `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | #1E2A3A/0.55 | 허용 S5 | 요약 줄 색 — 목업 stone, 구현 공용 부제 회사 ink 55%(`S5` — 다크 목업은 같은 자리를 `#A8B5C7` 로 그린다) |
 | 요약 줄 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 제목 ↔ 요약 줄 간격 = 공용 헤더 `VStack` 간격 2 |
 | 추가 버튼 | `w-10` | 40 | `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: 40, height: 40)` | 40 | 일치 | 버튼 폭 |
 | 추가 버튼 | `h-10` | 40 | `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: 40, height: 40)` | 40 | 일치 | 버튼 높이 |
@@ -1155,7 +1155,7 @@ last_updated: 2026-10-10
 | 검색 필드 | `rounded-md` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.sm) .background(DesignTokens.Color.card(tone)) .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))` · `var rowRadius: CGFloat { switch self { case .personal: return DesignTokens.Radius.card case .work: return DesignTokens.Radius.key` | 6 | 일치 | 검색 필드 라운드 = `rowRadius`(회사 `Radius.key` 6) |
 | 검색 글리프 | `width:14px` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass")` | 시스템 | 불일치 | 돋보기 크기 — 구현은 크기 수식 없이 시스템 글리프 |
 | 검색 글리프 | `height:14px` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass")` | 시스템 | 불일치 | 돋보기 크기 — 구현은 크기 수식 없이 시스템 글리프 |
-| 검색 글리프 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass") .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))` | #1E2A3A/0.45 | 불일치 | 돋보기 색 — 목업 stone, 구현 회사 ink 45% — S5 와 같은 모양이나 이 화면은 아직 대상이 아니다 |
+| 검색 글리프 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: "magnifyingglass") .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))` | #1E2A3A/0.45 | 허용 S5 | 돋보기 색 — 목업 stone, 구현 회사 ink 45%(`S5` — 다크 목업은 같은 자리를 `#7A8AA0` 로 그린다) |
 | 검색 안내 | `text-[13px]` | 13 | `ios/PocketAide/Todos/TodoListView.swift` | `TextField(area.searchPrompt, text: $viewModel.query) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))` | 13 | 일치 | 「회사 영역만 검색…」 크기 = `bodySm` 13 |
 | 검색 안내 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `TextField(area.searchPrompt, text: $viewModel.query)` | 시스템 | 불일치 | 안내 글자 색 — 구현은 시스템 `TextField` 자리표시자 색 |
 | 본문 | `px-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `.listRowInsets(EdgeInsets(top: DesignTokens.Spacing.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: DesignTokens.Spacing.cardGap / 2, trailing: DesignTokens.Spacing.xl))` | 20 | 일치 | 행 좌우 여백 = 목록 행 인셋 leading·trailing `Spacing.xl` |
@@ -1221,7 +1221,7 @@ last_updated: 2026-10-10
 | 메타 줄 | `gap-3` | 12 | — | — | — | 불일치 | 메타 항목 사이 간격 — 구현은 항목을 「 · 」 로 이어 한 `Text` 로 그린다 |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: 4)` | 4 | 불일치 | 제목 ↔ 메타 줄 간격 — 구현 4 |
 | 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)` | 12 | 불일치 | 메타 줄 크기 — 구현 `captionSm` 12(회사는 고정폭 `base.monospaced()`) |
-| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 불일치 | 메타 줄 색 — 목업 stone, 구현 회사 ink 55% — S5 와 같은 모양이나 이 화면은 아직 대상이 아니다 |
+| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone, 구현 회사 ink 55%(`S5` — 다크 목업은 같은 자리를 `#A8B5C7` 로 그린다) |
 | 메타 줄 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 — 구현 메타에 변환 수식이 없다(「메모: …」 등 한글·소문자가 그대로) |
 | 메타 구분점 | `text-stone-300` | #D6D3D1 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 불일치 | 「·」 색 — 목업은 구분점만 stone-300 으로 더 흐리게, 구현은 `parts.joined(separator: " · ")` 라 메타 글자와 같은 색 |
 | 완료 카드 | `bg-white/50` | #FFFFFF/0.5 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone))` | #FFFFFF | 불일치 | 완료 카드 배경 — 목업 흰색 50%, 구현은 완료 행도 불투명 card |
@@ -1250,14 +1250,14 @@ last_updated: 2026-10-10
 | — | — | #1E2A3A | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(nil)` | #1E2A3A/0.7 | 불일치 | 「DUE TODAY」·「THIS WEEK」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone)) .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))` · `var rowRadius: CGFloat { switch self { case .personal: return DesignTokens.Radius.card case .work: return DesignTokens.Radius.key` | 6 | 불일치 | 행 카드 라운드 — 목업 회사 카드는 각진 모서리(라운드 클래스 없음 — 목업 주석 「hard-edged cards」), 구현 회사 `rowRadius` 는 `Radius.key` 6 |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `.clipShape(Circle())` | full | 불일치 | 추가 버튼 모양 — 목업 회사 버튼은 각진 사각(라운드 클래스 없음), 구현은 두 탭 공통 원형 |
-| 글리프 18(추가 · 삭제) | `width:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기(스와이프된 행 — 더하기 글리프와 같은 `style` 문자열이라 한 요소) — 시스템 스와이프 버튼 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 글리프 18(추가 · 삭제) | `height:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 글리프 크기 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 불일치 | 삭제 패널 너비 — 시스템 스와이프 버튼 폭 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
+| 글리프 18(추가 · 삭제) | `width:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기(스와이프된 행 — 더하기 글리프와 같은 `style` 문자열이라 한 요소) — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 글리프 18(추가 · 삭제) | `height:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 패널 | `w-[74px]` | 74 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 삭제 패널 너비 — 시스템 스와이프 버튼 폭 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 삭제 패널 | `bg-[#9C3F2D]` | #9C3F2D | `ios/PocketAide/Todos/TodoListView.swift` | `.tint(DesignTokens.Color.destructive(tone))` | #9C3F2D | 일치 | 삭제 패널 채움 = 회사 destructive(`tokens.md` §1.10 — 다짐 값 차용, 다크 목업은 `#D87560`) |
-| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 휴지통 ↔ 라벨 간격 — 시스템 스와이프 버튼 배치 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 패널 글자·글리프 색 — 시스템 스와이프 버튼 전경색 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 크기 — 시스템 스와이프 버튼 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
-| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 불일치 | 「삭제」 굵기 — 시스템 스와이프 버튼 — S4(다짐·임시공간 같은 8자리)와 같은 사정이나 이 화면은 아직 대상이 아니다(허용 등재는 후속) |
+| 삭제 패널 | `gap-1` | 4 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 ↔ 라벨 간격 — 시스템 스와이프 버튼 배치 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 패널 | `text-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 패널 글자·글리프 색 — 시스템 스와이프 버튼 전경색 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 라벨 | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 크기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
+| 삭제 라벨 | `font-semibold` | semibold | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 「삭제」 굵기 — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
 | 밀린 행 카드 | `bg-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone))` | #FFFFFF | 일치 | 밀린 행 카드 배경 = 회사 `card` |
 | 밀린 행 카드 | `border` | 1 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | 1 | 일치 | 밀린 행 카드 외곽선 두께 |
 | 밀린 행 카드 | `border-[var(--rule)]` | #D6DEE9 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #D6DEE9 | 일치 | 밀린 행 카드 외곽선 색 = 회사 `rule` |
@@ -1265,7 +1265,7 @@ last_updated: 2026-10-10
 | 밀린 행 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 밀린 행 카드 체크 ↔ 본문 간격 = `Spacing.md` |
 | 빈 상태 안내 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 안내 위·아래 여백 = `Spacing.xl`(`emptyState` 의 `Group` — 진행 표시에도 걸린다) |
 | 빈 상태 안내 | `text-[14px]` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.") .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 안내 크기 = `body` |
-| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #1E2A3A/0.55 | 불일치 | 안내 색 — 목업 stone, 구현 회사 ink 55% — 개인 투두 「빈 상태」 안내와 같은 모양(S5 는 다짐·임시공간 보조 글자만 대상, 이 화면은 아직 대상이 아니다 — 다크 목업 대조 뒤 등재 여부는 후속) |
+| 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #1E2A3A/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 회사 ink 55%(`S5` — 다크 목업은 같은 자리를 `#A8B5C7` 로 그린다) |
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 안내 줄 높이 — 구현에 `lineHeight` 수식이 없다(임시공간은 `.lineHeight(.multiple(factor: 1.625))`) — 개인 투두 「빈 상태」 안내와 같다 |
 | 진행 표시 자리 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `ProgressView().frame(maxWidth: .infinity)` · `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 진행 표시 위·아래 여백 — `emptyState` 의 `Group` 에 걸린 `Spacing.xl` 이 안내 줄과 진행 표시에 함께 걸린다(진행 표시 크기·색은 시스템이 정한다) |
 | 오류 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(message) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))` | 11 | 일치 | 오류 줄 크기 = `captionXs` — 「오류」 프레임 목록 맨 위 한 줄(`todos.work.error`) |
