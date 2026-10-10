@@ -131,13 +131,14 @@ final class WebhookUserScopedHistoryUITests: XCTestCase {
         }
         XCTAssertTrue(row.waitForExistence(timeout: 5), "The 알림 설정 sheet should offer 로그아웃")
         row.tap()
-        var confirm = app.buttons["prmonitor.settings.signOut.confirm"]
-        if !confirm.waitForExistence(timeout: 10) {
-            confirm = app.buttons.matching(
+        var confirms = app.buttons.matching(identifier: "prmonitor.settings.signOut.confirm")
+        if !confirms.firstMatch.waitForExistence(timeout: 10) {
+            confirms = app.buttons.matching(
                 NSPredicate(format: "label == %@ AND identifier != %@", "로그아웃", "prmonitor.settings.signOut")
-            ).firstMatch
+            )
         }
-        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "로그아웃 should ask for confirmation")
+        XCTAssertTrue(confirms.firstMatch.waitForExistence(timeout: 5), "로그아웃 should ask for confirmation")
+        let confirm = confirms.allElementsBoundByIndex.first(where: { $0.isHittable }) ?? confirms.firstMatch
         confirm.tap()
         XCTAssertTrue(app.buttons["SignInButton"].waitForExistence(timeout: 20), "Signing out should land on the login screen")
     }
