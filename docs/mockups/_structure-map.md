@@ -56,7 +56,7 @@ last_updated: 2026-10-10
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 50행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 54행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 48행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -98,9 +98,9 @@ last_updated: 2026-10-10
 | `screen-todo-personal` | S | 일치 | 15 |
 | `screen-todo-personal` | S | 불일치 | 6 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
-| `screen-todo-work` | M | 일치 | 83 |
+| `screen-todo-work` | M | 일치 | 89 |
 | `screen-todo-work` | M | 기본값 일치 | 3 |
-| `screen-todo-work` | M | 불일치 | 54 |
+| `screen-todo-work` | M | 불일치 | 48 |
 | `screen-todo-work` | M | 허용 | 11 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 16 |
@@ -1013,7 +1013,7 @@ last_updated: 2026-10-10
 | 밀린 행 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 밀린 행 카드 체크 ↔ 본문 간격 = `Spacing.md` |
 | 완료 섹션 제목 | `text-[14px]` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` · `var sectionTitleSize: CGFloat { switch self { case .personal: return 14` | 14 | 일치 | 「완료 · N」 크기 = `sectionTitleSize`(개인 14 — 회사 `captionSm` 12, `checkSize` 와 같은 영역 분기) |
 | 완료 섹션 제목 | `font-bold` | bold | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` | bold | 일치 | 「완료 · N」 굵기 |
-| 완료 섹션 제목 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(nil)` | #3D2A22/0.7 | 불일치 | 「완료 · N」 색 — 목업 stone-400, 구현은 모든 섹션 머리가 개인 ink 70% |
+| 완료 섹션 제목 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #3D2A22/0.7 | 불일치 | 「완료 · N」 색 — 목업 stone-400, 구현은 모든 섹션 머리가 개인 ink 70% |
 | 완료 카드 | `bg-white/50` | #FFFFFF/0.5 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone).opacity(item.isDone ? 0.5 : 1))` | #FFFFFF/0.5 | 일치 | 완료 카드 배경 = 개인 card 50%(완료 행만 — 다크 목업도 다크 card `/50`) |
 | 완료 카드 | `rounded-2xl` | 16 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone).opacity(item.isDone ? 0.5 : 1)) .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))` · `var rowRadius: CGFloat { switch self { case .personal: return DesignTokens.Radius.card` | 16 | 일치 | 완료 카드 라운드 = `rowRadius`(개인 `Radius.card` — 회사는 `Radius.key`) |
 | 완료 카드 | `p-3.5` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14)` | 14 | 일치 | 완료 카드 안쪽 여백 |
@@ -1037,7 +1037,7 @@ last_updated: 2026-10-10
 | — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
 | — | — | regular | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Tokens.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `weight: Font.Weight = .regular,` | regular | 기본값 일치 | 요약 줄 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 공용 부제는 굵기를 넘기지 않아 `font(size:)` 기본값 regular |
 | — | — | regular | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | medium | 불일치 | 행 제목 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400) |
-| — | — | #3D2A22 | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(nil)` | #3D2A22/0.7 | 불일치 | 「오늘」·「날짜 없음」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
+| — | — | #3D2A22 | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #3D2A22/0.7 | 불일치 | 「오늘」·「날짜 없음」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
 | 오류 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(message) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))` | 11 | 일치 | 오류 줄 크기 = `captionXs` — 「오류」 프레임 목록 맨 위 한 줄(`todos.personal.error`) |
 | 오류 줄 | `text-[#9E2B3C]` | #9E2B3C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.destructive(tone)) .listRowBackground(Color.clear) .accessibilityIdentifier("\(idPrefix).error")` | #9E2B3C | 일치 | 오류 줄 색 = 개인 destructive(`tokens.md` §1.10 — 다크 목업은 `#E07583`) |
 | 진행 표시 자리 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `ProgressView().frame(maxWidth: .infinity)` · `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 진행 표시 위·아래 여백 — `emptyState` 의 `Group` 에 걸린 `Spacing.xl` 이 안내 줄과 진행 표시에 함께 걸린다(진행 표시 크기·색은 시스템이 정한다) |
@@ -1179,18 +1179,18 @@ last_updated: 2026-10-10
 | 섹션 막대(백로그 · 완료) | `bg-stone-400` | #A8A29E | — | — | — | 불일치 | 섹션 머리 왼쪽 세로 막대 — 구현에 없다 |
 | 섹션 제목 | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` · `var sectionTitleSize: CGFloat { switch self { case .personal: return 14 case .work: return DesignTokens.Typography.captionSm` | 12 | 일치 | 섹션 제목 크기 = `sectionTitleSize`(회사 `captionSm` 12 — 개인 14) |
 | 섹션 제목 | `font-bold` | bold | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` | bold | 일치 | 섹션 제목 굵기 |
-| 섹션 제목 | `tracking-wide` | 0.025em | — | — | — | 불일치 | 섹션 제목 자간 0.025em × 12 = 0.3 — 구현 섹션 머리에 자간 수식이 없다 |
-| 섹션 제목 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 — 구현은 `.textCase(nil)` 로 변환을 끄고 리터럴 「OPEN」·「DONE」 자체가 대문자라 지금 문구에선 렌더가 같다(변환 수식은 없다) |
+| 섹션 제목 | `tracking-wide` | 0.025em | `ios/PocketAide/Todos/TodoListView.swift` | `.tracking(area.sectionTitleTracking)` · `var sectionTitleTracking: CGFloat { switch self { case .personal: return 0 case .work: return 0.3` | 0.3 | 일치 | 섹션 제목 자간 0.025em × 12 = 0.3 = `sectionTitleTracking`(회사 0.3 — 개인 0, 목업 개인 섹션 제목에 자간 클래스 없음) |
+| 섹션 제목 | `uppercase` | uppercase | `ios/PocketAide/Todos/TodoListView.swift` | `.textCase(area.sectionTitleCase)` · `var sectionTitleCase: Text.Case? { switch self { case .personal: return nil case .work: return .uppercase` | uppercase | 일치 | 대문자 변환 = `sectionTitleCase`(회사 `.uppercase` — 개인 `nil`, 목업 개인 섹션 제목에 대문자 클래스 없음) |
 | 섹션 제목(백로그) | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` · `var sectionTitleSize: CGFloat { switch self { case .personal: return 14 case .work: return DesignTokens.Typography.captionSm` | 12 | 일치 | 섹션 제목 크기 = `sectionTitleSize`(회사 `captionSm` 12 — 개인 14) |
 | 섹션 제목(백로그) | `font-bold` | bold | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` | bold | 일치 | 섹션 제목 굵기 |
-| 섹션 제목(백로그) | `tracking-wide` | 0.025em | — | — | — | 불일치 | 섹션 제목 자간 0.025em × 12 = 0.3 — 구현 섹션 머리에 자간 수식이 없다 |
-| 섹션 제목(백로그) | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 — 구현은 `.textCase(nil)` 로 변환을 끄고 리터럴 「OPEN」·「DONE」 자체가 대문자라 지금 문구에선 렌더가 같다(변환 수식은 없다) |
-| 섹션 제목(백로그) | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(nil)` | #1E2A3A/0.7 | 불일치 | 섹션 제목 색 — 목업 stone, 구현은 모든 섹션 머리가 회사 ink 70% |
+| 섹션 제목(백로그) | `tracking-wide` | 0.025em | `ios/PocketAide/Todos/TodoListView.swift` | `.tracking(area.sectionTitleTracking)` · `var sectionTitleTracking: CGFloat { switch self { case .personal: return 0 case .work: return 0.3` | 0.3 | 일치 | 섹션 제목 자간 0.025em × 12 = 0.3 = `sectionTitleTracking`(회사 0.3 — 개인 0, 목업 개인 섹션 제목에 자간 클래스 없음) |
+| 섹션 제목(백로그) | `uppercase` | uppercase | `ios/PocketAide/Todos/TodoListView.swift` | `.textCase(area.sectionTitleCase)` · `var sectionTitleCase: Text.Case? { switch self { case .personal: return nil case .work: return .uppercase` | uppercase | 일치 | 대문자 변환 = `sectionTitleCase`(회사 `.uppercase` — 개인 `nil`, 목업 개인 섹션 제목에 대문자 클래스 없음) |
+| 섹션 제목(백로그) | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #1E2A3A/0.7 | 불일치 | 섹션 제목 색 — 목업 stone, 구현은 모든 섹션 머리가 회사 ink 70% |
 | 완료 섹션 제목 | `text-[12px]` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` · `var sectionTitleSize: CGFloat { switch self { case .personal: return 14 case .work: return DesignTokens.Typography.captionSm` | 12 | 일치 | 섹션 제목 크기 = `sectionTitleSize`(회사 `captionSm` 12 — 개인 14) |
 | 완료 섹션 제목 | `font-bold` | bold | `ios/PocketAide/Todos/TodoListView.swift` | `Text("\(title) · \(items.count)") .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))` | bold | 일치 | 섹션 제목 굵기 |
-| 완료 섹션 제목 | `tracking-wide` | 0.025em | — | — | — | 불일치 | 섹션 제목 자간 0.025em × 12 = 0.3 — 구현 섹션 머리에 자간 수식이 없다 |
-| 완료 섹션 제목 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 — 구현은 `.textCase(nil)` 로 변환을 끄고 리터럴 「OPEN」·「DONE」 자체가 대문자라 지금 문구에선 렌더가 같다(변환 수식은 없다) |
-| 완료 섹션 제목 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(nil)` | #1E2A3A/0.7 | 불일치 | 섹션 제목 색 — 목업 stone, 구현은 모든 섹션 머리가 회사 ink 70% |
+| 완료 섹션 제목 | `tracking-wide` | 0.025em | `ios/PocketAide/Todos/TodoListView.swift` | `.tracking(area.sectionTitleTracking)` · `var sectionTitleTracking: CGFloat { switch self { case .personal: return 0 case .work: return 0.3` | 0.3 | 일치 | 섹션 제목 자간 0.025em × 12 = 0.3 = `sectionTitleTracking`(회사 0.3 — 개인 0, 목업 개인 섹션 제목에 자간 클래스 없음) |
+| 완료 섹션 제목 | `uppercase` | uppercase | `ios/PocketAide/Todos/TodoListView.swift` | `.textCase(area.sectionTitleCase)` · `var sectionTitleCase: Text.Case? { switch self { case .personal: return nil case .work: return .uppercase` | uppercase | 일치 | 대문자 변환 = `sectionTitleCase`(회사 `.uppercase` — 개인 `nil`, 목업 개인 섹션 제목에 대문자 클래스 없음) |
+| 완료 섹션 제목 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #1E2A3A/0.7 | 불일치 | 섹션 제목 색 — 목업 stone, 구현은 모든 섹션 머리가 회사 ink 70% |
 | 섹션 구분선 | `bg-[var(--rule)]` | #D6DEE9 | — | — | — | 불일치 | 섹션 머리 오른쪽 가로 구분선 — 구현에 없다 |
 | 급한 행 카드 | `bg-white` | #FFFFFF | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone).opacity(item.isDone ? 0.5 : 1))` | #FFFFFF | 일치 | 카드 배경 = 회사 `card` |
 | 급한 행 카드 | `border-l-[3px]` | left 3 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | left 1 | 불일치 | 왼쪽 테두리 — 목업은 오늘 마감 카드 왼쪽만 3px 강조 띠, 구현은 모든 행이 둘레 1pt 외곽선 |
@@ -1247,7 +1247,7 @@ last_updated: 2026-10-10
 | — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
 | — | — | regular | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Tokens.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `weight: Font.Weight = .regular,` | regular | 기본값 일치 | 요약 줄 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 공용 부제는 굵기를 넘기지 않아 `font(size:)` 기본값 regular |
 | — | — | regular | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | medium | 불일치 | 오늘 마감이 아닌 행 제목 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 구현은 모든 행 medium |
-| — | — | #1E2A3A | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(nil)` | #1E2A3A/0.7 | 불일치 | 「DUE TODAY」·「THIS WEEK」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
+| — | — | #1E2A3A | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #1E2A3A/0.7 | 불일치 | 「DUE TODAY」·「THIS WEEK」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone).opacity(item.isDone ? 0.5 : 1)) .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))` · `var rowRadius: CGFloat { switch self { case .personal: return DesignTokens.Radius.card case .work: return DesignTokens.Radius.key` | 6 | 불일치 | 행 카드 라운드 — 목업 회사 카드는 각진 모서리(라운드 클래스 없음 — 목업 주석 「hard-edged cards」), 구현 회사 `rowRadius` 는 `Radius.key` 6 |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `.clipShape(Circle())` | full | 불일치 | 추가 버튼 모양 — 목업 회사 버튼은 각진 사각(라운드 클래스 없음), 구현은 두 탭 공통 원형 |
 | 글리프 18(추가 · 삭제) | `width:18px` | 18 | `ios/PocketAide/Todos/TodoListView.swift` | `Label("삭제", systemImage: "trash")` | 시스템 | 허용 S4 | 휴지통 글리프 크기(스와이프된 행 — 더하기 글리프와 같은 `style` 문자열이라 한 요소) — 시스템 스와이프 버튼 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
