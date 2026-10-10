@@ -94,6 +94,21 @@ struct BackendAPI {
         return BackendAPI(token: token)
     }
 
+    static func setNextAppLoginSubject(_ subject: String, file: StaticString = #filePath, line: UInt = #line) {
+        guard let url = URL(string: issuer + "/e2e/next-login-subject") else {
+            XCTFail("The oidcmock next-login endpoint should form a URL", file: file, line: line)
+            return
+        }
+        var form = URLComponents()
+        form.queryItems = [URLQueryItem(name: "sub", value: subject)]
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = Data((form.percentEncodedQuery ?? "").utf8)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let reply = send(request)
+        XCTAssertEqual(reply.status, 204, "oidcmock should take the next app login subject: \(reply.text)", file: file, line: line)
+    }
+
     func call(_ method: String, _ path: String, json: [String: Any]? = nil) -> BackendReply {
         guard let url = URL(string: Self.server + path) else {
             return BackendReply(status: 0, body: Data(), location: nil, failingURL: nil)
