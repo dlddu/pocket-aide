@@ -120,6 +120,7 @@ struct TodoListView: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))
+                .font(.system(size: 14))
             TextField(area.searchPrompt, text: $viewModel.query)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))
                 .foregroundStyle(DesignTokens.Color.ink(tone))
@@ -252,10 +253,10 @@ private struct TodoRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).toggle")
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(item.title)
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))
-                    .foregroundStyle(DesignTokens.Color.ink(tone).opacity(item.isDone ? 0.45 : 1))
+                    .foregroundStyle(DesignTokens.Color.ink(tone))
                     .strikethrough(item.isDone)
                     .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
                 if !meta.isEmpty {
@@ -268,12 +269,13 @@ private struct TodoRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(14)
-        .background(DesignTokens.Color.card(tone))
+        .background(DesignTokens.Color.card(tone).opacity(item.isDone ? 0.5 : 1))
         .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous)
                 .stroke(DesignTokens.Color.rule(tone), lineWidth: 1)
         )
+        .opacity(item.isDone ? 0.6 : 1)
     }
 
     private var meta: String {
@@ -295,7 +297,7 @@ private struct TodoRow: View {
     }
 
     private var metaFont: Font {
-        let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)
+        let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)
         return area == .work ? base.monospaced() : base
     }
 }
