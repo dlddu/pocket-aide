@@ -142,6 +142,53 @@ jobs:
             done
           ) > /tmp/push-relay.log 2>&1 &
           echo "PUSH_RELAY_PID=$!" >> "$GITHUB_ENV"
+      - name: Cut the Open-Meteo route while a test asks for it (network-cut / network-restore log lines)
+        if: steps.shard.outputs.pr_monitor == 'true'
+        run: |
+          (
+            set +e
+            cut_route() {
+              ips=$(python3 -c 'import socket; print(" ".join(sorted({a[4][0] for a in socket.getaddrinfo("api.open-meteo.com", 443, proto=socket.IPPROTO_TCP)})))')
+              { cat /etc/pf.conf; echo "block return out quick from any to { $ips }"; } > /tmp/pf-cut.conf
+              sudo pfctl -f /tmp/pf-cut.conf
+              token=$(sudo pfctl -E 2>&1 | sed -n 's/^Token : //p')
+              for ip in $ips; do
+                case "$ip" in *:*) any='::/0' ;; *) any='0.0.0.0/0' ;; esac
+                sudo pfctl -k "$any" -k "$ip" || true
+              done
+              printf '127.0.0.1 api.open-meteo.com\n::1 api.open-meteo.com\n' | sudo tee -a /etc/hosts > /dev/null
+              sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true
+              echo "cut $(date +%T) ips=$ips token=$token"
+            }
+            restore_route() {
+              sudo sed -i '' '/ api\.open-meteo\.com$/d' /etc/hosts
+              sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder || true
+              sudo pfctl -f /etc/pf.conf
+              [ -n "$token" ] && sudo pfctl -X "$token" || true
+              token=''
+              echo "restored $(date +%T)"
+            }
+            until xcrun simctl list devices booted 2>/dev/null | grep -q '(Booted)'; do sleep 2; done
+            xcrun simctl spawn booted log stream --style compact \
+              --predicate 'eventMessage CONTAINS "pocketaide-e2e network-"' > /tmp/network-switch.log 2>&1 &
+            state=restore; token=''; cut_at=0; handled=0
+            while true; do
+              lines=$(grep -cE 'network-(cut|restore) [0-9A-F]{8}-' /tmp/network-switch.log || true)
+              if [ "${lines:-0}" -gt "$handled" ]; then
+                handled=$lines
+                want=$(grep -oE 'network-(cut|restore) [0-9A-F]{8}-' /tmp/network-switch.log | tail -n 1 | cut -d' ' -f1)
+                if [ "$want" = network-cut ] && [ "$state" != cut ]; then
+                  cut_route; state=cut; cut_at=$(date +%s)
+                elif [ "$want" = network-restore ] && [ "$state" = cut ]; then
+                  restore_route; state=restore
+                fi
+              elif [ "$state" = cut ] && [ $(( $(date +%s) - cut_at )) -gt 180 ]; then
+                echo "cut held over 180s"; restore_route; state=restore
+              fi
+              sleep 1
+            done
+          ) > /tmp/network-cut.log 2>&1 &
+          echo "NETWORK_CUT_PID=$!" >> "$GITHUB_ENV"
       - uses: ./.github/actions/generate-xcode-project
       - name: SwiftLint
         if: strategy.job-index == 0
@@ -186,6 +233,7 @@ jobs:
           echo '--- push ---'; cat /tmp/push.log || true
           echo '--- push-ready ---'; cat /tmp/push-ready.log || true
           echo '--- push relay ---'; cat /tmp/push-relay.log || true
+          echo '--- network cut ---'; cat /tmp/network-cut.log || true; cat /tmp/network-switch.log || true
           echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
           echo '--- github stub ---'; tail -n 100 /tmp/github-stub.log || true
       - name: Upload xcresult on failure
@@ -206,3 +254,6 @@ jobs:
           [ -n "${PUSH_PID:-}" ] && kill ${PUSH_PID} || true
           pkill -f 'pocketaide-e2e push-ready' || true
           [ -n "${PUSH_RELAY_PID:-}" ] && kill ${PUSH_RELAY_PID} || true
+          [ -n "${NETWORK_CUT_PID:-}" ] && kill ${NETWORK_CUT_PID} || true
+          pkill -f 'pocketaide-e2e network-' || true
+          sudo sed -i '' '/ api\.open-meteo\.com$/d' /etc/hosts || true
