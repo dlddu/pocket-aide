@@ -47,10 +47,10 @@ last_updated: 2026-10-09
 | A | 기준 4 | 6 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 161 |
+| B | 일치 | 164 |
 | B | 외부 | 37 |
-| B | 예시 데이터 | 101 |
-| B | 목업 전용 | 107 |
+| B | 예시 데이터 | 103 |
+| B | 목업 전용 | 111 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 43 |
@@ -225,7 +225,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 463행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 472행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -659,6 +659,7 @@ last_updated: 2026-10-09
 | `screen-todo-work` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `05 · 회사 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-todo-work` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-work` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-todo-work` | `WORK` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
 | `screen-todo-work` | `회사` | 일치 | 헤더 제목 · 탭 바 |
@@ -681,6 +682,8 @@ last_updated: 2026-10-09
 | `screen-todo-work` | `onboarding 개선 결과 한 페이지로` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `BACKLOG · 5` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 「OPEN · n」 |
 | `screen-todo-work` | `결제 이슈 timeline 정리 — Slack 자료 모으기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
+| `screen-todo-work` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
+| `screen-todo-work` | `지난 분기 회고 메모 — 액션 아이템만 남기기` | 예시 데이터 | 할 일 제목(사용자 데이터 — 스와이프된 행) |
 | `screen-todo-work` | `DONE · 8` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
 | `screen-todo-work` | `주간 지표 리포트 공유` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `채용 인터뷰 피드백 제출` | 예시 데이터 | 할 일 제목(사용자 데이터) |
@@ -691,6 +694,12 @@ last_updated: 2026-10-09
 | `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-work` | `0 OPEN · 0 DONE` | 일치 | 빈 상태·불러오는 중·오류 프레임 요약 줄 「\(open) OPEN · \(done) DONE」 |
+| `screen-todo-work` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 |
+| `screen-todo-work` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-work` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-work` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-todo-work` | `PRD-3 · AC1 별도 데이터·검색 분리(검색바에 "회사 영역만"), AC3 시각 차이(슬레이트·각진 카드·모노스페이스), AC4 영역 간 이동 UI 없음` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 
 ## 검산
