@@ -194,6 +194,13 @@ public extension WeatherClient {
         WeatherForecastCache().save(data, for: location, at: now)
         return WeatherForecastSnapshot(forecast: forecast, fetchedAt: now)
     }
+
+    static func fetchForecastToCompletion(
+        _ location: WeatherCoordinate,
+        session: URLSession = .shared
+    ) async throws -> WeatherForecastSnapshot {
+        try await Task { try await fetchForecast(location, session: session) }.value
+    }
 }
 
 private struct DetailedForecastResponse: Decodable {
