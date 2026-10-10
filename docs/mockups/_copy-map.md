@@ -39,16 +39,16 @@ last_updated: 2026-10-09
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 128 |
+| A | 일치 | 127 |
 | A | 데이터 | 5 |
-| A | 비표시 | 13 |
+| A | 비표시 | 15 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
-| A | 기준 4 | 7 |
+| A | 기준 4 | 6 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 0 |
-| B | 일치 | 162 |
-| B | 외부 | 36 |
+| B | 일치 | 161 |
+| B | 외부 | 37 |
 | B | 예시 데이터 | 100 |
 | B | 목업 전용 | 105 |
 | B | 미구현 영역 | 10 |
@@ -173,15 +173,14 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Routines/RoutinesView.swift` | `unchecked` | 비표시 | 위와 같음 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `checkmark.circle.fill` | 비표시 | 체크된 단계 SF Symbol 이름(삼항이라 제외 규칙 밖) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `circle` | 비표시 | 미체크 단계 SF Symbol 이름(위와 같음) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `임시 공간` | 일치 | `ScreenHeader` 제목 — 목업은 같은 문구를 미분류 배지 옆 작은 라벨로, 「분류되지 않은 메모」 를 큰 제목으로 그린다(위계 차이는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(viewModel.unclassifiedCount)` | 데이터 | 미분류 개수 배지 「12」 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 — 목업 큰 제목 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 추가 버튼(구현은 목록 위 전폭 버튼 — 자리는 기준 4) |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 제목(`ScreenHeader` 26 bold) |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 오른쪽 추가 캡슐 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(section.items.count) ITEMS` | 일치 | 일자 그룹 헤더 개수 「5 ITEMS」 — 목업처럼 제목(`ScratchpadSections.title` 데이터) · 구분선 · 개수 세 요소로 그린다(글꼴 SF Mono·대문자화는 기준 4) |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 기준 4 | 항목 메타 — 목업은 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다. 구현은 「 · 」 로 이어 한 줄 |
+| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 비표시 | 항목 메타 줄의 접근성 라벨(`accessibilityLabel`) — 화면에는 목업처럼 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다(`Text(item.source.displayName)` · `Text(time)` — 보간 아닌 데이터) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현`(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
@@ -212,6 +211,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 구현 대기 | 회사 요약 줄 — 목업 「12 OPEN · 8 DONE · DEADLINE 3」 의 마감 카운트가 구현에 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(idPrefix).summary` | 비표시 | 요약 줄 접근성 식별자 — `ScreenHeader` 의 `subtitleIdentifier:` 인자로 넘겨 `accessibilityIdentifier(` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 기준 4 | 회사 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「DONE · 8」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
@@ -570,9 +570,9 @@ last_updated: 2026-10-09
 | `screen-scratchpad` | `03 · 임시 공간` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-scratchpad` | `임시 공간` | 일치 | 헤더 제목(목업은 배지 옆 작은 라벨 — 위계는 기준 4) |
+| `screen-scratchpad` | `임시 공간` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구(배지 옆 작은 라벨) |
 | `screen-scratchpad` | `12` | 예시 데이터 | 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
-| `screen-scratchpad` | `분류되지 않은 메모` | 일치 | 헤더 미분류 캡션 |
+| `screen-scratchpad` | `분류되지 않은 메모` | 일치 | 헤더 제목 |
 | `screen-scratchpad` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
 | `screen-scratchpad` | `새 메모` | 일치 | 추가 버튼 |
 | `screen-scratchpad` | `오늘` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 일자 그룹 제목 `ScratchpadSections.title` |

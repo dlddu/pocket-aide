@@ -68,3 +68,16 @@
 | `ios/PocketAideTests/PRMonitorUITests.swift` 91–92 | 「The event is enqueued after the first sign-in and consumed within」 | 재실행 루프가 있는 이유(이벤트가 첫 로그인 뒤에 들어오므로 앱을 다시 띄워 재조회해야 한다) — 지우면 루프를 단순 `waitForExistence` 로 줄이는 정리가 열리고 첫 화면이 이벤트 전에 그려진 실행에서 테스트가 깨진다 |
 | `ios/PocketAideTests/PRMonitorUITests.swift` 104–107 | 「An acknowledged group moves under the 「확인 완료」 section header」 | 확인 상태를 섹션 헤더로 관측하는 이유(확인된 그룹은 카드 헤더로 접힌다)와 `if !exists` 분기의 이유(`-test-iterations 2` 가 이미 확인된 뒤 재실행할 수 있다) — 지우면 분기를 걷는 정리가 재시도 실행을 항상 실패시킨다 |
 | `ios/PocketAideTests/PRMonitorUITests.swift` 123 | 「Acknowledgement is server-side: a fresh launch re-fetches history.」 | 종료·재실행이 서버 측 영속을 검증하려는 것이라는 사실 — 지우면 재실행을 불필요한 지연으로 보고 걷어 「확인」이 서버에 저장되는지 검증하지 않게 된다 |
+
+## 증분 재판정 — 2026-10-09 (iOS UI 테스트 샤딩 · main 배포 필터)
+
+- **기준 커밋**: `3467c6b` 위의 브랜치 `ci/ios-test-shards` (줄 번호는 그 브랜치 기준이다)
+- **범위**: 원장 `.github/workflows/` 행에 더해진 주석 11줄과 새 파일 `scripts/ci/ios_test_shards.py` 의 주석 2줄. 기존 주석은 고치지 않았다.
+
+| 자리 | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` 94–97 | 「The *_deploy filters leave out workflow and action files: they」 | `backend_deploy`·`ios_deploy` 가 `backend`·`ios` 와 달리 워크플로 파일을 빼는 이유(main 의 이미지·pin·TestFlight 를 정하고, CI 만 바꾼 변경은 PR 에서 이미 돌았다) — 지우면 두 목록이 실수로 갈라진 것으로 보고 합쳐, 같은 코드를 새 SHA 로 다시 배포하고 TestFlight 빌드 번호를 쓰게 된다 |
+| `.github/workflows/ios-test.yml` 10–13 | 「The UI suite runs serially in one simulator, so splitting its classes」 | 매트릭스가 테스트 시간을 줄이는 원리(한 시뮬레이터에서 직렬로 돈다)와 샤드마다 백엔드·DB 가 따로라는 사실, 샤드 하나가 macOS 동시 슬롯 하나를 쥔다는 비용 — 지우면 샤드 수를 슬롯 상한을 모른 채 늘려 대기열을 만들거나, 샤드 간 DB 공유를 가정한 테스트를 쓰게 된다 |
+| `.github/workflows/ios-test.yml` 86–87 | 「Keep pushing for the whole shard: where PRMonitorUITests falls in」 | 재전송 상한을 샤드 전체 길이로 잡은 이유(샤드 안 알파벳순 위치가 푸시 창을 결정하지 않게 한다) — 지우면 상한을 줄여 푸시 탭 테스트가 창 밖으로 밀리는 실패(PR #140)를 되살린다 |
+| `.github/workflows/ios-test.yml` 118 | 「Coverage stays on in the scheme for local runs; nothing in CI reads it.」 | `-enableCodeCoverage NO` 가 scheme 의 `gatherCoverageData: true` 를 CI 에서만 끈다는 짝과 근거 — 지우면 scheme 과 어긋난 실수로 보고 플래그를 지우거나, CI 산출물에 커버리지가 있다고 기대하게 된다 |
+| `scripts/ci/ios_test_shards.py` 27–28 | 「A class missing from the durations file is a new one: weigh it like a」 | 소요 시간 표에 없는 클래스를 버리지 않고 중앙값 가중치로 배정하는 계약 — 지우면 표에 없는 클래스를 건너뛰도록 바꿔 새 테스트가 CI 에서 조용히 빠지게 된다 |

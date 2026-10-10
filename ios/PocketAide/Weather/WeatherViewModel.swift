@@ -27,11 +27,7 @@ final class WeatherViewModel: ObservableObject {
             state = .loaded(cached)
         }
         do {
-            state = .loaded(try await WeatherClient.fetchForecast(location))
-        } catch is CancellationError {
-            return
-        } catch let error as URLError where error.code == .cancelled {
-            return
+            state = .loaded(try await WeatherClient.fetchForecastToCompletion(location))
         } catch {
             state = .error
         }

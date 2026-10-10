@@ -17,6 +17,7 @@ TOKENS = {
     "ghp_e2e_ratelimited": "ratelimited",
     "ghp_e2e_empty": "empty",
     "ghp_e2e_slow": "slow",
+    "ghp_e2e_rollup": "rollup",
 }
 
 SCHEDULED_TOKENS = {
@@ -25,6 +26,9 @@ SCHEDULED_TOKENS = {
 }
 
 SLOW_SECONDS = 20
+
+FAILING_CHECKS = {"FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED", "STARTUP_FAILURE"}
+RUNNING_CHECKS = {"EXPECTED", "PENDING", "QUEUED", "IN_PROGRESS", "WAITING", "REQUESTED"}
 
 SEARCH_COUNTS = {}
 SEARCH_COUNTS_LOCK = threading.Lock()
@@ -52,6 +56,32 @@ def pull_request(number, title, author, minutes_ago, rollup):
         "author": {"login": author},
         "commits": {"nodes": [{"commit": {"statusCheckRollup": status}}]},
     }
+
+
+def rollup_of(checks):
+    if not checks:
+        return None
+    if any(check in FAILING_CHECKS for check in checks):
+        return "FAILURE"
+    if any(check in RUNNING_CHECKS for check in checks):
+        return "PENDING"
+    return "SUCCESS"
+
+
+def rollup_payload():
+    payload = empty_payload()
+    payload["data"]["authored"]["nodes"] = [
+        pull_request(number, title, LOGIN, minutes_ago, rollup_of(checks))
+        for number, title, minutes_ago, checks in (
+            (41, "e2e checks all passed", 1, ["SUCCESS", "SUCCESS"]),
+            (42, "e2e one check failed", 2, ["SUCCESS", "FAILURE"]),
+            (43, "e2e checks running", 3, ["IN_PROGRESS"]),
+            (44, "e2e no checks", 4, []),
+            (45, "e2e passed and running", 5, ["SUCCESS", "IN_PROGRESS"]),
+            (46, "e2e running and one failed", 6, ["SUCCESS", "IN_PROGRESS", "FAILURE"]),
+        )
+    ]
+    return payload
 
 
 def search_payload():
@@ -192,6 +222,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if behavior == "rerun":
             self.send_json(200, rerun_payload(next_search_number(self.token())))
+            return
+        if behavior == "rollup":
+            self.send_json(200, rollup_payload())
             return
         if behavior == "slow":
             time.sleep(SLOW_SECONDS)

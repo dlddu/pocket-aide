@@ -105,6 +105,25 @@ final class WeatherForecastTests: XCTestCase {
         XCTAssertNil(cache.load(for: location, now: savedAt))
     }
 
+    func testFetchToCompletionOutlivesACancelledCaller() async throws {
+        DelayedForecastProtocol.body = response()
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [DelayedForecastProtocol.self]
+        let session = URLSession(configuration: configuration)
+        defer { WeatherForecastCache().clear() }
+
+        let started = Date()
+        let caller = Task { [location] in
+            try await WeatherClient.fetchForecastToCompletion(location, session: session)
+        }
+        caller.cancel()
+        let snapshot = try await caller.value
+
+        XCTAssertEqual(snapshot.forecast, try Weather.forecast(from: response()))
+        XCTAssertGreaterThanOrEqual(snapshot.fetchedAt, started)
+        XCTAssertLessThanOrEqual(snapshot.fetchedAt, Date())
+    }
+
     func testUpdatedLabelShowsFetchTime() throws {
         let seoul = try XCTUnwrap(TimeZone(identifier: "Asia/Seoul"))
         let date = Date(timeIntervalSince1970: 1_791_203_400)
@@ -112,4 +131,24 @@ final class WeatherForecastTests: XCTestCase {
         XCTAssertEqual(Weather.chanceLabel(40), "40%")
         XCTAssertEqual(Weather.chanceLabel(nil), "—")
     }
+}
+
+private final class DelayedForecastProtocol: URLProtocol {
+    static var body = Data()
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { [self] in
+            guard let url = request.url,
+                  let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil) else { return }
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: Self.body)
+            client?.urlProtocolDidFinishLoading(self)
+        }
+    }
+
+    override func stopLoading() {}
 }

@@ -29,6 +29,8 @@ struct ScratchpadView: View {
     @ObservedObject var viewModel: ScratchpadViewModel
     @State private var sheetMode: SheetMode?
 
+    private static let cardGap: CGFloat = 10
+
     private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "ko_KR")
@@ -41,7 +43,6 @@ struct ScratchpadView: View {
             DesignTokens.Color.surface(.scratchpad).ignoresSafeArea()
             VStack(spacing: 0) {
                 header
-                addButton
                 list
             }
         }
@@ -57,16 +58,26 @@ struct ScratchpadView: View {
     }
 
     private var header: some View {
-        ScreenHeader(area: .scratchpad, title: "임시 공간", subtitle: "캡처 부담 없이 일단 던져두는 곳") {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(viewModel.unclassifiedCount)")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.h1, weight: .bold))
-                    .foregroundStyle(DesignTokens.Color.accent(.scratchpad))
-                    .accessibilityIdentifier("scratchpad.badge")
-                Text("분류되지 않은 메모")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
-                    .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))
-            }
+        ScreenHeader(
+            area: .scratchpad,
+            title: "분류되지 않은 메모",
+            titleSize: 26,
+            labelTracking: 2.2,
+            subtitle: "캡처 부담 없이 일단 던져두는 곳",
+            bottomPadding: DesignTokens.Spacing.md
+        ) {
+            Text("\(viewModel.unclassifiedCount)")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs, weight: .bold))
+                .monospacedDigit()
+                .foregroundStyle(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(DesignTokens.Color.accent(.scratchpad))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .padding(.leading, DesignTokens.Spacing.sm)
+                .accessibilityIdentifier("scratchpad.badge")
+        } trailing: {
+            addButton
         }
     }
 
@@ -74,26 +85,19 @@ struct ScratchpadView: View {
         Button {
             sheetMode = .add
         } label: {
-            HStack(spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.xs) {
                 Image(systemName: "plus")
                     .font(.system(size: 13, weight: .bold))
                 Text("새 메모")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))
-                Spacer(minLength: 0)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
             }
             .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, 12)
-            .background(DesignTokens.Color.card(.scratchpad))
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Radius.card, style: .continuous)
-                    .stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1)
-            )
-            .foregroundStyle(DesignTokens.Color.ink(.scratchpad))
+            .padding(.vertical, 6)
+            .background(DesignTokens.Color.ink(.scratchpad))
+            .clipShape(Capsule())
+            .foregroundStyle(DesignTokens.Color.surface(.scratchpad))
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, DesignTokens.Spacing.xl)
-        .padding(.bottom, DesignTokens.Spacing.sm)
         .accessibilityIdentifier("scratchpad.add.button")
     }
 
@@ -110,24 +114,9 @@ struct ScratchpadView: View {
                 emptyState
             } else {
                 ForEach(viewModel.sections) { section in
-                    Section {
-                        ForEach(section.items) { item in
-                            row(for: item)
-                        }
-                    } header: {
-                        HStack(spacing: DesignTokens.Spacing.sm) {
-                            Text(section.title)
-                                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
-                                .tracking(2.1)
-                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
-                            Rectangle()
-                                .fill(DesignTokens.Color.rule(.scratchpad))
-                                .frame(height: 1)
-                            Text("\(section.items.count) ITEMS")
-                                .font(DesignTokens.Typography.font(size: 10.5))
-                                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
-                        }
-                        .textCase(nil)
+                    dayHeader(section)
+                    ForEach(section.items) { item in
+                        row(for: item)
                     }
                 }
             }
@@ -155,15 +144,37 @@ struct ScratchpadView: View {
         .listRowBackground(Color.clear)
     }
 
+    private func dayHeader(_ section: ScratchpadSection) -> some View {
+        let isFirst = section.id == viewModel.sections.first?.id
+        return HStack(spacing: DesignTokens.Spacing.sm) {
+            Text(section.title)
+                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
+                .tracking(2.1)
+                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.7))
+                .textCase(.uppercase)
+            Rectangle()
+                .fill(DesignTokens.Color.rule(.scratchpad))
+                .frame(height: 1)
+            Text("\(section.items.count) ITEMS")
+                .font(DesignTokens.Typography.font(size: 10.5))
+                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.5))
+        }
+        .padding(.top, isFirst ? DesignTokens.Spacing.xs : DesignTokens.Spacing.md)
+        .listRowInsets(EdgeInsets(top: isFirst ? DesignTokens.Spacing.xs : Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+    }
+
     private func row(for item: ScratchpadItem) -> some View {
-        ScratchpadCard(item: item, time: timeLabel(item)) { target in
+        let isLast = item.id == viewModel.sections.last?.items.last?.id
+        return ScratchpadCard(item: item, time: timeLabel(item)) { target in
             Task {
                 if let affirmation = await viewModel.move(item, to: target) {
                     sheetMode = .priority(affirmation)
                 }
             }
         }
-        .listRowInsets(EdgeInsets(top: 4, leading: DesignTokens.Spacing.xl, bottom: 4, trailing: DesignTokens.Spacing.xl))
+        .listRowInsets(EdgeInsets(top: Self.cardGap / 2, leading: DesignTokens.Spacing.xl, bottom: isLast ? DesignTokens.Spacing.xxl : Self.cardGap / 2, trailing: DesignTokens.Spacing.xl))
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -215,17 +226,26 @@ private struct ScratchpadCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 6) {
-                if item.source == .shortcut {
+            HStack(alignment: .top, spacing: 12) {
+                HStack(spacing: 6) {
                     Circle()
-                        .fill(DesignTokens.Color.accent(.scratchpad))
+                        .fill(item.source == .shortcut ? DesignTokens.Color.accent(.scratchpad) : DesignTokens.Color.ink(.scratchpad).opacity(0.55))
                         .frame(width: 6, height: 6)
+                    Text(item.source.displayName)
+                        .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
+                        .tracking(0.5)
+                        .textCase(.uppercase)
+                        .foregroundStyle(item.source == .shortcut ? DesignTokens.Color.accent(.scratchpad) : DesignTokens.Color.ink(.scratchpad).opacity(0.7))
                 }
-                Text("\(item.source.displayName) · \(time)")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                Spacer(minLength: 0)
+                Text(time)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                     .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.55))
-                    .accessibilityIdentifier("scratchpad.row.\(item.id).meta")
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(item.source.displayName) · \(time)")
+            .accessibilityAddTraits(.isStaticText)
+            .accessibilityIdentifier("scratchpad.row.\(item.id).meta")
             .padding(.bottom, 6)
             Text(item.text)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))

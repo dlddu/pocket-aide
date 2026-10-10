@@ -3,7 +3,7 @@ import XCTest
 struct ScratchpadScreen {
     let app: XCUIApplication
 
-    static let screenTitle = "임시 공간"
+    static let screenTitle = "분류되지 않은 메모"
     static let tabLabel = "임시공간"
     static let chipLabels = ["personal": "→ 개인", "work": "→ 회사", "affirmation": "→ 다짐", "routine": "→ 루틴"]
 
@@ -15,8 +15,8 @@ struct ScratchpadScreen {
         XCTAssertTrue(tab.waitForExistence(timeout: 5), "The 임시공간 tab should be in the tab bar")
         tab.tap()
         let screen = ScratchpadScreen(app: app)
-        XCTAssertTrue(screen.header.waitForExistence(timeout: 15), "The 임시 공간 screen header should appear")
-        XCTAssertTrue(screen.addButton.waitForExistence(timeout: 10), "The add button should be on the 임시 공간 screen")
+        XCTAssertTrue(screen.header.waitForExistence(timeout: 15), "The 임시공간 screen header should appear")
+        XCTAssertTrue(screen.addButton.waitForExistence(timeout: 10), "The add button should be on the 임시공간 screen")
         return screen
     }
 
