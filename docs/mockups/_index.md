@@ -107,8 +107,8 @@ last_updated: 2026-10-05
   - 여정: (미정의)
   - 가치: V3 (영역 분리된 작업 관리 — 개인 영역)
   - PRD/AC (보조): PRD-3 / AC3 (영역별 시각 분리, terracotta 톤)
-  - 두 프레임: **목록**, **빈 상태**(할 일 0개 — 안내 한 줄, 요약 「0개 남음 · 0개 완료」, 필터 칩 없음). 2026-10-01 빈 상태 프레임 추가 — 구현이 먼저 있었고 목업이 그리지 않던 상태다.
-  - 검색 필드: 두 프레임 헤더에 「개인 영역만 검색…」(회사 목업 검색 블록과 같은 자리·치수, 라운드 16). 2026-10-04 추가 — 구현 `TodoListView` 가 두 영역 모두 검색 필드를 그린다.
+  - 네 프레임: **목록**, **빈 상태**(할 일 0개 — 안내 한 줄, 요약 「0개 남음 · 0개 완료」, 필터 칩 없음), **불러오는 중**(안내 자리에 진행 표시만), **오류**(목록 맨 위 destructive 오류 줄 — 첫 불러오기 실패라 아래는 빈 상태 안내). 2026-10-01 빈 상태 프레임 추가, 2026-10-10 불러오는 중·오류 프레임 추가 — 셋 다 구현이 먼저 있었고 목업이 그리지 않던 상태다.
+  - 검색 필드: 네 프레임 헤더에 「개인 영역만 검색…」(회사 목업 검색 블록과 같은 자리·치수, 라운드 16). 2026-10-04 추가 — 구현 `TodoListView` 가 두 영역 모두 검색 필드를 그린다.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `리스트 + 섹션` (patterns.md §3)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip` (clay), `AreaLabel`("PERSONAL"), `ScreenHeader.with-icon-button-fab`, `IconCircleButton.solid`, `FilterPills`, `SectionHeader`, `Card.task-card`, `Card.dimmed`, `CheckCircle.unchecked`, `CheckCircle.done`, `TabBar` (active=개인)

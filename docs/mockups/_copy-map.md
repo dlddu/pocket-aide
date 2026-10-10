@@ -41,7 +41,7 @@ last_updated: 2026-10-09
 |---|---|---|
 | A | 일치 | 127 |
 | A | 데이터 | 5 |
-| A | 비표시 | 14 |
+| A | 비표시 | 15 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
@@ -49,13 +49,13 @@ last_updated: 2026-10-09
 | A | 목업 대기 | 0 |
 | B | 일치 | 161 |
 | B | 외부 | 37 |
-| B | 예시 데이터 | 100 |
-| B | 목업 전용 | 105 |
+| B | 예시 데이터 | 101 |
+| B | 목업 전용 | 107 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 43 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 164행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 165행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -211,6 +211,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 구현 대기 | 회사 요약 줄 — 목업 「12 OPEN · 8 DONE · DEADLINE 3」 의 마감 카운트가 구현에 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(idPrefix).summary` | 비표시 | 요약 줄 접근성 식별자 — `ScreenHeader` 의 `subtitleIdentifier:` 인자로 넘겨 `accessibilityIdentifier(` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 기준 4 | 회사 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「DONE · 8」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
@@ -224,7 +225,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 460행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 463행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -651,6 +652,9 @@ last_updated: 2026-10-09
 | `screen-todo-personal` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `0개 남음 · 0개 완료` | 일치 | 빈 상태 프레임 요약 줄 |
 | `screen-todo-personal` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 |
+| `screen-todo-personal` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-personal` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-personal` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-todo-personal` | `PRD-3 · AC3 시각적 영역 구분(테라코타 톤·상단 스트립·"PERSONAL" 라벨) — 회사 탭과 한눈에 구분되도록 설계` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-work` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

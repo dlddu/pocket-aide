@@ -82,6 +82,7 @@ jobs:
               - 'ios/fastlane/**'
               - '.github/workflows/ci.yml'
               - '.github/workflows/ios-test.yml'
+              - 'scripts/ci/**'
               - '.github/actions/setup-go-backend/**'
               - '.github/actions/start-test-backend/**'
               - '.github/actions/start-test-sqs/**'
@@ -90,14 +91,20 @@ jobs:
             # k8s/** is here because production only moves when the `pin` job
             # republishes the deploy branch, and pin runs after an image build.
             # A manifest-only change on main must still reach production.
-            backend:
+            # The *_deploy filters leave out workflow and action files: they
+            # decide main's image/pin/TestFlight, and a CI-only edit is already
+            # exercised on its PR — republishing would roll out an identical
+            # build under a new SHA and spend a TestFlight build number.
+            backend_deploy: &backend_deploy
               - 'backend/**'
               - 'k8s/**'
               - 'Dockerfile'
               - '.dockerignore'
+            backend:
+              - *backend_deploy
               - '.github/workflows/ci.yml'
               - '.github/workflows/backend-docker-push.yml'
-            ios:
+            ios_deploy: &ios_deploy
               - 'ios/Gemfile'
               - 'ios/project.yml'
               - 'ios/PocketAide/**'
@@ -105,6 +112,8 @@ jobs:
               - 'ios/PocketAideWidget/**'
               - 'ios/Shared/**'
               - 'ios/fastlane/**'
+            ios:
+              - *ios_deploy
               - '.github/workflows/ci.yml'
               - '.github/workflows/testflight-upload.yml'
               - '.github/actions/install-ios-signing/**'
@@ -121,6 +130,8 @@ jobs:
           BACKEND: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
           IOS: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
           IOS_TESTS: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios_tests == 'true' }}
+          BACKEND_DEPLOY: ${{ steps.filter.outputs.backend_deploy == 'true' }}
+          IOS_DEPLOY: ${{ steps.filter.outputs.ios_deploy == 'true' }}
         run: |
           set -euo pipefail
           image=$BACKEND testflight=false preview_pr='' build_source=''
@@ -138,11 +149,11 @@ jobs:
               # Production build on main when the app changed, or when the
               # merged PR was a labelled one — its testers are on a preview
               # build that dies with the preview, so move them back to prod.
-              build_source=main
+              image=$BACKEND_DEPLOY build_source=main
               merged_labelled=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/pulls" \
                 --jq "[.[] | select(.merged_at != null) | .labels[].name] | any(. == \"$PREVIEW_LABEL\")" \
                 2>/dev/null || echo false)
-              if [ "$IOS" = true ] || [ "$merged_labelled" = true ]; then testflight=true; fi
+              if [ "$IOS_DEPLOY" = true ] || [ "$merged_labelled" = true ]; then testflight=true; fi
               ;;
             workflow_dispatch)
               testflight=true build_source=수동

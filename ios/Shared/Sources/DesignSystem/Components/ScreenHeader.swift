@@ -7,6 +7,8 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
     private let titleSize: CGFloat
     private let labelTracking: CGFloat
     private let subtitle: String?
+    private let subtitleIdentifier: String
+    private let subtitleMonospaced: Bool
     private let bottomPadding: CGFloat
     private let labelAccessory: LabelAccessory
     private let trailing: Trailing
@@ -18,6 +20,8 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
         titleSize: CGFloat = 24,
         labelTracking: CGFloat = 2.4,
         subtitle: String? = nil,
+        subtitleIdentifier: String = "screen.header.subtitle",
+        subtitleMonospaced: Bool = false,
         bottomPadding: CGFloat = DesignTokens.Spacing.sm,
         @ViewBuilder labelAccessory: () -> LabelAccessory,
         @ViewBuilder trailing: () -> Trailing
@@ -28,6 +32,8 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
         self.titleSize = titleSize
         self.labelTracking = labelTracking
         self.subtitle = subtitle
+        self.subtitleIdentifier = subtitleIdentifier
+        self.subtitleMonospaced = subtitleMonospaced
         self.bottomPadding = bottomPadding
         self.labelAccessory = labelAccessory()
         self.trailing = trailing()
@@ -53,7 +59,8 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
                     Text(subtitle)
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
                         .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
-                        .accessibilityIdentifier("screen.header.subtitle")
+                        .monospaced(subtitleMonospaced)
+                        .accessibilityIdentifier(subtitleIdentifier)
                 }
             }
             Spacer()

@@ -91,31 +91,29 @@ struct TodoListView: View {
     }
 
     private var header: some View {
-        ScreenHeader(area: tone, title: area.screenTitle) {
-            VStack(alignment: .trailing, spacing: 6) {
-                Button {
-                    sheetMode = .create
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .bold))
-                        .frame(width: 36, height: 36)
-                        .background(DesignTokens.Color.card(tone))
-                        .overlay(Circle().stroke(DesignTokens.Color.rule(tone), lineWidth: 1))
-                        .clipShape(Circle())
-                        .foregroundStyle(DesignTokens.Color.ink(tone))
-                }
-                .accessibilityIdentifier("\(idPrefix).add.button")
-                Text(area.summary(open: viewModel.openCount, done: viewModel.doneCount))
-                    .font(summaryFont)
-                    .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))
-                    .accessibilityIdentifier("\(idPrefix).summary")
+        ScreenHeader(
+            area: tone,
+            title: area.screenTitle,
+            titleSize: 28,
+            subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),
+            subtitleIdentifier: "\(idPrefix).summary",
+            subtitleMonospaced: area == .work,
+            bottomPadding: DesignTokens.Spacing.md
+        ) {
+            EmptyView()
+        } trailing: {
+            Button {
+                sheetMode = .create
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 18, weight: .bold))
+                    .frame(width: 40, height: 40)
+                    .background(DesignTokens.Color.accent(tone))
+                    .clipShape(Circle())
+                    .foregroundStyle(.white)
             }
+            .accessibilityIdentifier("\(idPrefix).add.button")
         }
-    }
-
-    private var summaryFont: Font {
-        let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold)
-        return area == .work ? base.monospaced() : base
     }
 
     private var searchField: some View {
@@ -123,13 +121,13 @@ struct TodoListView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))
             TextField(area.searchPrompt, text: $viewModel.query)
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))
                 .foregroundStyle(DesignTokens.Color.ink(tone))
                 .autocorrectionDisabled()
                 .accessibilityIdentifier("\(idPrefix).search.field")
         }
         .padding(.horizontal, DesignTokens.Spacing.md)
-        .padding(.vertical, 10)
+        .padding(.vertical, DesignTokens.Spacing.sm)
         .background(DesignTokens.Color.card(tone))
         .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))
         .overlay(
@@ -137,7 +135,7 @@ struct TodoListView: View {
                 .stroke(DesignTokens.Color.rule(tone), lineWidth: 1)
         )
         .padding(.horizontal, DesignTokens.Spacing.xl)
-        .padding(.bottom, DesignTokens.Spacing.sm)
+        .padding(.bottom, DesignTokens.Spacing.md)
     }
 
     private var list: some View {
