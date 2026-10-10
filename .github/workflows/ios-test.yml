@@ -5,8 +5,16 @@ on:
 
 jobs:
   ios:
-    name: iOS build + test
+    name: iOS build + test (shard ${{ strategy.job-index }})
     runs-on: macos-26
+    # The UI suite runs serially in one simulator, so splitting its classes
+    # across runners is what shortens the job. Each shard builds the app itself
+    # (a few minutes) and gets its own backend and SQLite DB. Each shard holds
+    # a macOS slot, and the account allows few at once, so mind the width.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     env:
       # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; oidcmock 이 대신한다 (docs/e2e-mocking-policy.md)
       OIDC_ISSUER: http://localhost:5556
@@ -26,6 +34,9 @@ jobs:
       APNS_DISABLED: "true"
     steps:
       - uses: actions/checkout@v4
+      - name: Pick this shard's test classes
+        id: shard
+        run: python3 scripts/ci/ios_test_shards.py --index ${{ strategy.job-index }} --total ${{ strategy.job-total }}
       - uses: ./.github/actions/setup-go-backend
       - uses: ./.github/actions/start-test-sqs
       - uses: ./.github/actions/start-test-backend
@@ -54,6 +65,7 @@ jobs:
           echo "ENQUEUE_PID=$!" >> "$GITHUB_ENV"
       # mock-exception: EXT — APNs 전달(Apple 서버 → 기기)은 Apple 인증키·실 기기 토큰 경계라 CI 안에서 못 한다; 백엔드가 보낼 페이로드를 `xcrun simctl push` 로 시뮬레이터에 넣고 수신·탭 이후는 실경로 (docs/e2e-mocking-policy.md)
       - name: Deliver PR-monitor push to the simulator
+        if: steps.shard.outputs.pr_monitor == 'true'
         # Push the payload the backend would send for the fixture's history row
         # (formatPushText title/body + SendWithData's event_id) until the app logs
         # the deep-link highlight for that id. Pushes before the test grants
@@ -71,7 +83,9 @@ jobs:
             echo "$id" > /tmp/push-event-id
             printf '{"aps":{"alert":{"title":"%s","body":"%s"},"sound":"default"},"event_id":%s}\n' \
               'CI 통과 — dlddu/pocket-aide-e2e #9001' 'CI on e2e/bf-1-webhook' "$id" > /tmp/pr-monitor.apns
-            for i in $(seq 1 60); do
+            # Keep pushing for the whole shard: where PRMonitorUITests falls in
+            # the shard's alphabetical run order no longer bounds the window.
+            for i in $(seq 1 240); do
               xcrun simctl push booted com.dlddu.PocketAide /tmp/pr-monitor.apns || true
               if xcrun simctl spawn booted log show --last 30s --style compact \
                   --predicate 'process == "PocketAide"' 2>/dev/null \
@@ -85,6 +99,7 @@ jobs:
           echo "PUSH_PID=$!" >> "$GITHUB_ENV"
       - uses: ./.github/actions/generate-xcode-project
       - name: SwiftLint
+        if: strategy.job-index == 0
         working-directory: ios
         run: |
           brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
@@ -100,6 +115,7 @@ jobs:
           # -retry-tests-on-failure + -test-iterations 2 absorbs environment-
           # induced flakes (e.g. "Failed to get background assertion", UI
           # query snapshot timeouts on a loaded simulator): each failing test is re-run once.
+          # Coverage stays on in the scheme for local runs; nothing in CI reads it.
           xcodebuild \
             -project PocketAide.xcodeproj \
             -scheme PocketAide \
@@ -108,8 +124,11 @@ jobs:
             -resultBundlePath TestResults.xcresult \
             -retry-tests-on-failure \
             -test-iterations 2 \
+            -enableCodeCoverage NO \
+            ${{ steps.shard.outputs.only_testing }} \
             test | xcbeautify
       - name: Verify push tap reached the deep-link highlight
+        if: steps.shard.outputs.pr_monitor == 'true'
         # The tap itself is asserted by PRMonitorUITests; the highlighted
         # event id is only observable in the app's log, saved by the push step.
         run: |
@@ -126,7 +145,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ios-test-result-bundle
+          name: ios-test-result-bundle-${{ strategy.job-index }}
           path: ios/TestResults.xcresult
           retention-days: 7
       - name: Stop background processes

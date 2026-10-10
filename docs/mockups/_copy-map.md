@@ -41,7 +41,7 @@ last_updated: 2026-10-09
 |---|---|---|
 | A | 일치 | 127 |
 | A | 데이터 | 5 |
-| A | 비표시 | 14 |
+| A | 비표시 | 15 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
@@ -55,7 +55,7 @@ last_updated: 2026-10-09
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 43 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 164행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 165행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -211,6 +211,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 구현 대기 | 회사 요약 줄 — 목업 「12 OPEN · 8 DONE · DEADLINE 3」 의 마감 카운트가 구현에 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(idPrefix).summary` | 비표시 | 요약 줄 접근성 식별자 — `ScreenHeader` 의 `subtitleIdentifier:` 인자로 넘겨 `accessibilityIdentifier(` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 기준 4 | 회사 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「DONE · 8」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
