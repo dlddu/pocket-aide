@@ -40,6 +40,7 @@ type Server struct {
 	subject  string
 	signKey  *rsa.PrivateKey
 	codes    map[string]authCode
+	nextSub  string
 }
 
 type authCode struct {
@@ -115,6 +116,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/jwks.json", s.handleJWKS)
 	mux.HandleFunc("/authorize", s.handleAuthorize)
 	mux.HandleFunc("/token", s.handleToken)
+	mux.HandleFunc("/e2e/next-login-subject", s.handleNextLoginSubject)
 	return mux
 }
 
@@ -162,9 +164,6 @@ func (s *Server) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	scope := q.Get("scope")
 	responseType := q.Get("response_type")
 	subject := q.Get("login_hint")
-	if subject == "" {
-		subject = s.subject
-	}
 
 	if responseType != "code" {
 		http.Error(w, "unsupported response_type", http.StatusBadRequest)
@@ -185,6 +184,10 @@ func (s *Server) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 
 	code := randomString(32)
 	s.mu.Lock()
+	if subject == "" {
+		subject = orDefault(s.nextSub, s.subject)
+		s.nextSub = ""
+	}
 	s.codes[code] = authCode{
 		codeChallenge:       codeChallenge,
 		codeChallengeMethod: codeChallengeMethod,
@@ -208,6 +211,21 @@ func (s *Server) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 	}
 	cb.RawQuery = qs.Encode()
 	http.Redirect(w, r, cb.String(), http.StatusFound)
+}
+
+func (s *Server) handleNextLoginSubject(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		return
+	}
+	s.mu.Lock()
+	s.nextSub = r.PostForm.Get("sub")
+	s.mu.Unlock()
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleToken(w http.ResponseWriter, r *http.Request) {
