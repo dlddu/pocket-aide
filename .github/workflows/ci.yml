@@ -33,7 +33,10 @@ jobs:
       # nothing changed, skipping every job. Force all filters true instead.
       backend_unit: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend_unit == 'true' }}
       backend_integration: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend_integration == 'true' }}
-      ios_tests: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios_tests == 'true' }}
+      # Not on main pushes: the PR already ran the suite on its merge ref, and a
+      # rerun holds macOS slots for ~40 min that queued PRs are waiting on. The
+      # cost is no check for two PRs that each passed but break when combined.
+      ios_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.ios_tests == 'true') }}
       backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
       ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
       # Whether this run publishes a backend image / uploads to TestFlight.
@@ -207,8 +210,8 @@ jobs:
   testflight-upload:
     name: TestFlight upload
     needs: [changes, ios-test, backend-docker-push]
-    # ios-test may be skipped (e.g. a main merge of a docs-only labelled PR);
-    # it only has to not have failed. A preview build needs its backend image
+    # ios-test is skipped on every main push (see the ios_tests output) and on
+    # PRs that leave the app alone; it only has to not have failed. A preview build needs its backend image
     # published first, hence the docker-push dependency.
     if: ${{ !cancelled() && needs.changes.outputs.testflight == 'true' && (needs.ios-test.result == 'success' || needs.ios-test.result == 'skipped') && needs.backend-docker-push.result != 'failure' }}
     uses: ./.github/workflows/testflight-upload.yml

@@ -198,6 +198,7 @@
 - **검증 AC**: AC11
 - **구현 상태**: 구현됨
 - **관련 코드 테스트**: `backend/internal/notificationhistory/store_test.go` — `TestInsertBatchTx_FansOutAcrossUsers`, `TestInsertBatchTx_PRFieldsNilWhenEmpty`, `TestList_KeysetPagination`; `backend/internal/handlers/notification_history_test.go` — `TestNotificationHistory_ListIsUserScoped`, `TestNotificationHistory_ListSupportsBeforeAndLimit`; `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testUnacknowledgedGroupsComeFirst`, `testWithinUnreadSectionLatestGroupComesFirst`
+- **비고**: 3단계의 계정 전환은 PR 모니터 「알림 설정」 시트 맨 아래 「로그아웃」 → 확인 → 로그인 화면에서 다른 계정으로 로그인하는 경로다(`prd-github-monitor.md` 결정 사항 「앱 로그아웃 진입점」). 2026-10-09 이전에는 이 경로가 없어 3단계를 앱에서 수행할 수 없었다.
 
 ### 시나리오 13: 이력 저장에 실패하면 푸시를 보내지 않고 나중에 재처리한다
 - **사전 조건**: 서버가 이력 저장에 실패하도록 만든 상태(예: DB 쓰기 불가). 디바이스 토큰 등록됨.

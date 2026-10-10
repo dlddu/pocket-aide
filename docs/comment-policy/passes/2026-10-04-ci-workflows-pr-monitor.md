@@ -81,3 +81,25 @@
 | `.github/workflows/ios-test.yml` 86–87 | 「Keep pushing for the whole shard: where PRMonitorUITests falls in」 | 재전송 상한을 샤드 전체 길이로 잡은 이유(샤드 안 알파벳순 위치가 푸시 창을 결정하지 않게 한다) — 지우면 상한을 줄여 푸시 탭 테스트가 창 밖으로 밀리는 실패(PR #140)를 되살린다 |
 | `.github/workflows/ios-test.yml` 118 | 「Coverage stays on in the scheme for local runs; nothing in CI reads it.」 | `-enableCodeCoverage NO` 가 scheme 의 `gatherCoverageData: true` 를 CI 에서만 끈다는 짝과 근거 — 지우면 scheme 과 어긋난 실수로 보고 플래그를 지우거나, CI 산출물에 커버리지가 있다고 기대하게 된다 |
 | `scripts/ci/ios_test_shards.py` 27–28 | 「A class missing from the durations file is a new one: weigh it like a」 | 소요 시간 표에 없는 클래스를 버리지 않고 중앙값 가중치로 배정하는 계약 — 지우면 표에 없는 클래스를 건너뛰도록 바꿔 새 테스트가 CI 에서 조용히 빠지게 된다 |
+
+## 증분 재판정 — 2026-10-09 (main push 에서 ios-test 생략)
+
+- **기준 커밋**: `d081178` 위의 브랜치 `ci/skip-ios-test-on-main` (줄 번호는 그 브랜치 기준이다)
+- **범위**: `.github/workflows/ci.yml` 에 더한 주석 3줄과 개작 1블록(2줄).
+
+| 자리 | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` 36–38 | 「Not on main pushes: the PR already ran the suite on its merge ref, and a」 | `ios_tests` 출력만 push 이벤트를 빼는 이유(PR 이 merge ref 로 이미 돌렸고, 재실행이 대기 중인 PR 의 macOS 슬롯을 40분가량 잡는다)와 그 대가(각각 통과한 두 PR 이 합쳐져 깨지는 경우를 main 에서 못 잡는다) — 지우면 다른 출력과 어긋난 실수로 보고 되돌려 슬롯 경합을 되살리거나, 대가를 모른 채 같은 생략을 다른 테스트로 넓히게 된다 |
+| `.github/workflows/ci.yml` 213–214 → 개작 | 「ios-test is skipped on every main push (see the ios_tests output) and on」 | TestFlight 가 `ios-test` 의 `skipped` 를 받아 주는 이유(main push 에서는 항상 건너뛴다) — 옛 문면은 문서 전용 라벨 PR 만 예로 들어, 지우거나 그대로 두면 main 에서 skipped 를 막아 운영 TestFlight 를 멈추게 할 수 있다 |
+
+## 증분 재판정 — 2026-10-10 (푸시 준비 신호)
+
+- **기준 커밋**: `b5a4fc4` 위의 브랜치 `ci/push-on-ready` (줄 번호는 그 브랜치 기준이다)
+- **범위**: 푸시 루프를 테스트의 준비 신호 기반으로 바꾸며 개작한 주석 3블록과 새 주석 1줄. 2026-10-09 증분의 `ios-test.yml` 「Keep pushing for the whole shard」 2줄은 루프와 함께 지웠다(무엇을 대신하는지는 아래 첫 행).
+
+| 자리 | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `.github/workflows/ios-test.yml` 69–76 → 개작 | 「Push the payload the backend would send for the fixture's history row / (formatPushText title/body + SendWithData's event_id) only after / PRMonitorUITests logs "pocketaide-e2e push-ready" from the home screen: …」 | 푸시를 테스트의 준비 로그 뒤에만 보내는 이유(다른 테스트 위에 뜬 배너가 그 테스트의 탭에 눌려 PR 모니터를 열고 루프를 일찍 끝냈다 — #224 shard 2 실패)와 이 줄이 테스트 쪽 `NSLog` 와 짝이라는 사실, 강조 로그를 여기 남기는 이유(xcodebuild 가 테스트 끝에 시뮬레이터를 내린다) — 지우면 준비 대기를 불필요한 지연으로 보고 타이머 푸시로 되돌려 같은 실패를 되살리거나, 테스트의 로그 문자열을 바꿔 신호를 끊게 된다 |
+| `ios/PocketAideTests/PRMonitorUITests.swift` 4–7 → 개작 | 「Needs the ios-test workflow environment: … pushes that event to the simulator once the push test logs that / it is waiting on the home screen ("Deliver PR-monitor push").」 | 이 클래스가 워크플로 스텝(픽스처 주입 · 준비 신호 뒤 푸시)에 기대며 로컬 실행에서는 푸시 테스트가 배너를 받지 못한다는 사실 — 지우면 로컬 실패를 앱 결함으로 오인한다 |
+| `ios/PocketAideTests/PRMonitorUITests.swift` 46–47 → 개작 | 「An earlier test in the shard may already have answered the permission / prompt; banners need it granted.」 | 권한 프롬프트 처리가 `if` 인 이유(샤드 안 앞선 테스트가 이미 답했을 수 있다) — 옛 문면 「No earlier test answers」는 샤딩 뒤 틀렸고, 지우면 프롬프트가 늘 뜬다고 보고 단정으로 바꿔 순서에 따라 깨지게 된다 |
+| `ios/PocketAideTests/PRMonitorUITests.swift` 58 | 「The workflow pushes only after this line; the UUID tells a retry apart.」 | 이 `NSLog` 가 진단용이 아니라 워크플로가 기다리는 신호이고, UUID 가 `-retry-tests-on-failure` 재시도를 새 신호로 구분한다는 계약 — 지우면 로그 정리 때 줄을 지워 푸시가 끊기거나, 고정 문자열로 바꿔 재시도에 푸시가 다시 오지 않게 된다 |

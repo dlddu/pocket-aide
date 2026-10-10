@@ -91,7 +91,8 @@ struct PRMonitorView: View {
             PRMonitorNotificationSettingsSheet(
                 viewModel: viewModel,
                 pushAuthorizationDenied: auth.pushAuthorizationDenied,
-                isPresented: $showingSettingsSheet
+                isPresented: $showingSettingsSheet,
+                onSignOut: { auth.signOut() }
             )
         }
     }

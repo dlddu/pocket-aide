@@ -3,7 +3,8 @@ import XCTest
 
 /// Needs the ios-test workflow environment: it enqueues
 /// `.github/fixtures/github-webhook/workflow_run.completed.json` after the first
-/// sign-in and pushes that event to the simulator ("Deliver PR-monitor push").
+/// sign-in and pushes that event to the simulator once the push test logs that
+/// it is waiting on the home screen ("Deliver PR-monitor push").
 final class PRMonitorUITests: XCTestCase {
     /// Title line the fixture produces: GitHub's workflow_run.pull_requests[]
     /// carries no PR title, so it reads "<repo> · #<number>". Matched by
@@ -42,7 +43,8 @@ final class PRMonitorUITests: XCTestCase {
         app.launch()
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
 
-        // No earlier test answers the permission prompt; banners need it.
+        // An earlier test in the shard may already have answered the permission
+        // prompt; banners need it granted.
         let allow = springboard.alerts.buttons
             .matching(NSPredicate(format: "label IN %@", ["Allow", "허용"])).firstMatch
         if allow.waitForExistence(timeout: 10) {
@@ -53,6 +55,8 @@ final class PRMonitorUITests: XCTestCase {
         XCTAssertFalse(tab.isSelected, "Launch should land on a different tab than PR 모니터")
 
         XCUIDevice.shared.press(.home)
+        // The workflow pushes only after this line; the UUID tells a retry apart.
+        NSLog("pocketaide-e2e push-ready %@", UUID().uuidString)
         let banner = springboard.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", pushTitle)).firstMatch
         XCTAssertTrue(banner.waitForExistence(timeout: 120), "The pushed notification should be presented")

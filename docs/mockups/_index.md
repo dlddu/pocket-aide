@@ -120,6 +120,7 @@ last_updated: 2026-10-05
   - 가치: V3 (영역 분리된 작업 관리 — 회사 영역)
   - PRD/AC (보조): PRD-3 / AC1 (두 영역 완전 분리 — 회사 영역만 검색), AC3 (시각 구분, slate 톤), AC4 (영역 간 이동 불가 — 이동 UI 없음)
   - 완료 섹션: BACKLOG 뒤 「DONE · 8」(요약 줄 8 DONE 과 같은 수) + 흐린 완료 카드. 2026-10-04 추가 — 구현 `TodoListView` 가 회사 영역에도 완료 섹션을 그린다.
+  - 네 프레임: **목록**(BACKLOG 카드 아래 스와이프된 행 — 회사 `--destructive` 「삭제」 패널, 각진 틀), **빈 상태**(할 일 0개 — 안내 한 줄, 요약 「0 OPEN · 0 DONE」, 기한 섹션·분리 안내 상자 없음), **불러오는 중**(안내 자리에 진행 표시만), **오류**(목록 맨 위 destructive 오류 줄 — 첫 불러오기 실패라 아래는 빈 상태 안내). 2026-10-10 추가 — 넷 다 구현 `TodoListView(area: .work)` 가 먼저 그리던 상태이고, 개인 투두 목업(`screen-todo-personal`)의 같은 프레임과 같은 짜임이다.
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (patterns.md §1) + `리스트 + 섹션` (patterns.md §3)
   - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip` (slate), `AreaLabel`("WORK"), `ScreenHeader.with-icon-button-fab`, `IconCircleButton.solid`, `FilterPills`, `SectionHeader`, `Card.task-card`, `CheckCircle`, `TabBar` (active=회사)

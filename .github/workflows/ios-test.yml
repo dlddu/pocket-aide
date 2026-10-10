@@ -67,15 +67,21 @@ jobs:
       - name: Deliver PR-monitor push to the simulator
         if: steps.shard.outputs.pr_monitor == 'true'
         # Push the payload the backend would send for the fixture's history row
-        # (formatPushText title/body + SendWithData's event_id) until the app logs
-        # the deep-link highlight for that id. Pushes before the test grants
-        # notification permission are not presented, and the log line is saved
-        # here because xcodebuild shuts the simulator down when the tests end.
+        # (formatPushText title/body + SendWithData's event_id) only after
+        # PRMonitorUITests logs "pocketaide-e2e push-ready" from the home screen:
+        # a banner shown during another test can be tapped by it, which opens
+        # the PR monitor under that test and used to end the pushes early. Each
+        # ready line gets pushes until the app logs the deep-link highlight for
+        # that id; the line is kept here because xcodebuild shuts the simulator
+        # down when the tests end.
         run: |
           (
+            until xcrun simctl list devices booted 2>/dev/null | grep -q '(Booted)'; do sleep 2; done
+            xcrun simctl spawn booted log stream --style compact \
+              --predicate 'eventMessage CONTAINS "pocketaide-e2e push-ready"' > /tmp/push-ready.log 2>&1 &
             id=''
             for i in $(seq 1 1800); do
-              id=$(sqlite3 "$DATABASE_PATH" 'SELECT id FROM notification_history ORDER BY id LIMIT 1' 2>/dev/null || true)
+              id=$(sqlite3 "$DATABASE_PATH" "SELECT id FROM notification_history WHERE repo_full_name = 'dlddu/pocket-aide-e2e' ORDER BY id LIMIT 1" 2>/dev/null || true)
               [ -n "$id" ] && break
               sleep 1
             done
@@ -83,17 +89,23 @@ jobs:
             echo "$id" > /tmp/push-event-id
             printf '{"aps":{"alert":{"title":"%s","body":"%s"},"sound":"default"},"event_id":%s}\n' \
               'CI 통과 — dlddu/pocket-aide-e2e #9001' 'CI on e2e/bf-1-webhook' "$id" > /tmp/pr-monitor.apns
-            # Keep pushing for the whole shard: where PRMonitorUITests falls in
-            # the shard's alphabetical run order no longer bounds the window.
-            for i in $(seq 1 240); do
-              xcrun simctl push booted com.dlddu.PocketAide /tmp/pr-monitor.apns || true
-              if xcrun simctl spawn booted log show --last 30s --style compact \
-                  --predicate 'process == "PocketAide"' 2>/dev/null \
-                  | grep -w "highlightedEventID=$id" > /tmp/push-highlight.log; then
-                echo "delivered event_id=$id"
-                break
-              fi
-              sleep 10
+            handled=0
+            while true; do
+              ready=$(grep -cE 'push-ready [0-9A-F]{8}-' /tmp/push-ready.log || true)
+              if [ "${ready:-0}" -le "$handled" ]; then sleep 2; continue; fi
+              handled=$ready
+              echo "push-ready #$ready"
+              start=$(date +%s)
+              while [ $(( $(date +%s) - start )) -lt 110 ]; do
+                xcrun simctl push booted com.dlddu.PocketAide /tmp/pr-monitor.apns || true
+                sleep 8
+                if xcrun simctl spawn booted log show --last "$(( $(date +%s) - start + 5 ))s" --style compact \
+                    --predicate 'process == "PocketAide"' 2>/dev/null \
+                    | grep -w "highlightedEventID=$id" >> /tmp/push-highlight.log; then
+                  echo "delivered event_id=$id"
+                  break
+                fi
+              done
             done
           ) > /tmp/push.log 2>&1 &
           echo "PUSH_PID=$!" >> "$GITHUB_ENV"
@@ -172,6 +184,7 @@ jobs:
         run: |
           echo '--- enqueue ---'; cat /tmp/enqueue.log || true
           echo '--- push ---'; cat /tmp/push.log || true
+          echo '--- push-ready ---'; cat /tmp/push-ready.log || true
           echo '--- push relay ---'; cat /tmp/push-relay.log || true
           echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
           echo '--- github stub ---'; tail -n 100 /tmp/github-stub.log || true
@@ -191,4 +204,5 @@ jobs:
           [ -n "${GITHUB_STUB_PID:-}" ] && kill ${GITHUB_STUB_PID} || true
           [ -n "${ENQUEUE_PID:-}" ] && kill ${ENQUEUE_PID} || true
           [ -n "${PUSH_PID:-}" ] && kill ${PUSH_PID} || true
+          pkill -f 'pocketaide-e2e push-ready' || true
           [ -n "${PUSH_RELAY_PID:-}" ] && kill ${PUSH_RELAY_PID} || true
