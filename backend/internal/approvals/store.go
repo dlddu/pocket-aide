@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -41,6 +43,7 @@ var (
 	ErrAlreadyRevoked    = errors.New("caller key already revoked")
 	ErrInvalidKey        = errors.New("invalid caller key")
 	ErrNotPending        = errors.New("request is not pending")
+	ErrInvalidCursor     = errors.New("invalid history cursor")
 )
 
 // CallerKey is a row of approval_caller_keys: a named key an external caller presents to file approval requests for one user.
@@ -346,4 +349,61 @@ func (s *Store) Decide(ctx context.Context, userID int64, id string, d Decision)
 		return r, ErrNotPending
 	}
 	return r, nil
+}
+
+const HistoryPageSize = 20
+
+type HistoryPage struct {
+	Items      []Request
+	NextCursor string
+}
+
+func historyCursor(r Request) string {
+	return strconv.FormatInt(*r.ProcessedAt, 10) + "." + r.ID
+}
+
+func parseHistoryCursor(c string) (int64, string, error) {
+	ts, id, ok := strings.Cut(c, ".")
+	if !ok || id == "" {
+		return 0, "", ErrInvalidCursor
+	}
+	n, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		return 0, "", ErrInvalidCursor
+	}
+	return n, id, nil
+}
+
+func (s *Store) ListHistory(ctx context.Context, userID int64, cursor string, limit int) (HistoryPage, error) {
+	beforeTS, beforeID := int64(math.MaxInt64), ""
+	if cursor != "" {
+		ts, id, err := parseHistoryCursor(cursor)
+		if err != nil {
+			return HistoryPage{}, err
+		}
+		beforeTS, beforeID = ts, id
+	}
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT `+requestColumns+` FROM approval_requests r JOIN approval_caller_keys k ON k.id = r.caller_key_id WHERE r.user_id = ? AND (r.status IN ('APPROVED', 'REJECTED') OR (r.status = 'PENDING' AND r.expires_at <= ?)) AND (COALESCE(r.processed_at, r.expires_at) < ? OR (COALESCE(r.processed_at, r.expires_at) = ? AND r.id < ?)) ORDER BY COALESCE(r.processed_at, r.expires_at) DESC, r.id DESC LIMIT ?`,
+		userID, s.now().Unix(), beforeTS, beforeTS, beforeID, limit+1)
+	if err != nil {
+		return HistoryPage{}, fmt.Errorf("list approval history: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	page := HistoryPage{Items: []Request{}}
+	for rows.Next() {
+		r, err := s.scanRequest(rows)
+		if err != nil {
+			return HistoryPage{}, fmt.Errorf("scan approval request: %w", err)
+		}
+		page.Items = append(page.Items, r)
+	}
+	if err := rows.Err(); err != nil {
+		return HistoryPage{}, err
+	}
+	if len(page.Items) > limit {
+		page.Items = page.Items[:limit]
+		page.NextCursor = historyCursor(page.Items[limit-1])
+	}
+	return page, nil
 }
