@@ -7,6 +7,7 @@ struct ApprovalsView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var viewModel: ApprovalsViewModel
     @State private var path: [ApprovalRequest] = []
+    @State private var showsSettings = false
 
     private static let area: DesignTokens.Area = .prMonitor
 
@@ -31,9 +32,17 @@ struct ApprovalsView: View {
             .navigationDestination(for: ApprovalRequest.self) { item in
                 ApprovalDetailView(item: item, api: viewModel.api ?? auth.api)
             }
+            .navigationDestination(isPresented: $showsSettings) {
+                ApprovalKeysView(api: viewModel.api ?? auth.api)
+            }
         }
         .onChange(of: path) { _, newPath in
             if newPath.isEmpty {
+                Task { await viewModel.load() }
+            }
+        }
+        .onChange(of: showsSettings) { _, shown in
+            if !shown {
                 Task { await viewModel.load() }
             }
         }
@@ -80,6 +89,22 @@ struct ApprovalsView: View {
             .padding(.vertical, DesignTokens.Spacing.xs)
             .background(DesignTokens.Color.accent(Self.area))
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            Button {
+                showsSettings = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(DesignTokens.Color.ink(Self.area))
+                    .frame(width: 36, height: 36)
+                    .background(DesignTokens.Color.card(Self.area))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("승인 게이트 설정")
+            .accessibilityIdentifier("approvals.settings.button")
         }
         .padding(.horizontal, DesignTokens.Spacing.xl)
         .padding(.top, DesignTokens.Spacing.md)
