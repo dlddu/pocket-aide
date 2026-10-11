@@ -37,9 +37,14 @@ jobs:
       - name: Pick this shard's test classes
         id: shard
         run: python3 scripts/ci/ios_test_shards.py --index ${{ strategy.job-index }} --total ${{ strategy.job-total }}
-      - uses: ./.github/actions/setup-go-backend
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-test-backend
+          path: ${{ runner.temp }}/ios-test-backend
       - uses: ./.github/actions/start-test-sqs
       - uses: ./.github/actions/start-test-backend
+        with:
+          bin_dir: ${{ runner.temp }}/ios-test-backend
       - name: Enqueue webhook fixture after first sign-in
         # The consumer fans an event out to existing users only, and the
         # first user row appears when the UI tests sign in. Wait for it in
@@ -218,7 +223,18 @@ jobs:
             -test-iterations 2 \
             -enableCodeCoverage NO \
             ${{ steps.shard.outputs.only_testing }} \
-            test | xcbeautify
+            test | xcbeautify | tee "$RUNNER_TEMP/xcodebuild.log"
+      - name: Record test class durations
+        run: |
+          python3 scripts/ci/ios_test_durations.py extract \
+            --log "$RUNNER_TEMP/xcodebuild.log" \
+            --planned ${{ steps.shard.outputs.planned_seconds }} \
+            --out "$RUNNER_TEMP/ios-test-durations.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-durations-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/ios-test-durations.json
+          retention-days: 30
       - name: Verify push tap reached the deep-link highlight
         if: steps.shard.outputs.pr_monitor == 'true'
         # The tap itself is asserted by PRMonitorUITests; the highlighted

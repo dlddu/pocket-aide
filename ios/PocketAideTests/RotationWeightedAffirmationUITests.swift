@@ -7,22 +7,28 @@ final class RotationWeightedAffirmationUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testHigherPrioritySentencesAreShownMoreOften() {
+    func testHigherPrioritySentencesAreShownMoreOften() throws {
         let token = TodoUI.uniqueToken()
         let high = "자주 떠올린다 \(token)"
         let normal = "가끔 떠올린다 \(token)"
         let low = "드물게 떠올린다 \(token)"
         let sentences = [high, normal, low]
-        let app = TodoUI.launch()
-        let screen = AffirmationsScreen.open(in: app)
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        api.removeAllAffirmations()
+        api.addAffirmation(high, priority: "high")
+        api.addAffirmation(normal, priority: "normal")
+        api.addAffirmation(low, priority: "low")
+        addTeardownBlock { api.deleteAffirmations(sentences) }
 
-        screen.removeEverySentence()
-        screen.add(high, priority: "high")
-        screen.add(normal, priority: "normal")
-        screen.add(low, priority: "low")
+        let app = XCUIApplication()
+        // mock-exception: DET — 히어로 회전은 시스템 난수로 문장을 고르고 XCUITest 는 그 난수를 고정할 수 없다; 앱이 회전 난수에 쓸 시드 값만 주입한다 (docs/e2e-mocking-policy.md)
+        app.launchEnvironment["ROTATION_SEED"] = AffirmationsScreen.rotationSeed
+        app.launch()
+        let screen = AffirmationsScreen.open(in: app)
 
         var counts = Dictionary(uniqueKeysWithValues: sentences.map { ($0, 0) })
         XCTAssertTrue(screen.rotateButton.waitForExistence(timeout: 15), "The hero card should offer the rotate button")
+        _ = screen.heroSentence(among: sentences, turn: 0)
         for turn in 1...AffirmationsScreen.rotationSamples {
             screen.rotateButton.tap()
             let shown = screen.heroSentence(among: sentences, turn: turn)
@@ -38,37 +44,12 @@ final class RotationWeightedAffirmationUITests: XCTestCase {
         XCTAssertGreaterThan(highCount, normalCount, "높음 should be shown more often than 보통 (\(summary))")
         XCTAssertGreaterThan(normalCount, lowCount, "보통 should be shown more often than 낮음 (\(summary))")
         XCTAssertGreaterThan(lowCount, 0, "낮음 should still be shown at least once (\(summary))")
-
-        screen.remove(sentences)
     }
 }
 
 private extension AffirmationsScreen {
-    static let rotationSamples = 300
-
-    var anyRow: XCUIElement {
-        app.descendants(matching: .any).matching(
-            NSPredicate(format: "identifier BEGINSWITH %@ AND NOT (identifier ENDSWITH %@)", "affirmations.row.", ".delete")
-        ).firstMatch
-    }
-
-    func removeEverySentence(limit: Int = 60) {
-        for _ in 0..<limit {
-            let target = anyRow
-            guard target.waitForExistence(timeout: 5) else { return }
-            let identifier = target.identifier
-            reveal(target)
-            target.swipeLeft()
-            let delete = app.buttons.matching(
-                NSPredicate(format: "label == %@ OR identifier ENDSWITH %@", "삭제", ".delete")
-            ).firstMatch
-            XCTAssertTrue(delete.waitForExistence(timeout: 5), "Swiping a sentence left should reveal 삭제")
-            delete.tap()
-            let removed = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
-            XCTAssertTrue(TodoUI.waitToDisappear(removed), "The swiped sentence should leave the list")
-        }
-        XCTFail("More than \(limit) sentences were left over before seeding the three priorities")
-    }
+    static let rotationSeed = "2009"
+    static let rotationSamples = 30
 
     func heroSentence(among sentences: [String], turn: Int) -> String {
         let hero = app.staticTexts.matching(

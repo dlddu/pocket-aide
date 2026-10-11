@@ -7,16 +7,18 @@ final class AffirmationDeleteUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testSwipeAndSheetDeleteRemoveSentencesFromListAndRotation() {
+    func testSwipeAndSheetDeleteRemoveSentencesFromListAndRotation() throws {
         let token = TodoUI.uniqueToken()
         let kept = "남길 다짐 \(token)"
         let swiped = "밀어 지울 다짐 \(token)"
         let viaSheet = "시트로 지울 다짐 \(token)"
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for sentence in [kept, viaSheet, swiped] {
+            api.addAffirmation(sentence)
+        }
+        addTeardownBlock { api.deleteAffirmations([kept, viaSheet, swiped]) }
         let app = TodoUI.launch()
         var screen = AffirmationsScreen.open(in: app)
-        for sentence in [kept, viaSheet, swiped] {
-            screen.add(sentence)
-        }
 
         screen.openEditSheet(viaSheet).delete()
         XCTAssertTrue(TodoUI.waitToDisappear(screen.row(viaSheet)), "The sheet-deleted sentence should leave the list")
@@ -33,7 +35,5 @@ final class AffirmationDeleteUITests: XCTestCase {
         TodoUI.relaunch(app)
         screen = AffirmationsScreen.open(in: app)
         screen.assertRemoved([swiped, viaSheet], kept: kept)
-
-        screen.remove([kept])
     }
 }

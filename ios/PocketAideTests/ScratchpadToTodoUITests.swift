@@ -7,17 +7,18 @@ final class ScratchpadToTodoUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testScratchpadMemosLandOnlyInTheChosenTodoArea() {
+    func testScratchpadMemosLandOnlyInTheChosenTodoArea() throws {
         let token = TodoUI.uniqueToken()
         let personalMemo = "장보기 목록 정리 \(token)"
         let workMemo = "주간 보고 초안 \(token)"
         let keptMemo = "나중에 읽을 글 \(token)"
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for memo in [keptMemo, workMemo, personalMemo] {
+            api.addScratchpadMemo(memo)
+        }
         let app = TodoUI.launch()
 
         let scratchpad = ScratchpadScreen.open(in: app)
-        for memo in [keptMemo, workMemo, personalMemo] {
-            scratchpad.add(memo)
-        }
 
         scratchpad.move(personalMemo, to: "personal")
         XCTAssertTrue(TodoUI.waitToDisappear(scratchpad.memo(personalMemo)), "The memo sorted into 개인 should leave 임시 공간")

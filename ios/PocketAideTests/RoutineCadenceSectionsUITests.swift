@@ -10,7 +10,7 @@ final class RoutineCadenceSectionsUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testCadencesSplitRoutinesIntoTodayAndResting() {
+    func testCadencesSplitRoutinesIntoTodayAndResting() throws {
         Self.waitPastMidnightIfClose()
         let now = Date()
         let weekday = Calendar.current.component(.weekday, from: now) - 1
@@ -24,10 +24,11 @@ final class RoutineCadenceSectionsUITests: XCTestCase {
         let bills = "관리비 확인 \(token)"
         let water = "물 마시기 \(token)"
 
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        api.removeAllRoutines()
+        addTeardownBlock { api.removeAllRoutines() }
         let app = TodoUI.launch()
         let screen = RoutinesScreen.open(in: app)
-        screen.removeAll()
-        screen.removeResting()
         XCTAssertTrue(
             screen.text(Self.headerDate(now)).waitForExistence(timeout: 10),
             "The header should show today's date as '\(Self.headerDate(now))'"
@@ -52,10 +53,6 @@ final class RoutineCadenceSectionsUITests: XCTestCase {
             0,
             "A resting routine should not offer its steps to check"
         )
-
-        screen.swipeDelete(screen.card(review).title)
-        screen.swipeDelete(screen.card(water).title)
-        screen.removeResting()
     }
 
     private static func headerDate(_ date: Date) -> String {
@@ -213,14 +210,6 @@ private extension RoutinesScreen {
         for name in resting {
             XCTAssertTrue(named(name).exists, "'\(name)' should be on screen with the section headers", file: file, line: line)
             XCTAssertGreaterThan(named(name).frame.minY, header.frame.minY, "'\(name)' should sit under 오늘 쉬는 루틴", file: file, line: line)
-        }
-    }
-
-    func removeResting(limit: Int = 8) {
-        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", " · 단계 "))
-        for _ in 0..<limit {
-            let row = rows.firstMatch
-            guard row.waitForExistence(timeout: 2), swipeDelete(row) else { return }
         }
     }
 }

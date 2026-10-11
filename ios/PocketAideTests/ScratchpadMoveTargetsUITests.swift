@@ -7,7 +7,7 @@ final class ScratchpadMoveTargetsUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testEveryMemoOffersFourTargetsAndMovesOnlyWhereItsChipWasTapped() {
+    func testEveryMemoOffersFourTargetsAndMovesOnlyWhereItsChipWasTapped() throws {
         let token = TodoUI.uniqueToken()
         let moves = [
             (target: "personal", memo: "세탁소 들르기 \(token)"),
@@ -17,13 +17,18 @@ final class ScratchpadMoveTargetsUITests: XCTestCase {
         ]
         let kept = "아직 정하지 못한 메모 \(token)"
         let all = moves.map { $0.memo } + [kept]
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for memo in moves.reversed().map({ $0.memo }) + [kept] {
+            api.addScratchpadMemo(memo)
+        }
+        addTeardownBlock {
+            api.deleteScratchpadMemos([kept])
+            api.deleteAffirmations([moves[2].memo])
+            api.deleteRoutines(named: [moves[3].memo])
+        }
         let app = TodoUI.launch()
 
         let scratchpad = ScratchpadScreen.open(in: app)
-        for move in moves.reversed() {
-            scratchpad.add(move.memo)
-        }
-        scratchpad.add(kept)
 
         scratchpad.assertFourChips(for: kept)
         for move in moves {
@@ -45,7 +50,6 @@ final class ScratchpadMoveTargetsUITests: XCTestCase {
         for moved in moves.map { $0.memo } {
             XCTAssertFalse(back.memo(moved).exists, "'\(moved)' must not remain in 임시 공간")
         }
-        back.remove([kept])
     }
 
     private func assertDestinations(_ moved: [String], all: [String], token: String, in app: XCUIApplication) {
@@ -60,7 +64,6 @@ final class ScratchpadMoveTargetsUITests: XCTestCase {
         for other in all where other != sentence {
             XCTAssertFalse(affirmations.anywhere(other).exists, "'\(other)' must not be listed in 다짐")
         }
-        affirmations.remove([sentence])
 
         let name = moved[3]
         let routines = RoutinesScreen.open(in: app)
@@ -68,6 +71,5 @@ final class ScratchpadMoveTargetsUITests: XCTestCase {
         for other in all where other != name {
             XCTAssertFalse(routines.card(other).title.exists, "'\(other)' must not be listed in 루틴")
         }
-        routines.swipeDelete(routines.card(name).title)
     }
 }

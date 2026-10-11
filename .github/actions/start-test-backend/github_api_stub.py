@@ -1,6 +1,7 @@
 # mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 앱의 GitHubClient 가 부르는 GET /user · POST /graphql 만 실 응답 모양으로 서빙한다 (docs/e2e-mocking-policy.md)
 import json
 import socket
+import socketserver
 import sys
 import threading
 import time
@@ -258,7 +259,10 @@ class DualStackServer(ThreadingHTTPServer):
 
     def server_bind(self):
         self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-        super().server_bind()
+        # HTTPServer.server_bind would reverse-resolve "::" before listen(); on the macOS runner that held connects for 75s.
+        socketserver.TCPServer.server_bind(self)
+        self.server_name = "localhost"
+        self.server_port = self.server_address[1]
 
 
 if __name__ == "__main__":

@@ -7,8 +7,14 @@ final class TodoEditUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testEditClearsOptionalFieldsAndCancelKeepsTheItem() {
+    func testEditClearsOptionalFieldsAndCancelKeepsTheItem() throws {
         let token = TodoUI.uniqueToken()
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for area in TodoUIArea.allCases {
+            let tag = "\(area.rawValue) \(token)"
+            api.addTodo("점검 일정 \(tag)", in: area, memo: "지난 메모", dueDate: TodoScreen.today(), priority: "normal")
+            api.addTodo("회의록 정리 \(tag)", in: area)
+        }
         let app = TodoUI.launch()
         for area in TodoUIArea.allCases {
             let screen = TodoScreen.open(area, in: app)
@@ -22,8 +28,6 @@ final class TodoEditUITests: XCTestCase {
         let renamed = "점검 일정 변경 \(tag)"
         let untouched = "회의록 정리 \(tag)"
         let discarded = "취소될 제목 \(tag)"
-        screen.add(title: original, memo: "지난 메모", due: true, priority: "normal")
-        screen.add(title: untouched)
         XCTAssertEqual(
             screen.meta(original)?.label,
             "\(TodoScreen.today()) · \(screen.priorityLabel("normal")) · 메모: 지난 메모",

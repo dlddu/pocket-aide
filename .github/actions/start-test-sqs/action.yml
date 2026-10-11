@@ -18,11 +18,25 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Python version for the venv cache key
+      id: python
+      shell: bash
+      run: echo "version=$(python3 -c 'import platform; print(platform.python_version())')" >> "$GITHUB_OUTPUT"
+    - name: Restore moto server venv
+      uses: actions/cache@v4
+      with:
+        path: /tmp/moto-venv
+        key: moto-venv-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.version }}-moto5
     - name: Install moto server
       shell: bash
       run: |
-        python3 -m venv /tmp/moto-venv
-        /tmp/moto-venv/bin/pip install --quiet 'moto[server]>=5.1,<6'
+        if /tmp/moto-venv/bin/python -c 'import moto.server' 2>/dev/null; then
+          echo "moto server venv restored from cache"
+        else
+          rm -rf /tmp/moto-venv
+          python3 -m venv /tmp/moto-venv
+          /tmp/moto-venv/bin/pip install --quiet 'moto[server]>=5.1,<6'
+        fi
     - name: Start moto server and create the queue
       shell: bash
       run: |
