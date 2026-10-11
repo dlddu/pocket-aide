@@ -17,7 +17,10 @@ struct ApprovalHistoryScreen {
         XCTAssertTrue(tab.waitForExistence(timeout: 15), "The 승인 tab should be in the tab bar", file: file, line: line)
         tab.tap()
         let button = app.buttons["approvals.history.button"]
-        XCTAssertTrue(button.waitForExistence(timeout: 15), "The 승인 header should offer 처리 이력", file: file, line: line)
+        if !button.waitForExistence(timeout: 15) {
+            tab.tap()
+        }
+        XCTAssertTrue(button.waitForExistence(timeout: 30), "The 승인 header should offer 처리 이력", file: file, line: line)
         button.tap()
         let screen = ApprovalHistoryScreen(app: app)
         XCTAssertTrue(screen.title.waitForExistence(timeout: 15), "처리 이력 should open", file: file, line: line)

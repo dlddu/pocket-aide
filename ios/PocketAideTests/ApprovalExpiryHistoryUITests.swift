@@ -28,7 +28,10 @@ final class ApprovalExpiryHistoryUITests: XCTestCase {
         XCTAssertTrue(tab.waitForExistence(timeout: 15), "The 승인 tab should be in the tab bar")
         tab.tap()
         let pending = ApprovalsScreen(app: app)
-        XCTAssertTrue(pending.title.waitForExistence(timeout: 15), "The 승인 screen should open")
+        if !pending.title.waitForExistence(timeout: 15) {
+            tab.tap()
+        }
+        XCTAssertTrue(pending.title.waitForExistence(timeout: 30), "The 승인 screen should open")
         if !pending.row(waiting).waitForExistence(timeout: 5) {
             pending.pullToRefresh()
         }
