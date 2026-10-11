@@ -135,8 +135,20 @@ enum TabBadgeReading: CustomStringConvertible {
     }
 }
 
+enum BadgeTint {
+    case systemRed
+    case accent
+
+    func matches(red: Int, green: Int, blue: Int) -> Bool {
+        switch self {
+        case .systemRed: return red >= 200 && green <= 110 && blue <= 110
+        case .accent: return blue >= 140 && blue - green >= 45 && blue - red >= 25
+        }
+    }
+}
+
 enum TabBadgeReader {
-    static func read(_ tab: XCUIElement, in app: XCUIApplication) -> TabBadgeReading {
+    static func read(_ tab: XCUIElement, in app: XCUIApplication, tint: BadgeTint = .systemRed) -> TabBadgeReading {
         guard tab.exists, app.frame.width > 0, let screen = XCUIScreen.main.screenshot().image.cgImage else {
             return .unreadable
         }
@@ -148,8 +160,8 @@ enum TabBadgeReader {
         guard !pixelArea.isEmpty, let crop = screen.cropping(to: pixelArea), let bitmap = Bitmap(crop) else {
             return .unreadable
         }
-        let spans = bitmap.redSpans()
-        guard spans.reduce(0, { $0 + $1.red }) >= Int(scale * scale * 20) else {
+        let spans = bitmap.badgeSpans(tint)
+        guard spans.reduce(0, { $0 + $1.badge }) >= Int(scale * scale * 20) else {
             return .none
         }
         guard let glyphs = GlyphMask(bitmap.glyphPoints(in: spans)) else {
@@ -221,7 +233,7 @@ private struct Span {
     let y: Int
     let left: Int
     let right: Int
-    let red: Int
+    let badge: Int
 }
 
 private struct Point {
@@ -323,20 +335,20 @@ private struct Bitmap {
         Int(bytes[(y * width + x) * 4 + offset])
     }
 
-    private func isBadgeRed(_ x: Int, _ y: Int) -> Bool {
-        channel(x, y, 0) >= 200 && channel(x, y, 1) <= 110 && channel(x, y, 2) <= 110
+    private func isBadge(_ x: Int, _ y: Int, _ tint: BadgeTint) -> Bool {
+        tint.matches(red: channel(x, y, 0), green: channel(x, y, 1), blue: channel(x, y, 2))
     }
 
     private func isGlyph(_ x: Int, _ y: Int) -> Bool {
         channel(x, y, 0) >= 200 && channel(x, y, 1) >= 170 && channel(x, y, 2) >= 170
     }
 
-    func redSpans() -> [Span] {
+    func badgeSpans(_ tint: BadgeTint) -> [Span] {
         var spans: [Span] = []
         for y in 0..<height {
-            let red = (0..<width).filter { isBadgeRed($0, y) }
-            if let left = red.first, let right = red.last {
-                spans.append(Span(y: y, left: left, right: right, red: red.count))
+            let badge = (0..<width).filter { isBadge($0, y, tint) }
+            if let left = badge.first, let right = badge.last {
+                spans.append(Span(y: y, left: left, right: right, badge: badge.count))
             }
         }
         return spans

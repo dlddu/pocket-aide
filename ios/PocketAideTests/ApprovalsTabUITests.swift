@@ -125,14 +125,19 @@ struct ApprovalsScreen {
         guard let expected = ApprovalSeed.pendingCount(api) else {
             return XCTFail("\(step): the pending list API should answer", file: file, line: line)
         }
+        let headerMatched = RoutinesScreen.eventually(timeout: 15) { pendingCount.label == "\(expected)" }
+        let header = pendingCount.label
+        app.tabBars.firstMatch.buttons["다짐"].tap()
         var reading = TabBadgeReading.unreadable
-        let matched = RoutinesScreen.eventually(timeout: 15) {
-            reading = TabBadgeReader.read(ApprovalSeed.tab(in: app), in: app)
-            return pendingCount.label == "\(expected)" && reading.count == expected
+        let badgeMatched = RoutinesScreen.eventually(timeout: 15) {
+            reading = TabBadgeReader.read(ApprovalSeed.tab(in: app), in: app, tint: .accent)
+            return reading.count == expected
         }
+        ApprovalSeed.tab(in: app).tap()
+        XCTAssertTrue(title.waitForExistence(timeout: 15), "\(step): the 승인 screen should open again", file: file, line: line)
         XCTAssertTrue(
-            matched,
-            "\(step): the header count and the 승인 tab badge should read \(expected) but read \(pendingCount.label) / \(reading)",
+            headerMatched && badgeMatched,
+            "\(step): the header count and the 승인 tab badge should read \(expected) but read \(header) / \(reading)",
             file: file,
             line: line
         )
