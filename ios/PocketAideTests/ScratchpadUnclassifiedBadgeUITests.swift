@@ -56,6 +56,24 @@ private struct UnclassifiedCounts {
             .flatMap { Int($0.label) }
     }
 
+    func moreRowBadge(_ row: XCUIElement) -> TabBadgeReading {
+        let digits = NSPredicate(format: "label MATCHES %@", "[0-9]+")
+        if let text = row.staticTexts.matching(digits).allElementsBoundByIndex.last, let value = Int(text.label) {
+            return .number(value)
+        }
+        if let value = (row.value as? String).flatMap({ Int($0) }) {
+            return .number(value)
+        }
+        if let tail = row.label.split(whereSeparator: { !$0.isNumber }).last, row.label.hasSuffix(String(tail)), let value = Int(tail) {
+            return .number(value)
+        }
+        let pixels = TabBadgeReader.read(row, in: app)
+        if case .number = pixels {
+            return pixels
+        }
+        return row.staticTexts.matching(NSPredicate(format: "label == %@", ScratchpadScreen.tabLabel)).firstMatch.exists ? .none : pixels
+    }
+
     func assertBoth(_ expected: Int, _ step: String, file: StaticString = #filePath, line: UInt = #line) {
         var reading = TabBadgeReading.unreadable
         var matched = RoutinesScreen.eventually(timeout: 15) { header == expected }
@@ -63,7 +81,7 @@ private struct UnclassifiedCounts {
         let row = ScratchpadScreen.moreRow(in: app)
         if matched {
             matched = row.waitForExistence(timeout: 5) && RoutinesScreen.eventually(timeout: 15) {
-                reading = TabBadgeReader.read(row, in: app)
+                reading = moreRowBadge(row)
                 return reading.count == expected
             }
         }
