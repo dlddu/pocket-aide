@@ -13,7 +13,22 @@ struct RootView: View {
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
 
+    private static let approvalBadgeAppearance: Void = {
+        let badge = UIColor { traits in
+            var environment = EnvironmentValues()
+            environment.colorScheme = traits.userInterfaceStyle == .dark ? .dark : .light
+            return UIColor(cgColor: DesignTokens.Color.accent(.prMonitor).resolve(in: environment).cgColor)
+        }
+        let appearance = UITabBarAppearance()
+        for layout in [appearance.stackedLayoutAppearance, appearance.inlineLayoutAppearance, appearance.compactInlineLayoutAppearance] {
+            layout.normal.badgeBackgroundColor = badge
+            layout.selected.badgeBackgroundColor = badge
+        }
+        UITabBar.appearance().standardAppearance = appearance
+    }()
+
     init(selectedTab: Binding<RootTab>, highlightedEventID: Binding<Int64?> = .constant(nil)) {
+        _ = Self.approvalBadgeAppearance
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
