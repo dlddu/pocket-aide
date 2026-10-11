@@ -27,7 +27,8 @@
   2026-10-11 앱 승인 탭 1차(하단 탭 바 「승인」 탭·대기 목록·배지·빈/오류 상태, rct_20261011-0001)에 맞춰 시나리오 4·5·15를 다시 판정했다.
   같은 날 앱 상세·결정 화면(카운트다운·확인 단계·409 안내, rct_20261011-0007)에 맞춰 시나리오 5·8·9·10·15·16을 다시 판정했다.
   같은 날 앱 승인 게이트 설정의 호출자 키 화면(발급·원문 1회·목록·폐기, rct_20261011-0012)에 맞춰 시나리오 1·2·16을 다시 판정했다.
-  푸시·자동 응답·처리 이력은 아직 없어, 그 단계에 기대는 시나리오는 「부분 구현」 또는 「미구현」이다.
+  같은 날 처리 이력(서버 이력 API·앱 이력 화면, rct_20261011-0018)에 맞춰 시나리오 11·12·16을 다시 판정했다.
+  푸시·자동 응답은 아직 없어, 그 단계에 기대는 시나리오는 「부분 구현」 또는 「미구현」이다.
 - 관찰자가 둘이다. **호출자**(외부 자동화)의 관찰 지점은 호출자 API(`/api/external/approvals`)의 HTTP 응답이고,
   **사용자**의 관찰 지점은 앱 화면이다. 호출자 쪽 단계는 `curl` 같은 HTTP 클라이언트로 수행한다고 읽는다.
 - 「사용자 A」「사용자 B」는 서로 다른 OIDC 계정이다. CI에서는 oidcmock이 발급하는 두 계정으로 대신한다
@@ -223,8 +224,8 @@
   - 3단계: 409. E는 `EXPIRED` 그대로다(gatekeeper는 만료 요청 승인을 허용했다 — 동작 변경 회귀 확인).
   - 4단계: E는 `EXPIRED`, N은 `PENDING`.
 - **검증 AC**: AC4, AC3, AC8
-- **구현 상태**: 부분 구현 — 3·4단계(만료 요청 승인 409 + `EXPIRED` 유지, 호출자 조회 E `EXPIRED`·N `PENDING`)와 대기 목록에서 E가 빠지는 것은 서버에서 구현됨(만료는 조회 시점 판정, 상태를 쓰지 않는다). 처리 이력(AC8)과 앱 화면이 없어 2단계는 관찰할 수 없다.
-- **관련 코드 테스트**: `backend/internal/handlers/approvals_test.go` — `TestApprovalExpiryIsConsistentEverywhere`
+- **구현 상태**: 구현됨 — 2단계: 승인 탭 대기 목록에서 E가 빠지고 N은 남으며, 승인 탭 머리의 「처리 이력」 버튼으로 연 이력에 E가 「만료」·「만료 — 결정 없음」으로 있다(서버 `GET /api/approvals/history`가 만료 시각을 처리 시각으로 싣는다). 3·4단계(만료 요청 승인 409 + `EXPIRED` 유지, 호출자 조회 E `EXPIRED`·N `PENDING`)는 서버에서 구현됨(만료는 조회 시점 판정, 상태를 쓰지 않는다).
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalExpiryHistoryUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalExpiryIsConsistentEverywhere`, `backend/internal/handlers/approval_history_test.go` — `TestApprovalHistoryShowsProcessingModeNewestFirst`
 
 
 ### 시나리오 12: 이력은 처리 방식을 구분해 처리 시각 역순으로 이어진다
@@ -237,8 +238,8 @@
   - 2단계: 세 항목이 처리 시각 역순으로 보이고, 각각 「수동 결정」「자동 거절」「만료」로 처리 방식이 구분되어 있다.
   - 3단계: 목록이 이어서 불러와지며 중복·누락이 없다.
 - **검증 AC**: AC8
-- **구현 상태**: 미구현
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 부분 구현 — 승인 탭 머리의 「처리 이력」 버튼이 이력을 연다. 이력은 처리 시각 역순(같은 초면 요청 id 역순)이고, 항목마다 결과(승인됨·거절됨·만료)·처리 시각·요청 내용·키 이름과 처리 방식(「수동 결정」「자동 승인」「자동 거절」「만료 — 결정 없음」, 폐기된 키면 「· 폐기된 키로 생성됨」)을 보인다. 서버는 20건씩 커서로 이어 주고, 앱은 목록 끝의 「이전 이력 불러오는 중…」에 닿으면 다음 쪽을 붙인다(3단계). 1단계의 자동 거절은 자동 응답 모드(AC9)가 없어 만들 수 없으므로, 2단계는 「수동 결정」「만료」 두 항목까지만 관찰할 수 있다.
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalHistoryUITests.swift`, `ios/PocketAideUnitTests/ApprovalHistoryTests.swift`, `backend/internal/handlers/approval_history_test.go` — `TestApprovalHistoryShowsProcessingModeNewestFirst`, `TestApprovalHistoryCursorHasNoGapsOrDuplicates`
 
 
 ### 시나리오 13: 자동 응답 모드는 이후 요청에만 적용되고, 켜져 있는 동안 배너로 보인다
@@ -310,5 +311,5 @@
   - 5단계: `infra-ci`가 폐기 시각과 함께 목록에 남아 있고, 다시 활성화할 방법은 없다.
   - 6단계: 이력의 R에 키 이름 `infra-ci`가 그대로 보인다.
 - **검증 AC**: AC14
-- **구현 상태**: 부분 구현 — 1단계: 앱 「승인 게이트 설정」 키 목록의 「폐기」가 확인 대화상자(취소 가능)를 거쳐 폐기 API(`POST /api/approval-keys/{id}/revoke`)를 부른다. 폐기 키 401(2단계)·다른 키 201·폐기 키 요청이 `PENDING`으로 남고 `key_revoked`·키 이름이 실리는 것은 서버에서 구현됨. 4단계의 「폐기된 키로 생성됨」 경고는 앱의 대기 목록 항목과 상세에 있다. 5단계: 폐기된 키는 키 목록에 취소선 이름과 「폐기됨 MM/dd」로 남고 「폐기」 버튼이 없다(다시 활성화할 방법 없음). 자동 응답 모드(AC9, 3단계의 즉시 `APPROVED`)와 처리 이력(6단계)은 없다.
+- **구현 상태**: 부분 구현 — 1단계: 앱 「승인 게이트 설정」 키 목록의 「폐기」가 확인 대화상자(취소 가능)를 거쳐 폐기 API(`POST /api/approval-keys/{id}/revoke`)를 부른다. 폐기 키 401(2단계)·다른 키 201·폐기 키 요청이 `PENDING`으로 남고 `key_revoked`·키 이름이 실리는 것은 서버에서 구현됨. 4단계의 「폐기된 키로 생성됨」 경고는 앱의 대기 목록 항목과 상세에 있다. 5단계: 폐기된 키는 키 목록에 취소선 이름과 「폐기됨 MM/dd」로 남고 「폐기」 버튼이 없다(다시 활성화할 방법 없음). 6단계: 처리 이력의 R 항목에 키 이름 칩 `infra-ci`가 보이고 처리 방식 뒤에 「· 폐기된 키로 생성됨」이 붙는다. 자동 응답 모드(AC9, 3단계의 즉시 `APPROVED`)는 없다.
 - **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyRevokeUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyRevocation`

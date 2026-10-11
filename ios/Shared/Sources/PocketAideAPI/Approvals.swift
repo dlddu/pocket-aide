@@ -145,6 +145,28 @@ public enum ApprovalFormatting {
         return "수동 결정"
     }
 
+    public static func historyMeta(_ item: ApprovalRequest) -> String {
+        let mode = decisionModeLabel(status: item.status, mode: item.decisionMode)
+        return item.keyRevoked ? "\(mode) · 폐기된 키로 생성됨" : mode
+    }
+
+    public static func historyTime(_ processedAt: Int64, now: Date = Date(), calendar: Calendar = .current) -> String {
+        let date = Date(timeIntervalSince1970: TimeInterval(processedAt))
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = calendar.timeZone
+        if calendar.isDate(date, inSameDayAs: now) {
+            formatter.dateFormat = "HH:mm:ss"
+            return formatter.string(from: date)
+        }
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(date, inSameDayAs: yesterday) {
+            formatter.dateFormat = "HH:mm"
+            return "어제 " + formatter.string(from: date)
+        }
+        formatter.dateFormat = "MM/dd HH:mm"
+        return formatter.string(from: date)
+    }
+
     public static func confirmTitle(_ decision: ApprovalDecision) -> String {
         decision == .approve ? "승인할까요?" : "거절할까요?"
     }
@@ -176,10 +198,33 @@ struct ApprovalListResponse: Decodable {
     let items: [ApprovalRequest]
 }
 
+public struct ApprovalHistoryPage: Decodable, Equatable, Sendable {
+    public let items: [ApprovalRequest]
+    public let nextCursor: String?
+
+    enum CodingKeys: String, CodingKey {
+        case items
+        case nextCursor = "next_cursor"
+    }
+
+    public init(items: [ApprovalRequest], nextCursor: String?) {
+        self.items = items
+        self.nextCursor = nextCursor
+    }
+}
+
 public extension APIClient {
     func listPendingApprovals() async throws -> [ApprovalRequest] {
         let response: ApprovalListResponse = try await get("/api/approvals", authenticated: true)
         return ApprovalFormatting.newestFirst(response.items)
+    }
+
+    func approvalHistory(cursor: String? = nil) async throws -> ApprovalHistoryPage {
+        var path = "/api/approvals/history"
+        if let cursor, let encoded = cursor.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
+            path += "?cursor=" + encoded
+        }
+        return try await get(path, authenticated: true)
     }
 
     func approval(id: String) async throws -> ApprovalRequest {

@@ -58,6 +58,7 @@ func newApprovalEnv(t *testing.T) *approvalEnv {
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(store))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(store))
 		p.Get("/api/approvals", handlers.ListPendingApprovals(store))
+		p.Get("/api/approvals/history", handlers.ListApprovalHistory(store))
 		p.Get("/api/approvals/{id}", handlers.GetApproval(store))
 		p.Post("/api/approvals/{id}/approve", handlers.DecideApproval(store, approvals.DecisionApprove))
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(store, approvals.DecisionReject))
