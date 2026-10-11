@@ -41,7 +41,7 @@ last_updated: 2026-10-09
 |---|---|---|
 | A | 일치 | 127 |
 | A | 데이터 | 5 |
-| A | 비표시 | 15 |
+| A | 비표시 | 16 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 6 |
@@ -55,7 +55,7 @@ last_updated: 2026-10-09
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 43 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 165행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 166행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -73,6 +73,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 노출` | 일치 | 우선순위 점 범례 — 목록 아래 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `보통` | 일치 | 범례 항목 |
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `가끔` | 일치 | 범례 항목 |
+| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ROTATION_SEED` | 비표시 | 프로세스 env 키 — `launchRotationSeed()` 가 읽는 테스트 시드(모킹 정책 `DET`), 화면에 그려지지 않는다 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `우선순위 설정` | 일치 | 편집 모드 시트 제목 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `\"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 serif 64 글리프(U+0022, 목업과 같은 문자) |

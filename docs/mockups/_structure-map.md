@@ -55,8 +55,8 @@ last_updated: 2026-10-10
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 50행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 48행 · `목업 대기` 0행, 표 S `불일치` 6행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 44행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 43행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -75,7 +75,7 @@ last_updated: 2026-10-10
 | `screen-routines` | S | 일치 | 18 |
 | `screen-routines` | S | 불일치 | 0 |
 | `screen-affirmations` | M | 일치 | 133 |
-| `screen-affirmations` | M | 기본값 일치 | 2 |
+| `screen-affirmations` | M | 기본값 일치 | 3 |
 | `screen-affirmations` | M | 불일치 | 7 |
 | `screen-affirmations` | M | 허용 | 12 |
 | `screen-affirmations` | M | 목업 대기 | 0 |
@@ -90,21 +90,21 @@ last_updated: 2026-10-10
 | `screen-scratchpad` | S | 일치 | 13 |
 | `screen-scratchpad` | S | 불일치 | 3 |
 | `screen-scratchpad` | S | 목업 대기 | 0 |
-| `screen-todo-personal` | M | 일치 | 80 |
+| `screen-todo-personal` | M | 일치 | 86 |
 | `screen-todo-personal` | M | 기본값 일치 | 3 |
-| `screen-todo-personal` | M | 불일치 | 50 |
+| `screen-todo-personal` | M | 불일치 | 44 |
 | `screen-todo-personal` | M | 허용 | 12 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
-| `screen-todo-personal` | S | 일치 | 15 |
-| `screen-todo-personal` | S | 불일치 | 6 |
+| `screen-todo-personal` | S | 일치 | 16 |
+| `screen-todo-personal` | S | 불일치 | 5 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
-| `screen-todo-work` | M | 일치 | 89 |
+| `screen-todo-work` | M | 일치 | 94 |
 | `screen-todo-work` | M | 기본값 일치 | 3 |
-| `screen-todo-work` | M | 불일치 | 48 |
+| `screen-todo-work` | M | 불일치 | 43 |
 | `screen-todo-work` | M | 허용 | 11 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
-| `screen-todo-work` | S | 일치 | 16 |
-| `screen-todo-work` | S | 불일치 | 6 |
+| `screen-todo-work` | S | 일치 | 17 |
+| `screen-todo-work` | S | 불일치 | 5 |
 | `screen-todo-work` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
@@ -477,7 +477,7 @@ last_updated: 2026-10-10
 | 빈 상태 제목 | `serif text-[18px] font-bold text-[var(--ink)]` |
 | 빈 상태 안내 | `mt-2 text-[11px] text-stone-500 leading-relaxed` |
 
-## 표 M — 수치 (`screen-affirmations`) · 154행
+## 표 M — 수치 (`screen-affirmations`) · 155행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -488,13 +488,14 @@ last_updated: 2026-10-10
 | 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | `AreaLabel` 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) — 목업 헤더 라벨을 600 에서 토큰 규칙으로 맞췄다(PERSONAL·WORK·PR·APPROVAL·노출 빈도 라벨과 같은 값) |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
 | 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.tracking(tracking)` · `tracking: CGFloat = 2.4` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42, 0.1pt 단위로 2.4(`AreaLabel` 기본 자간 — `ScreenHeader` `labelTracking` 기본값도 2.4) |
-| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 다짐 탭은 라벨 옆 부속이 없다(`EmptyView`). 목업도 라벨 하나뿐이라 간격 수식이 없다 |
+| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking ) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 다짐 탭은 라벨 옆 부속이 없다(`EmptyView`). 목업도 라벨 하나뿐이라 간격 수식이 없다 |
 | 영역 라벨(헤더) | `text-[var(--tan)]` | #8B6F47 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #8B6F47 | 일치 | 라벨 색 = 영역 accent(tan) |
 | 제목 | `text-[24px]` | 24 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` · `titleSize: CGFloat = 24` | 24 | 일치 | 화면 제목 크기 = `ScreenHeader` 기본 `titleSize` |
 | 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
 | 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * titleSize)` | -0.025em | 일치 | 제목 자간 −0.025em(× 24 = −0.6) — `ScreenHeader` 를 쓰는 화면 목업 h1 이 모두 `tracking-tight` |
 | 제목 | `serif` | serif | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ScreenHeader(area: .affirmations, title: "자주 읽어줘야 할 것", titleFamily: .serif)` | serif | 일치 | 다짐 화면 제목은 serif |
-| 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 라벨 ↔ 제목 간격 |
+| 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: labelSpacing)` · `labelSpacing: CGFloat = 2` | 2 | 일치 | 라벨 ↔ 제목 간격 — 공용 헤더 바깥 `VStack` 간격 `labelSpacing` 의 기본값 2 |
+| — | — | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 기본값 일치 | 제목 ↔ 부제 간격 — 다짐 탭은 부제가 없어 공용 헤더 안쪽 `VStack` 에 제목 하나뿐이라 그려지지 않는다 |
 | 추가 버튼 | `w-9` | 36 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.frame(width: 36, height: 36)` | 36 | 일치 | 버튼 너비 |
 | 추가 버튼 | `h-9` | 36 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.frame(width: 36, height: 36)` | 36 | 일치 | 버튼 높이 |
 | 추가 버튼 | `rounded-full` | full | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `.clipShape(Circle())` | full | 일치 | 원형 |
@@ -642,7 +643,7 @@ last_updated: 2026-10-10
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold">다짐</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area, tracking: labelTracking)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.22em] text-[var(--tan)] font-bold">다짐</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` | 일치 | 헤더 맨 위 — 영역 이름 |
 | 2 | 화면 제목 | `자주 읽어줘야 할 것</h1>` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ScreenHeader(area: .affirmations, title: "자주 읽어줘야 할 것", titleFamily: .serif)` | 일치 | 라벨 아래 |
 | 3 | 추가 버튼 | `<button class="w-9 h-9 rounded-full border border-[var(--rule)] grid place-items-center bg-white/40">` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `sheetMode = .create` | 일치 | 헤더 오른쪽 끝 — 원형 더하기 |
 | 4 | 히어로 카드 | `<!-- HERO: rotating affirmation -->` | `ios/PocketAide/Affirmations/AffirmationsView.swift` | `if let hero = viewModel.heroItem {` | 일치 | 본문 맨 위 |
@@ -709,11 +710,11 @@ last_updated: 2026-10-10
 | 헤더 | `px-5` | 20 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl)` | 20 | 일치 | 헤더 좌우 여백 = `Spacing.xl` |
 | 헤더 | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
 | 헤더 | `pb-3` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `bottomPadding: DesignTokens.Spacing.md` · `.padding(.bottom, bottomPadding)` | 12 | 일치 | 헤더 아래 여백 = `Spacing.md` — 화면이 `ScreenHeader` 의 `bottomPadding` 인자로 넘긴다(기본값 8 은 다짐 탭 `pb-2`) |
-| 라벨 줄 | `gap-2` | 8 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.leading, DesignTokens.Spacing.sm)` · `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 8 | 일치 | 영역 라벨 ↔ 미분류 배지 간격 = 배지 앞 여백 `Spacing.sm` — 공용 라벨 줄 `HStack` 은 간격 0(부속 없는 화면에 간격이 생기지 않게) 이고 배지가 제 앞 여백을 단다 |
+| 라벨 줄 | `gap-2` | 8 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.leading, DesignTokens.Spacing.sm)` · `HStack(spacing: 0) { AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking ) labelAccessory }` | 8 | 일치 | 영역 라벨 ↔ 미분류 배지 간격 = 배지 앞 여백 `Spacing.sm` — 공용 라벨 줄 `HStack` 은 간격 0(부속 없는 화면에 간격이 생기지 않게) 이고 배지가 제 앞 여백을 단다 |
 | 영역 라벨(헤더) | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | 11 | 일치 | `AreaLabel` 크기 = `captionXs` |
 | 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | `AreaLabel` 굵기 = `tokens.md` §3.4(영역 라벨은 항상 `font-bold`) |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
-| 영역 라벨(헤더) | `tracking-[0.2em]` | 0.2em | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: 2.2` · `AreaLabel(area: area, tracking: labelTracking)` · `.tracking(tracking)` | 2.2 | 일치 | 자간 — 0.2em × 11 = 2.2, 화면이 `ScreenHeader` 의 `labelTracking` 인자로 넘겨 `AreaLabel` 까지 내려간다(기본값 2.4 는 다른 화면 목업의 0.22em) |
+| 영역 라벨(헤더) | `tracking-[0.2em]` | 0.2em | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: 2.2` · `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` · `.tracking(tracking)` | 2.2 | 일치 | 자간 — 0.2em × 11 = 2.2, 화면이 `ScreenHeader` 의 `labelTracking` 인자로 넘겨 `AreaLabel` 까지 내려간다(기본값 2.4 는 다른 화면 목업의 0.22em) |
 | 영역 라벨(헤더) | `text-[var(--warm)]` | #B6855E | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #B6855E | 일치 | 라벨 색 = 영역 accent(warm) |
 | 미분류 배지 | `bg-[var(--warm)]` | #B6855E | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.background(DesignTokens.Color.accent(.scratchpad))` | #B6855E | 일치 | 배지 채움 = 영역 accent(warm) |
 | 미분류 배지 | `text-white` | #FFFFFF | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.foregroundStyle(.white)` | #FFFFFF | 일치 | 배지 글자 색 = 흰색(라이트·다크 목업 모두 `text-white`) |
@@ -725,7 +726,7 @@ last_updated: 2026-10-10
 | 제목 | `text-[26px]` | 26 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` · `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `titleSize: 26` · `size: titleSize, weight: .bold, family: titleFamily` | 26 | 일치 | 화면 제목 크기 — 화면이 `ScreenHeader` 의 `titleSize` 인자로 넘긴다(기본값 24 는 다짐 탭) |
 | 제목 | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `size: titleSize, weight: .bold, family: titleFamily` | bold | 일치 | 화면 제목 굵기 |
 | 제목 | `tracking-tight` | -0.025em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.tracking(-0.025 * titleSize)` | -0.025em | 일치 | 제목 자간 −0.025em(글자 크기에 비례) |
-| 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 일치 | 라벨 ↔ 제목 간격 |
+| 제목 | `mt-0.5` | 2 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: labelSpacing)` · `labelSpacing: CGFloat = 2` | 2 | 일치 | 라벨 ↔ 제목 간격 — 공용 헤더 바깥 `VStack` 간격 `labelSpacing` 의 기본값 2 |
 | 제목 | `font-family:'SF Pro Display',serif` | sans | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `titleFamily: DesignTokens.Typography.Family = .sans` | sans | 일치 | 제목 서체 — 목업 체인 1순위 `SF Pro Display` 는 iOS 시스템 sans(뒤의 `serif` 는 폴백), 구현 기본 `titleFamily` `.sans`(`.system`, 허용 `T3`) |
 | 부제 | `text-[12px]` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | 12 | 일치 | 부제 크기 = `captionSm` |
 | 부제 | `text-stone-500` | #78716C | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm)) .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))` | #2A2723/0.55 | 허용 S5 | 부제 색 — 목업 stone, 구현 영역 ink 투명도(`S5` — 다크 목업은 같은 자리를 임시공간 다크 톤 `#BFAE91` 로 그린다) |
@@ -830,7 +831,7 @@ last_updated: 2026-10-10
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold">임시 공간</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area, tracking: labelTracking)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 1 | 영역 라벨 | `<div class="text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold">임시 공간</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` | 일치 | 헤더 맨 위 — 영역 이름 |
 | 2 | 미분류 배지 | `<span class="bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp">12</span>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text("\(viewModel.unclassifiedCount)")` | 일치 | 영역 라벨 바로 옆 작은 warm 배지 — `ScreenHeader` 의 라벨 부속(`labelAccessory`) |
 | 3 | 화면 제목 | `분류되지 않은 메모</h1>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `title: "분류되지 않은 메모"` | 일치 | 라벨 아래 큰 제목(26 bold) — 「분류되지 않은 메모」 |
 | 4 | 부제 | `캡처 부담 없이 일단 던져두는 곳</p>` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `subtitle: "캡처 부담 없이 일단 던져두는 곳"` | 일치 | 제목 아래 |
@@ -899,15 +900,15 @@ last_updated: 2026-10-10
 | 헤더 | `px-5` | 20 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl)` · `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1) ) .padding(.horizontal, DesignTokens.Spacing.xl)` | 20 | 일치 | 헤더 좌우 여백 = `Spacing.xl` — 목업 헤더 안의 검색 필드는 구현에서 헤더 밖 형제라 같은 `Spacing.xl` 을 따로 단다 |
 | 헤더 | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
 | 헤더 | `pb-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl) .padding(.bottom, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 블록 아래 여백 = `Spacing.md` — 목업은 필터 칩 줄 아래 12, 구현은 헤더 블록 맨 아래(검색 필드) 아래 12(필터 칩 줄 자체의 유무는 표 S 7) |
-| 라벨 줄 | `gap-1.5` | 6 | — | — | — | 불일치 | 영역 점 ↔ 영역 라벨 간격 — 구현 헤더는 점을 그리지 않는다(`AreaLabel` 의 `showsDot` 기본 `false`, `ScreenHeader` 가 넘기지 않음) |
-| 라벨 줄 | `mb-1` | 4 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 불일치 | 라벨 줄 ↔ 제목 간격 — 구현은 공용 헤더 `VStack` 간격 2 |
-| 영역 점 | `w-2` | 8 | — | — | — | 불일치 | 영역 점 — 구현 헤더에 없다 |
-| 영역 점 | `h-2` | 8 | — | — | — | 불일치 | 영역 점 — 구현 헤더에 없다 |
-| 영역 점 | `rounded-full` | full | — | — | — | 불일치 | 영역 점 — 구현 헤더에 없다 |
-| 영역 점 | `bg-[var(--clay)]` | #B65A3C | — | — | — | 불일치 | 영역 점 — 구현 헤더에 없다 |
+| 라벨 줄 | `gap-1.5` | 6 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `HStack(spacing: 6) { if showsDot {` · `labelShowsDot: true,` | 6 | 일치 | 영역 점 ↔ 영역 라벨 간격 — 투두 헤더가 `labelShowsDot: true` 로 `AreaLabel` 의 점을 켜고, 점과 라벨은 `AreaLabel` 의 `HStack` 간격 6 |
+| 라벨 줄 | `mb-1` | 4 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: labelSpacing)` · `labelSpacing: DesignTokens.Spacing.xs,` | 4 | 일치 | 라벨 줄 ↔ 제목 간격 — 공용 헤더 바깥 `VStack` 간격 `labelSpacing` 에 투두 헤더가 `Spacing.xs` 를 넘긴다(제목 ↔ 요약 줄은 안쪽 `VStack` 간격 2 그대로) |
+| 영역 점 | `w-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: dotSize, height: dotSize)` · `labelDotSize: 8,` | 8 | 일치 | 영역 점 너비 — 투두 헤더가 `labelDotSize: 8` 을 넘기고 `AreaLabel` 이 점을 정사각 `dotSize` 로 그린다 |
+| 영역 점 | `h-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: dotSize, height: dotSize)` · `labelDotSize: 8,` | 8 | 일치 | 영역 점 높이 — 투두 헤더가 `labelDotSize: 8` 을 넘기고 `AreaLabel` 이 점을 정사각 `dotSize` 로 그린다 |
+| 영역 점 | `rounded-full` | full | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `case .circle: Circle().fill(DesignTokens.Color.accent(area))` · `case .personal: return .circle` | full | 일치 | 영역 점 모양 — 개인 영역은 `headerDotShape` 가 `.circle` 이라 원 |
+| 영역 점 | `bg-[var(--clay)]` | #B65A3C | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `case .circle: Circle().fill(DesignTokens.Color.accent(area))` · `case .personal: return .circle` | #B65A3C | 일치 | 영역 점 색 = 개인 `accent`(라벨 글자와 같은 clay) |
 | 영역 라벨(헤더) | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | 11 | 일치 | `AreaLabel` 크기 = `captionXs` |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
-| 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: CGFloat = 2.4` · `AreaLabel(area: area, tracking: labelTracking)` · `.tracking(tracking)` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42 → 2.4(`ScreenHeader` 기본값이 `AreaLabel` 까지 내려간다) |
+| 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: CGFloat = 2.4` · `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` · `.tracking(tracking)` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42 → 2.4(`ScreenHeader` 기본값이 `AreaLabel` 까지 내려간다) |
 | 영역 라벨(헤더) | `text-[var(--clay)]` | #B65A3C | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #B65A3C | 일치 | 라벨 색 = 개인 accent(clay) |
 | 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | `AreaLabel` 굵기 |
 | 제목 | `text-[28px]` | 28 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `size: titleSize, weight: .bold, family: titleFamily` · `titleSize: 28,` | 28 | 일치 | 제목 크기 — 화면이 `titleSize: 28` 을 넘긴다(공용 기본값 24) |
@@ -1034,7 +1035,7 @@ last_updated: 2026-10-10
 | 빈 상태 안내 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55)) .accessibilityIdentifier("\(idPrefix).empty.state")` | #3D2A22/0.55 | 허용 S5 | 안내 색 — 목업 stone, 구현 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
 | 빈 상태 안내 | `leading-relaxed` | 1.625 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body)) .lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배(임시공간·다짐 빈 상태 안내와 같은 수식) |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(spacing: 0) { Rectangle()` | 0 | 기본값 일치 | 맨 위 영역 띠 · 헤더 · 검색 필드 · 목록 사이 간격 — 목업은 블록 사이 간격 수식이 없다(다짐·임시공간 선례) |
-| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
+| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking ) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
 | — | — | regular | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Tokens.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `weight: Font.Weight = .regular,` | regular | 기본값 일치 | 요약 줄 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 공용 부제는 굵기를 넘기지 않아 `font(size:)` 기본값 regular |
 | — | — | regular | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | medium | 불일치 | 행 제목 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400) |
 | — | — | #3D2A22 | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #3D2A22/0.7 | 불일치 | 「오늘」·「날짜 없음」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
@@ -1048,8 +1049,8 @@ last_updated: 2026-10-10
 
 | # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 점 | `<span class="w-2 h-2 rounded-full bg-[var(--clay)]"></span>` | — | — | 불일치 | 목업 헤더는 영역 라벨 앞에 clay 점을 단다 — 구현 `ScreenHeader` 는 점 없이 라벨만 |
-| 2 | 영역 라벨 | `PERSONAL</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area, tracking: labelTracking)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 1 | 영역 점 | `<span class="w-2 h-2 rounded-full bg-[var(--clay)]"></span>` | `ios/PocketAide/Todos/TodoListView.swift` | `labelShowsDot: true, labelDotShape: area.headerDotShape,` | 일치 | 헤더 맨 앞 — 영역 라벨 앞 clay 원 점(`AreaLabel` 이 라벨 앞에 그린다) |
+| 2 | 영역 라벨 | `PERSONAL</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` | 일치 | 헤더 맨 위 — 영역 이름 |
 | 3 | 화면 제목 | `내 일</h1>` | `ios/PocketAide/Todos/TodoListView.swift` | `case .personal: return "내 일"` | 일치 | 라벨 아래 큰 제목 |
 | 4 | 요약 줄 | `7개 남음 · 4개 완료</p>` | `ios/PocketAide/Todos/TodoListView.swift` | `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | 일치 | 제목 바로 아래 부제 자리 — 공용 헤더 부제(`ScreenHeader` 의 `subtitle`)로 그린다 |
 | 5 | 추가 버튼 | `<button class="w-10 h-10 rounded-full bg-[var(--clay)] text-white grid place-items-center active:scale-95">` | `ios/PocketAide/Todos/TodoListView.swift` | `.accessibilityIdentifier("\(idPrefix).add.button")` | 일치 | 헤더 오른쪽 끝 원형 버튼(수치·색 차이는 표 M) |
@@ -1123,14 +1124,14 @@ last_updated: 2026-10-10
 | 헤더 | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
 | 헤더 | `pb-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl) .padding(.bottom, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 블록 아래 여백 = `Spacing.md` — 목업도 회사 헤더는 검색 필드로 끝나 필드 아래 12(개인과 달리 필터 칩 줄이 없다) |
 | 헤더 | `bg-[var(--bg)]/95` | #EEF2F8/0.95 | `ios/PocketAide/Todos/TodoListView.swift` | `DesignTokens.Color.surface(tone).ignoresSafeArea()` | #EEF2F8 | 불일치 | 헤더 바탕 — 목업은 헤더에 회사 바탕 95% 를 깔아 스크롤된 목록이 비치게 하고, 구현 헤더는 배경이 없어 화면 바탕 `surface`(같은 hex, 불투명)가 그대로 보인다(목록은 헤더 아래에서 시작해 겹치지 않는다) |
-| 라벨 줄 | `gap-1.5` | 6 | — | — | — | 불일치 | 영역 점 ↔ 영역 라벨 간격 — 구현 헤더는 점을 그리지 않는다(`AreaLabel` 의 `showsDot` 기본 `false`, `ScreenHeader` 가 넘기지 않음) |
-| 라벨 줄 | `mb-1` | 4 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `VStack(alignment: .leading, spacing: 2)` | 2 | 불일치 | 라벨 줄 ↔ 제목 간격 — 구현은 공용 헤더 `VStack` 간격 2 |
-| 영역 점 | `w-2` | 8 | — | — | — | 불일치 | 영역 점(회사는 각진 사각) — 구현 헤더에 없다 |
-| 영역 점 | `h-2` | 8 | — | — | — | 불일치 | 영역 점(회사는 각진 사각) — 구현 헤더에 없다 |
-| 영역 점 | `bg-[var(--slate)]` | #355577 | — | — | — | 불일치 | 영역 점(회사는 각진 사각) — 구현 헤더에 없다 |
+| 라벨 줄 | `gap-1.5` | 6 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `HStack(spacing: 6) { if showsDot {` · `labelShowsDot: true,` | 6 | 일치 | 영역 점 ↔ 영역 라벨 간격 — 투두 헤더가 `labelShowsDot: true` 로 `AreaLabel` 의 점을 켜고, 점과 라벨은 `AreaLabel` 의 `HStack` 간격 6 |
+| 라벨 줄 | `mb-1` | 4 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: labelSpacing)` · `labelSpacing: DesignTokens.Spacing.xs,` | 4 | 일치 | 라벨 줄 ↔ 제목 간격 — 공용 헤더 바깥 `VStack` 간격 `labelSpacing` 에 투두 헤더가 `Spacing.xs` 를 넘긴다(제목 ↔ 요약 줄은 안쪽 `VStack` 간격 2 그대로) |
+| 영역 점 | `w-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: dotSize, height: dotSize)` · `labelDotSize: 8,` | 8 | 일치 | 영역 점 너비 — 투두 헤더가 `labelDotSize: 8` 을 넘기고 `AreaLabel` 이 점을 정사각 `dotSize` 로 그린다 |
+| 영역 점 | `h-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: dotSize, height: dotSize)` · `labelDotSize: 8,` | 8 | 일치 | 영역 점 높이 — 투두 헤더가 `labelDotSize: 8` 을 넘기고 `AreaLabel` 이 점을 정사각 `dotSize` 로 그린다 |
+| 영역 점 | `bg-[var(--slate)]` | #355577 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `case .square: Rectangle().fill(DesignTokens.Color.accent(area))` · `case .work: return .square` | #355577 | 일치 | 영역 점 색 = 회사 `accent`(라벨 글자와 같은 slate) — 회사 영역은 `headerDotShape` 가 `.square` 라 라운드 없는 사각(목업도 라운드 클래스 없음) |
 | 영역 라벨(헤더) | `text-[11px]` | 11 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | 11 | 일치 | `AreaLabel` 크기 = `captionXs` |
 | 영역 라벨(헤더) | `uppercase` | uppercase | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환 |
-| 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: CGFloat = 2.4` · `AreaLabel(area: area, tracking: labelTracking)` · `.tracking(tracking)` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42 → 2.4(`ScreenHeader` 기본값이 `AreaLabel` 까지 내려간다) |
+| 영역 라벨(헤더) | `tracking-[0.22em]` | 0.22em | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `labelTracking: CGFloat = 2.4` · `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` · `.tracking(tracking)` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42 → 2.4(`ScreenHeader` 기본값이 `AreaLabel` 까지 내려간다) |
 | 영역 라벨(헤더) | `text-[var(--slate)]` | #355577 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `.foregroundStyle(DesignTokens.Color.accent(area))` | #355577 | 일치 | 라벨 색 = 회사 `accent`(slate) |
 | 영역 라벨(헤더) | `font-bold` | bold | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `size: DesignTokens.Typography.captionXs, weight: .bold, family: .sans` | bold | 일치 | 라벨 굵기 — 글꼴은 목업 `stamp`(고정폭) 클래스 CSS 로 측정 대상 토큰이 아니다(구현 `.sans`) |
 | 제목 | `text-[28px]` | 28 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `size: titleSize, weight: .bold, family: titleFamily` · `titleSize: 28,` | 28 | 일치 | 제목 크기 — 화면이 `titleSize: 28` 을 넘긴다(공용 기본값 24) |
@@ -1244,7 +1245,7 @@ last_updated: 2026-10-10
 | 분리 안내 머리 | `font-bold` | bold | — | — | — | 불일치 | 「N.B.」 머리 — 구현에 없다 |
 | 분리 안내 머리 | `text-[var(--slate)]` | #355577 | — | — | — | 불일치 | 「N.B.」 머리 — 구현에 없다 |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(spacing: 0) { Rectangle()` | 0 | 기본값 일치 | 맨 위 영역 띠 · 헤더 · 검색 필드 · 목록 사이 간격 — 목업은 블록 사이 간격 수식이 없다(다짐·임시공간·개인 투두 선례) |
-| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel(area: area, tracking: labelTracking) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
+| — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking ) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
 | — | — | regular | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Tokens.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `weight: Font.Weight = .regular,` | regular | 기본값 일치 | 요약 줄 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 공용 부제는 굵기를 넘기지 않아 `font(size:)` 기본값 regular |
 | — | — | regular | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))` | medium | 불일치 | 오늘 마감이 아닌 행 제목 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 구현은 모든 행 medium |
 | — | — | #1E2A3A | `ios/PocketAide/Todos/TodoListView.swift` | `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7)) .textCase(area.sectionTitleCase)` | #1E2A3A/0.7 | 불일치 | 「DUE TODAY」·「THIS WEEK」 섹션 제목 색 — 목업은 색 클래스 없이 ink, 구현은 ink 70% |
@@ -1277,8 +1278,8 @@ last_updated: 2026-10-10
 
 | # | 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
 |---|---|---|---|---|---|---|
-| 1 | 영역 점 | `<span class="w-2 h-2 bg-[var(--slate)]"></span>` | — | — | 불일치 | 목업 헤더는 영역 라벨 앞에 slate 사각 점을 단다 — 구현 `ScreenHeader` 는 점 없이 라벨만 |
-| 2 | 영역 라벨 | `WORK</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel(area: area, tracking: labelTracking)` | 일치 | 헤더 맨 위 — 영역 이름 |
+| 1 | 영역 점 | `<span class="w-2 h-2 bg-[var(--slate)]"></span>` | `ios/PocketAide/Todos/TodoListView.swift` | `labelShowsDot: true, labelDotShape: area.headerDotShape,` | 일치 | 헤더 맨 앞 — 영역 라벨 앞 slate 사각 점(`AreaLabel` 이 라벨 앞에 그린다) |
+| 2 | 영역 라벨 | `WORK</div>` | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking )` | 일치 | 헤더 맨 위 — 영역 이름 |
 | 3 | 화면 제목 | `회사</h1>` | `ios/PocketAide/Todos/TodoListView.swift` | `case .work: return "회사"` | 일치 | 라벨 아래 큰 제목 |
 | 4 | 요약 줄 | `12 OPEN · 8 DONE · DEADLINE 3</p>` | `ios/PocketAide/Todos/TodoListView.swift` | `subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),` | 일치 | 제목 바로 아래 부제 자리 — 공용 헤더 부제로 그린다(「DEADLINE N」 문구 유무는 `_copy-map` 몫) |
 | 5 | 추가 버튼 | `<button class="w-10 h-10 bg-[var(--slate)] text-white grid place-items-center active:scale-95">` | `ios/PocketAide/Todos/TodoListView.swift` | `.accessibilityIdentifier("\(idPrefix).add.button")` | 일치 | 헤더 오른쪽 끝 버튼(모양·색 차이는 표 M) |

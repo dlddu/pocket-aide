@@ -6,6 +6,10 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
     private let titleFamily: DesignTokens.Typography.Family
     private let titleSize: CGFloat
     private let labelTracking: CGFloat
+    private let labelShowsDot: Bool
+    private let labelDotShape: AreaLabel.DotShape
+    private let labelDotSize: CGFloat
+    private let labelSpacing: CGFloat
     private let subtitle: String?
     private let subtitleIdentifier: String
     private let subtitleMonospaced: Bool
@@ -19,6 +23,10 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
         titleFamily: DesignTokens.Typography.Family = .sans,
         titleSize: CGFloat = 24,
         labelTracking: CGFloat = 2.4,
+        labelShowsDot: Bool = false,
+        labelDotShape: AreaLabel.DotShape = .circle,
+        labelDotSize: CGFloat = 6,
+        labelSpacing: CGFloat = 2,
         subtitle: String? = nil,
         subtitleIdentifier: String = "screen.header.subtitle",
         subtitleMonospaced: Bool = false,
@@ -31,6 +39,10 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
         self.titleFamily = titleFamily
         self.titleSize = titleSize
         self.labelTracking = labelTracking
+        self.labelShowsDot = labelShowsDot
+        self.labelDotShape = labelDotShape
+        self.labelDotSize = labelDotSize
+        self.labelSpacing = labelSpacing
         self.subtitle = subtitle
         self.subtitleIdentifier = subtitleIdentifier
         self.subtitleMonospaced = subtitleMonospaced
@@ -41,26 +53,34 @@ public struct ScreenHeader<LabelAccessory: View, Trailing: View>: View {
 
     public var body: some View {
         HStack(alignment: .bottom) {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: labelSpacing) {
                 HStack(spacing: 0) {
-                    AreaLabel(area: area, tracking: labelTracking)
+                    AreaLabel(
+                        area: area,
+                        showsDot: labelShowsDot,
+                        dotShape: labelDotShape,
+                        dotSize: labelDotSize,
+                        tracking: labelTracking
+                    )
                     labelAccessory
                 }
-                Text(title)
-                    .font(DesignTokens.Typography.font(
-                        size: titleSize,
-                        weight: .bold,
-                        family: titleFamily
-                    ))
-                    .foregroundStyle(DesignTokens.Color.ink(area))
-                    .tracking(-0.025 * titleSize)
-                    .accessibilityIdentifier("screen.header.title")
-                if let subtitle {
-                    Text(subtitle)
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
-                        .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
-                        .monospaced(subtitleMonospaced)
-                        .accessibilityIdentifier(subtitleIdentifier)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(DesignTokens.Typography.font(
+                            size: titleSize,
+                            weight: .bold,
+                            family: titleFamily
+                        ))
+                        .foregroundStyle(DesignTokens.Color.ink(area))
+                        .tracking(-0.025 * titleSize)
+                        .accessibilityIdentifier("screen.header.title")
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                            .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
+                            .monospaced(subtitleMonospaced)
+                            .accessibilityIdentifier(subtitleIdentifier)
+                    }
                 }
             }
             Spacer()
