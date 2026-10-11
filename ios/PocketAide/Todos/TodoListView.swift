@@ -29,7 +29,7 @@ extension TodoArea {
     var rowRadius: CGFloat {
         switch self {
         case .personal: return DesignTokens.Radius.card
-        case .work: return DesignTokens.Radius.key
+        case .work: return 0
         }
     }
 
@@ -106,6 +106,8 @@ extension TodoArea {
     var showsSectionRule: Bool { self == .work }
 
     var checkIsRound: Bool { self == .personal }
+
+    var searchRadius: CGFloat { self == .personal ? DesignTokens.Radius.card : DesignTokens.Radius.key }
 
     func summary(open: Int, done: Int) -> String {
         switch self {
@@ -187,7 +189,7 @@ struct TodoListView: View {
                     .font(.system(size: 18, weight: .bold))
                     .frame(width: 40, height: 40)
                     .background(DesignTokens.Color.accent(tone))
-                    .clipShape(Circle())
+                    .clipShape(area.checkIsRound ? AnyShape(Circle()) : AnyShape(RoundedRectangle(cornerRadius: area.rowRadius)))
                     .foregroundStyle(.white)
             }
             .accessibilityIdentifier("\(idPrefix).add.button")
@@ -208,9 +210,9 @@ struct TodoListView: View {
         .padding(.horizontal, DesignTokens.Spacing.md)
         .padding(.vertical, DesignTokens.Spacing.sm)
         .background(DesignTokens.Color.card(tone))
-        .clipShape(RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: area.searchRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: area.rowRadius, style: .continuous)
+            RoundedRectangle(cornerRadius: area.searchRadius, style: .continuous)
                 .stroke(DesignTokens.Color.rule(tone), lineWidth: 1)
         )
         .padding(.horizontal, DesignTokens.Spacing.xl)
