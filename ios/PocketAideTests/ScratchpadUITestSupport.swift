@@ -12,12 +12,28 @@ struct ScratchpadScreen {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 15), "Tab bar should appear after sign-in")
         let tab = tabBar.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", tabLabel)).firstMatch
-        XCTAssertTrue(tab.waitForExistence(timeout: 5), "The 임시공간 tab should be in the tab bar")
-        tab.tap()
+        if tab.exists {
+            tab.tap()
+        } else {
+            let row = moreRow(in: app)
+            XCTAssertTrue(row.waitForExistence(timeout: 5), "The 임시공간 row should be listed under More")
+            row.tap()
+        }
         let screen = ScratchpadScreen(app: app)
         XCTAssertTrue(screen.header.waitForExistence(timeout: 15), "The 임시공간 screen header should appear")
         XCTAssertTrue(screen.addButton.waitForExistence(timeout: 10), "The add button should be on the 임시공간 screen")
         return screen
+    }
+
+    static func moreRow(in app: XCUIApplication) -> XCUIElement {
+        let more = app.tabBars.firstMatch.buttons["More"]
+        XCTAssertTrue(more.waitForExistence(timeout: 5), "The More tab should be in the tab bar")
+        more.tap()
+        let back = app.navigationBars.buttons["More"]
+        if back.waitForExistence(timeout: 1) {
+            back.tap()
+        }
+        return app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", tabLabel)).firstMatch
     }
 
     var header: XCUIElement {

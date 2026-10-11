@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 enum RootTab: Hashable {
-    case chat, scratchpad, personal, work, routines, affirmations, prMonitor
+    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval
 }
 
 struct RootView: View {
@@ -11,11 +11,13 @@ struct RootView: View {
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
     @StateObject private var scratchpad: ScratchpadViewModel
+    @StateObject private var approvals: ApprovalsViewModel
 
     init(selectedTab: Binding<RootTab>, highlightedEventID: Binding<Int64?> = .constant(nil)) {
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
+        _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
     }
 
     var body: some View {
@@ -62,7 +64,7 @@ struct RootView: View {
 
     private var activeTint: Color {
         switch selectedTab {
-        case .prMonitor: return DesignTokens.Color.accent(.prMonitor)
+        case .prMonitor, .approval: return DesignTokens.Color.accent(.prMonitor)
         case .affirmations: return DesignTokens.Color.accent(.affirmations)
         case .personal: return DesignTokens.Color.accent(.personal)
         case .work: return DesignTokens.Color.accent(.work)
@@ -82,6 +84,10 @@ struct RootView: View {
             Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
                 PRMonitorView(highlightedEventID: $highlightedEventID)
             }
+            Tab("승인", systemImage: "checkmark.shield", value: RootTab.approval) {
+                ApprovalsView(viewModel: approvals)
+            }
+            .badge(approvals.pendingCount)
             Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
                 ChatTab()
             }
@@ -105,6 +111,10 @@ struct RootView: View {
                 scratchpad.replaceAPI(api)
             }
             await scratchpad.load()
+            if approvals.api == nil, let api = auth.api {
+                approvals.replaceAPI(api)
+            }
+            await approvals.load()
         }
     }
 }

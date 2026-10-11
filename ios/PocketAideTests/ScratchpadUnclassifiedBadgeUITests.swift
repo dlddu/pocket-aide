@@ -9,7 +9,7 @@ final class ScratchpadUnclassifiedBadgeUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testHeaderCountAndTabBadgeFollowAddMoveDeleteAndRelaunch() {
+    func testHeaderCountAndMoreRowBadgeFollowAddMoveDeleteAndRelaunch() {
         let token = TodoUI.uniqueToken()
         let kept = "남겨 둘 메모 \(token)"
         let deleted = "지울 메모 \(token)"
@@ -56,17 +56,16 @@ private struct UnclassifiedCounts {
             .flatMap { Int($0.label) }
     }
 
-    var tab: XCUIElement {
-        app.tabBars.firstMatch.buttons
-            .matching(NSPredicate(format: "label BEGINSWITH %@", ScratchpadScreen.tabLabel))
-            .firstMatch
-    }
-
     func assertBoth(_ expected: Int, _ step: String, file: StaticString = #filePath, line: UInt = #line) {
         var reading = TabBadgeReading.unreadable
-        let matched = RoutinesScreen.eventually(timeout: 15) {
-            reading = TabBadgeReader.read(tab, in: app)
-            return header == expected && reading.count == expected
+        var matched = RoutinesScreen.eventually(timeout: 15) { header == expected }
+        let headerReading = header
+        let row = ScratchpadScreen.moreRow(in: app)
+        if matched {
+            matched = row.waitForExistence(timeout: 5) && RoutinesScreen.eventually(timeout: 15) {
+                reading = TabBadgeReader.read(row, in: app)
+                return reading.count == expected
+            }
         }
         if !matched {
             let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
@@ -80,7 +79,16 @@ private struct UnclassifiedCounts {
         }
         XCTAssertTrue(
             matched,
-            "\(step): the header count and the 임시공간 tab badge should both read \(expected) but read \(header.map(String.init) ?? "-") / \(reading)",
+            "\(step): the header count and the 임시공간 badge under More should both read \(expected) but read \(headerReading.map(String.init) ?? "-") / \(reading)",
+            file: file,
+            line: line
+        )
+        if row.exists {
+            row.tap()
+        }
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label == %@", ScratchpadScreen.screenTitle)).firstMatch.waitForExistence(timeout: 15),
+            "\(step): the 임시공간 screen should open again from the More row",
             file: file,
             line: line
         )
