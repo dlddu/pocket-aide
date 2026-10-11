@@ -18,3 +18,16 @@
 | `backend/internal/routines/store.go` 23 | 「Routine is one row of the routines table, with its steps in position order.」 | `routines` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + `Steps` 가 `position` 순으로 채워진다는 계약 — 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 소비자가 순서를 다시 정렬해야 하는지 판단하려면 조회 SQL 을 찾아 읽어야 한다 |
 | `backend/internal/routines/store.go` 37 | 「DayStep is a step with whether a routine_step_checks row marks it done on that day.」 | `routine_step_checks` 엔티티의 의미 정본(ERD `의미:` 링크 대상) — 그 테이블에는 플래그 컬럼이 없고 **행의 존재가 곧 체크**라는 사실을 적은 유일한 자리라, 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고 체크 해제를 컬럼 갱신으로 구현하려는 오판이 열린다 |
 | `backend/internal/notificationsettings/store.go` 20 | 「Settings is one row of the user_notification_settings table; a user without a row gets Default().」 | `user_notification_settings` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + 행 부재가 오류가 아니라 `Default()` 로 읽힌다는 계약 — 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 행 없는 사용자를 가입 시 행 생성이 필요한 결함으로 오인할 수 있다 |
+
+## 증분 판정 — 2026-10-11 (approvals ERD `의미:` 대상)
+
+- **task**: `tbm_pocket-aide-comment-necessity` / `rct_20261011-0003`
+- **기준 커밋**: `39527f3` (#242 — 줄 번호는 이 커밋 기준이다)
+- **범위**: #242 가 들인 원장 `—` 행 하나 — `backend/internal/approvals/store.go` 2줄. 그 밖에 남은 미판정 덩어리는 없다.
+- **결과**: 2줄 전량 유지. 제거 0줄 · 비주석 변경은 없다.
+- **공통 사유**: 위 다섯째 패스와 같다 — 두 줄은 exported 타입의 한 줄 doc 주석이고 `docs/data-model/erd.md` 의 `approval_caller_keys`·`approval_requests` 엔티티 `의미:` 링크가 가리키는 대상이라, 지우면 `datamodelcheck` 의 `checkMeaning` 이 불변식 1 위반(`meaning-undocumented`)을 보고한다. 아래 표는 doc 수준을 넘는 문면의 사유를 덧붙인다.
+
+| 자리(`39527f3` 기준 줄) | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `backend/internal/approvals/store.go` 46 | 「CallerKey is a row of approval_caller_keys: a named key an external caller presents to file approval requests for one user.」 | `approval_caller_keys` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + 키가 **한 사용자에 묶인다**는 사실 — 구조체에는 `user_id` 필드가 없어(행에는 있다) 선언만 읽어서는 키의 소유 범위가 드러나지 않는다. 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 키 하나로 여러 사용자에게 요청을 낼 수 있다는 오판이 열린다 |
+| `backend/internal/approvals/store.go` 61 | 「Request is a row of approval_requests: one approval asked through a caller key, and the user's decision on it.」 | `approval_requests` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + 요청과 사용자의 결정이 **같은 행**에 담긴다는 사실(별도 결정 테이블이 없고 `Status`·`DecisionMode`·`ProcessedAt` 이 결정이다) — 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 결정 이력을 찾아 다른 테이블을 뒤지거나 결정을 별도 행으로 쌓으려는 오판이 열린다 |
