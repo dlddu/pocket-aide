@@ -110,17 +110,27 @@ struct BackendAPI {
     }
 
     func call(_ method: String, _ path: String, json: [String: Any]? = nil) -> BackendReply {
-        guard let url = URL(string: Self.server + path) else {
+        Self.perform(method, path, authorization: "Bearer \(token)", json: json)
+    }
+
+    static func anonymous(_ method: String, _ path: String, json: [String: Any]? = nil) -> BackendReply {
+        perform(method, path, authorization: nil, json: json)
+    }
+
+    private static func perform(_ method: String, _ path: String, authorization: String?, json: [String: Any]?) -> BackendReply {
+        guard let url = URL(string: server + path) else {
             return BackendReply(status: 0, body: Data(), location: nil, failingURL: nil)
         }
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let authorization {
+            request.setValue(authorization, forHTTPHeaderField: "Authorization")
+        }
         if let json, let body = try? JSONSerialization.data(withJSONObject: json) {
             request.httpBody = body
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        return Self.send(request)
+        return send(request)
     }
 
     private static func authorizationCode(in reply: BackendReply) -> String? {
