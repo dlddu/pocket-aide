@@ -26,7 +26,8 @@
   먼저 작성), 2026-10-09 백엔드 1차(호출자 키·호출자 API·앱용 대기 목록·상세·결정 API, rct_20261009-0007)에 맞춰 다시 판정했다.
   2026-10-11 앱 승인 탭 1차(하단 탭 바 「승인」 탭·대기 목록·배지·빈/오류 상태, rct_20261011-0001)에 맞춰 시나리오 4·5·15를 다시 판정했다.
   같은 날 앱 상세·결정 화면(카운트다운·확인 단계·409 안내, rct_20261011-0007)에 맞춰 시나리오 5·8·9·10·15·16을 다시 판정했다.
-  설정·푸시·자동 응답·처리 이력은 아직 없어, 그 단계에 기대는 시나리오는 「부분 구현」 또는 「미구현」이다.
+  같은 날 앱 승인 게이트 설정의 호출자 키 화면(발급·원문 1회·목록·폐기, rct_20261011-0012)에 맞춰 시나리오 1·2·16을 다시 판정했다.
+  푸시·자동 응답·처리 이력은 아직 없어, 그 단계에 기대는 시나리오는 「부분 구현」 또는 「미구현」이다.
 - 관찰자가 둘이다. **호출자**(외부 자동화)의 관찰 지점은 호출자 API(`/api/external/approvals`)의 HTTP 응답이고,
   **사용자**의 관찰 지점은 앱 화면이다. 호출자 쪽 단계는 `curl` 같은 HTTP 클라이언트로 수행한다고 읽는다.
 - 「사용자 A」「사용자 B」는 서로 다른 OIDC 계정이다. CI에서는 oidcmock이 발급하는 두 계정으로 대신한다
@@ -58,8 +59,8 @@
   - 4단계: 사용자 B의 키 목록에 `infra-ci`가 없다.
   - (서버) 저장소에 키 원문이 남아 있지 않다(해시만 있다).
 - **검증 AC**: AC13
-- **구현 상태**: 부분 구현 — 서버의 발급(`POST /api/approval-keys`, 원문 1회 응답 · `pak_` 접두 · SHA-256 해시만 저장)·목록(이름·원문 앞 12자·발급 시각·마지막 사용 시각)·같은 이름 거부(409)·사용자별 목록 분리는 있다. 앱의 승인 게이트 설정 화면(발급·복사·목록)이 없어 1·2·4단계를 앱에서 관찰할 수 없다.
-- **관련 코드 테스트**: `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyIssuedOnceAndHashedOnly`
+- **구현 상태**: 구현됨 — 승인 탭 머리의 설정 버튼으로 여는 「승인 게이트 설정」에서 호출자 이름을 넣어 발급하면 시트가 「호출자 키를 발급했습니다」로 바뀌어 원문과 「복사」를 보인다(서버는 원문을 발급 응답에만 싣고 SHA-256 해시만 저장한다). 시트를 닫으면 원문은 어디에도 남지 않고, 키 목록에는 이름·원문 앞 12자·발급 날짜·마지막 사용(아직 없으면 「마지막 사용 없음」)만 보인다. 같은 이름 재발급은 서버 409를 받아 시트에 「이미 쓰이고 있는 호출자 이름입니다」를 안내하고 원문을 보이지 않는다. 다른 사용자로 로그인한 설정의 키 목록에는 그 키가 없다.
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyIssueUITests.swift`, `ios/PocketAideUnitTests/ApprovalKeysTests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyIssuedOnceAndHashedOnly`
 
 
 ### 시나리오 2: 발급한 키로 요청을 만들고 결과를 폴링한다
@@ -73,8 +74,8 @@
   - 2단계: 200, `status`=`PENDING`, `processedAt`은 비어 있다. 응답에 사용자 식별 정보(OIDC `sub`·이메일)가 없다.
   - 3단계: `infra-ci`의 마지막 사용 시각이 방금으로 갱신되어 있다.
 - **검증 AC**: AC1, AC3, AC13
-- **구현 상태**: 부분 구현 — 1·2단계(호출자 API 생성 201·조회 200, 사용자 식별 정보 없음)는 구현됨. 3단계의 마지막 사용 시각은 서버 키 목록 API(`last_used_at`)에 있으나 앱 키 목록 화면이 없다.
-- **관련 코드 테스트**: `backend/internal/handlers/approvals_test.go` — `TestApprovalCreateAndPoll`
+- **구현 상태**: 구현됨 — 1·2단계(호출자 API 생성 201·조회 200, 사용자 식별 정보 없음)는 서버에서, 3단계는 앱 「승인 게이트 설정」 키 목록이 그 키의 마지막 사용 시각(오늘이면 시:분)을 보여 화면으로 관찰된다.
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyLastUsedUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalCreateAndPoll`
 
 
 ### 시나리오 3: 형식이 틀리거나 인증이 맞지 않는 요청은 거부된다
@@ -309,5 +310,5 @@
   - 5단계: `infra-ci`가 폐기 시각과 함께 목록에 남아 있고, 다시 활성화할 방법은 없다.
   - 6단계: 이력의 R에 키 이름 `infra-ci`가 그대로 보인다.
 - **검증 AC**: AC14
-- **구현 상태**: 부분 구현 — 폐기 API(`POST /api/approval-keys/{id}/revoke`)·폐기 키 401(2단계)·다른 키 201·폐기 키 요청이 `PENDING`으로 남고 `key_revoked`·키 이름이 실리는 것·폐기 키가 목록에 폐기 시각과 남는 것은 서버에서 구현됨. 4단계의 「폐기된 키로 생성됨」 경고는 앱의 대기 목록 항목과 상세에 있다. 자동 응답 모드(AC9, 3단계의 즉시 `APPROVED`)와 처리 이력(6단계)은 없다.
-- **관련 코드 테스트**: `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyRevocation`
+- **구현 상태**: 부분 구현 — 1단계: 앱 「승인 게이트 설정」 키 목록의 「폐기」가 확인 대화상자(취소 가능)를 거쳐 폐기 API(`POST /api/approval-keys/{id}/revoke`)를 부른다. 폐기 키 401(2단계)·다른 키 201·폐기 키 요청이 `PENDING`으로 남고 `key_revoked`·키 이름이 실리는 것은 서버에서 구현됨. 4단계의 「폐기된 키로 생성됨」 경고는 앱의 대기 목록 항목과 상세에 있다. 5단계: 폐기된 키는 키 목록에 취소선 이름과 「폐기됨 MM/dd」로 남고 「폐기」 버튼이 없다(다시 활성화할 방법 없음). 자동 응답 모드(AC9, 3단계의 즉시 `APPROVED`)와 처리 이력(6단계)은 없다.
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyRevokeUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyRevocation`
