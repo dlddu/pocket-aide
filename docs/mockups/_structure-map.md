@@ -58,7 +58,7 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 32행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 22행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 34행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 25행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -110,8 +110,8 @@ last_updated: 2026-10-11
 | `screen-todo-work` | S | 목업 대기 | 0 |
 | `screen-approval` | M | 일치 | 105 |
 | `screen-approval` | M | 기본값 일치 | 3 |
-| `screen-approval` | M | 불일치 | 34 |
-| `screen-approval` | M | 허용 | 5 |
+| `screen-approval` | M | 불일치 | 25 |
+| `screen-approval` | M | 허용 | 14 |
 | `screen-approval` | M | 목업 대기 | 2 |
 | `screen-approval` | S | 일치 | 15 |
 | `screen-approval` | S | 불일치 | 2 |
@@ -1355,15 +1355,15 @@ last_updated: 2026-10-11
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
-| 헤더 | `bg-[var(--bg)]/95` | #EEEDF5/0.95 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 헤더 | `pb-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 헤더 | `pt-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 헤더 | `px-5` | 20 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 뒤로 버튼 | `gap-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 뒤로 버튼 | `text-[15px]` | 15 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 뒤로 버튼 | `text-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 뒤로 글리프 | `height:16px` | 16 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
-| 뒤로 글리프 | `width:10px` | 10 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 불일치 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 허용목록에 이 자리 항목이 아직 없다 |
+| 헤더 | `bg-[var(--bg)]/95` | #EEEDF5/0.95 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 헤더 | `pb-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 헤더 | `pt-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 헤더 | `px-5` | 20 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 뒤로 버튼 | `gap-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 뒤로 버튼 | `text-[15px]` | 15 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 뒤로 버튼 | `text-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 뒤로 글리프 | `height:16px` | 16 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
+| 뒤로 글리프 | `width:10px` | 10 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 시스템 | 허용 S7 | 시스템 내비게이션 바의 뒤로 버튼(`NavigationStack` 푸시 — 구현 수식 없음). 목업이 그린 iOS 뒤로 버튼 모양을 시스템이 그린다(`S7`) |
 | 본문 | `pb-6` | 24 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.bottom, DesignTokens.Spacing.xxl)` | 24 | 일치 | 스크롤 본문 아래 여백 |
 | 본문 | `pt-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 스크롤 본문 위 여백(본문 `VStack` 의 `.padding(.top, …)`) |
 | 본문 | `px-5` | 20 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl)` | 20 | 일치 | 본문 좌우 여백 |
