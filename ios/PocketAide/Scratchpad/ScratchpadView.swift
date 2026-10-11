@@ -2,17 +2,6 @@ import DesignSystem
 import PocketAideAPI
 import SwiftUI
 
-extension ScratchpadMoveTarget {
-    var designArea: DesignTokens.Area {
-        switch self {
-        case .personal: return .personal
-        case .work: return .work
-        case .affirmation: return .affirmations
-        case .routine: return .routines
-        }
-    }
-}
-
 struct ScratchpadTab: View {
     @ObservedObject var viewModel: ScratchpadViewModel
 
@@ -220,6 +209,7 @@ struct ScratchpadView: View {
 }
 
 private struct ScratchpadCard: View {
+    @Environment(\.colorScheme) private var colorScheme
     let item: ScratchpadItem
     let time: String
     let onMove: (ScratchpadMoveTarget) -> Void
@@ -261,8 +251,9 @@ private struct ScratchpadCard: View {
                             .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .medium))
                             .padding(.horizontal, 10)
                             .padding(.vertical, DesignTokens.Spacing.xs)
-                            .overlay(Capsule().stroke(DesignTokens.Color.accent(target.designArea), lineWidth: 1))
-                            .foregroundStyle(DesignTokens.Color.accent(target.designArea))
+                            .background(Capsule().fill((colorScheme == .dark ? DesignTokens.Color.card(.scratchpad) : Color.white).opacity(0.6)))
+                            .overlay(Capsule().stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1))
+                            .foregroundStyle(DesignTokens.Color.ink(.scratchpad))
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("scratchpad.row.\(item.id).move.\(target.rawValue)")
