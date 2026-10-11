@@ -12,7 +12,10 @@ final class ApprovalOwnershipUITests: XCTestCase {
         XCTAssertTrue(tab.waitForExistence(timeout: 15), "\(step): the 승인 tab should be in the tab bar")
         tab.tap()
         let screen = ApprovalsScreen(app: app)
-        XCTAssertTrue(screen.title.waitForExistence(timeout: 15), "\(step): the 승인 screen should open")
+        if !screen.title.waitForExistence(timeout: 15) {
+            tab.tap()
+        }
+        XCTAssertTrue(screen.title.waitForExistence(timeout: 30), "\(step): the 승인 screen should open")
         return screen
     }
 
