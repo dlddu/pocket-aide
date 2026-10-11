@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-10-09
+last_updated: 2026-10-11
 ---
 
 # 구현 ↔ 목업 매핑
@@ -37,6 +37,8 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록(머리 정렬 칩)·우선순위 점 범례·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | 부분 | `screen-approval` | 승인 탭 1차(#244) — 「대기 목록」 프레임의 헤더(`AreaLabel` 「APPROVAL · GATE」·제목 「승인」·대기 수 배지)·「대기 · N건」 섹션 머리·요청 카드(보낸 키 칩·남은 시간·요약·요청자 · 시각·폐기된 키 경고)와 「빈 상태」 프레임의 안내 문구, 「오류」 프레임의 오류 배너(제목·오류 설명·다시 시도). 요청 상세·결정 확인·처리 이력·자동 응답 모드(헤더 줄·배너·설정)·호출자 키 발급은 아직 구현되지 않았다. 하단 TabBar 는 `RootView.swift` 행 |
+| `ios/PocketAide/Approvals/ApprovalsViewModel.swift` | 비렌더링 | — | 대기 승인 요청 목록·대기 수·오류 상태와 API 호출 |
 | `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
 | `ios/PocketAide/AppDelegate.swift` | 비렌더링 | — | 앱 수명주기·푸시 등록 |
 | `ios/PocketAide/CalendarAccess.swift` | 비렌더링 | — | 캘린더 전체 접근 권한 요청(EventKit) — 허용되면 위젯 타임라인 재요청 |
@@ -54,7 +56,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text` | 채팅 탭의 「준비 중」 자리표시자(`ChatTab`). 임시공간·루틴 탭은 #64·#88 이 실제 화면으로 바꿨다 — `Scratchpad/`·`Routines/` 행 |
 | `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`)·딥링크 처리 — `pocketaide://weather` 는 날씨 시트(`Weather/WeatherView.swift` 행)를 띄우고, `pocketaide://calendar` 는 시스템 캘린더(`calshow:`)를 연다 |
 | `ios/PocketAide/PushRegistrar.swift` | 비렌더링 | — | APNs 토큰 등록 |
-| `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업은 다섯 칸 다짐·PR 모니터·승인·채팅·더 보기(tokens.md §7 하단 노출), 목업별 활성 탭: 다짐·다짐·PR 모니터·더 보기·더 보기·더 보기·더 보기). 구현은 시스템 `TabView` 일곱 탭(다짐·PR 모니터·채팅·임시공간·개인·회사·루틴 — iPhone 에서는 앞 넷 + 시스템 오버플로 탭)이라 승인 탭이 없고 임시공간이 하단에 남아 있다. `screen-scratchpad` 「더 보기 — 미분류 배지」 프레임은 그 오버플로 목록. 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
+| `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업은 다섯 칸 다짐·PR 모니터·승인·채팅·더 보기(tokens.md §7 하단 노출), 목업별 활성 탭: 다짐·다짐·승인·PR 모니터·더 보기·더 보기·더 보기·더 보기). 구현은 시스템 `TabView` 여덟 탭(다짐·PR 모니터·승인·채팅·임시공간·개인·회사·루틴 — #244 부터 이 순서)이라 iPhone 에서는 앞 넷 + 시스템 오버플로 탭(「More」)으로 목업의 하단 다섯 칸과 같은 자리가 되고 임시공간·개인·회사·루틴은 오버플로 목록에 들어간다. 승인 탭 배지는 `.badge(pendingCount)` 라 iOS 시스템 빨강이다(목업은 §1.11 강조색). `screen-scratchpad` 「더 보기 — 미분류 배지」 프레임은 그 오버플로 목록. 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
 | `ios/PocketAide/Routines/RoutineErrorRow.swift` | 부분 | `screen-routines` | 목록 위 오류 행 `RoutineErrorRow`(실패 문구 + 재시도할 수 있는 실패에만 「다시 시도」) — 목업 「상태 변형」 프레임 맨 위 오류 행. 문구는 `ios/Shared/Sources/PocketAideAPI/Routines.swift` 의 `RoutineFailureCopy`(동작 7종 × 원인 안내 3종)가 만들고 목업은 그중 「단계 체크 · 연결 실패」 한 쌍을 그린다 |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | 부분 | `screen-routines` | 30일 이력 시트 `RoutineHistorySheet`(제목 「<루틴> · 30일」·요약 줄·분모 안내 줄·30칸 히트맵·일자별 행) — 목업 화면 하단 history strip(「아침 루틴 · 30일」·30칸 히트맵·「전체 이력」)의 구현. 목업은 화면 안 인라인, 구현은 카드 「이력」 버튼 뒤 시트다(자리 차이는 기준 4). 같은 파일의 루틴 추가·단계 추가 시트(`RoutineAddSheet`·`RoutineStepAddSheet`)는 목업의 「루틴 추가」·「단계 추가」 프레임이 대응한다 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | 화면 | `screen-routines` | 루틴 탭 화면 전체 — `RoutinesView`·진입점 `RoutinesTab`·`RoutineCard`: 헤더(날짜·「새 루틴」)·루틴 카드(진행률·단계 체크)·「오늘 쉬는 루틴」·빈 상태. 목록 위 오류 행은 `RoutineErrorRow.swift` 행, 이력·추가 시트는 `RoutineSheets.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |

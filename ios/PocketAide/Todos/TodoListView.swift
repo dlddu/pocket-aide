@@ -82,6 +82,29 @@ extension TodoArea {
         }
     }
 
+    var sectionHeaderBottom: CGFloat {
+        switch self {
+        case .personal: return DesignTokens.Spacing.xs
+        case .work: return 6
+        }
+    }
+
+    var sectionHeadSpacing: CGFloat {
+        switch self {
+        case .personal: return 0
+        case .work: return DesignTokens.Spacing.sm
+        }
+    }
+
+    var sectionBarWidth: CGFloat {
+        switch self {
+        case .personal: return 0
+        case .work: return DesignTokens.Spacing.xs
+        }
+    }
+
+    var showsSectionRule: Bool { self == .work }
+
     func summary(open: Int, done: Int) -> String {
         switch self {
         case .personal: return "\(open)개 남음 · \(done)개 완료"
@@ -204,11 +227,12 @@ struct TodoListView: View {
             if viewModel.items.isEmpty {
                 emptyState
             } else {
-                section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, titleOpacity: 1, isLastSection: viewModel.doneItems.isEmpty)
-                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isLastSection: true)
+                section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, titleOpacity: 1, isFirstSection: true, isLastSection: viewModel.doneItems.isEmpty)
+                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty, isLastSection: true)
             }
         }
         .listStyle(.plain)
+        .environment(\.defaultMinListHeaderHeight, 0)
         .scrollContentBackground(.hidden)
         .refreshable { await viewModel.load() }
     }
@@ -233,7 +257,7 @@ struct TodoListView: View {
     }
 
     @ViewBuilder
-    private func section(title: String, items: [TodoItem], titleOpacity: Double, isLastSection: Bool) -> some View {
+    private func section(title: String, items: [TodoItem], titleOpacity: Double, isFirstSection: Bool, isLastSection: Bool) -> some View {
         if !items.isEmpty {
             Section {
                 ForEach(items) { item in
@@ -256,11 +280,22 @@ struct TodoListView: View {
                     }
                 }
             } header: {
-                Text("\(title) · \(items.count)")
-                    .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))
-                    .tracking(area.sectionTitleTracking)
-                    .foregroundStyle(DesignTokens.Color.ink(tone).opacity(titleOpacity))
-                    .textCase(area.sectionTitleCase)
+                HStack(spacing: area.sectionHeadSpacing) {
+                    Rectangle()
+                        .fill(titleOpacity == 1 ? DesignTokens.Color.accent(tone) : DesignTokens.Color.ink(tone).opacity(titleOpacity))
+                        .frame(width: area.sectionBarWidth, height: DesignTokens.Spacing.md)
+                    Text("\(title) · \(items.count)")
+                        .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))
+                        .tracking(area.sectionTitleTracking)
+                        .foregroundStyle(DesignTokens.Color.ink(tone).opacity(titleOpacity))
+                        .textCase(area.sectionTitleCase)
+                    if area.showsSectionRule {
+                        Rectangle()
+                            .fill(DesignTokens.Color.rule(tone))
+                            .frame(height: 1)
+                    }
+                }
+                .listRowInsets(EdgeInsets(top: isFirstSection ? area.listTopInset + DesignTokens.Spacing.xs : DesignTokens.Spacing.md, leading: DesignTokens.Spacing.xl, bottom: area.sectionHeaderBottom, trailing: DesignTokens.Spacing.xl))
             }
         }
     }
