@@ -10,11 +10,11 @@ final class AffirmationsViewModel: ObservableObject {
 
     private(set) var api: APIClient?
     let selector = RotationSelector()
-    let rotationSeed: UInt64?
+    private var seededRNG: SeededRNG?
 
     init(api: APIClient?, rotationSeed: UInt64? = nil) {
         self.api = api
-        self.rotationSeed = rotationSeed
+        self.seededRNG = rotationSeed.map { SeededRNG(seed: $0) }
     }
 
     func replaceAPI(_ client: APIClient) {
@@ -76,9 +76,9 @@ final class AffirmationsViewModel: ObservableObject {
     }
 
     func rotateHero() {
-        if let seed = rotationSeed {
-            var rng = SeededRNG(seed: seed)
+        if var rng = seededRNG {
             heroID = selector.pick(from: items, using: &rng)?.id
+            seededRNG = rng
         } else {
             var rng = SystemRandomNumberGenerator()
             heroID = selector.pick(from: items, using: &rng)?.id

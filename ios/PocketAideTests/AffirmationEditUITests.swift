@@ -7,16 +7,18 @@ final class AffirmationEditUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testEditChangesOnlyTheTargetAndCancelChangesNothing() {
+    func testEditChangesOnlyTheTargetAndCancelChangesNothing() throws {
         let token = TodoUI.uniqueToken()
         let original = "물 자주 마시기 \(token)"
         let edited = "물 한 잔 먼저 \(token)"
         let untouched = "일찍 잠들기 \(token)"
         let discarded = "버려질 문장 \(token)"
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        api.addAffirmation(untouched)
+        api.addAffirmation(original)
+        addTeardownBlock { api.deleteAffirmations([original, edited, untouched, discarded]) }
         let app = TodoUI.launch()
         var screen = AffirmationsScreen.open(in: app)
-        screen.add(untouched)
-        screen.add(original)
         screen.assertStored(original, priority: "normal")
 
         let edit = screen.openEditSheet(original)
@@ -39,8 +41,6 @@ final class AffirmationEditUITests: XCTestCase {
         TodoUI.relaunch(app)
         screen = AffirmationsScreen.open(in: app)
         assertEdited(on: screen, edited: edited, untouched: untouched, gone: [original, discarded])
-
-        screen.remove([edited, untouched])
     }
 
     private func assertEdited(on screen: AffirmationsScreen, edited: String, untouched: String, gone: [String]) {

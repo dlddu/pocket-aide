@@ -20,13 +20,17 @@ final class TodoNoCrossAreaMoveUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testNoControlMovesAnItemToTheOtherArea() {
+    func testNoControlMovesAnItemToTheOtherArea() throws {
         let token = TodoUI.uniqueToken()
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for area in TodoUIArea.allCases {
+            api.addTodo("영역 고정 \(area.rawValue) \(token)", in: area)
+        }
         let app = TodoUI.launch()
         for area in TodoUIArea.allCases {
             let screen = TodoScreen.open(area, in: app)
             let title = "영역 고정 \(area.rawValue) \(token)"
-            screen.add(title: title)
+            XCTAssertTrue(screen.row(title).waitForExistence(timeout: 10), "'\(title)' should be listed")
             guard let counts = screen.counts() else { return XCTFail("Summary should parse") }
 
             assertEditSheetHasNoAreaControl(on: screen, title: title)

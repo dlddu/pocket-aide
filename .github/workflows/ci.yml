@@ -183,10 +183,36 @@ jobs:
     if: needs.changes.outputs.backend_integration == 'true'
     uses: ./.github/workflows/backend-integration-test.yml
 
+  # Cross-compiled here, beside the backend tests, so the macOS shards skip Go
+  # setup and the build; ios-test.yml downloads this artifact by name.
+  ios-test-backend:
+    name: iOS test backend binaries
+    needs: changes
+    if: needs.changes.outputs.ios_tests == 'true'
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-backend
+      # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; ios-test 잡이 띄울 oidcmock 을 macOS 러너용으로 빌드한다 (docs/e2e-mocking-policy.md)
+      - name: Build oidcmock + server for the macOS runner
+        working-directory: backend
+        env:
+          CGO_ENABLED: "0"
+          GOOS: darwin
+          GOARCH: arm64
+        run: |
+          go build -o "$RUNNER_TEMP/ios-test-backend/oidcmock" ./cmd/oidcmock
+          go build -o "$RUNNER_TEMP/ios-test-backend/pocket-aide" ./cmd/server
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-backend
+          path: ${{ runner.temp }}/ios-test-backend/
+          retention-days: 1
+
   ios-test:
     name: iOS build + test
-    needs: [changes, backend-unit-test, backend-integration-test]
-    if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' }}
+    needs: [changes, ios-test-backend, backend-unit-test, backend-integration-test]
+    if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.ios-test-backend.result == 'success' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' }}
     uses: ./.github/workflows/ios-test.yml
 
   # No path filter: runs on every PR and main push (tens of seconds). The PR

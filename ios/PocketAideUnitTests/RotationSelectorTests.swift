@@ -73,4 +73,50 @@ final class RotationSelectorTests: XCTestCase {
             XCTAssertEqual(selector.pick(from: pool, using: &rng)?.id, 1)
         }
     }
+
+    func testRotationWeightedUITestSeedRanksPrioritiesForEveryPoolOrder() {
+        let weighted = RotationSelector()
+        let uniform = RotationSelector(weights: [.high: 1, .normal: 1, .low: 1])
+        let orders: [[AffirmationPriority]] = [
+            [.high, .normal, .low], [.high, .low, .normal],
+            [.normal, .high, .low], [.normal, .low, .high],
+            [.low, .high, .normal], [.low, .normal, .high],
+        ]
+        for order in orders {
+            for skipped in 0...3 {
+                let counts = rotationCounts(weighted, order: order, skipped: skipped)
+                XCTAssertTrue(ranksByPriority(counts), "order=\(order) skipped=\(skipped) counts=\(counts)")
+            }
+        }
+        for skipped in 0...3 {
+            let counts = rotationCounts(uniform, order: [.low, .normal, .high], skipped: skipped)
+            XCTAssertFalse(ranksByPriority(counts), "Equal weights must not pass the UI assertion: skipped=\(skipped) counts=\(counts)")
+        }
+    }
+
+    private func rotationCounts(
+        _ selector: RotationSelector,
+        order: [AffirmationPriority],
+        skipped: Int
+    ) -> [AffirmationPriority: Int] {
+        let pool = order.enumerated().map { aff(Int64($0.offset + 1), $0.element) }
+        var rng = SeededRNG(seed: 2009)
+        for _ in 0..<skipped {
+            _ = selector.pick(from: pool, using: &rng)
+        }
+        var counts: [AffirmationPriority: Int] = [.high: 0, .normal: 0, .low: 0]
+        for _ in 0..<30 {
+            if let pick = selector.pick(from: pool, using: &rng) {
+                counts[pick.priority, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
+    private func ranksByPriority(_ counts: [AffirmationPriority: Int]) -> Bool {
+        let high = counts[.high] ?? 0
+        let normal = counts[.normal] ?? 0
+        let low = counts[.low] ?? 0
+        return high > normal && normal > low && low > 0
+    }
 }

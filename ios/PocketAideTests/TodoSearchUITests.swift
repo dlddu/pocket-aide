@@ -7,19 +7,17 @@ final class TodoSearchUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testSearchOnlyLooksInsideTheCurrentArea() {
+    func testSearchOnlyLooksInsideTheCurrentArea() throws {
         let token = TodoUI.uniqueToken()
         let personalTitle = "세금 신고 \(token)"
         let workTitle = "세금계산서 발행 \(token)"
         let workMemoTitle = "분기 정산 \(token)"
         let workMemo = "세금 관련"
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        api.addTodo(personalTitle, in: .personal)
+        api.addTodo(workTitle, in: .work)
+        api.addTodo(workMemoTitle, in: .work, memo: workMemo)
         let app = TodoUI.launch()
-
-        let personal = TodoScreen.open(.personal, in: app)
-        personal.add(title: personalTitle)
-        let work = TodoScreen.open(.work, in: app)
-        work.add(title: workTitle)
-        work.add(title: workMemoTitle, memo: workMemo)
 
         let personalAgain = TodoScreen.open(.personal, in: app)
         personalAgain.search("세금")

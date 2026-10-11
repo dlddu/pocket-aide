@@ -7,8 +7,15 @@ final class TodoDeleteUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testSwipeAndSheetDeleteRemoveItemsForGood() {
+    func testSwipeAndSheetDeleteRemoveItemsForGood() throws {
         let token = TodoUI.uniqueToken()
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for area in TodoUIArea.allCases {
+            let tag = "\(area.rawValue) \(token)"
+            for title in ["남길 항목 \(tag)", "끝난 약속 \(tag)", "오래된 메모 \(tag)"] {
+                api.addTodo(title, in: area)
+            }
+        }
         let app = TodoUI.launch()
         var expectations: [TodoUIArea: (kept: [String], deleted: [String])] = [:]
         for area in TodoUIArea.allCases {
@@ -33,9 +40,7 @@ final class TodoDeleteUITests: XCTestCase {
         let swiped = "오래된 메모 \(tag)"
         let viaSheet = "끝난 약속 \(tag)"
         let kept = "남길 항목 \(tag)"
-        for title in [kept, viaSheet, swiped] {
-            screen.add(title: title)
-        }
+        XCTAssertTrue(screen.row(swiped).waitForExistence(timeout: 10), "The seeded items should be listed")
         guard let before = screen.counts() else {
             XCTFail("Summary should parse")
             return ([kept], [swiped, viaSheet])

@@ -86,8 +86,8 @@
   - 「낮음」 문장도 0회가 아니다(완전히 숨겨지지 않는다).
 - **검증 AC**: AC2
 - **구현 상태**: 구현됨 — 앱·위젯이 같은 `RotationSelector`(가중 추첨)를 쓴다.
-- **관련 코드 테스트**: `ios/PocketAideUnitTests/RotationSelectorTests.swift` — `testWeightedDistribution`, `testZeroWeightItemsAreSkipped`, `testSameSeedIsDeterministic`
-- **비고**: 분포 단정은 난수에 기대므로 UI 수준에서 검증하려면 시드 고정(`ROTATION_SEED`, 모킹 정책 `DET`)이 필요하다.
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/RotationSelectorTests.swift` — `testWeightedDistribution`, `testZeroWeightItemsAreSkipped`, `testSameSeedIsDeterministic`, `testRotationWeightedUITestSeedRanksPrioritiesForEveryPoolOrder`
+- **비고**: 분포 단정은 난수에 기대므로 UI 수준에서는 시드 고정(`ROTATION_SEED`, 모킹 정책 `DET`)으로 검증한다. E2E 는 세 문장을 백엔드 API 로 시드하고 고정 시드로 앱을 띄워 회전 30회의 노출 순서를 센다 — 그 시드가 풀 순서와 무관하게 순서를 지키고, 우선순위가 무시되면(균등 가중) 단정이 깨진다는 성질은 위 마지막 단위 테스트가 지킨다(2026-10-11, 300회 무시드에서 전환).
 
 ### 시나리오 6: 다짐 탭에 들어올 때마다 다른 문장이 회전 노출된다
 - **사전 조건**: 로그인된 상태. 문장이 3개 이상 있음.

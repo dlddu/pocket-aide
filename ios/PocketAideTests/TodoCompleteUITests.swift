@@ -7,8 +7,14 @@ final class TodoCompleteUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testCompleteMovesToDoneSectionAndCanBeUndone() {
+    func testCompleteMovesToDoneSectionAndCanBeUndone() throws {
         let token = TodoUI.uniqueToken()
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        for area in TodoUIArea.allCases {
+            let tag = "\(area.rawValue) \(token)"
+            api.addTodo("택배 반품 \(tag)", in: area, memo: "편의점 접수", dueDate: TodoScreen.today(), priority: "low")
+            api.addTodo("영수증 정리 \(tag)", in: area)
+        }
         let app = TodoUI.launch()
         for area in TodoUIArea.allCases {
             let screen = TodoScreen.open(area, in: app)
@@ -20,8 +26,7 @@ final class TodoCompleteUITests: XCTestCase {
         let tag = "\(screen.area.rawValue) \(token)"
         let target = "택배 반품 \(tag)"
         let sibling = "영수증 정리 \(tag)"
-        screen.add(title: target, memo: "편의점 접수", due: true, priority: "low")
-        screen.add(title: sibling)
+        XCTAssertTrue(screen.row(sibling).waitForExistence(timeout: 10), "The seeded items should be listed")
         let expectedMeta = "\(TodoScreen.today()) · \(screen.priorityLabel("low")) · 메모: 편의점 접수"
         guard let before = screen.counts() else { return XCTFail("Summary should parse") }
 

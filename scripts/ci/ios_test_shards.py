@@ -27,6 +27,9 @@ def plan(total):
     # A class missing from the durations file is a new one: weigh it like a
     # typical class so it still lands somewhere instead of being dropped.
     default = statistics.median(known.values())
+    for c in ui_classes():
+        if c not in known:
+            print(f"::warning title=ios-test shards::{c} is missing from {DURATIONS.name}; planned at the median {default:.0f}s")
     units = [(f"{UI_TARGET}/{c}", known.get(c, default)) for c in ui_classes()]
     units.append((UNIT_TARGET, data[UNIT_TARGET]))
     shards = [[] for _ in range(total)]
@@ -58,6 +61,7 @@ def main():
         with open(out, "a", encoding="utf-8") as fh:
             fh.write(f"only_testing={args}\n")
             fh.write(f"pr_monitor={'true' if pr_monitor else 'false'}\n")
+            fh.write(f"planned_seconds={loads[a.index]:.0f}\n")
 
 
 if __name__ == "__main__":

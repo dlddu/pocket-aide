@@ -103,3 +103,13 @@
 | `ios/PocketAideTests/PRMonitorUITests.swift` 4–7 → 개작 | 「Needs the ios-test workflow environment: … pushes that event to the simulator once the push test logs that / it is waiting on the home screen ("Deliver PR-monitor push").」 | 이 클래스가 워크플로 스텝(픽스처 주입 · 준비 신호 뒤 푸시)에 기대며 로컬 실행에서는 푸시 테스트가 배너를 받지 못한다는 사실 — 지우면 로컬 실패를 앱 결함으로 오인한다 |
 | `ios/PocketAideTests/PRMonitorUITests.swift` 46–47 → 개작 | 「An earlier test in the shard may already have answered the permission / prompt; banners need it granted.」 | 권한 프롬프트 처리가 `if` 인 이유(샤드 안 앞선 테스트가 이미 답했을 수 있다) — 옛 문면 「No earlier test answers」는 샤딩 뒤 틀렸고, 지우면 프롬프트가 늘 뜬다고 보고 단정으로 바꿔 순서에 따라 깨지게 된다 |
 | `ios/PocketAideTests/PRMonitorUITests.swift` 58 | 「The workflow pushes only after this line; the UUID tells a retry apart.」 | 이 `NSLog` 가 진단용이 아니라 워크플로가 기다리는 신호이고, UUID 가 `-retry-tests-on-failure` 재시도를 새 신호로 구분한다는 계약 — 지우면 로그 정리 때 줄을 지워 푸시가 끊기거나, 고정 문자열로 바꿔 재시도에 푸시가 다시 오지 않게 된다 |
+
+## 증분 재판정 — 2026-10-11 (iOS 테스트 백엔드 교차 빌드)
+
+- **기준 커밋**: `b14f475` 위의 브랜치 `ci/ios-test-seed-api-seeding-prebuilt-backend` (줄 번호는 그 브랜치 기준이다)
+- **범위**: `.github/workflows/ci.yml` 에 더한 주석 2줄. 같은 PR 의 `mock-exception:` 주석(`ci.yml` 1줄 · `AffirmationsView.swift` 1줄 · `RotationWeightedAffirmationUITests.swift` 1줄)은 기계가 읽는 주석이라 판정 밖이다.
+
+| 자리 | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` 186–187 | 「Cross-compiled here, beside the backend tests, so the macOS shards skip Go / setup and the build; ios-test.yml downloads this artifact by name.」 | 교차 빌드 잡이 `ios-test.yml` 이 아니라 호출자에 있는 이유(백엔드 테스트와 나란히 돌아 iOS 경로에 지연을 더하지 않는다)와 `ios-test.yml` 이 아티팩트를 이름으로 받는다는 짝 — 지우면 응집을 이유로 잡을 `ios-test.yml` 안으로 옮겨 iOS 만 바뀐 PR 의 경로에 빌드 시간을 더하거나, 아티팩트 이름을 한쪽만 바꿔 샤드가 백엔드 없이 뜨게 된다 |
+

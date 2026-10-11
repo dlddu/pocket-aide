@@ -323,3 +323,32 @@ struct TodoScreen {
         }
     }
 }
+
+struct SeededTodo {
+    let id: Int64
+    let area: TodoUIArea
+    let title: String
+}
+
+extension BackendAPI {
+    @discardableResult
+    func addTodo(
+        _ title: String,
+        in area: TodoUIArea,
+        memo: String = "",
+        dueDate: String? = nil,
+        priority: String? = nil,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) -> SeededTodo? {
+        var body: [String: Any] = ["title": title, "memo": memo]
+        if let dueDate { body["due_date"] = dueDate }
+        if let priority { body["priority"] = priority }
+        let reply = call("POST", "/api/todos/\(area.rawValue)", json: body)
+        guard reply.status == 201, let id = (reply.json?["id"] as? NSNumber)?.int64Value else {
+            XCTFail("POST /api/todos/\(area.rawValue) should create '\(title)': \(reply.status) \(reply.text)", file: file, line: line)
+            return nil
+        }
+        return SeededTodo(id: id, area: area, title: title)
+    }
+}
