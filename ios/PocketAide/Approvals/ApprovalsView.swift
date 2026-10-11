@@ -35,7 +35,6 @@ struct ApprovalsView: View {
                 Task { await viewModel.load() }
             }
         }
-        .accessibilityIdentifier("approvals.screen")
     }
 
     private var header: some View {
