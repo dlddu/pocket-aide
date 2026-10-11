@@ -33,6 +33,13 @@ extension TodoArea {
         }
     }
 
+    var headerDotShape: AreaLabel.DotShape {
+        switch self {
+        case .personal: return .circle
+        case .work: return .square
+        }
+    }
+
     var checkSize: CGFloat {
         switch self {
         case .personal: return 24
@@ -130,6 +137,10 @@ struct TodoListView: View {
             area: tone,
             title: area.screenTitle,
             titleSize: 28,
+            labelShowsDot: true,
+            labelDotShape: area.headerDotShape,
+            labelDotSize: 8,
+            labelSpacing: DesignTokens.Spacing.xs,
             subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),
             subtitleIdentifier: "\(idPrefix).summary",
             subtitleMonospaced: area == .work,
