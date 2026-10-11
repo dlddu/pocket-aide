@@ -245,3 +245,33 @@ public extension APIClient {
         }
     }
 }
+
+public enum ApprovalPushPayload {
+    public static func approvalID(from info: [AnyHashable: Any]) -> String? {
+        guard let raw = info["approval_id"] as? String, !raw.isEmpty else { return nil }
+        return raw
+    }
+
+    public static func deepLinkURL(fromUserInfo info: [AnyHashable: Any]) -> URL? {
+        guard let id = approvalID(from: info) else { return nil }
+        var components = URLComponents()
+        components.scheme = "pocketaide"
+        components.host = "approvals"
+        components.queryItems = [URLQueryItem(name: "id", value: id)]
+        return components.url
+    }
+
+    public static func approvalID(fromDeepLink url: URL) -> String? {
+        guard url.scheme == "pocketaide", url.host == "approvals",
+              let id = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "id" })?.value,
+              !id.isEmpty else { return nil }
+        return id
+    }
+}
+
+public enum PushDeepLink {
+    public static func url(fromUserInfo info: [AnyHashable: Any]) -> URL? {
+        ApprovalPushPayload.deepLinkURL(fromUserInfo: info) ?? PRMonitorPushPayload.deepLinkURL(fromUserInfo: info)
+    }
+}

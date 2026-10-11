@@ -29,7 +29,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         // scene has installed its observer.
         if let response = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
             NSLog("[AppDelegate] cold-start launchOptions push payload: %@", String(describing: response))
-            if let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: response) {
+            if let url = PushDeepLink.url(fromUserInfo: response) {
                 Task { @MainActor in
                     DeepLinkRouter.shared.receive(url)
                 }
@@ -72,7 +72,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) {
         let info = response.notification.request.content.userInfo
         NSLog("[AppDelegate] didReceive response userInfo=%@", String(describing: info))
-        if let url = PRMonitorPushPayload.deepLinkURL(fromUserInfo: info) {
+        if let url = PushDeepLink.url(fromUserInfo: info) {
             Task { @MainActor in
                 DeepLinkRouter.shared.receive(url)
             }

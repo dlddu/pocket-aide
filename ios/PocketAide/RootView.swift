@@ -10,6 +10,7 @@ struct RootView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
+    @Binding var openedApprovalID: String?
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
 
@@ -27,10 +28,15 @@ struct RootView: View {
         UITabBar.appearance().standardAppearance = appearance
     }()
 
-    init(selectedTab: Binding<RootTab>, highlightedEventID: Binding<Int64?> = .constant(nil)) {
+    init(
+        selectedTab: Binding<RootTab>,
+        highlightedEventID: Binding<Int64?> = .constant(nil),
+        openedApprovalID: Binding<String?> = .constant(nil)
+    ) {
         _ = Self.approvalBadgeAppearance
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
+        _openedApprovalID = openedApprovalID
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
         _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
     }
@@ -100,7 +106,7 @@ struct RootView: View {
                 PRMonitorView(highlightedEventID: $highlightedEventID)
             }
             Tab("승인", systemImage: "checkmark.shield", value: RootTab.approval) {
-                ApprovalsView(viewModel: approvals)
+                ApprovalsView(viewModel: approvals, openedApprovalID: $openedApprovalID)
             }
             .badge(approvals.pendingCount)
             Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/dlddu/pocket-aide/backend/internal/approvalpush"
 	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 )
@@ -124,7 +125,11 @@ func callerFromContext(ctx context.Context) (approvals.Caller, bool) {
 	return c, ok
 }
 
-func CreateExternalApproval(store *approvals.Store) http.HandlerFunc {
+type ApprovalPusher interface {
+	Notify(req approvalpush.Request)
+}
+
+func CreateExternalApproval(store *approvals.Store, push ApprovalPusher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		caller, ok := callerFromContext(r.Context())
 		if !ok {
@@ -171,6 +176,14 @@ func CreateExternalApproval(store *approvals.Store) http.HandlerFunc {
 			CreatedAt: created.CreatedAt,
 			ExpiresAt: created.ExpiresAt,
 		})
+		if push != nil {
+			push.Notify(approvalpush.Request{
+				UserID:     caller.UserID,
+				KeyName:    caller.Name,
+				ApprovalID: created.ID,
+				Context:    in.Context,
+			})
+		}
 	}
 }
 

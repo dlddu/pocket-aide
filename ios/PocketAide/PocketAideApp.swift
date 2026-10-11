@@ -1,4 +1,5 @@
 import Foundation
+import PocketAideAPI
 import SwiftUI
 import UIKit
 
@@ -10,11 +11,12 @@ struct PocketAideApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab: RootTab = .affirmations
     @State private var highlightedEventID: Int64?
+    @State private var openedApprovalID: String?
     @State private var showsWeather = false
 
     var body: some Scene {
         WindowGroup {
-            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID)
+            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID)
                 .environmentObject(auth)
                 .sheet(isPresented: $showsWeather) { WeatherView() }
                 .task { await auth.bootstrap() }
@@ -87,6 +89,12 @@ struct PocketAideApp: App {
             selectedTab = .prMonitor
             NSLog("[PocketAideApp] selectedTab set to .prMonitor, highlightedEventID=%@",
                   highlightedEventID.map(String.init) ?? "<nil>")
+        case "approvals":
+            showsWeather = false
+            openedApprovalID = ApprovalPushPayload.approvalID(fromDeepLink: url)
+            selectedTab = .approval
+            NSLog("[PocketAideApp] selectedTab set to .approval, openedApprovalID=%@",
+                  openedApprovalID ?? "<nil>")
         default:
             break
         }

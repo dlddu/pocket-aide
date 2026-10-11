@@ -28,7 +28,8 @@
   같은 날 앱 상세·결정 화면(카운트다운·확인 단계·409 안내, rct_20261011-0007)에 맞춰 시나리오 5·8·9·10·15·16을 다시 판정했다.
   같은 날 앱 승인 게이트 설정의 호출자 키 화면(발급·원문 1회·목록·폐기, rct_20261011-0012)에 맞춰 시나리오 1·2·16을 다시 판정했다.
   같은 날 처리 이력(서버 이력 API·앱 이력 화면, rct_20261011-0018)에 맞춰 시나리오 11·12·16을 다시 판정했다.
-  푸시·자동 응답은 아직 없어, 그 단계에 기대는 시나리오는 「부분 구현」 또는 「미구현」이다.
+  같은 날 신규 요청 푸시(APNs 발송·알림 탭 → 상세, rct_20261011-0027)에 맞춰 시나리오 6·7을 다시 판정했다.
+  자동 응답과 잠금화면 알림 액션은 아직 없어, 그 단계에 기대는 시나리오는 「부분 구현」 또는 「미구현」이다.
 - 관찰자가 둘이다. **호출자**(외부 자동화)의 관찰 지점은 호출자 API(`/api/external/approvals`)의 HTTP 응답이고,
   **사용자**의 관찰 지점은 앱 화면이다. 호출자 쪽 단계는 `curl` 같은 HTTP 클라이언트로 수행한다고 읽는다.
 - 「사용자 A」「사용자 B」는 서로 다른 OIDC 계정이다. CI에서는 oidcmock이 발급하는 두 계정으로 대신한다
@@ -145,8 +146,8 @@
   - 3단계: 앱이 실행되며 곧바로 그 요청의 상세가 열린다. 상세에 `context` 전문·요청자 이름(`Deploy Bot`)·키 이름(`infra-ci`)·`externalId`·생성 시각·상태가 보인다.
   - 푸시를 누른 것만으로는 결정되지 않는다 — 상태는 `PENDING`이다.
 - **검증 AC**: AC10, AC6, AC13
-- **구현 상태**: 미구현
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 — 호출자 키로 요청이 만들어지면 서버가 응답과 별개로 그 사용자의 등록 기기 전부에 APNs 푸시를 보낸다. 제목은 「승인 요청 · <키 이름>」(호출자가 밝힌 `requesterName`이 아니라 실제 키 이름), 본문은 `context`, 페이로드에 요청 id(`approval_id`)가 실린다. 앱은 `approval_id`가 있는 알림을 누르면(앱이 종료된 상태 포함) 승인 탭을 고르고 그 요청을 불러와 상세를 연다 — `approval_id`가 없는 알림은 전처럼 PR 모니터로 간다. 알림을 누르는 것은 결정하지 않는다.
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalPushUITests.swift`(발송 요청은 가짜 APNs 수신부에서, 3단계 진입은 알림이 여는 딥링크 `pocketaide://approvals?id=<id>`로 관찰), `ios/PocketAideUnitTests/ApprovalPushPayloadTests.swift`, `backend/internal/approvalpush/notifier_test.go` — `TestSendGoesToEveryDeviceOfTheOwner`, `backend/internal/handlers/approval_push_test.go` — `TestApprovalCreatePushesKeyNameAndContext`
 
 
 ### 시나리오 7: 긴 요청도 푸시가 나가고, 푸시 장애가 요청 생성을 막지 않는다
@@ -160,8 +161,8 @@
   - 2단계: 생성 응답이 발송 실패를 기다리지 않고 바로 201로 온다.
   - 3단계: 두 요청 모두 대기 목록에 있다.
 - **검증 AC**: AC10
-- **구현 상태**: 미구현
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 — 1단계: 본문은 `context` 앞부분을 직렬화된 페이로드가 4096바이트 안에 들도록 잘라 「…」로 끝낸다. 2단계: 발송은 생성 응답을 쓴 뒤 별도 고루틴에서 하므로(시간 제한 30초) APNs가 응답하지 않아도 생성은 바로 201이다. APNs가 무효 토큰(`BadDeviceToken`·`Unregistered`·`DeviceTokenNotForTopic`·410)으로 거절하면 그 토큰을 지운다. 3단계: 두 요청 모두 대기 목록에 있다.
+- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalLongPushUITests.swift`(1·3단계 — 2단계의 APNs 무응답은 CI 가짜 수신부로 만들 수 없어 서버 테스트가 맡는다), `backend/internal/handlers/approval_push_test.go` — `TestApprovalCreateDoesNotWaitForPush`, `backend/internal/approvalpush/notifier_test.go` — `TestLongContextIsCutToFitThePayload`, `TestInvalidTokensAreDroppedOthersKept`, `TestNotifyReturnsBeforeTheSendFinishes`, `backend/internal/apns/payload_test.go` — `TestFitAlertBodyCutsToThePayloadLimit`, `TestSendWithDataReportsRejections`
 
 
 ### 시나리오 8: 상세의 남은 시간이 0이 되면 결정할 수 없다

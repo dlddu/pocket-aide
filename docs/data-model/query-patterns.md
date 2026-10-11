@@ -73,6 +73,7 @@
 | Q-61 | `update approval_caller_keys \| eq(id, revoked_at, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::RevokeKey` |
 | Q-62 | `select approval_caller_keys \| eq(id, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::getKey` |
 | Q-63 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.user_id) \| - \| order(coalesce(r.processed_at,r.expires_at) desc, approval_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); approval_requests: idx_approval_requests_user_status_created | `backend/internal/approvals/store.go::Store::ListHistory` |
+| Q-64 | `delete device_tokens \| eq(token, user_id) \| - \| -` | UNIQUE(device_tokens.token) | `backend/internal/devicetokens/store.go::Store::Delete` |
 
 ## 수동 형태
 
@@ -105,4 +106,3 @@
 | `idx_approval_caller_keys_active_name` | `approval_caller_keys` | `Q-58` 삽입의 무결성 제약(`revoked_at IS NULL` 부분 UNIQUE) — 위반이 `ErrDuplicateName` 이 된다 |
 | `idx_notif_history_user_created` | `notification_history` | - |
 | `idx_users_oidc_sub` | `users` | `UNIQUE(users.oidc_sub)` 와 컬럼이 같다 — 엔진은 `Q-06` 에 UNIQUE 쪽을 고른다 |
-| `UNIQUE(device_tokens.token)` | `device_tokens` | `Q-08` 의 `ON CONFLICT(token)` 충돌 대상 — 쓰기 패턴이라 플랜 판정 밖이다 |
