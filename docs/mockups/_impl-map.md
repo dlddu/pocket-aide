@@ -37,7 +37,7 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록(머리 정렬 칩)·우선순위 점 범례·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | 부분 | `screen-approval` | 승인 탭 1차(#244) — 「대기 목록」 프레임의 헤더(`AreaLabel` 「APPROVAL · GATE」·제목 「승인」·대기 수 배지)·「대기 · N건」 섹션 머리·요청 카드(보낸 키 칩·남은 시간·요약·요청자 · 시각·폐기된 키 경고)와 「빈 상태」 프레임의 안내 문구, 그리고 목업에 없는 오류 배너. 요청 상세·결정 확인·처리 이력·자동 응답 모드(헤더 줄·배너·설정)·호출자 키 발급은 아직 구현되지 않았다. 하단 TabBar 는 `RootView.swift` 행 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | 부분 | `screen-approval` | 승인 탭 1차(#244) — 「대기 목록」 프레임의 헤더(`AreaLabel` 「APPROVAL · GATE」·제목 「승인」·대기 수 배지)·「대기 · N건」 섹션 머리·요청 카드(보낸 키 칩·남은 시간·요약·요청자 · 시각·폐기된 키 경고)와 「빈 상태」 프레임의 안내 문구, 「오류」 프레임의 오류 배너(제목·오류 설명·다시 시도). 요청 상세·결정 확인·처리 이력·자동 응답 모드(헤더 줄·배너·설정)·호출자 키 발급은 아직 구현되지 않았다. 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Approvals/ApprovalsViewModel.swift` | 비렌더링 | — | 대기 승인 요청 목록·대기 수·오류 상태와 API 호출 |
 | `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
 | `ios/PocketAide/AppDelegate.swift` | 비렌더링 | — | 앱 수명주기·푸시 등록 |
