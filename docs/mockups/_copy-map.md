@@ -35,22 +35,21 @@ last_updated: 2026-10-11
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 2행, 표 B `구현 대기` 80행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 80행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 135 |
+| A | 일치 | 137 |
 | A | 데이터 | 6 |
 | A | 비표시 | 16 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
-| A | 목업 대기 | 2 |
-| B | 일치 | 180 |
+| B | 일치 | 182 |
 | B | 외부 | 40 |
-| B | 예시 데이터 | 135 |
-| B | 목업 전용 | 125 |
+| B | 예시 데이터 | 136 |
+| B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 80 |
@@ -87,8 +86,8 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기` | 일치 | 헤더 대기 수 배지 아래 라벨 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 목업 대기 | 오류 배너 제목 — 목업은 조회 오류 상태를 그리지 않는다 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 목업 대기 | 오류 배너 재시도 버튼 — 목업은 조회 오류 상태를 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 일치 | 오류 배너 제목 — 「오류」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
@@ -236,7 +235,7 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 573행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 577행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -374,6 +373,10 @@ last_updated: 2026-10-11
 | `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | 빈 상태 안내(`ApprovalsView.swift`) |
 | `screen-approval` | `자동 응답 모드` | 구현 대기 | 빈 상태의 현재 모드 줄 · 설정 섹션 머리 — 자동 응답 모드가 구현에 없다(AC9·AC12) |
 | `screen-approval` | `— 새 요청은 알림으로 받습니다.` | 구현 대기 | 빈 상태의 현재 모드 설명 — 같은 이유(AC12) |
+| `screen-approval` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `승인 요청을 불러오지 못했습니다` | 일치 | 「오류」 프레임 오류 배너 제목(`ApprovalsView.swift`) |
+| `screen-approval` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `ApprovalsViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
+| `screen-approval` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼(`ApprovalsView.swift`) |
 | `screen-approval` | `자동 응답 모드 켜짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `1` | 예시 데이터 | 대기 수(자동 응답 모드 프레임 헤더 배지·탭 배지) |
 | `screen-approval` | `자동 거절 모드가 켜져 있습니다.` | 구현 대기 | 자동 응답 모드 배너 — 같은 이유(AC9) |
