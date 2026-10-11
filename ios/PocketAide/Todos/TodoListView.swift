@@ -68,6 +68,13 @@ extension TodoArea {
         }
     }
 
+    var rowTitleWeight: Font.Weight {
+        switch self {
+        case .personal: return .regular
+        case .work: return .medium
+        }
+    }
+
     var listTopInset: CGFloat {
         switch self {
         case .personal: return DesignTokens.Spacing.xs
@@ -197,8 +204,8 @@ struct TodoListView: View {
             if viewModel.items.isEmpty {
                 emptyState
             } else {
-                section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, isLastSection: viewModel.doneItems.isEmpty)
-                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, isLastSection: true)
+                section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, titleOpacity: 1, isLastSection: viewModel.doneItems.isEmpty)
+                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isLastSection: true)
             }
         }
         .listStyle(.plain)
@@ -226,7 +233,7 @@ struct TodoListView: View {
     }
 
     @ViewBuilder
-    private func section(title: String, items: [TodoItem], isLastSection: Bool) -> some View {
+    private func section(title: String, items: [TodoItem], titleOpacity: Double, isLastSection: Bool) -> some View {
         if !items.isEmpty {
             Section {
                 ForEach(items) { item in
@@ -252,7 +259,7 @@ struct TodoListView: View {
                 Text("\(title) · \(items.count)")
                     .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))
                     .tracking(area.sectionTitleTracking)
-                    .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7))
+                    .foregroundStyle(DesignTokens.Color.ink(tone).opacity(titleOpacity))
                     .textCase(area.sectionTitleCase)
             }
         }
@@ -306,7 +313,7 @@ private struct TodoRow: View {
             .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).toggle")
             VStack(alignment: .leading, spacing: 6) {
                 Text(item.title)
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .medium))
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))
                     .lineHeight(.multiple(factor: 1.375))
                     .foregroundStyle(DesignTokens.Color.ink(tone))
                     .strikethrough(item.isDone)
