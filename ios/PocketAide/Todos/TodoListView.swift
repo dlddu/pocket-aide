@@ -201,7 +201,7 @@ struct TodoListView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))
                 .font(.system(size: 14))
-            TextField(area.searchPrompt, text: $viewModel.query)
+            TextField(area.searchPrompt, text: $viewModel.query, prompt: Text(area.searchPrompt).foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45)))
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))
                 .foregroundStyle(DesignTokens.Color.ink(tone))
                 .autocorrectionDisabled()
