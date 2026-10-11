@@ -40,7 +40,7 @@
 2. 주석마다 시험을 적용해 지우거나 · 고치거나 · 옮기거나 · 사유와 함께 남긴다.
 3. `passes/<판정일>-<slug>.md` 에 제거 목록(불필요 유형)과 유지 목록(사유 한 문장)을 적는다. 같은 범위의 증분 재판정은 새 파일을 만들지 않고 원래 패스 파일에 절을 더한다.
 4. 해당 행의 줄 수·지문을 `python3 scripts/comment-policy/check_ledger.py --rows` 의 출력으로 갱신하고 판정 칸을 `완료` 로, 결과 칸에 요약과 패스 파일 링크를 적는다.
-5. 게이트(`python3 scripts/comment-policy/check_ledger.py`)가 초록이어야 한다. CI 워크플로 `comment-policy` 가 PR 과 `main` push 마다 같은 검사를 돌린다.
+5. 게이트(`python3 scripts/comment-policy/check_ledger.py`)가 초록이어야 한다. CI 워크플로 `CI`(`.github/workflows/ci.yml`)의 `comment-policy ledger` 잡이 PR 과 `main` push 마다 같은 검사를 돌린다.
 
 주석을 **새로 들이는** PR(판정 패스가 아닌 기능 PR 포함)도 게이트를 지나야 한다 — 원장 「읽는 법」의 마지막 항목대로 자기 파일의 행만 고친다.
 
