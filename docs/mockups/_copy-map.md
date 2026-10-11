@@ -7,7 +7,7 @@ last_updated: 2026-10-11
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 18개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 19개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -35,26 +35,27 @@ last_updated: 2026-10-11
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 80행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 5행, 표 B `구현 대기` 71행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 137 |
+| A | 일치 | 147 |
 | A | 데이터 | 6 |
-| A | 비표시 | 14 |
+| A | 비표시 | 21 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
-| B | 일치 | 182 |
-| B | 외부 | 40 |
+| A | 목업 대기 | 5 |
+| B | 일치 | 189 |
+| B | 외부 | 42 |
 | B | 예시 데이터 | 136 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 80 |
+| B | 구현 대기 | 71 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 174행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 196행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -82,6 +83,28 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 일치 | 편집 모드 파괴적 액션 — 목업 편집 모드 프레임의 외곽선 버튼(생성 모드엔 없음) |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `취소` | 일치 | 확인 다이얼로그 취소 버튼 — 「결정 확인」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `승인` | 일치 | 결정 버튼 「승인」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(승인) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `거절` | 일치 | 결정 버튼 「거절」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(거절) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 상세 폐기된 키 경고 — 목업은 「자동 응답 모드 켜짐」 프레임 대기 카드(상세 프레임에는 폐기된 키 요청이 없다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `남은 시간` | 일치 | 카운트다운 라벨 — 「요청 상세」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `보낸 키` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `key` | 비표시 | `fact(_:_:id:)` 의 `id:` 인자 — `accessibilityIdentifier("approval.detail.\(id)")` 접미사, 화면에 그려지지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청자` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `—` | 목업 대기 | 요청자 이름이 비었거나 시각이 없을 때의 대체 문자 — 목업 상세는 요청자·시각이 다 있는 요청만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `requester` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 ID` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `externalId` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 시각` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `createdAt` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `상태` | 목업 대기 | 메타 「상태」(값 `ApprovalFormatting.statusLabel`) — 목업 상세 `dl` 은 보낸 키·요청자·요청 ID·요청 시각 넷뿐이다 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `status` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 방식` | 목업 대기 | 처리된 요청의 메타 「처리 방식」 — 목업은 처리된 요청의 상세 프레임을 그리지 않는다(낱말은 처리 이력 설계 주석에만 있다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `mode` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 시각` | 목업 대기 | 처리된 요청의 메타 「처리 시각」 — 같은 이유(HTML 주석에만 있다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `processedAt` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `최신 상태를 불러오지 못했습니다` | 목업 대기 | 상세 재조회 실패 배너 제목 — 목업 상세에 오류 상태 프레임이 없다 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `다시 시도` | 일치 | 상세 재조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`AreaLabel`) — 「대기 목록」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
@@ -307,7 +330,7 @@ last_updated: 2026-10-11
 | `screen-approval` | `대기 목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-approval` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`ApprovalsView.swift`) |
-| `screen-approval` | `승인` | 일치 | 헤더 제목(`ApprovalsView.swift`) · 탭 바 셋째 칸 · 상세 백버튼(`RootView.swift`) |
+| `screen-approval` | `승인` | 일치 | 헤더 제목·상세 백버튼(`ApprovalsView.swift` — 숨긴 내비게이션 바의 `navigationTitle`) · 탭 바 셋째 칸(`RootView.swift`) · 상세 결정 버튼(`ApprovalDetailView.swift`) |
 | `screen-approval` | `자동 응답` | 구현 대기 | 헤더 아래 「자동 응답 <모드>」 줄 — 구현 헤더에 자동 응답 모드 표시가 없다(PRD-12 AC9) |
 | `screen-approval` | `없음` | 구현 대기 | 헤더 「자동 응답」 줄의 모드 값 — 같은 이유 |
 | `screen-approval` | `3` | 예시 데이터 | 대기 수(헤더 배지·탭 배지) |
@@ -332,22 +355,22 @@ last_updated: 2026-10-11
 | `screen-approval` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음) |
 | `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `남은 시간` | 구현 대기 | 요청 상세 카운트다운 라벨 — 요청 상세 화면이 구현에 없다(PRD-12 AC6) |
+| `screen-approval` | `남은 시간` | 일치 | 요청 상세 카운트다운 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `03:48` | 예시 데이터 | 상세 카운트다운 값 |
 | `screen-approval` | `작업: dear-baby 구버전 리소스 정리 (3/5) 대상: deployment/dear-baby-api 네임스페이스: prod 동작: delete (propagationPolicy=Foreground) 사유: v2 롤아웃(dear-baby-api-v2) 완료 후 트래픽 0 확인 — 최근 24시간 요청 0건 남은 단계: 4/5 service/dear-baby-api 삭제 5/5 configmap/dear-baby-api-env 삭제` | 예시 데이터 | 요청 내용 전문(호출자가 보낸 텍스트) |
-| `screen-approval` | `보낸 키` | 구현 대기 | 요청 상세 메타 라벨 — 요청 상세 화면이 구현에 없다(PRD-12 AC6) |
-| `screen-approval` | `요청자` | 구현 대기 | 요청 상세 메타 라벨 — 같은 이유 |
+| `screen-approval` | `보낸 키` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `요청자` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `Claude Code · homelab 정리 세션` | 예시 데이터 | 요청자 이름 |
-| `screen-approval` | `요청 ID` | 구현 대기 | 요청 상세 메타 라벨 — 같은 이유 |
+| `screen-approval` | `요청 ID` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `cleanup-20261005-3` | 예시 데이터 | 요청 ID |
-| `screen-approval` | `요청 시각` | 구현 대기 | 요청 상세 메타 라벨 — 같은 이유 |
+| `screen-approval` | `요청 시각` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `09:41:02` | 예시 데이터 | 요청 시각 |
-| `screen-approval` | `거절` | 구현 대기 | 결정 버튼 — 결정 화면이 구현에 없다(PRD-12 AC7) |
+| `screen-approval` | `거절` | 일치 | 요청 상세 결정 버튼(`ApprovalDetailView.swift`) |
 | `screen-approval` | `결정 확인` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `03:31` | 예시 데이터 | 상세 카운트다운 값 |
-| `screen-approval` | `승인할까요?` | 구현 대기 | 결정 확인 다이얼로그 제목 — 같은 이유(AC7) |
-| `screen-approval` | `deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.` | 구현 대기 | 결정 확인 다이얼로그 본문(요약 + 고정 문구) — 같은 이유(AC7) |
-| `screen-approval` | `취소` | 구현 대기 | 결정 확인 다이얼로그 버튼 — 같은 이유(AC7) |
+| `screen-approval` | `승인할까요?` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 결정 확인 다이얼로그 제목 — `ApprovalFormatting.confirmTitle` |
+| `screen-approval` | `deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 결정 확인 다이얼로그 본문 — `ApprovalFormatting.confirmMessage`(요약 + 목적격 조사 + 고정 문구) |
+| `screen-approval` | `취소` | 일치 | 결정 확인 다이얼로그 취소 버튼(`ApprovalDetailView.swift`) |
 | `screen-approval` | `2` | 예시 데이터 | 대기 수(처리 이력 프레임 헤더 배지·탭 배지) |
 | `screen-approval` | `승인됨` | 구현 대기 | 처리 이력 결과 — 처리 이력 화면이 구현에 없다(AC8) |
 | `screen-approval` | `09:44:20` | 예시 데이터 | 처리 시각 |

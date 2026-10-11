@@ -6,6 +6,7 @@ struct ApprovalsView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var viewModel: ApprovalsViewModel
+    @State private var path: [ApprovalRequest] = []
 
     private static let area: DesignTokens.Area = .prMonitor
 
@@ -17,11 +18,23 @@ struct ApprovalsView: View {
     }()
 
     var body: some View {
-        ZStack {
-            DesignTokens.Color.surface(Self.area).ignoresSafeArea()
-            VStack(spacing: 0) {
-                header
-                list
+        NavigationStack(path: $path) {
+            ZStack {
+                DesignTokens.Color.surface(Self.area).ignoresSafeArea()
+                VStack(spacing: 0) {
+                    header
+                    list
+                }
+            }
+            .navigationTitle("승인")
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: ApprovalRequest.self) { item in
+                ApprovalDetailView(item: item, api: viewModel.api ?? auth.api)
+            }
+        }
+        .onChange(of: path) { _, newPath in
+            if newPath.isEmpty {
+                Task { await viewModel.load() }
             }
         }
         .task {
@@ -171,7 +184,9 @@ struct ApprovalsView: View {
     }
 
     private func row(for item: ApprovalRequest) -> some View {
-        Group {
+        Button {
+            path.append(item)
+        } label: {
             if item.expiresAt == nil {
                 card(for: item, now: Date())
             } else {
@@ -180,6 +195,7 @@ struct ApprovalsView: View {
                 }
             }
         }
+        .buttonStyle(.plain)
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 5, leading: DesignTokens.Spacing.xl, bottom: 5, trailing: DesignTokens.Spacing.xl))
