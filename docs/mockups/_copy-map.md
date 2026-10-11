@@ -7,7 +7,7 @@ last_updated: 2026-10-11
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 19개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 21개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -35,27 +35,27 @@ last_updated: 2026-10-11
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 5행, 표 B `구현 대기` 71행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 11행, 표 B `구현 대기` 56행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 147 |
+| A | 일치 | 158 |
 | A | 데이터 | 6 |
-| A | 비표시 | 21 |
+| A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
-| A | 목업 대기 | 5 |
-| B | 일치 | 189 |
-| B | 외부 | 42 |
-| B | 예시 데이터 | 136 |
+| A | 목업 대기 | 11 |
+| B | 일치 | 197 |
+| B | 외부 | 48 |
+| B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 71 |
+| B | 구현 대기 | 56 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 196행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 217행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -105,10 +105,31 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `processedAt` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `최신 상태를 불러오지 못했습니다` | 목업 대기 | 상세 재조회 실패 배너 제목 — 목업 상세에 오류 상태 프레임이 없다 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `다시 시도` | 일치 | 상세 재조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `승인 게이트 설정` | 일치 | 설정 화면 제목 — 「설정」·「키 발급」 프레임 `h2` |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 목업에 두 상태 프레임은 없고, 같은 문구가 「결정 확인」 프레임 취소 버튼에 있다(대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `폐기` | 일치 | 키 행 「폐기」 버튼 — 「설정」 프레임 · 폐기 확인 대화상자 확정 버튼 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키` | 일치 | 섹션 머리 — 「설정」·「키 발급」 프레임(stamp uppercase accent) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 목업 대기 | 빈 목록 안내 — 목업 「설정」 프레임은 키가 있는 목록만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `+ 호출자 키 발급` | 일치 | 점선 발급 버튼 — 「설정」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 목업 대기 | 목록 조회 실패 배너 제목 — 목업에 설정 화면 오류 상태 프레임이 없다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 목업 대기 | 발급 입력 시트 제목 — 목업은 발급 직후(원문 표시) 시트만 그리고 이름 입력 단계는 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 이름` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임(발급 입력 시트에서도 같은 라벨) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 목업 대기 | 발급 입력 시트 이름 필드 placeholder — 같은 문자열이 「설정」 프레임 키 이름 칩(표 B `예시 데이터`)에 있을 뿐, 입력 단계 프레임이 없다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰이고 화면에 그려지지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 목업 대기 | 발급 입력 시트 확정 버튼 — 입력 단계 프레임이 없다(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.submit` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `키 원문` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 목업 대기 | 복사 뒤 버튼 라벨 — 목업은 복사 전 상태만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사` | 일치 | 시트 주 버튼 — 「키 발급」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.copy` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `완료` | 일치 | 시트 보조 버튼 — 「키 발급」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.done` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`AreaLabel`) — 「대기 목록」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기` | 일치 | 헤더 대기 수 배지 아래 라벨 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 게이트 설정` | 일치 | 헤더 설정 버튼의 `accessibilityLabel` — 목업 헤더 설정 버튼 `title`(글리프는 `gearshape`) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 일치 | 오류 배너 제목 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구 |
@@ -336,7 +357,7 @@ last_updated: 2026-10-11
 | `screen-approval` | `3` | 예시 데이터 | 대기 수(헤더 배지·탭 배지) |
 | `screen-approval` | `대기` | 일치 | 헤더 대기 수 배지 라벨(`ApprovalsView.swift`) |
 | `screen-approval` | `처리 이력` | 구현 대기 | 처리 이력 섹션 머리·헤더 이력 버튼(그리고 프레임 캡션) — 처리 이력 화면이 구현에 없다(PRD-12 AC8) |
-| `screen-approval` | `승인 게이트 설정` | 구현 대기 | 헤더 설정 버튼·설정 화면 제목 — 설정 화면이 구현에 없다(PRD-12 AC9·AC13) |
+| `screen-approval` | `승인 게이트 설정` | 일치 | 헤더 설정 버튼 `title`(`ApprovalsView.swift` `accessibilityLabel`) · 설정 화면 제목(`ApprovalKeysView.swift`) |
 | `screen-approval` | `대기 · 3건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
 | `screen-approval` | `k3s-mcp` | 예시 데이터 | 보낸 키 이름 칩 |
 | `screen-approval` | `04:12 남음` | 예시 데이터 | 남은 시간 — 서식은 `ApprovalFormatting.remaining` |
@@ -408,24 +429,24 @@ last_updated: 2026-10-11
 | `screen-approval` | `k3s-mcp · 09:30` | 예시 데이터 | 요청자 자리(요청자 이름 대신 키 이름) · 시각 |
 | `screen-approval` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고(`ApprovalsView.swift`) |
 | `screen-approval` | `설정 — 자동 응답·호출자 키` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `없음 — 알림으로 받기` | 구현 대기 | 설정 자동 응답 선택지 — 설정 화면이 구현에 없다(AC9) |
+| `screen-approval` | `없음 — 알림으로 받기` | 구현 대기 | 설정 자동 응답 선택지 — 설정 화면(`ApprovalKeysView.swift`)에 「자동 응답 모드」 섹션이 없다(AC9) |
 | `screen-approval` | `자동 승인` | 구현 대기 | 설정 자동 응답 선택지 — 같은 이유(AC9) |
-| `screen-approval` | `호출자 키` | 구현 대기 | 설정 섹션 머리 — 호출자 키 관리가 구현에 없다(AC13·AC14) |
-| `screen-approval` | `폐기` | 구현 대기 | 호출자 키 폐기 버튼 — 같은 이유(AC14) |
-| `screen-approval` | `pak_7Hq2… · 발급 09/29 · 마지막 사용 09:41` | 구현 대기 | 호출자 키 메타 줄(접두 · 「발급」 · 「마지막 사용」 고정 문구 + 값) — 같은 이유(AC13) |
-| `screen-approval` | `pak_Xm91… · 발급 09/30 · 마지막 사용 09:20` | 구현 대기 | 호출자 키 메타 줄 — 같은 이유(AC13) |
-| `screen-approval` | `폐기됨 10/03` | 구현 대기 | 폐기된 키 표시 — 같은 이유(AC14) |
-| `screen-approval` | `pak_b3Kd… · 발급 09/12 · 마지막 사용 10/03` | 구현 대기 | 호출자 키 메타 줄 — 같은 이유(AC13) |
-| `screen-approval` | `+ 호출자 키 발급` | 구현 대기 | 호출자 키 발급 버튼 — 같은 이유(AC13) |
+| `screen-approval` | `호출자 키` | 일치 | 설정 섹션 머리(`ApprovalKeysView.swift`) |
+| `screen-approval` | `폐기` | 일치 | 호출자 키 폐기 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `pak_7Hq2… · 발급 09/29 · 마지막 사용 09:41` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(접두 + 「…」 · 「발급 MM/dd」 · 「마지막 사용 HH:mm」(오늘)/「MM/dd」), 값은 예시 |
+| `screen-approval` | `pak_Xm91… · 발급 09/30 · 마지막 사용 09:20` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(위와 같음) |
+| `screen-approval` | `폐기됨 10/03` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 폐기된 키 표시 — `ApprovalKeyFormatting.revokedLabel`(「폐기됨 MM/dd」) |
+| `screen-approval` | `pak_b3Kd… · 발급 09/12 · 마지막 사용 10/03` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(마지막 사용이 오늘이 아니면 날짜) |
+| `screen-approval` | `+ 호출자 키 발급` | 일치 | 호출자 키 발급 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `키 발급 — 원문 1회 표시` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `pak_7Hq2… · 발급 09/29` | 구현 대기 | 키 발급 시트 뒤 목록의 키 메타 줄 — 같은 이유(AC13) |
-| `screen-approval` | `호출자 키를 발급했습니다` | 구현 대기 | 키 발급 시트 제목 — 같은 이유(AC13) |
-| `screen-approval` | `호출자 이름` | 구현 대기 | 키 발급 시트 필드 라벨 — 같은 이유(AC13) |
-| `screen-approval` | `키 원문` | 구현 대기 | 키 발급 시트 필드 라벨 — 같은 이유(AC13) |
+| `screen-approval` | `pak_7Hq2… · 발급 09/29` | 예시 데이터 | 키 발급 시트 뒤 목록의 키 메타 줄 — 「설정」 프레임 첫 행과 같은 키(`k3s-mcp`)를 「마지막 사용」 없이 줄여 그린 배경. 구현은 같은 자리를 `ApprovalKeyFormatting.meta` 로 그리고 「마지막 사용 …」(값이 없으면 「없음」)을 늘 붙인다 |
+| `screen-approval` | `호출자 키를 발급했습니다` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 키 발급 시트 제목 — `ApprovalKeyFormatting.issuedTitle` |
+| `screen-approval` | `호출자 이름` | 일치 | 키 발급 시트 필드 라벨(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 원문` | 일치 | 키 발급 시트 필드 라벨(`ApprovalKeysView.swift`) |
 | `screen-approval` | `pak_Rk4vN8sQ2mTzW6yLp0eHc9JdXb7AuF3G` | 예시 데이터 | 발급된 키 원문 |
-| `screen-approval` | `이 화면을 닫으면 원문을 다시 볼 수 없습니다. 지금 복사해 호출자의 시크릿에 넣으세요.` | 구현 대기 | 키 발급 시트 경고 — 같은 이유(AC13) |
-| `screen-approval` | `복사` | 구현 대기 | 키 발급 시트 버튼 — 같은 이유(AC13) |
-| `screen-approval` | `완료` | 구현 대기 | 키 발급 시트 버튼 — 같은 이유(AC13) |
+| `screen-approval` | `이 화면을 닫으면 원문을 다시 볼 수 없습니다. 지금 복사해 호출자의 시크릿에 넣으세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 키 발급 시트 경고 — `ApprovalKeyFormatting.secretWarning` |
+| `screen-approval` | `복사` | 일치 | 키 발급 시트 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `완료` | 일치 | 키 발급 시트 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
