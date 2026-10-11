@@ -1,13 +1,13 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-09
+last_updated: 2026-10-11
 ---
 
 # 카피 ↔ 구현 대응표
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 12개 ↔ 목업 8장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 18개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -35,27 +35,27 @@ last_updated: 2026-10-09
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 0행, 표 B `구현 대기` 43행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 2행, 표 B `구현 대기` 80행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 127 |
-| A | 데이터 | 5 |
+| A | 일치 | 135 |
+| A | 데이터 | 6 |
 | A | 비표시 | 16 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
-| A | 기준 4 | 6 |
+| A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
-| A | 목업 대기 | 0 |
-| B | 일치 | 164 |
-| B | 외부 | 37 |
-| B | 예시 데이터 | 103 |
-| B | 목업 전용 | 111 |
+| A | 목업 대기 | 2 |
+| B | 일치 | 180 |
+| B | 외부 | 40 |
+| B | 예시 데이터 | 135 |
+| B | 목업 전용 | 125 |
 | B | 미구현 영역 | 10 |
-| B | 기준 4 | 4 |
-| B | 구현 대기 | 43 |
+| B | 기준 4 | 3 |
+| B | 구현 대기 | 80 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 166행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 176행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -83,6 +83,15 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 일치 | 편집 모드 파괴적 액션 — 목업 편집 모드 프레임의 외곽선 버튼(생성 모드엔 없음) |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`AreaLabel`) — 「대기 목록」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기` | 일치 | 헤더 대기 수 배지 아래 라벨 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 목업 대기 | 오류 배너 제목 — 목업은 조회 오류 상태를 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 목업 대기 | 오류 배너 재시도 버튼 — 목업은 조회 오류 상태를 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `방금 진입` | 일치 | 푸시로 진입한 그룹의 헤더 상태 라벨(`isGroupHighlighted` 일 때만) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` · ` | 일치 | 제목 줄 구분자 |
@@ -135,8 +144,9 @@ last_updated: 2026-10-09
 | `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` — `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
 | `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목(목업은 넷째 칸 — 셋째 「승인」 이 구현에 없어 구현은 셋째 칸, 표 B `승인` 행) |
-| `ios/PocketAide/RootView.swift` | `임시공간` | 기준 4 | 탭 라벨 — 낱말은 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임)과 같고 자리가 다르다: 구현은 하단 탭 바 넷째 칸, 목업은 「더 보기」 안(tokens.md §7 하단 노출) |
+| `ios/PocketAide/RootView.swift` | `승인` | 일치 | 탭 바 항목(셋째 칸, #244) |
+| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목(넷째 칸 — 목업과 같은 자리) |
+| `ios/PocketAide/RootView.swift` | `임시공간` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). #244 부터 다섯째 탭이라 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
@@ -226,7 +236,7 @@ last_updated: 2026-10-09
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 472행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 573행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -258,7 +268,7 @@ last_updated: 2026-10-09
 | `screen-affirmations` | `보통` | 일치 | 범례 항목 — 위와 같음 |
 | `screen-affirmations` | `가끔` | 일치 | 범례 항목 — 위와 같음 |
 | `screen-affirmations` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-affirmations` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-affirmations` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
@@ -276,7 +286,7 @@ last_updated: 2026-10-09
 | `screen-affirmations-priority-edit` | `결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations-priority-edit` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-affirmations-priority-edit` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-affirmations-priority-edit` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
@@ -294,6 +304,107 @@ last_updated: 2026-10-09
 | `screen-affirmations-priority-edit` | `저장` | 일치 | 1차 액션 |
 | `screen-affirmations-priority-edit` | `취소` | 일치 | 2차 액션 |
 | `screen-affirmations-priority-edit` | `PRD-5 · AC1·AC2 — 생성: 헤더 + 로 연 시트 한 장에서 문장 입력과 노출 빈도를 함께 저장(취소하면 저장 안 함). 편집: 카드를 길게 눌러 같은 시트의 편집 모드. 3-tier 단일 선택으로 노출 빈도 결정. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + §4 FilterPills 단일 선택형, patterns §9 편집 시트 패턴.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-approval` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-approval` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-approval` | `14 · 승인 게이트` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-approval` | `대기 목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
+| `screen-approval` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`ApprovalsView.swift`) |
+| `screen-approval` | `승인` | 일치 | 헤더 제목(`ApprovalsView.swift`) · 탭 바 셋째 칸 · 상세 백버튼(`RootView.swift`) |
+| `screen-approval` | `자동 응답` | 구현 대기 | 헤더 아래 「자동 응답 <모드>」 줄 — 구현 헤더에 자동 응답 모드 표시가 없다(PRD-12 AC9) |
+| `screen-approval` | `없음` | 구현 대기 | 헤더 「자동 응답」 줄의 모드 값 — 같은 이유 |
+| `screen-approval` | `3` | 예시 데이터 | 대기 수(헤더 배지·탭 배지) |
+| `screen-approval` | `대기` | 일치 | 헤더 대기 수 배지 라벨(`ApprovalsView.swift`) |
+| `screen-approval` | `처리 이력` | 구현 대기 | 처리 이력 섹션 머리·헤더 이력 버튼(그리고 프레임 캡션) — 처리 이력 화면이 구현에 없다(PRD-12 AC8) |
+| `screen-approval` | `승인 게이트 설정` | 구현 대기 | 헤더 설정 버튼·설정 화면 제목 — 설정 화면이 구현에 없다(PRD-12 AC9·AC13) |
+| `screen-approval` | `대기 · 3건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
+| `screen-approval` | `k3s-mcp` | 예시 데이터 | 보낸 키 이름 칩 |
+| `screen-approval` | `04:12 남음` | 예시 데이터 | 남은 시간 — 서식은 `ApprovalFormatting.remaining` |
+| `screen-approval` | `deployment/dear-baby-api 삭제` | 예시 데이터 | 요청 요약 |
+| `screen-approval` | `Claude Code · homelab 정리 세션 · 09:41` | 예시 데이터 | 요청자 · 시각 |
+| `screen-approval` | `infra-ci` | 예시 데이터 | 보낸 키 이름 칩 |
+| `screen-approval` | `27:40 남음` | 예시 데이터 | 남은 시간 |
+| `screen-approval` | `prod 배포 v1.42` | 예시 데이터 | 요청 요약 |
+| `screen-approval` | `Deploy Bot · 09:20` | 예시 데이터 | 요청자 · 시각 |
+| `screen-approval` | `session-agent` | 예시 데이터 | 보낸 키 이름 칩 |
+| `screen-approval` | `기한 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 기한 없는 요청의 남은 시간 자리 — `ApprovalFormatting.noDeadline` |
+| `screen-approval` | `세션 sp-7 의 git push --force 허용` | 예시 데이터 | 요청 요약 |
+| `screen-approval` | `session-platform agent · 어제 18:02` | 구현 대기 | 요청자 · 시각 — 목업은 하루 지난 요청에 「어제」 를 붙이지만 구현 시각 서식은 `HH:mm` 뿐이다 |
+| `screen-approval` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-approval` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-approval` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-approval` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음) |
+| `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `남은 시간` | 구현 대기 | 요청 상세 카운트다운 라벨 — 요청 상세 화면이 구현에 없다(PRD-12 AC6) |
+| `screen-approval` | `03:48` | 예시 데이터 | 상세 카운트다운 값 |
+| `screen-approval` | `작업: dear-baby 구버전 리소스 정리 (3/5) 대상: deployment/dear-baby-api 네임스페이스: prod 동작: delete (propagationPolicy=Foreground) 사유: v2 롤아웃(dear-baby-api-v2) 완료 후 트래픽 0 확인 — 최근 24시간 요청 0건 남은 단계: 4/5 service/dear-baby-api 삭제 5/5 configmap/dear-baby-api-env 삭제` | 예시 데이터 | 요청 내용 전문(호출자가 보낸 텍스트) |
+| `screen-approval` | `보낸 키` | 구현 대기 | 요청 상세 메타 라벨 — 요청 상세 화면이 구현에 없다(PRD-12 AC6) |
+| `screen-approval` | `요청자` | 구현 대기 | 요청 상세 메타 라벨 — 같은 이유 |
+| `screen-approval` | `Claude Code · homelab 정리 세션` | 예시 데이터 | 요청자 이름 |
+| `screen-approval` | `요청 ID` | 구현 대기 | 요청 상세 메타 라벨 — 같은 이유 |
+| `screen-approval` | `cleanup-20261005-3` | 예시 데이터 | 요청 ID |
+| `screen-approval` | `요청 시각` | 구현 대기 | 요청 상세 메타 라벨 — 같은 이유 |
+| `screen-approval` | `09:41:02` | 예시 데이터 | 요청 시각 |
+| `screen-approval` | `거절` | 구현 대기 | 결정 버튼 — 결정 화면이 구현에 없다(PRD-12 AC7) |
+| `screen-approval` | `결정 확인` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `03:31` | 예시 데이터 | 상세 카운트다운 값 |
+| `screen-approval` | `승인할까요?` | 구현 대기 | 결정 확인 다이얼로그 제목 — 같은 이유(AC7) |
+| `screen-approval` | `deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.` | 구현 대기 | 결정 확인 다이얼로그 본문(요약 + 고정 문구) — 같은 이유(AC7) |
+| `screen-approval` | `취소` | 구현 대기 | 결정 확인 다이얼로그 버튼 — 같은 이유(AC7) |
+| `screen-approval` | `2` | 예시 데이터 | 대기 수(처리 이력 프레임 헤더 배지·탭 배지) |
+| `screen-approval` | `승인됨` | 구현 대기 | 처리 이력 결과 — 처리 이력 화면이 구현에 없다(AC8) |
+| `screen-approval` | `09:44:20` | 예시 데이터 | 처리 시각 |
+| `screen-approval` | `수동 결정` | 구현 대기 | 처리 방식 — 같은 이유(AC8) |
+| `screen-approval` | `만료` | 구현 대기 | 처리 이력 결과 — 같은 이유(AC8) |
+| `screen-approval` | `08:55:00` | 예시 데이터 | 처리 시각 |
+| `screen-approval` | `prod 배포 v1.41 (재시도)` | 예시 데이터 | 요청 요약 |
+| `screen-approval` | `만료 — 결정 없음` | 구현 대기 | 처리 방식 — 같은 이유(AC8) |
+| `screen-approval` | `거절됨` | 구현 대기 | 처리 이력 결과 — 같은 이유(AC8) |
+| `screen-approval` | `어제 22:10` | 예시 데이터 | 처리 시각(처리 이력 영역 자체가 `처리 이력` 행으로 구현 대기) |
+| `screen-approval` | `staging DB 마이그레이션 0042` | 예시 데이터 | 요청 요약 |
+| `screen-approval` | `staging-ci` | 예시 데이터 | 보낸 키 이름 |
+| `screen-approval` | `자동 거절` | 구현 대기 | 처리 방식 · 자동 응답 모드 값·설정 선택지 — 자동 응답 모드가 구현에 없다(AC8·AC9) |
+| `screen-approval` | `10/03 19:02` | 예시 데이터 | 처리 시각 |
+| `screen-approval` | `cluster-admin 바인딩 추가` | 예시 데이터 | 요청 요약 |
+| `screen-approval` | `old-ci` | 예시 데이터 | 보낸 키 이름(폐기된 키) |
+| `screen-approval` | `수동 결정 · 폐기된 키로 생성됨` | 구현 대기 | 처리 이력의 처리 방식 + 폐기된 키 표시 — 처리 이력 화면이 구현에 없다(AC8·AC14) |
+| `screen-approval` | `이전 이력 불러오는 중…` | 구현 대기 | 처리 이력 커서 이어 불러오기 — 같은 이유(AC8) |
+| `screen-approval` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `0` | 예시 데이터 | 대기 수(빈 상태 헤더 배지) |
+| `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | 빈 상태 안내(`ApprovalsView.swift`) |
+| `screen-approval` | `자동 응답 모드` | 구현 대기 | 빈 상태의 현재 모드 줄 · 설정 섹션 머리 — 자동 응답 모드가 구현에 없다(AC9·AC12) |
+| `screen-approval` | `— 새 요청은 알림으로 받습니다.` | 구현 대기 | 빈 상태의 현재 모드 설명 — 같은 이유(AC12) |
+| `screen-approval` | `자동 응답 모드 켜짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `1` | 예시 데이터 | 대기 수(자동 응답 모드 프레임 헤더 배지·탭 배지) |
+| `screen-approval` | `자동 거절 모드가 켜져 있습니다.` | 구현 대기 | 자동 응답 모드 배너 — 같은 이유(AC9) |
+| `screen-approval` | `새 요청은 알림 없이 바로 거절됩니다.` | 구현 대기 | 자동 응답 모드 배너 설명 — 같은 이유(AC9) |
+| `screen-approval` | `끄기` | 구현 대기 | 자동 응답 모드 배너 버튼 — 같은 이유(AC9) |
+| `screen-approval` | `대기 · 1건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
+| `screen-approval` | `12:03 남음` | 예시 데이터 | 남은 시간 |
+| `screen-approval` | `k3s-mcp · 09:30` | 예시 데이터 | 요청자 자리(요청자 이름 대신 키 이름) · 시각 |
+| `screen-approval` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고(`ApprovalsView.swift`) |
+| `screen-approval` | `설정 — 자동 응답·호출자 키` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `없음 — 알림으로 받기` | 구현 대기 | 설정 자동 응답 선택지 — 설정 화면이 구현에 없다(AC9) |
+| `screen-approval` | `자동 승인` | 구현 대기 | 설정 자동 응답 선택지 — 같은 이유(AC9) |
+| `screen-approval` | `호출자 키` | 구현 대기 | 설정 섹션 머리 — 호출자 키 관리가 구현에 없다(AC13·AC14) |
+| `screen-approval` | `폐기` | 구현 대기 | 호출자 키 폐기 버튼 — 같은 이유(AC14) |
+| `screen-approval` | `pak_7Hq2… · 발급 09/29 · 마지막 사용 09:41` | 구현 대기 | 호출자 키 메타 줄(접두 · 「발급」 · 「마지막 사용」 고정 문구 + 값) — 같은 이유(AC13) |
+| `screen-approval` | `pak_Xm91… · 발급 09/30 · 마지막 사용 09:20` | 구현 대기 | 호출자 키 메타 줄 — 같은 이유(AC13) |
+| `screen-approval` | `폐기됨 10/03` | 구현 대기 | 폐기된 키 표시 — 같은 이유(AC14) |
+| `screen-approval` | `pak_b3Kd… · 발급 09/12 · 마지막 사용 10/03` | 구현 대기 | 호출자 키 메타 줄 — 같은 이유(AC13) |
+| `screen-approval` | `+ 호출자 키 발급` | 구현 대기 | 호출자 키 발급 버튼 — 같은 이유(AC13) |
+| `screen-approval` | `키 발급 — 원문 1회 표시` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `pak_7Hq2… · 발급 09/29` | 구현 대기 | 키 발급 시트 뒤 목록의 키 메타 줄 — 같은 이유(AC13) |
+| `screen-approval` | `호출자 키를 발급했습니다` | 구현 대기 | 키 발급 시트 제목 — 같은 이유(AC13) |
+| `screen-approval` | `호출자 이름` | 구현 대기 | 키 발급 시트 필드 라벨 — 같은 이유(AC13) |
+| `screen-approval` | `키 원문` | 구현 대기 | 키 발급 시트 필드 라벨 — 같은 이유(AC13) |
+| `screen-approval` | `pak_Rk4vN8sQ2mTzW6yLp0eHc9JdXb7AuF3G` | 예시 데이터 | 발급된 키 원문 |
+| `screen-approval` | `이 화면을 닫으면 원문을 다시 볼 수 없습니다. 지금 복사해 호출자의 시크릿에 넣으세요.` | 구현 대기 | 키 발급 시트 경고 — 같은 이유(AC13) |
+| `screen-approval` | `복사` | 구현 대기 | 키 발급 시트 버튼 — 같은 이유(AC13) |
+| `screen-approval` | `완료` | 구현 대기 | 키 발급 시트 버튼 — 같은 이유(AC13) |
+| `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
+| `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
+| `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `13 · PR 모니터링 이력` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -384,7 +495,7 @@ last_updated: 2026-10-09
 | `screen-pr-monitor-history` | `버튼 또는 그룹의` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `"모두 확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
-| `screen-pr-monitor-history` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-pr-monitor-history` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-pr-monitor-history` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
@@ -529,7 +640,7 @@ last_updated: 2026-10-09
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
 | `screen-routines` | `오늘 · 60%` | 구현 대기 | 30일 히트맵 끝 라벨 — 구현 이력 시트는 요약 줄 「\(scheduleSummary) · 예정 n일 중 m일 완료」 를 쓴다 |
 | `screen-routines` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-routines` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-routines` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-routines` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
@@ -599,10 +710,10 @@ last_updated: 2026-10-09
 | `screen-scratchpad` | `19:30` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정` | 예시 데이터 | 메모 본문(사용자 데이터) |
 | `screen-scratchpad` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-scratchpad` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-scratchpad` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
-| `screen-scratchpad` | `임시공간` | 기준 4 | 「더 보기」 목록 항목 — 낱말은 `RootView.swift` 탭 라벨과 같고 자리가 다르다(구현은 하단 탭 바 넷째 칸 + `.badge`, 목업은 「더 보기」 목록 + 미분류 배지 — tokens.md §7) |
+| `screen-scratchpad` | `임시공간` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(#244 부터 구현도 시스템 More 목록 안. 미분류 수는 `.badge`) |
 | `screen-scratchpad` | `개인` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
 | `screen-scratchpad` | `회사` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
 | `screen-scratchpad` | `루틴` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
@@ -646,7 +757,7 @@ last_updated: 2026-10-09
 | `screen-todo-personal` | `세탁기 세제 주문` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-todo-personal` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-todo-personal` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
@@ -691,7 +802,7 @@ last_updated: 2026-10-09
 | `screen-todo-work` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다 |
 | `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
 | `screen-todo-work` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-work` | `승인` | 구현 대기 | 하단 탭 바 셋째 칸(tokens.md §7 탭 8) — `RootView.swift` 에 승인 탭이 없다(PRD-12 화면 미구현, 탭 추가는 그 구현과 함께) |
+| `screen-todo-work` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
 | `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
