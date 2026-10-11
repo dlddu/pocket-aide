@@ -32,30 +32,6 @@ func (s *Store) Upsert(ctx context.Context, userID int64, token string) error {
 	return nil
 }
 
-// ListAll returns every registered token across all users. Kept for tests
-// that pre-date per-user fan-out; production dispatch should use
-// ListByUserID for the blacklist-matched push path.
-func (s *Store) ListAll(ctx context.Context) ([]string, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT token FROM device_tokens`)
-	if err != nil {
-		return nil, fmt.Errorf("list device tokens: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-
-	out := make([]string, 0)
-	for rows.Next() {
-		var t string
-		if err := rows.Scan(&t); err != nil {
-			return nil, fmt.Errorf("scan device token: %w", err)
-		}
-		out = append(out, t)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("rows err: %w", err)
-	}
-	return out, nil
-}
-
 // ListByUserID returns every token registered for a single user.
 func (s *Store) ListByUserID(ctx context.Context, userID int64) ([]string, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT token FROM device_tokens WHERE user_id = ?`, userID)
