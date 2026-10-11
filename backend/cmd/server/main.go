@@ -16,6 +16,7 @@ import (
 
 	"github.com/dlddu/pocket-aide/backend/internal/affirmations"
 	"github.com/dlddu/pocket-aide/backend/internal/apns"
+	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
@@ -72,6 +73,7 @@ func main() {
 	routineStore := routines.New(conn)
 	sessionStore := sessions.New(conn)
 	platform := sessions.NewClient(cfg.SessionPlatformURL)
+	approvalStore := approvals.New(conn)
 
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
@@ -113,6 +115,19 @@ func main() {
 		p.Post("/api/sessions/{id}/write", handlers.WriteSession(sessionStore, platform))
 		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(sessionStore, platform))
 		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(sessionStore, platform))
+		p.Get("/api/approval-keys", handlers.ListApprovalKeys(approvalStore))
+		p.Post("/api/approval-keys", handlers.IssueApprovalKey(approvalStore))
+		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(approvalStore))
+		p.Get("/api/approvals", handlers.ListPendingApprovals(approvalStore))
+		p.Get("/api/approvals/{id}", handlers.GetApproval(approvalStore))
+		p.Post("/api/approvals/{id}/approve", handlers.DecideApproval(approvalStore, approvals.DecisionApprove))
+		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(approvalStore, approvals.DecisionReject))
+	})
+
+	r.Group(func(x chi.Router) {
+		x.Use(handlers.CallerKeyMiddleware(approvalStore))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore))
+		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 	})
 
 	srv := &http.Server{
