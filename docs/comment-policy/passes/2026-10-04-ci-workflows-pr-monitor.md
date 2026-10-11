@@ -107,9 +107,9 @@
 ## 증분 재판정 — 2026-10-11 (iOS 테스트 백엔드 교차 빌드)
 
 - **기준 커밋**: `b14f475` 위의 브랜치 `ci/ios-test-seed-api-seeding-prebuilt-backend` (줄 번호는 그 브랜치 기준이다)
-- **범위**: `.github/workflows/ci.yml` 에 더한 주석 2줄. 같은 PR 의 `mock-exception:` 주석(`ci.yml` 1줄 · `AffirmationsView.swift` 1줄 · `RotationWeightedAffirmationUITests.swift` 1줄)은 기계가 읽는 주석이라 판정 밖이다.
+- **범위**: `.github/workflows/ci.yml` 에 더한 주석 2줄과 `github_api_stub.py` 에 더한 주석 1줄(새 행). 같은 PR 의 `mock-exception:` 주석(`ci.yml` 1줄 · `AffirmationsView.swift` 1줄 · `RotationWeightedAffirmationUITests.swift` 1줄)은 기계가 읽는 주석이라 판정 밖이다.
 
 | 자리 | 주석 | 필요 사유 |
 | --- | --- | --- |
 | `.github/workflows/ci.yml` 186–187 | 「Cross-compiled here, beside the backend tests, so the macOS shards skip Go / setup and the build; ios-test.yml downloads this artifact by name.」 | 교차 빌드 잡이 `ios-test.yml` 이 아니라 호출자에 있는 이유(백엔드 테스트와 나란히 돌아 iOS 경로에 지연을 더하지 않는다)와 `ios-test.yml` 이 아티팩트를 이름으로 받는다는 짝 — 지우면 응집을 이유로 잡을 `ios-test.yml` 안으로 옮겨 iOS 만 바뀐 PR 의 경로에 빌드 시간을 더하거나, 아티팩트 이름을 한쪽만 바꿔 샤드가 백엔드 없이 뜨게 된다 |
-
+| `.github/actions/start-test-backend/github_api_stub.py` 262 | 「HTTPServer.server_bind would reverse-resolve "::" before listen(); on the macOS runner that held connects for 75s.」 | `server_bind` 을 부모 대신 `TCPServer` 로 부르고 `server_name` 을 직접 채우는 이유(부모가 `socket.getfqdn("::")` 역방향 조회를 `listen()` 전에 해, macOS 러너에서 기동 확인 `curl` 이 매 샤드 75초씩 연결 시간 초과로 멈췄다 — 2026-10-10 이전 샤드 로그 31개 전부) — 지우면 군더더기로 보고 `super().server_bind()` 로 되돌려 샤드마다 75초를 다시 잃는다 |
