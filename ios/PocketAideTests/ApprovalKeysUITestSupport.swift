@@ -53,7 +53,7 @@ struct ApprovalKeysScreen {
     }
 
     func secretIsNowhere(_ secret: String) -> Bool {
-        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", secret, secret)).count == 0
+        !app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", secret, secret)).firstMatch.exists
     }
 
     func goBack() {

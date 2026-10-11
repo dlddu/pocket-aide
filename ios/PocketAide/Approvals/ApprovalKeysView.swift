@@ -39,10 +39,10 @@ struct ApprovalKeysView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .task { await viewModel.load() }
-        .sheet(isPresented: $showsIssueSheet, onDismiss: { viewModel.finishIssuing() }) {
+        .sheet(isPresented: $showsIssueSheet, onDismiss: { viewModel.finishIssuing() }, content: {
             ApprovalKeyIssueSheet(viewModel: viewModel, isPresented: $showsIssueSheet)
                 .presentationDetents([.medium, .large])
-        }
+        })
         .alert(
             revoking.map(ApprovalKeyFormatting.revokeTitle) ?? "",
             isPresented: Binding(get: { revoking != nil }, set: { if !$0 { revoking = nil } }),

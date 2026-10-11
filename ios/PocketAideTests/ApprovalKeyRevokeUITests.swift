@@ -30,17 +30,11 @@ final class ApprovalKeyRevokeUITests: XCTestCase {
         let revoke = screen.revoke(revokedName)
         XCTAssertTrue(revoke.waitForExistence(timeout: 15), "\(revokedName) should offer 폐기")
 
-        revoke.tap()
-        let alert = app.alerts.firstMatch
-        XCTAssertTrue(alert.waitForExistence(timeout: 5), "폐기 should ask for confirmation")
-        alert.buttons["취소"].tap()
-        XCTAssertTrue(TodoUI.waitToDisappear(alert, timeout: 5), "취소 should close the confirmation")
+        confirm(revoke, with: "취소", in: app)
         XCTAssertTrue(revoke.exists, "Cancelling should leave the key active")
         XCTAssertNil(ApprovalKeysAPI.key(api, named: revokedName)?["revoked_at"] as? Int, "Cancelling should not revoke")
 
-        revoke.tap()
-        XCTAssertTrue(alert.waitForExistence(timeout: 5), "폐기 should ask for confirmation")
-        alert.buttons["폐기"].tap()
+        confirm(revoke, with: "폐기", in: app)
         XCTAssertTrue(screen.revoked(revokedName).waitForExistence(timeout: 15), "The revoked key should stay listed with its revoke date")
         XCTAssertTrue(screen.revoked(revokedName).label.hasPrefix("폐기됨 "))
         XCTAssertFalse(screen.revoke(revokedName).exists, "A revoked key should offer no way to re-enable it")
@@ -66,5 +60,13 @@ final class ApprovalKeyRevokeUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("폐기된 키로 생성됨"), "The pending request should carry the revoked-key warning: \(row.label)")
         XCTAssertEqual(ApprovalLookup.status(api, pending), "PENDING", "Revoking should not decide the pending request")
         app.terminate()
+    }
+
+    private func confirm(_ revoke: XCUIElement, with label: String, in app: XCUIApplication) {
+        revoke.tap()
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 5), "폐기 should ask for confirmation")
+        alert.buttons[label].tap()
+        XCTAssertTrue(TodoUI.waitToDisappear(alert, timeout: 5), "\(label) should close the confirmation")
     }
 }
