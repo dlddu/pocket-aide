@@ -7,7 +7,7 @@ last_updated: 2026-10-11
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 21개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 22개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -36,11 +36,11 @@ last_updated: 2026-10-11
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 11행, 표 B `구현 대기` 47행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 11행, 표 B `구현 대기` 39행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 158 |
+| A | 일치 | 162 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
@@ -48,16 +48,16 @@ last_updated: 2026-10-11
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 11 |
-| B | 일치 | 197 |
-| B | 외부 | 48 |
+| B | 일치 | 199 |
+| B | 외부 | 54 |
 | B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 47 |
+| B | 구현 대기 | 39 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 217행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 221행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -107,6 +107,9 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `processedAt` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `최신 상태를 불러오지 못했습니다` | 목업 대기 | 상세 재조회 실패 배너 제목 — 목업 상세에 오류 상태 프레임이 없다 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `다시 시도` | 일치 | 상세 재조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
+| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `처리 이력` | 일치 | 섹션 머리 — 「처리 이력」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `다시 시도` | 일치 | 이력 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구(이력 화면 오류 상태 프레임은 목업에 없다) |
+| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `이전 이력 불러오는 중…` | 일치 | 커서 이어 불러오기 줄 — 「처리 이력」 프레임 하단 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `승인 게이트 설정` | 일치 | 설정 화면 제목 — 「설정」·「키 발급」 프레임 `h2` |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 목업에 두 상태 프레임은 없고, 같은 문구가 「결정 확인」 프레임 취소 버튼에 있다(대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `폐기` | 일치 | 키 행 「폐기」 버튼 — 「설정」 프레임 · 폐기 확인 대화상자 확정 버튼 |
@@ -132,6 +135,7 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기` | 일치 | 헤더 대기 수 배지 아래 라벨 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 게이트 설정` | 일치 | 헤더 설정 버튼의 `accessibilityLabel` — 목업 헤더 설정 버튼 `title`(글리프는 `gearshape`) |
+| `ios/PocketAide/Approvals/ApprovalsView.swift` | `처리 이력` | 일치 | 헤더 이력 버튼의 `accessibilityLabel` — 목업 헤더 이력 버튼 `title`(글리프는 `clock`) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 일치 | 오류 배너 제목 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구 |
@@ -358,7 +362,7 @@ last_updated: 2026-10-11
 | `screen-approval` | `없음` | 구현 대기 | 헤더 「자동 응답」 줄의 모드 값 — 같은 이유 |
 | `screen-approval` | `3` | 예시 데이터 | 대기 수(헤더 배지·탭 배지) |
 | `screen-approval` | `대기` | 일치 | 헤더 대기 수 배지 라벨(`ApprovalsView.swift`) |
-| `screen-approval` | `처리 이력` | 구현 대기 | 처리 이력 섹션 머리·헤더 이력 버튼(그리고 프레임 캡션) — 처리 이력 화면이 구현에 없다(PRD-12 AC8) |
+| `screen-approval` | `처리 이력` | 일치 | 처리 이력 섹션 머리(`ApprovalHistoryView.swift`)·헤더 이력 버튼 `title`(`ApprovalsView.swift` `accessibilityLabel`)(그리고 프레임 캡션) |
 | `screen-approval` | `승인 게이트 설정` | 일치 | 헤더 설정 버튼 `title`(`ApprovalsView.swift` `accessibilityLabel`) · 설정 화면 제목(`ApprovalKeysView.swift`) |
 | `screen-approval` | `대기 · 3건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
 | `screen-approval` | `k3s-mcp` | 예시 데이터 | 보낸 키 이름 칩 |
@@ -395,23 +399,23 @@ last_updated: 2026-10-11
 | `screen-approval` | `deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 결정 확인 다이얼로그 본문 — `ApprovalFormatting.confirmMessage`(요약 + 목적격 조사 + 고정 문구) |
 | `screen-approval` | `취소` | 일치 | 결정 확인 다이얼로그 취소 버튼(`ApprovalDetailView.swift`) |
 | `screen-approval` | `2` | 예시 데이터 | 대기 수(처리 이력 프레임 헤더 배지·탭 배지) |
-| `screen-approval` | `승인됨` | 구현 대기 | 처리 이력 결과 — 처리 이력 화면이 구현에 없다(AC8) |
+| `screen-approval` | `승인됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력 결과 — `ApprovalFormatting.statusLabel`(`ApprovalHistoryView.swift` 이력 행) |
 | `screen-approval` | `09:44:20` | 예시 데이터 | 처리 시각 |
-| `screen-approval` | `수동 결정` | 구현 대기 | 처리 방식 — 같은 이유(AC8) |
-| `screen-approval` | `만료` | 구현 대기 | 처리 이력 결과 — 같은 이유(AC8) |
+| `screen-approval` | `수동 결정` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 방식 — `ApprovalFormatting.decisionModeLabel`(`historyMeta` 경유) |
+| `screen-approval` | `만료` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력 결과 — `ApprovalFormatting.statusLabel` |
 | `screen-approval` | `08:55:00` | 예시 데이터 | 처리 시각 |
 | `screen-approval` | `prod 배포 v1.41 (재시도)` | 예시 데이터 | 요청 요약 |
-| `screen-approval` | `만료 — 결정 없음` | 구현 대기 | 처리 방식 — 같은 이유(AC8) |
-| `screen-approval` | `거절됨` | 구현 대기 | 처리 이력 결과 — 같은 이유(AC8) |
-| `screen-approval` | `어제 22:10` | 예시 데이터 | 처리 시각(처리 이력 영역 자체가 `처리 이력` 행으로 구현 대기) |
+| `screen-approval` | `만료 — 결정 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 방식 — `ApprovalFormatting.decisionModeLabel` |
+| `screen-approval` | `거절됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력 결과 — `ApprovalFormatting.statusLabel` |
+| `screen-approval` | `어제 22:10` | 예시 데이터 | 처리 시각 — 서식은 `ApprovalFormatting.historyTime`(오늘 `HH:mm:ss` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `staging DB 마이그레이션 0042` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `staging-ci` | 예시 데이터 | 보낸 키 이름 |
-| `screen-approval` | `자동 거절` | 구현 대기 | 처리 방식 · 자동 응답 모드 값·설정 선택지 — 자동 응답 모드가 구현에 없다(AC8·AC9) |
+| `screen-approval` | `자동 거절` | 구현 대기 | 처리 방식 · 자동 응답 모드 값·설정 선택지 — 처리 방식 자리는 `ApprovalFormatting.decisionModeLabel` 이 그리지만(#264) 자동 응답 모드(배너 값·설정 선택지)가 구현에 없다(AC9) |
 | `screen-approval` | `10/03 19:02` | 예시 데이터 | 처리 시각 |
 | `screen-approval` | `cluster-admin 바인딩 추가` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `old-ci` | 예시 데이터 | 보낸 키 이름(폐기된 키) |
-| `screen-approval` | `수동 결정 · 폐기된 키로 생성됨` | 구현 대기 | 처리 이력의 처리 방식 + 폐기된 키 표시 — 처리 이력 화면이 구현에 없다(AC8·AC14) |
-| `screen-approval` | `이전 이력 불러오는 중…` | 구현 대기 | 처리 이력 커서 이어 불러오기 — 같은 이유(AC8) |
+| `screen-approval` | `수동 결정 · 폐기된 키로 생성됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력의 처리 방식 + 폐기된 키 표시 — `ApprovalFormatting.historyMeta`(「\(mode) · 폐기된 키로 생성됨」) |
+| `screen-approval` | `이전 이력 불러오는 중…` | 일치 | 처리 이력 커서 이어 불러오기(`ApprovalHistoryView.swift`) |
 | `screen-approval` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `0` | 예시 데이터 | 대기 수(빈 상태 헤더 배지) |
 | `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | 빈 상태 안내(`ApprovalsView.swift`) |
