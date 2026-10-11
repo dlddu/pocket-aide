@@ -82,11 +82,13 @@ func TestRegisterDeviceToken_UpsertRebindsToNewUser(t *testing.T) {
 		}
 	}
 
-	tokens, err := store.ListAll(context.Background())
-	if err != nil {
-		t.Fatalf("list: %v", err)
-	}
-	if len(tokens) != 1 {
-		t.Errorf("expected 1 token (upsert rebind), got %d", len(tokens))
+	for uid, want := range map[int64]int{1: 0, 2: 1} {
+		tokens, err := store.ListByUserID(context.Background(), uid)
+		if err != nil {
+			t.Fatalf("uid=%d list: %v", uid, err)
+		}
+		if len(tokens) != want {
+			t.Errorf("uid=%d: expected %d token(s) after upsert rebind, got %d", uid, want, len(tokens))
+		}
 	}
 }

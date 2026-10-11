@@ -19,7 +19,6 @@
 | Q-06 | `select users \| eq(oidc_sub) \| - \| -` | UNIQUE(users.oidc_sub) | `backend/internal/auth/middleware.go::upsertUser` |
 | Q-07 | `insert users \| - \| - \| -` | — | `backend/internal/auth/middleware.go::upsertUser` |
 | Q-08 | `upsert device_tokens \| eq(token) \| - \| -` | — | `backend/internal/devicetokens/store.go::Store::Upsert` |
-| Q-09 | `select device_tokens \| - \| - \| -` | 지원 없음 | `backend/internal/devicetokens/store.go::Store::ListAll` |
 | Q-10 | `select device_tokens \| eq(user_id) \| - \| -` | idx_device_tokens_user_id | `backend/internal/devicetokens/store.go::Store::ListByUserID` |
 | Q-11 | `select user_excluded_repos \| eq(user_id) \| - \| order(created_at desc, id desc)` | UNIQUE(user_excluded_repos.user_id,user_excluded_repos.repo_full_name) | `backend/internal/excludedrepos/store.go::Store::List` |
 | Q-12 | `insert user_excluded_repos \| - \| - \| -` | — | `backend/internal/excludedrepos/store.go::Store::Add` |
@@ -92,3 +91,4 @@
 | --- | --- | --- |
 | `idx_notif_history_user_created` | `notification_history` | - |
 | `idx_users_oidc_sub` | `users` | `UNIQUE(users.oidc_sub)` 와 컬럼이 같다 — 엔진은 `Q-06` 에 UNIQUE 쪽을 고른다 |
+| `UNIQUE(device_tokens.token)` | `device_tokens` | `Q-08` 의 `ON CONFLICT(token)` 충돌 대상 — 쓰기 패턴이라 플랜 판정 밖이다 |
