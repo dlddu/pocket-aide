@@ -26,10 +26,10 @@ struct ScratchpadScreen {
     }
 
     static func moreRow(in app: XCUIApplication) -> XCUIElement {
-        let more = app.tabBars.firstMatch.buttons["More"]
+        let more = app.tabBars.firstMatch.buttons["더 보기"]
         XCTAssertTrue(more.waitForExistence(timeout: 5), "The More tab should be in the tab bar")
         more.tap()
-        let back = app.navigationBars.buttons["More"]
+        let back = app.navigationBars.buttons["더 보기"]
         if back.waitForExistence(timeout: 1) {
             back.tap()
         }
