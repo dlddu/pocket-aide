@@ -105,6 +105,8 @@ extension TodoArea {
 
     var showsSectionRule: Bool { self == .work }
 
+    var checkIsRound: Bool { self == .personal }
+
     func summary(open: Int, done: Int) -> String {
         switch self {
         case .personal: return "\(open)개 남음 · \(done)개 완료"
@@ -339,9 +341,7 @@ private struct TodoRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
             Button(action: onToggle) {
-                Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                    .font(.system(size: area.checkSize))
-                    .foregroundStyle(DesignTokens.Color.accent(tone))
+                TodoCheckBox(area: area, isDone: item.isDone)
             }
             .buttonStyle(.plain)
             .padding(.top, 2)

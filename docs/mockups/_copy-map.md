@@ -41,7 +41,7 @@ last_updated: 2026-10-11
 |---|---|---|
 | A | 일치 | 147 |
 | A | 데이터 | 6 |
-| A | 비표시 | 23 |
+| A | 비표시 | 21 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
@@ -55,7 +55,7 @@ last_updated: 2026-10-11
 | B | 기준 4 | 3 |
 | B | 구현 대기 | 71 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 198행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 196행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -252,8 +252,6 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 개인 목업 「날짜 없음」 행의 스와이프 패널 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `checkmark.square.fill` | 비표시 | 완료 체크박스 SF Symbol 이름 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `square` | 비표시 | 미완료 체크박스 SF Symbol 이름 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
 | `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
