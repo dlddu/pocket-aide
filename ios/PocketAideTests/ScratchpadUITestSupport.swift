@@ -33,7 +33,18 @@ struct ScratchpadScreen {
         if back.waitForExistence(timeout: 1) {
             back.tap()
         }
-        return app.cells.matching(NSPredicate(format: "label BEGINSWITH %@", tabLabel)).firstMatch
+        let label = NSPredicate(format: "label == %@", tabLabel)
+        let cell = app.cells.containing(label).firstMatch
+        if cell.waitForExistence(timeout: 3) {
+            return cell
+        }
+        let candidates: [XCUIElement] = [
+            app.tables.staticTexts[tabLabel],
+            app.collectionViews.staticTexts[tabLabel],
+            app.tables.cells[tabLabel],
+            app.collectionViews.cells[tabLabel],
+        ]
+        return candidates.first { $0.exists } ?? cell
     }
 
     var header: XCUIElement {
