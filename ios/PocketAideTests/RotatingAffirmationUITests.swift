@@ -7,23 +7,25 @@ final class RotatingAffirmationUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testHeroRotatesAcrossReentriesAndOnTheRotateButton() {
+    func testHeroRotatesAcrossReentriesAndOnTheRotateButton() throws {
         let token = TodoUI.uniqueToken()
         let sentences = ["오늘도 한 걸음 \(token)", "서두르지 않는다 \(token)", "끝까지 해 본다 \(token)"]
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        api.removeAllAffirmations()
+        addTeardownBlock { api.deleteAffirmations(sentences) }
         let app = TodoUI.launch()
         var screen = AffirmationsScreen.open(in: app)
 
-        screen.removeEverySentence()
         screen.assertEmptyState()
         screen = screen.reenter()
         screen.assertEmptyState()
 
         for sentence in sentences {
-            screen.add(sentence)
+            api.addAffirmation(sentence)
         }
-        XCTAssertFalse(app.staticTexts[AffirmationsScreen.emptyTitle].exists, "The empty state gives way to the hero card")
-
+        screen = screen.reenter()
         var shown: Set<String> = [screen.settledHero(among: sentences)]
+        XCTAssertFalse(app.staticTexts[AffirmationsScreen.emptyTitle].exists, "The empty state gives way to the hero card")
         for _ in 0..<AffirmationsScreen.rotationAttempts where shown.count < 2 {
             screen = screen.reenter()
             shown.insert(screen.settledHero(among: sentences))
@@ -37,8 +39,6 @@ final class RotatingAffirmationUITests: XCTestCase {
             after = screen.shownHero(among: sentences)
         }
         XCTAssertNotEqual(after, before, "The rotate button should replace the hero sentence")
-
-        screen.remove(sentences)
     }
 }
 
@@ -56,24 +56,6 @@ private extension AffirmationsScreen {
         app.descendants(matching: .any).matching(
             NSPredicate(format: "identifier BEGINSWITH %@", "affirmations.hero")
         ).firstMatch
-    }
-
-    func removeEverySentence(limit: Int = 60) {
-        for _ in 0..<limit {
-            let target = anyRow
-            guard target.waitForExistence(timeout: 5) else { return }
-            let identifier = target.identifier
-            reveal(target)
-            target.swipeLeft()
-            let delete = app.buttons.matching(
-                NSPredicate(format: "label == %@ OR identifier ENDSWITH %@", "삭제", ".delete")
-            ).firstMatch
-            XCTAssertTrue(delete.waitForExistence(timeout: 5), "Swiping a sentence left should reveal 삭제")
-            delete.tap()
-            let removed = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
-            XCTAssertTrue(TodoUI.waitToDisappear(removed), "The swiped sentence should leave the list")
-        }
-        XCTFail("More than \(limit) sentences were left over before the empty-state check")
     }
 
     func assertEmptyState() {

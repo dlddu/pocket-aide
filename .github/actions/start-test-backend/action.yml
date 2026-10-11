@@ -1,16 +1,20 @@
-name: Build & start the test backend
+name: Start the test backend
 description: >
-  Compiles cmd/oidcmock + cmd/server, starts both in the background
-  together with the local GitHub API stub (github_api_stub.py) and the
-  fake APNs receiver (apns_receiver.py), and exports OIDCMOCK_PID /
-  BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID via $GITHUB_ENV so
-  a later step can kill them. Assumes the caller already checked out the repo and ran
-  ./.github/actions/setup-go-backend. Required env vars on the calling
+  Starts prebuilt cmd/oidcmock + cmd/server binaries (bin_dir/oidcmock,
+  bin_dir/pocket-aide — ci.yml's ios-test-backend job cross-compiles them)
+  in the background together with the local GitHub API stub
+  (github_api_stub.py) and the fake APNs receiver (apns_receiver.py), and
+  exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID
+  via $GITHUB_ENV so a later step can kill them. Assumes the caller already
+  checked out the repo. Required env vars on the calling
   job (read by the binaries themselves, not this action):
     OIDC_ISSUER, OIDC_AUDIENCE, OIDC_CLIENT_ID, OIDC_REDIRECT_URI,
     DATABASE_PATH, PORT.
 
 inputs:
+  bin_dir:
+    description: Directory holding the oidcmock and pocket-aide binaries built for this runner.
+    required: true
   oidcmock_port:
     description: Port the oidcmock server listens on.
     required: false
@@ -35,17 +39,14 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Build backend binaries
+    - name: Make the backend binaries executable
       shell: bash
-      working-directory: backend
-      run: |
-        go build -o /tmp/oidcmock ./cmd/oidcmock
-        go build -o /tmp/pocket-aide ./cmd/server
+      run: chmod +x "${{ inputs.bin_dir }}/oidcmock" "${{ inputs.bin_dir }}/pocket-aide"
     # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; oidcmock 이 대신한다 (docs/e2e-mocking-policy.md)
     - name: Start oidcmock
       shell: bash
       run: |
-        /tmp/oidcmock -addr :${{ inputs.oidcmock_port }} \
+        "${{ inputs.bin_dir }}/oidcmock" -addr :${{ inputs.oidcmock_port }} \
           -client-id pocket-aide-ios-dev -audience pocket-aide-dev &
         echo "OIDCMOCK_PID=$!" >> "$GITHUB_ENV"
         for i in {1..30}; do
@@ -63,7 +64,7 @@ runs:
     - name: Start backend
       shell: bash
       run: |
-        /tmp/pocket-aide &
+        "${{ inputs.bin_dir }}/pocket-aide" &
         echo "BACKEND_PID=$!" >> "$GITHUB_ENV"
         for i in {1..30}; do
           curl -fsS http://localhost:${{ inputs.backend_port }}/healthz && break || sleep 1

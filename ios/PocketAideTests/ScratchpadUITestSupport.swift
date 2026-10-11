@@ -143,3 +143,24 @@ extension ScratchpadScreen {
         }
     }
 }
+
+extension BackendAPI {
+    @discardableResult
+    func addScratchpadMemo(_ text: String, file: StaticString = #filePath, line: UInt = #line) -> Int64? {
+        let reply = call("POST", "/api/scratchpad", json: ["text": text])
+        guard reply.status == 201, let id = (reply.json?["id"] as? NSNumber)?.int64Value else {
+            XCTFail("POST /api/scratchpad should store '\(text)': \(reply.status) \(reply.text)", file: file, line: line)
+            return nil
+        }
+        return id
+    }
+
+    func deleteScratchpadMemos(_ texts: [String]) {
+        let reply = call("GET", "/api/scratchpad")
+        for item in (reply.json?["items"] as? [[String: Any]]) ?? [] {
+            guard let text = item["text"] as? String, texts.contains(text),
+                  let id = (item["id"] as? NSNumber)?.int64Value else { continue }
+            _ = call("DELETE", "/api/scratchpad/\(id)")
+        }
+    }
+}

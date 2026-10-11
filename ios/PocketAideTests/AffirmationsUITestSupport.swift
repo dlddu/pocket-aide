@@ -216,3 +216,37 @@ struct AffirmationSheet {
         XCTAssertTrue(TodoUI.waitToDisappear(title), "The sheet should close after delete")
     }
 }
+
+extension BackendAPI {
+    @discardableResult
+    func addAffirmation(_ text: String, priority: String = "normal", file: StaticString = #filePath, line: UInt = #line) -> Int64? {
+        let reply = call("POST", "/api/affirmations", json: ["text": text, "priority": priority])
+        guard reply.status == 201, let id = (reply.json?["id"] as? NSNumber)?.int64Value else {
+            XCTFail("POST /api/affirmations should create '\(text)': \(reply.status) \(reply.text)", file: file, line: line)
+            return nil
+        }
+        return id
+    }
+
+    func affirmationIDs(file: StaticString = #filePath, line: UInt = #line) -> [(id: Int64, text: String)] {
+        let reply = call("GET", "/api/affirmations")
+        XCTAssertEqual(reply.status, 200, "GET /api/affirmations should list the sentences: \(reply.text)", file: file, line: line)
+        return ((reply.json?["items"] as? [[String: Any]]) ?? []).compactMap { item in
+            guard let id = (item["id"] as? NSNumber)?.int64Value, let text = item["text"] as? String else { return nil }
+            return (id, text)
+        }
+    }
+
+    func deleteAffirmations(_ texts: [String]) {
+        for item in affirmationIDs() where texts.contains(item.text) {
+            _ = call("DELETE", "/api/affirmations/\(item.id)")
+        }
+    }
+
+    func removeAllAffirmations(file: StaticString = #filePath, line: UInt = #line) {
+        for item in affirmationIDs(file: file, line: line) {
+            _ = call("DELETE", "/api/affirmations/\(item.id)")
+        }
+        XCTAssertTrue(affirmationIDs(file: file, line: line).isEmpty, "Every sentence should be gone", file: file, line: line)
+    }
+}

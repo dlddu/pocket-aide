@@ -47,6 +47,20 @@ extension TodoArea {
         }
     }
 
+    var sectionTitleTracking: CGFloat {
+        switch self {
+        case .personal: return 0
+        case .work: return 0.3
+        }
+    }
+
+    var sectionTitleCase: Text.Case? {
+        switch self {
+        case .personal: return nil
+        case .work: return .uppercase
+        }
+    }
+
     var listTopInset: CGFloat {
         switch self {
         case .personal: return DesignTokens.Spacing.xs
@@ -226,8 +240,9 @@ struct TodoListView: View {
             } header: {
                 Text("\(title) · \(items.count)")
                     .font(DesignTokens.Typography.font(size: area.sectionTitleSize, weight: .bold))
+                    .tracking(area.sectionTitleTracking)
                     .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.7))
-                    .textCase(nil)
+                    .textCase(area.sectionTitleCase)
             }
         }
     }

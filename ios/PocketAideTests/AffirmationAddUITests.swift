@@ -7,8 +7,10 @@ final class AffirmationAddUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    func testAddedSentenceStaysListedWithItsPriority() {
+    func testAddedSentenceStaysListedWithItsPriority() throws {
         let sentence = "천천히 꾸준히 \(TodoUI.uniqueToken())"
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The test runner should get a backend token")
+        addTeardownBlock { api.deleteAffirmations([sentence]) }
         let app = TodoUI.launch()
         var screen = AffirmationsScreen.open(in: app)
 
@@ -36,7 +38,5 @@ final class AffirmationAddUITests: XCTestCase {
         TodoUI.relaunch(app)
         screen = AffirmationsScreen.open(in: app)
         screen.assertStored(sentence, priority: "high")
-
-        screen.remove([sentence])
     }
 }

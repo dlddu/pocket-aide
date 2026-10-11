@@ -10,7 +10,12 @@ struct AffirmationsView: View {
     @State private var sortOrder: AffirmationSortOrder = .priority
 
     init() {
-        _viewModel = StateObject(wrappedValue: AffirmationsViewModel(api: nil))
+        _viewModel = StateObject(wrappedValue: AffirmationsViewModel(api: nil, rotationSeed: Self.launchRotationSeed()))
+    }
+
+    // mock-exception: DET — 히어로 회전은 시스템 난수로 문장을 고르고 XCUITest 는 그 난수를 고정할 수 없다; UI 테스트만 회전 난수의 시드 값을 주입한다 (docs/e2e-mocking-policy.md)
+    private static func launchRotationSeed() -> UInt64? {
+        ProcessInfo.processInfo.environment["ROTATION_SEED"].flatMap { UInt64($0) }
     }
 
     var body: some View {

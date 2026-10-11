@@ -97,6 +97,15 @@ extension BackendAPI {
             }
         }
     }
+
+    func deleteRoutines(named names: [String]) {
+        let reply = call("GET", "/api/routines")
+        for item in (reply.json?["items"] as? [[String: Any]]) ?? [] {
+            guard let name = item["name"] as? String, names.contains(name),
+                  let id = (item["id"] as? NSNumber)?.int64Value else { continue }
+            _ = call("DELETE", "/api/routines/\(id)")
+        }
+    }
 }
 
 struct RoutineHistoryPanel {

@@ -14,8 +14,9 @@
 
 | 판정일 | 범위 | 주석 줄 | 지문 | 판정 | 결과 |
 | --- | --- | ---: | --- | :-: | --- |
+| 2026-10-11 | `.github/actions/start-test-backend/github_api_stub.py` | 1 | `edf8d7a3afdd` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-10-04 | `.github/actions/start-test-sqs/action.yml` | 1 | `4a8622eeb479` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-10-04-test-sqs-action.md) |
-| 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 89 | `b22e35136edc` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
+| 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 91 | `631eeb49ad6b` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) · 2026-10-11 증분 유지 2줄(iOS 테스트 백엔드 교차 빌드) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-08 | `backend/cmd/server/main.go` | 17 | `9600452f468b` | 완료 | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
