@@ -58,7 +58,7 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 32행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 25행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 21행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -109,9 +109,9 @@ last_updated: 2026-10-11
 | `screen-todo-work` | S | 불일치 | 2 |
 | `screen-todo-work` | S | 허용 | 1 |
 | `screen-todo-work` | S | 목업 대기 | 0 |
-| `screen-approval` | M | 일치 | 105 |
+| `screen-approval` | M | 일치 | 109 |
 | `screen-approval` | M | 기본값 일치 | 3 |
-| `screen-approval` | M | 불일치 | 25 |
+| `screen-approval` | M | 불일치 | 21 |
 | `screen-approval` | M | 허용 | 14 |
 | `screen-approval` | M | 목업 대기 | 2 |
 | `screen-approval` | S | 일치 | 15 |
@@ -1374,15 +1374,15 @@ last_updated: 2026-10-11
 | 제목 | `text-[18px]` | 18 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 18, weight: .bold))` | 18 | 일치 | 제목 크기 |
 | 섹션 머리 | `gap-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `HStack(spacing: DesignTokens.Spacing.sm)` | 8 | 일치 | 막대 · 제목 · 선 사이 간격 |
 | 섹션 머리 | `mb-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.bottom, DesignTokens.Spacing.sm)` | 8 | 일치 | 섹션 머리 아래 여백 |
-| 섹션 머리 | `mt-1` | 4 | — | — | — | 불일치 | 섹션 머리 위 여백 — 구현은 제목 아래 여백 12 뒤에 바로 놓는다(실효 12 vs 목업 12+4) |
+| 섹션 머리 | `mt-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.xs)` | 4 | 일치 | 섹션 머리 위 여백(`Spacing.xs` = 4) — 제목 아래 12 뒤에 4를 더 띄운다 |
 | 섹션 막대 | `bg-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.fill(DesignTokens.Color.accent(Self.area))` | #5B4DB8 | 일치 | 막대 색 |
 | 섹션 막대 | `h-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.frame(width: 4, height: 12)` | 12 | 일치 | 막대 높이 |
 | 섹션 막대 | `w-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.frame(width: 4, height: 12)` | 4 | 일치 | 막대 폭 |
 | 섹션 제목 | `font-bold` | bold | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))` | bold | 일치 | 「호출자 키」 굵기 |
 | 섹션 제목 | `text-[11px]` | 11 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))` | 11 | 일치 | 섹션 제목 크기(`captionXs`) |
 | 섹션 제목 | `text-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.accent(Self.area))` | #5B4DB8 | 일치 | 섹션 제목 색 |
-| 섹션 제목 | `tracking-wide` | 0.025em | — | — | — | 불일치 | 자간 수식 없음(목업 11 × 0.025em = 0.3) |
-| 섹션 제목 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 수식 없음(`.textCase(.uppercase)` 부재 — 한글 문구라 렌더 차이는 없다) |
+| 섹션 제목 | `tracking-wide` | 0.025em | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.tracking(0.3)` | 0.3 | 일치 | 섹션 제목 자간 — 0.025em × 11 = 0.275, 0.1pt 단위로 0.3(우선순위 시트 제목 `.tracking(-0.5)` 선례) |
+| 섹션 제목 | `uppercase` | uppercase | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환(한글 문구라 보이는 차이는 없다) |
 | 섹션 선 | `bg-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | #D8D5E4 | 일치 | 섹션 머리 오른쪽 1pt 선 색 |
 | 모드 카드 | `bg-white` | #FFFFFF | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
 | 모드 카드 | `border` | 1 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
@@ -1481,7 +1481,7 @@ last_updated: 2026-10-11
 | 원문 칸 | `py-2.5` | 10 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.vertical, 10)` | 10 | 일치 | 칸 위아래 여백 |
 | 원문 칸 | `rounded-md` | 6 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)` | 6 | 일치 | 칸 라운드 |
 | 원문 칸 | `text-[12px]` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionSm, design: .monospaced))` | 12 | 일치 | 원문 글자 크기(고정폭) |
-| 경고 문구 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 줄 높이 수식 없음 |
+| 경고 문구 | `leading-relaxed` | 1.625 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 경고 줄 높이 = 글자 크기의 1.625배 |
 | 경고 문구 | `mt-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.sm)` | 8 | 일치 | 원문 칸 ↔ 경고 간격 |
 | 경고 문구 | `text-[11.5px]` | 11.5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 11.5))` | 11.5 | 일치 | 경고 크기 |
 | 경고 문구 | `text-[var(--destructive)]` | #9C3F2D | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.StatusColor.failure)` | #9C3F2D | 일치 | 경고 색 |
