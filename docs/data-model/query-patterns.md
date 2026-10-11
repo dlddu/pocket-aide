@@ -61,6 +61,17 @@
 | Q-49 | `select agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Owns` |
 | Q-50 | `select agent_sessions \| eq(user_id) \| - \| -` | idx_agent_sessions_user_id | `backend/internal/sessions/store.go::Store::Owned` |
 | Q-51 | `delete agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Remove` |
+| Q-52 | `select approval_caller_keys \| eq(key_hash) \| - \| -` | UNIQUE(approval_caller_keys.key_hash) | `backend/internal/approvals/store.go::Store::Authenticate` |
+| Q-53 | `update approval_caller_keys \| eq(id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::Authenticate` |
+| Q-54 | `insert approval_requests \| - \| - \| -` | — | `backend/internal/approvals/store.go::Store::Create` |
+| Q-55 | `update approval_requests \| eq(id, status, user_id) \| - \| -` | PK(approval_requests) | `backend/internal/approvals/store.go::Store::Decide` |
+| Q-56 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.id, approval_requests.user_id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); approval_requests: PK(approval_requests) | `backend/internal/approvals/store.go::Store::Get` |
+| Q-57 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.caller_key_id, approval_requests.id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); approval_requests: PK(approval_requests) | `backend/internal/approvals/store.go::Store::GetForCaller` |
+| Q-58 | `insert approval_caller_keys \| - \| - \| -` | — | `backend/internal/approvals/store.go::Store::IssueKey` |
+| Q-59 | `select approval_caller_keys \| eq(user_id) \| - \| order(created_at desc, id desc)` | idx_approval_caller_keys_user_created | `backend/internal/approvals/store.go::Store::ListKeys` |
+| Q-60 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.status, approval_requests.user_id) \| - \| order(approval_requests.created_at desc, approval_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); approval_requests: idx_approval_requests_user_status_created | `backend/internal/approvals/store.go::Store::ListPending` |
+| Q-61 | `update approval_caller_keys \| eq(id, revoked_at, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::RevokeKey` |
+| Q-62 | `select approval_caller_keys \| eq(id, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::getKey` |
 
 ## 수동 형태
 
@@ -89,6 +100,8 @@
 
 | 인덱스 | 테이블 | 비고 |
 | --- | --- | --- |
+| `UNIQUE(approval_requests.caller_key_id,approval_requests.external_id)` | `approval_requests` | `Q-54` 삽입의 무결성 제약 — 위반이 `ErrDuplicateExternal` 이 된다 |
+| `idx_approval_caller_keys_active_name` | `approval_caller_keys` | `Q-58` 삽입의 무결성 제약(`revoked_at IS NULL` 부분 UNIQUE) — 위반이 `ErrDuplicateName` 이 된다 |
 | `idx_notif_history_user_created` | `notification_history` | - |
 | `idx_users_oidc_sub` | `users` | `UNIQUE(users.oidc_sub)` 와 컬럼이 같다 — 엔진은 `Q-06` 에 UNIQUE 쪽을 고른다 |
 | `UNIQUE(device_tokens.token)` | `device_tokens` | `Q-08` 의 `ON CONFLICT(token)` 충돌 대상 — 쓰기 패턴이라 플랜 판정 밖이다 |

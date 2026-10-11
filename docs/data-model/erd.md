@@ -4,10 +4,13 @@
 
 ```mermaid
 erDiagram
+    approval_caller_keys ||--o{ approval_requests : caller_key_id
     routine_steps ||--o{ routine_step_checks : step_id
     routines ||--o{ routine_steps : routine_id
     users ||--o{ affirmations : user_id
     users ||--o{ agent_sessions : user_id
+    users ||--o{ approval_caller_keys : user_id
+    users ||--o{ approval_requests : user_id
     users ||--o{ device_tokens : user_id
     users ||--o{ notification_history : user_id
     users ||--o{ personal_todos : user_id
@@ -50,6 +53,50 @@ erDiagram
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
 | `idx_agent_sessions_user_id` | `user_id` | NO | - |
+
+### `approval_caller_keys`
+
+의미: [`approvals.CallerKey`](../../backend/internal/approvals/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | INTEGER | NO | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `name` | TEXT | NO |  |
+| `key_hash` | TEXT | NO |  |
+| `key_prefix` | TEXT | NO |  |
+| `created_at` | INTEGER | NO |  |
+| `last_used_at` | INTEGER | YES |  |
+| `revoked_at` | INTEGER | YES |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `UNIQUE(approval_caller_keys.key_hash)` | `key_hash` | YES | - |
+| `idx_approval_caller_keys_active_name` | `user_id`, `name` | YES | `revoked_at IS NULL` |
+| `idx_approval_caller_keys_user_created` | `user_id`, `created_at` | NO | - |
+
+### `approval_requests`
+
+의미: [`approvals.Request`](../../backend/internal/approvals/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | TEXT | YES | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `caller_key_id` | INTEGER | NO | FK → approval_caller_keys.id |
+| `external_id` | TEXT | NO |  |
+| `context` | TEXT | NO |  |
+| `requester_name` | TEXT | NO |  |
+| `status` | TEXT | NO |  |
+| `decision_mode` | TEXT | YES |  |
+| `created_at` | INTEGER | NO |  |
+| `expires_at` | INTEGER | YES |  |
+| `processed_at` | INTEGER | YES |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `UNIQUE(approval_requests.caller_key_id,approval_requests.external_id)` | `caller_key_id`, `external_id` | YES | - |
+| `idx_approval_requests_user_status_created` | `user_id`, `status`, `created_at` | NO | - |
 
 ### `device_tokens`
 
