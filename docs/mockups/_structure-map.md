@@ -58,7 +58,7 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 32행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 22행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 39행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 34행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -110,8 +110,8 @@ last_updated: 2026-10-11
 | `screen-todo-work` | S | 목업 대기 | 0 |
 | `screen-approval` | M | 일치 | 105 |
 | `screen-approval` | M | 기본값 일치 | 3 |
-| `screen-approval` | M | 불일치 | 39 |
-| `screen-approval` | M | 허용 | 0 |
+| `screen-approval` | M | 불일치 | 34 |
+| `screen-approval` | M | 허용 | 5 |
 | `screen-approval` | M | 목업 대기 | 2 |
 | `screen-approval` | S | 일치 | 15 |
 | `screen-approval` | S | 불일치 | 2 |
@@ -1414,7 +1414,7 @@ last_updated: 2026-10-11
 | 폐기 버튼 | `text-[var(--destructive)]` | #9C3F2D | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.StatusColor.failure)` | #9C3F2D | 일치 | 「폐기」 색(`StatusColor.failure` 라이트 = 목업 `--destructive`) |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `VStack(alignment: .leading, spacing: 6)` | 6 | 일치 | 칩 줄 ↔ 메타 줄 간격 |
 | 메타 줄 | `text-[10.5px]` | 10.5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: 10.5, design: .monospaced))` | 10.5 | 일치 | 메타 줄 크기 |
-| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))` | #221F33/0.55 | 불일치 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — `S1`·`S5` 와 같은 규약이지만 두 항목의 대상에 승인 화면이 없다 |
+| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))` | #221F33/0.55 | 허용 S6 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — 다크 목업은 이 자리를 stone 이 아니라 영역 다크 톤 `#A7A1BE` 로 그린다(`S6`) |
 | 키 행 | `border-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | #D8D5E4 | 일치 | 둘째 행부터 위 1pt 구분선 색(행 사이 `Rectangle` 한 수식) |
 | 키 행 | `border-t` | top 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | top 1 | 일치 | 둘째 행부터 위 1pt 구분선(`index > 0` 일 때 행 위에 그린다) |
 | 키 행 | `px-3.5` | 14 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.horizontal, 14)` | 14 | 일치 | 키 행 좌우 여백 |
@@ -1425,15 +1425,15 @@ last_updated: 2026-10-11
 | 폐기된 키 행 | `px-3.5` | 14 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.horizontal, 14)` | 14 | 일치 | 키 행 좌우 여백 |
 | 폐기된 키 행 | `py-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.vertical, DesignTokens.Spacing.md)` | 12 | 일치 | 키 행 위아래 여백 |
 | 폐기된 키 칩 | `border` | 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 2, style: .continuous) .stroke(key.isRevoked ? DesignTokens.Color.rule(Self.area) : Color.clear, lineWidth: 1)` | 1 | 일치 | 폐기된 키 칩 외곽선 굵기 |
-| 폐기된 키 칩 | `border-stone-300` | #D6D3D1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 2, style: .continuous) .stroke(key.isRevoked ? DesignTokens.Color.rule(Self.area) : Color.clear, lineWidth: 1)` | #D8D5E4 | 불일치 | 폐기된 칩 외곽선 — 구현은 영역 `rule` |
+| 폐기된 키 칩 | `border-stone-300` | #D6D3D1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 2, style: .continuous) .stroke(key.isRevoked ? DesignTokens.Color.rule(Self.area) : Color.clear, lineWidth: 1)` | #D8D5E4 | 허용 S6 | 폐기된 칩 외곽선 — 구현은 영역 `rule`(라이트 `#D8D5E4`). 다크 목업은 이 자리를 `border-[var(--rule)]`(= 구현 `rule` 다크 `#3F365B`)로 그린다(`S6`) |
 | 폐기된 키 칩 | `font-bold` | bold | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: 10.5, weight: .bold, design: .monospaced))` | bold | 일치 | 칩 굵기 |
 | 폐기된 키 칩 | `px-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.horizontal, DesignTokens.Spacing.sm)` | 8 | 일치 | 칩 좌우 여백 |
 | 폐기된 키 칩 | `py-0.5` | 2 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.vertical, 2)` | 2 | 일치 | 칩 위아래 여백 |
 | 폐기된 키 칩 | `rounded-[2px]` | 2 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))` | 2 | 일치 | 칩 라운드 |
 | 폐기된 키 칩 | `text-[10.5px]` | 10.5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: 10.5, weight: .bold, design: .monospaced))` | 10.5 | 일치 | 칩 글자 크기 |
-| 폐기된 키 칩 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(key.isRevoked ? DesignTokens.Color.ink(Self.area).opacity(0.55) : DesignTokens.StatusColor.arrivalGlow)` | #221F33/0.55 | 불일치 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — `S1`·`S5` 와 같은 규약이지만 두 항목의 대상에 승인 화면이 없다 |
+| 폐기된 키 칩 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(key.isRevoked ? DesignTokens.Color.ink(Self.area).opacity(0.55) : DesignTokens.StatusColor.arrivalGlow)` | #221F33/0.55 | 허용 S6 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — 다크 목업은 이 자리를 stone 이 아니라 영역 다크 톤 `#A7A1BE` 로 그린다(`S6`) |
 | 폐기 시각 | `text-[10.5px]` | 10.5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: 10.5, design: .monospaced))` | 10.5 | 일치 | 「폐기됨 MM/dd」 크기 |
-| 폐기 시각 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))` | #221F33/0.55 | 불일치 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — `S1`·`S5` 와 같은 규약이지만 두 항목의 대상에 승인 화면이 없다 |
+| 폐기 시각 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))` | #221F33/0.55 | 허용 S6 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — 다크 목업은 이 자리를 stone 이 아니라 영역 다크 톤 `#A7A1BE` 로 그린다(`S6`) |
 | 발급 버튼 | `border` | 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 10, style: .continuous) .stroke(DesignTokens.Color.accent(Self.area), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))` | 1 | 일치 | 점선 외곽선 굵기 |
 | 발급 버튼 | `border-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 10, style: .continuous) .stroke(DesignTokens.Color.accent(Self.area), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))` | #5B4DB8 | 일치 | 점선 외곽선 색 |
 | 발급 버튼 | `border-dashed` | dashed | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 10, style: .continuous) .stroke(DesignTokens.Color.accent(Self.area), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))` | dashed | 일치 | 점선(`StrokeStyle(dash:)`) |
@@ -1463,7 +1463,7 @@ last_updated: 2026-10-11
 | 시트 제목 | `text-[17px]` | 17 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 17, weight: .bold))` | 17 | 일치 | 시트 제목 크기 |
 | 시트 라벨 | `mt-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 라벨 위 여백(`label(_:)` 의 `.padding(.top, …)`) |
 | 시트 라벨 | `text-[11px]` | 11 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))` | 11 | 일치 | 「호출자 이름」·「키 원문」 크기 |
-| 시트 라벨 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))` | #221F33/0.55 | 불일치 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — `S1`·`S5` 와 같은 규약이지만 두 항목의 대상에 승인 화면이 없다 |
+| 시트 라벨 | `text-stone-500` | #78716C | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))` | #221F33/0.55 | 허용 S6 | 구현은 영역 `ink` 55%(prMonitor 라이트 `#221F33`) — 다크 목업은 이 자리를 stone 이 아니라 영역 다크 톤 `#A7A1BE` 로 그린다(`S6`) |
 | 이름 칸 | `bg-[var(--bg)]` | #EEEDF5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.background(DesignTokens.Color.surface(Self.area))` | #EEEDF5 | 일치 | 이름 칸 바탕(prMonitor `surface`) |
 | 이름 칸 | `border` | 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)` | 1 | 일치 | 이름 칸 외곽선 굵기 |
 | 이름 칸 | `border-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)` | #D8D5E4 | 일치 | 이름 칸 외곽선 색 |
