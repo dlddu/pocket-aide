@@ -54,7 +54,7 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 36행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 26행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 
@@ -82,9 +82,9 @@ last_updated: 2026-10-11
 | `screen-affirmations` | S | 일치 | 16 |
 | `screen-affirmations` | S | 불일치 | 1 |
 | `screen-affirmations` | S | 목업 대기 | 0 |
-| `screen-scratchpad` | M | 일치 | 90 |
+| `screen-scratchpad` | M | 일치 | 92 |
 | `screen-scratchpad` | M | 기본값 일치 | 1 |
-| `screen-scratchpad` | M | 불일치 | 13 |
+| `screen-scratchpad` | M | 불일치 | 11 |
 | `screen-scratchpad` | M | 허용 | 13 |
 | `screen-scratchpad` | M | 목업 대기 | 0 |
 | `screen-scratchpad` | S | 일치 | 13 |
@@ -796,14 +796,14 @@ last_updated: 2026-10-11
 | 출처 라벨(탭 입력) | `uppercase` | uppercase | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(item.source.displayName) .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold)) .tracking(0.5) .textCase(.uppercase) .foregroundStyle(item.source == .shortcut ? DesignTokens.Color.accent(.scratchpad) : DesignTokens.Color.ink(.scratchpad).opacity(0.7))` | uppercase | 일치 | 출처 라벨 대문자 변환 — `.textCase(.uppercase)` |
 | 이동 칩 줄 | `mt-3` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.accessibilityIdentifier("scratchpad.row.\(item.id).move.\(target.rawValue)") } } .padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 본문 ↔ 이동 칩 간격 = `Spacing.md`(칩 줄 위 여백 — 카드 세로 스택은 간격 0) |
 | 이동 칩 줄 | `gap-1.5` | 6 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `HStack(spacing: 6) { ForEach(ScratchpadMoveTarget.allCases` | 6 | 일치 | 이동 칩 사이 간격 |
-| 이동 칩 | `bg-white/60` | #FFFFFF/0.6 | — | — | — | 불일치 | 칩 바탕 — 구현 칩은 바탕 없이 외곽선만 |
-| 이동 칩 | `border` | 1 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.accent(target.designArea), lineWidth: 1))` | 1 | 일치 | 칩 외곽선 두께 |
-| 이동 칩 | `border-[var(--rule)]` | #E0D8C2 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.accent(target.designArea), lineWidth: 1))` | 대상 영역 accent | 불일치 | 칩 외곽선 색 — 목업 임시공간 rule, 구현은 칩마다 이동 대상 영역의 accent(글자 색도 같다) |
+| 이동 칩 | `bg-white/60` | #FFFFFF/0.6 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.background(Capsule().fill((colorScheme == .dark ? DesignTokens.Color.card(.scratchpad) : Color.white).opacity(0.6)))` | #FFFFFF/0.6 | 일치 | 칩 바탕 = 흰색 60%(다크는 다크 목업 `bg-[#272219]/60` 대로 영역 card 60%) |
+| 이동 칩 | `border` | 1 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1))` | 1 | 일치 | 칩 외곽선 두께 |
+| 이동 칩 | `border-[var(--rule)]` | #E0D8C2 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1))` | #E0D8C2 | 일치 | 칩 외곽선 색 = 임시공간 rule(글자는 목업 프레임이 물려주는 임시공간 ink) |
 | 이동 칩 | `text-[11px]` | 11 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(target.chipLabel) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .medium))` | 11 | 일치 | 칩 글자 크기 |
 | 이동 칩 | `font-medium` | medium | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `Text(target.chipLabel) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .medium))` | medium | 일치 | 칩 글자 굵기 |
 | 이동 칩 | `px-2.5` | 10 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.horizontal, 10)` | 10 | 일치 | 칩 좌우 안쪽 여백 |
 | 이동 칩 | `py-1` | 4 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.vertical, DesignTokens.Spacing.xs)` | 4 | 일치 | 칩 위아래 안쪽 여백 |
-| 이동 칩 | `rounded-full` | full | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.accent(target.designArea), lineWidth: 1))` | full | 일치 | 칩 캡슐 |
+| 이동 칩 | `rounded-full` | full | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.overlay(Capsule().stroke(DesignTokens.Color.rule(.scratchpad), lineWidth: 1))` | full | 일치 | 칩 캡슐 |
 | 일자 머리(어제) | `gap-2` | 8 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `HStack(spacing: DesignTokens.Spacing.sm) { Text(section.title)` | 8 | 일치 | 일자 라벨 · 구분선 · 개수 사이 간격 |
 | 일자 머리(어제) | `pt-3` | 12 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.padding(.top, isFirst ? DesignTokens.Spacing.xs : DesignTokens.Spacing.md)` | 12 | 일치 | 둘째 이후 일자 머리 위 여백 = `Spacing.md`(첫 머리가 아닐 때) |
 | 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 스와이프 행 라운드 — 시스템 `List` 스와이프 액션이 정한다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
