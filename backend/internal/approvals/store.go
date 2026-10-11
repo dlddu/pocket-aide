@@ -43,6 +43,7 @@ var (
 	ErrNotPending        = errors.New("request is not pending")
 )
 
+// CallerKey is a row of approval_caller_keys: a named key an external caller presents to file approval requests for one user.
 type CallerKey struct {
 	ID         int64  `json:"id"`
 	Name       string `json:"name"`
@@ -57,6 +58,7 @@ type IssuedKey struct {
 	Key string `json:"key"`
 }
 
+// Request is a row of approval_requests: one approval asked through a caller key, and the user's decision on it.
 type Request struct {
 	ID            string
 	UserID        int64
