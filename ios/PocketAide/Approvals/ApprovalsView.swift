@@ -41,6 +41,11 @@ struct ApprovalsView: View {
                 Task { await viewModel.load() }
             }
         }
+        .onChange(of: showsSettings) { _, shown in
+            if !shown {
+                Task { await viewModel.load() }
+            }
+        }
         .task {
             if viewModel.api == nil, let api = auth.api {
                 viewModel.replaceAPI(api)
