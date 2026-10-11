@@ -103,7 +103,7 @@ struct TodoScreen {
         if direct.exists {
             direct.tap()
         } else {
-            let more = tabBar.buttons["More"]
+            let more = tabBar.buttons["더 보기"]
             XCTAssertTrue(more.exists, "Neither the '\(area.tabLabel)' tab nor 'More' is present")
             more.tap()
             if !tapMoreRow(area.tabLabel, in: app) {

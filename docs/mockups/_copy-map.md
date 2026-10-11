@@ -25,7 +25,8 @@ last_updated: 2026-10-11
   - `데이터` — 정방향 전용. 보간만 있는 리터럴(런타임 값의 서식). 정적 문구가 없어 대조할 카피가 없다.
   - `예시 데이터` — 역방향 전용. 목업이 채워 넣은 예시 값(다짐 문장·PR 제목·시각·SHA·개수 등). 구현은 같은 자리를 데이터로 그린다.
   - `비표시` — 정방향 전용. 화면에 글자로 그려지지 않는 리터럴(SF Symbol 이름 등).
-  - `시스템 UI` — 정방향 전용. iOS 가 앱 밖에서 그리는 문구(위젯 갤러리 이름·설명). 대응 화면 목업이 없다.
+  - `시스템 UI` — 정방향: iOS 가 앱 밖에서 그리는 문구(위젯 갤러리 이름·설명). 대응 화면 목업이 없다. 역방향: 앱 리터럴 없이 UIKit 이 앱 개발 지역 언어로 그리는
+    시스템 컴포넌트 문구(시스템 `TabView` 오버플로 탭·목록의 「더 보기」·「편집」). 검산이 그 낱말과 `ios/project.yml` 의 `developmentLanguage: ko` 를 확인한다.
   - `목업 전용` — 역방향 전용. 목업 갤러리 크롬·프레임 밖 캡션·설계 주석 박스·상태바·홈 화면 크롬. 앱이 그리지 않는다.
   - `미구현 영역` — 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행 또는 지원하지 않는 위젯 크기).
   - `기준 4` — 낱말은 같고 차이가 글리프·아이콘·자리뿐이다. 구조 대조의 몫이다.
@@ -35,7 +36,7 @@ last_updated: 2026-10-11
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 5행, 표 B `구현 대기` 71행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 5행, 표 B `구현 대기` 62행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
@@ -53,7 +54,8 @@ last_updated: 2026-10-11
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
-| B | 구현 대기 | 71 |
+| B | 시스템 UI | 9 |
+| B | 구현 대기 | 62 |
 
 ## 표 A — 정방향 (구현 리터럴 → 목업) · 196행
 
@@ -290,7 +292,7 @@ last_updated: 2026-10-11
 | `screen-affirmations` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-affirmations` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-affirmations` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 카드 제목 |
 | `screen-affirmations` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 카드 본문 |
@@ -308,7 +310,7 @@ last_updated: 2026-10-11
 | `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-affirmations-priority-edit` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-affirmations-priority-edit` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
 | `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
 | `screen-affirmations-priority-edit` | `생성 — 문장이 비어 있을 때` | 목업 전용 | 프레임 위 캡션(생성 모드 빈 문장 상태 프레임 이름) |
@@ -353,7 +355,7 @@ last_updated: 2026-10-11
 | `screen-approval` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-approval` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음) |
+| `screen-approval` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `남은 시간` | 일치 | 요청 상세 카운트다운 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `03:48` | 예시 데이터 | 상세 카운트다운 값 |
@@ -521,7 +523,7 @@ last_updated: 2026-10-11
 | `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-pr-monitor-history` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-pr-monitor-history` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-pr-monitor-history` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-pr-monitor-history` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 |
@@ -666,7 +668,7 @@ last_updated: 2026-10-11
 | `screen-routines` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-routines` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-routines` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-routines` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 |
@@ -736,7 +738,7 @@ last_updated: 2026-10-11
 | `screen-scratchpad` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-scratchpad` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-scratchpad` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-scratchpad` | `임시공간` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(#244 부터 구현도 시스템 More 목록 안. 미분류 수는 `.badge`) |
 | `screen-scratchpad` | `개인` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
 | `screen-scratchpad` | `회사` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
@@ -749,7 +751,7 @@ last_updated: 2026-10-11
 | `screen-scratchpad` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `ScratchpadViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-scratchpad` | `더 보기 — 미분류 배지` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-scratchpad` | `편집` | 구현 대기 | 「더 보기」 목록 내비게이션 바 버튼 — 시스템 More 목록이 그리는 자리이고 구현은 `developmentLanguage: en` 이라 「Edit」다(앱 리터럴 없음) |
+| `screen-scratchpad` | `편집` | 시스템 UI | 「더 보기」 목록 내비게이션 바 버튼 — 시스템 More 목록이 그리는 자리라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「편집」으로 그린다 |
 | `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현에 없다(시스템 More 목록에는 꼬리말 자리가 없다) |
 | `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12 — 임시공간이 「더 보기」로 옮겨져 「더 보기」 목록의 임시공간 항목에 표시, 위젯 PRD-8 AC9로 보완)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-personal` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -783,7 +785,7 @@ last_updated: 2026-10-11
 | `screen-todo-personal` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-todo-personal` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-todo-personal` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `0개 남음 · 0개 완료` | 일치 | 빈 상태 프레임 요약 줄 |
@@ -828,7 +830,7 @@ last_updated: 2026-10-11
 | `screen-todo-work` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-work` | `더 보기` | 구현 대기 | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이고 `ios/project.yml` `developmentLanguage: en` 이라 라벨이 「More」다(앱 리터럴 없음 — UI 테스트도 `buttons["More"]`) |
+| `screen-todo-work` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-work` | `0 OPEN · 0 DONE` | 일치 | 빈 상태·불러오는 중·오류 프레임 요약 줄 「\(open) OPEN · \(done) DONE」 |
@@ -924,7 +926,9 @@ def cover(name, got, want):
 cover("A", A, [(f, l) for f in mapped for l in literals(f)])
 cover("B", B, [(m, x) for m in mocks for x in dict.fromkeys(seqs[m])])
 VA = {"일치", "데이터", "비표시", "시스템 UI", "미구현 영역", "기준 4", "구현 대기", "목업 대기"}
-VB = {"일치", "예시 데이터", "목업 전용", "미구현 영역", "기준 4", "구현 대기"}
+VB = {"일치", "예시 데이터", "목업 전용", "미구현 영역", "기준 4", "구현 대기", "시스템 UI"}
+UIKIT = {"더 보기", "편집"}
+ko_region = re.search(r"^\s*developmentLanguage:\s*ko\s*$", pathlib.Path("ios/project.yml").read_text(), re.M)
 tally = {}
 for f, lit, v in A:
     tally[("A", v)] = tally.get(("A", v), 0) + 1
@@ -939,6 +943,8 @@ for m, x, v in B:
         if not pathlib.Path(ext.group(1)).is_file() or not rev_hit(x, literals(ext.group(1), excl=False)):
             errs.append(f"B 외부 거짓 {m} `{x}`: {ext.group(1)}")
     elif v not in VB: errs.append(f"B 판정 {m} `{x}`: {v}")
+    elif v == "시스템 UI" and not (x in UIKIT and ko_region):
+        errs.append(f"B 시스템 UI 거짓 {m} `{x}`")
     elif v == "일치" and not rev_hit(x, [l for f, ms in mapped.items() if m in ms for l in literals(f)]):
         errs.append(f"B 일치 거짓 {m} `{x}`")
 for t, v, n in re.findall(r"^\| (A|B) \| (.+?) \| (\d+) \|$", text, re.M):

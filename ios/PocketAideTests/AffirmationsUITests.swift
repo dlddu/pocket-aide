@@ -49,7 +49,7 @@ final class AffirmationsUITests: XCTestCase {
         }
 
         if !findAndTapAffirmationsRow(in: app) {
-            let more = tabsBar.buttons["More"]
+            let more = tabsBar.buttons["더 보기"]
             XCTAssertTrue(more.exists, "Neither '다짐' tab nor 'More' tab is present")
             more.tap()
             _ = findAndTapAffirmationsRow(in: app)
