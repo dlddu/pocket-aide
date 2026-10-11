@@ -133,6 +133,14 @@ public final class APIClient: @unchecked Sendable {
 
     private struct Empty: Encodable {}
 
+    static func url(_ base: URL, _ path: String) -> URL {
+        let parts = path.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)
+        let url = base.appendingPathComponent(String(parts[0]))
+        guard parts.count == 2, var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
+        components.percentEncodedQuery = String(parts[1])
+        return components.url ?? url
+    }
+
     private func send<Input: Encodable>(
         method: String,
         path: String,
@@ -158,7 +166,7 @@ public final class APIClient: @unchecked Sendable {
         authenticated: Bool,
         didRetryAfterRefresh: Bool
     ) async throws -> Data {
-        var req = URLRequest(url: baseURL.appendingPathComponent(path))
+        var req = URLRequest(url: APIClient.url(baseURL, path))
         req.httpMethod = method
         if authenticated, let token = try tokenStore.load()?.accessToken {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

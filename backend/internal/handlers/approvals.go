@@ -293,6 +293,34 @@ func ListPendingApprovals(store *approvals.Store) http.HandlerFunc {
 	}
 }
 
+func ListApprovalHistory(store *approvals.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "no user in context")
+			return
+		}
+		page, err := store.ListHistory(r.Context(), u.ID, r.URL.Query().Get("cursor"), approvals.HistoryPageSize)
+		if errors.Is(err, approvals.ErrInvalidCursor) {
+			writeError(w, http.StatusBadRequest, "invalid cursor")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "list failed")
+			return
+		}
+		items := make([]approvalResponse, 0, len(page.Items))
+		for _, p := range page.Items {
+			items = append(items, toApprovalResponse(p))
+		}
+		var next *string
+		if page.NextCursor != "" {
+			next = &page.NextCursor
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"items": items, "next_cursor": next})
+	}
+}
+
 func GetApproval(store *approvals.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())

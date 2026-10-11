@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: com.dlddu
   deploymentTarget:
     iOS: "26.0"
-  developmentLanguage: en
+  developmentLanguage: ko
   groupSortPosition: top
   generateEmptyDirectories: true
 

@@ -119,6 +119,7 @@ func main() {
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(approvalStore))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(approvalStore))
 		p.Get("/api/approvals", handlers.ListPendingApprovals(approvalStore))
+		p.Get("/api/approvals/history", handlers.ListApprovalHistory(approvalStore))
 		p.Get("/api/approvals/{id}", handlers.GetApproval(approvalStore))
 		p.Post("/api/approvals/{id}/approve", handlers.DecideApproval(approvalStore, approvals.DecisionApprove))
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(approvalStore, approvals.DecisionReject))

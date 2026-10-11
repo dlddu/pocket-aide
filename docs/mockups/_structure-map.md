@@ -57,8 +57,8 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 32행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 22행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 21행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 25행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -102,15 +102,16 @@ last_updated: 2026-10-11
 | `screen-todo-personal` | S | 목업 대기 | 0 |
 | `screen-todo-work` | M | 일치 | 111 |
 | `screen-todo-work` | M | 기본값 일치 | 6 |
-| `screen-todo-work` | M | 불일치 | 22 |
-| `screen-todo-work` | M | 허용 | 12 |
+| `screen-todo-work` | M | 불일치 | 11 |
+| `screen-todo-work` | M | 허용 | 23 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 19 |
-| `screen-todo-work` | S | 불일치 | 3 |
+| `screen-todo-work` | S | 불일치 | 2 |
+| `screen-todo-work` | S | 허용 | 1 |
 | `screen-todo-work` | S | 목업 대기 | 0 |
-| `screen-approval` | M | 일치 | 109 |
+| `screen-approval` | M | 일치 | 105 |
 | `screen-approval` | M | 기본값 일치 | 3 |
-| `screen-approval` | M | 불일치 | 21 |
+| `screen-approval` | M | 불일치 | 25 |
 | `screen-approval` | M | 허용 | 14 |
 | `screen-approval` | M | 목업 대기 | 2 |
 | `screen-approval` | S | 일치 | 15 |
@@ -1245,17 +1246,17 @@ last_updated: 2026-10-11
 | 완료 카드 | `opacity-60` | 0.6 | `ios/PocketAide/Todos/TodoListView.swift` | `.opacity(item.isDone ? 0.6 : 1)` | 0.6 | 일치 | 완료 흐림 = 카드 전체 60%(완료 행만) |
 | 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoCheckBox.swift` | `Image(systemName: "checkmark") .font(.system(size: 12, weight: .bold))` · `.opacity(isDone ? 1 : 0)` | 12 | 일치 | 완료 체크 표시 = 흰 `checkmark` 12 — 미완료에선 투명 |
 | 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoCheckBox.swift` | `Image(systemName: "checkmark") .font(.system(size: 12, weight: .bold))` · `.opacity(isDone ? 1 : 0)` | 12 | 일치 | 완료 체크 표시 = 흰 `checkmark` 12 — 미완료에선 투명 |
-| 분리 안내 상자 | `mt-4` | 16 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `p-3` | 12 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `border` | 1 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `border-dashed` | dashed | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `border-[var(--slate)]/40` | #355577/0.4 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `rounded-md` | 6 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `text-[11.5px]` | 11.5 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `text-stone-500` | #78716C | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 상자 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
-| 분리 안내 머리 | `font-bold` | bold | — | — | — | 불일치 | 「N.B.」 머리 — 구현에 없다 |
-| 분리 안내 머리 | `text-[var(--slate)]` | #355577 | — | — | — | 불일치 | 「N.B.」 머리 — 구현에 없다 |
+| 분리 안내 상자 | `mt-4` | 16 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `p-3` | 12 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `border` | 1 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `border-dashed` | dashed | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `border-[var(--slate)]/40` | #355577/0.4 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `rounded-md` | 6 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `text-[11.5px]` | 11.5 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `text-stone-500` | #78716C | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 상자 | `leading-relaxed` | 1.625 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 머리 | `font-bold` | bold | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
+| 분리 안내 머리 | `text-[var(--slate)]` | #355577 | — | — | — | 허용 S8 | 목록 끝 「N.B.」 점선 상자는 목업 프레임 안의 설계 주석이라 앱이 그리지 않는다 — `_copy-map.md` 표 B 가 같은 상자의 문구를 `목업 전용` 으로 판정했다(`S8`) |
 | — | — | 0 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(spacing: 0) { Rectangle()` | 0 | 기본값 일치 | 맨 위 영역 띠 · 헤더 · 검색 필드 · 목록 사이 간격 — 목업은 블록 사이 간격 수식이 없다(다짐·임시공간·개인 투두 선례) |
 | — | — | 0 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `HStack(spacing: 0) { AreaLabel( area: area, showsDot: labelShowsDot, dotShape: labelDotShape, dotSize: labelDotSize, tracking: labelTracking ) labelAccessory }` | 0 | 기본값 일치 | 영역 라벨 줄 — 이 화면은 라벨 옆 부속이 없다(`EmptyView`) |
 | — | — | regular | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/Shared/Sources/DesignSystem/Tokens.swift` | `Text(subtitle) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))` · `weight: Font.Weight = .regular,` | regular | 기본값 일치 | 요약 줄 굵기 — 목업은 굵기 클래스 없음(CSS 기본 400), 공용 부제는 굵기를 넘기지 않아 `font(size:)` 기본값 regular |
@@ -1308,7 +1309,7 @@ last_updated: 2026-10-11
 | 16 | 스와이프 삭제 | `<!-- 스와이프된 행` | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 「삭제」 — 백로그 카드 아래 밀린 행 |
 | 17 | 완료 섹션 | `DONE · 8</h2>` | `ios/PocketAide/Todos/TodoListView.swift` | `section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty, isLastSection: true)` | 일치 | 목록 끝 「DONE · N」 섹션 |
 | 18 | 완료 행 | `<button class="check done w-5 h-5 grid place-items-center mt-0.5 shrink-0">` | `ios/PocketAide/Todos/TodoListView.swift` | `.strikethrough(item.isDone)` | 일치 | 완료 행 — 채운 체크 · 취소선 · 흐림 |
-| 19 | 분리 안내 | `<!-- separation guard rail (V3 reinforcement) -->` | — | — | 불일치 | 목업 목록 끝 「N.B. 개인 영역과 분리된 별개 컬렉션…」 점선 상자 — 구현에 없다 |
+| 19 | 분리 안내 | `<!-- separation guard rail (V3 reinforcement) -->` | — | — | 허용 S8 | 목업 목록 끝 「N.B. 개인 영역과 분리된 별개 컬렉션…」 점선 상자는 프레임 안 설계 주석(PRD-3 AC1 의 재진술)이라 앱이 그리지 않는다 — `_copy-map.md` 표 B `목업 전용` 과 같은 판정(`S8`) |
 | 20 | 빈 상태 | `<!-- 빈 상태: 섹션·행 대신 안내 한 줄` | `ios/PocketAide/Todos/TodoListView.swift` | `.accessibilityIdentifier("\(idPrefix).empty.state")` | 일치 | 항목이 없으면 섹션·행 대신 안내 한 줄(검색 필드는 남는다) |
 | 21 | 불러오는 중 | `<!-- 불러오는 중: 첫 불러오기 동안 빈 상태 안내 자리에 시스템 진행 표시` | `ios/PocketAide/Todos/TodoListView.swift` | `ProgressView().frame(maxWidth: .infinity)` | 일치 | 첫 불러오기 동안 안내 자리에 진행 표시만 — 섹션·행 없음(`emptyState` 의 `if viewModel.isLoading`) |
 | 22 | 오류 줄 | `<!-- 오류 줄 — 구현 `todos.work.error`(목록 맨 위)` | `ios/PocketAide/Todos/TodoListView.swift` | `.accessibilityIdentifier("\(idPrefix).error")` | 일치 | 실패 시 목록 맨 위에 destructive 글자 한 줄 — 그 아래는 그때의 목록(첫 불러오기 실패면 빈 상태 안내) |
@@ -1373,15 +1374,15 @@ last_updated: 2026-10-11
 | 제목 | `text-[18px]` | 18 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 18, weight: .bold))` | 18 | 일치 | 제목 크기 |
 | 섹션 머리 | `gap-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `HStack(spacing: DesignTokens.Spacing.sm)` | 8 | 일치 | 막대 · 제목 · 선 사이 간격 |
 | 섹션 머리 | `mb-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.bottom, DesignTokens.Spacing.sm)` | 8 | 일치 | 섹션 머리 아래 여백 |
-| 섹션 머리 | `mt-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.xs)` | 4 | 일치 | 섹션 머리 위 여백(`Spacing.xs` = 4) — 제목 아래 12 뒤에 4를 더 띄운다 |
+| 섹션 머리 | `mt-1` | 4 | — | — | — | 불일치 | 섹션 머리 위 여백 — 구현은 제목 아래 여백 12 뒤에 바로 놓는다(실효 12 vs 목업 12+4) |
 | 섹션 막대 | `bg-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.fill(DesignTokens.Color.accent(Self.area))` | #5B4DB8 | 일치 | 막대 색 |
 | 섹션 막대 | `h-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.frame(width: 4, height: 12)` | 12 | 일치 | 막대 높이 |
 | 섹션 막대 | `w-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.frame(width: 4, height: 12)` | 4 | 일치 | 막대 폭 |
 | 섹션 제목 | `font-bold` | bold | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))` | bold | 일치 | 「호출자 키」 굵기 |
 | 섹션 제목 | `text-[11px]` | 11 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))` | 11 | 일치 | 섹션 제목 크기(`captionXs`) |
 | 섹션 제목 | `text-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.accent(Self.area))` | #5B4DB8 | 일치 | 섹션 제목 색 |
-| 섹션 제목 | `tracking-wide` | 0.025em | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.tracking(0.3)` | 0.3 | 일치 | 섹션 제목 자간 — 0.025em × 11 = 0.275, 0.1pt 단위로 0.3(우선순위 시트 제목 `.tracking(-0.5)` 선례) |
-| 섹션 제목 | `uppercase` | uppercase | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환(한글 문구라 보이는 차이는 없다) |
+| 섹션 제목 | `tracking-wide` | 0.025em | — | — | — | 불일치 | 자간 수식 없음(목업 11 × 0.025em = 0.3) |
+| 섹션 제목 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 수식 없음(`.textCase(.uppercase)` 부재 — 한글 문구라 렌더 차이는 없다) |
 | 섹션 선 | `bg-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | #D8D5E4 | 일치 | 섹션 머리 오른쪽 1pt 선 색 |
 | 모드 카드 | `bg-white` | #FFFFFF | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
 | 모드 카드 | `border` | 1 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
@@ -1480,7 +1481,7 @@ last_updated: 2026-10-11
 | 원문 칸 | `py-2.5` | 10 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.vertical, 10)` | 10 | 일치 | 칸 위아래 여백 |
 | 원문 칸 | `rounded-md` | 6 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)` | 6 | 일치 | 칸 라운드 |
 | 원문 칸 | `text-[12px]` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionSm, design: .monospaced))` | 12 | 일치 | 원문 글자 크기(고정폭) |
-| 경고 문구 | `leading-relaxed` | 1.625 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 경고 줄 높이 = 글자 크기의 1.625배 |
+| 경고 문구 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 줄 높이 수식 없음 |
 | 경고 문구 | `mt-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.sm)` | 8 | 일치 | 원문 칸 ↔ 경고 간격 |
 | 경고 문구 | `text-[11.5px]` | 11.5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 11.5))` | 11.5 | 일치 | 경고 크기 |
 | 경고 문구 | `text-[var(--destructive)]` | #9C3F2D | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.StatusColor.failure)` | #9C3F2D | 일치 | 경고 색 |

@@ -8,6 +8,7 @@ struct ApprovalsView: View {
     @ObservedObject var viewModel: ApprovalsViewModel
     @State private var path: [ApprovalRequest] = []
     @State private var showsSettings = false
+    @State private var showsHistory = false
 
     private static let area: DesignTokens.Area = .prMonitor
 
@@ -35,6 +36,9 @@ struct ApprovalsView: View {
             .navigationDestination(isPresented: $showsSettings) {
                 ApprovalKeysView(api: viewModel.api ?? auth.api)
             }
+            .navigationDestination(isPresented: $showsHistory) {
+                ApprovalHistoryView(api: viewModel.api ?? auth.api)
+            }
         }
         .onChange(of: path) { _, newPath in
             if newPath.isEmpty {
@@ -42,6 +46,11 @@ struct ApprovalsView: View {
             }
         }
         .onChange(of: showsSettings) { _, shown in
+            if !shown {
+                Task { await viewModel.load() }
+            }
+        }
+        .onChange(of: showsHistory) { _, shown in
             if !shown {
                 Task { await viewModel.load() }
             }
@@ -89,6 +98,22 @@ struct ApprovalsView: View {
             .padding(.vertical, DesignTokens.Spacing.xs)
             .background(DesignTokens.Color.accent(Self.area))
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            Button {
+                showsHistory = true
+            } label: {
+                Image(systemName: "clock")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(DesignTokens.Color.ink(Self.area))
+                    .frame(width: 36, height: 36)
+                    .background(DesignTokens.Color.card(Self.area))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("처리 이력")
+            .accessibilityIdentifier("approvals.history.button")
             Button {
                 showsSettings = true
             } label: {

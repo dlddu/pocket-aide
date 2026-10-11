@@ -72,6 +72,7 @@
 | Q-60 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.status, approval_requests.user_id) \| - \| order(approval_requests.created_at desc, approval_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); approval_requests: idx_approval_requests_user_status_created | `backend/internal/approvals/store.go::Store::ListPending` |
 | Q-61 | `update approval_caller_keys \| eq(id, revoked_at, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::RevokeKey` |
 | Q-62 | `select approval_caller_keys \| eq(id, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::getKey` |
+| Q-63 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.user_id) \| - \| order(coalesce(r.processed_at,r.expires_at) desc, approval_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); approval_requests: idx_approval_requests_user_status_created | `backend/internal/approvals/store.go::Store::ListHistory` |
 
 ## 수동 형태
 

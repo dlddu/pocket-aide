@@ -16,7 +16,7 @@ struct RoutinesScreen {
         if direct.exists {
             direct.tap()
         } else {
-            let more = tabBar.buttons["More"]
+            let more = tabBar.buttons["더 보기"]
             XCTAssertTrue(more.exists, "Neither the 루틴 tab nor 'More' is present")
             more.tap()
             if !screen.addButton.waitForExistence(timeout: 3) && !tapMoreRow(in: app) {
