@@ -65,6 +65,7 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | 화면 | `screen-scratchpad` | 임시공간 탭 화면 전체 — `ScratchpadView`·진입점 `ScratchpadTab`·`ScratchpadCard`: 헤더·일자 그룹 목록·항목 카드(이동 액션)·빈 상태. 추가 시트는 `ScratchpadAddSheet.swift` 행, 「→ 다짐」 시트는 `PriorityEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Scratchpad/ScratchpadViewModel.swift` | 비렌더링 | — | 임시공간 항목 목록·분류 이동 상태와 API 호출 |
 | `ios/PocketAide/ShowHelloIntent.swift` | 비렌더링 | — | App Intent |
+| `ios/PocketAide/Todos/TodoCheckBox.swift` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 왼쪽 완료 체크 `TodoCheckBox` — 목업 `.check`·`.check.done`(개인 원 · 회사 각진 사각, 영역 accent 1.6 외곽선 · 완료 채움 · 흰 체크 글리프 12). `TodoListView.swift` 의 `TodoRow` 가 쓴다 |
 | `ios/PocketAide/Todos/TodoEditSheet.swift` | 목업 없음 | — | 투두 생성·편집 시트(PRD-3 AC2) — 대응 화면 목업이 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListView(area:)`와 진입점 `PersonalTab`·`WorkTab`: 헤더·섹션 목록·행·빈 상태. 편집 시트는 `TodoEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Todos/TodoListViewModel.swift` | 비렌더링 | — | 영역별 투두 목록 상태·API 호출 |

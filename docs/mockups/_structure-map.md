@@ -23,8 +23,8 @@ last_updated: 2026-10-11
 | `screen-routines` | `ios/PocketAide/Routines/RoutineSheets.swift` 의 `RoutineAddSheet`·`RoutineStepAddSheet` (+ 그 시트가 쓰는 `Sheet.swift`·`Card.swift`) | 시트 세 프레임 — 「새 루틴 시트」(이름·반복 주기·단계·액션) · 「루틴 추가 — 특정 요일」(같은 시트, 반복 주기 자리에 요일 원형 버튼 7개) · 「단계 추가 — 루틴 카드에서」(기존 단계·새 단계 입력·액션)의 `Backdrop`·`Sheet` 하위 트리. 루틴 목록 화면·상태 변형 프레임·history strip, 같은 파일의 이력 시트 `RoutineHistorySheet`, 시트 아래 탭 바·상태바는 범위 밖 |
 | `screen-affirmations` | `ios/PocketAide/Affirmations/AffirmationsView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`Card.swift`·`AreaLabel.swift`) | 다짐 탭 본체 세 프레임 — 「목록」(헤더·히어로 카드·목록 머리·목록 행·스와이프된 행·범례) · 「빈 상태」(헤더·안내 카드) · 「불러오는 중」(헤더·진행 표시 카드)의 `<header>`·`<main>` 하위 트리. 상태바·하단 탭 바(`RootView.swift` 행)·우선순위 시트(위 행)는 범위 밖 |
 | `screen-scratchpad` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 임시공간 탭 네 프레임 — 「목록」(헤더·일자 머리·메모 카드·이동 칩·스와이프된 행) · 「빈 상태」(헤더·안내 한 줄) · 「불러오는 중」(헤더·진행 표시) · 「오류」(헤더·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 「더 보기 — 미분류 배지」 프레임(`RootView.swift` 행의 시스템 오버플로 목록)·추가 시트(`ScratchpadAddSheet.swift` — 목업 없음)·「→ 다짐」 시트(우선순위 시트 행)·상태바·하단 탭 바는 범위 밖 |
-| `screen-todo-personal` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .personal)` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 개인 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·필터 칩·섹션 머리·행 카드·스와이프된 행·완료 섹션) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트(`TodoEditSheet.swift` — 목업 없음)·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖. 같은 뷰가 그리는 회사 탭은 아래 행 |
-| `screen-todo-work` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .work)` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 회사 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·기한별 섹션 머리·행 카드·스와이프된 행·완료 섹션·분리 안내 상자) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖 |
+| `screen-todo-personal` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .personal)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 개인 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·필터 칩·섹션 머리·행 카드·스와이프된 행·완료 섹션) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트(`TodoEditSheet.swift` — 목업 없음)·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖. 같은 뷰가 그리는 회사 탭은 아래 행 |
+| `screen-todo-work` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .work)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 회사 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·기한별 섹션 머리·행 카드·스와이프된 행·완료 섹션·분리 안내 상자) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖 |
 
 ## 판독 규약
 
@@ -36,7 +36,7 @@ last_updated: 2026-10-11
   상호작용 클래스(`active:*`·`transition`)는 표 M 의 대상이 아니다 — 요소 순서·유무는 표 S 가 적는다.
 - **역방향**(목업 → 구현): 표 E 의 요소마다 측정 대상 토큰이 표 M 에 한 행씩 나온다. `목업 값` 은 토큰을 px(색은 `#RRGGBB[/불투명도]`)로 환산한 값이다.
 - **정방향**(구현 → 목업): 화면별 정방향 대상 — 우선순위 시트는 `ios/PocketAide/Affirmations/PriorityEditSheet.swift` 와 `Sheet.swift`, 루틴 시트는 `RoutineSheets.swift` 의
-  `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 개인·회사 투두 탭은 각각 `TodoListView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
+  `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 개인·회사 투두 탭은 각각 `TodoListView.swift`·`TodoCheckBox.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
   `.opacity(…)`·`lineWidth:`·`…Radius:`·`padding: .…`)은 모두 표 M 어느 행의 `구현 인용` 안에 나온다. 목업 토큰과 짝이 없는 수식은 `요소`·`목업 인용` 이 `—` 인 행이다.
 - `구현 인용` 은 소스의 공백을 접은 조각이고, `구현 값` 의 숫자는 그 조각의 숫자(`DesignTokens` 상수·`CardPadding` 은 값으로 풀어서)에서, 색은 조각이 부르는
   그 화면 영역(다짐 · 루틴) 색 에셋의 라이트 값에서 온다(`.white` 는 `#FFFFFF`). 값이 화면에서 공용 컴포넌트로 인자로 넘어가는 자리는 `구현 파일` 칸에 파일을 ` · ` 로 함께 적고, 인용마다 그중 한 파일에 있다. 시스템 컨트롤처럼 구현에 수식이 없는 자리의 `구현 값` 은 `시스템` 이고, 구현에 그 요소·수식 자체가 없으면 구현 열 셋이 `—` 다(`불일치`). 값은 단일 수식의 값만 읽는다 — 인접 인셋의 합·오프셋과 안쪽 여백의 합처럼 실효 값이 같아도 단일 수식이 아니면 `불일치` 이고 근거 열이 실효 값을 적는다. `em` 자간은 그 요소의 글자 크기를 곱해 소수 첫째 자리까지 본다(구현도 `em` 계수로 적으면 계수끼리 비교한다).
@@ -55,8 +55,8 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 13행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 36행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 26행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 32행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 24행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -90,17 +90,17 @@ last_updated: 2026-10-11
 | `screen-scratchpad` | S | 일치 | 13 |
 | `screen-scratchpad` | S | 불일치 | 3 |
 | `screen-scratchpad` | S | 목업 대기 | 0 |
-| `screen-todo-personal` | M | 일치 | 91 |
+| `screen-todo-personal` | M | 일치 | 95 |
 | `screen-todo-personal` | M | 기본값 일치 | 7 |
-| `screen-todo-personal` | M | 불일치 | 36 |
+| `screen-todo-personal` | M | 불일치 | 32 |
 | `screen-todo-personal` | M | 허용 | 13 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
 | `screen-todo-personal` | S | 일치 | 16 |
 | `screen-todo-personal` | S | 불일치 | 5 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
-| `screen-todo-work` | M | 일치 | 109 |
+| `screen-todo-work` | M | 일치 | 111 |
 | `screen-todo-work` | M | 기본값 일치 | 4 |
-| `screen-todo-work` | M | 불일치 | 26 |
+| `screen-todo-work` | M | 불일치 | 24 |
 | `screen-todo-work` | M | 허용 | 12 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 19 |
@@ -977,9 +977,9 @@ last_updated: 2026-10-11
 | 행 카드 | `border` | 1 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | 1 | 일치 | 행 카드 외곽선 두께 |
 | 행 카드 | `border-[var(--rule)]` | #EBD9CB | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #EBD9CB | 일치 | 행 카드 외곽선 색 = 개인 rule |
 | 행 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 행 카드 체크 ↔ 본문 간격 = `Spacing.md` |
-| 체크 | `w-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize`(개인 24 — 회사 20, `rowRadius` 와 같은 영역 분기) |
-| 체크 | `h-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize` |
-| 체크 | `rounded-full` | full | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 체크 모양 — 목업은 clay 1.6 외곽선 원(`.check`), 구현은 모서리 둥근 사각 SF Symbol(`square` · `checkmark.square.fill`) |
+| 체크 | `w-6` | 24 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize`(개인 24 — 회사 20, `rowRadius` 와 같은 영역 분기) |
+| 체크 | `h-6` | 24 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize` |
+| 체크 | `rounded-full` | full | `ios/PocketAide/Todos/TodoCheckBox.swift` | `box(Circle())` · `.overlay(shape.strokeBorder(DesignTokens.Color.accent(tone), lineWidth: 1.6))` | full | 일치 | 체크 모양 = 원(`TodoCheckBox` — `checkIsRound` 개인, 회사는 `Rectangle()`). 목업 `.check` 의 1.6 외곽선 clay 는 영역 `accent` 1.6 `strokeBorder` |
 | 체크 | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
 | 태그 줄 | `gap-1.5` | 6 | — | — | — | 불일치 | 제목 위 태그 줄 — 구현은 우선순위를 메타 줄 문구(「높음」 등)로 그리고 태그 줄이 없다 |
 | 태그 줄 | `mb-0.5` | 2 | — | — | — | 불일치 | 태그 줄 — 구현에 없다 |
@@ -1022,12 +1022,12 @@ last_updated: 2026-10-11
 | 완료 카드 | `border-[var(--rule)]` | #EBD9CB | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #EBD9CB | 일치 | 완료 카드 외곽선 색 = 개인 rule |
 | 완료 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 완료 카드 체크 ↔ 본문 간격 = `Spacing.md` |
 | 완료 카드 | `opacity-60` | 0.6 | `ios/PocketAide/Todos/TodoListView.swift` | `.opacity(item.isDone ? 0.6 : 1)` | 0.6 | 일치 | 완료 흐림 = 카드 전체 60%(완료 행만) |
-| 체크(완료) | `w-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize`(개인 24 — 회사 20, `rowRadius` 와 같은 영역 분기) |
-| 체크(완료) | `h-6` | 24 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize` |
-| 체크(완료) | `rounded-full` | full | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 체크 모양 — 목업은 clay 1.6 외곽선 원(`.check`), 구현은 모서리 둥근 사각 SF Symbol(`square` · `checkmark.square.fill`) |
+| 체크(완료) | `w-6` | 24 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize`(개인 24 — 회사 20, `rowRadius` 와 같은 영역 분기) |
+| 체크(완료) | `h-6` | 24 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24` | 24 | 일치 | 체크 크기 = `checkSize` |
+| 체크(완료) | `rounded-full` | full | `ios/PocketAide/Todos/TodoCheckBox.swift` | `box(Circle())` · `.background(shape.fill(isDone ? DesignTokens.Color.accent(tone) : .clear))` | full | 일치 | 완료 체크 모양 = 원 — 목업 `.check.done` 의 clay 채움은 완료일 때 영역 `accent` 채움 |
 | 체크(완료) | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
-| 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 완료 체크 표시 — 구현은 채운 사각 SF Symbol(`checkmark.square.fill`) 하나라 따로 그리는 체크 글리프가 없다 |
-| 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 완료 체크 표시 |
+| 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoCheckBox.swift` | `Image(systemName: "checkmark") .font(.system(size: 12, weight: .bold))` · `.opacity(isDone ? 1 : 0)` | 12 | 일치 | 완료 체크 표시 = 흰 `checkmark` 12 — 미완료에선 투명(목업 미완료 체크는 빈 원) |
+| 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoCheckBox.swift` | `Image(systemName: "checkmark") .font(.system(size: 12, weight: .bold))` · `.opacity(isDone ? 1 : 0)` | 12 | 일치 | 완료 체크 표시 = 흰 `checkmark` 12 |
 | 완료 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))` | 15 | 일치 | 완료 행 제목 크기 = `bodyLg` |
 | 완료 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 빈 상태 안내 | `py-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.vertical, DesignTokens.Spacing.xl) .listRowSeparator(.hidden)` | 20 | 일치 | 안내 위·아래 여백 = `Spacing.xl`(`emptyState` 의 `Group` — 진행 표시에도 걸린다) |
@@ -1060,7 +1060,7 @@ last_updated: 2026-10-11
 | 7 | 필터 칩 | `<!-- filter pills -->` | — | — | 불일치 | 목업은 검색 아래 기한 필터 칩 넷(전체 · 오늘 · 이번 주 · 날짜 없음) — 구현에 없다 |
 | 8 | 섹션 머리 | `<!-- section header -->` | `ios/PocketAide/Todos/TodoListView.swift` | `section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, titleOpacity: 1, isFirstSection: true, isLastSection: viewModel.doneItems.isEmpty)` | 불일치 | 목업은 미완료를 기한별 섹션(오늘 · 날짜 없음)으로 나누고 오른쪽에 날짜·개수를 단다 — 구현은 미완료 한 섹션 「할 일 · N」 |
 | 9 | 행 카드 | `<!-- task with priority -->` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoRow(area: area, item: item) {` | 일치 | 섹션 머리 아래 카드 — 체크 · 본문 순 |
-| 10 | 체크 | `<button class="check w-6 h-6 rounded-full grid place-items-center mt-0.5 shrink-0"></button>` | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 일치 | 카드 왼쪽 체크(모양·크기 차이는 표 M) |
+| 10 | 체크 | `<button class="check w-6 h-6 rounded-full grid place-items-center mt-0.5 shrink-0"></button>` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoCheckBox(area: area, isDone: item.isDone)` | 일치 | 카드 왼쪽 체크 — `TodoCheckBox` 가 개인은 원으로 그린다(수치는 표 M) |
 | 11 | 우선 태그 | `우선</span>` | `ios/PocketAide/Todos/TodoListView.swift` | `parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)` | 불일치 | 목업은 제목 위 clay 대문자 태그 「우선」 — 구현은 메타 줄 끝에 우선순위 이름(「높음」 등) |
 | 12 | 행 제목 | `엄마 생신 케이크 예약 — 후암동 어니언</p>` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title)` | 일치 | 카드 본문 첫 줄 |
 | 13 | 메타 줄 | `<div class="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500">` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta)` | 일치 | 제목 아래 메타 한 줄(기한 · 메모) |
@@ -1208,11 +1208,11 @@ last_updated: 2026-10-11
 | 행 카드 | `border-[var(--rule)]` | #D6DEE9 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #D6DEE9 | 일치 | 외곽선 색 = 회사 `rule` |
 | 행 카드 | `p-3.5` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14)` | 14 | 일치 | 카드 안쪽 여백 14 |
 | 행 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
-| 체크 | `w-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize`(회사 20 — 개인 24, `rowRadius` 와 같은 영역 분기) |
-| 체크 | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize` |
+| 체크 | `w-5` | 20 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` · `.overlay(shape.strokeBorder(DesignTokens.Color.accent(tone), lineWidth: 1.6))` | 20 | 일치 | 체크 크기 = `checkSize`(회사 20 — 개인 24, `rowRadius` 와 같은 영역 분기). 모양은 `TodoCheckBox` 의 `box(Rectangle())` 각진 사각 — 목업 `.check` 의 1.6 외곽선 slate 는 영역 `accent` 1.6 `strokeBorder` |
+| 체크 | `h-5` | 20 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize` |
 | 체크 | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
-| 체크(완료) | `w-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize`(회사 20 — 개인 24, `rowRadius` 와 같은 영역 분기) |
-| 체크(완료) | `h-5` | 20 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square") .font(.system(size: area.checkSize))` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize` |
+| 체크(완료) | `w-5` | 20 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` · `.background(shape.fill(isDone ? DesignTokens.Color.accent(tone) : .clear))` | 20 | 일치 | 체크 크기 = `checkSize`(회사 20 — 개인 24, `rowRadius` 와 같은 영역 분기). 목업 `.check.done` 의 slate 채움은 완료일 때 영역 `accent` 채움 |
+| 체크(완료) | `h-5` | 20 | `ios/PocketAide/Todos/TodoCheckBox.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: area.checkSize, height: area.checkSize)` · `var checkSize: CGFloat { switch self { case .personal: return 24 case .work: return 20` | 20 | 일치 | 체크 크기 = `checkSize` |
 | 체크(완료) | `mt-0.5` | 2 | `ios/PocketAide/Todos/TodoListView.swift` | `.buttonStyle(.plain) .padding(.top, 2)` | 2 | 일치 | 체크 위 여백 — `HStack(alignment: .top)` 안에서 체크만 2 내린다 |
 | 급한 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))` | 15 | 일치 | 제목 크기 = `bodyLg` |
 | 급한 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
@@ -1233,8 +1233,8 @@ last_updated: 2026-10-11
 | 완료 카드 | `p-3.5` | 14 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14)` | 14 | 일치 | 카드 안쪽 여백 14 |
 | 완료 카드 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `HStack(alignment: .top, spacing: DesignTokens.Spacing.md)` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
 | 완료 카드 | `opacity-60` | 0.6 | `ios/PocketAide/Todos/TodoListView.swift` | `.opacity(item.isDone ? 0.6 : 1)` | 0.6 | 일치 | 완료 흐림 = 카드 전체 60%(완료 행만) |
-| 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 체크 표시 — 구현은 채운 사각 SF Symbol 하나라 안쪽 글리프 크기 수식이 없다 |
-| 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 시스템 | 불일치 | 체크 표시 — 구현은 채운 사각 SF Symbol 하나라 안쪽 글리프 크기 수식이 없다 |
+| 체크 글리프 | `width:12px` | 12 | `ios/PocketAide/Todos/TodoCheckBox.swift` | `Image(systemName: "checkmark") .font(.system(size: 12, weight: .bold))` · `.opacity(isDone ? 1 : 0)` | 12 | 일치 | 완료 체크 표시 = 흰 `checkmark` 12 — 미완료에선 투명 |
+| 체크 글리프 | `height:12px` | 12 | `ios/PocketAide/Todos/TodoCheckBox.swift` | `Image(systemName: "checkmark") .font(.system(size: 12, weight: .bold))` · `.opacity(isDone ? 1 : 0)` | 12 | 일치 | 완료 체크 표시 = 흰 `checkmark` 12 — 미완료에선 투명 |
 | 분리 안내 상자 | `mt-4` | 16 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
 | 분리 안내 상자 | `p-3` | 12 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
 | 분리 안내 상자 | `border` | 1 | — | — | — | 불일치 | 목록 끝 「N.B.」 영역 분리 안내 상자 — 구현에 없다(표 S) |
@@ -1291,7 +1291,7 @@ last_updated: 2026-10-11
 | 9 | 섹션 구분선 | `<div class="flex-1 h-px bg-[var(--rule)]"></div>` | `ios/PocketAide/Todos/TodoListView.swift` | `if area.showsSectionRule { Rectangle() .fill(DesignTokens.Color.rule(tone))` | 일치 | 섹션 제목 오른쪽 가로 구분선 — 머리 `HStack` 의 마지막 자식(회사만) |
 | 10 | 행 카드 | `<div class="bg-white border border-[var(--rule)] p-3.5 flex items-start gap-3">` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoRow(area: area, item: item) {` | 일치 | 섹션 머리 아래 카드 — 체크 · 본문 순 |
 | 11 | 급한 행 강조 | `border-l-[3px] border-l-[#C2554F]` | — | — | 불일치 | 목업은 오늘 마감 카드 왼쪽에 3px 붉은 강조 띠 — 구현 행은 기한과 무관하게 같은 외곽선 |
-| 12 | 체크 | `<button class="check w-5 h-5 grid place-items-center mt-0.5 shrink-0"></button>` | `ios/PocketAide/Todos/TodoListView.swift` | `Image(systemName: item.isDone ? "checkmark.square.fill" : "square")` | 일치 | 카드 왼쪽 사각 체크(크기 차이는 표 M) |
+| 12 | 체크 | `<button class="check w-5 h-5 grid place-items-center mt-0.5 shrink-0"></button>` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoCheckBox(area: area, isDone: item.isDone)` | 일치 | 카드 왼쪽 체크 — `TodoCheckBox` 가 회사는 각진 사각으로 그린다(수치는 표 M) |
 | 13 | 행 제목 | `retention 데이터 fact-check 한 번 더</p>` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title)` | 일치 | 카드 본문 첫 줄 |
 | 14 | 메타 줄 | `<div class="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500 stamp uppercase">` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta)` | 일치 | 제목 아래 메타 한 줄(기한 · 우선순위 · 메모) |
 | 15 | 우선순위 | `<span>P1</span>` | `ios/PocketAide/Todos/TodoListView.swift` | `parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)` | 일치 | 메타 줄 안 「P<순위>」(#139) |
@@ -1329,9 +1329,11 @@ SCREENS = [
              ("ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift", "public var body", "public extension")]},
     {"slug": "screen-todo-personal", "area": "personal", "svg": True, "roots": ["absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20", "bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-1.5"],
      "fwd": [("ios/PocketAide/Todos/TodoListView.swift", None, None),
+             ("ios/PocketAide/Todos/TodoCheckBox.swift", None, None),
              ("ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift", "public var body", "public extension")]},
     {"slug": "screen-todo-work", "area": "work", "svg": True, "roots": ["absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20", "bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-2 pb-6 space-y-1.5"],
      "fwd": [("ios/PocketAide/Todos/TodoListView.swift", None, None),
+             ("ios/PocketAide/Todos/TodoCheckBox.swift", None, None),
              ("ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift", "public var body", "public extension")]},
 ]
 part = lambda h: text.split(f"## {h}", 1)[1].split("\n## ", 1)[0]
