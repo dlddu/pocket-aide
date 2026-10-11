@@ -1,12 +1,20 @@
 package apns
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/sideshow/apns2"
 )
 
 // generateP8 produces an ECDSA P-256 PKCS#8 PEM resembling an Apple-issued
@@ -67,5 +75,70 @@ func TestNew_RejectsMissingMetadata(t *testing.T) {
 				t.Fatal("expected error, got nil")
 			}
 		})
+	}
+}
+
+func TestNew_KeepsAppleHostWithoutOverride(t *testing.T) {
+	dev, err := New("KEYID", "TEAMID", "com.example.app", generateP8(t), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	prod, err := New("KEYID", "TEAMID", "com.example.app", generateP8(t), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dev.cli.Host != apns2.HostDevelopment || prod.cli.Host != apns2.HostProduction {
+		t.Fatalf("hosts = %q, %q", dev.cli.Host, prod.cli.Host)
+	}
+}
+
+func TestWithHost_SendsToPlainHTTPReceiver(t *testing.T) {
+	type received struct {
+		path, topic, auth string
+		body              map[string]any
+	}
+	got := make(chan received, 1)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		var body map[string]any
+		_ = json.Unmarshal(raw, &body)
+		got <- received{r.URL.Path, r.Header.Get("apns-topic"), r.Header.Get("authorization"), body}
+		w.Header().Set("apns-id", "fake-id")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	c, err := New("KEYID", "TEAMID", "com.example.app", generateP8(t), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c = c.WithHost(srv.URL + "/")
+	if err := c.SendWithData(context.Background(), "abc123", "CI 실패", "body", map[string]any{"event_id": 7}); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+	r := <-got
+	if r.path != "/3/device/abc123" || r.topic != "com.example.app" || !strings.HasPrefix(r.auth, "bearer ") {
+		t.Fatalf("request = %+v", r)
+	}
+	alert, _ := r.body["aps"].(map[string]any)["alert"].(map[string]any)
+	if alert["title"] != "CI 실패" || r.body["event_id"] != float64(7) {
+		t.Fatalf("payload = %v", r.body)
+	}
+}
+
+func TestWithHost_ReportsRejection(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, `{"reason":"BadDeviceToken"}`)
+	}))
+	defer srv.Close()
+
+	c, err := New("KEYID", "TEAMID", "com.example.app", generateP8(t), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c.WithHost(srv.URL).Send(context.Background(), "bad", "t", "b")
+	if err == nil || !strings.Contains(err.Error(), "BadDeviceToken") {
+		t.Fatalf("err = %v", err)
 	}
 }
