@@ -36,11 +36,11 @@ last_updated: 2026-10-12
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 34행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 33행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 168 |
+| A | 일치 | 169 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
@@ -48,16 +48,16 @@ last_updated: 2026-10-12
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 12 |
-| B | 일치 | 204 |
+| B | 일치 | 205 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 34 |
+| B | 구현 대기 | 33 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 228행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 229행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -222,6 +222,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 쉬는 루틴` | 일치 | 오늘 예정 없는 루틴 섹션 제목 — 「상태 변형」 주간 카드 위 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · 단계 \(routine.steps.count)개` | 일치 | 쉬는 루틴 행 메타 — 「상태 변형」 주간 카드 메타 「매주 일요일 · 단계 3개」 |
+| `ios/PocketAide/Routines/RoutinesView.swift` | `D-\(days)` | 일치 | 쉬는 루틴 행 오른쪽 배지 — 「상태 변형」 주간 카드 「D-4」(다음 예정일까지 남은 날, `RoutineSchedule.daysUntilNext`) |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 주간 카드의 스와이프된 행 패널 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · \(routine.done) / \(routine.total) 완료` | 일치 | 카드 메타 「매일 · 3 / 5 완료」 |
 | `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 일치 | 다 끝낸 루틴의 진행률 자리 — 「상태 변형」 완료 카드 |
@@ -685,7 +686,7 @@ last_updated: 2026-10-12
 | `screen-routines` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-routines` | `주간 회고` | 예시 데이터 | 루틴 이름(사용자 데이터) |
 | `screen-routines` | `매주 일요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주기 요약 `RoutineWeekdays.summary` 「매주 \(symbols[day])요일」 — 구현은 쉬는 루틴 행 메타에 그린다 |
-| `screen-routines` | `D-4` | 구현 대기 | 다음 예정일까지 남은 날 — 구현 쉬는 루틴 행에 없다 |
+| `screen-routines` | `D-4` | 일치 | 다음 예정일까지 남은 날 — `RoutinesView.swift` 쉬는 루틴 행 오른쪽 배지 「D-\(days)」(`RoutineSchedule.daysUntilNext`, 서버 `ScheduledOn` 과 같은 규칙) |
 | `screen-routines` | `월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
 | `screen-routines` | `화` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
 | `screen-routines` | `수` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |

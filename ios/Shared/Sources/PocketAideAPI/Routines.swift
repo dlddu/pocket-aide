@@ -39,6 +39,38 @@ public enum RoutineWeekdays {
     }
 }
 
+public enum RoutineSchedule {
+    public static func daysUntilNext(_ routine: Routine, after day: String) -> Int? {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+        let parts = day.split(separator: "-").compactMap { Int($0) }
+        guard parts.count == 3,
+              let base = calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2])) else {
+            return nil
+        }
+        for offset in 1...366 {
+            guard let date = calendar.date(byAdding: .day, value: offset, to: base) else { return nil }
+            if RoutineDayFormat.string(from: date, calendar: calendar) >= routine.startDay,
+               matches(routine, date, calendar) {
+                return offset
+            }
+        }
+        return nil
+    }
+
+    static func matches(_ routine: Routine, _ date: Date, _ calendar: Calendar) -> Bool {
+        switch routine.cadence {
+        case .daily:
+            return true
+        case .weekdays, .weekly:
+            return RoutineWeekdays.contains(routine.weekdays, calendar.component(.weekday, from: date) - 1)
+        case .monthly:
+            let last = calendar.range(of: .day, in: .month, for: date)?.count ?? 31
+            return calendar.component(.day, from: date) == min(routine.monthDay, last)
+        }
+    }
+}
+
 public enum RoutineDayFormat {
     public static func string(from date: Date, calendar: Calendar = .current) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
