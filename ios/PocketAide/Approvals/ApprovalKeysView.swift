@@ -24,6 +24,8 @@ struct ApprovalKeysView: View {
                         .foregroundStyle(DesignTokens.Color.ink(Self.area))
                         .padding(.bottom, DesignTokens.Spacing.md)
                         .accessibilityIdentifier("approval.keys.title")
+                    autoResponseSectionHeader
+                    autoResponseOptions
                     sectionHeader
                     if let message = viewModel.errorMessage {
                         errorBanner(message)
@@ -55,6 +57,56 @@ struct ApprovalKeysView: View {
         } message: { _ in
             Text(ApprovalKeyFormatting.revokeMessage)
         }
+    }
+
+    private var autoResponseOptions: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
+                ForEach(Array(ApprovalAutoResponse.allCases.enumerated()), id: \.element) { index, mode in
+                    if index > 0 {
+                        Rectangle()
+                            .fill(DesignTokens.Color.rule(Self.area))
+                            .frame(height: 1)
+                    }
+                    ApprovalAutoResponseOption(mode: mode, selected: viewModel.autoResponse == mode, area: Self.area) {
+                        Task { await viewModel.setAutoResponse(mode) }
+                    }
+                    .disabled(viewModel.autoResponse == nil)
+                }
+            }
+            .background(DesignTokens.Color.card(Self.area))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            if let notice = viewModel.modeNotice {
+                Text(notice)
+                    .font(DesignTokens.Typography.font(size: 11.5))
+                    .foregroundStyle(DesignTokens.StatusColor.failure)
+                    .padding(.top, DesignTokens.Spacing.sm)
+                    .accessibilityIdentifier("approval.settings.mode.notice")
+            }
+        }
+        .padding(.bottom, DesignTokens.Spacing.lg)
+    }
+
+    private var autoResponseSectionHeader: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Rectangle()
+                .fill(DesignTokens.Color.accent(Self.area))
+                .frame(width: 4, height: 12)
+            Text("자동 응답 모드")
+                .font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))
+                .tracking(0.3)
+                .textCase(.uppercase)
+                .foregroundStyle(DesignTokens.Color.accent(Self.area))
+            Rectangle()
+                .fill(DesignTokens.Color.rule(Self.area))
+                .frame(height: 1)
+        }
+        .padding(.top, DesignTokens.Spacing.xs)
+        .padding(.bottom, DesignTokens.Spacing.sm)
     }
 
     private var sectionHeader: some View {

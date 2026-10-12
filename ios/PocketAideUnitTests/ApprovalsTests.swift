@@ -102,4 +102,20 @@ final class ApprovalsTests: XCTestCase {
         )
         XCTAssertEqual(ApprovalFormatting.confirmMessage(.reject, context: "캐시 비움"), "캐시 비움을 거절합니다. 확정하면 되돌릴 수 없습니다.")
     }
+
+    func testAutoResponseSettingsRoundTripAndCopy() throws {
+        let decoded = try JSONDecoder().decode(ApprovalSettings.self, from: Data(#"{"auto_response":"AUTO_REJECT"}"#.utf8))
+        XCTAssertEqual(decoded.autoResponse, .autoReject)
+        let encoded = try JSONEncoder().encode(ApprovalSettings(autoResponse: .autoApprove))
+        XCTAssertEqual(String(decoding: encoded, as: UTF8.self), #"{"auto_response":"AUTO_APPROVE"}"#)
+
+        XCTAssertEqual(ApprovalAutoResponse.allCases.map(\.optionLabel), ["없음 — 알림으로 받기", "자동 승인", "자동 거절"])
+        XCTAssertEqual(ApprovalAutoResponse.allCases.map(\.label), ["없음", "자동 승인", "자동 거절"])
+        XCTAssertNil(ApprovalAutoResponse.off.bannerTitle)
+        XCTAssertEqual(ApprovalAutoResponse.autoApprove.bannerTitle, "자동 승인 모드가 켜져 있습니다.")
+        XCTAssertEqual(ApprovalAutoResponse.autoReject.bannerTitle, "자동 거절 모드가 켜져 있습니다.")
+        XCTAssertEqual(ApprovalAutoResponse.off.outcomeNotice, "새 요청은 알림으로 받습니다.")
+        XCTAssertEqual(ApprovalAutoResponse.autoReject.outcomeNotice, "새 요청은 알림 없이 바로 거절됩니다.")
+        XCTAssertEqual(ApprovalAutoResponse.autoApprove.outcomeNotice, "새 요청은 알림 없이 바로 승인됩니다.")
+    }
 }

@@ -18,6 +18,7 @@ erDiagram
     users ||--o{ scratchpad_items : user_id
     users ||--o{ user_excluded_repos : user_id
     users ||--o{ work_todos : user_id
+    users ||--o| user_approval_settings : user_id
     users ||--o| user_notification_settings : user_id
 ```
 
@@ -223,6 +224,16 @@ erDiagram
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
 | `idx_scratchpad_items_user_id` | `user_id` | NO | - |
+
+### `user_approval_settings`
+
+의미: [`approvals.AutoResponse`](../../backend/internal/approvals/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `user_id` | INTEGER | NO | PK, FK → users.id |
+| `auto_response` | TEXT | NO |  |
+| `updated_at` | INTEGER | NO |  |
 
 ### `user_excluded_repos`
 

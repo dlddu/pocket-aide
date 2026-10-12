@@ -44,7 +44,25 @@ var (
 	ErrInvalidKey        = errors.New("invalid caller key")
 	ErrNotPending        = errors.New("request is not pending")
 	ErrInvalidCursor     = errors.New("invalid history cursor")
+	ErrInvalidMode       = errors.New("auto_response must be one of NONE, AUTO_APPROVE, AUTO_REJECT")
 )
+
+// AutoResponse is a user's row in user_approval_settings: how requests filed by caller keys are processed at creation; a user without a row gets AutoResponseNone.
+type AutoResponse string
+
+const (
+	AutoResponseNone    AutoResponse = "NONE"
+	AutoResponseApprove AutoResponse = "AUTO_APPROVE"
+	AutoResponseReject  AutoResponse = "AUTO_REJECT"
+)
+
+func (m AutoResponse) Valid() bool {
+	switch m {
+	case AutoResponseNone, AutoResponseApprove, AutoResponseReject:
+		return true
+	}
+	return false
+}
 
 // CallerKey is a row of approval_caller_keys: a named key an external caller presents to file approval requests for one user.
 type CallerKey struct {
@@ -256,8 +274,37 @@ func (s *Store) scanRequest(sc interface{ Scan(...any) error }) (Request, error)
 	return r, nil
 }
 
+func (s *Store) AutoResponse(ctx context.Context, userID int64) (AutoResponse, error) {
+	var mode string
+	err := s.db.QueryRowContext(ctx,
+		`SELECT auto_response FROM user_approval_settings WHERE user_id = ?`, userID).Scan(&mode)
+	if errors.Is(err, sql.ErrNoRows) {
+		return AutoResponseNone, nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("select approval settings: %w", err)
+	}
+	return AutoResponse(mode), nil
+}
+
+func (s *Store) SetAutoResponse(ctx context.Context, userID int64, mode AutoResponse) (AutoResponse, error) {
+	if !mode.Valid() {
+		return "", ErrInvalidMode
+	}
+	if _, err := s.db.ExecContext(ctx,
+		`INSERT INTO user_approval_settings (user_id, auto_response) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET auto_response = excluded.auto_response, updated_at = unixepoch()`,
+		userID, string(mode)); err != nil {
+		return "", fmt.Errorf("upsert approval settings: %w", err)
+	}
+	return mode, nil
+}
+
 func (s *Store) Create(ctx context.Context, caller Caller, in NewRequest) (Request, error) {
 	id, err := randomID()
+	if err != nil {
+		return Request{}, err
+	}
+	mode, err := s.AutoResponse(ctx, caller.UserID)
 	if err != nil {
 		return Request{}, err
 	}
@@ -267,9 +314,20 @@ func (s *Store) Create(ctx context.Context, caller Caller, in NewRequest) (Reque
 		e := created + *in.TimeoutSeconds
 		expiresAt = &e
 	}
+	status := StatusPending
+	var decisionMode *string
+	var processedAt *int64
+	if mode != AutoResponseNone {
+		status = StatusApproved
+		if mode == AutoResponseReject {
+			status = StatusRejected
+		}
+		auto := "auto"
+		decisionMode, processedAt = &auto, &created
+	}
 	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO approval_requests (id, user_id, caller_key_id, external_id, context, requester_name, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		id, caller.UserID, caller.KeyID, in.ExternalID, in.Context, in.RequesterName, created, expiresAt)
+		`INSERT INTO approval_requests (id, user_id, caller_key_id, external_id, context, requester_name, status, decision_mode, created_at, expires_at, processed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, caller.UserID, caller.KeyID, in.ExternalID, in.Context, in.RequesterName, status, decisionMode, created, expiresAt, processedAt)
 	if isUniqueViolation(err) {
 		return Request{}, ErrDuplicateExternal
 	}

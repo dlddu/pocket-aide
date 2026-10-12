@@ -57,6 +57,14 @@ type approvalResponse struct {
 	ProcessedAt   *int64           `json:"processed_at"`
 }
 
+type approvalSettingsPayload struct {
+	AutoResponse *approvals.AutoResponse `json:"auto_response"`
+}
+
+type approvalSettingsResponse struct {
+	AutoResponse approvals.AutoResponse `json:"auto_response"`
+}
+
 type issueKeyPayload struct {
 	Name string `json:"name"`
 }
@@ -176,7 +184,7 @@ func CreateExternalApproval(store *approvals.Store, push ApprovalPusher) http.Ha
 			CreatedAt: created.CreatedAt,
 			ExpiresAt: created.ExpiresAt,
 		})
-		if push != nil {
+		if push != nil && created.Status == approvals.StatusPending {
 			push.Notify(approvalpush.Request{
 				UserID:     caller.UserID,
 				KeyName:    caller.Name,
@@ -376,5 +384,50 @@ func DecideApproval(store *approvals.Store, d approvals.Decision) http.HandlerFu
 		default:
 			writeJSON(w, http.StatusOK, toApprovalResponse(got))
 		}
+	}
+}
+
+func GetApprovalSettings(store *approvals.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "no user in context")
+			return
+		}
+		mode, err := store.AutoResponse(r.Context(), u.ID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "lookup failed")
+			return
+		}
+		writeJSON(w, http.StatusOK, approvalSettingsResponse{AutoResponse: mode})
+	}
+}
+
+func UpdateApprovalSettings(store *approvals.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "no user in context")
+			return
+		}
+		var p approvalSettingsPayload
+		if err := decodeApprovalBody(w, r, &p); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if p.AutoResponse == nil {
+			writeError(w, http.StatusBadRequest, "auto_response is required")
+			return
+		}
+		mode, err := store.SetAutoResponse(r.Context(), u.ID, *p.AutoResponse)
+		if errors.Is(err, approvals.ErrInvalidMode) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "update failed")
+			return
+		}
+		writeJSON(w, http.StatusOK, approvalSettingsResponse{AutoResponse: mode})
 	}
 }
