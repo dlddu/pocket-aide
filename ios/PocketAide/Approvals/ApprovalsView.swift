@@ -13,13 +13,6 @@ struct ApprovalsView: View {
 
     private static let area: DesignTokens.Area = .prMonitor
 
-    private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "ko_KR")
-        f.dateFormat = "HH:mm"
-        return f
-    }()
-
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
@@ -259,7 +252,7 @@ struct ApprovalsView: View {
         ApprovalRowCard(
             item: item,
             remaining: ApprovalFormatting.remaining(expiresAt: item.expiresAt, now: now),
-            createdText: Self.timeFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(item.createdAt))),
+            createdText: ApprovalFormatting.requestTime(item.createdAt, now: now),
             area: Self.area
         )
     }

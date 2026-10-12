@@ -36,7 +36,7 @@ last_updated: 2026-10-12
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 31행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 30행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
@@ -50,12 +50,12 @@ last_updated: 2026-10-12
 | A | 목업 대기 | 12 |
 | B | 일치 | 207 |
 | B | 외부 | 54 |
-| B | 예시 데이터 | 137 |
+| B | 예시 데이터 | 138 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 31 |
+| B | 구현 대기 | 30 |
 
 ## 표 A — 정방향 (구현 리터럴 → 목업) · 231행
 
@@ -386,7 +386,7 @@ last_updated: 2026-10-12
 | `screen-approval` | `session-agent` | 예시 데이터 | 보낸 키 이름 칩 |
 | `screen-approval` | `기한 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 기한 없는 요청의 남은 시간 자리 — `ApprovalFormatting.noDeadline` |
 | `screen-approval` | `세션 sp-7 의 git push --force 허용` | 예시 데이터 | 요청 요약 |
-| `screen-approval` | `session-platform agent · 어제 18:02` | 구현 대기 | 요청자 · 시각 — 목업은 하루 지난 요청에 「어제」 를 붙이지만 구현 시각 서식은 `HH:mm` 뿐이다 |
+| `screen-approval` | `session-platform agent · 어제 18:02` | 예시 데이터 | 요청자 · 시각 — 서식은 `ApprovalFormatting.requestTime`(오늘 `HH:mm` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `채팅` | 일치 | `RootView.swift` 탭 바 |
