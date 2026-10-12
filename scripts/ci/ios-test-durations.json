@@ -33,6 +33,7 @@
     "TodoAreaSeparationUITests": 157,
     "TodoCompleteUITests": 170,
     "TodoDeleteUITests": 184,
+    "TodoDueFilterUITests": 135,
     "TodoEditUITests": 177,
     "TodoNoCrossAreaMoveUITests": 316,
     "TodoSearchUITests": 53,
