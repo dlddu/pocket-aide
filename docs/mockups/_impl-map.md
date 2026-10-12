@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-10-11
+last_updated: 2026-10-12
 ---
 
 # 구현 ↔ 목업 매핑
@@ -37,6 +37,7 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록(머리 정렬 칩)·우선순위 점 범례·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
+| `ios/PocketAide/Approvals/ApprovalDeepLinkOpener.swift` | 비렌더링 | — | 승인 푸시 딥링크 → 요청 상세 진입(`ViewModifier`) — `openedApprovalID` 를 받아 요청을 조회하고 설정·이력 화면을 닫은 뒤 상세(`ApprovalDetailView.swift` 행)를 연다. `ApprovalsView.swift` 에 붙는다 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | 부분 | `screen-approval` | 승인 요청 상세(#251, PRD-12 AC6·AC7) — 「요청 상세」 프레임의 헤더(백버튼 「승인」·보낸 키 칩)·요청 요약 제목·「남은 시간」 카운트다운(라벨·초 단위 값·진행 막대)·요청 내용 전문·메타(보낸 키·요청자·요청 ID·요청 시각)·폐기된 키 경고·「거절」/「승인」 버튼과 「결정 확인」 프레임의 확인 다이얼로그(제목·본문·「취소」 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.confirmTitle`·`confirmMessage`). 목업에 없는 구현 상태 — 메타 「상태」·처리된 요청의 「처리 방식」·「처리 시각」, 최신 상태 조회 오류 배너, 결정 충돌·실패 안내 배너 — 는 `_copy-map.md` 표 A `목업 대기` |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | 부분 | `screen-approval` | 처리 이력(#264, PRD-12 AC8) — 「처리 이력」 프레임의 섹션 머리 「처리 이력」·이력 행(결과 점·결과 「승인됨/거절됨/만료」·처리 시각·요청 요약·보낸 키 칩·처리 방식 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.statusLabel`·`historyTime`·`historyMeta`(`decisionModeLabel` + 「 · 폐기된 키로 생성됨」))·하단 「이전 이력 불러오는 중…」. 승인 탭 헤더의 이력 버튼으로 진입한다(`ApprovalsView.swift` 행). 목업에 없는 구현 상태 — 조회 오류 배너(오류 설명·「다시 시도」)·첫 조회 중 진행 표시 — 는 목업 「오류」 프레임의 같은 문구로 대조한다. 이력 프레임의 구조·수치 대조는 `_structure-map.md` 의 몫이다 |
 | `ios/PocketAide/Approvals/ApprovalHistoryViewModel.swift` | 비렌더링 | — | 처리 이력 커서 페이지 조회·이어 불러오기·오류 상태와 API 호출 |
@@ -59,7 +60,7 @@ last_updated: 2026-10-11
 | `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 화면 | `screen-pr-monitor-history` | PR 모니터 탭 화면 셸 — `AreaStrip`·`AreaLabel`·`ScreenHeader`(미확인 배지·열린 PR 버튼·알림 설정 버튼·제외 레포 버튼)·미확인/확인 완료 섹션. 카드·row 는 위 두 행 |
 | `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 비렌더링 | — | 이력 조회·확인 처리 |
 | `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text` | 채팅 탭의 「준비 중」 자리표시자(`ChatTab`). 임시공간·루틴 탭은 #64·#88 이 실제 화면으로 바꿨다 — `Scratchpad/`·`Routines/` 행 |
-| `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`)·딥링크 처리 — `pocketaide://weather` 는 날씨 시트(`Weather/WeatherView.swift` 행)를 띄우고, `pocketaide://calendar` 는 시스템 캘린더(`calshow:`)를 연다 |
+| `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`)·딥링크 처리 — `pocketaide://weather` 는 날씨 시트(`Weather/WeatherView.swift` 행)를 띄우고, `pocketaide://calendar` 는 시스템 캘린더(`calshow:`)를 열고, `pocketaide://approvals?id=<요청 ID>` 는 날씨 시트를 닫고 승인 탭을 선택해 요청 상세를 연다(`Approvals/ApprovalDeepLinkOpener.swift` 행) |
 | `ios/PocketAide/PushRegistrar.swift` | 비렌더링 | — | APNs 토큰 등록 |
 | `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업은 다섯 칸 다짐·PR 모니터·승인·채팅·더 보기(tokens.md §7 하단 노출), 목업별 활성 탭: 다짐·다짐·승인·PR 모니터·더 보기·더 보기·더 보기·더 보기). 구현은 시스템 `TabView` 여덟 탭(다짐·PR 모니터·승인·채팅·임시공간·개인·회사·루틴 — #244 부터 이 순서)이라 iPhone 에서는 앞 넷 + 시스템 오버플로 탭(「더 보기」 — `ios/project.yml` `developmentLanguage: ko` 라 UIKit 이 한국어로 그린다)으로 목업의 하단 다섯 칸과 같은 자리가 되고 임시공간·개인·회사·루틴은 오버플로 목록에 들어간다. 승인 탭 배지는 `.badge(pendingCount)` 에 탭 바 외형(`UITabBarAppearance` 배지 배경 = `accent(.prMonitor)`)을 더해 목업과 같은 §1.11 강조색이다(배지 글자는 시스템 기본 흰색 = 목업 `text-white`). `screen-scratchpad` 「더 보기 — 미분류 배지」 프레임은 그 오버플로 목록. 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
 | `ios/PocketAide/Routines/RoutineErrorRow.swift` | 부분 | `screen-routines` | 목록 위 오류 행 `RoutineErrorRow`(실패 문구 + 재시도할 수 있는 실패에만 「다시 시도」) — 목업 「상태 변형」 프레임 맨 위 오류 행. 문구는 `ios/Shared/Sources/PocketAideAPI/Routines.swift` 의 `RoutineFailureCopy`(동작 7종 × 원인 안내 3종)가 만들고 목업은 그중 「단계 체크 · 연결 실패」 한 쌍을 그린다 |
