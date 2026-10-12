@@ -40,7 +40,7 @@ last_updated: 2026-10-11
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 162 |
+| A | 일치 | 163 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
@@ -279,9 +279,10 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 개인 목업 「날짜 없음」 행의 스와이프 패널 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
-| `ios/PocketAide/Todos/TodoListView.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | ` · ` | 일치 | 행 메타 구분자 |
+| `ios/PocketAide/Todos/TodoRowMeta.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
+| `ios/PocketAide/Todos/TodoRowMeta.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
+| `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
+| `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
 ## 표 B — 역방향 (목업 텍스트 → 구현) · 577행
 

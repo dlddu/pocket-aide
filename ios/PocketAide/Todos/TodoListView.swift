@@ -355,12 +355,7 @@ private struct TodoRow: View {
                     .foregroundStyle(DesignTokens.Color.ink(tone))
                     .strikethrough(item.isDone)
                     .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
-                if !meta.isEmpty {
-                    Text(meta)
-                        .font(metaFont)
-                        .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))
-                        .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).meta")
-                }
+                TodoRowMeta(area: area, item: item)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -372,28 +367,5 @@ private struct TodoRow: View {
                 .stroke(DesignTokens.Color.rule(tone), lineWidth: 1)
         )
         .opacity(item.isDone ? 0.6 : 1)
-    }
-
-    private var meta: String {
-        var parts: [String] = []
-        if let due = item.dueDate { parts.append(due) }
-        if let priority = item.priority {
-            parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)
-        }
-        if !item.memo.isEmpty { parts.append("메모: \(item.memo)") }
-        return parts.joined(separator: " · ")
-    }
-
-    private func workRank(_ priority: TodoPriority) -> Int {
-        switch priority {
-        case .high: return 1
-        case .normal: return 2
-        case .low: return 3
-        }
-    }
-
-    private var metaFont: Font {
-        let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)
-        return area == .work ? base.monospaced() : base
     }
 }
