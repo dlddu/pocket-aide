@@ -36,11 +36,11 @@ last_updated: 2026-10-12
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 33행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 32행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 169 |
+| A | 일치 | 170 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
@@ -48,16 +48,16 @@ last_updated: 2026-10-12
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 12 |
-| B | 일치 | 205 |
+| B | 일치 | 206 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 33 |
+| B | 구현 대기 | 32 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 229행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 230행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -200,6 +200,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/Routines/RoutineErrorRow.swift` | `다시 시도` | 일치 | 오류 행 재시도 버튼 — 「상태 변형」 프레임 오류 행(실패 문구는 `RoutineFailureCopy` 가 만든 문자열을 받아 그린다 — 표 B 외부 행) |
+| `ios/PocketAide/Routines/RoutineHistoryRange.swift` | `오늘 · \(today.progressPercent)%` | 일치 | 이력 시트 히트맵 아래 끝 라벨 — 목업 history strip 「오늘 · 60%」(오늘 체크 단계 비율, 오늘이 예정일일 때만) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨 |
@@ -697,7 +698,7 @@ last_updated: 2026-10-12
 | `screen-routines` | `아침 루틴 · 30일` | 일치 | history strip 제목 — 구현 이력 시트 제목 「\(routine.name) · \(days.count)일」(표 A 같은 행) |
 | `screen-routines` | `전체 이력` | 구현 대기 | history strip 이력 진입 버튼 — 구현은 카드 하단 「이력」 버튼(표 A 같은 행) |
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
-| `screen-routines` | `오늘 · 60%` | 구현 대기 | 30일 히트맵 끝 라벨 — 구현 이력 시트는 요약 줄 「\(scheduleSummary) · 예정 n일 중 m일 완료」 를 쓴다 |
+| `screen-routines` | `오늘 · 60%` | 일치 | 30일 히트맵 끝 라벨 — `RoutineHistoryRange.swift` 「오늘 · \(today.progressPercent)%」(이력 시트 히트맵 아래, 오늘이 예정일일 때) |
 | `screen-routines` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
 | `screen-routines` | `채팅` | 일치 | `RootView.swift` 탭 바 |

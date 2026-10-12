@@ -347,6 +347,7 @@ struct RoutineHistorySheet: View {
                                 .accessibilityValue(day.statusLabel)
                         }
                     }
+                    RoutineHistoryRange(days: days)
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(days.reversed()) { day in
                             HStack {
