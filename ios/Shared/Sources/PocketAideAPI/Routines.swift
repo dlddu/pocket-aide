@@ -189,6 +189,10 @@ public struct RoutineHistoryDay: Codable, Identifiable, Equatable, Sendable, Has
         if completed { return "완료" }
         return "미완료 \(done)/\(total)"
     }
+
+    public var progressPercent: Int {
+        total > 0 ? Int((Double(done) / Double(total) * 100).rounded()) : 0
+    }
 }
 
 public enum RoutineFailureCopy {

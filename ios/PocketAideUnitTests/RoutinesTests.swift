@@ -31,6 +31,7 @@ final class RoutinesTests: XCTestCase {
         let json = #"{"items":[{"day":"2026-09-29","scheduled":true,"done":2,"total":2,"completed":true},{"day":"2026-09-30","scheduled":true,"done":1,"total":2,"completed":false},{"day":"2026-10-01","scheduled":false,"done":0,"total":2,"completed":false}]}"#
         let days = try JSONDecoder().decode(RoutineHistoryResponse.self, from: Data(json.utf8)).items
         XCTAssertEqual(days.map(\.statusLabel), ["완료", "미완료 1/2", "쉬는 날"])
+        XCTAssertEqual(days.map(\.progressPercent), [100, 50, 0])
         let summary = RoutineHistorySummary(days)
         XCTAssertEqual(summary.scheduledDays, 2)
         XCTAssertEqual(summary.completedDays, 1)
