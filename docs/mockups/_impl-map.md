@@ -76,6 +76,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Todos/TodoEditSheet.swift` | 목업 없음 | — | 투두 생성·편집 시트(PRD-3 AC2) — 대응 화면 목업이 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListView(area:)`와 진입점 `PersonalTab`·`WorkTab`: 헤더·섹션 목록·행·빈 상태. 편집 시트는 `TodoEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Todos/TodoListViewModel.swift` | 비렌더링 | — | 영역별 투두 목록 상태·API 호출 |
+| `ios/PocketAide/Todos/TodoPriorityTag.swift` | 부분 | `screen-todo-personal` | 개인 투두 행 제목 위 「우선」 태그 줄 `TodoPriorityTag` — 목업 `<!-- task with priority -->` 의 태그 줄(10pt bold · 개인 accent · 대문자 · 자간 0.5 · 태그 줄 아래 2). 우선순위 `high` 인 개인 행에만 `TodoListView.swift` 의 `TodoRow` 가 그린다(회사는 메타 줄 「P1」) |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 제목 아래 메타 줄 `TodoRowMeta` — 목업 메타 줄(`flex items-center gap-3`: 항목 간격 12, 개인은 기한 앞 달력 글리프 11 · 글리프↔기한 4, 회사는 대문자 고정폭 · 항목 사이 「·」). `TodoListView.swift` 의 `TodoRow` 가 쓴다 |
 | `ios/PocketAide/WeatherLocationAccess.swift` | 비렌더링 | — | 위젯 날씨용 현재 위치 갱신(`CLLocationUpdate`·역지오코딩 → App Group `WeatherLocationStore`) — 앱 진입·로그인 시 호출. 갱신이 끝나면 `didRefresh` 알림을 보내 열린 날씨 시트가 다시 조회한다 |
 | `ios/PocketAide/Weather/WeatherView.swift` | 목업 없음 | — | 앱 내 날씨 시트(PRD-8 AC10 — 위젯 날씨 슬라이스 탭 `pocketaide://weather` 로 `PocketAideApp.swift` 가 띄운다): `AreaLabel` 「날씨」·지명 제목·「닫기」·현재 기온·「시간별 예보」·「주간 예보」 카드, 위치 권한 없음·조회 오류 안내와 「설정 열기」·「다시 시도」. 대응 화면 목업이 없다 — 위젯 안의 날씨는 `WeatherSection.swift` 행 |
