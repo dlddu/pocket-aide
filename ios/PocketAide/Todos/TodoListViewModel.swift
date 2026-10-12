@@ -7,6 +7,7 @@ final class TodoListViewModel: ObservableObject {
     @Published private(set) var items: [TodoItem] = []
     @Published private(set) var isLoading = false
     @Published var query = ""
+    @Published var dueFilter: TodoDueFilter = .all
     @Published var errorMessage: String?
 
     private(set) var api: APIClient?
@@ -20,7 +21,7 @@ final class TodoListViewModel: ObservableObject {
         self.api = client
     }
 
-    var visibleItems: [TodoItem] { TodoSearch.filter(items, query: query) }
+    var visibleItems: [TodoItem] { TodoSearch.filter(items, query: query).filter { dueFilter.includes($0) } }
     var openItems: [TodoItem] { visibleItems.filter { !$0.isDone } }
     var doneItems: [TodoItem] { visibleItems.filter(\.isDone) }
     var openCount: Int { items.filter { !$0.isDone }.count }

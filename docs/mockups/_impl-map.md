@@ -72,6 +72,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Scratchpad/ScratchpadViewModel.swift` | 비렌더링 | — | 임시공간 항목 목록·분류 이동 상태와 API 호출 |
 | `ios/PocketAide/ShowHelloIntent.swift` | 비렌더링 | — | App Intent |
 | `ios/PocketAide/Todos/TodoCheckBox.swift` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 왼쪽 완료 체크 `TodoCheckBox` — 목업 `.check`·`.check.done`(개인 원 · 회사 각진 사각, 영역 accent 1.6 외곽선 · 완료 채움 · 흰 체크 글리프 12). `TodoListView.swift` 의 `TodoRow` 가 쓴다 |
+| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | 부분 | `screen-todo-personal` | 개인 투두 검색 필드 아래 기한 필터 칩 줄 `TodoDueFilterChips` — 목업 `<!-- filter pills -->`(「전체 · N」 · 「오늘」 · 「이번 주」 · 「날짜 없음」, 단일 선택 · 가로 스크롤 · 칩 간격 6 · 칩 여백 12×4 · 12pt). 거르는 규칙은 `PocketAideAPI` 의 `TodoDueFilter`. 항목이 있을 때만 `TodoListView.swift` 가 그린다(빈 상태 프레임은 칩이 없다) |
 | `ios/PocketAide/Todos/TodoEditSheet.swift` | 목업 없음 | — | 투두 생성·편집 시트(PRD-3 AC2) — 대응 화면 목업이 없다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListView(area:)`와 진입점 `PersonalTab`·`WorkTab`: 헤더·섹션 목록·행·빈 상태. 편집 시트는 `TodoEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Todos/TodoListViewModel.swift` | 비렌더링 | — | 영역별 투두 목록 상태·API 호출 |
