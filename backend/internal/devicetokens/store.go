@@ -53,3 +53,10 @@ func (s *Store) ListByUserID(ctx context.Context, userID int64) ([]string, error
 	}
 	return out, nil
 }
+
+func (s *Store) Delete(ctx context.Context, userID int64, token string) error {
+	if _, err := s.db.ExecContext(ctx, `DELETE FROM device_tokens WHERE user_id = ? AND token = ?`, userID, token); err != nil {
+		return fmt.Errorf("delete device token: %w", err)
+	}
+	return nil
+}

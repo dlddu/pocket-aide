@@ -6,6 +6,7 @@ struct ApprovalsView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var viewModel: ApprovalsViewModel
+    @Binding var openedApprovalID: String?
     @State private var path: [ApprovalRequest] = []
     @State private var showsSettings = false
     @State private var showsHistory = false
@@ -66,6 +67,7 @@ struct ApprovalsView: View {
                 Task { await viewModel.load() }
             }
         }
+        .modifier(ApprovalDeepLinkOpener(openedApprovalID: $openedApprovalID, path: $path, showsSettings: $showsSettings, showsHistory: $showsHistory, api: viewModel.api ?? auth.api))
     }
 
     private var header: some View {

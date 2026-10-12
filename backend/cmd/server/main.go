@@ -16,6 +16,7 @@ import (
 
 	"github.com/dlddu/pocket-aide/backend/internal/affirmations"
 	"github.com/dlddu/pocket-aide/backend/internal/apns"
+	"github.com/dlddu/pocket-aide/backend/internal/approvalpush"
 	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
@@ -75,6 +76,25 @@ func main() {
 	platform := sessions.NewClient(cfg.SessionPlatformURL)
 	approvalStore := approvals.New(conn)
 
+	var apnsClient *apns.Client
+	if cfg.PRMonitorEnabled && !cfg.APNSDisabled {
+		apnsClient, err = apns.New(
+			cfg.APNSKeyID, cfg.APNSTeamID, cfg.APNSBundleID,
+			[]byte(cfg.APNSAuthKeyP8), cfg.APNSUseProduction,
+		)
+		if err != nil {
+			log.Fatalf("apns: %v", err)
+		}
+		if cfg.APNSHost != "" {
+			log.Printf("pr-monitor: APNs pushes go to %s (APNS_HOST)", cfg.APNSHost)
+			apnsClient = apnsClient.WithHost(cfg.APNSHost)
+		}
+	}
+	var approvalPusher handlers.ApprovalPusher
+	if apnsClient != nil {
+		approvalPusher = approvalpush.New(apnsClient, deviceStore)
+	}
+
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(verifier, conn))
 		p.Get("/api/me", handlers.Me())
@@ -127,7 +147,7 @@ func main() {
 
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(approvalStore))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 	})
 
@@ -147,21 +167,8 @@ func main() {
 	consumerCtx, cancelConsumer := context.WithCancel(context.Background())
 	defer cancelConsumer()
 	if cfg.PRMonitorEnabled {
-		var apnsClient *apns.Client
 		if cfg.APNSDisabled {
 			log.Printf("pr-monitor: APNs push disabled (APNS_DISABLED=true); history is still recorded")
-		} else {
-			apnsClient, err = apns.New(
-				cfg.APNSKeyID, cfg.APNSTeamID, cfg.APNSBundleID,
-				[]byte(cfg.APNSAuthKeyP8), cfg.APNSUseProduction,
-			)
-			if err != nil {
-				log.Fatalf("apns: %v", err)
-			}
-			if cfg.APNSHost != "" {
-				log.Printf("pr-monitor: APNs pushes go to %s (APNS_HOST)", cfg.APNSHost)
-				apnsClient = apnsClient.WithHost(cfg.APNSHost)
-			}
 		}
 		dispatch := func(ctx context.Context, evt githubwebhook.WorkflowRunEvent) error {
 			// Looked up outside InsertBatchTx so the transaction holds

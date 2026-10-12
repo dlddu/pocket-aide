@@ -6,6 +6,7 @@ package apns
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -69,21 +70,70 @@ func (c *Client) Send(ctx context.Context, deviceToken, title, body string) erro
 // (PRD-10 AC7 — we send `event_id` so the receiver can highlight the right
 // notification-history row).
 func (c *Client) SendWithData(ctx context.Context, deviceToken, title, body string, data map[string]any) error {
-	p := payload.NewPayload().AlertTitle(title).AlertBody(body).Sound("default")
-	for k, v := range data {
-		p = p.Custom(k, v)
-	}
 	n := &apns2.Notification{
 		DeviceToken: deviceToken,
 		Topic:       c.bundleID,
-		Payload:     p,
+		Payload:     alertPayload(title, body, data),
 	}
 	resp, err := c.cli.PushWithContext(ctx, n)
 	if err != nil {
 		return fmt.Errorf("apns push: %w", err)
 	}
 	if !resp.Sent() {
-		return fmt.Errorf("apns rejected (status=%d reason=%q apns-id=%s)", resp.StatusCode, resp.Reason, resp.ApnsID)
+		return &RejectedError{StatusCode: resp.StatusCode, Reason: resp.Reason, ApnsID: resp.ApnsID}
 	}
 	return nil
+}
+
+const MaxPayloadBytes = 4096
+
+type RejectedError struct {
+	StatusCode int
+	Reason     string
+	ApnsID     string
+}
+
+func (e *RejectedError) Error() string {
+	return fmt.Sprintf("apns rejected (status=%d reason=%q apns-id=%s)", e.StatusCode, e.Reason, e.ApnsID)
+}
+
+func (e *RejectedError) TokenInvalid() bool {
+	switch e.Reason {
+	case apns2.ReasonBadDeviceToken, apns2.ReasonUnregistered, apns2.ReasonDeviceTokenNotForTopic:
+		return true
+	}
+	return e.StatusCode == http.StatusGone
+}
+
+func alertPayload(title, body string, data map[string]any) *payload.Payload {
+	p := payload.NewPayload().AlertTitle(title).AlertBody(body).Sound("default")
+	for k, v := range data {
+		p = p.Custom(k, v)
+	}
+	return p
+}
+
+func PayloadSize(title, body string, data map[string]any) int {
+	raw, err := json.Marshal(alertPayload(title, body, data))
+	if err != nil {
+		return 0
+	}
+	return len(raw)
+}
+
+func FitAlertBody(title, body string, data map[string]any) string {
+	if PayloadSize(title, body, data) <= MaxPayloadBytes {
+		return body
+	}
+	runes := []rune(body)
+	lo, hi := 0, len(runes)
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if PayloadSize(title, string(runes[:mid])+"…", data) <= MaxPayloadBytes {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	return string(runes[:lo]) + "…"
 }

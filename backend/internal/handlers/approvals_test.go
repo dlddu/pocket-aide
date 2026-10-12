@@ -44,6 +44,11 @@ type approvalEnv struct {
 
 func newApprovalEnv(t *testing.T) *approvalEnv {
 	t.Helper()
+	return newApprovalEnvWithPush(t, nil)
+}
+
+func newApprovalEnvWithPush(t *testing.T, push handlers.ApprovalPusher) *approvalEnv {
+	t.Helper()
 	conn, err := db.Open(filepath.Join(t.TempDir(), "approvals.db"))
 	if err != nil {
 		t.Fatalf("db open: %v", err)
@@ -65,7 +70,7 @@ func newApprovalEnv(t *testing.T) *approvalEnv {
 	})
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(store))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(store))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(store, push))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(store))
 	})
 	env.router = r
