@@ -153,6 +153,9 @@ struct TodoListView: View {
                     .accessibilityHidden(true)
                 header
                 searchField
+                if area == .personal && !viewModel.items.isEmpty {
+                    TodoDueFilterChips(area: area, total: viewModel.items.count, selection: $viewModel.dueFilter)
+                }
                 list
             }
         }

@@ -40,7 +40,7 @@ last_updated: 2026-10-11
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 163 |
+| A | 일치 | 167 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
@@ -48,16 +48,16 @@ last_updated: 2026-10-11
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 11 |
-| B | 일치 | 199 |
+| B | 일치 | 203 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 39 |
+| B | 구현 대기 | 35 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 221행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 226행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -264,6 +264,10 @@ last_updated: 2026-10-11
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `날씨` | 일치 | 날씨 슬라이스 라벨의 지명 없음 대체값(#111 에서 `PocketAideWidget.swift` 의 자리표시자 라벨 「날씨」 를 대체했다) — 「날씨 슬라이스 상태」 변형. 지명이 있으면 지명(목업 「서울」 — 예시 데이터) |
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 상태 — 「날씨 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/WeatherSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「날씨 슬라이스 상태」 변형 |
+| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `전체 · \(total)` | 일치 | 기한 필터 첫 칩 「전체 · 11」 — 개수는 영역 전체 항목 수(목업 남음 7 + 완료 4) |
+| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `오늘` | 일치 | 기한 필터 칩 「오늘」 — 마감이 오늘이거나 지난 항목 |
+| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `이번 주` | 일치 | 기한 필터 칩 「이번 주」 — 마감이 이번 주 마지막 날까지인 항목 |
+| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `날짜 없음` | 일치 | 기한 필터 칩 「날짜 없음」 — 마감이 없는 항목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 일치 | 개인 탭 검색 필드 placeholder |
@@ -789,10 +793,10 @@ last_updated: 2026-10-11
 | `screen-todo-personal` | `내 일` | 일치 | 헤더 제목 |
 | `screen-todo-personal` | `7개 남음 · 4개 완료` | 일치 | 요약 줄 |
 | `screen-todo-personal` | `개인 영역만 검색…` | 일치 | 검색 필드 placeholder |
-| `screen-todo-personal` | `전체 · 11` | 구현 대기 | 날짜 필터 칩 — 구현에 필터가 없다 |
-| `screen-todo-personal` | `오늘` | 구현 대기 | 날짜 필터 칩·날짜 섹션 제목 — 구현은 할 일/완료 두 섹션뿐 |
-| `screen-todo-personal` | `이번 주` | 구현 대기 | 위와 같음 |
-| `screen-todo-personal` | `날짜 없음` | 구현 대기 | 위와 같음 |
+| `screen-todo-personal` | `전체 · 11` | 일치 | 기한 필터 칩 「전체 · \(total)」(`TodoDueFilterChips.swift`) |
+| `screen-todo-personal` | `오늘` | 일치 | 기한 필터 칩 「오늘」(`TodoDueFilterChips.swift`) — 같은 글자의 날짜 섹션 제목(기한별 섹션)은 구조 축 `_structure-map` 표 S #8 이 맡는다 |
+| `screen-todo-personal` | `이번 주` | 일치 | 기한 필터 칩 「이번 주」(`TodoDueFilterChips.swift`) |
+| `screen-todo-personal` | `날짜 없음` | 일치 | 기한 필터 칩 「날짜 없음」(`TodoDueFilterChips.swift`) — 같은 글자의 날짜 섹션 제목은 구조 축 `_structure-map` 표 S #8 이 맡는다 |
 | `screen-todo-personal` | `5월 6일 수` | 구현 대기 | 날짜 섹션 부제(날짜) — 날짜 섹션이 구현에 없다 |
 | `screen-todo-personal` | `우선` | 외부 `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 우선순위 라벨 — `TodoPriority.displayName` |
 | `screen-todo-personal` | `엄마 생신 케이크 예약 — 후암동 어니언` | 예시 데이터 | 할 일 제목(사용자 데이터) |

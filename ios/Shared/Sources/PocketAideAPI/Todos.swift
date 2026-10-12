@@ -128,6 +128,29 @@ public enum TodoSearch {
     }
 }
 
+public enum TodoDueFilter: String, CaseIterable, Sendable {
+    case all
+    case today
+    case thisWeek
+    case noDate
+
+    public func includes(_ item: TodoItem, now: Date = Date(), calendar: Calendar = .current) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .noDate:
+            return item.dueDate == nil
+        case .today:
+            guard let due = item.dueDate else { return false }
+            return due <= TodoDueDate.string(from: now)
+        case .thisWeek:
+            guard let due = item.dueDate, let week = calendar.dateInterval(of: .weekOfYear, for: now) else { return false }
+            let lastDay = calendar.date(byAdding: .day, value: -1, to: week.end) ?? now
+            return due <= TodoDueDate.string(from: lastDay)
+        }
+    }
+}
+
 struct TodosListResponse: Decodable {
     let items: [TodoItem]
 }
