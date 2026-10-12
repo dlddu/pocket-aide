@@ -352,12 +352,17 @@ private struct TodoRow: View {
             .padding(.top, 2)
             .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).toggle")
             VStack(alignment: .leading, spacing: 6) {
-                Text(item.title)
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))
-                    .lineHeight(.multiple(factor: 1.375))
-                    .foregroundStyle(DesignTokens.Color.ink(tone))
-                    .strikethrough(item.isDone)
-                    .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
+                VStack(alignment: .leading, spacing: 0) {
+                    if area == .personal && item.priority == .high {
+                        TodoPriorityTag(area: area, item: item)
+                    }
+                    Text(item.title)
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))
+                        .lineHeight(.multiple(factor: 1.375))
+                        .foregroundStyle(DesignTokens.Color.ink(tone))
+                        .strikethrough(item.isDone)
+                        .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id)")
+                }
                 TodoRowMeta(area: area, item: item)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

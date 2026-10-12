@@ -26,13 +26,18 @@ struct TodoRowMeta: View {
             .textCase(area == .work ? .uppercase : nil)
             .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(parts.joined(separator: " · "))
+            .accessibilityLabel(labelParts.joined(separator: " · "))
             .accessibilityAddTraits(.isStaticText)
             .accessibilityIdentifier("todos.\(area.rawValue).row.\(item.id).meta")
         }
     }
 
     private var parts: [String] {
+        guard area == .personal, item.priority == .high else { return labelParts }
+        return labelParts.filter { $0 != TodoPriority.high.displayName }
+    }
+
+    private var labelParts: [String] {
         var parts: [String] = []
         if let due = item.dueDate { parts.append(due) }
         if let priority = item.priority {
