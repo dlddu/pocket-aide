@@ -35,12 +35,7 @@ struct PRMonitorGroupCard: View {
                             .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
                             .accessibilityIdentifier("prmonitor.group.\(group.id).arrival")
                     }
-                    if group.prNumber == nil, !group.headBranch.isEmpty {
-                        Text("PR 없음 · \(group.headBranch) 직접 푸시")
-                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
-                            .italic()
-                            .foregroundStyle(.tertiary)
-                    }
+                    noPRLabel
                     titleLine
                     statusSummary
                     if !group.allAcknowledged {
@@ -273,6 +268,16 @@ struct PRMonitorGroupCard: View {
 }
 
 extension PRMonitorGroupCard {
+    @ViewBuilder
+    fileprivate var noPRLabel: some View {
+        if group.prNumber == nil, !group.headBranch.isEmpty {
+            Text("PR 없음 · \(group.headBranch) 직접 푸시")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                .italic()
+                .foregroundStyle(.tertiary)
+        }
+    }
+
     @ViewBuilder
     fileprivate var groupLinks: some View {
         if let prDest = group.prURL.flatMap(URL.init(string:)) {
