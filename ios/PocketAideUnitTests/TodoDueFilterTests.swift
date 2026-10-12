@@ -41,4 +41,9 @@ final class TodoDueFilterTests: XCTestCase {
     func testNoDateKeepsOnlyUndatedItems() {
         XCTAssertEqual(ids(.noDate), [5])
     }
+
+    func testDeadlineCountIsOpenItemsWithDueDate() {
+        XCTAssertEqual(TodoDeadline.openCount(items), 4)
+        XCTAssertEqual(TodoDeadline.openCount([]), 0)
+    }
 }

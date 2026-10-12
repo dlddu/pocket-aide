@@ -151,6 +151,12 @@ public enum TodoDueFilter: String, CaseIterable, Sendable {
     }
 }
 
+public enum TodoDeadline {
+    public static func openCount(_ items: [TodoItem]) -> Int {
+        items.filter { !$0.isDone && $0.dueDate != nil }.count
+    }
+}
+
 struct TodosListResponse: Decodable {
     let items: [TodoItem]
 }

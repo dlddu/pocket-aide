@@ -26,6 +26,7 @@ final class TodoListViewModel: ObservableObject {
     var doneItems: [TodoItem] { visibleItems.filter(\.isDone) }
     var openCount: Int { items.filter { !$0.isDone }.count }
     var doneCount: Int { items.count - openCount }
+    var deadlineCount: Int { TodoDeadline.openCount(items) }
 
     func load() async {
         guard let api else { return }

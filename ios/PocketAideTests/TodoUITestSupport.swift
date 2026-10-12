@@ -183,7 +183,7 @@ struct TodoScreen {
         let numbers = summary.label
             .split(whereSeparator: { !$0.isNumber })
             .compactMap { Int($0) }
-        guard numbers.count == 2 else { return nil }
+        guard numbers.count >= 2 else { return nil }
         return TodoCounts(open: numbers[0], done: numbers[1])
     }
 
