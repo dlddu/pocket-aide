@@ -41,6 +41,15 @@ final class ApprovalHistoryTests: XCTestCase {
         XCTAssertEqual(ApprovalFormatting.historyTime(1_760_000_000 - 8 * 86_400, now: now, calendar: calendar), "10/01 17:53")
     }
 
+    func testRequestTimeIsTodayYesterdayOrDate() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Seoul"))
+        let now = Date(timeIntervalSince1970: 1_760_000_000)
+        XCTAssertEqual(ApprovalFormatting.requestTime(1_760_000_000 - 60, now: now, calendar: calendar), "17:52")
+        XCTAssertEqual(ApprovalFormatting.requestTime(1_760_000_000 - 86_400, now: now, calendar: calendar), "어제 17:53")
+        XCTAssertEqual(ApprovalFormatting.requestTime(1_760_000_000 - 8 * 86_400, now: now, calendar: calendar), "10/01 17:53")
+    }
+
     func testRequestURLKeepsTheQueryOutOfThePath() throws {
         let base = try XCTUnwrap(URL(string: "https://aide.example.com"))
         XCTAssertEqual(

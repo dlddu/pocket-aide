@@ -151,12 +151,20 @@ public enum ApprovalFormatting {
     }
 
     public static func historyTime(_ processedAt: Int64, now: Date = Date(), calendar: Calendar = .current) -> String {
-        let date = Date(timeIntervalSince1970: TimeInterval(processedAt))
+        dayRelativeTime(processedAt, todayFormat: "HH:mm:ss", now: now, calendar: calendar)
+    }
+
+    public static func requestTime(_ createdAt: Int64, now: Date = Date(), calendar: Calendar = .current) -> String {
+        dayRelativeTime(createdAt, todayFormat: "HH:mm", now: now, calendar: calendar)
+    }
+
+    private static func dayRelativeTime(_ seconds: Int64, todayFormat: String, now: Date, calendar: Calendar) -> String {
+        let date = Date(timeIntervalSince1970: TimeInterval(seconds))
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.timeZone = calendar.timeZone
         if calendar.isDate(date, inSameDayAs: now) {
-            formatter.dateFormat = "HH:mm:ss"
+            formatter.dateFormat = todayFormat
             return formatter.string(from: date)
         }
         if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(date, inSameDayAs: yesterday) {
