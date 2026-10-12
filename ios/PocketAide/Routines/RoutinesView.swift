@@ -186,8 +186,15 @@ struct RoutinesView: View {
                             .foregroundStyle(DesignTokens.Color.ink(.routines).opacity(0.55))
                     }
                     Spacer(minLength: 0)
-                    Image(systemName: "calendar")
-                        .foregroundStyle(DesignTokens.Color.accent(.routines))
+                    if let days = RoutineSchedule.daysUntilNext(routine, after: viewModel.dayKey) {
+                        Text("D-\(days)")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .bold))
+                            .tracking(0.55)
+                            .foregroundStyle(DesignTokens.Color.accent(.routines))
+                            .padding(.horizontal, DesignTokens.Spacing.sm)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(DesignTokens.Color.soft(.routines)))
+                    }
                 }
                 if routine.cadence == .weekdays || routine.cadence == .weekly {
                     weekdayBar(routine.weekdays)

@@ -37,6 +37,21 @@ final class RoutinesTests: XCTestCase {
         XCTAssertEqual(RoutineDayFormat.title(of: "2026-10-01"), "10월 1일")
     }
 
+    func testDaysUntilNextScheduledDay() throws {
+        func routine(_ cadence: String, weekdays: Int = 0, monthDay: Int = 0, startDay: String = "2026-01-01") throws -> Routine {
+            let json = #"{"id":1,"name":"r","cadence":"\#(cadence)","weekdays":\#(weekdays),"month_day":\#(monthDay),"start_day":"\#(startDay)","steps":[],"created_at":1}"#
+            return try JSONDecoder().decode(Routine.self, from: Data(json.utf8))
+        }
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("daily"), after: "2026-10-12"), 1)
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("weekly", weekdays: RoutineWeekdays.bit(0)), after: "2026-10-12"), 6)
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("weekly", weekdays: RoutineWeekdays.bit(1)), after: "2026-10-12"), 7)
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("weekdays", weekdays: RoutineWeekdays.bit(3) | RoutineWeekdays.bit(5)), after: "2026-10-12"), 2)
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("monthly", monthDay: 31), after: "2026-11-01"), 29)
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("monthly", monthDay: 1), after: "2026-10-12"), 20)
+        XCTAssertEqual(RoutineSchedule.daysUntilNext(try routine("daily", startDay: "2026-10-20"), after: "2026-10-12"), 8)
+        XCTAssertNil(RoutineSchedule.daysUntilNext(try routine("daily"), after: "bad"))
+    }
+
     func testDayFormatUsesCalendarDay() {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "Asia/Seoul") ?? .current
