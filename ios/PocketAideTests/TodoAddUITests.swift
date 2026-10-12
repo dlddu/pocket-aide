@@ -70,6 +70,20 @@ final class TodoAddUITests: XCTestCase {
             "\(TodoScreen.today()) · \(screen.priorityLabel("high")) · 메모: 참고 자료 첨부",
             "The full item should show due date, priority and memo"
         )
+        let fullTag = priorityTag(on: screen, title: titles.full)
+        if screen.area == .personal {
+            XCTAssertTrue(fullTag?.waitForExistence(timeout: 5) ?? false, "A personal 「우선」 item should carry the priority tag")
+            XCTAssertEqual(fullTag?.label, "우선", "The personal tag should read 「우선」")
+            if let fullTag {
+                XCTAssertLessThan(fullTag.frame.minY, fullRow.frame.minY, "The priority tag sits above the title")
+            }
+        } else {
+            XCTAssertFalse(fullTag?.exists ?? true, "Work items show P1 on the secondary line without a tag")
+        }
+        XCTAssertFalse(
+            priorityTag(on: screen, title: titles.bare)?.exists ?? true,
+            "A title-only item should have no priority tag"
+        )
         XCTAssertFalse(
             screen.meta(titles.bare)?.exists ?? true,
             "A title-only item should have no secondary line"
@@ -81,5 +95,10 @@ final class TodoAddUITests: XCTestCase {
         XCTAssertLessThan(fullRow.frame.minY, bareRow.frame.minY, "Dated items sort before undated ones")
         screen.clearSearch()
         screen.dismissKeyboard()
+    }
+
+    private func priorityTag(on screen: TodoScreen, title: String) -> XCUIElement? {
+        guard let id = screen.rowID(title) else { return nil }
+        return screen.app.staticTexts["todos.\(screen.area.rawValue).row.\(id).priority"]
     }
 }
