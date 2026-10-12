@@ -36,11 +36,11 @@ last_updated: 2026-10-12
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 32행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 31행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 170 |
+| A | 일치 | 171 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
@@ -48,16 +48,16 @@ last_updated: 2026-10-12
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
 | A | 목업 대기 | 12 |
-| B | 일치 | 206 |
+| B | 일치 | 207 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 32 |
+| B | 구현 대기 | 31 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 230행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 231행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -142,6 +142,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `방금 진입` | 일치 | 푸시로 진입한 그룹의 헤더 상태 라벨(`isGroupHighlighted` 일 때만) |
+| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR 없음 · \(group.headBranch) 직접 푸시` | 일치 | PR 없는 그룹의 헤더 상태 라벨 「PR 없음 · main 직접 푸시」(브랜치가 비면 그리지 않는다 — 「—」 커밋 그룹) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` · ` | 일치 | 제목 줄 구분자 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `#\(number)` | 일치 | PR 번호 「#42」 |
@@ -524,7 +525,7 @@ last_updated: 2026-10-12
 | `screen-pr-monitor-history` | `ios-tests #317` | 예시 데이터 | 워크플로 이름 + run 번호 |
 | `screen-pr-monitor-history` | `07:46` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `build #316` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `PR 없음 · main 직접 푸시` | 구현 대기 | PR 없는 그룹의 상태 라벨 — 구현에 없다 |
+| `screen-pr-monitor-history` | `PR 없음 · main 직접 푸시` | 일치 | PR 없는 그룹의 상태 라벨 「PR 없음 · \(group.headBranch) 직접 푸시」 — `PRMonitorGroupCard.swift` 헤더 |
 | `screen-pr-monitor-history` | `최근 07:01` | 일치 | 그룹 헤더 시각 |
 | `screen-pr-monitor-history` | `main` | 예시 데이터 | 브랜치 이름 |
 | `screen-pr-monitor-history` | `@f77e024` | 일치 | 「 @\(short)」 |

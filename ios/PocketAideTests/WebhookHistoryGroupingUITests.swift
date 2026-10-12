@@ -50,6 +50,10 @@ final class WebhookHistoryGroupingUITests: XCTestCase {
         XCTAssertEqual(labels.contains("통과 \(passed)"), passed > 0, "Group \(group) should summarise \(passed) passed: \(labels)")
         XCTAssertEqual(labels.contains("실패 \(failed)"), failed > 0, "Group \(group) should summarise \(failed) failed: \(labels)")
         XCTAssertTrue(labels.contains { $0.hasPrefix("최근 ") }, "Group \(group) should show its latest event time: \(labels)")
+        XCTAssertEqual(
+            labels.contains("PR 없음 · \(lead.branch) 직접 푸시"), lead.pullRequest == nil,
+            "Only the PR-less group should read PR 없음 · \(lead.branch) 직접 푸시: \(labels)"
+        )
     }
 
     private func normalized(_ labels: [String], repo: String, token: String) -> [String] {

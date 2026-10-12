@@ -35,6 +35,12 @@ struct PRMonitorGroupCard: View {
                             .foregroundStyle(DesignTokens.Color.accent(.prMonitor))
                             .accessibilityIdentifier("prmonitor.group.\(group.id).arrival")
                     }
+                    if group.prNumber == nil, !group.headBranch.isEmpty {
+                        Text("PR 없음 · \(group.headBranch) 직접 푸시")
+                            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                            .italic()
+                            .foregroundStyle(.tertiary)
+                    }
                     titleLine
                     statusSummary
                     if !group.allAcknowledged {
