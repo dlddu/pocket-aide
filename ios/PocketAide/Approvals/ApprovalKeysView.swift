@@ -64,14 +64,11 @@ struct ApprovalKeysView: View {
                 .frame(width: 4, height: 12)
             Text("호출자 키")
                 .font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))
-                .tracking(0.3)
-                .textCase(.uppercase)
                 .foregroundStyle(DesignTokens.Color.accent(Self.area))
             Rectangle()
                 .fill(DesignTokens.Color.rule(Self.area))
                 .frame(height: 1)
         }
-        .padding(.top, DesignTokens.Spacing.xs)
         .padding(.bottom, DesignTokens.Spacing.sm)
     }
 
@@ -287,7 +284,6 @@ private struct ApprovalKeyIssueSheet: View {
                 .accessibilityIdentifier("approval.keys.issued.secret")
             Text(ApprovalKeyFormatting.secretWarning)
                 .font(DesignTokens.Typography.font(size: 11.5))
-                .lineHeight(.multiple(factor: 1.625))
                 .foregroundStyle(DesignTokens.StatusColor.failure)
                 .padding(.top, DesignTokens.Spacing.sm)
             HStack(spacing: 10) {

@@ -23,8 +23,8 @@ last_updated: 2026-10-11
 | `screen-routines` | `ios/PocketAide/Routines/RoutineSheets.swift` 의 `RoutineAddSheet`·`RoutineStepAddSheet` (+ 그 시트가 쓰는 `Sheet.swift`·`Card.swift`) | 시트 세 프레임 — 「새 루틴 시트」(이름·반복 주기·단계·액션) · 「루틴 추가 — 특정 요일」(같은 시트, 반복 주기 자리에 요일 원형 버튼 7개) · 「단계 추가 — 루틴 카드에서」(기존 단계·새 단계 입력·액션)의 `Backdrop`·`Sheet` 하위 트리. 루틴 목록 화면·상태 변형 프레임·history strip, 같은 파일의 이력 시트 `RoutineHistorySheet`, 시트 아래 탭 바·상태바는 범위 밖 |
 | `screen-affirmations` | `ios/PocketAide/Affirmations/AffirmationsView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`Card.swift`·`AreaLabel.swift`) | 다짐 탭 본체 세 프레임 — 「목록」(헤더·히어로 카드·목록 머리·목록 행·스와이프된 행·범례) · 「빈 상태」(헤더·안내 카드) · 「불러오는 중」(헤더·진행 표시 카드)의 `<header>`·`<main>` 하위 트리. 상태바·하단 탭 바(`RootView.swift` 행)·우선순위 시트(위 행)는 범위 밖 |
 | `screen-scratchpad` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 임시공간 탭 네 프레임 — 「목록」(헤더·일자 머리·메모 카드·이동 칩·스와이프된 행) · 「빈 상태」(헤더·안내 한 줄) · 「불러오는 중」(헤더·진행 표시) · 「오류」(헤더·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 「더 보기 — 미분류 배지」 프레임(`RootView.swift` 행의 시스템 오버플로 목록)·추가 시트(`ScratchpadAddSheet.swift` — 목업 없음)·「→ 다짐」 시트(우선순위 시트 행)·상태바·하단 탭 바는 범위 밖 |
-| `screen-todo-personal` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .personal)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 개인 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·필터 칩·섹션 머리·행 카드·스와이프된 행·완료 섹션) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트(`TodoEditSheet.swift` — 목업 없음)·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖. 같은 뷰가 그리는 회사 탭은 아래 행 |
-| `screen-todo-work` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .work)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 회사 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·기한별 섹션 머리·행 카드·스와이프된 행·완료 섹션·분리 안내 상자) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖 |
+| `screen-todo-personal` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .personal)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`TodoRowMeta.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 개인 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·필터 칩·섹션 머리·행 카드·스와이프된 행·완료 섹션) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트(`TodoEditSheet.swift` — 목업 없음)·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖. 같은 뷰가 그리는 회사 탭은 아래 행 |
+| `screen-todo-work` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .work)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`TodoRowMeta.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 회사 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·기한별 섹션 머리·행 카드·스와이프된 행·완료 섹션·분리 안내 상자) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖 |
 | `screen-approval` | `ios/PocketAide/Approvals/ApprovalKeysView.swift`(`ApprovalKeysView`·`ApprovalKeyIssueSheet`) | 승인 게이트 설정 두 프레임 — 「설정 — 자동 응답·호출자 키」(헤더·제목·「자동 응답 모드」 섹션·「호출자 키」 섹션 머리·키 목록·발급 버튼) · 「키 발급 — 원문 1회 표시」(같은 헤더·본문 + 발급 시트)의 `<header>`·`<main>`·시트 하위 트리(검산 `frames` 7·8 — 0부터 센 프레임 순번). 「대기 목록」·「요청 상세」·「결정 확인」·「처리 이력」·「빈 상태」·「오류」·「자동 응답 모드 배너」 일곱 프레임(`ApprovalsView.swift`·`ApprovalDetailView.swift` 행)·시트 뒤 딤·상태바·하단 탭 바는 아직 표가 없다(범위 밖). 발급 입력 시트·빈 목록·오류 배너·폐기 확인 대화상자는 목업이 없다 |
 
 ## 판독 규약
@@ -37,7 +37,7 @@ last_updated: 2026-10-11
   상호작용 클래스(`active:*`·`transition`)는 표 M 의 대상이 아니다 — 요소 순서·유무는 표 S 가 적는다.
 - **역방향**(목업 → 구현): 표 E 의 요소마다 측정 대상 토큰이 표 M 에 한 행씩 나온다. `목업 값` 은 토큰을 px(색은 `#RRGGBB[/불투명도]`)로 환산한 값이다.
 - **정방향**(구현 → 목업): 화면별 정방향 대상 — 우선순위 시트는 `ios/PocketAide/Affirmations/PriorityEditSheet.swift` 와 `Sheet.swift`, 루틴 시트는 `RoutineSheets.swift` 의
-  `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 개인·회사 투두 탭은 각각 `TodoListView.swift`·`TodoCheckBox.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 승인 게이트 설정은 `ApprovalKeysView.swift` 전체(발급 시트 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
+  `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 개인·회사 투두 탭은 각각 `TodoListView.swift`·`TodoCheckBox.swift`·`TodoRowMeta.swift`(회사는 개인 기한 항목 `TodoDueItem` 을 뺀 `TodoRowMeta` 구조체) 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 승인 게이트 설정은 `ApprovalKeysView.swift` 전체(발급 시트 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
   `.opacity(…)`·`lineWidth:`·`…Radius:`·`padding: .…`)은 모두 표 M 어느 행의 `구현 인용` 안에 나온다. 목업 토큰과 짝이 없는 수식은 `요소`·`목업 인용` 이 `—` 인 행이다.
 - `구현 인용` 은 소스의 공백을 접은 조각이고, `구현 값` 의 숫자는 그 조각의 숫자(`DesignTokens` 상수·`CardPadding` 은 값으로 풀어서)에서, 색은 조각이 부르는
   그 화면 영역(다짐 · 루틴) 색 에셋의 라이트 값에서 온다(`.white` 는 `#FFFFFF`, `DesignTokens.StatusColor.<이름>` 은 `Tokens.swift` 의 `light:` 값). 값이 화면에서 공용 컴포넌트로 인자로 넘어가는 자리는 `구현 파일` 칸에 파일을 ` · ` 로 함께 적고, 인용마다 그중 한 파일에 있다. 시스템 컨트롤처럼 구현에 수식이 없는 자리의 `구현 값` 은 `시스템` 이고, 구현에 그 요소·수식 자체가 없으면 구현 열 셋이 `—` 다(`불일치`). 값은 단일 수식의 값만 읽는다 — 인접 인셋의 합·오프셋과 안쪽 여백의 합처럼 실효 값이 같아도 단일 수식이 아니면 `불일치` 이고 근거 열이 실효 값을 적는다. `em` 자간은 그 요소의 글자 크기를 곱해 소수 첫째 자리까지 본다(구현도 `em` 계수로 적으면 계수끼리 비교한다).
@@ -56,9 +56,9 @@ last_updated: 2026-10-11
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 31행 · `목업 대기` 0행, 표 S `불일치` 5행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 10행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 21행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 27행 · `목업 대기` 0행, 표 S `불일치` 4행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 8행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 25행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -92,26 +92,26 @@ last_updated: 2026-10-11
 | `screen-scratchpad` | S | 일치 | 13 |
 | `screen-scratchpad` | S | 불일치 | 3 |
 | `screen-scratchpad` | S | 목업 대기 | 0 |
-| `screen-todo-personal` | M | 일치 | 95 |
+| `screen-todo-personal` | M | 일치 | 99 |
 | `screen-todo-personal` | M | 기본값 일치 | 7 |
-| `screen-todo-personal` | M | 불일치 | 31 |
+| `screen-todo-personal` | M | 불일치 | 27 |
 | `screen-todo-personal` | M | 허용 | 14 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
-| `screen-todo-personal` | S | 일치 | 16 |
-| `screen-todo-personal` | S | 불일치 | 5 |
+| `screen-todo-personal` | S | 일치 | 17 |
+| `screen-todo-personal` | S | 불일치 | 4 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
-| `screen-todo-work` | M | 일치 | 111 |
+| `screen-todo-work` | M | 일치 | 113 |
 | `screen-todo-work` | M | 기본값 일치 | 6 |
-| `screen-todo-work` | M | 불일치 | 10 |
+| `screen-todo-work` | M | 불일치 | 8 |
 | `screen-todo-work` | M | 허용 | 24 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 19 |
 | `screen-todo-work` | S | 불일치 | 2 |
 | `screen-todo-work` | S | 허용 | 1 |
 | `screen-todo-work` | S | 목업 대기 | 0 |
-| `screen-approval` | M | 일치 | 109 |
+| `screen-approval` | M | 일치 | 105 |
 | `screen-approval` | M | 기본값 일치 | 3 |
-| `screen-approval` | M | 불일치 | 21 |
+| `screen-approval` | M | 불일치 | 25 |
 | `screen-approval` | M | 허용 | 14 |
 | `screen-approval` | M | 목업 대기 | 2 |
 | `screen-approval` | S | 일치 | 15 |
@@ -1001,13 +1001,13 @@ last_updated: 2026-10-11
 | 우선 태그 | `tracking-wider` | 0.05em | — | — | — | 불일치 | 「우선」 태그 — 구현에 없다(우선순위는 메타 줄 문구) |
 | 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))` | 15 | 일치 | 행 제목 크기 = `bodyLg` |
 | 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
-| 메타 줄 | `gap-3` | 12 | — | — | — | 불일치 | 메타 항목 사이 간격 — 구현은 메타를 한 `Text` 에 ` · ` 로 이어 붙여 간격 수식이 없다 |
+| 메타 줄 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `HStack(spacing: DesignTokens.Spacing.md) { ForEach(Array(parts.enumerated()), id: \.offset) { index, part in` | 12 | 일치 | 메타 항목 사이 간격 = `Spacing.md` — 항목(기한 · 우선순위 · 메모)을 한 줄 `HStack` 에 띄워 그린다(개인은 구분 글자 없이 간격만) |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: 6)` | 6 | 일치 | 제목 ↔ 메타 줄 간격 6 |
-| 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)` | 11 | 일치 | 메타 줄 크기 = `captionXs` 11 |
-| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #3D2A22/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone, 구현 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
-| 메타 항목 | `gap-1` | 4 | — | — | — | 불일치 | 달력 글리프 ↔ 기한 간격 — 구현 메타에 글리프가 없다 |
-| 달력 글리프 | `width:11px` | 11 | — | — | — | 불일치 | 기한 앞 달력 글리프 — 구현에 없다 |
-| 달력 글리프 | `height:11px` | 11 | — | — | — | 불일치 | 기한 앞 달력 글리프 — 구현에 없다 |
+| 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)` | 11 | 일치 | 메타 줄 크기 = `captionXs` 11 |
+| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoRowMeta.swift` | `.font(metaFont) .textCase(area == .work ? .uppercase : nil) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #3D2A22/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone, 구현 개인 ink 55%(`S5` — 다크 목업은 같은 자리를 `#C9A595` 로 그린다) |
+| 메타 항목 | `gap-1` | 4 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `HStack(spacing: DesignTokens.Spacing.xs) { Image(systemName: "calendar")` | 4 | 일치 | 달력 글리프 ↔ 기한 간격 = `Spacing.xs` — 개인 기한 항목(`TodoDueItem`)만 글리프를 앞에 단다 |
+| 달력 글리프 | `width:11px` | 11 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `Image(systemName: "calendar") .font(.system(size: 11))` | 11 | 일치 | 기한 앞 달력 글리프 — 목업 svg 11 × 11, 구현 SF Symbol 11pt(검색 돋보기 선례) |
+| 달력 글리프 | `height:11px` | 11 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `Image(systemName: "calendar") .font(.system(size: 11))` | 11 | 일치 | 기한 앞 달력 글리프 — 목업 svg 11 × 11, 구현 SF Symbol 11pt |
 | 섹션 머리 | `pt-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `} .listRowInsets(EdgeInsets(top: isFirstSection ? area.listTopInset + DesignTokens.Spacing.xs : DesignTokens.Spacing.md, leading: DesignTokens.Spacing.xl, bottom: area.sectionHeaderBottom, trailing: DesignTokens.Spacing.xl))` · `items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty,` | 12 | 일치 | 둘째 섹션 머리 위 여백 = 머리 인셋 위 `Spacing.md`(`isFirstSection` 거짓 — 열린 항목이 있을 때의 완료 섹션) |
 | 섹션 머리 | `pb-1` | 4 | `ios/PocketAide/Todos/TodoListView.swift` | `} .listRowInsets(EdgeInsets(top: isFirstSection ? area.listTopInset + DesignTokens.Spacing.xs : DesignTokens.Spacing.md, leading: DesignTokens.Spacing.xl, bottom: area.sectionHeaderBottom, trailing: DesignTokens.Spacing.xl))` · `var sectionHeaderBottom: CGFloat { switch self { case .personal: return DesignTokens.Spacing.xs` | 4 | 일치 | 섹션 머리 아래 여백 = 머리 인셋 아래 `sectionHeaderBottom`(개인 4). 시스템 머리 최소 높이는 목록의 `.environment(\.defaultMinListHeaderHeight, 0)` 로 끈다 |
 | 스와이프 행 틀 | `rounded-2xl` | 16 | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 시스템 | 허용 S4 | 스와이프 행 라운드 — 시스템 `List` 가 그린다 — 목업 주석 「구현 `.swipeActions` 의 「삭제」」(`S4`) |
@@ -1072,10 +1072,10 @@ last_updated: 2026-10-11
 | 8 | 섹션 머리 | `<!-- section header -->` | `ios/PocketAide/Todos/TodoListView.swift` | `section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, titleOpacity: 1, isFirstSection: true, isLastSection: viewModel.doneItems.isEmpty)` | 불일치 | 목업은 미완료를 기한별 섹션(오늘 · 날짜 없음)으로 나누고 오른쪽에 날짜·개수를 단다 — 구현은 미완료 한 섹션 「할 일 · N」 |
 | 9 | 행 카드 | `<!-- task with priority -->` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoRow(area: area, item: item) {` | 일치 | 섹션 머리 아래 카드 — 체크 · 본문 순 |
 | 10 | 체크 | `<button class="check w-6 h-6 rounded-full grid place-items-center mt-0.5 shrink-0"></button>` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoCheckBox(area: area, isDone: item.isDone)` | 일치 | 카드 왼쪽 체크 — `TodoCheckBox` 가 개인은 원으로 그린다(수치는 표 M) |
-| 11 | 우선 태그 | `우선</span>` | `ios/PocketAide/Todos/TodoListView.swift` | `parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)` | 불일치 | 목업은 제목 위 clay 대문자 태그 「우선」 — 구현은 메타 줄 끝에 우선순위 이름(「높음」 등) |
+| 11 | 우선 태그 | `우선</span>` | `ios/PocketAide/Todos/TodoRowMeta.swift` | `parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)` | 불일치 | 목업은 제목 위 clay 대문자 태그 「우선」 — 구현은 메타 줄 끝에 우선순위 이름(「높음」 등) |
 | 12 | 행 제목 | `엄마 생신 케이크 예약 — 후암동 어니언</p>` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title)` | 일치 | 카드 본문 첫 줄 |
-| 13 | 메타 줄 | `<div class="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500">` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta)` | 일치 | 제목 아래 메타 한 줄(기한 · 메모) |
-| 14 | 달력 글리프 | `<rect x="3" y="4" width="18" height="18" rx="2"/>` | — | — | 불일치 | 목업은 기한 앞에 달력 글리프 — 구현 메타는 글자만 |
+| 13 | 메타 줄 | `<div class="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500">` | `ios/PocketAide/Todos/TodoRowMeta.swift` | `HStack(spacing: DesignTokens.Spacing.md)` | 일치 | 제목 아래 메타 한 줄(기한 · 메모) — 항목을 한 줄 `HStack` 에 띄운다 |
+| 14 | 달력 글리프 | `<rect x="3" y="4" width="18" height="18" rx="2"/>` | `ios/PocketAide/Todos/TodoRowMeta.swift` | `Image(systemName: "calendar")` | 일치 | 기한 앞 달력 글리프(SF Symbol `calendar`) |
 | 15 | 스와이프 삭제 | `<!-- 스와이프된 행` | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 「삭제」 |
 | 16 | 완료 섹션 | `<!-- completed -->` | `ios/PocketAide/Todos/TodoListView.swift` | `section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty, isLastSection: true)` | 일치 | 목록 끝 「완료 · N」 섹션 |
 | 17 | 접기 | `접기</button>` | — | — | 불일치 | 목업 완료 섹션 머리 오른쪽 「접기」 — 구현에 없다(완료 섹션은 늘 펼침) |
@@ -1232,12 +1232,12 @@ last_updated: 2026-10-11
 | 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
 | 완료 행 제목 | `text-[15px]` | 15 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title) .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight))` | 15 | 일치 | 제목 크기 = `bodyLg` |
 | 완료 행 제목 | `leading-snug` | 1.375 | `ios/PocketAide/Todos/TodoListView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: area.rowTitleWeight)) .lineHeight(.multiple(factor: 1.375))` | 1.375 | 일치 | 줄 높이 = 글자 크기의 1.375배(`TodoRow` 제목 한 수식 — 모든 행) |
-| 메타 줄 | `gap-3` | 12 | — | — | — | 불일치 | 메타 항목 사이 간격 — 구현은 항목을 「 · 」 로 이어 한 `Text` 로 그린다 |
+| 메타 줄 | `gap-3` | 12 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `HStack(spacing: DesignTokens.Spacing.md) { ForEach(Array(parts.enumerated()), id: \.offset) { index, part in` | 12 | 일치 | 메타 항목 사이 간격 = `Spacing.md` — 항목과 「·」 글자를 한 줄 `HStack` 에 띄워 그린다 |
 | 메타 줄 | `mt-1.5` | 6 | `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: 6)` | 6 | 일치 | 제목 ↔ 메타 줄 간격 6 |
-| 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoListView.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)` | 11 | 일치 | 메타 줄 크기 = `captionXs` 11(회사는 고정폭 `base.monospaced()`) |
-| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone, 구현 회사 ink 55%(`S5` — 다크 목업은 같은 자리를 `#A8B5C7` 로 그린다) |
-| 메타 줄 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 — 구현 메타에 변환 수식이 없다(「메모: …」 등 한글·소문자가 그대로) |
-| 메타 구분점 | `text-stone-300` | #D6D3D1 | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta) .font(metaFont) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 불일치 | 「·」 색 — 목업은 구분점만 stone-300 으로 더 흐리게, 구현은 `parts.joined(separator: " · ")` 라 메타 글자와 같은 색 |
+| 메타 줄 | `text-[11px]` | 11 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `let base = DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs)` | 11 | 일치 | 메타 줄 크기 = `captionXs` 11(회사는 고정폭 `base.monospaced()`) |
+| 메타 줄 | `text-stone-500` | #78716C | `ios/PocketAide/Todos/TodoRowMeta.swift` | `.font(metaFont) .textCase(area == .work ? .uppercase : nil) .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone, 구현 회사 ink 55%(`S5` — 다크 목업은 같은 자리를 `#A8B5C7` 로 그린다) |
+| 메타 줄 | `uppercase` | uppercase | `ios/PocketAide/Todos/TodoRowMeta.swift` | `.textCase(area == .work ? .uppercase : nil)` | uppercase | 일치 | 대문자 변환 — 회사 메타 줄만(접근성 라벨은 원문 그대로) |
+| 메타 구분점 | `text-stone-300` | #D6D3D1 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `Text("·")` · `.foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.55))` | #1E2A3A/0.55 | 불일치 | 「·」 색 — 구분점은 항목 사이 별도 글자가 됐지만 색은 메타 줄 색(ink 55%)을 물려받는다. 목업은 구분점만 stone-300 으로 더 흐리게 그리고 다크 목업도 stone 이라 `S5` 사유가 서지 않는다 |
 | 완료 카드 | `bg-white/50` | #FFFFFF/0.5 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(14) .background(DesignTokens.Color.card(tone).opacity(item.isDone ? 0.5 : 1))` | #FFFFFF/0.5 | 일치 | 완료 카드 배경 = 회사 card 50%(완료 행만 — 다크 목업도 다크 card `/50`) |
 | 완료 카드 | `border` | 1 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | 1 | 일치 | 카드 외곽선 두께 |
 | 완료 카드 | `border-[var(--rule)]` | #D6DEE9 | `ios/PocketAide/Todos/TodoListView.swift` | `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1)` | #D6DEE9 | 일치 | 외곽선 색 = 회사 `rule` |
@@ -1304,8 +1304,8 @@ last_updated: 2026-10-11
 | 11 | 급한 행 강조 | `border-l-[3px] border-l-[#C2554F]` | — | — | 불일치 | 목업은 오늘 마감 카드 왼쪽에 3px 붉은 강조 띠 — 구현 행은 기한과 무관하게 같은 외곽선 |
 | 12 | 체크 | `<button class="check w-5 h-5 grid place-items-center mt-0.5 shrink-0"></button>` | `ios/PocketAide/Todos/TodoListView.swift` | `TodoCheckBox(area: area, isDone: item.isDone)` | 일치 | 카드 왼쪽 체크 — `TodoCheckBox` 가 회사는 각진 사각으로 그린다(수치는 표 M) |
 | 13 | 행 제목 | `retention 데이터 fact-check 한 번 더</p>` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(item.title)` | 일치 | 카드 본문 첫 줄 |
-| 14 | 메타 줄 | `<div class="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500 stamp uppercase">` | `ios/PocketAide/Todos/TodoListView.swift` | `Text(meta)` | 일치 | 제목 아래 메타 한 줄(기한 · 우선순위 · 메모) |
-| 15 | 우선순위 | `<span>P1</span>` | `ios/PocketAide/Todos/TodoListView.swift` | `parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)` | 일치 | 메타 줄 안 「P<순위>」(#139) |
+| 14 | 메타 줄 | `<div class="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500 stamp uppercase">` | `ios/PocketAide/Todos/TodoRowMeta.swift` | `HStack(spacing: DesignTokens.Spacing.md)` | 일치 | 제목 아래 메타 한 줄(기한 · 우선순위 · 메모) — 항목과 「·」 를 한 줄 `HStack` 에 띄운다 |
+| 15 | 우선순위 | `<span>P1</span>` | `ios/PocketAide/Todos/TodoRowMeta.swift` | `parts.append(area == .work ? "P\(workRank(priority))" : priority.displayName)` | 일치 | 메타 줄 안 「P<순위>」(#139) |
 | 16 | 스와이프 삭제 | `<!-- 스와이프된 행` | `ios/PocketAide/Todos/TodoListView.swift` | `.swipeActions(edge: .trailing, allowsFullSwipe: false)` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 「삭제」 — 백로그 카드 아래 밀린 행 |
 | 17 | 완료 섹션 | `DONE · 8</h2>` | `ios/PocketAide/Todos/TodoListView.swift` | `section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty, isLastSection: true)` | 일치 | 목록 끝 「DONE · N」 섹션 |
 | 18 | 완료 행 | `<button class="check done w-5 h-5 grid place-items-center mt-0.5 shrink-0">` | `ios/PocketAide/Todos/TodoListView.swift` | `.strikethrough(item.isDone)` | 일치 | 완료 행 — 채운 체크 · 취소선 · 흐림 |
@@ -1374,15 +1374,15 @@ last_updated: 2026-10-11
 | 제목 | `text-[18px]` | 18 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 18, weight: .bold))` | 18 | 일치 | 제목 크기 |
 | 섹션 머리 | `gap-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `HStack(spacing: DesignTokens.Spacing.sm)` | 8 | 일치 | 막대 · 제목 · 선 사이 간격 |
 | 섹션 머리 | `mb-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.bottom, DesignTokens.Spacing.sm)` | 8 | 일치 | 섹션 머리 아래 여백 |
-| 섹션 머리 | `mt-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.xs)` | 4 | 일치 | 섹션 머리 위 여백(`Spacing.xs` = 4) — 제목 아래 12 뒤에 4를 더 띄운다 |
+| 섹션 머리 | `mt-1` | 4 | — | — | — | 불일치 | 섹션 머리 위 여백 — 구현은 제목 아래 여백 12 뒤에 바로 놓는다(실효 12 vs 목업 12+4) |
 | 섹션 막대 | `bg-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.fill(DesignTokens.Color.accent(Self.area))` | #5B4DB8 | 일치 | 막대 색 |
 | 섹션 막대 | `h-3` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.frame(width: 4, height: 12)` | 12 | 일치 | 막대 높이 |
 | 섹션 막대 | `w-1` | 4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.frame(width: 4, height: 12)` | 4 | 일치 | 막대 폭 |
 | 섹션 제목 | `font-bold` | bold | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))` | bold | 일치 | 「호출자 키」 굵기 |
 | 섹션 제목 | `text-[11px]` | 11 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionXs, weight: .bold, design: .monospaced))` | 11 | 일치 | 섹션 제목 크기(`captionXs`) |
 | 섹션 제목 | `text-[var(--accent)]` | #5B4DB8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.Color.accent(Self.area))` | #5B4DB8 | 일치 | 섹션 제목 색 |
-| 섹션 제목 | `tracking-wide` | 0.025em | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.tracking(0.3)` | 0.3 | 일치 | 섹션 제목 자간 — 0.025em × 11 = 0.275, 0.1pt 단위로 0.3(우선순위 시트 제목 `.tracking(-0.5)` 선례) |
-| 섹션 제목 | `uppercase` | uppercase | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환(한글 문구라 보이는 차이는 없다) |
+| 섹션 제목 | `tracking-wide` | 0.025em | — | — | — | 불일치 | 자간 수식 없음(목업 11 × 0.025em = 0.3) |
+| 섹션 제목 | `uppercase` | uppercase | — | — | — | 불일치 | 대문자 변환 수식 없음(`.textCase(.uppercase)` 부재 — 한글 문구라 렌더 차이는 없다) |
 | 섹션 선 | `bg-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | #D8D5E4 | 일치 | 섹션 머리 오른쪽 1pt 선 색 |
 | 모드 카드 | `bg-white` | #FFFFFF | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
 | 모드 카드 | `border` | 1 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
@@ -1481,7 +1481,7 @@ last_updated: 2026-10-11
 | 원문 칸 | `py-2.5` | 10 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.vertical, 10)` | 10 | 일치 | 칸 위아래 여백 |
 | 원문 칸 | `rounded-md` | 6 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)` | 6 | 일치 | 칸 라운드 |
 | 원문 칸 | `text-[12px]` | 12 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(.system(size: DesignTokens.Typography.captionSm, design: .monospaced))` | 12 | 일치 | 원문 글자 크기(고정폭) |
-| 경고 문구 | `leading-relaxed` | 1.625 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.lineHeight(.multiple(factor: 1.625))` | 1.625 | 일치 | 경고 줄 높이 = 글자 크기의 1.625배 |
+| 경고 문구 | `leading-relaxed` | 1.625 | — | — | — | 불일치 | 줄 높이 수식 없음 |
 | 경고 문구 | `mt-2` | 8 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.top, DesignTokens.Spacing.sm)` | 8 | 일치 | 원문 칸 ↔ 경고 간격 |
 | 경고 문구 | `text-[11.5px]` | 11.5 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: 11.5))` | 11.5 | 일치 | 경고 크기 |
 | 경고 문구 | `text-[var(--destructive)]` | #9C3F2D | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(DesignTokens.StatusColor.failure)` | #9C3F2D | 일치 | 경고 색 |
@@ -1557,10 +1557,12 @@ SCREENS = [
     {"slug": "screen-todo-personal", "area": "personal", "svg": True, "roots": ["absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20", "bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-1.5"],
      "fwd": [("ios/PocketAide/Todos/TodoListView.swift", None, None),
              ("ios/PocketAide/Todos/TodoCheckBox.swift", None, None),
+             ("ios/PocketAide/Todos/TodoRowMeta.swift", None, None),
              ("ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift", "public var body", "public extension")]},
     {"slug": "screen-todo-work", "area": "work", "svg": True, "roots": ["absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20", "bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-2 pb-6 space-y-1.5"],
      "fwd": [("ios/PocketAide/Todos/TodoListView.swift", None, None),
              ("ios/PocketAide/Todos/TodoCheckBox.swift", None, None),
+             ("ios/PocketAide/Todos/TodoRowMeta.swift", "struct TodoRowMeta", "private struct TodoDueItem"),
              ("ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift", "public var body", "public extension")]},
     {"slug": "screen-approval", "area": "prMonitor", "svg": True, "frames": [7, 8],
      "roots": ["absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-20", "absolute top-[104px] bottom-[88px]", "absolute z-50 inset-x-0 bottom-0 rounded-t-[22px]"],
