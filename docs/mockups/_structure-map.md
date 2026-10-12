@@ -56,8 +56,8 @@ last_updated: 2026-10-12
 남은 구조·수치 drift(`screen-routines` 시트 세 프레임): 표 M `불일치` 0행 · `목업 대기` 0행, 표 S `불일치` 0행.
 남은 구조·수치 drift(`screen-affirmations` 다짐 탭 본체 세 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 4행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 8행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 네 프레임): 표 M `불일치` 3행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 21행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
@@ -94,16 +94,16 @@ last_updated: 2026-10-12
 | `screen-scratchpad` | S | 목업 대기 | 0 |
 | `screen-todo-personal` | M | 일치 | 122 |
 | `screen-todo-personal` | M | 기본값 일치 | 7 |
-| `screen-todo-personal` | M | 불일치 | 4 |
-| `screen-todo-personal` | M | 허용 | 14 |
+| `screen-todo-personal` | M | 불일치 | 3 |
+| `screen-todo-personal` | M | 허용 | 15 |
 | `screen-todo-personal` | M | 목업 대기 | 0 |
 | `screen-todo-personal` | S | 일치 | 19 |
 | `screen-todo-personal` | S | 불일치 | 2 |
 | `screen-todo-personal` | S | 목업 대기 | 0 |
 | `screen-todo-work` | M | 일치 | 113 |
 | `screen-todo-work` | M | 기본값 일치 | 6 |
-| `screen-todo-work` | M | 불일치 | 8 |
-| `screen-todo-work` | M | 허용 | 24 |
+| `screen-todo-work` | M | 불일치 | 7 |
+| `screen-todo-work` | M | 허용 | 25 |
 | `screen-todo-work` | M | 목업 대기 | 0 |
 | `screen-todo-work` | S | 일치 | 19 |
 | `screen-todo-work` | S | 불일치 | 2 |
@@ -952,7 +952,7 @@ last_updated: 2026-10-12
 | 검색 안내 | `text-stone-400` | #A8A29E | `ios/PocketAide/Todos/TodoListView.swift` | `TextField(area.searchPrompt, text: $viewModel.query, prompt: Text(area.searchPrompt).foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45)))` | #3D2A22/0.45 | 허용 S5 | 자리표시 글자 색 — 목업 stone, 구현 `prompt:` 에 개인 ink 45%(`S5` — 다크 목업은 같은 자리를 돋보기와 같은 `#9C7A6A` 로 그린다) |
 | 필터 칩 줄 | `gap-1.5` | 6 | `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 6) {` | 6 | 일치 | 칩 사이 간격 6 — 가로 스크롤(`overflow-x-auto`) 한 줄 |
 | 필터 칩 줄 | `mt-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl) .padding(.bottom, DesignTokens.Spacing.md)` | 12 | 일치 | 검색 필드 ↔ 칩 줄 간격 = 검색 필드 아래 `Spacing.md` — 칩 줄은 `TodoListView` 의 `VStack` 에서 검색 필드 바로 다음 형제다 |
-| 필터 칩 줄 | `-mx-5` | -20 | — | — | — | 불일치 | 칩 줄 좌우 음수 여백 — 목업은 헤더 `px-5` 안에서 칩 줄만 `-mx-5` 로 화면 끝까지 넓혀 스크롤 띠를 가장자리까지 낸다. 구현 칩 줄은 헤더 밖 형제(검색 필드처럼)라 좌우 여백 없이 처음부터 화면 폭이고 상쇄할 바깥 여백이 없어 이 수식이 없다(실효 띠 폭은 같다 — 단일 수식이 아니라 `불일치`) |
+| 필터 칩 줄 | `-mx-5` | -20 | — | — | — | 허용 S9 | 칩 줄 좌우 음수 여백 — 목업은 헤더 `px-5` 안에서 칩 줄만 `-mx-5` 로 화면 끝까지 넓혀 스크롤 띠를 가장자리까지 낸다. 구현 칩 줄은 헤더 밖 형제(검색 필드처럼)라 좌우 여백 없이 처음부터 화면 폭이고 상쇄할 바깥 여백이 없어 이 수식이 없다(실효 띠 폭은 같다 — 헤더 묶음이 목록 위 고정 형제 스택, `S9`) |
 | 필터 칩 줄 | `px-5` | 20 | `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl) } .padding(.bottom, DesignTokens.Spacing.md)` | 20 | 일치 | 스크롤 띠 안쪽 좌우 여백 = `Spacing.xl` — 첫 칩이 헤더 글자와 같은 선에서 시작한다 |
 | 필터 칩(선택) | `px-3` | 12 | `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `.padding(.horizontal, DesignTokens.Spacing.md)` | 12 | 일치 | 칩 좌우 여백 = `Spacing.md`(선택 · 비선택 공통) |
 | 필터 칩(선택) | `py-1` | 4 | `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `.padding(.vertical, DesignTokens.Spacing.xs)` | 4 | 일치 | 칩 위아래 여백 = `Spacing.xs` |
@@ -1136,7 +1136,7 @@ last_updated: 2026-10-12
 | 헤더 | `px-5` | 20 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl)` · `.stroke(DesignTokens.Color.rule(tone), lineWidth: 1) ) .padding(.horizontal, DesignTokens.Spacing.xl)` | 20 | 일치 | 헤더 좌우 여백 = `Spacing.xl` — 목업 헤더 안의 검색 필드는 구현에서 헤더 밖 형제라 같은 `Spacing.xl` 을 따로 단다 |
 | 헤더 | `pt-3` | 12 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | `.padding(.top, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
 | 헤더 | `pb-3` | 12 | `ios/PocketAide/Todos/TodoListView.swift` | `.padding(.horizontal, DesignTokens.Spacing.xl) .padding(.bottom, DesignTokens.Spacing.md)` | 12 | 일치 | 헤더 블록 아래 여백 = `Spacing.md` — 목업도 회사 헤더는 검색 필드로 끝나 필드 아래 12(개인과 달리 필터 칩 줄이 없다) |
-| 헤더 | `bg-[var(--bg)]/95` | #EEF2F8/0.95 | `ios/PocketAide/Todos/TodoListView.swift` | `DesignTokens.Color.surface(tone).ignoresSafeArea()` | #EEF2F8 | 불일치 | 헤더 바탕 — 목업은 헤더에 회사 바탕 95% 를 깔아 스크롤된 목록이 비치게 하고, 구현 헤더는 배경이 없어 화면 바탕 `surface`(같은 hex, 불투명)가 그대로 보인다(목록은 헤더 아래에서 시작해 겹치지 않는다) |
+| 헤더 | `bg-[var(--bg)]/95` | #EEF2F8/0.95 | `ios/PocketAide/Todos/TodoListView.swift` | `DesignTokens.Color.surface(tone).ignoresSafeArea()` | #EEF2F8 | 허용 S9 | 헤더 바탕 — 목업은 헤더에 회사 바탕 95% 를 깔아 스크롤된 목록이 비치게 하고, 구현 헤더는 배경이 없어 화면 바탕 `surface`(같은 hex, 불투명)가 그대로 보인다(목록은 헤더 아래에서 시작해 겹치지 않는다 — 헤더 묶음이 목록 위 고정 형제 스택, `S9`) |
 | 라벨 줄 | `gap-1.5` | 6 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `HStack(spacing: 6) { if showsDot {` · `labelShowsDot: true,` | 6 | 일치 | 영역 점 ↔ 영역 라벨 간격 — 투두 헤더가 `labelShowsDot: true` 로 `AreaLabel` 의 점을 켜고, 점과 라벨은 `AreaLabel` 의 `HStack` 간격 6 |
 | 라벨 줄 | `mb-1` | 4 | `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `VStack(alignment: .leading, spacing: labelSpacing)` · `labelSpacing: DesignTokens.Spacing.xs,` | 4 | 일치 | 라벨 줄 ↔ 제목 간격 — 공용 헤더 바깥 `VStack` 간격 `labelSpacing` 에 투두 헤더가 `Spacing.xs` 를 넘긴다(제목 ↔ 요약 줄은 안쪽 `VStack` 간격 2 그대로) |
 | 영역 점 | `w-2` | 8 | `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` · `ios/PocketAide/Todos/TodoListView.swift` | `.frame(width: dotSize, height: dotSize)` · `labelDotSize: 8,` | 8 | 일치 | 영역 점 너비 — 투두 헤더가 `labelDotSize: 8` 을 넘기고 `AreaLabel` 이 점을 정사각 `dotSize` 로 그린다 |
