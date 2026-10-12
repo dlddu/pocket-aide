@@ -132,6 +132,7 @@ struct TodoListView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @StateObject private var viewModel: TodoListViewModel
     @State private var sheetMode: TodoEditSheet.Mode?
+    @State private var isDoneCollapsed = false
 
     private let area: TodoArea
 
@@ -235,7 +236,7 @@ struct TodoListView: View {
                 emptyState
             } else {
                 section(title: area == .work ? "OPEN" : "할 일", items: viewModel.openItems, titleOpacity: 1, isFirstSection: true, isLastSection: viewModel.doneItems.isEmpty)
-                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty, isLastSection: true)
+                section(title: area == .work ? "DONE" : "완료", items: viewModel.doneItems, titleOpacity: 0.45, isFirstSection: viewModel.openItems.isEmpty, isLastSection: true, collapsible: area == .personal)
             }
         }
         .listStyle(.plain)
@@ -264,10 +265,10 @@ struct TodoListView: View {
     }
 
     @ViewBuilder
-    private func section(title: String, items: [TodoItem], titleOpacity: Double, isFirstSection: Bool, isLastSection: Bool) -> some View {
+    private func section(title: String, items: [TodoItem], titleOpacity: Double, isFirstSection: Bool, isLastSection: Bool, collapsible: Bool = false) -> some View {
         if !items.isEmpty {
             Section {
-                ForEach(items) { item in
+                ForEach(collapsible && isDoneCollapsed ? [] : items) { item in
                     let isLast = isLastSection && item.id == items.last?.id
                     TodoRow(area: area, item: item) {
                         Task { await viewModel.toggleDone(item) }
@@ -296,6 +297,9 @@ struct TodoListView: View {
                         .tracking(area.sectionTitleTracking)
                         .foregroundStyle(DesignTokens.Color.ink(tone).opacity(titleOpacity))
                         .textCase(area.sectionTitleCase)
+                    if collapsible {
+                        doneCollapseButton
+                    }
                     if area.showsSectionRule {
                         Rectangle()
                             .fill(DesignTokens.Color.rule(tone))
@@ -305,6 +309,15 @@ struct TodoListView: View {
                 .listRowInsets(EdgeInsets(top: isFirstSection ? area.listTopInset + DesignTokens.Spacing.xs : DesignTokens.Spacing.md, leading: DesignTokens.Spacing.xl, bottom: area.sectionHeaderBottom, trailing: DesignTokens.Spacing.xl))
             }
         }
+    }
+
+    private var doneCollapseButton: some View {
+        Button(isDoneCollapsed ? "펼치기" : "접기") { isDoneCollapsed.toggle() }
+            .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+            .foregroundStyle(DesignTokens.Color.ink(tone).opacity(0.45))
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .accessibilityIdentifier("\(idPrefix).done.collapse")
     }
 
     @ViewBuilder

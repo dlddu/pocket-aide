@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-11
+last_updated: 2026-10-12
 ---
 
 # 카피 ↔ 구현 대응표
@@ -36,28 +36,28 @@ last_updated: 2026-10-11
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 11행, 표 B `구현 대기` 39행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 34행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 167 |
+| A | 일치 | 168 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 9 |
-| A | 목업 대기 | 11 |
-| B | 일치 | 203 |
+| A | 목업 대기 | 12 |
+| B | 일치 | 204 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 137 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 35 |
+| B | 구현 대기 | 34 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 226행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 228행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -283,6 +283,8 @@ last_updated: 2026-10-11
 | `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 개인 목업 「날짜 없음」 행의 스와이프 패널 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `펼치기` | 목업 대기 | 개인 완료 섹션을 접은 뒤의 버튼 문구 — 목업은 펼친 상태(「접기」)만 그린다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `접기` | 일치 | 개인 완료 섹션 머리 오른쪽 「접기」 버튼 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
@@ -809,7 +811,7 @@ last_updated: 2026-10-11
 | `screen-todo-personal` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
 | `screen-todo-personal` | `책장 정리 — 안 읽은 책 5권 추리기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `완료 · 4` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
-| `screen-todo-personal` | `접기` | 구현 대기 | 완료 섹션 접기 버튼 — 구현에 없다 |
+| `screen-todo-personal` | `접기` | 일치 | 완료 섹션 접기 버튼 — `TodoListView.swift` 개인 완료 섹션 머리 `doneCollapseButton` |
 | `screen-todo-personal` | `세탁기 세제 주문` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
