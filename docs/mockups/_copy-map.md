@@ -36,22 +36,22 @@ last_updated: 2026-10-13
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 7행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 6행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 178 |
+| A | 일치 | 179 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 7 |
-| B | 일치 | 213 |
+| A | 목업 대기 | 6 |
+| B | 일치 | 214 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 141 |
-| B | 목업 전용 | 127 |
+| B | 목업 전용 | 128 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
@@ -287,14 +287,14 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 개인 목업 「날짜 없음」 행의 스와이프 패널 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `펼치기` | 목업 대기 | 개인 완료 섹션을 접은 뒤의 버튼 문구 — 목업은 펼친 상태(「접기」)만 그린다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `펼치기` | 일치 | 개인 완료 섹션을 접은 뒤의 버튼 문구 — 「목록 — 완료 접힘」 프레임 완료 섹션 머리 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `접기` | 일치 | 개인 완료 섹션 머리 오른쪽 「접기」 버튼 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 586행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 588행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -838,6 +838,8 @@ last_updated: 2026-10-13
 | `screen-todo-personal` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
+| `screen-todo-personal` | `목록 — 완료 접힘` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-todo-personal` | `펼치기` | 일치 | 「목록 — 완료 접힘」 프레임 완료 섹션 머리 오른쪽 버튼 — `TodoListView.swift` 개인 완료 섹션 `doneCollapseButton`(접힌 뒤 문구) |
 | `screen-todo-personal` | `PRD-3 · AC3 시각적 영역 구분(테라코타 톤·상단 스트립·"PERSONAL" 라벨) — 회사 탭과 한눈에 구분되도록 설계` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-work` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
