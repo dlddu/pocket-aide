@@ -36,26 +36,26 @@ last_updated: 2026-10-12
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 9행 · `목업 대기` 12행, 표 B `구현 대기` 30행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 12행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 171 |
+| A | 일치 | 173 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
-| A | 구현 대기 | 9 |
+| A | 구현 대기 | 8 |
 | A | 목업 대기 | 12 |
-| B | 일치 | 207 |
+| B | 일치 | 208 |
 | B | 외부 | 54 |
 | B | 예시 데이터 | 138 |
 | B | 목업 전용 | 126 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 30 |
+| B | 구현 대기 | 29 |
 
 ## 표 A — 정방향 (구현 리터럴 → 목업) · 231행
 
@@ -276,7 +276,8 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 일치 | 개인 탭 검색 필드 placeholder |
 | `ios/PocketAide/Todos/TodoListView.swift` | `회사 영역만 검색…` | 일치 | 회사 탭 검색 필드 placeholder |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 구현 대기 | 회사 요약 줄 — 목업 「12 OPEN · 8 DONE · DEADLINE 3」 의 마감 카운트가 구현에 없다 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE · DEADLINE \(deadline)` | 일치 | 회사 요약 줄 「12 OPEN · 8 DONE · DEADLINE 3」 — 마감일 있는 미완료(`TodoDeadline.openCount`)가 1개 이상일 때 |
+| `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 일치 | 회사 요약 줄 — 마감일 있는 미완료가 0개일 때(빈 상태·불러오는 중·오류 프레임 「0 OPEN · 0 DONE」) |
 | `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
 | `ios/PocketAide/Todos/TodoListView.swift` | `\(idPrefix).summary` | 비표시 | 요약 줄 접근성 식별자 — `ScreenHeader` 의 `subtitleIdentifier:` 인자로 넘겨 `accessibilityIdentifier(` 제외 규칙에 걸리지 않는다 |
 | `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
@@ -836,7 +837,7 @@ last_updated: 2026-10-12
 | `screen-todo-work` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-todo-work` | `WORK` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
 | `screen-todo-work` | `회사` | 일치 | 헤더 제목 · 탭 바 |
-| `screen-todo-work` | `12 OPEN · 8 DONE · DEADLINE 3` | 구현 대기 | 요약 줄 — 구현은 「\(open) OPEN · \(done) DONE」, 마감 카운트가 없다 |
+| `screen-todo-work` | `12 OPEN · 8 DONE · DEADLINE 3` | 일치 | 요약 줄 「\(open) OPEN · \(done) DONE · DEADLINE \(deadline)」(마감일 있는 미완료 수) |
 | `screen-todo-work` | `회사 영역만 검색…` | 일치 | 검색 필드 placeholder |
 | `screen-todo-work` | `DUE TODAY` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 OPEN/DONE 두 섹션뿐 |
 | `screen-todo-work` | `분기 리뷰 deck — KPI 슬라이드 4장` | 예시 데이터 | 할 일 제목(사용자 데이터) |

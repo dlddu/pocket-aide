@@ -109,10 +109,10 @@ extension TodoArea {
 
     var searchRadius: CGFloat { self == .personal ? DesignTokens.Radius.card : DesignTokens.Radius.key }
 
-    func summary(open: Int, done: Int) -> String {
+    func summary(open: Int, done: Int, deadline: Int) -> String {
         switch self {
         case .personal: return "\(open)개 남음 · \(done)개 완료"
-        case .work: return "\(open) OPEN · \(done) DONE"
+        case .work: return deadline > 0 ? "\(open) OPEN · \(done) DONE · DEADLINE \(deadline)" : "\(open) OPEN · \(done) DONE"
         }
     }
 }
@@ -179,7 +179,7 @@ struct TodoListView: View {
             labelDotShape: area.headerDotShape,
             labelDotSize: 8,
             labelSpacing: DesignTokens.Spacing.xs,
-            subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount),
+            subtitle: area.summary(open: viewModel.openCount, done: viewModel.doneCount, deadline: viewModel.deadlineCount),
             subtitleIdentifier: "\(idPrefix).summary",
             subtitleMonospaced: area == .work,
             bottomPadding: DesignTokens.Spacing.md
