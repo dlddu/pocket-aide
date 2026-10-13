@@ -71,8 +71,7 @@ struct PocketAideWidget: Widget {
         .supportedFamilies(Self.supportedFamilies)
     }
 
-    // iOS 27 adds the 4×6 extra-large family on iPhone; iOS 26 tops out at Large.
-    // The compiler check keeps the target building on Xcode 26 SDKs, which lack the case.
+    // The compiler check keeps this building on Xcode 26 SDKs, which lack .systemExtraLargePortrait.
     private static var supportedFamilies: [WidgetFamily] {
         #if compiler(>=6.4)
         if #available(iOS 27.0, *) {
