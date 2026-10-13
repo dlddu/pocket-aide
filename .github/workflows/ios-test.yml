@@ -6,7 +6,7 @@ on:
 jobs:
   ios:
     name: iOS build + test (shard ${{ strategy.job-index }})
-    runs-on: macos-26
+    runs-on: xcode-27
     # The UI suite runs serially in one simulator, so splitting its classes
     # across runners is what shortens the job. Each shard builds the app itself
     # (a few minutes) and gets its own backend and SQLite DB. Each shard holds
@@ -224,7 +224,7 @@ jobs:
             -project PocketAide.xcodeproj \
             -scheme PocketAide \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=latest' \
             -resultBundlePath TestResults.xcresult \
             -retry-tests-on-failure \
             -test-iterations 2 \
