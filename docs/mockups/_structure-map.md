@@ -25,7 +25,7 @@ last_updated: 2026-10-13
 | `screen-scratchpad` | `ios/PocketAide/Scratchpad/ScratchpadView.swift` (+ 그 화면이 쓰는 `ScreenHeader.swift`·`AreaLabel.swift`) | 임시공간 탭 네 프레임 — 「목록」(헤더·일자 머리·메모 카드·이동 칩·스와이프된 행) · 「빈 상태」(헤더·안내 한 줄) · 「불러오는 중」(헤더·진행 표시) · 「오류」(헤더·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 「더 보기 — 미분류 배지」 프레임(`RootView.swift` 행의 시스템 오버플로 목록)·추가 시트(`ScratchpadAddSheet.swift` — 목업 없음)·「→ 다짐」 시트(우선순위 시트 행)·상태바·하단 탭 바는 범위 밖 |
 | `screen-todo-personal` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .personal)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`TodoRowMeta.swift`·`TodoDueFilterChips.swift`·`TodoPriorityTag.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 개인 투두 탭 다섯 프레임 — 「목록」(헤더·검색 필드·필터 칩·섹션 머리·행 카드·스와이프된 행·완료 섹션) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄) · 「목록 — 완료 접힘」(「목록」과 같고 완료 섹션은 머리·「펼치기」만)의 `<header>`·`<main>` 하위 트리. 편집 시트(`TodoEditSheet.swift` — 목업 없음)·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖. 같은 뷰가 그리는 회사 탭은 아래 행 |
 | `screen-todo-work` | `ios/PocketAide/Todos/TodoListView.swift` 의 `TodoListView(area: .work)` (+ 그 화면이 쓰는 `TodoCheckBox.swift`·`TodoRowMeta.swift`·`ScreenHeader.swift`·`AreaLabel.swift`) | 회사 투두 탭 네 프레임 — 「목록」(헤더·검색 필드·기한별 섹션 머리·행 카드·스와이프된 행·완료 섹션·분리 안내 상자) · 「빈 상태」(헤더·검색 필드·안내 한 줄) · 「불러오는 중」(헤더·검색 필드·진행 표시) · 「오류」(헤더·검색 필드·오류 줄·안내 한 줄)의 `<header>`·`<main>` 하위 트리. 편집 시트·상태바·맨 위 영역 띠·하단 탭 바는 범위 밖 |
-| `screen-approval` | `ios/PocketAide/Approvals/ApprovalKeysView.swift`(`ApprovalKeysView`·`ApprovalKeyIssueSheet`) | 승인 게이트 설정 두 프레임 — 「설정 — 자동 응답·호출자 키」(헤더·제목·「자동 응답 모드」 섹션·「호출자 키」 섹션 머리·키 목록·발급 버튼) · 「키 발급 — 원문 1회 표시」(같은 헤더·본문 + 발급 시트)의 `<header>`·`<main>`·시트 하위 트리(검산 `frames` 7·8 — 0부터 센 프레임 순번). 「대기 목록」·「요청 상세」·「결정 확인」·「처리 이력」·「빈 상태」·「오류」·「자동 응답 모드 배너」 일곱 프레임(`ApprovalsView.swift`·`ApprovalDetailView.swift` 행)·시트 뒤 딤·상태바·하단 탭 바는 아직 표가 없다(범위 밖). 발급 입력 시트·빈 목록·오류 배너·폐기 확인 대화상자는 목업이 없다 |
+| `screen-approval` | `ios/PocketAide/Approvals/ApprovalKeysView.swift`(`ApprovalKeysView`·`ApprovalKeyIssueSheet`) · `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift`(`ApprovalAutoResponseOption` — 모드 선택지 행) | 승인 게이트 설정 두 프레임 — 「설정 — 자동 응답·호출자 키」(헤더·제목·「자동 응답 모드」 섹션·「호출자 키」 섹션 머리·키 목록·발급 버튼) · 「키 발급 — 원문 1회 표시」(같은 헤더·본문 + 발급 시트)의 `<header>`·`<main>`·시트 하위 트리(검산 `frames` 7·8 — 0부터 센 프레임 순번). 「대기 목록」·「요청 상세」·「결정 확인」·「처리 이력」·「빈 상태」·「오류」·「자동 응답 모드 배너」 일곱 프레임(`ApprovalsView.swift`·`ApprovalDetailView.swift` 행)·시트 뒤 딤·상태바·하단 탭 바는 아직 표가 없다(범위 밖). 발급 입력 시트·빈 목록·오류 배너·폐기 확인 대화상자는 목업이 없다 |
 
 ## 판독 규약
 
@@ -37,7 +37,7 @@ last_updated: 2026-10-13
   상호작용 클래스(`active:*`·`transition`)는 표 M 의 대상이 아니다 — 요소 순서·유무는 표 S 가 적는다.
 - **역방향**(목업 → 구현): 표 E 의 요소마다 측정 대상 토큰이 표 M 에 한 행씩 나온다. `목업 값` 은 토큰을 px(색은 `#RRGGBB[/불투명도]`)로 환산한 값이다.
 - **정방향**(구현 → 목업): 화면별 정방향 대상 — 우선순위 시트는 `ios/PocketAide/Affirmations/PriorityEditSheet.swift` 와 `Sheet.swift`, 루틴 시트는 `RoutineSheets.swift` 의
-  `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 개인·회사 투두 탭은 각각 `TodoListView.swift`·`TodoCheckBox.swift`·`TodoRowMeta.swift`(회사는 개인 기한 항목 `TodoDueItem` 을 뺀 `TodoRowMeta` 구조체) · 개인만 `TodoDueFilterChips.swift`(기한 필터 칩 줄)·`TodoPriorityTag.swift`(「우선」 태그 줄) 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 승인 게이트 설정은 `ApprovalKeysView.swift` 전체(발급 시트 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
+  `RoutineAddSheet`·`RoutineStepAddSheet` 두 구조체와 `Sheet.swift`, 다짐 탭 본체는 `AffirmationsView.swift` 와 `ScreenHeader.swift` 본문(부제 분기 제외), 임시공간 탭은 `ScratchpadView.swift` 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 개인·회사 투두 탭은 각각 `TodoListView.swift`·`TodoCheckBox.swift`·`TodoRowMeta.swift`(회사는 개인 기한 항목 `TodoDueItem` 을 뺀 `TodoRowMeta` 구조체) · 개인만 `TodoDueFilterChips.swift`(기한 필터 칩 줄)·`TodoPriorityTag.swift`(「우선」 태그 줄) 전체와 `ScreenHeader.swift` 본문(부제 분기 포함), 승인 게이트 설정은 `ApprovalAutoResponseViews.swift` 의 `ApprovalAutoResponseOption`(라벨 영역 `.buttonStyle(.plain)` 앞까지)과 `ApprovalKeysView.swift` 전체(발급 시트 포함) — 의 레이아웃 수식(`.padding(…)`·`spacing:`·`size:`·`weight:`·`family:`·`.frame(width:…)`·
   `.opacity(…)`·`lineWidth:`·`…Radius:`·`padding: .…`)은 모두 표 M 어느 행의 `구현 인용` 안에 나온다. 목업 토큰과 짝이 없는 수식은 `요소`·`목업 인용` 이 `—` 인 행이다.
 - `구현 인용` 은 소스의 공백을 접은 조각이고, `구현 값` 의 숫자는 그 조각의 숫자(`DesignTokens` 상수·`CardPadding` 은 값으로 풀어서)에서, 색은 조각이 부르는
   그 화면 영역(다짐 · 루틴) 색 에셋의 라이트 값에서 온다(`.white` 는 `#FFFFFF`, `DesignTokens.StatusColor.<이름>` 은 `Tokens.swift` 의 `light:` 값). 값이 화면에서 공용 컴포넌트로 인자로 넘어가는 자리는 `구현 파일` 칸에 파일을 ` · ` 로 함께 적고, 인용마다 그중 한 파일에 있다. 시스템 컨트롤처럼 구현에 수식이 없는 자리의 `구현 값` 은 `시스템` 이고, 구현에 그 요소·수식 자체가 없으면 구현 열 셋이 `—` 다(`불일치`). 값은 단일 수식의 값만 읽는다 — 인접 인셋의 합·오프셋과 안쪽 여백의 합처럼 실효 값이 같아도 단일 수식이 아니면 `불일치` 이고 근거 열이 실효 값을 적는다. `em` 자간은 그 요소의 글자 크기를 곱해 소수 첫째 자리까지 본다(구현도 `em` 계수로 적으면 계수끼리 비교한다).
@@ -58,7 +58,7 @@ last_updated: 2026-10-13
 남은 구조·수치 drift(`screen-scratchpad` 임시공간 탭 네 프레임): 표 M `불일치` 11행 · `목업 대기` 0행, 표 S `불일치` 3행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-personal` 개인 투두 탭 다섯 프레임): 표 M `불일치` 1행 · `목업 대기` 0행, 표 S `불일치` 1행 · `목업 대기` 0행.
 남은 구조·수치 drift(`screen-todo-work` 회사 투두 탭 네 프레임): 표 M `불일치` 7행 · `목업 대기` 0행, 표 S `불일치` 2행 · `목업 대기` 0행.
-남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 21행 · `목업 대기` 2행, 표 S `불일치` 2행 · `목업 대기` 0행.
+남은 구조·수치 drift(`screen-approval` 승인 게이트 설정·키 발급 두 프레임): 표 M `불일치` 8행 · `목업 대기` 3행, 표 S `불일치` 0행 · `목업 대기` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -109,13 +109,13 @@ last_updated: 2026-10-13
 | `screen-todo-work` | S | 불일치 | 2 |
 | `screen-todo-work` | S | 허용 | 1 |
 | `screen-todo-work` | S | 목업 대기 | 0 |
-| `screen-approval` | M | 일치 | 109 |
+| `screen-approval` | M | 일치 | 122 |
 | `screen-approval` | M | 기본값 일치 | 3 |
-| `screen-approval` | M | 불일치 | 21 |
+| `screen-approval` | M | 불일치 | 8 |
 | `screen-approval` | M | 허용 | 14 |
-| `screen-approval` | M | 목업 대기 | 2 |
-| `screen-approval` | S | 일치 | 15 |
-| `screen-approval` | S | 불일치 | 2 |
+| `screen-approval` | M | 목업 대기 | 3 |
+| `screen-approval` | S | 일치 | 17 |
+| `screen-approval` | S | 불일치 | 0 |
 | `screen-approval` | S | 목업 대기 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
@@ -1353,7 +1353,7 @@ last_updated: 2026-10-13
 | 복사 버튼 | `flex-1 py-3 rounded-[10px] border border-[var(--accent)] bg-[var(--accent)] text-white text-[15px] font-bold` |
 | 완료 버튼 | `flex-1 py-3 rounded-[10px] border border-[var(--rule)] bg-white text-[15px]` |
 
-## 표 M — 수치 (`screen-approval`) · 149행
+## 표 M — 수치 (`screen-approval`) · 150행
 
 | 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
 |---|---|---|---|---|---|---|---|
@@ -1385,19 +1385,19 @@ last_updated: 2026-10-13
 | 섹션 제목 | `tracking-wide` | 0.025em | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.tracking(0.3)` | 0.3 | 일치 | 섹션 제목 자간 — 0.025em × 11 = 0.275, 0.1pt 단위로 0.3(우선순위 시트 제목 `.tracking(-0.5)` 선례) |
 | 섹션 제목 | `uppercase` | uppercase | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.textCase(.uppercase)` | uppercase | 일치 | 대문자 변환(한글 문구라 보이는 차이는 없다) |
 | 섹션 선 | `bg-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | #D8D5E4 | 일치 | 섹션 머리 오른쪽 1pt 선 색 |
-| 모드 카드 | `bg-white` | #FFFFFF | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 카드 | `border` | 1 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 카드 | `border-[var(--rule)]` | #D8D5E4 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 카드 | `mb-4` | 16 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 카드 | `rounded-md` | 6 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행(첫) | `px-3.5` | 14 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행(첫) | `py-3` | 12 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행(첫) | `text-[14px]` | 14 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행 | `border-[var(--rule)]` | #D8D5E4 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행 | `border-t` | top 1 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행 | `px-3.5` | 14 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행 | `py-3` | 12 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 모드 행 | `text-[14px]` | 14 | — | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
+| 모드 카드 | `bg-white` | #FFFFFF | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.background(DesignTokens.Color.card(Self.area))` | #FFFFFF | 일치 | 모드 카드 바탕(prMonitor `card` 라이트, #278) — 키 목록 카드와 같은 수식 |
+| 모드 카드 | `border` | 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)` | 1 | 일치 | 모드 카드 외곽선 굵기 |
+| 모드 카드 | `border-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)` | #D8D5E4 | 일치 | 모드 카드 외곽선 색 |
+| 모드 카드 | `mb-4` | 16 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.bottom, DesignTokens.Spacing.lg)` | 16 | 일치 | 모드 카드 아래 여백 — 구현은 카드와 변경 실패 안내 줄을 담은 `autoResponseOptions` 바깥에 건다(안내 줄이 없을 때 카드 아래 16) |
+| 모드 카드 | `rounded-md` | 6 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))` | 6 | 일치 | 모드 카드 라운드 |
+| 모드 행(첫) | `px-3.5` | 14 | `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `.padding(.horizontal, 14)` | 14 | 일치 | 선택지 행 좌우 여백(`ApprovalAutoResponseOption`) |
+| 모드 행(첫) | `py-3` | 12 | `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `.padding(.vertical, DesignTokens.Spacing.md)` | 12 | 일치 | 선택지 행 위아래 여백 |
+| 모드 행(첫) | `text-[14px]` | 14 | `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 선택지 라벨 크기(`body`) |
+| 모드 행 | `border-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | #D8D5E4 | 일치 | 둘째 선택지부터 위 1pt 구분선 색(행 사이 `Rectangle` 한 수식 — 키 행과 같은 방식) |
+| 모드 행 | `border-t` | top 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Rectangle() .fill(DesignTokens.Color.rule(Self.area)) .frame(height: 1)` | top 1 | 일치 | 둘째 선택지부터 위 1pt 구분선(`index > 0` 일 때 행 위에 그린다) |
+| 모드 행 | `px-3.5` | 14 | `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `.padding(.horizontal, 14)` | 14 | 일치 | 선택지 행 좌우 여백 |
+| 모드 행 | `py-3` | 12 | `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `.padding(.vertical, DesignTokens.Spacing.md)` | 12 | 일치 | 선택지 행 위아래 여백 |
+| 모드 행 | `text-[14px]` | 14 | `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))` | 14 | 일치 | 선택지 라벨 크기 |
 | 키 목록 카드 | `bg-white` | #FFFFFF | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.background(DesignTokens.Color.card(Self.area))` | #FFFFFF | 일치 | 키 목록 카드 바탕(prMonitor `card` 라이트) |
 | 키 목록 카드 | `border` | 1 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)` | 1 | 일치 | 카드 외곽선 굵기 |
 | 키 목록 카드 | `border-[var(--rule)]` | #D8D5E4 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `RoundedRectangle(cornerRadius: 6, style: .continuous) .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)` | #D8D5E4 | 일치 | 카드 외곽선 색 |
@@ -1506,6 +1506,7 @@ last_updated: 2026-10-13
 | 완료 버튼 | — | #221F33 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.foregroundStyle(primary ? Color.white : DesignTokens.Color.ink(Self.area))` | #221F33 | 기본값 일치 | 보조 버튼 글자 색 — 목업은 색 클래스 없이 프레임 `ink` 상속 |
 | — | — | — | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.padding(.vertical, DesignTokens.Spacing.lg)` | 16 | 목업 대기 | 키 0건 안내·불러오는 중 진행 표시의 위아래 여백 — 목업에 빈 목록·불러오는 중 상태가 없다 |
 | — | — | — | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `.font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))` | semibold | 목업 대기 | 키 0건 안내 · 목록 조회 오류 배너 「다시 시도」 굵기 — 목업에 두 상태가 없다 |
+| — | — | — | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Text(notice) .font(DesignTokens.Typography.font(size: 11.5)) .foregroundStyle(DesignTokens.StatusColor.failure) .padding(.top, DesignTokens.Spacing.sm)` | 11.5 | 목업 대기 | 모드 변경 실패 안내 줄(`viewModel.modeNotice`, #278) — 목업 「설정」 프레임은 변경 실패 상태를 그리지 않는다 |
 
 ## 표 S — 요소 순서·유무 (`screen-approval`) · 17행
 
@@ -1515,9 +1516,9 @@ last_updated: 2026-10-13
 |---|---|---|---|---|---|---|
 | 1 | 뒤로 「승인」 | `<button class="flex items-center gap-1 text-[15px] text-[var(--accent)]">` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `navigationBarTitleDisplayMode(.inline)` | 일치 | 승인 탭에서 푸시된 화면 — 시스템 내비게이션 바의 뒤로 버튼 |
 | 2 | 제목 「승인 게이트 설정」 | `<h2 class="text-[18px] font-bold mb-3">승인 게이트 설정</h2>` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Text("승인 게이트 설정")` | 일치 | 본문 첫 요소 |
-| 3 | 「자동 응답 모드」 섹션 머리 | `자동 응답 모드</h2>` | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 4 | 모드 선택지 세 줄 | `<input type="radio" name="mode" checked` | — | — | 불일치 | 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다(`_impl-map.md` `ApprovalKeysView.swift` 행) |
-| 5 | 「호출자 키」 섹션 머리 | `호출자 키</h2>` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Text("호출자 키")` | 일치 | 제목 다음(구현은 자동 응답 섹션이 없어 바로 온다) |
+| 3 | 「자동 응답 모드」 섹션 머리 | `자동 응답 모드</h2>` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `autoResponseSectionHeader autoResponseOptions sectionHeader` | 일치 | 제목 다음 맨 위 섹션(#278) — 섹션 머리 · 모드 카드 · 「호출자 키」 섹션 머리 순서 |
+| 4 | 모드 선택지 세 줄 | `<input type="radio" name="mode" checked` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `ForEach(Array(ApprovalAutoResponse.allCases.enumerated()), id: \.element) { index, mode in` | 일치 | 「없음 — 알림으로 받기」·「자동 승인」·「자동 거절」 세 줄(`ApprovalAutoResponse.allCases`), 라벨 왼쪽 · 라디오 오른쪽(`ApprovalAutoResponseOption` — 선택된 모드 `largecircle.fill.circle` accent) |
+| 5 | 「호출자 키」 섹션 머리 | `호출자 키</h2>` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Text("호출자 키")` | 일치 | 모드 카드 다음 |
 | 6 | 키 목록 카드 | `<div class="bg-white border border-[var(--rule)] rounded-md overflow-hidden">` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `ForEach(Array(viewModel.keys.enumerated()), id: \.element.id) { index, key in` | 일치 | 키마다 한 행, 둘째 행부터 위 구분선 |
 | 7 | 키 행 — 칩 · 「폐기」 | `<button class="text-[12px] font-bold text-[var(--destructive)]">폐기</button>` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `Button("폐기") { revoking = key }` | 일치 | 칩 왼쪽 · 버튼 오른쪽, 아래 메타 줄 |
 | 8 | 폐기된 키 행 — 「폐기됨 MM/dd」 | `폐기됨 10/03` | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `if let revoked = ApprovalKeyFormatting.revokedLabel(key) {` | 일치 | 폐기 버튼 자리에 폐기 시각 |
@@ -1570,7 +1571,8 @@ SCREENS = [
              ("ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift", "public var body", "public extension")]},
     {"slug": "screen-approval", "area": "prMonitor", "svg": True, "frames": [7, 8],
      "roots": ["absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-20", "absolute top-[104px] bottom-[88px]", "absolute z-50 inset-x-0 bottom-0 rounded-t-[22px]"],
-     "fwd": [("ios/PocketAide/Approvals/ApprovalKeysView.swift", None, None)]},
+     "fwd": [("ios/PocketAide/Approvals/ApprovalKeysView.swift", None, None),
+             ("ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift", "struct ApprovalAutoResponseOption", ".buttonStyle(.plain)")]},
 ]
 part = lambda h: text.split(f"## {h}", 1)[1].split("\n## ", 1)[0]
 cells = lambda body: [[c.strip() for c in r.strip("|").split(" | ")] for r in re.findall(r"^\| .*\|$", body, re.M)[1:]]
