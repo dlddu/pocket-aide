@@ -68,6 +68,16 @@ struct PocketAideWidget: Widget {
         }
         .configurationDisplayName("PocketAide")
         .description("하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.")
-        .supportedFamilies([.systemLarge])
+        .supportedFamilies(Self.supportedFamilies)
+    }
+
+    // The compiler check keeps this building on Xcode 26 SDKs, which lack .systemExtraLargePortrait.
+    private static var supportedFamilies: [WidgetFamily] {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            return [.systemExtraLargePortrait]
+        }
+        #endif
+        return [.systemLarge]
     }
 }
