@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 ---
 
 # 구현 ↔ 목업 매핑
@@ -38,7 +38,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
 | `ios/PocketAide/Approvals/ApprovalDeepLinkOpener.swift` | 비렌더링 | — | 승인 푸시 딥링크 → 요청 상세 진입(`ViewModifier`) — `openedApprovalID` 를 받아 요청을 조회하고 설정·이력 화면을 닫은 뒤 상세(`ApprovalDetailView.swift` 행)를 연다. `ApprovalsView.swift` 에 붙는다 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | 부분 | `screen-approval` | 승인 요청 상세(#251, PRD-12 AC6·AC7) — 「요청 상세」 프레임의 헤더(백버튼 「승인」·보낸 키 칩)·요청 요약 제목·「남은 시간」 카운트다운(라벨·초 단위 값·진행 막대)·요청 내용 전문·메타(보낸 키·요청자·요청 ID·요청 시각)·폐기된 키 경고·「거절」/「승인」 버튼과 「결정 확인」 프레임의 확인 다이얼로그(제목·본문·「취소」 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.confirmTitle`·`confirmMessage`). 목업에 없는 구현 상태 — 메타 「상태」·처리된 요청의 「처리 방식」·「처리 시각」, 최신 상태 조회 오류 배너, 결정 충돌·실패 안내 배너 — 는 `_copy-map.md` 표 A `목업 대기` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | 부분 | `screen-approval` | 승인 요청 상세(#251, PRD-12 AC6·AC7) — 「요청 상세」 프레임의 헤더(백버튼 「승인」·보낸 키 칩)·요청 요약 제목·「남은 시간」 카운트다운(라벨·초 단위 값·진행 막대)·요청 내용 전문·메타(보낸 키·요청자·요청 ID·요청 시각)·폐기된 키 경고·「거절」/「승인」 버튼과 「요청 상세 — 만료 · 재조회 실패」 프레임의 처리된 요청(카운트다운·결정 버튼 없음, 메타 상태·처리 방식·처리 시각, 요청자 「—」)과 재조회 실패 배너, 「결정 확인」 프레임의 확인 다이얼로그(제목·본문·「취소」 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.confirmTitle`·`confirmMessage`). 목업에 없는 구현 상태 — 메타 「상태」·처리된 요청의 「처리 방식」·「처리 시각」, 최신 상태 조회 오류 배너, 결정 충돌·실패 안내 배너 — 는 `_copy-map.md` 표 A `목업 대기` |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | 부분 | `screen-approval` | 처리 이력(#264, PRD-12 AC8) — 「처리 이력」 프레임의 섹션 머리 「처리 이력」·이력 행(결과 점·결과 「승인됨/거절됨/만료」·처리 시각·요청 요약·보낸 키 칩·처리 방식 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.statusLabel`·`historyTime`·`historyMeta`(`decisionModeLabel` + 「 · 폐기된 키로 생성됨」))·하단 「이전 이력 불러오는 중…」. 승인 탭 헤더의 이력 버튼으로 진입한다(`ApprovalsView.swift` 행). 목업에 없는 구현 상태 — 조회 오류 배너(오류 설명·「다시 시도」)·첫 조회 중 진행 표시 — 는 목업 「오류」 프레임의 같은 문구로 대조한다. 이력 프레임의 구조·수치 대조는 `_structure-map.md` 의 몫이다 |
 | `ios/PocketAide/Approvals/ApprovalHistoryViewModel.swift` | 비렌더링 | — | 처리 이력 커서 페이지 조회·이어 불러오기·오류 상태와 API 호출 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | 부분 | `screen-approval` | 승인 게이트 설정(#257, PRD-12 AC13·AC14) — 「설정 — 자동 응답·호출자 키」 프레임의 제목 「승인 게이트 설정」·「호출자 키」 섹션 머리·키 행(이름 칩·「폐기」 버튼 또는 「폐기됨 MM/dd」·메타 줄 — 문구는 `PocketAideAPI/ApprovalKeys.swift` 의 `ApprovalKeyFormatting.meta`·`revokedLabel`)·점선 「+ 호출자 키 발급」 버튼과 「키 발급 — 원문 1회 표시」 프레임의 시트(제목 `ApprovalKeyFormatting.issuedTitle`·「호출자 이름」·「키 원문」·경고 `secretWarning`·「복사」/「완료」). 승인 탭 헤더의 설정 버튼으로 진입한다(`ApprovalsView.swift` 행). 「자동 응답 모드」 섹션(AC9)은 아직 구현되지 않았다. 목업에 없는 구현 상태 — 발급 입력 시트(「호출자 키 발급」·이름 입력·「발급」)·「복사됨」·빈 목록·목록 조회 오류 배너·폐기 확인 대화상자 — 는 `_copy-map.md` 표 A `목업 대기` |

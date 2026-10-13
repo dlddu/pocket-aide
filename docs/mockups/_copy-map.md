@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 ---
 
 # 카피 ↔ 구현 대응표
@@ -36,22 +36,22 @@ last_updated: 2026-10-12
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 12행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 7행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 173 |
+| A | 일치 | 178 |
 | A | 데이터 | 6 |
 | A | 비표시 | 25 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 12 |
-| B | 일치 | 208 |
+| A | 목업 대기 | 7 |
+| B | 일치 | 213 |
 | B | 외부 | 54 |
-| B | 예시 데이터 | 138 |
-| B | 목업 전용 | 126 |
+| B | 예시 데이터 | 141 |
+| B | 목업 전용 | 127 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 3 |
 | B | 시스템 UI | 9 |
@@ -93,20 +93,20 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `보낸 키` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `key` | 비표시 | `fact(_:_:id:)` 의 `id:` 인자 — `accessibilityIdentifier("approval.detail.\(id)")` 접미사, 화면에 그려지지 않는다 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청자` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `—` | 목업 대기 | 요청자 이름이 비었거나 시각이 없을 때의 대체 문자 — 목업 상세는 요청자·시각이 다 있는 요청만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `—` | 일치 | 요청자 이름이 비었거나 시각이 없을 때의 대체 문자 — 「요청 상세 — 만료 · 재조회 실패」 프레임 요청자 값 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `requester` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 ID` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `externalId` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 시각` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `createdAt` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `상태` | 목업 대기 | 메타 「상태」(값 `ApprovalFormatting.statusLabel`) — 목업 상세 `dl` 은 보낸 키·요청자·요청 ID·요청 시각 넷뿐이다 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `상태` | 일치 | 메타 「상태」(값 `ApprovalFormatting.statusLabel`) — 「요청 상세 — 만료 · 재조회 실패」 프레임 `dl`(「요청 상세」 프레임의 대기 요청 `dl` 은 보낸 키·요청자·요청 ID·요청 시각 넷만 그린다) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `status` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 방식` | 목업 대기 | 처리된 요청의 메타 「처리 방식」 — 목업은 처리된 요청의 상세 프레임을 그리지 않는다(낱말은 처리 이력 설계 주석에만 있다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 방식` | 일치 | 처리된 요청의 메타 「처리 방식」 — 「요청 상세 — 만료 · 재조회 실패」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `mode` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 시각` | 목업 대기 | 처리된 요청의 메타 「처리 시각」 — 같은 이유(HTML 주석에만 있다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 시각` | 일치 | 처리된 요청의 메타 「처리 시각」 — 「요청 상세 — 만료 · 재조회 실패」 프레임 `dl`(만료면 만료 시각) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `processedAt` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `최신 상태를 불러오지 못했습니다` | 목업 대기 | 상세 재조회 실패 배너 제목 — 목업 상세에 오류 상태 프레임이 없다 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `다시 시도` | 일치 | 상세 재조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `최신 상태를 불러오지 못했습니다` | 일치 | 상세 재조회 실패 배너 제목 — 「요청 상세 — 만료 · 재조회 실패」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `다시 시도` | 일치 | 상세 재조회 실패 배너 재시도 버튼 — 「요청 상세 — 만료 · 재조회 실패」 프레임 · 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `처리 이력` | 일치 | 섹션 머리 — 「처리 이력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `다시 시도` | 일치 | 이력 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구(이력 화면 오류 상태 프레임은 목업에 없다) |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `이전 이력 불러오는 중…` | 일치 | 커서 이어 불러오기 줄 — 「처리 이력」 프레임 하단 |
@@ -294,7 +294,7 @@ last_updated: 2026-10-12
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 577행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 586행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -464,6 +464,15 @@ last_updated: 2026-10-12
 | `screen-approval` | `이 화면을 닫으면 원문을 다시 볼 수 없습니다. 지금 복사해 호출자의 시크릿에 넣으세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 키 발급 시트 경고 — `ApprovalKeyFormatting.secretWarning` |
 | `screen-approval` | `복사` | 일치 | 키 발급 시트 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `완료` | 일치 | 키 발급 시트 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `요청 상세 — 만료 · 재조회 실패` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `최신 상태를 불러오지 못했습니다` | 일치 | 「요청 상세 — 만료 · 재조회 실패」 프레임 재조회 실패 배너 제목(`ApprovalDetailView.swift`) |
+| `screen-approval` | `작업: prod 배포 v1.41 (1차 실패 후 재시도) 대상: deployment/pocket-aide-api 네임스페이스: prod 이미지: ghcr.io/dlddu/pocket-aide-api:v1.41` | 예시 데이터 | 요청 내용 전문 — 구현은 `Text(item.context)` |
+| `screen-approval` | `—` | 일치 | 요청자 이름이 빈 요청의 대체 문자(`ApprovalDetailView.swift`) |
+| `screen-approval` | `deploy-v1.41-r2` | 예시 데이터 | 요청 ID — 구현은 `item.externalId` |
+| `screen-approval` | `08:50:00` | 예시 데이터 | 요청 시각 — 구현은 `HH:mm:ss` 서식 |
+| `screen-approval` | `상태` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `처리 방식` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `처리 시각` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
