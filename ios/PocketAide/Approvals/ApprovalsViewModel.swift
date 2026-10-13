@@ -6,6 +6,7 @@ final class ApprovalsViewModel: ObservableObject {
     @Published private(set) var items: [ApprovalRequest] = []
     @Published private(set) var isLoading = false
     @Published private(set) var hasLoaded = false
+    @Published private(set) var autoResponse: ApprovalAutoResponse = .off
     @Published var errorMessage: String?
 
     private(set) var api: APIClient?
@@ -26,8 +27,18 @@ final class ApprovalsViewModel: ObservableObject {
         defer { isLoading = false }
         do {
             items = try await api.listPendingApprovals()
+            autoResponse = try await api.approvalSettings().autoResponse
             errorMessage = nil
             hasLoaded = true
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
+    func turnOffAutoResponse() async {
+        guard let api else { return }
+        do {
+            autoResponse = try await api.updateApprovalAutoResponse(.off).autoResponse
         } catch {
             errorMessage = String(describing: error)
         }

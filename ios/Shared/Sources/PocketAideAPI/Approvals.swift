@@ -66,6 +66,52 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
     }
 }
 
+public enum ApprovalAutoResponse: String, Codable, CaseIterable, Identifiable, Sendable {
+    case off = "NONE"
+    case autoApprove = "AUTO_APPROVE"
+    case autoReject = "AUTO_REJECT"
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .off: return "없음"
+        case .autoApprove: return "자동 승인"
+        case .autoReject: return "자동 거절"
+        }
+    }
+
+    public var optionLabel: String {
+        self == .off ? "없음 — 알림으로 받기" : label
+    }
+
+    public var isAutomatic: Bool { self != .off }
+
+    public var bannerTitle: String? {
+        isAutomatic ? "\(label) 모드가 켜져 있습니다." : nil
+    }
+
+    public var outcomeNotice: String {
+        switch self {
+        case .off: return "새 요청은 알림으로 받습니다."
+        case .autoApprove: return "새 요청은 알림 없이 바로 승인됩니다."
+        case .autoReject: return "새 요청은 알림 없이 바로 거절됩니다."
+        }
+    }
+}
+
+public struct ApprovalSettings: Codable, Equatable, Sendable {
+    public let autoResponse: ApprovalAutoResponse
+
+    enum CodingKeys: String, CodingKey {
+        case autoResponse = "auto_response"
+    }
+
+    public init(autoResponse: ApprovalAutoResponse) {
+        self.autoResponse = autoResponse
+    }
+}
+
 public enum ApprovalDecision: String, Sendable {
     case approve
     case reject
@@ -233,6 +279,14 @@ public extension APIClient {
             path += "?cursor=" + encoded
         }
         return try await get(path, authenticated: true)
+    }
+
+    func approvalSettings() async throws -> ApprovalSettings {
+        try await get("/api/approval-settings", authenticated: true)
+    }
+
+    func updateApprovalAutoResponse(_ mode: ApprovalAutoResponse) async throws -> ApprovalSettings {
+        try await patch("/api/approval-settings", body: ApprovalSettings(autoResponse: mode), authenticated: true)
     }
 
     func approval(id: String) async throws -> ApprovalRequest {

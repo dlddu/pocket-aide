@@ -79,6 +79,7 @@ struct ApprovalsView: View {
                     .font(DesignTokens.Typography.font(size: 26, weight: .bold))
                     .foregroundStyle(DesignTokens.Color.ink(Self.area))
                     .accessibilityIdentifier("approvals.title")
+                ApprovalAutoResponseHeader(mode: viewModel.autoResponse, area: Self.area)
             }
             Spacer()
             VStack(spacing: 2) {
@@ -135,6 +136,14 @@ struct ApprovalsView: View {
         List {
             if let message = viewModel.errorMessage {
                 errorBanner(message)
+            }
+            if let title = viewModel.autoResponse.bannerTitle {
+                ApprovalAutoResponseBanner(title: title, notice: viewModel.autoResponse.outcomeNotice, area: Self.area) {
+                    Task {
+                        await viewModel.turnOffAutoResponse()
+                        await viewModel.load()
+                    }
+                }
             }
             if viewModel.items.isEmpty {
                 emptyState
@@ -193,22 +202,13 @@ struct ApprovalsView: View {
         .accessibilityIdentifier("approvals.error.banner")
     }
 
-    @ViewBuilder
     private var emptyState: some View {
-        Group {
-            if viewModel.isLoading || (!viewModel.hasLoaded && viewModel.errorMessage == nil) {
-                ProgressView().frame(maxWidth: .infinity)
-            } else if viewModel.errorMessage == nil {
-                Text("대기 중인 승인 요청이 없습니다")
-                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body, weight: .semibold))
-                    .foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, DesignTokens.Spacing.xxl)
-                    .accessibilityIdentifier("approvals.empty.state")
-            }
-        }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
+        ApprovalEmptyState(
+            isLoading: viewModel.isLoading || (!viewModel.hasLoaded && viewModel.errorMessage == nil),
+            showsMessage: viewModel.errorMessage == nil,
+            mode: viewModel.autoResponse,
+            area: Self.area
+        )
     }
 
     private var sectionHeader: some View {

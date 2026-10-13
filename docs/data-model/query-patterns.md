@@ -74,6 +74,8 @@
 | Q-62 | `select approval_caller_keys \| eq(id, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::getKey` |
 | Q-63 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.user_id) \| - \| order(coalesce(r.processed_at,r.expires_at) desc, approval_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); approval_requests: idx_approval_requests_user_status_created | `backend/internal/approvals/store.go::Store::ListHistory` |
 | Q-64 | `delete device_tokens \| eq(token, user_id) \| - \| -` | UNIQUE(device_tokens.token) | `backend/internal/devicetokens/store.go::Store::Delete` |
+| Q-65 | `select user_approval_settings \| eq(user_id) \| - \| -` | PK(user_approval_settings) | `backend/internal/approvals/store.go::Store::AutoResponse` |
+| Q-66 | `upsert user_approval_settings \| eq(user_id) \| - \| -` | — | `backend/internal/approvals/store.go::Store::SetAutoResponse` |
 
 ## 수동 형태
 

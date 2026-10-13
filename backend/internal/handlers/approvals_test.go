@@ -62,6 +62,8 @@ func newApprovalEnvWithPush(t *testing.T, push handlers.ApprovalPusher) *approva
 		p.Get("/api/approval-keys", handlers.ListApprovalKeys(store))
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(store))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(store))
+		p.Get("/api/approval-settings", handlers.GetApprovalSettings(store))
+		p.Patch("/api/approval-settings", handlers.UpdateApprovalSettings(store))
 		p.Get("/api/approvals", handlers.ListPendingApprovals(store))
 		p.Get("/api/approvals/history", handlers.ListApprovalHistory(store))
 		p.Get("/api/approvals/{id}", handlers.GetApproval(store))

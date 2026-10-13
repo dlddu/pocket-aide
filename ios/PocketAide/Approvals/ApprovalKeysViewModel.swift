@@ -8,6 +8,8 @@ final class ApprovalKeysViewModel: ObservableObject {
     @Published private(set) var hasLoaded = false
     @Published private(set) var isIssuing = false
     @Published private(set) var issued: IssuedApprovalKey?
+    @Published private(set) var autoResponse: ApprovalAutoResponse?
+    @Published var modeNotice: String?
     @Published var errorMessage: String?
     @Published var issueNotice: String?
 
@@ -23,6 +25,7 @@ final class ApprovalKeysViewModel: ObservableObject {
         defer { isLoading = false }
         do {
             keys = try await api.listApprovalKeys()
+            autoResponse = try await api.approvalSettings().autoResponse
             errorMessage = nil
             hasLoaded = true
         } catch {
@@ -45,6 +48,16 @@ final class ApprovalKeysViewModel: ObservableObject {
             }
         } catch {
             issueNotice = String(describing: error)
+        }
+    }
+
+    func setAutoResponse(_ mode: ApprovalAutoResponse) async {
+        guard let api, mode != autoResponse else { return }
+        do {
+            autoResponse = try await api.updateApprovalAutoResponse(mode).autoResponse
+            modeNotice = nil
+        } catch {
+            modeNotice = String(describing: error)
         }
     }
 
