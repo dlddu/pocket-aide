@@ -31,3 +31,15 @@
 | --- | --- | --- |
 | `backend/internal/approvals/store.go` 46 | 「CallerKey is a row of approval_caller_keys: a named key an external caller presents to file approval requests for one user.」 | `approval_caller_keys` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + 키가 **한 사용자에 묶인다**는 사실 — 구조체에는 `user_id` 필드가 없어(행에는 있다) 선언만 읽어서는 키의 소유 범위가 드러나지 않는다. 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 키 하나로 여러 사용자에게 요청을 낼 수 있다는 오판이 열린다 |
 | `backend/internal/approvals/store.go` 61 | 「Request is a row of approval_requests: one approval asked through a caller key, and the user's decision on it.」 | `approval_requests` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + 요청과 사용자의 결정이 **같은 행**에 담긴다는 사실(별도 결정 테이블이 없고 `Status`·`DecisionMode`·`ProcessedAt` 이 결정이다) — 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 결정 이력을 찾아 다른 테이블을 뒤지거나 결정을 별도 행으로 쌓으려는 오판이 열린다 |
+
+## 증분 판정 — 2026-10-13 (approvals 자동 응답 설정 ERD `의미:` 대상)
+
+- **task**: `tbm_pocket-aide-comment-necessity` / `rct_20261013-0001`
+- **기준 커밋**: `40c8c6d` (#278 — 줄 번호는 이 커밋 기준이다)
+- **범위**: #278 이 원장 `backend/internal/approvals/store.go` 행을 `—` 로 되돌리며 들인 1줄. 같은 행의 기존 2줄(`CallerKey`·`Request`, 지금 67·82행)은 위 2026-10-11 증분 판정 그대로이고 문면이 바뀌지 않았다. 그 밖에 남은 미판정 덩어리는 없다.
+- **결과**: 1줄 유지. 제거 0줄 · 비주석 변경은 없다.
+- **공통 사유**: 위 다섯째 패스와 같다 — exported 타입의 한 줄 doc 주석이고 `docs/data-model/erd.md` 의 `user_approval_settings` 엔티티 `의미:` 링크가 가리키는 대상이라, 지우면 `datamodelcheck` 의 `checkMeaning` 이 불변식 1 위반(`meaning-undocumented`)을 보고한다. 아래 표는 doc 수준을 넘는 문면의 사유를 덧붙인다.
+
+| 자리(`40c8c6d` 기준 줄) | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `backend/internal/approvals/store.go` 50 | 「AutoResponse is a user's row in user_approval_settings: how requests filed by caller keys are processed at creation; a user without a row gets AutoResponseNone.」 | `user_approval_settings` 엔티티의 의미 정본(ERD `의미:` 링크 대상) + 두 계약 — 모드는 요청 **생성 시점에만** 적용된다(`Create` 가 INSERT 전에 한 번 읽는다 — 모드를 바꿔도 기존 `PENDING` 요청은 소급 처리되지 않는다)는 것과, 행 부재가 오류가 아니라 `AutoResponseNone` 으로 읽힌다(`Store.AutoResponse` 의 `sql.ErrNoRows` 분기)는 것. 타입 선언은 문자열 별칭과 상수 셋뿐이라 둘 다 드러나지 않는다. 지우면 `datamodelcheck` 가 불변식 1 위반을 보고하고, 모드 변경 시 대기 요청을 일괄 처리하는 마이그레이션·핸들러를 짓거나 가입 시 설정 행 생성이 필요하다고 오판할 수 있다 |
