@@ -172,3 +172,12 @@
 | --- | --- | --- |
 | `ios/PocketAideWidget/PocketAideWidget.swift` (걷음) | 「iOS 27 adds the 4×6 extra-large family on iPhone; iOS 26 tops out at Large.」 | 제거 — 코드 재진술(`#available(iOS 27.0, *)` 분기와 폴백이 같은 사실을 말한다) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` 74 | 「The compiler check keeps this building on Xcode 26 SDKs, which lack .systemExtraLargePortrait.」 | 유지 — `#if compiler(>=6.4)` 가 런타임 `#available` 과 따로 있는 이유(CI macOS 러너의 기본 Xcode 26.x SDK 에는 이 case 가 없다) — 지우면 `#available` 과 겹친다고 보고 걷어 Xcode 26 으로 빌드하는 CI 가 컴파일 오류로 깨진다 |
+
+## 증분 재판정 — 2026-10-14 (위젯 레이아웃 조정)
+
+- **기준 커밋**: `264a141` 위의 브랜치 `feat/widget-layout-tune` (줄 번호는 그 브랜치 기준이다)
+- **범위**: 메일 자리표시 슬라이스를 위젯에서 걷으며 낡은 폴백 탭 대상 주석 한 블록.
+
+| 자리 | 주석 | 판정 |
+| --- | --- | --- |
+| `ios/PocketAideWidget/PocketAideWidget.swift` 36–37 | 「Outer widgetURL is the fallback tap target for the gaps between sections (rules, padding); every section overrides its own region with a Link.」 (2줄, 이전 3줄 개작) | 유지·개작 — 이전 문장은 「자리표시 슬라이스가 쓰는 폴백」이라 했는데 자리표시가 사라져 거짓이 됐다. 모든 슬라이스가 자기 `Link` 를 가진 지금 `widgetURL` 이 남는 이유(구분선·여백을 눌렀을 때의 목적지)만 남겼다 — 지우면 슬라이스마다 `Link` 가 있는데 왜 바깥 `widgetURL` 이 있는지 코드만으로는 알 수 없다 |

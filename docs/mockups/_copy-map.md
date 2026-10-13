@@ -28,7 +28,7 @@ last_updated: 2026-10-13
   - `시스템 UI` — 정방향: iOS 가 앱 밖에서 그리는 문구(위젯 갤러리 이름·설명). 대응 화면 목업이 없다. 역방향: 앱 리터럴 없이 UIKit 이 앱 개발 지역 언어로 그리는
     시스템 컴포넌트 문구(시스템 `TabView` 오버플로 탭·목록의 「더 보기」·「편집」). 검산이 그 낱말과 `ios/project.yml` 의 `developmentLanguage: ko` 를 확인한다.
   - `목업 전용` — 역방향 전용. 목업 갤러리 크롬·프레임 밖 캡션·설계 주석 박스·상태바·홈 화면 크롬. 앱이 그리지 않는다.
-  - `미구현 영역` — 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행 또는 지원하지 않는 위젯 크기).
+  - `미구현 영역` — 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행, 그 행 대조 범위가 미구현이라 적은 슬라이스, 또는 지원하지 않는 위젯 크기).
   - `기준 4` — 낱말은 같고 차이가 글리프·아이콘·자리뿐이다. 구조 대조의 몫이다.
   - `구현 대기` — 목업 문구가 구현에 없거나 다르다. 구현(`ios/`)을 고쳐야 닫힌다.
   - `목업 대기` — 구현 문구를 목업이 그리지 않는다(주로 빈·오류·생성 모드 같은 목업에 없는 상태). 목업을 보강하거나 허용목록에 사유를 남겨야 닫힌다.
@@ -251,7 +251,6 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 비표시 | 항목 메타 줄의 접근성 라벨(`accessibilityLabel`) — 화면에는 목업처럼 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다(`Text(item.source.displayName)` · `Text(time)` — 보간 아닌 데이터) |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현`(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
@@ -630,9 +629,9 @@ last_updated: 2026-10-13
 | `screen-widget` | `+ 2 더` | 일치 | 남은 일정 수(`CalendarSection` `+ \(summary.moreCount) 더`) |
 | `screen-widget` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
 | `screen-widget` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
+| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
+| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
 | `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
 | `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
