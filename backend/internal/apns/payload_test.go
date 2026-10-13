@@ -14,7 +14,7 @@ import (
 
 func TestFitAlertBodyKeepsBodiesThatFit(t *testing.T) {
 	data := map[string]any{"approval_id": "r"}
-	if got := FitAlertBody("승인 요청 · infra-ci", "prod 배포", data); got != "prod 배포" {
+	if got := FitAlertBody("", "승인 요청 · infra-ci", "prod 배포", data); got != "prod 배포" {
 		t.Fatalf("short body changed: %q", got)
 	}
 }
@@ -28,7 +28,7 @@ func TestFitAlertBodyCutsToThePayloadLimit(t *testing.T) {
 		"escape heavy": strings.Repeat("<&\"\n", 3000),
 	} {
 		t.Run(name, func(t *testing.T) {
-			got := FitAlertBody(title, body, data)
+			got := FitAlertBody("", title, body, data)
 			if !strings.HasSuffix(got, "…") {
 				t.Fatalf("cut body should end with …")
 			}
@@ -36,11 +36,11 @@ func TestFitAlertBodyCutsToThePayloadLimit(t *testing.T) {
 			if !strings.HasPrefix(body, kept) {
 				t.Fatalf("cut body should be a prefix of the original")
 			}
-			if size := PayloadSize(title, got, data); size > MaxPayloadBytes {
+			if size := PayloadSize("", title, got, data); size > MaxPayloadBytes {
 				t.Fatalf("payload %d bytes > %d", size, MaxPayloadBytes)
 			}
 			longer := string([]rune(body)[:len([]rune(kept))+1]) + "…"
-			if PayloadSize(title, longer, data) <= MaxPayloadBytes {
+			if PayloadSize("", title, longer, data) <= MaxPayloadBytes {
 				t.Fatalf("one more character would still fit — the cut is not tight")
 			}
 		})
@@ -72,6 +72,16 @@ func TestSendWithDataReportsRejections(t *testing.T) {
 	alert := received["aps"].(map[string]any)["alert"].(map[string]any)
 	if alert["title"] != "T" || alert["body"] != "B" || received["approval_id"] != "r-1" {
 		t.Fatalf("payload: %v", received)
+	}
+	if _, ok := received["aps"].(map[string]any)["category"]; ok {
+		t.Fatalf("plain push should carry no category: %v", received)
+	}
+
+	if err := c.SendWithCategory(context.Background(), "tok", "APPROVAL_REQUEST", "T", "B", map[string]any{"approval_id": "r-1"}); err != nil {
+		t.Fatalf("accepted push: %v", err)
+	}
+	if got := received["aps"].(map[string]any)["category"]; got != "APPROVAL_REQUEST" {
+		t.Fatalf("category: %v", received)
 	}
 
 	cases := []struct {
