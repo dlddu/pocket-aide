@@ -12,21 +12,19 @@ struct PocketAideWidgetEntryView: View {
                 ruleDivider(vertical: true)
                 CalendarSection(state: entry.calendar, now: entry.date)
             }
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.bottom, DesignTokens.Spacing.md)
 
             ruleDivider(vertical: false)
 
             AffirmationSection(state: entry.state)
                 .padding(.vertical, DesignTokens.Spacing.md)
+                .frame(maxHeight: .infinity, alignment: .topLeading)
 
             ruleDivider(vertical: false)
 
-            HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                PlaceholderSection(area: .aiChat, label: "메일")
-                ruleDivider(vertical: true)
-                NotificationSection(state: entry.notifications)
-            }
-            .padding(.vertical, DesignTokens.Spacing.md)
+            NotificationSection(state: entry.notifications)
+                .padding(.vertical, DesignTokens.Spacing.md)
 
             ruleDivider(vertical: false)
 
@@ -35,9 +33,8 @@ struct PocketAideWidgetEntryView: View {
         }
         .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        // Outer widgetURL is the fallback tap target — used for placeholder
-        // sections that don't yet have their own destinations. The
-        // affirmation section overrides this region with its own Link.
+        // Outer widgetURL is the fallback tap target for the gaps between
+        // sections (rules, padding); every section overrides its own region with a Link.
         .widgetURL(URL(string: "pocketaide://root"))
         .containerBackground(for: .widget) {
             DesignTokens.Color.widgetSurface()
