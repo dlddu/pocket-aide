@@ -13,10 +13,10 @@ struct AffirmationSection: View {
                     Spacer(minLength: 0)
                 }
                 Text(message)
-                    .font(DesignTokens.Typography.font(size: 15, family: .serif))
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, family: .serif))
                     .foregroundStyle(textColor)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(3)
+                    .lineLimit(5)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
