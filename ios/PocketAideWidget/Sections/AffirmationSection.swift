@@ -16,9 +16,10 @@ struct AffirmationSection: View {
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, family: .serif))
                     .foregroundStyle(textColor)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(5)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .buttonStyle(.plain)
     }

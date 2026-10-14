@@ -19,7 +19,6 @@ struct PocketAideWidgetEntryView: View {
 
             AffirmationSection(state: entry.state)
                 .padding(.vertical, DesignTokens.Spacing.md)
-                .frame(maxHeight: .infinity, alignment: .topLeading)
 
             ruleDivider(vertical: false)
 
