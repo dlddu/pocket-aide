@@ -18,7 +18,7 @@ on:
 jobs:
   upload:
     name: Build & upload to TestFlight
-    runs-on: macos-26
+    runs-on: xcode-27
     env:
       APP_BUNDLE_ID: com.dlddu.PocketAide
       BUILD_SOURCE: ${{ inputs.build_source }}

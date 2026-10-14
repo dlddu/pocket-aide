@@ -30,7 +30,7 @@ struct CalendarSection: View {
                     Text(first.title)
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm, weight: .bold))
                         .foregroundStyle(DesignTokens.Color.ink(.work))
-                        .lineLimit(1)
+                        .lineLimit(2)
                     Text(UpcomingEvents.rangeLabel(first, now: now, calendar: calendar))
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                         .foregroundStyle(DesignTokens.Color.ink(.work).opacity(0.75))
@@ -38,7 +38,7 @@ struct CalendarSection: View {
                         Text("\(UpcomingEvents.startLabel(event, now: now, calendar: calendar)) \(event.title)")
                             .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
                             .foregroundStyle(DesignTokens.Color.ink(.work).opacity(0.75))
-                            .lineLimit(1)
+                            .lineLimit(2)
                     }
                     if summary.moreCount > 0 {
                         Text("+ \(summary.moreCount) 더")

@@ -27,6 +27,7 @@
 | MA2 | 인증 — `backend/internal/auth/` · `ios/Shared/Sources/PocketAideAuth/` 아래 모든 변경 | 백엔드 OIDC ID 토큰 검증 미들웨어와 앱의 OIDC(PKCE) 로그인 클라이언트다. 검증이 느슨해지면 모든 API 의 사용자 경계가 무너지고, 단위 테스트는 「통과하지만 덜 검증하는」 변경을 잡지 못한다 |
 | MA3 | 배포 매니페스트 — `k8s/` 아래 모든 변경 | main 의 매니페스트는 `pin` 잡이 deploy 브랜치로 옮겨 그대로 운영에 반영된다(`.github/workflows/ci.yml` paths-filter `backend`). SQLite 단일 writer 전제(PVC 하나 · `replicas: 1` · `Recreate`)와 비밀 참조가 여기에 있다 |
 | MA4 | 판정기·워크플로·정책 자신 — `scripts/review-policy/` · `.github/workflows/review-policy.yml` · `docs/review-policy.md` | 워크플로가 `pull_request_target` 이라 PR 은 **base 쪽 판정기**로 판정된다 — PR 이 규칙을 고쳐 자기를 통과시킬 수는 없지만, 그 변경 자체(케이스를 줄이거나 자기 경로를 빼는 편집)는 옛 판정기가 보지 못한 채 다음 PR 부터 효력을 가진다. 그래서 이 경로의 변경은 사람 눈에 올린다 |
+| MA5 | 사람이 소유한 풀스캔 허용 기준표 — `docs/data-model/fullscan-criteria.md` 의 **모든** 변경 | 기준을 새로 만들거나 넓히는 것은 사람의 결정이다(그 파일 머리 · `docs/data-model/README.md` §2). 체커(`backend/cmd/datamodelcheck`)는 이 표의 기준 ID 로 불변식 3 의 `no-support` 를 「풀스캔 허용」으로 바꾸므로, 행 하나가 곧 위반을 없애는 결정이다. 자동 리뷰만 거친 PR 이 이 표를 바꾸면 사람의 채택 없이 기준이 착지한다 |
 
 ## 위험 표면
 
@@ -54,6 +55,7 @@ k8s/deployment.yaml
 scripts/review-policy/judge.py
 .github/workflows/review-policy.yml
 docs/review-policy.md
+docs/data-model/fullscan-criteria.md
 ```
 
 ## 의도적 제외

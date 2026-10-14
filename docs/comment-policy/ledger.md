@@ -47,7 +47,7 @@
 | 2026-09-29 | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 33 | `66ff5e1c3e54` | 완료 | 필요성 판정 — 제거 48줄 · 유지 33줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-10 | `ios/PocketAideTests/PRMonitorUITests.swift` | 24 | `c90c4afdfcc1` | 완료 | 필요성 판정 — 제거 10줄 · 유지 21줄(개작 1블록 포함) · 2026-10-10 증분 유지 1줄 · 개작 2블록(푸시 준비 신호) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-09-29 | `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift`, `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift`, `ios/PocketAideUnitTests/RotationSelectorTests.swift` | 9 | `2e4882fe089c` | 완료 | 필요성 판정 — 제거 16줄 · 유지 9줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| 2026-09-29 | `ios/PocketAideWidget/AffirmationProvider.swift`, `ios/PocketAideWidget/PocketAideWidget.swift` | 5 | `403e2d500842` | 완료 | 필요성 판정 — 제거 1줄 · 유지 7줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
+| 2026-10-14 | `ios/PocketAideWidget/AffirmationProvider.swift`, `ios/PocketAideWidget/PocketAideWidget.swift` | 5 | `b1b8f4247678` | 완료 | 필요성 판정 — 제거 1줄 · 유지 7줄(개작 1블록 포함) · 2026-10-13 증분 유지 1줄(초대형 위젯 컴파일러 가드) · 2026-10-14 증분 개작 1블록(3줄→2줄, 폴백 탭 대상) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Package.swift` | 1 | `9ea7cb80805c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 7 | `7eaa1de510bc` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Tokens.swift` | 14 | `542a9b308412` | 완료 | 필요성 판정 — 제거 3줄 · 유지 14줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |

@@ -12,6 +12,7 @@ struct PocketAideWidgetEntryView: View {
                 ruleDivider(vertical: true)
                 CalendarSection(state: entry.calendar, now: entry.date)
             }
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.bottom, DesignTokens.Spacing.md)
 
             ruleDivider(vertical: false)
@@ -21,12 +22,8 @@ struct PocketAideWidgetEntryView: View {
 
             ruleDivider(vertical: false)
 
-            HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-                PlaceholderSection(area: .aiChat, label: "메일")
-                ruleDivider(vertical: true)
-                NotificationSection(state: entry.notifications)
-            }
-            .padding(.vertical, DesignTokens.Spacing.md)
+            NotificationSection(state: entry.notifications)
+                .padding(.vertical, DesignTokens.Spacing.md)
 
             ruleDivider(vertical: false)
 
@@ -35,9 +32,8 @@ struct PocketAideWidgetEntryView: View {
         }
         .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        // Outer widgetURL is the fallback tap target — used for placeholder
-        // sections that don't yet have their own destinations. The
-        // affirmation section overrides this region with its own Link.
+        // Outer widgetURL is the fallback tap target for the gaps between
+        // sections (rules, padding); every section overrides its own region with a Link.
         .widgetURL(URL(string: "pocketaide://root"))
         .containerBackground(for: .widget) {
             DesignTokens.Color.widgetSurface()
@@ -68,6 +64,16 @@ struct PocketAideWidget: Widget {
         }
         .configurationDisplayName("PocketAide")
         .description("하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.")
-        .supportedFamilies([.systemLarge])
+        .supportedFamilies(Self.supportedFamilies)
+    }
+
+    // The compiler check keeps this building on Xcode 26 SDKs, which lack .systemExtraLargePortrait.
+    private static var supportedFamilies: [WidgetFamily] {
+        #if compiler(>=6.4)
+        if #available(iOS 27.0, *) {
+            return [.systemExtraLargePortrait]
+        }
+        #endif
+        return [.systemLarge]
     }
 }

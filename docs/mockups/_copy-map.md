@@ -7,7 +7,7 @@ last_updated: 2026-10-13
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 22개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 27개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -28,7 +28,7 @@ last_updated: 2026-10-13
   - `시스템 UI` — 정방향: iOS 가 앱 밖에서 그리는 문구(위젯 갤러리 이름·설명). 대응 화면 목업이 없다. 역방향: 앱 리터럴 없이 UIKit 이 앱 개발 지역 언어로 그리는
     시스템 컴포넌트 문구(시스템 `TabView` 오버플로 탭·목록의 「더 보기」·「편집」). 검산이 그 낱말과 `ios/project.yml` 의 `developmentLanguage: ko` 를 확인한다.
   - `목업 전용` — 역방향 전용. 목업 갤러리 크롬·프레임 밖 캡션·설계 주석 박스·상태바·홈 화면 크롬. 앱이 그리지 않는다.
-  - `미구현 영역` — 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행 또는 지원하지 않는 위젯 크기).
+  - `미구현 영역` — 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행, 그 행 대조 범위가 미구현이라 적은 슬라이스, 또는 지원하지 않는 위젯 크기).
   - `기준 4` — 낱말은 같고 차이가 글리프·아이콘·자리뿐이다. 구조 대조의 몫이다.
   - `구현 대기` — 목업 문구가 구현에 없거나 다르다. 구현(`ios/`)을 고쳐야 닫힌다.
   - `목업 대기` — 구현 문구를 목업이 그리지 않는다(주로 빈·오류·생성 모드 같은 목업에 없는 상태). 목업을 보강하거나 허용목록에 사유를 남겨야 닫힌다.
@@ -36,28 +36,28 @@ last_updated: 2026-10-13
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 6행, 표 B `구현 대기` 29행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 0행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 179 |
-| A | 데이터 | 6 |
-| A | 비표시 | 25 |
+| A | 일치 | 189 |
+| A | 데이터 | 7 |
+| A | 비표시 | 27 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 6 |
-| B | 일치 | 214 |
-| B | 외부 | 54 |
+| A | 목업 대기 | 0 |
+| B | 일치 | 222 |
+| B | 외부 | 60 |
 | B | 예시 데이터 | 141 |
-| B | 목업 전용 | 128 |
+| B | 목업 전용 | 131 |
 | B | 미구현 영역 | 10 |
-| B | 기준 4 | 3 |
+| B | 기준 4 | 4 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 29 |
+| B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 231행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 239행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -85,6 +85,13 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 일치 | 편집 모드 파괴적 액션 — 목업 편집 모드 프레임의 외곽선 버튼(생성 모드엔 없음) |
 | `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `자동 응답` | 일치 | 헤더 아래 「자동 응답 <모드>」 줄의 머리 — 「대기 목록」·「빈 상태」·「자동 응답 모드 켜짐」 프레임 헤더(모드 값은 `ApprovalAutoResponse.label`, 표 B 외부) |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `\(Text(title).bold()) \(notice)` | 데이터 | 자동 응답 모드 배너 본문 — 굵은 제목(`ApprovalAutoResponse.bannerTitle`) + 결과 안내(`outcomeNotice`). 목업 「자동 거절 모드가 켜져 있습니다.」·「새 요청은 알림 없이 바로 거절됩니다.」 는 표 B 외부 |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `끄기` | 일치 | 자동 응답 모드 배너 버튼 — 「자동 응답 모드 켜짐」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구(#278 에서 `ApprovalsView.swift` 에서 옮겨 왔다) |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `자동 응답 모드 \(Text(mode.label).bold()) — \(mode.outcomeNotice)` | 일치 | 「빈 상태」 프레임의 현재 모드 줄 「자동 응답 모드 없음 — 새 요청은 알림으로 받습니다.」(노드 3개를 이은 것) |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `largecircle.fill.circle` | 비표시 | 설정 모드 선택지의 선택된 라디오 SF Symbol 이름(`Image(systemName: selected ? …)` 삼항이라 `systemName:` 제외 규칙에 걸리지 않는다) |
+| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `circle` | 비표시 | 설정 모드 선택지의 선택 안 된 라디오 SF Symbol 이름(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `취소` | 일치 | 확인 다이얼로그 취소 버튼 — 「결정 확인」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `승인` | 일치 | 결정 버튼 「승인」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(승인) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `거절` | 일치 | 결정 버튼 「거절」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(거절) |
@@ -111,21 +118,22 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `다시 시도` | 일치 | 이력 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구(이력 화면 오류 상태 프레임은 목업에 없다) |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `이전 이력 불러오는 중…` | 일치 | 커서 이어 불러오기 줄 — 「처리 이력」 프레임 하단 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `승인 게이트 설정` | 일치 | 설정 화면 제목 — 「설정」·「키 발급」 프레임 `h2` |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 목업에 두 상태 프레임은 없고, 같은 문구가 「결정 확인」 프레임 취소 버튼에 있다(대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 「키 발급 — 이름 입력」 프레임 시트 · 「결정 확인」 프레임 취소 버튼(폐기 확인 대화상자는 목업이 없다 — 대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `폐기` | 일치 | 키 행 「폐기」 버튼 — 「설정」 프레임 · 폐기 확인 대화상자 확정 버튼 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `자동 응답 모드` | 일치 | 「자동 응답 모드」 섹션 머리 — 「설정」 프레임(stamp uppercase accent, #278) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키` | 일치 | 섹션 머리 — 「설정」·「키 발급」 프레임(stamp uppercase accent) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 목업 대기 | 빈 목록 안내 — 목업 「설정」 프레임은 키가 있는 목록만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 일치 | 빈 목록 안내 — 「설정 — 키 없음 · 조회 실패」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `+ 호출자 키 발급` | 일치 | 점선 발급 버튼 — 「설정」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 목업 대기 | 목록 조회 실패 배너 제목 — 목업에 설정 화면 오류 상태 프레임이 없다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 목업 대기 | 발급 입력 시트 제목 — 목업은 발급 직후(원문 표시) 시트만 그리고 이름 입력 단계는 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 일치 | 목록 조회 실패 배너 제목 — 「설정 — 키 없음 · 조회 실패」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 「설정 — 키 없음 · 조회 실패」 프레임 · 「오류」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 일치 | 발급 입력 시트 제목 — 「키 발급 — 이름 입력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 이름` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임(발급 입력 시트에서도 같은 라벨) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 목업 대기 | 발급 입력 시트 이름 필드 placeholder — 같은 문자열이 「설정」 프레임 키 이름 칩(표 B `예시 데이터`)에 있을 뿐, 입력 단계 프레임이 없다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 일치 | 발급 입력 시트 이름 필드 placeholder — 「키 발급 — 이름 입력」 프레임 `placeholder`(같은 문자열이 「설정」 프레임 키 이름 칩에도 있다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰이고 화면에 그려지지 않는다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 목업 대기 | 발급 입력 시트 확정 버튼 — 입력 단계 프레임이 없다(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 일치 | 발급 입력 시트 확정 버튼 — 「키 발급 — 이름 입력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.submit` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `키 원문` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 목업 대기 | 복사 뒤 버튼 라벨 — 목업은 복사 전 상태만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 일치 | 복사 뒤 버튼 라벨 — 「키 발급 — 복사됨」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사` | 일치 | 시트 주 버튼 — 「키 발급」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.copy` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `완료` | 일치 | 시트 보조 버튼 — 「키 발급」 프레임 |
@@ -138,7 +146,6 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `처리 이력` | 일치 | 헤더 이력 버튼의 `accessibilityLabel` — 목업 헤더 이력 버튼 `title`(글리프는 `clock`) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 일치 | 오류 배너 제목 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `방금 진입` | 일치 | 푸시로 진입한 그룹의 헤더 상태 라벨(`isGroupHighlighted` 일 때만) |
@@ -244,7 +251,6 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 비표시 | 항목 메타 줄의 접근성 라벨(`accessibilityLabel`) — 화면에는 목업처럼 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다(`Text(item.source.displayName)` · `Text(time)` — 보간 아닌 데이터) |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `메일` | 미구현 영역 | `PlaceholderSection` 라벨 — `_impl-map.md` `PlaceholderSection.swift` 행이 `미구현`(검산의 문자열 일치는 목업 독 아이콘 라벨에 걸린다 — 우연 일치) |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
@@ -294,7 +300,7 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 588행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 596행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -369,8 +375,8 @@ last_updated: 2026-10-13
 | `screen-approval` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-approval` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`ApprovalsView.swift`) |
 | `screen-approval` | `승인` | 일치 | 헤더 제목·상세 백버튼(`ApprovalsView.swift` — 숨긴 내비게이션 바의 `navigationTitle`) · 탭 바 셋째 칸(`RootView.swift`) · 상세 결정 버튼(`ApprovalDetailView.swift`) |
-| `screen-approval` | `자동 응답` | 구현 대기 | 헤더 아래 「자동 응답 <모드>」 줄 — 구현 헤더에 자동 응답 모드 표시가 없다(PRD-12 AC9) |
-| `screen-approval` | `없음` | 구현 대기 | 헤더 「자동 응답」 줄의 모드 값 — 같은 이유 |
+| `screen-approval` | `자동 응답` | 일치 | 헤더 아래 「자동 응답 <모드>」 줄의 머리(`ApprovalAutoResponseViews.swift` 의 `ApprovalAutoResponseHeader`, #278) |
+| `screen-approval` | `없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 헤더 「자동 응답」 줄·빈 상태 모드 줄의 모드 값 — `ApprovalAutoResponse.label` |
 | `screen-approval` | `3` | 예시 데이터 | 대기 수(헤더 배지·탭 배지) |
 | `screen-approval` | `대기` | 일치 | 헤더 대기 수 배지 라벨(`ApprovalsView.swift`) |
 | `screen-approval` | `처리 이력` | 일치 | 처리 이력 섹션 머리(`ApprovalHistoryView.swift`)·헤더 이력 버튼 `title`(`ApprovalsView.swift` `accessibilityLabel`)(그리고 프레임 캡션) |
@@ -421,7 +427,7 @@ last_updated: 2026-10-13
 | `screen-approval` | `어제 22:10` | 예시 데이터 | 처리 시각 — 서식은 `ApprovalFormatting.historyTime`(오늘 `HH:mm:ss` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `staging DB 마이그레이션 0042` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `staging-ci` | 예시 데이터 | 보낸 키 이름 |
-| `screen-approval` | `자동 거절` | 구현 대기 | 처리 방식 · 자동 응답 모드 값·설정 선택지 — 처리 방식 자리는 `ApprovalFormatting.decisionModeLabel` 이 그리지만(#264) 자동 응답 모드(배너 값·설정 선택지)가 구현에 없다(AC9) |
+| `screen-approval` | `자동 거절` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 방식 · 자동 응답 모드 값 — 처리 방식은 `ApprovalFormatting.decisionModeLabel`(#264), 배너 헤더 모드 값은 `ApprovalAutoResponse.label`(#278) |
 | `screen-approval` | `10/03 19:02` | 예시 데이터 | 처리 시각 |
 | `screen-approval` | `cluster-admin 바인딩 추가` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `old-ci` | 예시 데이터 | 보낸 키 이름(폐기된 키) |
@@ -429,25 +435,25 @@ last_updated: 2026-10-13
 | `screen-approval` | `이전 이력 불러오는 중…` | 일치 | 처리 이력 커서 이어 불러오기(`ApprovalHistoryView.swift`) |
 | `screen-approval` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `0` | 예시 데이터 | 대기 수(빈 상태 헤더 배지) |
-| `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | 빈 상태 안내(`ApprovalsView.swift`) |
-| `screen-approval` | `자동 응답 모드` | 구현 대기 | 빈 상태의 현재 모드 줄 · 설정 섹션 머리 — 자동 응답 모드가 구현에 없다(AC9·AC12) |
-| `screen-approval` | `— 새 요청은 알림으로 받습니다.` | 구현 대기 | 빈 상태의 현재 모드 설명 — 같은 이유(AC12) |
+| `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | 빈 상태 안내(`ApprovalAutoResponseViews.swift` 의 `ApprovalEmptyState`) |
+| `screen-approval` | `자동 응답 모드` | 일치 | 빈 상태의 현재 모드 줄(`ApprovalAutoResponseViews.swift`) · 설정 섹션 머리(`ApprovalKeysView.swift`) — #278 |
+| `screen-approval` | `— 새 요청은 알림으로 받습니다.` | 기준 4 | 빈 상태의 현재 모드 설명 — 구현은 `자동 응답 모드 \(…) — \(mode.outcomeNotice)`(`ApprovalAutoResponseViews.swift`)로 「자동 응답 모드 없음 — 새 요청은 알림으로 받습니다.」 를 그려 목업과 같지만, 「—」 는 그 리터럴의 정적 조각이고 문장은 `ApprovalAutoResponse.outcomeNotice` 라 노드 단위로는 나뉘지 않는다 |
 | `screen-approval` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `승인 요청을 불러오지 못했습니다` | 일치 | 「오류」 프레임 오류 배너 제목(`ApprovalsView.swift`) |
 | `screen-approval` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `ApprovalsViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-approval` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼(`ApprovalsView.swift`) |
 | `screen-approval` | `자동 응답 모드 켜짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `1` | 예시 데이터 | 대기 수(자동 응답 모드 프레임 헤더 배지·탭 배지) |
-| `screen-approval` | `자동 거절 모드가 켜져 있습니다.` | 구현 대기 | 자동 응답 모드 배너 — 같은 이유(AC9) |
-| `screen-approval` | `새 요청은 알림 없이 바로 거절됩니다.` | 구현 대기 | 자동 응답 모드 배너 설명 — 같은 이유(AC9) |
-| `screen-approval` | `끄기` | 구현 대기 | 자동 응답 모드 배너 버튼 — 같은 이유(AC9) |
+| `screen-approval` | `자동 거절 모드가 켜져 있습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 자동 응답 모드 배너 제목 — `ApprovalAutoResponse.bannerTitle`(「\(label) 모드가 켜져 있습니다.」, #278) |
+| `screen-approval` | `새 요청은 알림 없이 바로 거절됩니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 자동 응답 모드 배너 결과 안내 — `ApprovalAutoResponse.outcomeNotice`(#278) |
+| `screen-approval` | `끄기` | 일치 | 자동 응답 모드 배너 버튼(`ApprovalAutoResponseViews.swift`, #278) |
 | `screen-approval` | `대기 · 1건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
 | `screen-approval` | `12:03 남음` | 예시 데이터 | 남은 시간 |
 | `screen-approval` | `k3s-mcp · 09:30` | 예시 데이터 | 요청자 자리(요청자 이름 대신 키 이름) · 시각 |
 | `screen-approval` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고(`ApprovalsView.swift`) |
 | `screen-approval` | `설정 — 자동 응답·호출자 키` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `없음 — 알림으로 받기` | 구현 대기 | 설정 자동 응답 선택지 — 설정 화면(`ApprovalKeysView.swift`)에 「자동 응답 모드」 섹션이 없다(AC9) |
-| `screen-approval` | `자동 승인` | 구현 대기 | 설정 자동 응답 선택지 — 같은 이유(AC9) |
+| `screen-approval` | `없음 — 알림으로 받기` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 설정 자동 응답 선택지 — `ApprovalAutoResponse.optionLabel`(#278) |
+| `screen-approval` | `자동 승인` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 설정 자동 응답 선택지 — `ApprovalAutoResponse.label`(#278) |
 | `screen-approval` | `호출자 키` | 일치 | 설정 섹션 머리(`ApprovalKeysView.swift`) |
 | `screen-approval` | `폐기` | 일치 | 호출자 키 폐기 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `pak_7Hq2… · 발급 09/29 · 마지막 사용 09:41` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(접두 + 「…」 · 「발급 MM/dd」 · 「마지막 사용 HH:mm」(오늘)/「MM/dd」), 값은 예시 |
@@ -473,6 +479,14 @@ last_updated: 2026-10-13
 | `screen-approval` | `상태` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `처리 방식` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `처리 시각` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `설정 — 키 없음 · 조회 실패` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `호출자 키를 불러오지 못했습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 조회 실패 배너 제목(`ApprovalKeysView.swift`) |
+| `screen-approval` | `발급한 호출자 키가 없습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 키 0건 안내(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 발급 — 이름 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `호출자 키 발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 제목(`ApprovalKeysView.swift`) |
+| `screen-approval` | `발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 확정 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 발급 — 복사됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `복사됨` | 일치 | 「키 발급 — 복사됨」 프레임 주 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
@@ -623,9 +637,9 @@ last_updated: 2026-10-13
 | `screen-widget` | `+ 2 더` | 일치 | 남은 일정 수(`CalendarSection` `+ \(summary.moreCount) 더`) |
 | `screen-widget` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
 | `screen-widget` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
-| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — `PlaceholderSection.swift` 가 `미구현` |
+| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
+| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
+| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
 | `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
 | `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
