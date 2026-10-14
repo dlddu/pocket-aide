@@ -36,22 +36,22 @@ last_updated: 2026-10-13
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 6행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 0행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 183 |
+| A | 일치 | 189 |
 | A | 데이터 | 7 |
 | A | 비표시 | 27 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 1 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 6 |
-| B | 일치 | 217 |
+| A | 목업 대기 | 0 |
+| B | 일치 | 222 |
 | B | 외부 | 60 |
 | B | 예시 데이터 | 141 |
-| B | 목업 전용 | 128 |
+| B | 목업 전용 | 131 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 시스템 UI | 9 |
@@ -118,22 +118,22 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `다시 시도` | 일치 | 이력 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구(이력 화면 오류 상태 프레임은 목업에 없다) |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `이전 이력 불러오는 중…` | 일치 | 커서 이어 불러오기 줄 — 「처리 이력」 프레임 하단 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `승인 게이트 설정` | 일치 | 설정 화면 제목 — 「설정」·「키 발급」 프레임 `h2` |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 목업에 두 상태 프레임은 없고, 같은 문구가 「결정 확인」 프레임 취소 버튼에 있다(대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 「키 발급 — 이름 입력」 프레임 시트 · 「결정 확인」 프레임 취소 버튼(폐기 확인 대화상자는 목업이 없다 — 대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `폐기` | 일치 | 키 행 「폐기」 버튼 — 「설정」 프레임 · 폐기 확인 대화상자 확정 버튼 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `자동 응답 모드` | 일치 | 「자동 응답 모드」 섹션 머리 — 「설정」 프레임(stamp uppercase accent, #278) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키` | 일치 | 섹션 머리 — 「설정」·「키 발급」 프레임(stamp uppercase accent) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 목업 대기 | 빈 목록 안내 — 목업 「설정」 프레임은 키가 있는 목록만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 일치 | 빈 목록 안내 — 「설정 — 키 없음 · 조회 실패」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `+ 호출자 키 발급` | 일치 | 점선 발급 버튼 — 「설정」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 목업 대기 | 목록 조회 실패 배너 제목 — 목업에 설정 화면 오류 상태 프레임이 없다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 목업 대기 | 발급 입력 시트 제목 — 목업은 발급 직후(원문 표시) 시트만 그리고 이름 입력 단계는 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 일치 | 목록 조회 실패 배너 제목 — 「설정 — 키 없음 · 조회 실패」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 「설정 — 키 없음 · 조회 실패」 프레임 · 「오류」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 일치 | 발급 입력 시트 제목 — 「키 발급 — 이름 입력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 이름` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임(발급 입력 시트에서도 같은 라벨) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 목업 대기 | 발급 입력 시트 이름 필드 placeholder — 같은 문자열이 「설정」 프레임 키 이름 칩(표 B `예시 데이터`)에 있을 뿐, 입력 단계 프레임이 없다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 일치 | 발급 입력 시트 이름 필드 placeholder — 「키 발급 — 이름 입력」 프레임 `placeholder`(같은 문자열이 「설정」 프레임 키 이름 칩에도 있다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰이고 화면에 그려지지 않는다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 목업 대기 | 발급 입력 시트 확정 버튼 — 입력 단계 프레임이 없다(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 일치 | 발급 입력 시트 확정 버튼 — 「키 발급 — 이름 입력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.submit` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `키 원문` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 목업 대기 | 복사 뒤 버튼 라벨 — 목업은 복사 전 상태만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 일치 | 복사 뒤 버튼 라벨 — 「키 발급 — 복사됨」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사` | 일치 | 시트 주 버튼 — 「키 발급」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.copy` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `완료` | 일치 | 시트 보조 버튼 — 「키 발급」 프레임 |
@@ -300,7 +300,7 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 588행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 596행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -479,6 +479,14 @@ last_updated: 2026-10-13
 | `screen-approval` | `상태` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `처리 방식` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `처리 시각` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `설정 — 키 없음 · 조회 실패` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `호출자 키를 불러오지 못했습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 조회 실패 배너 제목(`ApprovalKeysView.swift`) |
+| `screen-approval` | `발급한 호출자 키가 없습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 키 0건 안내(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 발급 — 이름 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `호출자 키 발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 제목(`ApprovalKeysView.swift`) |
+| `screen-approval` | `발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 확정 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 발급 — 복사됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `복사됨` | 일치 | 「키 발급 — 복사됨」 프레임 주 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
