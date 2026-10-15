@@ -181,3 +181,13 @@
 | 자리 | 주석 | 판정 |
 | --- | --- | --- |
 | `ios/PocketAideWidget/PocketAideWidget.swift` 36–37 | 「Outer widgetURL is the fallback tap target for the gaps between sections (rules, padding); every section overrides its own region with a Link.」 (2줄, 이전 3줄 개작) | 유지·개작 — 이전 문장은 「자리표시 슬라이스가 쓰는 폴백」이라 했는데 자리표시가 사라져 거짓이 됐다. 모든 슬라이스가 자기 `Link` 를 가진 지금 `widgetURL` 이 남는 이유(구분선·여백을 눌렀을 때의 목적지)만 남겼다 — 지우면 슬라이스마다 `Link` 가 있는데 왜 바깥 `widgetURL` 이 있는지 코드만으로는 알 수 없다 |
+
+## 증분 재판정 — 2026-10-15 (위젯 토큰 갱신)
+
+- **기준 커밋**: `7e7cdf2` 위의 브랜치 `widget-token-refresh` (줄 번호는 그 브랜치 기준이다)
+- **범위**: 위젯 `APIClient` 에 `OIDCClient` 를 refresher 로 연결하고, refresh token 회전 경합에서 키체인을 지우지 않게 하며 더한 주석 2블록.
+
+| 자리 | 주석 | 판정 |
+| --- | --- | --- |
+| `ios/PocketAideWidget/AffirmationProvider.swift` 151–152 | 「Without a refresher the widget stalls at needsLogin once the access token lapses, until the app is next opened.」 (2줄) | 유지 — 위젯은 로그인 화면을 띄울 수 없어 refresher 가 쓸모없어 보이지만, 빠지면 액세스 토큰 만료 뒤 앱을 열 때까지 위젯이 로그인 필요 상태에 머문다 — 지우면 이 연결을 군더더기로 보고 걷어 그 회귀를 다시 들인다 |
+| `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` 135–137 | 「The app and widget share this keychain item. If the other process rotated the refresh token while ours was in flight, ours is stale rather than revoked — adopt theirs.」 (3줄) | 유지 — 4xx 에도 오류 대신 저장된 토큰을 돌려주는 이유(앱·위젯 두 프로세스의 동시 갱신 경합)는 코드만으로 드러나지 않는다 — 지우면 바로 위 「4xx 면 지운다」 주석과 어긋나는 예외로 보고 걷어, IdP 가 refresh token 을 회전시킬 때 동시 갱신마다 사용자를 로그아웃시킨다 |
