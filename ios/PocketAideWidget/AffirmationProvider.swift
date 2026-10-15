@@ -1,6 +1,7 @@
 import Foundation
 import os
 import PocketAideAPI
+import PocketAideAuth
 import PocketAideStorage
 import WidgetKit
 
@@ -34,7 +35,7 @@ struct AffirmationProvider: TimelineProvider {
         }
         Task {
             let now = Date()
-            let client = makeClient()
+            let client = await makeClient()
             let state = await fetchState(client, at: now)
             let notifications = await fetchNotifications(client)
             let scratchpad = await fetchScratchpad(client)
@@ -54,7 +55,7 @@ struct AffirmationProvider: TimelineProvider {
     func getTimeline(in _: Context, completion: @escaping (Timeline<PocketAideWidgetEntry>) -> Void) {
         Task {
             let now = Date()
-            let client = makeClient()
+            let client = await makeClient()
             let items = await fetchAffirmations(client)
             let notifications = await fetchNotifications(client)
             let scratchpad = await fetchScratchpad(client)
@@ -127,7 +128,7 @@ struct AffirmationProvider: TimelineProvider {
         case error
     }
 
-    private func makeClient() -> ClientResult {
+    private func makeClient() async -> ClientResult {
         let accessGroup = Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String
         let resolvedGroup = accessGroup.flatMap { $0.isEmpty ? nil : $0 }
         let baseURL = Bundle.main.object(forInfoDictionaryKey: "BackendBaseURL") as? String ?? "<nil>"
@@ -147,6 +148,10 @@ struct AffirmationProvider: TimelineProvider {
 
         do {
             let api = try APIClient.fromBundle(.main, tokenStore: store)
+            // Without a refresher the widget stalls at needsLogin once the
+            // access token lapses, until the app is next opened.
+            let oidc = await MainActor.run { OIDCClient(api: api, tokenStore: store) }
+            api.setTokenRefresher(oidc)
             return .ready(api)
         } catch {
             logger.error("APIClient.fromBundle failed: \(String(describing: error), privacy: .public)")
