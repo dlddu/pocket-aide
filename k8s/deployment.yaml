@@ -16,6 +16,7 @@ spec:
       labels:
         app: pocket-aide
     spec:
+      serviceAccountName: pocket-aide
       containers:
         - name: pocket-aide
           # The tag on main is a placeholder: CI's `pin` job rewrites it on the `deploy`

@@ -69,11 +69,14 @@ erDiagram
 | `created_at` | INTEGER | NO |  |
 | `last_used_at` | INTEGER | YES |  |
 | `revoked_at` | INTEGER | YES |  |
+| `kind` | TEXT | NO |  |
+| `service_account` | TEXT | YES |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
 | `UNIQUE(approval_caller_keys.key_hash)` | `key_hash` | YES | - |
 | `idx_approval_caller_keys_active_name` | `user_id`, `name` | YES | `revoked_at IS NULL` |
+| `idx_approval_caller_keys_active_service_account` | `service_account` | YES | `revoked_at IS NULL AND kind = 'k8s_sa'` |
 | `idx_approval_caller_keys_user_created` | `user_id`, `created_at` | NO | - |
 
 ### `approval_requests`
