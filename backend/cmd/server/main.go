@@ -24,6 +24,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
+	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
 	"github.com/dlddu/pocket-aide/backend/internal/routines"
@@ -147,8 +148,16 @@ func main() {
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(approvalStore, approvals.DecisionReject))
 	})
 
+	var reviewer handlers.TokenReviewer
+	if cfg.K8SCallerAuth {
+		rv, err := k8sauth.InCluster(cfg.K8STokenAudience, cfg.K8STokenIssuer)
+		if err != nil {
+			log.Fatalf("k8s caller auth: %v", err)
+		}
+		reviewer = rv
+	}
 	r.Group(func(x chi.Router) {
-		x.Use(handlers.CallerKeyMiddleware(approvalStore))
+		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
 		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 	})
@@ -280,6 +289,10 @@ type config struct {
 	// push fan-out, so the E2E backend can run the pipeline without Apple
 	// credentials (docs/e2e-mocking-policy.md).
 	APNSDisabled bool
+
+	K8SCallerAuth    bool
+	K8STokenAudience string
+	K8STokenIssuer   string
 }
 
 func loadConfig() config {
@@ -293,6 +306,10 @@ func loadConfig() config {
 		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
+
+		K8SCallerAuth:    os.Getenv("K8S_CALLER_AUTH") == "true",
+		K8STokenAudience: envOr("K8S_TOKEN_AUDIENCE", "pocket-aide"),
+		K8STokenIssuer:   os.Getenv("K8S_TOKEN_ISSUER"),
 	}
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
