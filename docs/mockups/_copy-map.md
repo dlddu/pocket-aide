@@ -7,7 +7,7 @@ last_updated: 2026-10-16
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 27개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 28개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -40,7 +40,7 @@ last_updated: 2026-10-16
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 196 |
+| A | 일치 | 198 |
 | A | 데이터 | 7 |
 | A | 비표시 | 32 |
 | A | 시스템 UI | 2 |
@@ -57,7 +57,7 @@ last_updated: 2026-10-16
 | B | 시스템 UI | 9 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 251행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 253행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -138,18 +138,20 @@ last_updated: 2026-10-16
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.copy` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `완료` | 일치 | 시트 보조 버튼 — 「키 발급」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.done` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `+ k8s 서비스 어카운트 등록` | 일치 | 점선 SA 등록 버튼 — 「설정 — SA 호출자」 프레임 둘째 점선 버튼(PRD-12 AC15) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `k8s 서비스 어카운트 등록` | 일치 | SA 등록 시트 제목 — 「SA 등록 — 입력」·「SA 등록 — 이미 등록됨」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.sa.name` | 비표시 | `field(text:id:refused:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰인다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `네임스페이스` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.sa.namespace` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `서비스 어카운트` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.sa.account` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | SA 등록 시트 안내 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.sa.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `등록` | 일치 | SA 등록 시트 확정 버튼 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.sa.submit` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `homelab-k3s-mcp` | 일치 | SA 등록 시트 세 입력 칸 `placeholder` — 「SA 등록 — 입력」 프레임(같은 문자열이 「설정 — SA 호출자」 프레임 이름 칩에 예시 데이터로도 있다) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `+ k8s 서비스 어카운트 등록` | 일치 | 점선 SA 등록 버튼 — 「설정 — SA 호출자」 프레임 둘째 점선 버튼(PRD-12 AC15) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `k8s 서비스 어카운트 등록` | 일치 | SA 등록 시트 제목 — 「SA 등록 — 입력」·「SA 등록 — 이미 등록됨」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.name` | 비표시 | `field(text:id:refused:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰인다 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `호출자 이름` | 일치 | SA 등록 시트 첫 입력 라벨 — 「SA 등록」 두 프레임(키 발급 시트와 같은 라벨) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `네임스페이스` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.namespace` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `서비스 어카운트` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.account` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | SA 등록 시트 안내 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `취소` | 일치 | SA 등록 시트 취소 버튼 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `등록` | 일치 | SA 등록 시트 확정 버튼 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.submit` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `homelab-k3s-mcp` | 일치 | SA 등록 시트 세 입력 칸 `placeholder` — 「SA 등록 — 입력」 프레임(같은 문자열이 「설정 — SA 호출자」 프레임 이름 칩에 예시 데이터로도 있다) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`AreaLabel`) — 「대기 목록」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
@@ -500,16 +502,16 @@ last_updated: 2026-10-16
 | `screen-approval` | `키 발급 — 복사됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `복사됨` | 일치 | 「키 발급 — 복사됨」 프레임 주 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `설정 — SA 호출자` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `homelab-k3s-mcp` | 일치 | 「SA 등록」 두 프레임의 세 입력 칸 `placeholder`(`ApprovalKeysView.swift`) · 「설정 — SA 호출자」 프레임 SA 호출자 이름 칩(이름은 데이터) |
+| `screen-approval` | `homelab-k3s-mcp` | 일치 | 「SA 등록」 두 프레임의 세 입력 칸 `placeholder`(`ApprovalServiceAccountSheet.swift`) · 「설정 — SA 호출자」 프레임 SA 호출자 이름 칩(이름은 데이터) |
 | `screen-approval` | `SA homelab-k3s-mcp/homelab-k3s-mcp · 등록 10/16 · 마지막 사용 09:41` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | SA 호출자 메타 줄 — `ApprovalKeyFormatting.meta` 의 SA 분기(「SA 네임스페이스/이름 · 등록 MM/dd · 마지막 사용」, PRD-12 AC15) |
-| `screen-approval` | `+ k8s 서비스 어카운트 등록` | 일치 | 「설정 — SA 호출자」 프레임 둘째 점선 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `+ k8s 서비스 어카운트 등록` | 일치 | 「설정 — SA 호출자」 프레임 둘째 점선 버튼(`ApprovalServiceAccountSheet.swift`) |
 | `screen-approval` | `SA 등록 — 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `pak_Xm91… · 발급 09/30` | 예시 데이터 | 「SA 등록」 시트 뒤 목록의 키 메타 줄 — 「설정 — SA 호출자」 프레임 둘째 행과 같은 키(`infra-ci`)를 「마지막 사용」 없이 줄여 그린 배경. 구현은 같은 자리를 `ApprovalKeyFormatting.meta` 로 그린다 |
-| `screen-approval` | `k8s 서비스 어카운트 등록` | 일치 | 「SA 등록」 시트 제목(`ApprovalKeysView.swift`) |
-| `screen-approval` | `네임스페이스` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalKeysView.swift`) |
-| `screen-approval` | `서비스 어카운트` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalKeysView.swift`) |
-| `screen-approval` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | 「SA 등록」 시트 안내(`ApprovalKeysView.swift`) |
-| `screen-approval` | `등록` | 일치 | 「SA 등록」 시트 확정 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `k8s 서비스 어카운트 등록` | 일치 | 「SA 등록」 시트 제목(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `네임스페이스` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `서비스 어카운트` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | 「SA 등록」 시트 안내(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `등록` | 일치 | 「SA 등록」 시트 확정 버튼(`ApprovalServiceAccountSheet.swift`) |
 | `screen-approval` | `SA 등록 — 이미 등록됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `이미 등록된 서비스 어카운트입니다` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 「SA 등록 — 이미 등록됨」 프레임 서버 409 안내 — `ApprovalKeyFormatting.duplicateServiceAccountNotice`(서비스 어카운트 칸 destructive 테두리와 함께) |
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고, AC15 k8s 서비스 어카운트 호출자 등록. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
