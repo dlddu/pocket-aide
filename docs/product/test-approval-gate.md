@@ -15,6 +15,7 @@
 - AC12: 빈·로딩·오류 상태 (PRD-12)
 - AC13: 호출자 키 발급 (PRD-12)
 - AC14: 호출자 키 폐기 (PRD-12)
+- AC15: k8s ServiceAccount 호출자 등록 (PRD-12)
 
 ## 달성 가치
 - V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」) — 검증 대상 AC 모두 V9를 달성한다.
@@ -31,6 +32,10 @@
   같은 날 신규 요청 푸시(APNs 발송·알림 탭 → 상세, rct_20261011-0027)에 맞춰 시나리오 6·7을 다시 판정했다.
   2026-10-12 자동 응답 모드(설정·생성 즉시 처리·배너·빈 상태 모드 표시, rct_20261012-0002)에 맞춰 시나리오 12·13·15·16을 다시 판정했다.
   잠금화면 알림 액션은 아직 없어, 그 단계에 기대는 시나리오 14는 「미구현」이다.
+  2026-10-16 AC15(k8s ServiceAccount 호출자)와 호출자 응답의 `decisionMode`를 PRD에 더하며 시나리오 17·18을 덧붙였다 — 둘 다 구현 착수 전이라 「미구현」이다.
+- SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
+  apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
+  발급하고 검증한다.
 - 관찰자가 둘이다. **호출자**(외부 자동화)의 관찰 지점은 호출자 API(`/api/external/approvals`)의 HTTP 응답이고,
   **사용자**의 관찰 지점은 앱 화면이다. 호출자 쪽 단계는 `curl` 같은 HTTP 클라이언트로 수행한다고 읽는다.
 - 「사용자 A」「사용자 B」는 서로 다른 OIDC 계정이다. CI에서는 oidcmock이 발급하는 두 계정으로 대신한다
@@ -315,3 +320,40 @@
 - **검증 AC**: AC14
 - **구현 상태**: 구현됨 — 1단계: 앱 「승인 게이트 설정」 키 목록의 「폐기」가 확인 대화상자(취소 가능)를 거쳐 폐기 API(`POST /api/approval-keys/{id}/revoke`)를 부른다. 폐기 키 401(2단계)·다른 키 201·폐기 키 요청이 `PENDING`으로 남고 `key_revoked`·키 이름이 실리는 것은 서버에서 구현됨. 4단계의 「폐기된 키로 생성됨」 경고는 앱의 대기 목록 항목과 상세에 있다. 5단계: 폐기된 키는 키 목록에 취소선 이름과 「폐기됨 MM/dd」로 남고 「폐기」 버튼이 없다(다시 활성화할 방법 없음). 6단계: 처리 이력의 R 항목에 키 이름 칩 `infra-ci`가 보이고 처리 방식 뒤에 「· 폐기된 키로 생성됨」이 붙는다. 3단계: 자동 승인 모드에서 다른 키로 만든 요청은 생성 응답부터 `APPROVED`이고, 폐기 전에 만든 R은 모드와 무관하게 `PENDING`으로 남는다(모드는 생성 시점에만 적용된다).
 - **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyRevokeUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyRevocation`
+
+
+### 시나리오 17: k8s ServiceAccount를 등록하면 그 파드의 토큰으로 요청을 만들 수 있다
+- **사전 조건**: 사용자 A·B로 로그인할 수 있는 상태. 클러스터에 ServiceAccount `homelab-k3s-mcp/homelab-k3s-mcp`와 그 SA로 도는 파드가 있고, 파드는 audience `pocket-aide` projected 토큰을 마운트한다. 자동 응답 모드 `없음`.
+- **실행 단계**:
+  1. 사용자 A가 승인 게이트 설정에서 호출자 이름 `homelab-k3s-mcp`, ServiceAccount `homelab-k3s-mcp/homelab-k3s-mcp`로 SA 호출자를 등록한다.
+  2. 등록 전에 파드가 projected 토큰으로 `POST /api/external/approvals`를 보낸 결과와, 등록 뒤 같은 요청의 결과를 비교한다.
+  3. 사용자 A가 승인 탭과 키 목록을 연다.
+  4. 파드가 같은 SA의 apiserver용 기본 토큰으로 생성을 시도한다.
+  5. 사용자 B가 같은 ServiceAccount를 다른 이름으로 등록하려 한다.
+  6. 사용자 A가 키 목록에서 `homelab-k3s-mcp`를 폐기한 뒤, 파드가 projected 토큰으로 생성과 2단계 요청의 조회를 시도한다.
+- **기대 결과**:
+  - 1단계: 키 원문을 보여 주는 단계 없이 등록이 끝난다.
+  - 2단계: 등록 전은 401, 등록 뒤는 201 + `PENDING`.
+  - 3단계: 2단계 요청이 사용자 A의 대기 목록에 있고 상세의 키 이름이 `homelab-k3s-mcp`다. 키 목록의 `homelab-k3s-mcp` 행은 원문 앞부분 대신 `homelab-k3s-mcp/homelab-k3s-mcp`를 보이고 마지막 사용 시각이 방금이다.
+  - 4단계: 401(audience가 `pocket-aide`가 아니다).
+  - 5단계: 이미 등록된 ServiceAccount라는 이유로 거부된다.
+  - 6단계: 둘 다 401. 2단계 요청은 `PENDING` 그대로 「폐기된 키로 생성됨」 경고와 함께 대기 목록에 남는다.
+- **검증 AC**: AC15, AC1, AC2, AC14
+- **구현 상태**: 미구현 — SA 호출자 등록·TokenReview 검증 모두 구현 전이다.
+- **관련 코드 테스트**: 없음
+
+
+### 시나리오 18: 호출자는 응답에서 자동 처리 여부를 안다
+- **사전 조건**: 사용자 A가 `infra-ci` 키를 발급해 둔 상태.
+- **실행 단계**:
+  1. 자동 응답 모드 `없음`에서 호출자가 요청 R1을 만들고 조회한다. 사용자 A가 R1을 승인한 뒤 다시 조회한다.
+  2. 자동 응답 모드를 `자동 승인`으로 바꾸고 호출자가 요청 R2를 만든다.
+  3. 자동 응답 모드를 `없음`으로 되돌리고 `timeoutSeconds`=5로 요청 R3을 만든 뒤 6초 후 조회한다.
+- **기대 결과**:
+  - 1단계: 승인 전 `decisionMode`는 `null`, 승인 후 `status`=`APPROVED` + `decisionMode`=`manual`.
+  - 2단계: 생성 응답부터 `status`=`APPROVED` + `decisionMode`=`auto`.
+  - 3단계: `status`=`EXPIRED` + `decisionMode`=`expired`.
+  - 어느 응답에도 사용자 식별 정보가 없다.
+- **검증 AC**: AC3, AC9
+- **구현 상태**: 미구현 — 호출자 응답에 `decisionMode`가 아직 없다.
+- **관련 코드 테스트**: 없음
