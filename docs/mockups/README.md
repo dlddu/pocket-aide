@@ -29,7 +29,7 @@ open docs/mockups/index.html
 | `screen-affirmations.html` | 다짐 (목록·빈 상태) | PRD-5 | AC2 우선순위, AC3 회전 노출 |
 | `screen-affirmations-priority-edit.html` | 다짐 — 추가·우선순위 시트 (생성·편집) | PRD-5 | AC1 추가, AC2 우선순위 (편집 시트 패턴) |
 | `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류·CI 상태 변형·알림 권한 꺼짐) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
-| `screen-approval.html` | 승인 게이트 (대기 목록·상세·결정 확인·처리 이력·빈 상태·오류·자동 응답 모드·설정·키 발급·처리된 상세·키 없음·조회 실패·발급 입력·복사됨) | PRD-12 | AC5~AC9, AC12~AC14 (푸시·잠금 화면 AC10·AC11은 여정 mockup) |
+| `screen-approval.html` | 승인 게이트 (대기 목록·상세·결정 확인·처리 이력·빈 상태·오류·자동 응답 모드·설정·키 발급·처리된 상세·키 없음·조회 실패·발급 입력·복사됨·SA 호출자·SA 등록) | PRD-12 | AC5~AC9, AC12~AC15 (푸시·잠금 화면 AC10·AC11은 여정 mockup) |
 
 ### 시스템 통합
 

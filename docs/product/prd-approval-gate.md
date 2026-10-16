@@ -3,11 +3,11 @@
 ## 달성 가치
 - **V9**: 개발 워크플로우 인지 부하 감소 — 범위의 「결정」. 자동화가 실행 전에 구하는 허락을 폰에서 받아 곧바로 승인·거절하고, 기한 안에 결정되지 않은 요청은 만료시켜 침묵이 승인으로 해석되지 않게 한다.
 
-**가치 해석 노트**: AC13·AC14(호출자 키 발급·폐기)는 V9 「범위 밖」의 "자동화 자체의 설정·운영"이 아니라, 누가 사용자에게 허락을 구할 수 있는지를 통제하는 결정 경로의 일부로 본다.
+**가치 해석 노트**: AC13·AC14·AC15(호출자 키 발급·폐기, k8s ServiceAccount 호출자 등록)는 V9 「범위 밖」의 "자동화 자체의 설정·운영"이 아니라, 누가 사용자에게 허락을 구할 수 있는지를 통제하는 결정 경로의 일부로 본다.
 
 ## 개요
 
-별도 서비스로 운영되던 [gatekeeper](https://github.com/dlddu/gatekeeper)(Go 백엔드 + Next.js PWA, Authelia forward-auth, Web Push)를 PocketAide로 흡수한다. 외부 자동화는 사용자가 발급한 호출자 키로 PocketAide 백엔드에 승인 요청을 만들고 결과를 폴링하며, 키 소유자는 iOS 앱에서 APNs 푸시로 요청을 받아 결정한다.
+별도 서비스로 운영되던 [gatekeeper](https://github.com/dlddu/gatekeeper)(Go 백엔드 + Next.js PWA, Authelia forward-auth, Web Push)를 PocketAide로 흡수한다. 외부 자동화는 사용자가 발급한 호출자 키(클러스터 안의 자동화는 사용자가 등록한 k8s ServiceAccount의 토큰, AC15)로 PocketAide 백엔드에 승인 요청을 만들고 결과를 폴링하며, 키 소유자는 iOS 앱에서 APNs 푸시로 요청을 받아 결정한다.
 
 ```
 외부 자동화 ──(호출자 키)──► pocket-aide 백엔드 ──(APNs)──► iOS 앱
@@ -40,13 +40,15 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 
 | 동작 | 경로 | 인증 | 요청 | 응답 |
 |------|------|------|------|------|
-| 요청 생성 | `POST /api/external/approvals` | `Authorization: Bearer <호출자 키>` | `externalId`(필수), `context`(필수), `requesterName`(선택, 표시용), `timeoutSeconds`(선택) | 201 `{id, status, createdAt, expiresAt}` |
-| 결과 조회 | `GET /api/external/approvals/{id}` | 같음 | - | 200 `{id, externalId, status, createdAt, expiresAt, processedAt}` |
+| 요청 생성 | `POST /api/external/approvals` | `Authorization: Bearer <호출자 키 또는 k8s SA 토큰>` | `externalId`(필수), `context`(필수), `requesterName`(선택, 표시용), `timeoutSeconds`(선택) | 201 `{id, status, decisionMode, createdAt, expiresAt}` |
+| 결과 조회 | `GET /api/external/approvals/{id}` | 같음 | - | 200 `{id, externalId, status, decisionMode, createdAt, expiresAt, processedAt}` |
 
 - `/api/external/` 아래는 호출자 키만, 그 밖의 `/api/`는 OIDC만 받는다. 인증 경계를 경로로 구분한다.
 - 수신자 필드는 없다. 알 수 없는 필드(예: 옛 `userId`)가 오면 400으로 거부해, 옛 클라이언트 설정이 섞여 들어오는 것을 전환 중에 바로 드러낸다.
 - `externalId`는 같은 호출자 키 안에서 유일하다(키가 다르면 같은 값을 써도 충돌하지 않는다).
 - 상태 값은 gatekeeper와 같은 `PENDING` / `APPROVED` / `REJECTED` / `EXPIRED`를 쓴다.
+- `decisionMode`는 처리 방식이다 — `manual`(사용자 결정) / `auto`(자동 응답) / `expired`(만료), 아직 `PENDING`이면 `null`. 앱의 처리 이력(AC8)이 쓰는 값과 같다. 자동 응답 모드(AC9)로 생성 즉시 처리된 요청은 생성 응답부터 `auto`다.
+- 인증 수단은 둘이다. 호출자 키(`pak_`로 시작, AC13)와, 사용자가 등록한 k8s ServiceAccount의 projected 토큰(audience `pocket-aide`, AC15). 어느 쪽이든 요청은 그 호출자를 등록한 사용자에게 귀속되고 `externalId`의 유일성 범위도 그 호출자 안이다.
 
 ## 사용자 시나리오 (대표)
 
@@ -59,9 +61,9 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 ## Acceptance Criteria
 
 ### AC1: 외부 자동화의 승인 요청 생성 (호출자 키 인증)
-- **설명**: 백엔드는 외부 자동화용 요청 생성 엔드포인트를 노출하고, 이를 OIDC와 분리된 호출자 키 미들웨어 뒤에 둔다. 호출자 키는 AC13으로 발급되고 폐기(AC14)되지 않은 키만 유효하며, gatekeeper식 단일 공유 시크릿은 두지 않는다. 요청 형식은 위 "호출자 API 계약"을 따른다. 필수 필드 누락·알 수 없는 필드는 400, 같은 키 안에서 `externalId` 중복은 409, 키 누락·불일치·폐기는 401이다. 호출자 키는 요청 생성(AC1)과 상태 조회(AC3) 두 경로에만 유효하며, 앱용 목록·상세·결정 경로에는 쓸 수 없다. 반대로 OIDC 토큰으로는 요청을 생성할 수 없다.
+- **설명**: 백엔드는 외부 자동화용 요청 생성 엔드포인트를 노출하고, 이를 OIDC와 분리된 호출자 미들웨어 뒤에 둔다. 호출자 자격 증명은 AC13으로 발급된 호출자 키 또는 AC15로 등록된 k8s ServiceAccount의 토큰이고, 폐기(AC14)되지 않은 것만 유효하며, gatekeeper식 단일 공유 시크릿은 두지 않는다. 요청 형식은 위 "호출자 API 계약"을 따른다. 필수 필드 누락·알 수 없는 필드는 400, 같은 키 안에서 `externalId` 중복은 409, 키 누락·불일치·폐기(SA 토큰은 미등록·폐기·검증 실패)는 401이다. 호출자 자격 증명은 요청 생성(AC1)과 상태 조회(AC3) 두 경로에만 유효하며, 앱용 목록·상세·결정 경로에는 쓸 수 없다. 반대로 OIDC 토큰으로는 요청을 생성할 수 없다.
 - **달성 가치**: V9
-- **검증 방법**: 유효 키로 생성 → 201 + `PENDING`. 같은 키로 동일 `externalId` 재생성 → 409, 다른 키로는 201. `userId` 필드를 넣어 생성 → 400. 키 없이 → 401. 호출자 키로 앱 목록 경로 호출 → 401. OIDC 토큰으로 생성 경로 호출 → 401.
+- **검증 방법**: 유효 키로 생성 → 201 + `PENDING`. 같은 키로 동일 `externalId` 재생성 → 409, 다른 키로는 201. `userId` 필드를 넣어 생성 → 400. 키 없이 → 401. 호출자 키로 앱 목록 경로 호출 → 401. OIDC 토큰으로 생성 경로 호출 → 401. SA 토큰 경로는 AC15에서 검증한다.
 
 ### AC2: 요청 소유권과 비공개
 - **설명**: 모든 요청은 생성에 쓰인 호출자 키의 소유자(AC13) 한 명에게 귀속되며, 호출자가 수신자를 따로 지정하는 방법은 없다. 앱의 목록·상세·결정 경로는 OIDC 인증된 요청자 소유 요청으로 한정되며, 타인 소유 요청 id로의 접근은 존재 여부를 드러내지 않도록 404로 응답한다(PRD-11 AC2와 같은 원칙). 인증 없이 요청 목록이나 내용을 조회할 수 있는 경로는 존재하지 않는다(gatekeeper의 공개 `GET /api/requests`는 옮기지 않는다).
@@ -69,7 +71,7 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 - **검증 방법**: A의 키로 만든 요청이 A의 목록에만 있고 B의 목록에 없는지 확인. B가 A의 요청 id로 상세·승인·거절 시도 → 모두 404. 토큰 없이 목록 경로 호출 → 401. 라우트 목록에 무인증 목록 경로가 없는지 확인.
 
 ### AC3: 요청자의 결과 조회 (폴링)
-- **설명**: 외부 자동화는 그 요청을 만든 호출자 키로 요청 id의 현재 상태(`PENDING` / `APPROVED` / `REJECTED` / `EXPIRED`), 처리 시각, 만료 시각을 조회할 수 있다. 응답은 AC4의 만료 규칙을 반영한 **실제** 상태여야 한다(만료 시각이 지난 `PENDING`을 `PENDING`으로 돌려주지 않는다). 다른 호출자 키로 만든 요청은 존재 여부를 드러내지 않도록 404로 응답한다. 응답에는 처리자의 OIDC `sub`·이메일 등 사용자 식별 정보를 포함하지 않는다.
+- **설명**: 외부 자동화는 그 요청을 만든 호출자 키(또는 SA 호출자의 토큰)로 요청 id의 현재 상태(`PENDING` / `APPROVED` / `REJECTED` / `EXPIRED`), 처리 방식(`decisionMode`, 수동/자동/만료), 처리 시각, 만료 시각을 조회할 수 있다. 응답은 AC4의 만료 규칙을 반영한 **실제** 상태여야 한다(만료 시각이 지난 `PENDING`을 `PENDING`으로 돌려주지 않는다). 다른 호출자 키로 만든 요청은 존재 여부를 드러내지 않도록 404로 응답한다. 응답에는 처리자의 OIDC `sub`·이메일 등 사용자 식별 정보를 포함하지 않는다.
 - **달성 가치**: V9
 - **검증 방법**: 생성 직후 조회 → `PENDING`. 앱에서 승인 후 조회 → `APPROVED` + `processedAt`. `timeoutSeconds=5` 요청을 6초 후 조회 → `EXPIRED`. 키 A로 만든 요청을 키 B로 조회 → 404. 응답 JSON에 사용자 식별자가 없는지 확인.
 
@@ -128,6 +130,11 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 - **달성 가치**: V9
 - **검증 방법**: 키 A·B 발급 → A 폐기 → A로 생성·조회 → 401, B로 생성 → 201. 폐기 전 A로 만든 `PENDING` 요청이 대기 목록에 남아 있고 경고가 표시되는지, 자동 응답 모드(AC9)가 켜져 있어도 상태가 바뀌지 않는지 확인. 폐기 후 이력의 A 요청에 키 이름이 그대로 보이는지 확인.
 
+### AC15: k8s ServiceAccount 호출자 등록
+- **설명**: 사용자는 승인 게이트 설정에서 호출자 이름과 k8s ServiceAccount(`네임스페이스/이름`)를 적어 SA 호출자를 등록한다. 등록에는 키 원문이 없다 — 그 SA로 도는 파드가 마운트한 projected 토큰(audience `pocket-aide`)이 자격 증명이다. 백엔드는 클러스터의 TokenReview로 토큰을 검증해 SA를 확인하고, 폐기되지 않은 등록이 있을 때만 그 등록을 호출자로 인정한다. 한 SA는 동시에 한 등록에만 묶인다(다른 사용자의 등록 포함). SA 호출자는 호출자 키와 같은 목록에 나타나며, 원문 앞부분 대신 `네임스페이스/이름`을 보인다. 호출자 이름의 유일성(AC13), 요청 귀속(AC2), 키 이름 표시(AC6·AC10), 마지막 사용 시각, 폐기(AC14)는 호출자 키와 같다. 등록되지 않았거나 폐기된 SA의 토큰, audience가 `pocket-aide`가 아닌 토큰, 검증에 실패한 토큰은 401이다.
+- **달성 가치**: V9
+- **검증 방법**: `homelab-k3s-mcp/homelab-k3s-mcp`를 이름 `homelab-k3s-mcp`로 등록 → 목록에 이름과 `homelab-k3s-mcp/homelab-k3s-mcp`가 보이고 원문은 없다. 그 SA의 projected 토큰으로 생성 → 201, 등록한 사용자의 대기 목록에 나타나고 마지막 사용 시각이 갱신된다. 다른 사용자가 같은 SA를 등록 → 409. 등록하지 않은 SA의 토큰 → 401. 같은 SA의 기본 토큰(audience가 apiserver) → 401. 등록을 폐기 → 생성·조회 401, 폐기 전 대기 요청은 경고와 함께 남는다.
+
 ## 결정 사항
 
 - **gatekeeper를 별도 서비스로 두지 않고 PocketAide 백엔드·iOS 앱으로 흡수한다.** 인증(OIDC)·푸시(APNs)·기기 토큰을 PRD-10과 공유해 운영 대상을 하나 줄인다.
@@ -135,6 +142,10 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 - **공개 목록 경로는 옮기지 않는다.** PocketAide는 공용 도메인이므로 gatekeeper의 무인증 `GET /api/requests`를 그대로 옮기면 모든 승인 요청 내용이 외부에 노출된다.
 - **만료된 요청은 결정할 수 없다(동작 변경).** gatekeeper는 만료 요청의 승인을 허용했으나, V9 「결정」 범위의 "침묵이 승인으로 해석되지 않는다"와 충돌하므로 409로 막는다. 기존 호출자 세 곳(homelab-k3s-mcp, session-platform, pure-agent)은 모두 `EXPIRED`를 받으면 폴링을 멈추므로 이 변경에 영향받지 않는다(2026-09-29 확인).
 - **API 키는 호출자별로 발급·폐기한다.** gatekeeper의 단일 공유 시크릿은 하나가 새면 모든 호출자를 교체해야 하고, 어느 호출자가 보낸 요청인지 구분할 수 없다. 호출자별 키로 유출 시 그 키만 폐기하고, 요청 출처를 호출자가 밝힌 이름이 아니라 실제 키로 확인한다(AC13·AC14).
+- **클러스터 안의 호출자는 k8s ServiceAccount 토큰으로 인증할 수 있다(AC15, 2026-10-16).** 같은 k3s 클러스터에서 도는 호출자(homelab-k3s-mcp)는 키 원문을 시크릿에 넣어 돌리는 대신 파드가 이미 가진 정체성을 쓴다. 새어 나갈 원문이 없고, 파드·SA가 지워지면 토큰도 곧바로 무효가 된다. SA와 사용자의 연결은 서버 설정이 아니라 앱에서 등록한다 — 누가 사용자에게 허락을 구할 수 있는지는 사용자가 통제한다는 AC13의 원칙을 그대로 따른다. 클러스터 밖 호출자는 계속 호출자 키를 쓴다.
+- **SA 토큰은 TokenReview로 검증하고 audience `pocket-aide`를 요구한다.** 백엔드가 서명 키·issuer 설정을 따로 들고 있지 않아도 되고, 삭제된 파드의 토큰은 바로 거부된다. audience를 요구해 apiserver용 기본 토큰을 PocketAide로 보내거나 PocketAide로 보낸 토큰을 apiserver에 재사용하는 일을 막는다. 공용 도메인으로 들어오는 임의 토큰이 apiserver 부하가 되지 않도록, 서명 검증 전 `iss`가 클러스터 issuer와 같을 때만 TokenReview를 부르고 그 결과는 60초 캐시한다(호출자는 2초마다 폴링한다). 등록·폐기 조회는 캐시하지 않으므로 앱에서의 폐기는 즉시 적용된다.
+- **한 SA는 한 등록에만 묶인다.** 같은 SA가 두 사용자에게 등록되면 요청 수신자를 정할 수 없다. 사용자 안의 호출자 이름 유일성과 별개로, 폐기되지 않은 등록 사이에서 SA는 전역으로 유일하다.
+- **외부 응답에 처리 방식(`decisionMode`)을 싣는다.** homelab-k3s-mcp의 이벤트 로그는 자동 승인을 따로 기록한다(gatekeeper의 `autoApproved` 대응). 처리 방식은 사용자 식별 정보가 아니므로 AC3과 충돌하지 않는다.
 - **폐기된 키의 대기 요청은 자동 처리하지 않는다.** 폐기는 대개 유출 의심 때문이므로 자동 승인은 위험하고, 자동 거절은 정상 요청까지 끊는다. 경고와 함께 사용자 판단에 맡긴다.
 - **승인 액션만 잠금 해제를 요구한다.** 거절은 자동화를 멈추는 안전한 방향이므로 마찰을 두지 않는다.
 - **수신자는 호출자 키의 소유자다.** 키가 사용자에게 귀속되므로(AC13) 요청에 수신자를 따로 적지 않는다. 수신자를 안 적은 요청이라는 경우 자체가 사라진다. 한 요청을 여러 사람에게 보내야 할 때 확장한다.
@@ -152,7 +163,7 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 
 | 레포 | 클라이언트 | 설정 | 비고 |
 |------|------------|------|------|
-| homelab-k3s-mcp | `internal/gatekeeper/gatekeeper.go` | `GATEKEEPER_BASE_URL` / `_API_KEY` / `_USER_ID` (flux-cd-apps ExternalSecret) | k8s 쓰기 도구의 승인 게이트. 통합 테스트 11개가 gatekeeper 형식에 의존 |
+| homelab-k3s-mcp | `internal/gatekeeper/gatekeeper.go` | `GATEKEEPER_BASE_URL` / `_API_KEY` / `_USER_ID` (flux-cd-apps ExternalSecret) | k8s 쓰기 도구의 승인 게이트. 통합 테스트 11개가 gatekeeper 형식에 의존. 호출자 키 대신 SA 토큰으로 전환한다(AC15) — 앱에서 `homelab-k3s-mcp/homelab-k3s-mcp`를 등록하고, 클라이언트는 projected 토큰(audience `pocket-aide`)을 `Authorization: Bearer`로 보낸다. 시크릿이 필요 없어진다 |
 | session-platform | `data-plane/cmd/agent/approval_gateway.go` | `GATEKEEPER_URL` 등 | e2e용 가짜 게이트웨이(`deploy/e2e-approval-gateway-fake.yaml`)도 함께 수정 |
 | pure-agent | `mcp-server/src/services/gatekeeper.ts` | `GATEKEEPER_URL` / `_API_KEY` / `_USER_ID` | 2026-08-05 이후 커밋 없음 — 전환할지 정리할지 전환 중 결정 |
 
@@ -171,6 +182,6 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 1. 요청자 콜백(웹훅) — 폴링 대신 결정 즉시 호출자에게 통지. (도입 시 만료 백그라운드 정리 필요)
 2. 만료 임박 리마인드 푸시. (도입 시 만료 백그라운드 정리 필요)
 3. 호출자 키 만료 기한·권한 범위(생성만/조회만) 지정.
-4. 기존 호출자 세 레포의 클라이언트 전환(운영 노트 "전환 절차").
+4. 기존 호출자 세 레포의 클라이언트 전환(운영 노트 "전환 절차"). homelab-k3s-mcp는 호출자 키 대신 SA 토큰(AC15)으로 전환한다.
 5. ~~승인 탭 화면 mockup과 화면 mockup 탭바 갱신~~ — 완료(2026-10-05): `screen-approval`, 탭바 새 구성, 승인자 여정 문서·여정 mockup(`JRN-approval-push-to-decision`).
 6. 위젯(PRD-8)에 대기 승인 수 노출 여부 검토.
