@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-13
+last_updated: 2026-10-16
 ---
 
 # 카피 ↔ 구현 대응표
@@ -36,7 +36,7 @@ last_updated: 2026-10-13
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 0행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 0행, 표 B `구현 대기` 28행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
@@ -50,12 +50,12 @@ last_updated: 2026-10-13
 | A | 목업 대기 | 0 |
 | B | 일치 | 222 |
 | B | 외부 | 60 |
-| B | 예시 데이터 | 141 |
-| B | 목업 전용 | 131 |
+| B | 예시 데이터 | 142 |
+| B | 목업 전용 | 134 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 시스템 UI | 9 |
-| B | 구현 대기 | 19 |
+| B | 구현 대기 | 28 |
 
 ## 표 A — 정방향 (구현 리터럴 → 목업) · 239행
 
@@ -300,7 +300,7 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 596행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 609행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -487,7 +487,20 @@ last_updated: 2026-10-13
 | `screen-approval` | `발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 확정 버튼(`ApprovalKeysView.swift`) |
 | `screen-approval` | `키 발급 — 복사됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `복사됨` | 일치 | 「키 발급 — 복사됨」 프레임 주 버튼(`ApprovalKeysView.swift`) |
-| `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
+| `screen-approval` | `설정 — SA 호출자` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `homelab-k3s-mcp` | 구현 대기 | 「설정 — SA 호출자」 프레임 SA 호출자 이름 칩 · 「SA 등록」 두 프레임의 세 입력 칸 `placeholder` — 앱에 SA 호출자 등록(PRD-12 AC15)이 없다 |
+| `screen-approval` | `SA homelab-k3s-mcp/homelab-k3s-mcp · 등록 10/16 · 마지막 사용 09:41` | 구현 대기 | SA 호출자 메타 줄(「SA 네임스페이스/이름」·등록 날짜·마지막 사용) — `ApprovalKeyFormatting.meta` 는 원문 앞부분·「발급」만 그린다(AC15 구현 전) |
+| `screen-approval` | `+ k8s 서비스 어카운트 등록` | 구현 대기 | 「설정 — SA 호출자」 프레임 둘째 점선 버튼 — 구현에 없다(AC15) |
+| `screen-approval` | `SA 등록 — 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `pak_Xm91… · 발급 09/30` | 예시 데이터 | 「SA 등록」 시트 뒤 목록의 키 메타 줄 — 「설정 — SA 호출자」 프레임 둘째 행과 같은 키(`infra-ci`)를 「마지막 사용」 없이 줄여 그린 배경. 구현은 같은 자리를 `ApprovalKeyFormatting.meta` 로 그린다 |
+| `screen-approval` | `k8s 서비스 어카운트 등록` | 구현 대기 | 「SA 등록」 시트 제목 — 구현에 없다(AC15) |
+| `screen-approval` | `네임스페이스` | 구현 대기 | 「SA 등록」 시트 입력 라벨 — 구현에 없다(AC15) |
+| `screen-approval` | `서비스 어카운트` | 구현 대기 | 「SA 등록」 시트 입력 라벨 — 구현에 없다(AC15) |
+| `screen-approval` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 구현 대기 | 「SA 등록」 시트 안내 — 구현에 없다(AC15) |
+| `screen-approval` | `등록` | 구현 대기 | 「SA 등록」 시트 확정 버튼 — 구현에 없다(AC15) |
+| `screen-approval` | `SA 등록 — 이미 등록됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `이미 등록된 서비스 어카운트입니다` | 구현 대기 | 「SA 등록 — 이미 등록됨」 프레임 서버 409(활성 등록에 묶인 SA) 안내 — 구현에 없다(AC15) |
+| `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고, AC15 k8s 서비스 어카운트 호출자 등록. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

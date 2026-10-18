@@ -1220,6 +1220,251 @@
     </div>
   </div>
 
-  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup <code>JRN-approval-push-to-decision</code>.</p>
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">설정 — SA 호출자</p>
+
+  <!-- 설정 — SA 호출자(AC15): SA 호출자는 호출자 키와 같은 목록에 섞여 발급(등록) 순으로 선다. 이름 칩·「폐기」는 키와 같고, 메타 줄은 원문 앞부분 대신 「SA 네임스페이스/이름」·등록 날짜·마지막 사용. 목록 아래 점선 버튼이 둘 — 「+ 호출자 키 발급」(AC13) · 「+ k8s 서비스 어카운트 등록」(AC15). 자동 응답 모드 섹션은 「설정 — 자동 응답·호출자 키」와 같아 생략한다 -->
+  <div class="frame relative overflow-hidden">
+
+    <!-- top strip — area accent -->
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — 상세: 백버튼 + 보낸 키 칩 -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-20 bg-[var(--bg)]/95 flex items-center justify-between">
+      <button class="flex items-center gap-1 text-[15px] text-[var(--accent)]"><svg width="10" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 10 16"><path d="M8 1L2 8l6 7"/></svg>승인</button>
+      
+    </header>
+
+    <main class="absolute top-[104px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <h2 class="text-[18px] font-bold mb-3">승인 게이트 설정</h2>
+      <div class="mb-2 mt-1 flex items-center gap-2">
+        <div class="w-1 h-3 bg-[var(--accent)]"></div>
+        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-[var(--accent)]">호출자 키</h2>
+        <div class="flex-1 h-px bg-[var(--rule)]"></div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-md overflow-hidden">
+        <div class="px-3.5 py-3"><div class="flex items-center justify-between"><span class="stamp text-[10.5px] font-bold px-2 py-0.5 rounded-[2px] bg-[var(--soft)] text-[var(--accent-strong)]">homelab-k3s-mcp</span><button class="text-[12px] font-bold text-[var(--destructive)]">폐기</button></div><div class="stamp text-[10.5px] text-stone-500 mt-1.5">SA homelab-k3s-mcp/homelab-k3s-mcp · 등록 10/16 · 마지막 사용 09:41</div></div>
+        <div class="px-3.5 py-3 border-t border-[var(--rule)]"><div class="flex items-center justify-between"><span class="stamp text-[10.5px] font-bold px-2 py-0.5 rounded-[2px] bg-[var(--soft)] text-[var(--accent-strong)]">infra-ci</span><button class="text-[12px] font-bold text-[var(--destructive)]">폐기</button></div><div class="stamp text-[10.5px] text-stone-500 mt-1.5">pak_Xm91… · 발급 09/30 · 마지막 사용 09:20</div></div>
+      </div>
+      <button class="w-full mt-3 py-3 rounded-[10px] border border-dashed border-[var(--accent)] text-[var(--accent)] text-[14px] font-bold">+ 호출자 키 발급</button>
+      <button class="w-full mt-2 py-3 rounded-[10px] border border-dashed border-[var(--accent)] text-[var(--accent)] text-[14px] font-bold">+ k8s 서비스 어카운트 등록</button>
+    </main>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7): 승인 탭 활성, 배지 = 대기 요청 수(§1.11 강조색) -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1 relative">
+        <span class="absolute -top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[var(--accent)] text-[9px] text-white grid place-items-center font-bold stamp">3</span>
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-bold">승인</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>
+        <span class="text-[10px] font-medium">채팅</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+
+    <!-- home indicator -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">SA 등록 — 입력</p>
+
+  <!-- SA 등록 — 입력(AC15): 「+ k8s 서비스 어카운트 등록」을 누르면 열리는 시트. 호출자 이름 · 네임스페이스 · 서비스 어카운트 세 칸(이름 둘은 k8s 이름 규칙 — 소문자·숫자·하이픈). 세 칸이 다 차야 「등록」이 활성. 등록이 성공하면 원문 표시 단계 없이 시트가 닫히고 목록에 SA 행이 생긴다. 시트는 편집 시트 패턴(patterns §9) -->
+  <div class="frame relative overflow-hidden">
+
+    <!-- top strip — area accent -->
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — 상세: 백버튼 + 보낸 키 칩 -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-20 bg-[var(--bg)]/95 flex items-center justify-between">
+      <button class="flex items-center gap-1 text-[15px] text-[var(--accent)]"><svg width="10" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 10 16"><path d="M8 1L2 8l6 7"/></svg>승인</button>
+      
+    </header>
+
+    <main class="absolute top-[104px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <h2 class="text-[18px] font-bold mb-3">승인 게이트 설정</h2>
+      <div class="mb-2 mt-1 flex items-center gap-2">
+        <div class="w-1 h-3 bg-[var(--accent)]"></div>
+        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-[var(--accent)]">호출자 키</h2>
+        <div class="flex-1 h-px bg-[var(--rule)]"></div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-md px-3.5 py-3"><div class="flex items-center justify-between"><span class="stamp text-[10.5px] font-bold px-2 py-0.5 rounded-[2px] bg-[var(--soft)] text-[var(--accent-strong)]">infra-ci</span><span></span></div><div class="stamp text-[10.5px] text-stone-500 mt-1.5">pak_Xm91… · 발급 09/30</div></div>
+    </main>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.35)"></div>
+    <div class="absolute z-50 inset-x-0 bottom-0 rounded-t-[22px] bg-white px-5 pt-3 pb-10">
+      <div class="w-9 h-1 rounded-full bg-stone-300 mx-auto mb-4"></div>
+      <div class="text-[17px] font-bold">k8s 서비스 어카운트 등록</div>
+      <label class="block text-[11px] text-stone-500 mt-3">호출자 이름</label>
+      <input placeholder="homelab-k3s-mcp" class="w-full mt-1 px-3 py-2.5 rounded-md border border-[var(--rule)] text-[14px] stamp bg-[var(--bg)]">
+      <div class="flex gap-2.5 mt-3">
+        <div class="flex-1"><label class="block text-[11px] text-stone-500">네임스페이스</label><input placeholder="homelab-k3s-mcp" class="w-full mt-1 px-3 py-2.5 rounded-md border border-[var(--rule)] text-[14px] stamp bg-[var(--bg)]"></div>
+        <div class="flex-1"><label class="block text-[11px] text-stone-500">서비스 어카운트</label><input placeholder="homelab-k3s-mcp" class="w-full mt-1 px-3 py-2.5 rounded-md border border-[var(--rule)] text-[14px] stamp bg-[var(--bg)]"></div>
+      </div>
+      <div class="text-[11px] text-stone-500 leading-relaxed mt-2.5">이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.</div>
+      <div class="flex gap-2.5 mt-4">
+        <button class="flex-1 py-3 rounded-[10px] border border-[var(--rule)] bg-white text-[15px]">취소</button>
+        <button class="flex-1 py-3 rounded-[10px] border border-[var(--accent)] bg-[var(--accent)] text-white text-[15px] font-bold">등록</button>
+      </div>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7): 승인 탭 활성, 배지 = 대기 요청 수(§1.11 강조색) -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1 relative">
+        <span class="absolute -top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[var(--accent)] text-[9px] text-white grid place-items-center font-bold stamp">3</span>
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-bold">승인</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>
+        <span class="text-[10px] font-medium">채팅</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+
+    <!-- home indicator -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">SA 등록 — 이미 등록됨</p>
+
+  <!-- SA 등록 — 이미 등록됨(AC15): 같은 서비스 어카운트가 이미 폐기되지 않은 등록에 묶여 있으면(다른 사용자 포함, 서버 409) 시트를 닫지 않고 서비스 어카운트 칸을 destructive 테두리로, 그 아래 한 줄 안내를 보인다. 호출자 이름 중복 409 는 키 발급과 같은 「이미 쓰이고 있는 호출자 이름입니다」 -->
+  <div class="frame relative overflow-hidden">
+
+    <!-- top strip — area accent -->
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+
+    <!-- status bar -->
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — 상세: 백버튼 + 보낸 키 칩 -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-2 z-20 bg-[var(--bg)]/95 flex items-center justify-between">
+      <button class="flex items-center gap-1 text-[15px] text-[var(--accent)]"><svg width="10" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 10 16"><path d="M8 1L2 8l6 7"/></svg>승인</button>
+      
+    </header>
+
+    <main class="absolute top-[104px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <h2 class="text-[18px] font-bold mb-3">승인 게이트 설정</h2>
+      <div class="mb-2 mt-1 flex items-center gap-2">
+        <div class="w-1 h-3 bg-[var(--accent)]"></div>
+        <h2 class="text-[11px] font-bold tracking-wide stamp uppercase text-[var(--accent)]">호출자 키</h2>
+        <div class="flex-1 h-px bg-[var(--rule)]"></div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-md px-3.5 py-3"><div class="flex items-center justify-between"><span class="stamp text-[10.5px] font-bold px-2 py-0.5 rounded-[2px] bg-[var(--soft)] text-[var(--accent-strong)]">infra-ci</span><span></span></div><div class="stamp text-[10.5px] text-stone-500 mt-1.5">pak_Xm91… · 발급 09/30</div></div>
+    </main>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.35)"></div>
+    <div class="absolute z-50 inset-x-0 bottom-0 rounded-t-[22px] bg-white px-5 pt-3 pb-10">
+      <div class="w-9 h-1 rounded-full bg-stone-300 mx-auto mb-4"></div>
+      <div class="text-[17px] font-bold">k8s 서비스 어카운트 등록</div>
+      <label class="block text-[11px] text-stone-500 mt-3">호출자 이름</label>
+      <input placeholder="homelab-k3s-mcp" value="homelab-k3s-mcp" class="w-full mt-1 px-3 py-2.5 rounded-md border border-[var(--rule)] text-[14px] stamp bg-[var(--bg)]">
+      <div class="flex gap-2.5 mt-3">
+        <div class="flex-1"><label class="block text-[11px] text-stone-500">네임스페이스</label><input placeholder="homelab-k3s-mcp" value="homelab-k3s-mcp" class="w-full mt-1 px-3 py-2.5 rounded-md border border-[var(--rule)] text-[14px] stamp bg-[var(--bg)]"></div>
+        <div class="flex-1"><label class="block text-[11px] text-stone-500">서비스 어카운트</label><input placeholder="homelab-k3s-mcp" value="homelab-k3s-mcp" class="w-full mt-1 px-3 py-2.5 rounded-md border border-[var(--destructive)] text-[14px] stamp bg-[var(--bg)]"></div>
+      </div>
+      <div class="text-[12px] text-[var(--destructive)] mt-2.5">이미 등록된 서비스 어카운트입니다</div>
+      <div class="text-[11px] text-stone-500 leading-relaxed mt-2.5">이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.</div>
+      <div class="flex gap-2.5 mt-4">
+        <button class="flex-1 py-3 rounded-[10px] border border-[var(--rule)] bg-white text-[15px]">취소</button>
+        <button class="flex-1 py-3 rounded-[10px] border border-[var(--accent)] bg-[var(--accent)] text-white text-[15px] font-bold">등록</button>
+      </div>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7): 승인 탭 활성, 배지 = 대기 요청 수(§1.11 강조색) -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1 relative">
+        <span class="absolute -top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[var(--accent)] text-[9px] text-white grid place-items-center font-bold stamp">3</span>
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-bold">승인</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M4 5.5C4 4.1 5.1 3 6.5 3h11C18.9 3 20 4.1 20 5.5v8c0 1.4-1.1 2.5-2.5 2.5H10l-4 4v-4h-.5C4.1 16 3 14.9 3 13.5v-8z"/></svg>
+        <span class="text-[10px] font-medium">채팅</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+
+    <!-- home indicator -->
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <p class="text-stone-500 text-xs max-w-md text-center leading-relaxed">PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고, AC15 k8s 서비스 어카운트 호출자 등록. 잠금 화면·푸시(AC10·AC11)는 여정 mockup <code>JRN-approval-push-to-decision</code>.</p>
 </body>
 </html>
