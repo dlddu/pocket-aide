@@ -14,6 +14,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/approvalpush"
 	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
+	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
 )
 
 const maxApprovalRequestBytes = 1 << 20
@@ -28,19 +29,28 @@ type externalCreatePayload struct {
 }
 
 type externalCreateResponse struct {
-	ID        string           `json:"id"`
-	Status    approvals.Status `json:"status"`
-	CreatedAt int64            `json:"createdAt"`
-	ExpiresAt *int64           `json:"expiresAt"`
+	ID           string           `json:"id"`
+	Status       approvals.Status `json:"status"`
+	DecisionMode *string          `json:"decisionMode"`
+	CreatedAt    int64            `json:"createdAt"`
+	ExpiresAt    *int64           `json:"expiresAt"`
 }
 
 type externalStatusResponse struct {
-	ID          string           `json:"id"`
-	ExternalID  string           `json:"externalId"`
-	Status      approvals.Status `json:"status"`
-	CreatedAt   int64            `json:"createdAt"`
-	ExpiresAt   *int64           `json:"expiresAt"`
-	ProcessedAt *int64           `json:"processedAt"`
+	ID           string           `json:"id"`
+	ExternalID   string           `json:"externalId"`
+	Status       approvals.Status `json:"status"`
+	DecisionMode *string          `json:"decisionMode"`
+	CreatedAt    int64            `json:"createdAt"`
+	ExpiresAt    *int64           `json:"expiresAt"`
+	ProcessedAt  *int64           `json:"processedAt"`
+}
+
+func externalDecisionMode(r approvals.Request) *string {
+	if r.DecisionMode == "" {
+		return nil
+	}
+	return &r.DecisionMode
 }
 
 type approvalResponse struct {
@@ -66,7 +76,9 @@ type approvalSettingsResponse struct {
 }
 
 type issueKeyPayload struct {
-	Name string `json:"name"`
+	Name           string `json:"name"`
+	Kind           string `json:"kind"`
+	ServiceAccount string `json:"service_account"`
 }
 
 func toApprovalResponse(r approvals.Request) approvalResponse {
@@ -105,7 +117,11 @@ func decodeApprovalBody(w http.ResponseWriter, r *http.Request, v any) error {
 	return nil
 }
 
-func CallerKeyMiddleware(store *approvals.Store) func(http.Handler) http.Handler {
+type TokenReviewer interface {
+	Review(ctx context.Context, token string) (string, error)
+}
+
+func CallerKeyMiddleware(store *approvals.Store, reviewer TokenReviewer) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			h := r.Header.Get("Authorization")
@@ -114,7 +130,26 @@ func CallerKeyMiddleware(store *approvals.Store) func(http.Handler) http.Handler
 				writeError(w, http.StatusUnauthorized, "caller key required")
 				return
 			}
-			caller, err := store.Authenticate(r.Context(), raw)
+			var (
+				caller approvals.Caller
+				err    error
+			)
+			switch {
+			case strings.HasPrefix(raw, "pak_") || reviewer == nil:
+				caller, err = store.Authenticate(r.Context(), raw)
+			default:
+				var sa string
+				sa, err = reviewer.Review(r.Context(), raw)
+				if errors.Is(err, k8sauth.ErrUnauthenticated) {
+					err = approvals.ErrInvalidKey
+				} else if err != nil {
+					writeError(w, http.StatusServiceUnavailable, "caller verification unavailable")
+					return
+				}
+				if err == nil {
+					caller, err = store.AuthenticateServiceAccount(r.Context(), sa)
+				}
+			}
 			if errors.Is(err, approvals.ErrInvalidKey) {
 				writeError(w, http.StatusUnauthorized, "invalid caller key")
 				return
@@ -179,10 +214,11 @@ func CreateExternalApproval(store *approvals.Store, push ApprovalPusher) http.Ha
 			return
 		}
 		writeJSON(w, http.StatusCreated, externalCreateResponse{
-			ID:        created.ID,
-			Status:    created.Status,
-			CreatedAt: created.CreatedAt,
-			ExpiresAt: created.ExpiresAt,
+			ID:           created.ID,
+			Status:       created.Status,
+			DecisionMode: externalDecisionMode(created),
+			CreatedAt:    created.CreatedAt,
+			ExpiresAt:    created.ExpiresAt,
 		})
 		if push != nil && created.Status == approvals.StatusPending {
 			push.Notify(approvalpush.Request{
@@ -212,12 +248,13 @@ func GetExternalApproval(store *approvals.Store) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusOK, externalStatusResponse{
-			ID:          got.ID,
-			ExternalID:  got.ExternalID,
-			Status:      got.Status,
-			CreatedAt:   got.CreatedAt,
-			ExpiresAt:   got.ExpiresAt,
-			ProcessedAt: got.ProcessedAt,
+			ID:           got.ID,
+			ExternalID:   got.ExternalID,
+			Status:       got.Status,
+			DecisionMode: externalDecisionMode(got),
+			CreatedAt:    got.CreatedAt,
+			ExpiresAt:    got.ExpiresAt,
+			ProcessedAt:  got.ProcessedAt,
 		})
 	}
 }
@@ -255,6 +292,19 @@ func IssueApprovalKey(store *approvals.Store) http.HandlerFunc {
 			writeError(w, http.StatusBadRequest, "name is required")
 			return
 		}
+		switch p.Kind {
+		case "", approvals.KindKey:
+		case approvals.KindServiceAccount:
+			registerServiceAccount(w, r, store, u.ID, name, strings.TrimSpace(p.ServiceAccount))
+			return
+		default:
+			writeError(w, http.StatusBadRequest, "kind must be key or k8s_sa")
+			return
+		}
+		if p.ServiceAccount != "" {
+			writeError(w, http.StatusBadRequest, "service_account is only for kind k8s_sa")
+			return
+		}
 		issued, err := store.IssueKey(r.Context(), u.ID, name)
 		if errors.Is(err, approvals.ErrDuplicateName) {
 			writeError(w, http.StatusConflict, "caller name already in use")
@@ -265,6 +315,22 @@ func IssueApprovalKey(store *approvals.Store) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusCreated, issued)
+	}
+}
+
+func registerServiceAccount(w http.ResponseWriter, r *http.Request, store *approvals.Store, userID int64, name, serviceAccount string) {
+	registered, err := store.RegisterServiceAccount(r.Context(), userID, name, serviceAccount)
+	switch {
+	case errors.Is(err, approvals.ErrInvalidSA):
+		writeError(w, http.StatusBadRequest, err.Error())
+	case errors.Is(err, approvals.ErrDuplicateName):
+		writeError(w, http.StatusConflict, "caller name already in use")
+	case errors.Is(err, approvals.ErrDuplicateSA):
+		writeError(w, http.StatusConflict, "service account already registered")
+	case err != nil:
+		writeError(w, http.StatusInternalServerError, "register failed")
+	default:
+		writeJSON(w, http.StatusCreated, registered)
 	}
 }
 

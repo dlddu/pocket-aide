@@ -32,7 +32,8 @@
   같은 날 신규 요청 푸시(APNs 발송·알림 탭 → 상세, rct_20261011-0027)에 맞춰 시나리오 6·7을 다시 판정했다.
   2026-10-12 자동 응답 모드(설정·생성 즉시 처리·배너·빈 상태 모드 표시, rct_20261012-0002)에 맞춰 시나리오 12·13·15·16을 다시 판정했다.
   잠금화면 알림 액션은 아직 없어, 그 단계에 기대는 시나리오 14는 「미구현」이다.
-  2026-10-16 AC15(k8s ServiceAccount 호출자)와 호출자 응답의 `decisionMode`를 PRD에 더하며 시나리오 17·18을 덧붙였다 — 둘 다 구현 착수 전이라 「미구현」이다.
+  2026-10-16 AC15(k8s ServiceAccount 호출자)와 호출자 응답의 `decisionMode`를 PRD에 더하며 시나리오 17·18을 덧붙였다 — 둘 다 구현 착수 전이라 「미구현」이었다.
+  같은 날 서버 쪽(마이그레이션 `0014_approval_k8s_callers` · TokenReview · SA 호출자 등록 API · `decisionMode`)에 맞춰 시나리오 17을 「부분 구현」(앱 등록 화면 없음), 18을 「구현됨」으로 다시 판정했다.
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
@@ -339,8 +340,8 @@
   - 5단계: 이미 등록된 ServiceAccount라는 이유로 거부된다.
   - 6단계: 둘 다 401. 2단계 요청은 `PENDING` 그대로 「폐기된 키로 생성됨」 경고와 함께 대기 목록에 남는다.
 - **검증 AC**: AC15, AC1, AC2, AC14
-- **구현 상태**: 미구현 — SA 호출자 등록·TokenReview 검증 모두 구현 전이다.
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 부분 구현 — 서버: SA 호출자 등록(`POST /api/approval-keys` `kind`=`k8s_sa`, 원문 없음 · 같은 SA 409 · 형식 400), TokenReview 검증(audience `pocket-aide` · `iss` 사전 필터 · 60초 캐시), 미등록·기본 토큰·폐기 401, 폐기 전 대기 요청 유지, 키 목록의 `kind`·`service_account`·마지막 사용 시각까지 구현됨(2단계·4~6단계의 HTTP 결과). 앱: 1단계 등록 화면과 3단계 키 목록의 `네임스페이스/이름` 표시가 없다.
+- **관련 코드 테스트**: `backend/internal/handlers/approval_k8s_caller_test.go` — `TestApprovalServiceAccountCallerRegistrationAndUse`·`TestApprovalServiceAccountCallerVerificationFailures`, `backend/internal/k8sauth/tokenreview_test.go`
 
 
 ### 시나리오 18: 호출자는 응답에서 자동 처리 여부를 안다
@@ -355,5 +356,5 @@
   - 3단계: `status`=`EXPIRED` + `decisionMode`=`expired`.
   - 어느 응답에도 사용자 식별 정보가 없다.
 - **검증 AC**: AC3, AC9
-- **구현 상태**: 미구현 — 호출자 응답에 `decisionMode`가 아직 없다.
-- **관련 코드 테스트**: 없음
+- **구현 상태**: 구현됨 — 호출자 생성·조회 응답이 `decisionMode`를 싣는다(대기 `null` · 수동 결정 `manual` · 자동 응답 `auto` · 만료 `expired`). 모든 단계가 호출자 API 응답으로 관찰된다.
+- **관련 코드 테스트**: `backend/internal/handlers/approval_k8s_caller_test.go` — `TestApprovalExternalResponsesCarryDecisionMode`

@@ -62,12 +62,12 @@
 | Q-50 | `select agent_sessions \| eq(user_id) \| - \| -` | idx_agent_sessions_user_id | `backend/internal/sessions/store.go::Store::Owned` |
 | Q-51 | `delete agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Remove` |
 | Q-52 | `select approval_caller_keys \| eq(key_hash) \| - \| -` | UNIQUE(approval_caller_keys.key_hash) | `backend/internal/approvals/store.go::Store::Authenticate` |
-| Q-53 | `update approval_caller_keys \| eq(id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::Authenticate` |
+| Q-53 | `update approval_caller_keys \| eq(id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::touch` |
 | Q-54 | `insert approval_requests \| - \| - \| -` | — | `backend/internal/approvals/store.go::Store::Create` |
 | Q-55 | `update approval_requests \| eq(id, status, user_id) \| - \| -` | PK(approval_requests) | `backend/internal/approvals/store.go::Store::Decide` |
 | Q-56 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.id, approval_requests.user_id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); approval_requests: PK(approval_requests) | `backend/internal/approvals/store.go::Store::Get` |
 | Q-57 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.caller_key_id, approval_requests.id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); approval_requests: PK(approval_requests) | `backend/internal/approvals/store.go::Store::GetForCaller` |
-| Q-58 | `insert approval_caller_keys \| - \| - \| -` | — | `backend/internal/approvals/store.go::Store::IssueKey` |
+| Q-58 | `insert approval_caller_keys \| - \| - \| -` | — | `backend/internal/approvals/store.go::Store::IssueKey`, `backend/internal/approvals/store.go::Store::RegisterServiceAccount` |
 | Q-59 | `select approval_caller_keys \| eq(user_id) \| - \| order(created_at desc, id desc)` | idx_approval_caller_keys_user_created | `backend/internal/approvals/store.go::Store::ListKeys` |
 | Q-60 | `select approval_caller_keys,approval_requests \| eq(approval_caller_keys.id=approval_requests.caller_key_id, approval_requests.status, approval_requests.user_id) \| - \| order(approval_requests.created_at desc, approval_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); approval_requests: idx_approval_requests_user_status_created | `backend/internal/approvals/store.go::Store::ListPending` |
 | Q-61 | `update approval_caller_keys \| eq(id, revoked_at, user_id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::RevokeKey` |
@@ -76,6 +76,7 @@
 | Q-64 | `delete device_tokens \| eq(token, user_id) \| - \| -` | UNIQUE(device_tokens.token) | `backend/internal/devicetokens/store.go::Store::Delete` |
 | Q-65 | `select user_approval_settings \| eq(user_id) \| - \| -` | PK(user_approval_settings) | `backend/internal/approvals/store.go::Store::AutoResponse` |
 | Q-66 | `upsert user_approval_settings \| eq(user_id) \| - \| -` | — | `backend/internal/approvals/store.go::Store::SetAutoResponse` |
+| Q-67 | `select approval_caller_keys \| eq(kind, revoked_at, service_account) \| - \| -` | idx_approval_caller_keys_active_service_account | `backend/internal/approvals/store.go::Store::AuthenticateServiceAccount` |
 
 ## 수동 형태
 
