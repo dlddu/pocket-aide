@@ -14,6 +14,13 @@ struct ApprovalKeysScreen {
     var issuedSecret: XCUIElement { app.staticTexts["approval.keys.issued.secret"] }
     var copy: XCUIElement { app.buttons["approval.keys.issued.copy"] }
     var done: XCUIElement { app.buttons["approval.keys.issued.done"] }
+    var registerServiceAccountButton: XCUIElement { app.buttons["approval.keys.register-sa"] }
+    var serviceAccountName: XCUIElement { app.textFields["approval.keys.sa.name"] }
+    var serviceAccountNamespace: XCUIElement { app.textFields["approval.keys.sa.namespace"] }
+    var serviceAccountField: XCUIElement { app.textFields["approval.keys.sa.account"] }
+    var serviceAccountSubmit: XCUIElement { app.buttons["approval.keys.sa.submit"] }
+    var serviceAccountCancel: XCUIElement { app.buttons["approval.keys.sa.cancel"] }
+    var serviceAccountNotice: XCUIElement { app.staticTexts["approval.keys.sa.notice"] }
 
     func row(_ name: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: "approval.keys.row.\(name)").firstMatch
@@ -50,6 +57,19 @@ struct ApprovalKeysScreen {
         nameField.tap()
         nameField.typeText(name)
         submit.tap()
+    }
+
+    func registerServiceAccount(name: String, namespace: String, account: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(registerServiceAccountButton.waitForExistence(timeout: 10), "+ k8s 서비스 어카운트 등록 should be on screen", file: file, line: line)
+        registerServiceAccountButton.tap()
+        XCTAssertTrue(serviceAccountName.waitForExistence(timeout: 10), "The register sheet should ask for a caller name", file: file, line: line)
+        serviceAccountName.tap()
+        serviceAccountName.typeText(name)
+        serviceAccountNamespace.tap()
+        serviceAccountNamespace.typeText(namespace)
+        serviceAccountField.tap()
+        serviceAccountField.typeText(account)
+        serviceAccountSubmit.tap()
     }
 
     func secretIsNowhere(_ secret: String) -> Bool {
