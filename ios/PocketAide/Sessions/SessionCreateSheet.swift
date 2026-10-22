@@ -189,8 +189,8 @@ struct SessionCreateSheet: View {
     }
 
     private var workload: AgentSessionWorkloadType? {
-        guard let types = config?.workloadTypes, !types.isEmpty else { return nil }
-        return types.first { $0.id == pickedType } ?? types[0]
+        guard let config else { return nil }
+        return config.workloadTypes.first { $0.id == pickedType } ?? config.initialType
     }
 
     private var trimmedName: String {

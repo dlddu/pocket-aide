@@ -177,7 +177,7 @@ func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 			return
 		}
 		model := strings.TrimSpace(p.Model)
-		if model != "" && info.Model == nil {
+		if model != "" && !info.TakesModel {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "this workloadType takes no model"})
 			return
 		}

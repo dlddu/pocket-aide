@@ -27,7 +27,7 @@ final class SessionDetailViewModel: ObservableObject {
         self.api = api
     }
 
-    var isTerminal: Bool { type?.interaction == .terminal }
+    var isTerminal: Bool { type?.input == .terminal }
 
     var canSend: Bool {
         session.state != .snapshot && !isSending && !isRestoring

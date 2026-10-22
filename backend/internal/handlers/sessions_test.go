@@ -36,11 +36,11 @@ const legacyPlatformConfig = `{"claudeCode":{"defaultModel":"~anthropic/claude-o
 
 const catalogPlatformConfig = `{"claudeCode":{"defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]},
  "workloadTypes":[
-  {"type":"claude-code","label":"Claude Code","description":"agent","interaction":"agent","model":{"defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]}},
-  {"type":"minimax-code","label":"MiniMax Code","interaction":"agent","model":{"defaultModel":"platform-default"}},
-  {"type":"approval-gated","label":"Approval gated","interaction":"agent","model":{"defaultModel":"platform-default","models":["sonnet"]}},
-  {"type":"shell","label":"Shell","interaction":"terminal"},
-  {"type":"future-kind","interaction":"something-else"}
+  {"type":"shell","label":"Shell","description":"bash","takesModel":false,"input":"terminal","defaultModel":null,"models":[]},
+  {"type":"claude-code","label":"Claude Code","description":"agent","takesModel":true,"input":"prompt","defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]},
+  {"type":"minimax-code","label":"MiniMax Code","description":"mcode","takesModel":true,"input":"prompt","defaultModel":"platform-default","models":[]},
+  {"type":"approval-gated","label":"Approval-gated","description":"gated","takesModel":true,"input":"prompt","defaultModel":"~anthropic/claude-opus-latest","models":["sonnet"]},
+  {"type":"future-kind","label":"Future","description":"?","takesModel":false,"input":"hologram","defaultModel":"stray","models":["x"]}
  ]}`
 
 func newFakePlatform() *fakePlatform {
@@ -536,7 +536,7 @@ func TestSessionConfigRelaysCatalog(t *testing.T) {
 	if legacy.ClaudeCode.DefaultModel != "~anthropic/claude-opus-latest" || len(legacy.ClaudeCode.Models) != 2 {
 		t.Fatalf("config: got %+v", legacy)
 	}
-	if len(legacy.WorkloadTypes) != 1 || legacy.WorkloadTypes[0].Type != "claude-code" || legacy.WorkloadTypes[0].Model == nil || len(legacy.WorkloadTypes[0].Model.Models) != 2 {
+	if lw := legacy.WorkloadTypes; len(lw) != 1 || lw[0].Type != "claude-code" || !lw[0].TakesModel || lw[0].Input != "prompt" || lw[0].DefaultModel == nil || *lw[0].DefaultModel != "~anthropic/claude-opus-latest" || len(lw[0].Models) != 2 {
 		t.Fatalf("a platform without workloadTypes must surface claude-code alone with its catalog, got %+v", legacy.WorkloadTypes)
 	}
 
@@ -548,17 +548,21 @@ func TestSessionConfigRelaysCatalog(t *testing.T) {
 	for _, w := range cat.WorkloadTypes {
 		types = append(types, w.Type)
 	}
-	if strings.Join(types, ",") != "claude-code,minimax-code,approval-gated,shell,future-kind" {
+	if strings.Join(types, ",") != "shell,claude-code,minimax-code,approval-gated,future-kind" {
 		t.Fatalf("catalog order must be the platform's, got %v", types)
 	}
 	mm, _ := cat.Workload("minimax-code")
-	if mm.Model == nil || mm.Model.Models == nil || len(mm.Model.Models) != 0 {
-		t.Errorf("an omitted model list must relay as [], got %+v", mm.Model)
+	if !mm.TakesModel || mm.Models == nil || len(mm.Models) != 0 || mm.DefaultModel == nil || *mm.DefaultModel != "platform-default" {
+		t.Errorf("minimax-code: got %+v", mm)
 	}
-	if sh, _ := cat.Workload("shell"); sh.Model != nil || sh.Interaction != "terminal" {
+	if sh, _ := cat.Workload("shell"); sh.TakesModel || sh.Input != "terminal" || sh.DefaultModel != nil {
 		t.Errorf("shell: got %+v", sh)
 	}
-	if fk, _ := cat.Workload("future-kind"); fk.Interaction != "agent" {
-		t.Errorf("an unknown interaction must fall back to agent, got %q", fk.Interaction)
+	fk, _ := cat.Workload("future-kind")
+	if fk.Input != "prompt" {
+		t.Errorf("an unknown input must fall back to prompt, got %q", fk.Input)
+	}
+	if fk.DefaultModel != nil || len(fk.Models) != 0 {
+		t.Errorf("a type that takes no model must relay no model catalog, got %+v", fk)
 	}
 }

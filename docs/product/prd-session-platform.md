@@ -55,13 +55,13 @@ iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 �
 
 ### AC3: 워크로드 타입 선택 (플랫폼 카탈로그)
 - **설명**: 세션 생성 시 워크로드 타입을 고른다. 선택지는 pocket-aide 나 앱에 박혀 있지 않고 **플랫폼 `GET /config` 의 `workloadTypes` 카탈로그**에서 온다 — 플랫폼에 타입이 추가되면 pocket-aide 배포·앱 업데이트 없이 선택지에 나타난다. 카탈로그 항목은 아래 「결정 사항 — 워크로드 카탈로그 계약」의 형태다.
-  - **표시**: 카탈로그 순서대로 라벨(없으면 타입 문자열)과 설명을 보인다. 첫 항목이 기본 선택이다. 목록·상세는 세션의 타입을 카탈로그 라벨로, 카탈로그에 없으면 타입 문자열 그대로 보인다(다른 타입으로 오인 표시하지 않는다).
-  - **모델**: 카탈로그 항목에 `model` 이 있으면 모델 입력을 보인다 — `models` 가 비어 있지 않으면 선택, 비어 있으면 자유 입력. `model` 이 없으면 모델 입력을 숨기고 보내지 않는다.
-  - **상호작용**: `interaction` 이 `terminal` 이면 프롬프트를 PTY 입력으로 보고 끝에 개행을 붙이며 출력의 터미널 제어 문자(ANSI 이스케이프·캐리지 리턴)를 걷어 보인다. 그 밖(`agent`, 생략·모르는 값 포함)은 에이전트 프롬프트로 다루고 응답 단계 표시(AC6)를 쓴다.
-  - **검증(백엔드)**: 생성 요청마다 카탈로그를 읽어, 카탈로그에 없는 타입은 400, `model` 없는 타입에 모델을 보내면 400 으로 플랫폼에 닿기 전에 거부한다. 카탈로그를 읽지 못하면 생성하지 않는다. 타입을 생략한 요청은 `claude-code` 로 만든다(플랫폼 기본값 `shell` 이 아니라 — 기존 앱 빌드의 동작을 바꾸지 않기 위함).
+  - **표시**: 카탈로그 순서대로 라벨(없으면 타입 문자열)과 설명을 보인다. 기본 선택은 첫 `prompt` 타입(없으면 첫 항목)이다. 목록·상세는 세션의 타입을 카탈로그 라벨로, 카탈로그에 없으면 타입 문자열 그대로 보인다(다른 타입으로 오인 표시하지 않는다).
+  - **모델**: 카탈로그 항목의 `takesModel` 이 참이면 모델 입력을 보인다 — `models` 가 비어 있지 않으면 선택(초기값 `defaultModel`), 비어 있으면 자유 입력. 거짓이면 모델 입력을 숨기고 보내지 않는다.
+  - **상호작용**: `input` 이 `terminal` 이면 프롬프트를 PTY 입력으로 보고 끝에 개행을 붙이며 출력의 터미널 제어 문자(ANSI 이스케이프·캐리지 리턴)를 걷어 보인다. 그 밖(`prompt`, 생략·모르는 값 포함)은 에이전트 프롬프트로 다루고 응답 단계 표시(AC6)를 쓴다.
+  - **검증(백엔드)**: 생성 요청마다 카탈로그를 읽어, 카탈로그에 없는 타입은 400, `takesModel` 이 거짓인 타입에 모델을 보내면 400 으로 플랫폼에 닿기 전에 거부한다. 카탈로그를 읽지 못하면 생성하지 않는다. 타입을 생략한 요청은 `claude-code` 로 만든다(플랫폼 기본값 `shell` 이 아니라 — 기존 앱 빌드의 동작을 바꾸지 않기 위함).
   - **하위 호환**: 플랫폼이 `workloadTypes` 를 아직 주지 않으면, 백엔드가 기존 `claudeCode` 블록으로 `claude-code` 한 항목짜리 카탈로그를 만들어 준다.
 - **달성 가치**: V9
-- **검증 방법**: 카탈로그에 새 타입을 넣은 플랫폼에서 앱 변경 없이 그 타입이 선택지에 나타나고 생성되는지 확인. 카탈로그 밖 타입·빈 문자열 → 400 + pod 미생성. 모델 없는 타입 + 모델 → 400. 타입 생략 → `claude-code`. `workloadTypes` 없는 플랫폼 → 선택지 `claude-code` 하나. `terminal` 타입 세션에 `ls` 를 보내면 실행되고 출력에 이스케이프 문자가 보이지 않는지 확인.
+- **검증 방법**: 카탈로그에 새 타입을 넣은 플랫폼에서 앱 변경 없이 그 타입이 선택지에 나타나고 생성되는지 확인. 카탈로그 밖 타입·빈 문자열 → 400 + pod 미생성. `takesModel` 거짓 타입 + 모델 → 400. 타입 생략 → `claude-code`. `workloadTypes` 없는 플랫폼 → 선택지 `claude-code` 하나. `terminal` 타입 세션에 `ls` 를 보내면 실행되고 출력에 이스케이프 문자가 보이지 않는지 확인.
 
 ### AC4: 세션 생성 (이름 + 타입 + 모델 선택)
 - **설명**: 사용자가 세션 이름·워크로드 타입(AC3)·모델(에이전트 타입만)을 지정해 세션을 생성한다.
@@ -119,16 +119,16 @@ iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 �
 - **프록시 대상 주소**: 클러스터 내부 DNS `http://control-plane.session-platform.svc.cluster.local` (네임스페이스 `session-platform`, Service `control-plane`, port 80). 외부 도메인 경유하지 않는다.
 - **1차 범위**: 전체 라이프사이클(생성·목록·프롬프트·출력·스냅샷·복원·삭제).
 - **워크로드**: 플랫폼 카탈로그에서 선택(2026-10-23 — 「`claude-code` 전용」 → 세 타입 하드코딩 → 카탈로그). 생략 시 `claude-code`.
-- **워크로드 카탈로그 계약 (2026-10-23, 플랫폼 구현 대기)**: 플랫폼 `GET /api/v1/config` 가 기존 `claudeCode` 블록과 함께 아래 배열을 준다. 배열 순서가 표시 순서다.
+- **워크로드 카탈로그 계약 (2026-10-23, session-platform PR #153)**: 플랫폼 `GET /api/v1/config` 가 기존 `claudeCode` 블록과 함께 `workloadTypes` 배열을 준다. 이 배포에서 만들 수 있는 타입만(이미지가 설정된 것만) 표시 순서대로 담긴다.
   ```json
   "workloadTypes": [
-    { "type": "claude-code", "label": "Claude Code", "description": "자연어로 일을 맡기는 에이전트",
-      "interaction": "agent", "model": { "defaultModel": "sonnet", "models": ["sonnet", "opus"] } },
-    { "type": "minimax-code", "label": "MiniMax Code", "interaction": "agent", "model": { "defaultModel": "platform-default", "models": [] } },
-    { "type": "shell", "label": "쉘", "description": "명령을 직접 실행하는 인터랙티브 쉘", "interaction": "terminal" }
+    { "type": "shell", "label": "Shell", "description": "Interactive bash. You type the commands.",
+      "takesModel": false, "input": "terminal", "defaultModel": null, "models": [] },
+    { "type": "claude-code", "label": "Claude Code", "description": "Agent CLI. You send prompts, it does the work.",
+      "takesModel": true, "input": "prompt", "defaultModel": "~anthropic/claude-opus-latest", "models": ["sonnet", "opus"] }
   ]
   ```
-  `type`·`interaction`(`agent` | `terminal`) 필수, `label`·`description` 선택, `model` 은 모델을 받는 타입에만(`models` 빈 배열 = 자유 입력). 플랫폼이 이 배열을 주기 전까지 앱 선택지는 `claude-code` 하나다.
+  `input` 은 `prompt` | `terminal`(모르는 값은 `prompt` 로 다룬다), `takesModel` 이 거짓이면 모델 입력을 숨기고 `models` 가 비면 자유 입력. 플랫폼은 셸을 첫 항목으로 두지만, 앱의 기본 선택은 첫 `prompt` 타입이다(폰에서는 에이전트에게 맡기는 쓰임이 주라서 — 없으면 첫 항목). 플랫폼이 이 배열을 주기 전까지 앱 선택지는 `claude-code` 하나다.
 - **상태 표시 (2026-10-23)**: 플랫폼 API가 주는 것(`state`·`lastAccess`·`checkpoint.createdAt`·`sizeBytes`)만 보인다. 아카이브 진행 중 여부·아카이브 기능 켜짐 여부·자동 아카이브 예정 시각은 API에 없어 표시하지 않는다(앱에 플랫폼 정책 값을 하드코딩하지 않는다).
 - **소유권 모델**: PocketAide DB에 `session_id ↔ user_id` 매핑 테이블 신설. 플랫폼 측 스키마는 변경하지 않는다(플랫폼에 사용자 개념을 도입하지 않는다).
 - **타인 세션 응답 코드**: 403이 아닌 404. 세션 존재 여부 자체를 노출하지 않기 위함.

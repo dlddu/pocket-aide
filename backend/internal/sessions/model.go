@@ -1,9 +1,9 @@
 package sessions
 
 const (
-	WorkloadClaudeCode  = "claude-code"
-	InteractionAgent    = "agent"
-	InteractionTerminal = "terminal"
+	WorkloadClaudeCode = "claude-code"
+	InputPrompt        = "prompt"
+	InputTerminal      = "terminal"
 )
 
 type Checkpoint struct {
@@ -40,11 +40,13 @@ type ClaudeCodeConfig struct {
 }
 
 type WorkloadTypeInfo struct {
-	Type        string            `json:"type"`
-	Label       string            `json:"label,omitempty"`
-	Description string            `json:"description,omitempty"`
-	Interaction string            `json:"interaction"`
-	Model       *ClaudeCodeConfig `json:"model,omitempty"`
+	Type         string   `json:"type"`
+	Label        string   `json:"label"`
+	Description  string   `json:"description"`
+	TakesModel   bool     `json:"takesModel"`
+	Input        string   `json:"input"`
+	DefaultModel *string  `json:"defaultModel"`
+	Models       []string `json:"models"`
 }
 
 type RuntimeConfig struct {
@@ -57,15 +59,26 @@ func (c *RuntimeConfig) Normalize() {
 		c.ClaudeCode.Models = []string{}
 	}
 	if len(c.WorkloadTypes) == 0 {
-		legacy := c.ClaudeCode
-		c.WorkloadTypes = []WorkloadTypeInfo{{Type: WorkloadClaudeCode, Interaction: InteractionAgent, Model: &legacy}}
+		legacyDefault := c.ClaudeCode.DefaultModel
+		c.WorkloadTypes = []WorkloadTypeInfo{{
+			Type:         WorkloadClaudeCode,
+			TakesModel:   true,
+			Input:        InputPrompt,
+			DefaultModel: &legacyDefault,
+			Models:       append([]string{}, c.ClaudeCode.Models...),
+		}}
 	}
 	for i := range c.WorkloadTypes {
-		if c.WorkloadTypes[i].Interaction != InteractionTerminal {
-			c.WorkloadTypes[i].Interaction = InteractionAgent
+		w := &c.WorkloadTypes[i]
+		if w.Input != InputTerminal {
+			w.Input = InputPrompt
 		}
-		if m := c.WorkloadTypes[i].Model; m != nil && m.Models == nil {
-			m.Models = []string{}
+		if !w.TakesModel {
+			w.DefaultModel = nil
+			w.Models = nil
+		}
+		if w.Models == nil {
+			w.Models = []string{}
 		}
 	}
 }

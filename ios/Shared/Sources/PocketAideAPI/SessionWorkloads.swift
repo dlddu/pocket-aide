@@ -1,12 +1,12 @@
 import Foundation
 
-public enum AgentSessionInteraction: String, Decodable, Sendable, Hashable {
-    case agent
+public enum AgentSessionInput: String, Decodable, Sendable, Hashable {
+    case prompt
     case terminal
 
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
-        self = AgentSessionInteraction(rawValue: raw) ?? .agent
+        self = AgentSessionInput(rawValue: raw) ?? .prompt
     }
 }
 
@@ -37,32 +37,39 @@ public struct AgentSessionWorkloadType: Decodable, Identifiable, Equatable, Send
     public let type: String
     public let label: String?
     public let description: String?
-    public let interaction: AgentSessionInteraction
+    public let input: AgentSessionInput
     public let model: AgentSessionModelCatalog?
 
     public init(
         type: String,
         label: String? = nil,
         description: String? = nil,
-        interaction: AgentSessionInteraction = .agent,
+        input: AgentSessionInput = .prompt,
         model: AgentSessionModelCatalog? = nil
     ) {
         self.type = type
         self.label = label
         self.description = description
-        self.interaction = interaction
+        self.input = input
         self.model = model
     }
 
-    enum CodingKeys: String, CodingKey { case type, label, description, interaction, model }
+    enum CodingKeys: String, CodingKey { case type, label, description, input, takesModel, defaultModel, models }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         type = try container.decode(String.self, forKey: .type)
         label = try container.decodeIfPresent(String.self, forKey: .label)
         description = try container.decodeIfPresent(String.self, forKey: .description)
-        interaction = try container.decodeIfPresent(AgentSessionInteraction.self, forKey: .interaction) ?? .agent
-        model = try container.decodeIfPresent(AgentSessionModelCatalog.self, forKey: .model)
+        input = try container.decodeIfPresent(AgentSessionInput.self, forKey: .input) ?? .prompt
+        if try container.decodeIfPresent(Bool.self, forKey: .takesModel) ?? false {
+            model = AgentSessionModelCatalog(
+                defaultModel: try container.decodeIfPresent(String.self, forKey: .defaultModel) ?? "",
+                models: try container.decodeIfPresent([String].self, forKey: .models) ?? []
+            )
+        } else {
+            model = nil
+        }
     }
 
     public var id: String { type }
@@ -91,5 +98,9 @@ public struct AgentSessionConfig: Decodable, Equatable, Sendable {
 
     public func type(_ id: String) -> AgentSessionWorkloadType? {
         workloadTypes.first { $0.type == id }
+    }
+
+    public var initialType: AgentSessionWorkloadType? {
+        workloadTypes.first { $0.input == .prompt } ?? workloadTypes.first
     }
 }

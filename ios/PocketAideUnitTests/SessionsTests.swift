@@ -20,24 +20,28 @@ final class SessionsTests: XCTestCase {
         let json = #"""
         {"claudeCode":{"defaultModel":"sonnet","models":["sonnet"]},
          "workloadTypes":[
-          {"type":"claude-code","label":"Claude Code","description":"agent","interaction":"agent","model":{"defaultModel":"sonnet","models":["sonnet","opus"]}},
-          {"type":"minimax-code","label":"MiniMax Code","interaction":"agent","model":{"defaultModel":"platform-default","models":[]}},
-          {"type":"shell","interaction":"terminal"},
-          {"type":"next-kind","interaction":"hologram"}
+          {"type":"shell","label":"Shell","description":"bash","takesModel":false,"input":"terminal","defaultModel":null,"models":[]},
+          {"type":"claude-code","label":"Claude Code","description":"agent","takesModel":true,"input":"prompt","defaultModel":"sonnet","models":["sonnet","opus"]},
+          {"type":"minimax-code","label":"MiniMax Code","description":"mcode","takesModel":true,"input":"prompt","defaultModel":"platform-default","models":[]},
+          {"type":"next-kind","label":"","description":"","takesModel":false,"input":"hologram","defaultModel":null,"models":[]}
          ]}
         """#
         let config = try JSONDecoder().decode(AgentSessionConfig.self, from: Data(json.utf8))
-        XCTAssertEqual(config.workloadTypes.map(\.type), ["claude-code", "minimax-code", "shell", "next-kind"])
+        XCTAssertEqual(config.workloadTypes.map(\.type), ["shell", "claude-code", "minimax-code", "next-kind"])
+        XCTAssertEqual(config.initialType?.type, "claude-code", "The picker starts on the first prompt type, not the shell")
         let claude = try XCTUnwrap(config.type("claude-code"))
         XCTAssertEqual(claude.model?.initialPick, "sonnet")
         let minimax = try XCTUnwrap(config.type("minimax-code"))
         XCTAssertTrue(minimax.takesModel)
         XCTAssertNil(minimax.model?.initialPick, "An empty catalog means free-text input")
+        XCTAssertEqual(minimax.model?.defaultModel, "platform-default")
         let shell = try XCTUnwrap(config.type("shell"))
         XCTAssertFalse(shell.takesModel)
-        XCTAssertEqual(shell.interaction, .terminal)
-        XCTAssertEqual(shell.displayName, "shell", "No label falls back to the raw type")
-        XCTAssertEqual(config.type("next-kind")?.interaction, .agent)
+        XCTAssertEqual(shell.input, .terminal)
+        XCTAssertEqual(shell.displayName, "Shell")
+        let next = try XCTUnwrap(config.type("next-kind"))
+        XCTAssertEqual(next.input, .prompt)
+        XCTAssertEqual(next.displayName, "next-kind", "An empty label falls back to the raw type")
         XCTAssertNil(config.type("absent"))
     }
 
@@ -66,7 +70,7 @@ final class SessionsTests: XCTestCase {
         """#
         let sessions = try JSONDecoder().decode(AgentSessionListResponse.self, from: Data(json.utf8)).sessions
         XCTAssertEqual(sessions.map(\.workloadType), ["shell", "minimax-code"])
-        XCTAssertEqual(sessions[0].kindLabel(AgentSessionWorkloadType(type: "shell", label: "쉘", interaction: .terminal)), "쉘")
+        XCTAssertEqual(sessions[0].kindLabel(AgentSessionWorkloadType(type: "shell", label: "Shell", input: .terminal)), "Shell")
         XCTAssertEqual(sessions[1].kindLabel(nil), "minimax-code · MiniMax-M2", "Unknown to the catalog still shows the raw type")
     }
 
