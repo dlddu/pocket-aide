@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-16
+last_updated: 2026-10-22
 ---
 
 # 카피 ↔ 구현 대응표
@@ -36,7 +36,7 @@ last_updated: 2026-10-16
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 0행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 1행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
@@ -47,7 +47,7 @@ last_updated: 2026-10-16
 | A | 미구현 영역 | 0 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 0 |
+| A | 목업 대기 | 1 |
 | B | 일치 | 229 |
 | B | 외부 | 62 |
 | B | 예시 데이터 | 142 |
@@ -57,7 +57,7 @@ last_updated: 2026-10-16
 | B | 시스템 UI | 9 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 253행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 254행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -216,7 +216,8 @@ last_updated: 2026-10-16
 | `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `승인` | 일치 | 탭 바 항목(셋째 칸, #244) |
-| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목(넷째 칸 — 목업과 같은 자리) |
+| `ios/PocketAide/RootView.swift` | `세션` | 목업 대기 | 탭 바 항목(넷째 칸, PRD-11 세션 탭) — 목업 탭 바에 없다. 세션 화면 목업이 생기면 탭 바도 함께 그린다 |
+| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목 — 목업은 넷째 칸, 구현은 세션 탭 뒤 다섯째라 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `임시공간` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). #244 부터 다섯째 탭이라 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
