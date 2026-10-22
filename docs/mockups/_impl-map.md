@@ -73,7 +73,7 @@ last_updated: 2026-10-22
 | `ios/PocketAide/Scratchpad/ScratchpadAddSheet.swift` | 목업 없음 | — | 임시공간 텍스트 추가 시트(PRD-4) — 대응 화면 목업이 없다 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | 화면 | `screen-scratchpad` | 임시공간 탭 화면 전체 — `ScratchpadView`·진입점 `ScratchpadTab`·`ScratchpadCard`: 헤더·일자 그룹 목록·항목 카드(이동 액션)·빈 상태. 추가 시트는 `ScratchpadAddSheet.swift` 행, 「→ 다짐」 시트는 `PriorityEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Scratchpad/ScratchpadViewModel.swift` | 비렌더링 | — | 임시공간 항목 목록·분류 이동 상태와 API 호출 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | 목업 없음 | — | 세션 탭의 새 세션 시트(PRD-11 AC3·AC4) — 이름·워크로드 타입 세그먼트·모델(에이전트 타입만, 카탈로그 있으면 선택, 없으면 자유 입력)·불변성 안내·생성 진행·실패 안내. 세션 화면 목업은 아직 없다 |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | 목업 없음 | — | 세션 탭의 새 세션 시트(PRD-11 AC3·AC4) — 이름·워크로드 타입 라디오 목록(플랫폼 카탈로그 순서·라벨·설명)·모델(카탈로그 항목에 `model` 이 있을 때만 — 목록 있으면 선택, 없으면 자유 입력)·불변성 안내·생성 진행·실패 안내. 세션 화면 목업은 아직 없다 |
 | `ios/PocketAide/Sessions/SessionDetailView.swift` | 목업 없음 | — | 세션 상세(PRD-11 AC3·AC6·AC7·AC9·AC11) — 상태 배지·타입·모델·응답 단계 줄과 상태 설명 줄(아카이브 시각·크기), 출력(서버 커서 폴링, 포그라운드만), 스냅샷 세션의 명시적 복원 패널, 프롬프트 입력(1 MiB 사전 안내). 오류 배너·상태 배지는 `SessionsView.swift` 행 |
 | `ios/PocketAide/Sessions/SessionDetailViewModel.swift` | 비렌더링 | — | 세션 출력 커서 폴링·전송·복원·응답 단계와 API 호출 |
 | `ios/PocketAide/Sessions/SessionsView.swift` | 목업 없음 | — | 세션 탭 화면 전체(PRD-11 AC5·AC11·AC12) — `SessionsView`·`SessionRow`·`SessionStateBadge`·`SessionErrorBanner`: 헤더(「AGENT · SESSIONS」·「새 세션」)·소유 세션 목록(상태 배지 — 「아카이브됨」 포함·타입·모델·상태 설명 줄)·빈/로딩 상태·오류 배너. 하단 TabBar 는 `RootView.swift` 행 |

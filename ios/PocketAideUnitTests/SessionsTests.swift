@@ -16,41 +16,58 @@ final class SessionsTests: XCTestCase {
         XCTAssertEqual(response.sessions[1].modelLabel, "platform-default")
     }
 
-    func testDecodesConfigWithAndWithoutCatalog() throws {
-        let full = try JSONDecoder().decode(
+    func testDecodesWorkloadCatalogInPlatformOrder() throws {
+        let json = #"""
+        {"claudeCode":{"defaultModel":"sonnet","models":["sonnet"]},
+         "workloadTypes":[
+          {"type":"claude-code","label":"Claude Code","description":"agent","interaction":"agent","model":{"defaultModel":"sonnet","models":["sonnet","opus"]}},
+          {"type":"minimax-code","label":"MiniMax Code","interaction":"agent","model":{"defaultModel":"platform-default","models":[]}},
+          {"type":"shell","interaction":"terminal"},
+          {"type":"next-kind","interaction":"hologram"}
+         ]}
+        """#
+        let config = try JSONDecoder().decode(AgentSessionConfig.self, from: Data(json.utf8))
+        XCTAssertEqual(config.workloadTypes.map(\.type), ["claude-code", "minimax-code", "shell", "next-kind"])
+        let claude = try XCTUnwrap(config.type("claude-code"))
+        XCTAssertEqual(claude.model?.initialPick, "sonnet")
+        let minimax = try XCTUnwrap(config.type("minimax-code"))
+        XCTAssertTrue(minimax.takesModel)
+        XCTAssertNil(minimax.model?.initialPick, "An empty catalog means free-text input")
+        let shell = try XCTUnwrap(config.type("shell"))
+        XCTAssertFalse(shell.takesModel)
+        XCTAssertEqual(shell.interaction, .terminal)
+        XCTAssertEqual(shell.displayName, "shell", "No label falls back to the raw type")
+        XCTAssertEqual(config.type("next-kind")?.interaction, .agent)
+        XCTAssertNil(config.type("absent"))
+    }
+
+    func testLegacyConfigSurfacesClaudeCodeAlone() throws {
+        let config = try JSONDecoder().decode(
             AgentSessionConfig.self,
-            from: Data(#"{"claudeCode":{"defaultModel":"sonnet","models":["sonnet","opus"]}}"#.utf8)
+            from: Data(#"{"claudeCode":{"defaultModel":"opus","models":["sonnet","opus"]}}"#.utf8)
         )
-        XCTAssertEqual(full.defaultModel, "sonnet")
-        XCTAssertEqual(full.models, ["sonnet", "opus"])
-        let empty = try JSONDecoder().decode(AgentSessionConfig.self, from: Data(#"{"claudeCode":{"defaultModel":""}}"#.utf8))
-        XCTAssertEqual(empty.models, [])
+        XCTAssertEqual(config.workloadTypes.map(\.type), ["claude-code"])
+        XCTAssertEqual(config.workloadTypes.first?.model?.initialPick, "opus")
     }
 
-    func testCreatePayloadSendsWorkloadTypeWireValues() throws {
-        let expected: [AgentSessionWorkload: String] = [.claudeCode: "claude-code", .approvalGated: "approval-gated", .shell: "shell"]
-        for (workload, wire) in expected {
-            let data = try JSONEncoder().encode(AgentSessionCreatePayload(name: "x", workloadType: workload, model: nil))
-            let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
-            XCTAssertEqual(object["workloadType"] as? String, wire)
-            XCTAssertNil(object["model"])
-        }
-        XCTAssertFalse(AgentSessionWorkload.shell.takesModel)
-        XCTAssertTrue(AgentSessionWorkload.approvalGated.takesModel)
+    func testCreatePayloadSendsTheCatalogType() throws {
+        let data = try JSONEncoder().encode(AgentSessionCreatePayload(name: "x", workloadType: "minimax-code", model: nil))
+        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertEqual(object["workloadType"] as? String, "minimax-code")
+        XCTAssertNil(object["model"])
     }
 
-    func testDecodesWorkloadTypeAndKindLabel() throws {
+    func testKindLabelUsesCatalogLabelOrRawType() throws {
         let json = #"""
         {"sessions":[
          {"id":"s","name":"sh","workloadType":"shell","state":"active","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"},
-         {"id":"g","name":"gated","workloadType":"approval-gated","state":"idle","model":"opus","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"},
-         {"id":"f","name":"future","workloadType":"something-new","state":"active","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"}
+         {"id":"m","name":"mm","workloadType":"minimax-code","state":"idle","model":"MiniMax-M2","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"}
         ]}
         """#
         let sessions = try JSONDecoder().decode(AgentSessionListResponse.self, from: Data(json.utf8)).sessions
-        XCTAssertEqual(sessions.map(\.workloadType), [.shell, .approvalGated, .claudeCode])
-        XCTAssertEqual(sessions[0].kindLabel, "쉘")
-        XCTAssertEqual(sessions[1].kindLabel, "승인 게이트 · opus")
+        XCTAssertEqual(sessions.map(\.workloadType), ["shell", "minimax-code"])
+        XCTAssertEqual(sessions[0].kindLabel(AgentSessionWorkloadType(type: "shell", label: "쉘", interaction: .terminal)), "쉘")
+        XCTAssertEqual(sessions[1].kindLabel(nil), "minimax-code · MiniMax-M2", "Unknown to the catalog still shows the raw type")
     }
 
     func testStateDetailShowsArchiveTimeAndSize() throws {

@@ -22,7 +22,7 @@ struct SessionsView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: AgentSession.self) { session in
-                SessionDetailView(session: session, api: viewModel.api ?? auth.api)
+                SessionDetailView(session: session, type: viewModel.workloadType(of: session), api: viewModel.api ?? auth.api)
             }
             .overlay { createSheet }
             .animation(.easeInOut(duration: 0.18), value: showsCreate)
@@ -94,7 +94,7 @@ struct SessionsView: View {
             } else {
                 ForEach(viewModel.sessions) { session in
                     NavigationLink(value: session) {
-                        SessionRow(session: session, area: Self.area)
+                        SessionRow(session: session, type: viewModel.workloadType(of: session), area: Self.area)
                     }
                     .listRowInsets(EdgeInsets(top: 5, leading: DesignTokens.Spacing.xl, bottom: 5, trailing: DesignTokens.Spacing.xl))
                     .listRowSeparator(.hidden)
@@ -153,6 +153,7 @@ struct SessionsView: View {
 
 struct SessionRow: View {
     let session: AgentSession
+    let type: AgentSessionWorkloadType?
     let area: DesignTokens.Area
 
     var body: some View {
@@ -168,7 +169,7 @@ struct SessionRow: View {
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
                 .foregroundStyle(DesignTokens.Color.ink(area))
                 .lineLimit(2)
-            Text(session.kindLabel)
+            Text(session.kindLabel(type))
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .medium))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.7))
                 .lineLimit(1)

@@ -8,7 +8,7 @@
 
 ## 개요
 
-PocketAide 백엔드가 [session-platform](https://github.com/dlddu/session-platform) 컨트롤 플레인의 **프록시**가 되어, iOS 앱이 기존 OIDC 세션만으로 세션(`claude-code`·`approval-gated`·`shell` 중 생성 시 고른 워크로드)의 **전체 라이프사이클**을 폰에서 수행한다.
+PocketAide 백엔드가 [session-platform](https://github.com/dlddu/session-platform) 컨트롤 플레인의 **프록시**가 되어, iOS 앱이 기존 OIDC 세션만으로 세션(플랫폼이 제공하는 워크로드 타입 중 생성 시 고른 것)의 **전체 라이프사이클**을 폰에서 수행한다.
 
 ```
 iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 내부 DNS)──► session-platform
@@ -27,7 +27,7 @@ iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 �
 |------|-------------|---------------------|
 | session-platform 인증 | OpenAPI 스펙에 인증 정의 없음 | 프록시가 **유일한 인증 경계** (AC1) |
 | 사용자 개념 | 없음. 세션은 전역 목록 | 소유권 매핑을 PocketAide가 보유 (AC2) |
-| 워크로드 | `shell` / `claude-code` / `approval-gated`, 생성 시 고정·불변. 모델은 `claude-code`·`approval-gated`에만 | 앱이 생성 시 타입을 고른다 (AC3) |
+| 워크로드 | 타입은 플랫폼이 늘려 간다(`shell`·`claude-code`·`approval-gated`·`minimax-code` …), 생성 시 고정·불변. 모델을 받는지는 타입마다 다르다 | 타입 목록을 플랫폼 `GET /config` 카탈로그에서 받는다 — pocket-aide·앱에 하드코딩하지 않는다 (AC3) |
 | 모델 | 생성 시 고정·불변. `GET /config`가 기본값+카탈로그 제공 | 생성 화면에서만 선택 (AC4) |
 | 스냅샷 | `CLAUDE_CODE_ARCHIVE_ENABLED` 게이트, 기본 off. off면 503 + pod 유지 | 실패가 아닌 "비활성" 안내 (AC8) |
 | 출력 | append-only 버퍼, 서버 발급 바이트 커서, 누적 256 MiB 상한 | 커서 규약 준수 (AC7) |
@@ -53,10 +53,15 @@ iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 �
 - **달성 가치**: V9
 - **검증 방법**: 사용자 A가 만든 세션이 사용자 B의 목록에 없는지 확인. B가 A의 세션 id로 read/write/delete 시도 → 모두 404. SPA에서 직접 만든 세션이 앱 목록에 나타나지 않는지 확인. 세션 생성 성공 시 매핑 row가 정확히 1개 생성되는지 확인.
 
-### AC3: 워크로드 타입 선택
-- **설명**: 세션 생성 시 워크로드 타입을 `claude-code`(기본 선택) · `approval-gated` · `shell` 중에서 고른다. 백엔드는 이 셋만 허용하고 그 밖의 값은 400으로 거부한다(무시하고 통과시키지 않는다 — 클라이언트 기대와 실제가 어긋나는 것을 막기 위함). 타입을 생략한 요청은 `claude-code`로 만든다(플랫폼 기본값 `shell`이 아니라 — 기존 클라이언트의 동작을 바꾸지 않기 위함). 모델은 에이전트 타입(`claude-code`·`approval-gated`)에만 있으며, `shell`에 모델을 보내면 400이다. 생성 화면은 타입마다 한 줄 설명을 보이고 `shell`이면 모델 입력을 숨긴다. `shell` 세션의 프롬프트는 PTY 입력이므로 앱이 끝에 개행을 붙여 명령으로 실행되게 하고, 출력의 터미널 제어 문자(ANSI 이스케이프·캐리지 리턴)를 걷어 보여 준다. 응답 단계 표시(AC6)는 에이전트 타입에만 쓴다.
+### AC3: 워크로드 타입 선택 (플랫폼 카탈로그)
+- **설명**: 세션 생성 시 워크로드 타입을 고른다. 선택지는 pocket-aide 나 앱에 박혀 있지 않고 **플랫폼 `GET /config` 의 `workloadTypes` 카탈로그**에서 온다 — 플랫폼에 타입이 추가되면 pocket-aide 배포·앱 업데이트 없이 선택지에 나타난다. 카탈로그 항목은 아래 「결정 사항 — 워크로드 카탈로그 계약」의 형태다.
+  - **표시**: 카탈로그 순서대로 라벨(없으면 타입 문자열)과 설명을 보인다. 첫 항목이 기본 선택이다. 목록·상세는 세션의 타입을 카탈로그 라벨로, 카탈로그에 없으면 타입 문자열 그대로 보인다(다른 타입으로 오인 표시하지 않는다).
+  - **모델**: 카탈로그 항목에 `model` 이 있으면 모델 입력을 보인다 — `models` 가 비어 있지 않으면 선택, 비어 있으면 자유 입력. `model` 이 없으면 모델 입력을 숨기고 보내지 않는다.
+  - **상호작용**: `interaction` 이 `terminal` 이면 프롬프트를 PTY 입력으로 보고 끝에 개행을 붙이며 출력의 터미널 제어 문자(ANSI 이스케이프·캐리지 리턴)를 걷어 보인다. 그 밖(`agent`, 생략·모르는 값 포함)은 에이전트 프롬프트로 다루고 응답 단계 표시(AC6)를 쓴다.
+  - **검증(백엔드)**: 생성 요청마다 카탈로그를 읽어, 카탈로그에 없는 타입은 400, `model` 없는 타입에 모델을 보내면 400 으로 플랫폼에 닿기 전에 거부한다. 카탈로그를 읽지 못하면 생성하지 않는다. 타입을 생략한 요청은 `claude-code` 로 만든다(플랫폼 기본값 `shell` 이 아니라 — 기존 앱 빌드의 동작을 바꾸지 않기 위함).
+  - **하위 호환**: 플랫폼이 `workloadTypes` 를 아직 주지 않으면, 백엔드가 기존 `claudeCode` 블록으로 `claude-code` 한 항목짜리 카탈로그를 만들어 준다.
 - **달성 가치**: V9
-- **검증 방법**: 세 타입으로 각각 세션을 만들어 세션 응답의 `workloadType`이 고른 값인지 확인. 허용값 밖·빈 문자열 → 400 + pod 미생성. `shell` + 모델 → 400. 타입 생략 → `claude-code`. `shell` 세션에 `ls`를 보내면 명령이 실행되고 출력에 이스케이프 문자가 보이지 않는지 확인.
+- **검증 방법**: 카탈로그에 새 타입을 넣은 플랫폼에서 앱 변경 없이 그 타입이 선택지에 나타나고 생성되는지 확인. 카탈로그 밖 타입·빈 문자열 → 400 + pod 미생성. 모델 없는 타입 + 모델 → 400. 타입 생략 → `claude-code`. `workloadTypes` 없는 플랫폼 → 선택지 `claude-code` 하나. `terminal` 타입 세션에 `ls` 를 보내면 실행되고 출력에 이스케이프 문자가 보이지 않는지 확인.
 
 ### AC4: 세션 생성 (이름 + 타입 + 모델 선택)
 - **설명**: 사용자가 세션 이름·워크로드 타입(AC3)·모델(에이전트 타입만)을 지정해 세션을 생성한다.
@@ -113,7 +118,17 @@ iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 �
 - **접근 경로**: PocketAide 백엔드 프록시. iOS 앱은 기존 OIDC 토큰만 사용하며 session-platform을 직접 호출하지 않는다. 앱에 별도의 플랫폼 자격증명을 두지 않는다.
 - **프록시 대상 주소**: 클러스터 내부 DNS `http://control-plane.session-platform.svc.cluster.local` (네임스페이스 `session-platform`, Service `control-plane`, port 80). 외부 도메인 경유하지 않는다.
 - **1차 범위**: 전체 라이프사이클(생성·목록·프롬프트·출력·스냅샷·복원·삭제).
-- **워크로드**: `claude-code`·`approval-gated`·`shell` 선택(2026-10-23 — 이전 「`claude-code` 전용」에서 확장). 생략 시 `claude-code`.
+- **워크로드**: 플랫폼 카탈로그에서 선택(2026-10-23 — 「`claude-code` 전용」 → 세 타입 하드코딩 → 카탈로그). 생략 시 `claude-code`.
+- **워크로드 카탈로그 계약 (2026-10-23, 플랫폼 구현 대기)**: 플랫폼 `GET /api/v1/config` 가 기존 `claudeCode` 블록과 함께 아래 배열을 준다. 배열 순서가 표시 순서다.
+  ```json
+  "workloadTypes": [
+    { "type": "claude-code", "label": "Claude Code", "description": "자연어로 일을 맡기는 에이전트",
+      "interaction": "agent", "model": { "defaultModel": "sonnet", "models": ["sonnet", "opus"] } },
+    { "type": "minimax-code", "label": "MiniMax Code", "interaction": "agent", "model": { "defaultModel": "platform-default", "models": [] } },
+    { "type": "shell", "label": "쉘", "description": "명령을 직접 실행하는 인터랙티브 쉘", "interaction": "terminal" }
+  ]
+  ```
+  `type`·`interaction`(`agent` | `terminal`) 필수, `label`·`description` 선택, `model` 은 모델을 받는 타입에만(`models` 빈 배열 = 자유 입력). 플랫폼이 이 배열을 주기 전까지 앱 선택지는 `claude-code` 하나다.
 - **상태 표시 (2026-10-23)**: 플랫폼 API가 주는 것(`state`·`lastAccess`·`checkpoint.createdAt`·`sizeBytes`)만 보인다. 아카이브 진행 중 여부·아카이브 기능 켜짐 여부·자동 아카이브 예정 시각은 API에 없어 표시하지 않는다(앱에 플랫폼 정책 값을 하드코딩하지 않는다).
 - **소유권 모델**: PocketAide DB에 `session_id ↔ user_id` 매핑 테이블 신설. 플랫폼 측 스키마는 변경하지 않는다(플랫폼에 사용자 개념을 도입하지 않는다).
 - **타인 세션 응답 코드**: 403이 아닌 404. 세션 존재 여부 자체를 노출하지 않기 위함.

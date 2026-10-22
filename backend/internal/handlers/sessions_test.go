@@ -29,10 +29,22 @@ type fakePlatform struct {
 	creates   []map[string]any
 	next      int
 	statusFor map[string]int
+	config    string
 }
 
+const legacyPlatformConfig = `{"claudeCode":{"defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]}}`
+
+const catalogPlatformConfig = `{"claudeCode":{"defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]},
+ "workloadTypes":[
+  {"type":"claude-code","label":"Claude Code","description":"agent","interaction":"agent","model":{"defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]}},
+  {"type":"minimax-code","label":"MiniMax Code","interaction":"agent","model":{"defaultModel":"platform-default"}},
+  {"type":"approval-gated","label":"Approval gated","interaction":"agent","model":{"defaultModel":"platform-default","models":["sonnet"]}},
+  {"type":"shell","label":"Shell","interaction":"terminal"},
+  {"type":"future-kind","interaction":"something-else"}
+ ]}`
+
 func newFakePlatform() *fakePlatform {
-	return &fakePlatform{sessions: map[string]map[string]any{}, statusFor: map[string]int{}}
+	return &fakePlatform{sessions: map[string]map[string]any{}, statusFor: map[string]int{}, config: legacyPlatformConfig}
 }
 
 func (f *fakePlatform) seed(name, workload, lastAccess string) string {
@@ -77,7 +89,10 @@ func (f *fakePlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/v1")
 	switch {
 	case r.Method == http.MethodGet && path == "/config":
-		_, _ = w.Write([]byte(`{"claudeCode":{"defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]}}`))
+		f.mu.Lock()
+		cfg := f.config
+		f.mu.Unlock()
+		_, _ = w.Write([]byte(cfg))
 	case r.Method == http.MethodGet && path == "/sessions":
 		f.mu.Lock()
 		list := []map[string]any{}
@@ -374,8 +389,11 @@ func TestSessionOwnershipIsolatesUsers(t *testing.T) {
 	}
 }
 
-func TestSessionCreateWorkloadTypes(t *testing.T) {
+func TestSessionCreateValidatesAgainstPlatformCatalog(t *testing.T) {
 	fx := newSessionFixture(t)
+	fx.platform.mu.Lock()
+	fx.platform.config = catalogPlatformConfig
+	fx.platform.mu.Unlock()
 	for _, body := range []map[string]any{
 		{"name": "x", "workloadType": ""},
 		{"name": "x", "workloadType": "python"},
@@ -402,10 +420,11 @@ func TestSessionCreateWorkloadTypes(t *testing.T) {
 	created := []sessions.Session{
 		createSession(t, fx, map[string]any{"name": "  trimmed  "}, 1),
 		createSession(t, fx, map[string]any{"name": "explicit", "workloadType": "claude-code", "model": "opus"}, 1),
-		createSession(t, fx, map[string]any{"name": "gated", "workloadType": "approval-gated", "model": "sonnet"}, 1),
+		createSession(t, fx, map[string]any{"name": "mm", "workloadType": "minimax-code", "model": "MiniMax-M2"}, 1),
 		createSession(t, fx, map[string]any{"name": "sh", "workloadType": "shell", "model": "  "}, 1),
+		createSession(t, fx, map[string]any{"name": "new", "workloadType": "future-kind"}, 1),
 	}
-	wantTypes := []string{"claude-code", "claude-code", "approval-gated", "shell"}
+	wantTypes := []string{"claude-code", "claude-code", "minimax-code", "shell", "future-kind"}
 	for i, s := range created {
 		if s.WorkloadType != wantTypes[i] {
 			t.Errorf("create %d workloadType: got %q want %q", i, s.WorkloadType, wantTypes[i])
@@ -417,8 +436,8 @@ func TestSessionCreateWorkloadTypes(t *testing.T) {
 	fx.platform.mu.Lock()
 	creates := fx.platform.creates
 	fx.platform.mu.Unlock()
-	if len(creates) != 4 {
-		t.Fatalf("platform creates: got %d want 4", len(creates))
+	if len(creates) != len(created) {
+		t.Fatalf("platform creates: got %d want %d", len(creates), len(created))
 	}
 	if creates[0]["workloadType"] != "claude-code" || creates[0]["name"] != "trimmed" {
 		t.Errorf("an omitted workloadType must still create claude-code, sent %v", creates[0])
@@ -426,14 +445,38 @@ func TestSessionCreateWorkloadTypes(t *testing.T) {
 	if _, ok := creates[0]["model"]; ok {
 		t.Errorf("omitted model must stay omitted so the platform records platform-default, sent %v", creates[0])
 	}
-	if creates[1]["model"] != "opus" || creates[1]["workloadType"] != "claude-code" {
-		t.Errorf("second create sent %v", creates[1])
-	}
-	if creates[2]["model"] != "sonnet" || creates[2]["workloadType"] != "approval-gated" {
-		t.Errorf("third create sent %v", creates[2])
+	if creates[2]["model"] != "MiniMax-M2" {
+		t.Errorf("a type with an empty catalog still takes a free-text model, sent %v", creates[2])
 	}
 	if _, ok := creates[3]["model"]; ok || creates[3]["workloadType"] != "shell" {
 		t.Errorf("a blank model on a shell create must be dropped, sent %v", creates[3])
+	}
+}
+
+func TestSessionCreateFallsBackToClaudeCodeOnLegacyPlatform(t *testing.T) {
+	fx := newSessionFixture(t)
+	for _, wt := range []string{"shell", "minimax-code"} {
+		rec := doTodo(t, fx.router, http.MethodPost, "/api/sessions", map[string]any{"name": "x", "workloadType": wt}, 1)
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("legacy platform, workloadType=%q: got %d want 400", wt, rec.Code)
+		}
+	}
+	if s := createSession(t, fx, map[string]any{"name": "ok", "model": "opus"}, 1); s.WorkloadType != "claude-code" {
+		t.Fatalf("legacy platform create: got %q", s.WorkloadType)
+	}
+}
+
+func TestSessionCreateUnreachableConfigDoesNotCreate(t *testing.T) {
+	fx := newSessionFixture(t)
+	fx.platform.mu.Lock()
+	fx.platform.statusFor["GET /api/v1/config"] = http.StatusInternalServerError
+	fx.platform.mu.Unlock()
+	rec := doTodo(t, fx.router, http.MethodPost, "/api/sessions", map[string]any{"name": "x"}, 1)
+	if rec.Code == http.StatusCreated {
+		t.Fatalf("create must fail when the catalog cannot be read, got 201")
+	}
+	if n := fx.platform.callCount("POST /api/v1/sessions"); n != 0 {
+		t.Fatalf("create reached the platform without a catalog: %d", n)
 	}
 }
 
@@ -474,18 +517,48 @@ func TestSessionListSortedByLastAccess(t *testing.T) {
 
 func TestSessionConfigRelaysCatalog(t *testing.T) {
 	fx := newSessionFixture(t)
-	rec := doTodo(t, fx.router, http.MethodGet, "/api/sessions/config", nil, 1)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("config: got %d", rec.Code)
+	read := func() sessions.RuntimeConfig {
+		t.Helper()
+		rec := doTodo(t, fx.router, http.MethodGet, "/api/sessions/config", nil, 1)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("config: got %d", rec.Code)
+		}
+		if rec.Header().Get("Cache-Control") != "no-store" {
+			t.Errorf("Cache-Control: got %q", rec.Header().Get("Cache-Control"))
+		}
+		var cfg sessions.RuntimeConfig
+		if err := json.NewDecoder(rec.Body).Decode(&cfg); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		return cfg
 	}
-	if rec.Header().Get("Cache-Control") != "no-store" {
-		t.Errorf("Cache-Control: got %q", rec.Header().Get("Cache-Control"))
+	legacy := read()
+	if legacy.ClaudeCode.DefaultModel != "~anthropic/claude-opus-latest" || len(legacy.ClaudeCode.Models) != 2 {
+		t.Fatalf("config: got %+v", legacy)
 	}
-	var cfg sessions.RuntimeConfig
-	if err := json.NewDecoder(rec.Body).Decode(&cfg); err != nil {
-		t.Fatalf("decode: %v", err)
+	if len(legacy.WorkloadTypes) != 1 || legacy.WorkloadTypes[0].Type != "claude-code" || legacy.WorkloadTypes[0].Model == nil || len(legacy.WorkloadTypes[0].Model.Models) != 2 {
+		t.Fatalf("a platform without workloadTypes must surface claude-code alone with its catalog, got %+v", legacy.WorkloadTypes)
 	}
-	if cfg.ClaudeCode.DefaultModel != "~anthropic/claude-opus-latest" || len(cfg.ClaudeCode.Models) != 2 {
-		t.Fatalf("config: got %+v", cfg)
+
+	fx.platform.mu.Lock()
+	fx.platform.config = catalogPlatformConfig
+	fx.platform.mu.Unlock()
+	cat := read()
+	var types []string
+	for _, w := range cat.WorkloadTypes {
+		types = append(types, w.Type)
+	}
+	if strings.Join(types, ",") != "claude-code,minimax-code,approval-gated,shell,future-kind" {
+		t.Fatalf("catalog order must be the platform's, got %v", types)
+	}
+	mm, _ := cat.Workload("minimax-code")
+	if mm.Model == nil || mm.Model.Models == nil || len(mm.Model.Models) != 0 {
+		t.Errorf("an omitted model list must relay as [], got %+v", mm.Model)
+	}
+	if sh, _ := cat.Workload("shell"); sh.Model != nil || sh.Interaction != "terminal" {
+		t.Errorf("shell: got %+v", sh)
+	}
+	if fk, _ := cat.Workload("future-kind"); fk.Interaction != "agent" {
+		t.Errorf("an unknown interaction must fall back to agent, got %q", fk.Interaction)
 	}
 }

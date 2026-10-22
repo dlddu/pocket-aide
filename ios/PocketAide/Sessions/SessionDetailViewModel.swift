@@ -4,6 +4,7 @@ import PocketAideAPI
 @MainActor
 final class SessionDetailViewModel: ObservableObject {
     @Published private(set) var session: AgentSession
+    @Published private(set) var type: AgentSessionWorkloadType?
     @Published private(set) var output = AgentSessionOutput()
     @Published private(set) var displayText = ""
     @Published private(set) var phase: AgentSessionResponsePhase = .none
@@ -18,13 +19,15 @@ final class SessionDetailViewModel: ObservableObject {
     private let api: APIClient?
     private var lastOutputAt = Date()
     private var lastPollAt: Date?
+    private var catalogChecked = false
 
-    init(session: AgentSession, api: APIClient?) {
+    init(session: AgentSession, type: AgentSessionWorkloadType?, api: APIClient?) {
         self.session = session
+        self.type = type
         self.api = api
     }
 
-    var isShell: Bool { session.workloadType == .shell }
+    var isTerminal: Bool { type?.interaction == .terminal }
 
     var canSend: Bool {
         session.state != .snapshot && !isSending && !isRestoring
@@ -38,6 +41,10 @@ final class SessionDetailViewModel: ObservableObject {
     }
 
     func tick() async {
+        if type == nil, !catalogChecked, let api {
+            catalogChecked = true
+            type = (try? await api.agentSessionConfig())?.type(session.workloadType)
+        }
         let stale = lastPollAt.map { Date().timeIntervalSince($0) > Self.stateRecheckAfter } ?? true
         lastPollAt = Date()
         if stale {
@@ -70,13 +77,13 @@ final class SessionDetailViewModel: ObservableObject {
                 session = latest
             }
             if outcome == .grew || !hasLoadedOutput {
-                displayText = isShell ? AgentSessionTerminal.clean(output.text) : output.text
+                displayText = isTerminal ? AgentSessionTerminal.clean(output.text) : output.text
             }
             let grew = outcome == .grew && hasLoadedOutput
             if grew {
                 lastOutputAt = Date()
             }
-            if !isShell {
+            if !isTerminal {
                 phase = phase.next(outputGrew: grew, secondsSinceLastOutput: Date().timeIntervalSince(lastOutputAt))
             }
             hasLoadedOutput = true
@@ -99,12 +106,12 @@ final class SessionDetailViewModel: ObservableObject {
         isSending = true
         defer { isSending = false }
         do {
-            let payload = isShell ? AgentSessionTerminal.command(prompt) : prompt
+            let payload = isTerminal ? AgentSessionTerminal.command(prompt) : prompt
             let result = try await api.writeAgentSession(id: session.id, prompt: payload)
             if let latest = result.session {
                 session = latest
             }
-            if !isShell {
+            if !isTerminal {
                 phase = .queued
             }
             lastOutputAt = Date()

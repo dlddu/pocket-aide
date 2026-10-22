@@ -26,6 +26,9 @@ final class SessionsViewModel: ObservableObject {
         guard let api, !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
+        if config == nil {
+            config = try? await api.agentSessionConfig()
+        }
         do {
             sessions = try await api.listAgentSessions()
             error = nil
@@ -40,7 +43,11 @@ final class SessionsViewModel: ObservableObject {
         config = try? await api.agentSessionConfig()
     }
 
-    func create(name: String, workload: AgentSessionWorkload, model: String?) async -> AgentSession? {
+    func workloadType(of session: AgentSession) -> AgentSessionWorkloadType? {
+        config?.type(session.workloadType)
+    }
+
+    func create(name: String, workload: AgentSessionWorkloadType, model: String?) async -> AgentSession? {
         guard let api, !isCreating else { return nil }
         isCreating = true
         createError = nil

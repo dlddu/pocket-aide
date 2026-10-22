@@ -10,8 +10,8 @@ struct SessionDetailView: View {
     private let area = SessionsView.area
     private static let bottomAnchor = "sessions.detail.output.bottom"
 
-    init(session: AgentSession, api: APIClient?) {
-        _viewModel = StateObject(wrappedValue: SessionDetailViewModel(session: session, api: api))
+    init(session: AgentSession, type: AgentSessionWorkloadType?, api: APIClient?) {
+        _viewModel = StateObject(wrappedValue: SessionDetailViewModel(session: session, type: type, api: api))
     }
 
     var body: some View {
@@ -58,7 +58,7 @@ struct SessionDetailView: View {
     private var statusLine: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             SessionStateBadge(state: viewModel.session.state, area: area)
-            Text(viewModel.session.kindLabel)
+            Text(viewModel.session.kindLabel(viewModel.type))
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .lineLimit(1)
@@ -111,7 +111,7 @@ struct SessionDetailView: View {
         if !viewModel.hasLoadedOutput {
             ProgressView().frame(maxWidth: .infinity)
         } else if viewModel.displayText.isEmpty {
-            Text(viewModel.isShell ? "아직 출력이 없어요. 아래에 명령을 입력해 보세요." : "아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.")
+            Text(viewModel.isTerminal ? "아직 출력이 없어요. 아래에 명령을 입력해 보세요." : "아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.")
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .accessibilityIdentifier("sessions.detail.output.empty")
@@ -167,9 +167,9 @@ struct SessionDetailView: View {
                     .accessibilityIdentifier("sessions.detail.prompt.toolarge")
             }
             HStack(alignment: .bottom, spacing: DesignTokens.Spacing.sm) {
-                TextField(viewModel.isShell ? "명령 입력" : "에이전트에게 맡길 일", text: $prompt, axis: .vertical)
-                    .textInputAutocapitalization(viewModel.isShell ? .never : .sentences)
-                    .autocorrectionDisabled(viewModel.isShell)
+                TextField(viewModel.isTerminal ? "명령 입력" : "에이전트에게 맡길 일", text: $prompt, axis: .vertical)
+                    .textInputAutocapitalization(viewModel.isTerminal ? .never : .sentences)
+                    .autocorrectionDisabled(viewModel.isTerminal)
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
                     .lineLimit(1...6)
                     .padding(.horizontal, DesignTokens.Spacing.md)
