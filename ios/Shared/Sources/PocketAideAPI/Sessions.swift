@@ -192,7 +192,7 @@ public enum AgentSessionError: Hashable, Sendable {
         413: .tooLarge,
         422: .snapshotted,
         429: .queueFull,
-        503: .disabled,
+        503: .unreachable,
         507: .quotaFull,
         502: .unreachable,
         504: .unreachable,

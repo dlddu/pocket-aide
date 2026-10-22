@@ -152,6 +152,10 @@ final class SessionsTests: XCTestCase {
         XCTAssertEqual(AgentSessionError(APIError.badStatus(413, upstream)), .tooLarge)
         XCTAssertEqual(AgentSessionError(APIError.badStatus(404, upstream)), .notFound)
         XCTAssertEqual(AgentSessionError(APIError.badStatus(502, upstream)), .unreachable)
+        XCTAssertEqual(
+            AgentSessionError(APIError.badStatus(503, "no available server")), .unreachable,
+            "An ingress 503 while the backend is down must not read as a disabled snapshot feature"
+        )
         XCTAssertEqual(AgentSessionError(APIError.badStatus(500, upstream)), .unknown)
         XCTAssertEqual(AgentSessionError(APIError.transport(URLError(.notConnectedToInternet))), .unreachable)
         let all: [AgentSessionError] = [.unauthorized, .notFound, .busy, .tooLarge, .snapshotted, .queueFull, .disabled, .quotaFull, .unreachable, .unknown]

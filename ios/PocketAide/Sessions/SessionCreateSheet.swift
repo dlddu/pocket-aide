@@ -211,7 +211,7 @@ struct SessionCreateSheet: View {
 
     private func createFailureMessage(_ error: AgentSessionError) -> String {
         switch error {
-        case .unknown, .disabled:
+        case .unknown:
             let name = workload?.displayName ?? "선택한"
             return "세션을 띄우지 못했어요. 세션 플랫폼에 「\(name)」 타입 설정(이미지·자격증명)이 있는지 확인해 주세요."
         default:
