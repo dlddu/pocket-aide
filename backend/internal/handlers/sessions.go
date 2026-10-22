@@ -152,8 +152,17 @@ func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
 			return
 		}
-		if p.WorkloadType != nil && *p.WorkloadType != sessions.WorkloadClaudeCode {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "workloadType must be claude-code"})
+		workload := sessions.WorkloadClaudeCode
+		if p.WorkloadType != nil {
+			workload = *p.WorkloadType
+		}
+		if !sessions.ValidWorkload(workload) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "workloadType must be claude-code, approval-gated or shell"})
+			return
+		}
+		model := strings.TrimSpace(p.Model)
+		if model != "" && !sessions.WorkloadTakesModel(workload) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "model is not allowed for shell sessions"})
 			return
 		}
 		name := strings.TrimSpace(p.Name)
@@ -163,8 +172,8 @@ func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 		}
 		upstream, err := json.Marshal(platformCreateRequest{
 			Name:         name,
-			WorkloadType: sessions.WorkloadClaudeCode,
-			Model:        strings.TrimSpace(p.Model),
+			WorkloadType: workload,
+			Model:        model,
 		})
 		if err != nil {
 			http.Error(w, "encode failed", http.StatusInternalServerError)

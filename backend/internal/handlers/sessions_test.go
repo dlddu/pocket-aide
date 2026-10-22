@@ -374,12 +374,17 @@ func TestSessionOwnershipIsolatesUsers(t *testing.T) {
 	}
 }
 
-func TestSessionCreateForcesClaudeCode(t *testing.T) {
+func TestSessionCreateWorkloadTypes(t *testing.T) {
 	fx := newSessionFixture(t)
-	for _, wt := range []string{"shell", "approval-gated", ""} {
-		rec := doTodo(t, fx.router, http.MethodPost, "/api/sessions", map[string]any{"name": "x", "workloadType": wt}, 1)
+	for _, body := range []map[string]any{
+		{"name": "x", "workloadType": ""},
+		{"name": "x", "workloadType": "python"},
+		{"name": "x", "workloadType": 3},
+		{"name": "x", "workloadType": "shell", "model": "opus"},
+	} {
+		rec := doTodo(t, fx.router, http.MethodPost, "/api/sessions", body, 1)
 		if rec.Code != http.StatusBadRequest {
-			t.Errorf("workloadType=%q: got %d want 400", wt, rec.Code)
+			t.Errorf("body=%v: got %d want 400", body, rec.Code)
 		}
 	}
 	for _, name := range []string{"", "   ", "\t\n"} {
@@ -394,25 +399,41 @@ func TestSessionCreateForcesClaudeCode(t *testing.T) {
 	if n := fx.count(); n != 0 {
 		t.Fatalf("rejected creates left %d mapping rows", n)
 	}
-	a := createSession(t, fx, map[string]any{"name": "  trimmed  "}, 1)
-	b := createSession(t, fx, map[string]any{"name": "explicit", "workloadType": "claude-code", "model": "opus"}, 1)
-	if a.WorkloadType != "claude-code" || b.WorkloadType != "claude-code" {
-		t.Fatalf("workloadType: got %q / %q", a.WorkloadType, b.WorkloadType)
+	created := []sessions.Session{
+		createSession(t, fx, map[string]any{"name": "  trimmed  "}, 1),
+		createSession(t, fx, map[string]any{"name": "explicit", "workloadType": "claude-code", "model": "opus"}, 1),
+		createSession(t, fx, map[string]any{"name": "gated", "workloadType": "approval-gated", "model": "sonnet"}, 1),
+		createSession(t, fx, map[string]any{"name": "sh", "workloadType": "shell", "model": "  "}, 1),
+	}
+	wantTypes := []string{"claude-code", "claude-code", "approval-gated", "shell"}
+	for i, s := range created {
+		if s.WorkloadType != wantTypes[i] {
+			t.Errorf("create %d workloadType: got %q want %q", i, s.WorkloadType, wantTypes[i])
+		}
+	}
+	if ids := listSessionIDs(t, fx, 1); len(ids) != len(created) {
+		t.Errorf("owner list: got %v, want all %d app-created sessions of every type", ids, len(created))
 	}
 	fx.platform.mu.Lock()
 	creates := fx.platform.creates
 	fx.platform.mu.Unlock()
-	if len(creates) != 2 {
-		t.Fatalf("platform creates: got %d want 2", len(creates))
+	if len(creates) != 4 {
+		t.Fatalf("platform creates: got %d want 4", len(creates))
 	}
 	if creates[0]["workloadType"] != "claude-code" || creates[0]["name"] != "trimmed" {
-		t.Errorf("first create sent %v", creates[0])
+		t.Errorf("an omitted workloadType must still create claude-code, sent %v", creates[0])
 	}
 	if _, ok := creates[0]["model"]; ok {
 		t.Errorf("omitted model must stay omitted so the platform records platform-default, sent %v", creates[0])
 	}
 	if creates[1]["model"] != "opus" || creates[1]["workloadType"] != "claude-code" {
 		t.Errorf("second create sent %v", creates[1])
+	}
+	if creates[2]["model"] != "sonnet" || creates[2]["workloadType"] != "approval-gated" {
+		t.Errorf("third create sent %v", creates[2])
+	}
+	if _, ok := creates[3]["model"]; ok || creates[3]["workloadType"] != "shell" {
+		t.Errorf("a blank model on a shell create must be dropped, sent %v", creates[3])
 	}
 }
 

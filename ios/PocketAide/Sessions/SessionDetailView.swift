@@ -43,9 +43,22 @@ struct SessionDetailView: View {
     }
 
     private var statusStrip: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            statusLine
+            Text(AgentSessionFormatting.stateDetail(viewModel.session))
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
+                .lineLimit(1)
+                .accessibilityIdentifier("sessions.detail.state")
+        }
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var statusLine: some View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             SessionStateBadge(state: viewModel.session.state, area: area)
-            Text(viewModel.session.modelLabel)
+            Text(viewModel.session.kindLabel)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .lineLimit(1)
@@ -63,8 +76,6 @@ struct SessionDetailView: View {
                 .accessibilityIdentifier("sessions.detail.phase")
             }
         }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
-        .padding(.vertical, DesignTokens.Spacing.sm)
     }
 
     private var outputArea: some View {
@@ -99,13 +110,13 @@ struct SessionDetailView: View {
     private var outputBody: some View {
         if !viewModel.hasLoadedOutput {
             ProgressView().frame(maxWidth: .infinity)
-        } else if viewModel.output.text.isEmpty {
-            Text("아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.")
+        } else if viewModel.displayText.isEmpty {
+            Text(viewModel.isShell ? "아직 출력이 없어요. 아래에 명령을 입력해 보세요." : "아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.")
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .accessibilityIdentifier("sessions.detail.output.empty")
         } else {
-            Text(viewModel.output.text)
+            Text(viewModel.displayText)
                 .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
                 .foregroundStyle(DesignTokens.Color.ink(area))
                 .textSelection(.enabled)
@@ -116,10 +127,10 @@ struct SessionDetailView: View {
 
     private var snapshotPanel: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Text("스냅샷으로 보관된 세션이에요")
+            Text("아카이브된 세션이에요")
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
                 .foregroundStyle(DesignTokens.Color.ink(area))
-            Text("오래 쓰지 않아 컴퓨트를 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.")
+            Text("오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.")
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.65))
                 .fixedSize(horizontal: false, vertical: true)
@@ -156,7 +167,9 @@ struct SessionDetailView: View {
                     .accessibilityIdentifier("sessions.detail.prompt.toolarge")
             }
             HStack(alignment: .bottom, spacing: DesignTokens.Spacing.sm) {
-                TextField("에이전트에게 맡길 일", text: $prompt, axis: .vertical)
+                TextField(viewModel.isShell ? "명령 입력" : "에이전트에게 맡길 일", text: $prompt, axis: .vertical)
+                    .textInputAutocapitalization(viewModel.isShell ? .never : .sentences)
+                    .autocorrectionDisabled(viewModel.isShell)
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
                     .lineLimit(1...6)
                     .padding(.horizontal, DesignTokens.Spacing.md)

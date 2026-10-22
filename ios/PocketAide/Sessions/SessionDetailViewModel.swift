@@ -5,6 +5,7 @@ import PocketAideAPI
 final class SessionDetailViewModel: ObservableObject {
     @Published private(set) var session: AgentSession
     @Published private(set) var output = AgentSessionOutput()
+    @Published private(set) var displayText = ""
     @Published private(set) var phase: AgentSessionResponsePhase = .none
     @Published private(set) var hasLoadedOutput = false
     @Published private(set) var isSending = false
@@ -22,6 +23,8 @@ final class SessionDetailViewModel: ObservableObject {
         self.session = session
         self.api = api
     }
+
+    var isShell: Bool { session.workloadType == .shell }
 
     var canSend: Bool {
         session.state != .snapshot && !isSending && !isRestoring
@@ -66,11 +69,16 @@ final class SessionDetailViewModel: ObservableObject {
             if let latest = result.session {
                 session = latest
             }
+            if outcome == .grew || !hasLoadedOutput {
+                displayText = isShell ? AgentSessionTerminal.clean(output.text) : output.text
+            }
             let grew = outcome == .grew && hasLoadedOutput
             if grew {
                 lastOutputAt = Date()
             }
-            phase = phase.next(outputGrew: grew, secondsSinceLastOutput: Date().timeIntervalSince(lastOutputAt))
+            if !isShell {
+                phase = phase.next(outputGrew: grew, secondsSinceLastOutput: Date().timeIntervalSince(lastOutputAt))
+            }
             hasLoadedOutput = true
             error = nil
         } catch {
@@ -91,11 +99,14 @@ final class SessionDetailViewModel: ObservableObject {
         isSending = true
         defer { isSending = false }
         do {
-            let result = try await api.writeAgentSession(id: session.id, prompt: prompt)
+            let payload = isShell ? AgentSessionTerminal.command(prompt) : prompt
+            let result = try await api.writeAgentSession(id: session.id, prompt: payload)
             if let latest = result.session {
                 session = latest
             }
-            phase = .queued
+            if !isShell {
+                phase = .queued
+            }
             lastOutputAt = Date()
             error = nil
             return true

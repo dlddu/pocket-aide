@@ -133,9 +133,9 @@ struct SessionsView: View {
                 config: viewModel.config,
                 isCreating: viewModel.isCreating,
                 error: viewModel.createError,
-                onCreate: { name, model in
+                onCreate: { name, workload, model in
                     Task {
-                        if let created = await viewModel.create(name: name, model: model) {
+                        if let created = await viewModel.create(name: name, workload: workload, model: model) {
                             showsCreate = false
                             path.append(created)
                         }
@@ -160,7 +160,7 @@ struct SessionRow: View {
             HStack(spacing: DesignTokens.Spacing.sm) {
                 SessionStateBadge(state: session.state, area: area)
                 Spacer(minLength: 0)
-                Text(AgentSessionFormatting.relative(session.lastAccess))
+                Text("생성 \(AgentSessionFormatting.relative(session.createdAt))")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
             }
@@ -168,10 +168,15 @@ struct SessionRow: View {
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
                 .foregroundStyle(DesignTokens.Color.ink(area))
                 .lineLimit(2)
-            Text(meta)
+            Text(session.kindLabel)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .medium))
+                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.7))
+                .lineLimit(1)
+            Text(AgentSessionFormatting.stateDetail(session))
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .lineLimit(1)
+                .accessibilityIdentifier("sessions.row.\(session.id).state")
         }
         .padding(DesignTokens.Spacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -183,16 +188,6 @@ struct SessionRow: View {
         )
     }
 
-    private var meta: String {
-        var parts = [session.modelLabel, "생성 \(AgentSessionFormatting.relative(session.createdAt))"]
-        if session.state == .snapshot, let checkpoint = session.checkpoint {
-            parts.append("스냅샷 \(AgentSessionFormatting.relative(checkpoint.createdAt))")
-            if let size = AgentSessionFormatting.size(checkpoint.sizeBytes) {
-                parts.append(size)
-            }
-        }
-        return parts.joined(separator: " · ")
-    }
 }
 
 struct SessionStateBadge: View {
@@ -217,7 +212,7 @@ struct SessionStateBadge: View {
         switch state {
         case .active: return DesignTokens.StatusColor.success
         case .idle: return DesignTokens.StatusColor.inProgress
-        case .snapshot: return DesignTokens.Color.ink(area).opacity(0.55)
+        case .snapshot: return DesignTokens.Color.accent(area)
         }
     }
 }

@@ -40,13 +40,13 @@ final class SessionsViewModel: ObservableObject {
         config = try? await api.agentSessionConfig()
     }
 
-    func create(name: String, model: String?) async -> AgentSession? {
+    func create(name: String, workload: AgentSessionWorkload, model: String?) async -> AgentSession? {
         guard let api, !isCreating else { return nil }
         isCreating = true
         createError = nil
         defer { isCreating = false }
         do {
-            let created = try await api.createAgentSession(name: name, model: model)
+            let created = try await api.createAgentSession(name: name, workload: workload, model: model)
             sessions.removeAll { $0.id == created.id }
             sessions.insert(created, at: 0)
             return created

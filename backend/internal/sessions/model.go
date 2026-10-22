@@ -1,6 +1,18 @@
 package sessions
 
-const WorkloadClaudeCode = "claude-code"
+const (
+	WorkloadClaudeCode    = "claude-code"
+	WorkloadShell         = "shell"
+	WorkloadApprovalGated = "approval-gated"
+)
+
+func ValidWorkload(w string) bool {
+	return w == WorkloadClaudeCode || w == WorkloadShell || w == WorkloadApprovalGated
+}
+
+func WorkloadTakesModel(w string) bool {
+	return w != WorkloadShell
+}
 
 type Checkpoint struct {
 	SizeBytes *int64 `json:"sizeBytes,omitempty"`

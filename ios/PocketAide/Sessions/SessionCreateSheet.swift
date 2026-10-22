@@ -6,10 +6,11 @@ struct SessionCreateSheet: View {
     let config: AgentSessionConfig?
     let isCreating: Bool
     let error: AgentSessionError?
-    let onCreate: (String, String?) -> Void
+    let onCreate: (String, AgentSessionWorkload, String?) -> Void
     let onCancel: () -> Void
 
     @State private var name = ""
+    @State private var workload: AgentSessionWorkload = .claudeCode
     @State private var pickedModel: String?
     @State private var typedModel = ""
 
@@ -29,8 +30,13 @@ struct SessionCreateSheet: View {
                         .foregroundStyle(DesignTokens.Color.ink(area))
                         .accessibilityIdentifier("sessions.create.name.field")
                 }
-                field(label: "모델") { modelInput }
-                Text("모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 Claude Code 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.")
+                workloadPicker
+                if workload.takesModel {
+                    field(label: "모델") { modelInput }
+                }
+                Text(workload.takesModel
+                     ? "타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요."
+                     : "타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.6))
                     .fixedSize(horizontal: false, vertical: true)
@@ -47,6 +53,25 @@ struct SessionCreateSheet: View {
             }
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var workloadPicker: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("타입")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
+                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.7))
+            Picker("타입", selection: $workload) {
+                ForEach(AgentSessionWorkload.allCases, id: \.self) { kind in
+                    Text(kind.label).tag(kind)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("sessions.create.workload.picker")
+            Text(workload.summary)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
+                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.6))
+                .accessibilityIdentifier("sessions.create.workload.summary")
         }
     }
 
@@ -129,6 +154,7 @@ struct SessionCreateSheet: View {
     }
 
     private var chosenModel: String? {
+        guard workload.takesModel else { return nil }
         if let config, !config.models.isEmpty {
             return pickedModel ?? defaultPick(config)
         }
@@ -138,7 +164,7 @@ struct SessionCreateSheet: View {
     private func createFailureMessage(_ error: AgentSessionError) -> String {
         switch error {
         case .unknown, .disabled:
-            return "세션을 띄우지 못했어요. 세션 플랫폼의 Claude Code 설정(이미지·자격증명)을 확인해 주세요."
+            return "세션을 띄우지 못했어요. 세션 플랫폼에 「\(workload.label)」 타입 설정(이미지·자격증명)이 있는지 확인해 주세요."
         default:
             return error.message
         }
@@ -146,6 +172,6 @@ struct SessionCreateSheet: View {
 
     private func handleCreate() {
         guard !trimmedName.isEmpty, !isCreating else { return }
-        onCreate(trimmedName, chosenModel)
+        onCreate(trimmedName, workload, chosenModel)
     }
 }

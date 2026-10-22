@@ -27,12 +27,53 @@ final class SessionsTests: XCTestCase {
         XCTAssertEqual(empty.models, [])
     }
 
-    func testCreatePayloadDropsBlankModelAndNeverSendsWorkloadType() throws {
-        let data = try JSONEncoder().encode(AgentSessionCreatePayload(name: "x", model: nil))
-        let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
-        XCTAssertEqual(object["name"] as? String, "x")
-        XCTAssertNil(object["model"])
-        XCTAssertNil(object["workloadType"])
+    func testCreatePayloadSendsWorkloadTypeWireValues() throws {
+        let expected: [AgentSessionWorkload: String] = [.claudeCode: "claude-code", .approvalGated: "approval-gated", .shell: "shell"]
+        for (workload, wire) in expected {
+            let data = try JSONEncoder().encode(AgentSessionCreatePayload(name: "x", workloadType: workload, model: nil))
+            let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            XCTAssertEqual(object["workloadType"] as? String, wire)
+            XCTAssertNil(object["model"])
+        }
+        XCTAssertFalse(AgentSessionWorkload.shell.takesModel)
+        XCTAssertTrue(AgentSessionWorkload.approvalGated.takesModel)
+    }
+
+    func testDecodesWorkloadTypeAndKindLabel() throws {
+        let json = #"""
+        {"sessions":[
+         {"id":"s","name":"sh","workloadType":"shell","state":"active","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"},
+         {"id":"g","name":"gated","workloadType":"approval-gated","state":"idle","model":"opus","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"},
+         {"id":"f","name":"future","workloadType":"something-new","state":"active","createdAt":"2026-10-22T10:00:00Z","lastAccess":"2026-10-22T10:00:00Z"}
+        ]}
+        """#
+        let sessions = try JSONDecoder().decode(AgentSessionListResponse.self, from: Data(json.utf8)).sessions
+        XCTAssertEqual(sessions.map(\.workloadType), [.shell, .approvalGated, .claudeCode])
+        XCTAssertEqual(sessions[0].kindLabel, "쉘")
+        XCTAssertEqual(sessions[1].kindLabel, "승인 게이트 · opus")
+    }
+
+    func testStateDetailShowsArchiveTimeAndSize() throws {
+        let now = try XCTUnwrap(AgentSessionFormatting.date("2026-10-22T12:00:00Z"))
+        let archived = AgentSession(
+            id: "a", name: "n", state: .snapshot,
+            createdAt: "2026-10-22T08:00:00Z", lastAccess: "2026-10-22T09:00:00Z",
+            checkpoint: AgentSessionCheckpoint(sizeBytes: 3_000_000, createdAt: "2026-10-22T10:00:00Z")
+        )
+        let detail = AgentSessionFormatting.stateDetail(archived, now: now)
+        XCTAssertTrue(detail.hasPrefix("아카이브 "), detail)
+        XCTAssertTrue(detail.contains("MB"), detail)
+        XCTAssertTrue(detail.hasSuffix("환경 반납됨"), detail)
+        XCTAssertEqual(AgentSessionState.snapshot.label, "아카이브됨")
+        let running = AgentSession(id: "b", name: "n", state: .active, createdAt: "2026-10-22T11:59:30Z", lastAccess: "2026-10-22T11:59:30Z")
+        XCTAssertEqual(AgentSessionFormatting.stateDetail(running, now: now), "환경이 떠 있어요 · 마지막 사용 방금")
+    }
+
+    func testTerminalCleanStripsEscapesAndCarriageReturns() {
+        let raw = "\u{1B}]0;user@sess:~\u{07}\u{1B}[?2004huser@sess:~$ ls\r\n\u{1B}[01;34mdir\u{1B}[0m  a.txt\r\n\u{1B}=done"
+        XCTAssertEqual(AgentSessionTerminal.clean(raw), "user@sess:~$ ls\ndir  a.txt\ndone")
+        XCTAssertEqual(AgentSessionTerminal.command("ls -la"), "ls -la\n")
+        XCTAssertEqual(AgentSessionTerminal.command("ls\n"), "ls\n")
     }
 
     func testOutputAppendsFromServerCursor() {

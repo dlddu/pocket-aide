@@ -9,9 +9,38 @@ public enum AgentSessionState: String, Codable, Sendable, Hashable {
         switch self {
         case .active: return "실행 중"
         case .idle: return "대기"
-        case .snapshot: return "스냅샷"
+        case .snapshot: return "아카이브됨"
         }
     }
+}
+
+public enum AgentSessionWorkload: String, Codable, CaseIterable, Sendable, Hashable {
+    case claudeCode = "claude-code"
+    case approvalGated = "approval-gated"
+    case shell
+
+    public init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        self = AgentSessionWorkload(rawValue: raw) ?? .claudeCode
+    }
+
+    public var label: String {
+        switch self {
+        case .claudeCode: return "Claude Code"
+        case .approvalGated: return "승인 게이트"
+        case .shell: return "쉘"
+        }
+    }
+
+    public var summary: String {
+        switch self {
+        case .claudeCode: return "자연어로 일을 맡기는 Claude Code 에이전트"
+        case .approvalGated: return "외부에 닿을 때마다 사람 승인을 받는 에이전트"
+        case .shell: return "명령을 직접 실행하는 인터랙티브 쉘"
+        }
+    }
+
+    public var takesModel: Bool { self != .shell }
 }
 
 public struct AgentSessionCheckpoint: Codable, Equatable, Sendable, Hashable {
@@ -27,6 +56,7 @@ public struct AgentSessionCheckpoint: Codable, Equatable, Sendable, Hashable {
 public struct AgentSession: Codable, Identifiable, Equatable, Sendable, Hashable {
     public let id: String
     public let name: String
+    public let workloadType: AgentSessionWorkload
     public let state: AgentSessionState
     public let model: String?
     public let createdAt: String
@@ -36,6 +66,7 @@ public struct AgentSession: Codable, Identifiable, Equatable, Sendable, Hashable
     public init(
         id: String,
         name: String,
+        workloadType: AgentSessionWorkload = .claudeCode,
         state: AgentSessionState,
         model: String? = nil,
         createdAt: String,
@@ -44,6 +75,7 @@ public struct AgentSession: Codable, Identifiable, Equatable, Sendable, Hashable
     ) {
         self.id = id
         self.name = name
+        self.workloadType = workloadType
         self.state = state
         self.model = model
         self.createdAt = createdAt
@@ -52,6 +84,10 @@ public struct AgentSession: Codable, Identifiable, Equatable, Sendable, Hashable
     }
 
     public var modelLabel: String { model.flatMap { $0.isEmpty ? nil : $0 } ?? "platform-default" }
+
+    public var kindLabel: String {
+        workloadType.takesModel ? "\(workloadType.label) · \(modelLabel)" : workloadType.label
+    }
 }
 
 public struct AgentSessionConfig: Decodable, Equatable, Sendable {
@@ -250,6 +286,41 @@ public enum AgentSessionFormatting {
         guard let bytes else { return nil }
         return ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
     }
+
+    public static func stateDetail(_ session: AgentSession, now: Date = Date()) -> String {
+        switch session.state {
+        case .active:
+            return "환경이 떠 있어요 · 마지막 사용 \(relative(session.lastAccess, now: now))"
+        case .idle:
+            return "환경은 떠 있지만 쉬는 중 · 마지막 사용 \(relative(session.lastAccess, now: now))"
+        case .snapshot:
+            var parts = ["아카이브 \(relative(session.checkpoint?.createdAt, now: now))"]
+            if let size = size(session.checkpoint?.sizeBytes) {
+                parts.append(size)
+            }
+            parts.append("환경 반납됨")
+            return parts.joined(separator: " · ")
+        }
+    }
+}
+
+public enum AgentSessionTerminal {
+    private static let escapes = try? NSRegularExpression(
+        pattern: "\u{1B}\\][^\u{07}\u{1B}]*(?:\u{07}|\u{1B}\\\\)|\u{1B}\\[[0-?]*[ -/]*[@-~]|\u{1B}[0-?@-Z\\\\-_]"
+    )
+
+    public static func clean(_ raw: String) -> String {
+        var text = raw
+        if let escapes {
+            text = escapes.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "")
+        }
+        text = text.replacingOccurrences(of: "\r\n", with: "\n")
+        return text.replacingOccurrences(of: "\r", with: "")
+    }
+
+    public static func command(_ input: String) -> String {
+        input.hasSuffix("\n") ? input : input + "\n"
+    }
 }
 
 struct AgentSessionListResponse: Decodable {
@@ -258,6 +329,7 @@ struct AgentSessionListResponse: Decodable {
 
 struct AgentSessionCreatePayload: Encodable {
     let name: String
+    let workloadType: AgentSessionWorkload
     let model: String?
 }
 
@@ -281,10 +353,11 @@ public extension APIClient {
         return response.sessions
     }
 
-    func createAgentSession(name: String, model: String?) async throws -> AgentSession {
-        let trimmedModel = model?.trimmingCharacters(in: .whitespacesAndNewlines)
+    func createAgentSession(name: String, workload: AgentSessionWorkload, model: String?) async throws -> AgentSession {
+        let trimmedModel = workload.takesModel ? model?.trimmingCharacters(in: .whitespacesAndNewlines) : nil
         let payload = AgentSessionCreatePayload(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            workloadType: workload,
             model: (trimmedModel?.isEmpty ?? true) ? nil : trimmedModel
         )
         return try await post("/api/sessions", body: payload, authenticated: true)
