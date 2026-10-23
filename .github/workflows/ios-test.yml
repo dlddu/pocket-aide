@@ -91,6 +91,8 @@ jobs:
             until xcrun simctl list devices booted 2>/dev/null | grep -q '(Booted)'; do sleep 2; done
             xcrun simctl spawn booted log stream --style compact \
               --predicate 'eventMessage CONTAINS "pocketaide-e2e push-ready"' > /tmp/push-ready.log 2>&1 &
+            xcrun simctl spawn booted log stream --style compact \
+              --predicate 'process == "PocketAide" AND eventMessage CONTAINS "highlightedEventID="' > /tmp/push-highlight-stream.log 2>&1 &
             id=''
             for i in $(seq 1 1800); do
               id=$(sqlite3 "$DATABASE_PATH" "SELECT id FROM notification_history WHERE repo_full_name = 'dlddu/pocket-aide-e2e' ORDER BY id LIMIT 1" 2>/dev/null || true)
@@ -111,8 +113,9 @@ jobs:
               while [ $(( $(date +%s) - start )) -lt 110 ]; do
                 xcrun simctl push booted com.dlddu.PocketAide /tmp/pr-monitor.apns || true
                 sleep 8
-                if xcrun simctl spawn booted log show --last "$(( $(date +%s) - start + 5 ))s" --style compact \
-                    --predicate 'process == "PocketAide"' 2>/dev/null \
+                if { cat /tmp/push-highlight-stream.log 2>/dev/null
+                     xcrun simctl spawn booted log show --last "$(( $(date +%s) - start + 5 ))s" --style compact \
+                       --predicate 'process == "PocketAide"' 2>/dev/null; } \
                     | grep -w "highlightedEventID=$id" >> /tmp/push-highlight.log; then
                   echo "delivered event_id=$id"
                   break
@@ -255,6 +258,7 @@ jobs:
           echo '--- enqueue ---'; cat /tmp/enqueue.log || true
           echo '--- push ---'; cat /tmp/push.log || true
           echo '--- push-ready ---'; cat /tmp/push-ready.log || true
+          echo '--- push-highlight stream ---'; cat /tmp/push-highlight-stream.log || true
           echo '--- push relay ---'; cat /tmp/push-relay.log || true
           echo '--- network cut ---'; cat /tmp/network-cut.log || true; cat /tmp/network-switch.log || true
           echo '--- moto ---'; tail -n 100 /tmp/moto.log || true
