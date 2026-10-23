@@ -1,6 +1,6 @@
 ---
 type: mockup-index
-last_updated: 2026-10-16
+last_updated: 2026-10-23
 ---
 
 # Mockup 인덱스
@@ -14,7 +14,7 @@ last_updated: 2026-10-16
 ## 메타 도구 (mockup이 아닌 갤러리 페이지)
 
 - `index.html` — 라이트 갤러리. 각 `screen-*.html`로 링크.
-- `mockups-dark.html` — **다크 변형 통합 갤러리**. 14개 `screen-*.html`의 다크 버전을 `tokens.md §1.9`(PR 모니터는 §1.11) 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다. PR 모니터 2화면은 `tokens.md §1.11` 다크 변형으로 변환(2026-09-30 추가). 승인 화면(`screen-approval`)도 같은 §1.11 다크 변형으로 변환(2026-10-05 추가). 보조 텍스트·흐린 요소의 인디고 톤 중립값(`#A7A1BE`·`#8A84A3`·`#5E5779`)은 다른 영역처럼 토큰 표 밖에서 도출한 값이다.
+- `mockups-dark.html` — **다크 변형 통합 갤러리**. 15개 `screen-*.html`의 다크 버전을 `tokens.md §1.9`(PR 모니터는 §1.11) 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다. PR 모니터 2화면은 `tokens.md §1.11` 다크 변형으로 변환(2026-09-30 추가). 승인 화면(`screen-approval`)도 같은 §1.11 다크 변형으로 변환(2026-10-05 추가). 세션 화면(`screen-sessions`)도 같은 규칙(승인 라이트↔다크 차분에서 뽑은 치환)으로 변환(2026-10-23 추가). 보조 텍스트·흐린 요소의 인디고 톤 중립값(`#A7A1BE`·`#8A84A3`·`#5E5779`)은 다른 영역처럼 토큰 표 밖에서 도출한 값이다.
 
 ## 현재 미정의 영역
 
@@ -225,6 +225,18 @@ last_updated: 2026-10-16
   - 토큰: §1.11 PR 모니터 팔레트 차용(승인 화면 — tokens.md §1.11 제약 개정 2026-10-05) — `--bg #EEEDF5`, `--ink #221F33`, `--accent #5B4DB8`, `--accent-strong #3D2F8E`, `--rule #D8D5E4`, `--soft #DDDAEB`. 상태 시그널: 승인됨 `--forest`, 거절됨·경고·폐기 `--destructive`, 만료 stone.
   - 디자인 시스템 밖 값: 요청 카드·남은 시간 카운트다운·결정 버튼 쌍·처리 방식 표기·호출자 키 행(components.md에 승인 화면 항목 없음 — 구현 착수 시 정식화), 결정 확인 다이얼로그(iOS alert 컨벤션, §1.8), 스크림 `rgba(34,31,51,.35)`(ink 알파), 탭 배지(시스템 빨강 대신 §1.11 강조색 — tokens.md §7).
 
+## screen-sessions.html
+- **시각화 대상**:
+  - 여정: (미정의)
+  - 가치: V9 (개발 워크플로우 인지 부하 감소 — 범위의 「지시·파악·마무리」), V5 (프롬프트가 자연어)
+  - PRD/AC (보조): PRD-11 / AC3 (플랫폼 카탈로그 타입 선택·terminal 타입 처리), AC4 (생성 시트), AC5 (목록·상태 배지·상태 설명 줄), AC6 (프롬프트·응답 단계), AC7 (커서로 이어 보는 출력), AC8 (지금 아카이브·아카이브 꺼짐 안내), AC9 (아카이브된 세션 복원), AC10 (삭제 확인), AC11 (연결 불가·타입 목록 실패), AC12 (빈 상태)
+  - 열한 프레임: **목록**, **빈 상태**, **오류 — 연결 불가**, **새 세션**, **새 세션 — 타입 목록 실패**, **상세 — 에이전트 응답 중**, **상세 — 쉘**, **상세 — 아카이브됨**, **상세 — 세션 동작**(지금 아카이브 · 세션 삭제 메뉴), **상세 — 삭제 확인**, **상세 — 아카이브 꺼짐**. 2026-10-23 추가 — 구현(PR #310·이 PR)이 먼저 있었고 목업이 그것을 따라 그린다. 타입 라벨·설명(Shell·Claude Code·MiniMax Code·Approval-gated)은 플랫폼 `GET /config` 카탈로그 문구다(예시 데이터).
+- **사용 디자인 시스템**:
+  - 패턴: `영역 화면` (patterns.md §1) — 세션은 하단 탭 바의 독립 탭(tokens.md §7 9번, 넷째 칸). `리스트 + 섹션` (patterns.md §3) — 세션 목록. `에이전트 세션` (patterns.md §9-1) — 상세. `편집 시트` (patterns.md §9) — 새 세션 시트.
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `AreaStrip`(§1.11 인디고), `AreaLabel`("AGENT · SESSIONS", 점), `ScreenHeader`(PillButton 「새 세션」 — ink 채움), `Card.session-card`, `Composer`, `Sheet`/`Backdrop`/`Handle`(새 세션), `TabBar`(세션 탭 활성).
+  - 토큰: §1.11 PR 모니터 팔레트 차용(세션 화면 — tokens.md §1.11 제약 개정 2026-10-23). 상태 시그널: 실행 중 `--forest`, 대기 `--tan`, 아카이브됨 `--accent`, 오류 아이콘 `--destructive`.
+  - 디자인 시스템 밖 값: 내비게이션 바·세션 동작 메뉴·삭제 확인 대화상자(iOS 시스템 컴포넌트, §1.8 — 앱에서는 시스템 destructive 빨강, 목업은 `--destructive` 로 표기), 출력 패널의 모노스페이스(`SF Mono`·`Menlo`, 승인 목업의 `.mono` 와 같은 값), 스크림 `rgba(34,31,51,.35)`(ink 알파, 승인과 같은 값).
+
 ---
 
 ## 가치별 mockup 커버리지 (역인덱스)
@@ -235,11 +247,11 @@ last_updated: 2026-10-16
 | V2 한·영 혼용 STT | screen-chat-voice, screen-shortcut-capture, screen-keyboard-extension |
 | V3 영역 분리 작업 관리 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-widget (PRD-8 AC9) |
 | V4 의도된 반복 노출 | screen-affirmations, screen-affirmations-priority-edit, screen-widget |
-| V5 자연어 대화 작업 처리 | screen-chat-text, screen-chat-voice, screen-keyboard-extension |
+| V5 자연어 대화 작업 처리 | screen-chat-text, screen-chat-voice, screen-keyboard-extension, screen-sessions |
 | V6 일상 정보 통합 시야 | screen-widget |
 | V7 시스템 전역 글쓰기 보조 | screen-keyboard-extension |
 | V8 일상 루틴 구조화 | screen-routines |
-| V9 개발 워크플로우 인지 부하 감소 | screen-pr-monitor-push, screen-pr-monitor-history, screen-approval |
+| V9 개발 워크플로우 인지 부하 감소 | screen-pr-monitor-push, screen-pr-monitor-history, screen-approval, screen-sessions |
 
 모든 V1~V9에 1개 이상의 mockup이 매핑됨 — 시각화 없는 가치 위험은 없음. ✅
 
@@ -257,20 +269,22 @@ last_updated: 2026-10-16
 | PRD-8 위젯 | screen-widget | AC9 임시 공간 미분류 수 영역 포함 |
 | PRD-9 키보드 확장 | screen-keyboard-extension | |
 | PRD-10 GitHub PR·CI 모니터 | screen-pr-monitor-push, screen-pr-monitor-history | push=AC6·AC7 진입점, history=AC7 도착지·AC11·AC12·AC13(PR/커밋 단위 그룹핑). AC1·AC2·AC3·AC4·AC5·AC8·AC9·AC10은 별도 mockup 필요 (열린 PR 목록·필터·인증 오류 배너·빈/로딩 상태 등) — follow-up. |
+| PRD-11 세션 플랫폼 | screen-sessions | AC3~AC12 앱 화면. AC1·AC2(인증 경계·소유권)는 백엔드 |
 | PRD-12 승인 게이트 | screen-approval | AC5~AC9·AC12~AC14 화면. AC10·AC11(푸시·잠금화면 액션)은 여정 mockup `JRN-approval-push-to-decision`. 구현 전 |
 
 ## 패턴별 mockup 커버리지 (역인덱스)
 
 | 패턴 (patterns.md) | 사용 mockup |
 |--------------------|-------------|
-| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit, screen-pr-monitor-history, screen-approval |
+| §1 영역 화면 | screen-scratchpad, screen-todo-personal, screen-todo-work, screen-routines, screen-affirmations, screen-affirmations-priority-edit, screen-pr-monitor-history, screen-approval, screen-sessions |
 | §2 채팅 화면 | screen-chat-text |
-| §3 리스트 + 섹션 | screen-todo-personal, screen-todo-work, screen-pr-monitor-history, screen-approval |
+| §3 리스트 + 섹션 | screen-todo-personal, screen-todo-work, screen-pr-monitor-history, screen-approval, screen-sessions |
 | §4 음성 모드 (다크) | screen-chat-voice |
 | §5 카드 + 진행률 | screen-routines |
 | §6 시스템 통합 | screen-shortcut-capture, screen-widget, screen-keyboard-extension, screen-pr-monitor-push (§6.1 잠금 화면 변형) |
 | §7 다짐 회전 노출 | screen-affirmations |
 | §8 임시공간 분류 흐름 | screen-scratchpad |
-| §9 편집 시트 | screen-affirmations-priority-edit, screen-routines, screen-approval (키 발급 시트) |
+| §9 편집 시트 | screen-affirmations-priority-edit, screen-routines, screen-approval (키 발급 시트), screen-sessions (새 세션 시트) |
+| §9-1 에이전트 세션 | screen-sessions |
 
 모든 mockup이 1개 이상의 패턴에 매핑됨 — 임의 스타일 mockup 위험은 없음. ✅

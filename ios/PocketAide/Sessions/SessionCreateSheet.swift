@@ -4,6 +4,8 @@ import SwiftUI
 
 struct SessionCreateSheet: View {
     let config: AgentSessionConfig?
+    let configFailed: Bool
+    let onRetryConfig: () -> Void
     let isCreating: Bool
     let error: AgentSessionError?
     let onCreate: (String, AgentSessionWorkloadType, String?) -> Void
@@ -78,12 +80,21 @@ struct SessionCreateSheet: View {
             } else {
                 Card(area: area, padding: .medium) {
                     HStack(spacing: DesignTokens.Spacing.sm) {
-                        if config == nil {
+                        if config == nil, !configFailed {
                             ProgressView()
                         }
-                        Text(config == nil ? "타입 목록을 불러오는 중…" : "세션 플랫폼이 제공하는 타입이 없어요.")
+                        Text(catalogNotice)
                             .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
                             .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.6))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        if configFailed {
+                            Button("다시 시도", action: onRetryConfig)
+                                .buttonStyle(.borderless)
+                                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
+                                .foregroundStyle(DesignTokens.Color.accent(area))
+                                .accessibilityIdentifier("sessions.create.workload.retry")
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -191,6 +202,13 @@ struct SessionCreateSheet: View {
     private var workload: AgentSessionWorkloadType? {
         guard let config else { return nil }
         return config.workloadTypes.first { $0.id == pickedType } ?? config.initialType
+    }
+
+    private var catalogNotice: String {
+        if configFailed {
+            return "세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요."
+        }
+        return config == nil ? "타입 목록을 불러오는 중…" : "세션 플랫폼이 제공하는 타입이 없어요."
     }
 
     private var trimmedName: String {

@@ -105,6 +105,7 @@ E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_AC
 
 | ID | 차단 요인 | 해소 방향 | 선행 | 재검토 시점 | 등재일 |
 |----|-----------|-----------|------|-------------|--------|
+| BF-5 | 세션 플랫폼 상류: 세션 탭의 생성·프롬프트·출력·아카이브·복원·삭제(`test-session-platform.md` 시나리오 2~11·13)를 E2E 가 밟지 못한다 — 백엔드가 클러스터 내부 DNS 로 부르는 session-platform 컨트롤 플레인은 k8s 클러스터·데이터 플레인 이미지·공급자 자격증명(Claude·MiniMax 구독)을 요구하는데, macOS 러너에는 Docker 가 없어 kind 를 띄울 수 없고 운영 플랫폼은 클러스터 밖에 노출되지 않는다. CI 가 지금 관찰하는 것은 플랫폼에 닿지 않는 경로(시나리오 1 탭·빈 상태, 시나리오 12 도달 불가)뿐이다. | 등재(EXT) — GitHub API 스텁(BF-3)과 같은 갈래: `start-test-backend` 가 session-platform API 의 앱 경로(`GET /config`·세션 CRUD·read·write·switch·snapshot)만 실 응답 모양으로 서빙하는 스텁을 띄우고 `SESSION_PLATFORM_URL` 을 그리로 돌린다. 실환경 대체(러너에서 닿는 전용 테스트 플랫폼)가 마련되면 그쪽으로 닫는다. 시나리오 12 는 그때 플랫폼 중지로 도달 불가를 만들도록 다시 쓴다. | 없음 | 2027-01-21 | 2026-10-23 |
 
 ### 해소된 차단 요인
 

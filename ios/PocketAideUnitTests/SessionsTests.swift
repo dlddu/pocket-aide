@@ -163,6 +163,14 @@ final class SessionsTests: XCTestCase {
         XCTAssertFalse(all.contains { $0.message.contains("session-platform") })
     }
 
+    func testSnapshot503MeansArchiveDisabledOnlyForSnapshot() {
+        let gateOff = APIError.badStatus(503, "feature disabled on the session platform")
+        XCTAssertEqual(AgentSessionError.forSnapshot(gateOff), .disabled)
+        XCTAssertEqual(AgentSessionError(gateOff), .unreachable)
+        XCTAssertEqual(AgentSessionError.forSnapshot(APIError.badStatus(409, "")), .busy)
+        XCTAssertTrue(AgentSessionError.disabled.message.contains("데이터는 사라지지 않아요"), "A disabled archive must not read as data loss")
+    }
+
     func testParsesNanosecondTimestamps() {
         let date = AgentSessionFormatting.date("2026-10-22T13:59:18.483112085Z")
         XCTAssertEqual(date, ISO8601DateFormatter().date(from: "2026-10-22T13:59:18Z"))

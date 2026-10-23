@@ -131,6 +131,8 @@ struct SessionsView: View {
         if showsCreate {
             SessionCreateSheet(
                 config: viewModel.config,
+                configFailed: viewModel.configFailed,
+                onRetryConfig: { Task { await viewModel.loadConfig() } },
                 isCreating: viewModel.isCreating,
                 error: viewModel.createError,
                 onCreate: { name, workload, model in

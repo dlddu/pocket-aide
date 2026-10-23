@@ -170,6 +170,13 @@ public enum AgentSessionError: Hashable, Sendable {
     case unreachable
     case unknown
 
+    public static func forSnapshot(_ error: Error) -> AgentSessionError {
+        if case .badStatus(503, _)? = error as? APIError {
+            return .disabled
+        }
+        return AgentSessionError(error)
+    }
+
     public init(_ error: Error) {
         guard let apiError = error as? APIError else {
             self = .unreachable
@@ -209,7 +216,7 @@ public enum AgentSessionError: Hashable, Sendable {
         .tooLarge: "프롬프트가 너무 커요. 1 MiB 이하로 줄여 주세요.",
         .snapshotted: "스냅샷 상태인 세션이에요. 복원한 뒤 이어서 쓸 수 있어요.",
         .queueFull: "앞선 프롬프트가 아직 처리 중이에요. 끝난 뒤 다시 보내 주세요.",
-        .disabled: "이 환경에서는 꺼져 있는 기능이에요. 세션은 그대로 유지돼요.",
+        .disabled: "이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요.",
         .quotaFull: "세션 출력 한도가 찼어요. 기존 출력은 볼 수 있지만 새 프롬프트는 보낼 수 없어요.",
         .unreachable: "세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.",
     ]
@@ -330,5 +337,13 @@ public extension APIClient {
 
     func restoreAgentSession(id: String) async throws -> AgentSession {
         try await post("/api/sessions/\(id)/switch", body: AgentSessionEmptyPayload(), authenticated: true)
+    }
+
+    func snapshotAgentSession(id: String) async throws -> AgentSession {
+        try await post("/api/sessions/\(id)/snapshot", body: AgentSessionEmptyPayload(), authenticated: true)
+    }
+
+    func deleteAgentSession(id: String) async throws {
+        try await delete("/api/sessions/\(id)", authenticated: true)
     }
 }
