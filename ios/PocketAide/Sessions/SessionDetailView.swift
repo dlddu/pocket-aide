@@ -4,8 +4,10 @@ import SwiftUI
 
 struct SessionDetailView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: SessionDetailViewModel
     @State private var prompt = ""
+    @State private var confirmsDelete = false
 
     private let area = SessionsView.area
     private static let bottomAnchor = "sessions.detail.output.bottom"
@@ -35,6 +37,22 @@ struct SessionDetailView: View {
         .navigationTitle(viewModel.session.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) { actionsMenu }
+        }
+        .alert("세션을 삭제할까요?", isPresented: $confirmsDelete) {
+            Button("취소", role: .cancel) {}
+            Button("삭제", role: .destructive) {
+                Task { await viewModel.delete() }
+            }
+        } message: {
+            Text("되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.")
+        }
+        .onChange(of: viewModel.deleted) { _, deleted in
+            if deleted {
+                dismiss()
+            }
+        }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await viewModel.pollWhileVisible()
@@ -45,7 +63,7 @@ struct SessionDetailView: View {
     private var statusStrip: some View {
         VStack(alignment: .leading, spacing: 2) {
             statusLine
-            Text(AgentSessionFormatting.stateDetail(viewModel.session))
+            Text(viewModel.isArchiving ? "아카이브하는 중… 환경을 반납하고 작업 내용을 보관해요" : AgentSessionFormatting.stateDetail(viewModel.session))
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .lineLimit(1)
@@ -125,39 +143,6 @@ struct SessionDetailView: View {
         }
     }
 
-    private var snapshotPanel: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Text("아카이브된 세션이에요")
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
-                .foregroundStyle(DesignTokens.Color.ink(area))
-            Text("오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.")
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
-                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.65))
-                .fixedSize(horizontal: false, vertical: true)
-            Button {
-                Task { await viewModel.restore() }
-            } label: {
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    if viewModel.isRestoring {
-                        ProgressView().tint(DesignTokens.Color.surface(area))
-                    }
-                    Text(viewModel.isRestoring ? "복원하는 중…" : "복원")
-                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Capsule().fill(DesignTokens.Color.ink(area)))
-                .foregroundStyle(DesignTokens.Color.surface(area))
-            }
-            .buttonStyle(.plain)
-            .disabled(viewModel.isRestoring)
-            .accessibilityIdentifier("sessions.detail.restore.button")
-            Spacer(minLength: 0)
-        }
-        .padding(DesignTokens.Spacing.xl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-
     private var composer: some View {
         VStack(alignment: .leading, spacing: 4) {
             if promptTooLarge {
@@ -227,5 +212,68 @@ struct SessionDetailView: View {
 
     private var canSend: Bool {
         viewModel.canSend && !trimmedPrompt.isEmpty && !promptTooLarge
+    }
+}
+
+extension SessionDetailView {
+    var actionsMenu: some View {
+        Menu {
+            Button {
+                Task { await viewModel.archive() }
+            } label: {
+                Label("지금 아카이브", systemImage: "archivebox")
+            }
+            .disabled(!viewModel.canArchive)
+            .accessibilityIdentifier("sessions.detail.archive.button")
+            Button(role: .destructive) {
+                confirmsDelete = true
+            } label: {
+                Label("세션 삭제", systemImage: "trash")
+            }
+            .disabled(viewModel.isBusy)
+            .accessibilityIdentifier("sessions.detail.delete.button")
+        } label: {
+            if viewModel.isArchiving || viewModel.isDeleting {
+                ProgressView()
+            } else {
+                Image(systemName: "ellipsis.circle")
+            }
+        }
+        .tint(DesignTokens.Color.ink(area))
+        .accessibilityLabel("세션 동작")
+        .accessibilityIdentifier("sessions.detail.actions.menu")
+    }
+
+    var snapshotPanel: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            Text("아카이브된 세션이에요")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))
+                .foregroundStyle(DesignTokens.Color.ink(area))
+            Text("오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.")
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
+                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.65))
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                Task { await viewModel.restore() }
+            } label: {
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    if viewModel.isRestoring {
+                        ProgressView().tint(DesignTokens.Color.surface(area))
+                    }
+                    Text(viewModel.isRestoring ? "복원하는 중…" : "복원")
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Capsule().fill(DesignTokens.Color.ink(area)))
+                .foregroundStyle(DesignTokens.Color.surface(area))
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isBusy)
+            .accessibilityIdentifier("sessions.detail.restore.button")
+            Spacer(minLength: 0)
+        }
+        .padding(DesignTokens.Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }

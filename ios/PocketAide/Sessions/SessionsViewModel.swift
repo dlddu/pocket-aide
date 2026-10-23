@@ -9,6 +9,7 @@ final class SessionsViewModel: ObservableObject {
     @Published var error: AgentSessionError?
 
     @Published private(set) var config: AgentSessionConfig?
+    @Published private(set) var configFailed = false
     @Published private(set) var isCreating = false
     @Published var createError: AgentSessionError?
 
@@ -27,7 +28,7 @@ final class SessionsViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         if config == nil {
-            config = try? await api.agentSessionConfig()
+            await loadConfig()
         }
         do {
             sessions = try await api.listAgentSessions()
@@ -40,7 +41,12 @@ final class SessionsViewModel: ObservableObject {
 
     func loadConfig() async {
         guard let api else { return }
-        config = try? await api.agentSessionConfig()
+        do {
+            config = try await api.agentSessionConfig()
+            configFailed = false
+        } catch {
+            configFailed = config == nil
+        }
     }
 
     func workloadType(of session: AgentSession) -> AgentSessionWorkloadType? {

@@ -1,6 +1,6 @@
 ---
 type: design-system-components
-last_updated: 2026-05-06
+last_updated: 2026-10-23
 source: 10개 mockup HTML에서 반복 등장하는 단위 추출
 ---
 
@@ -112,6 +112,8 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
   - `history-item.acked` (PR 모니터): `bg-[var(--bg)]/60` + `border border-dashed border-[var(--rule)]` + `opacity-70` + 본문 텍스트 `line-through decoration-stone-300`. 상태 배지는 stone-300(중립)으로 다운그레이드, "확인 · YYYY-MM-DD HH:MM" 메타가 본문 아래 작은 글씨로. ack 트리거는 **본 변형 외부의 "확인" 버튼 클릭만**(외부 링크 칩 탭이나 푸시 탭은 ack 미트리거 — AC12).
   - `history-group.unacked` (PR 모니터, PRD-10 AC13): `history-item.*` 카드들을 같은 PR(있으면) 또는 같은 커밋(`head_sha`) 기준으로 묶는 한 단계 상위 컨테이너. 외곽은 `bg-white` + 좌측 3px `--accent` 보더 + 나머지 1px `--rule` 보더 + 작은 `rounded-md`. 그룹 헤더는 PR 키 정보(`repo · #N PR-title`) 또는 커밋 키 정보(`repo · branch @sha`), 그 아래 종합 상태(`통과 X · 실패 Y · CI N건`)와 최근 시각, **PR 그룹일 때만 그 아래 `PR` 외부 링크 칩**(같은 그룹 안에서 PR URL이 동일하므로 row의 중복을 없앤 자리). 우측에 `미확인 N` 배지(`bg-[var(--accent)] text-white`)와 그 아래 `모두 확인` 보더 버튼(그룹 내 미확인 항목 일괄 ack 트리거). 그룹 본체는 헤더 아래 `border-t border-[var(--rule)]`로 구분되며, 그 안에 `history-item.unacked` / `history-item.acked` 행이 시각 역순으로 들어간다. 행 사이는 `border-t border-[var(--rule)]/60` 점진 구분. `pulse-glow` 옵션은 그룹 카드 단위에 적용 가능 — 푸시 진입한 항목이 속한 그룹 자체가 외곽 링 펄스를 받는다(5초 자동 해제).
   - `history-group.acked` (PR 모니터): 그룹 내 모든 항목이 확인된 상태. `bg-[var(--bg)]/60` + `border border-dashed border-[var(--rule)]` + `opacity-70`, 헤더만 표시되고 본체는 접힌 채로 둔다. 우측 배지는 `모두 확인`(중립 stone, 보더만). 본문 텍스트는 `line-through decoration-stone-300`.
+
+  - `session-card` (세션 화면, PRD-11 AC5): `bg-white` + `rounded-2xl` + 1px `--rule` 보더. 위 줄은 상태 배지(점 + 라벨 — 실행 중 `--forest` / 대기 `--tan` / 아카이브됨 영역 강조)와 우측 생성 시각, 그 아래 세션 이름(body-lg semibold), 타입 줄(「<타입 라벨> · <모델>」, caption-xs medium), 상태 설명 줄(마지막 사용 또는 아카이브 시각·크기·환경 반납, caption-xs 흐림). 카드 전체가 상세 진입 단추다.
 
 ### `SectionHeader`
 리스트 안의 섹션 구분자. 좌측 제목 + 우측 메타(카운트·날짜).
@@ -239,6 +241,7 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 | `IPhoneFrame` | 변형 없음 | 고정 |
 | `KeyboardKey` | 시스템 통합 전용 | `--kbd`, `--key` |
 | `Sheet` | 다짐 영역용 1종 (확장 여지) | 영역 표면색·rule·ink (alpha) |
+| `Card.session-card` | 세션 화면 전용 (§1.11 차용) | §1.11 인디고 + 의미 토큰(forest/tan) |
 
 ---
 

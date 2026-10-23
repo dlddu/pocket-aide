@@ -131,6 +131,8 @@ struct SessionsView: View {
         if showsCreate {
             SessionCreateSheet(
                 config: viewModel.config,
+                configFailed: viewModel.configFailed,
+                onRetryConfig: { Task { await viewModel.loadConfig() } },
                 isCreating: viewModel.isCreating,
                 error: viewModel.createError,
                 onCreate: { name, workload, model in
@@ -246,6 +248,5 @@ struct SessionErrorBanner: View {
                 .stroke(DesignTokens.Color.accent(area), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .accessibilityIdentifier("sessions.error")
     }
 }

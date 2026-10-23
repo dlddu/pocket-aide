@@ -11,6 +11,9 @@ final class SessionDetailViewModel: ObservableObject {
     @Published private(set) var hasLoadedOutput = false
     @Published private(set) var isSending = false
     @Published private(set) var isRestoring = false
+    @Published private(set) var isArchiving = false
+    @Published private(set) var isDeleting = false
+    @Published private(set) var deleted = false
     @Published var error: AgentSessionError?
 
     static let pollInterval: Duration = .seconds(2)
@@ -29,9 +32,13 @@ final class SessionDetailViewModel: ObservableObject {
 
     var isTerminal: Bool { type?.input == .terminal }
 
+    var isBusy: Bool { isRestoring || isArchiving || isDeleting }
+
     var canSend: Bool {
-        session.state != .snapshot && !isSending && !isRestoring
+        session.state != .snapshot && !isSending && !isBusy
     }
+
+    var canArchive: Bool { session.state != .snapshot && !isBusy }
 
     func pollWhileVisible() async {
         while !Task.isCancelled {
@@ -50,7 +57,7 @@ final class SessionDetailViewModel: ObservableObject {
         if stale {
             await refreshState()
         }
-        guard session.state != .snapshot, !isRestoring else { return }
+        guard session.state != .snapshot, !isBusy, !deleted else { return }
         await readOutput()
     }
 
@@ -124,7 +131,7 @@ final class SessionDetailViewModel: ObservableObject {
     }
 
     func restore() async {
-        guard let api, session.state == .snapshot, !isRestoring else { return }
+        guard let api, session.state == .snapshot, !isBusy else { return }
         isRestoring = true
         defer { isRestoring = false }
         do {
@@ -132,6 +139,36 @@ final class SessionDetailViewModel: ObservableObject {
             error = nil
         } catch {
             self.error = AgentSessionError(error)
+        }
+    }
+
+    func archive() async {
+        guard let api, canArchive else { return }
+        isArchiving = true
+        defer { isArchiving = false }
+        do {
+            session = try await api.snapshotAgentSession(id: session.id)
+            phase = .none
+            error = nil
+        } catch {
+            self.error = AgentSessionError.forSnapshot(error)
+        }
+    }
+
+    func delete() async {
+        guard let api, !isBusy else { return }
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            try await api.deleteAgentSession(id: session.id)
+            deleted = true
+        } catch {
+            let category = AgentSessionError(error)
+            if category == .notFound {
+                deleted = true
+            } else {
+                self.error = category
+            }
         }
     }
 }

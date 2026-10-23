@@ -1,6 +1,6 @@
 ---
 type: design-system-patterns
-last_updated: 2026-05-06
+last_updated: 2026-10-23
 source: 10개 mockup HTML의 화면 구조 분석
 ---
 
@@ -228,6 +228,25 @@ Card.routine-card (rounded-3xl)
 
 ---
 
+## 9-1. 에이전트 세션 (Agent Session)
+
+세션 탭(PRD-11, `screen-sessions`). 목록은 §1 영역 화면 + §3 리스트(`Card.session-card`), 상세는 §2 채팅 화면의 변형이다.
+
+### 상세 구조
+```
+NavigationBar (시스템 — 세션 이름 · 우측 「세션 동작」 메뉴: 지금 아카이브 · 세션 삭제)
+├─ StatusStrip (상태 배지 + 타입·모델 + 우측 응답 단계 / 아래 상태 설명 줄)
+├─ OutputPanel (Card, 모노스페이스 출력 — 서버 커서로 이어 붙임) 또는 ArchivedPanel (아카이브 안내 + 「복원」)
+├─ Composer (탭바 위 고정 — 에이전트 타입은 「에이전트에게 맡길 일」, 터미널 타입은 「명령 입력」)
+└─ TabBar
+```
+
+### 규칙
+- 출력 패널은 대화 버블로 쪼개지 않는다 — 플랫폼 출력은 하나의 이어지는 텍스트 스트림이다.
+- 응답 단계(「전송됨 · 응답 대기 중」·「응답 진행 중」·「새 출력이 멈췄어요」)는 에이전트 타입에만, 상태 줄 우측에 작게.
+- 파괴적 동작(세션 삭제)은 상단 메뉴 안에 두고 시스템 확인 대화상자를 거친다 — 영역 `--destructive` 토큰이 아니라 iOS 시스템 destructive 표기를 따른다(§1.11 영역에 destructive 토큰이 없고, 확인 대화상자는 시스템 컴포넌트다).
+- 아카이브된 세션은 출력 패널 대신 안내 + 「복원」 1차 액션을 보인다. 복원은 사용자 명시 동작으로만 일어난다.
+
 ## 10. 패턴 사용과 추가 규칙
 
 - mockup이 새 화면을 추가할 때, 먼저 본 문서의 9개 패턴 중 어디에 속하는지 식별한다.
@@ -255,3 +274,4 @@ Card.routine-card (rounded-3xl)
 | `screen-shortcut-capture` | 시스템 통합 (잠금화면) | — |
 | `screen-widget` | 시스템 통합 (위젯) | — |
 | `screen-keyboard-extension` | 시스템 통합 (키보드) | — |
+| `screen-sessions` | 영역 화면 (§1.11 차용) | 리스트+섹션, 에이전트 세션, 편집 시트 |
