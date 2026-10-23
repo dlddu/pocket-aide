@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 enum RootTab: Hashable {
-    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval
+    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, sessions
 }
 
 struct RootView: View {
@@ -85,7 +85,7 @@ struct RootView: View {
 
     private var activeTint: Color {
         switch selectedTab {
-        case .prMonitor, .approval: return DesignTokens.Color.accent(.prMonitor)
+        case .prMonitor, .approval, .sessions: return DesignTokens.Color.accent(.prMonitor)
         case .affirmations: return DesignTokens.Color.accent(.affirmations)
         case .personal: return DesignTokens.Color.accent(.personal)
         case .work: return DesignTokens.Color.accent(.work)
@@ -109,6 +109,9 @@ struct RootView: View {
                 ApprovalsView(viewModel: approvals, openedApprovalID: $openedApprovalID)
             }
             .badge(approvals.pendingCount)
+            Tab("세션", systemImage: "terminal", value: RootTab.sessions) {
+                SessionsView()
+            }
             Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
                 ChatTab()
             }

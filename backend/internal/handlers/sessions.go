@@ -67,24 +67,30 @@ func readSessionBody(w http.ResponseWriter, r *http.Request) ([]byte, bool) {
 	return raw, true
 }
 
+func fetchRuntimeConfig(w http.ResponseWriter, r *http.Request, client *sessions.Client) (sessions.RuntimeConfig, bool) {
+	var cfg sessions.RuntimeConfig
+	status, raw, err := client.Do(r.Context(), http.MethodGet, "/config", nil)
+	if err != nil {
+		writeUnreachable(w)
+		return cfg, false
+	}
+	if status != http.StatusOK {
+		writeSessionError(w, status)
+		return cfg, false
+	}
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		writeSessionError(w, http.StatusBadGateway)
+		return cfg, false
+	}
+	cfg.Normalize()
+	return cfg, true
+}
+
 func SessionConfig(client *sessions.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		status, raw, err := client.Do(r.Context(), http.MethodGet, "/config", nil)
-		if err != nil {
-			writeUnreachable(w)
+		cfg, ok := fetchRuntimeConfig(w, r, client)
+		if !ok {
 			return
-		}
-		if status != http.StatusOK {
-			writeSessionError(w, status)
-			return
-		}
-		var cfg sessions.RuntimeConfig
-		if err := json.Unmarshal(raw, &cfg); err != nil {
-			writeSessionError(w, http.StatusBadGateway)
-			return
-		}
-		if cfg.ClaudeCode.Models == nil {
-			cfg.ClaudeCode.Models = []string{}
 		}
 		w.Header().Set("Cache-Control", "no-store")
 		writeJSON(w, http.StatusOK, cfg)
@@ -152,19 +158,33 @@ func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
 			return
 		}
-		if p.WorkloadType != nil && *p.WorkloadType != sessions.WorkloadClaudeCode {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "workloadType must be claude-code"})
-			return
+		workload := sessions.WorkloadClaudeCode
+		if p.WorkloadType != nil {
+			workload = *p.WorkloadType
 		}
 		name := strings.TrimSpace(p.Name)
 		if name == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 			return
 		}
+		cfg, ok := fetchRuntimeConfig(w, r, client)
+		if !ok {
+			return
+		}
+		info, known := cfg.Workload(workload)
+		if !known {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "workloadType is not offered by the session platform"})
+			return
+		}
+		model := strings.TrimSpace(p.Model)
+		if model != "" && !info.TakesModel {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "this workloadType takes no model"})
+			return
+		}
 		upstream, err := json.Marshal(platformCreateRequest{
 			Name:         name,
-			WorkloadType: sessions.WorkloadClaudeCode,
-			Model:        strings.TrimSpace(p.Model),
+			WorkloadType: workload,
+			Model:        model,
 		})
 		if err != nil {
 			http.Error(w, "encode failed", http.StatusInternalServerError)
