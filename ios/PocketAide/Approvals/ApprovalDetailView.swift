@@ -162,25 +162,31 @@ struct ApprovalDetailView: View {
 
     private func decisionButtons(enabled: Bool) -> some View {
         HStack(spacing: 10) {
-            Button("거절") { confirming = .reject }
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.Spacing.md)
-                .foregroundStyle(DesignTokens.Color.accent(Self.area))
-                .background(DesignTokens.Color.card(Self.area))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)
-                )
-                .accessibilityIdentifier("approval.detail.reject")
-            Button("승인") { confirming = .approve }
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.Spacing.md)
-                .foregroundStyle(.white)
-                .background(DesignTokens.Color.accent(Self.area))
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .accessibilityIdentifier("approval.detail.approve")
+            Button { confirming = .reject } label: {
+                Text("거절")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.md)
+                    .foregroundStyle(DesignTokens.Color.accent(Self.area))
+                    .background(DesignTokens.Color.card(Self.area))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .accessibilityIdentifier("approval.detail.reject")
+            Button { confirming = .approve } label: {
+                Text("승인")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.md)
+                    .foregroundStyle(.white)
+                    .background(DesignTokens.Color.accent(Self.area))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .accessibilityIdentifier("approval.detail.approve")
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
