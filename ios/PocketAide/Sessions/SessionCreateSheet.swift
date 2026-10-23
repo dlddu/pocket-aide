@@ -98,7 +98,6 @@ struct SessionCreateSheet: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .accessibilityIdentifier("sessions.create.workload.empty")
             }
         }
     }

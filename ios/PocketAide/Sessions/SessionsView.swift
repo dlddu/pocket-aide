@@ -248,6 +248,5 @@ struct SessionErrorBanner: View {
                 .stroke(DesignTokens.Color.accent(area), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .accessibilityIdentifier("sessions.error")
     }
 }
