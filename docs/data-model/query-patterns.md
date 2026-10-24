@@ -57,10 +57,6 @@
 | Q-45 | `update work_todos \| eq(id, user_id) \| - \| -` | PK(work_todos) | `backend/internal/todos/store.go::Store::Update` |
 | Q-46 | `delete personal_todos \| eq(id, user_id) \| - \| -` | PK(personal_todos) | `backend/internal/todos/store.go::Store::Delete` |
 | Q-47 | `delete work_todos \| eq(id, user_id) \| - \| -` | PK(work_todos) | `backend/internal/todos/store.go::Store::Delete` |
-| Q-48 | `insert agent_sessions \| - \| - \| -` | — | `backend/internal/sessions/store.go::Store::Add` |
-| Q-49 | `select agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Owns` |
-| Q-50 | `select agent_sessions \| eq(user_id) \| - \| -` | idx_agent_sessions_user_id | `backend/internal/sessions/store.go::Store::Owned` |
-| Q-51 | `delete agent_sessions \| eq(session_id, user_id) \| - \| -` | PK(agent_sessions) | `backend/internal/sessions/store.go::Store::Remove` |
 | Q-52 | `select approval_caller_keys \| eq(key_hash) \| - \| -` | UNIQUE(approval_caller_keys.key_hash) | `backend/internal/approvals/store.go::Store::Authenticate` |
 | Q-53 | `update approval_caller_keys \| eq(id) \| - \| -` | PK(approval_caller_keys) | `backend/internal/approvals/store.go::Store::touch` |
 | Q-54 | `insert approval_requests \| - \| - \| -` | — | `backend/internal/approvals/store.go::Store::Create` |

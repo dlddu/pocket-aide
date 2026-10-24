@@ -143,48 +143,31 @@ func (f *fakePlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sessionRoutes(r chi.Router, store *sessions.Store, client *sessions.Client) {
+func sessionRoutes(r chi.Router, client *sessions.Client) {
 	r.Get("/api/sessions/config", handlers.SessionConfig(client))
-	r.Get("/api/sessions", handlers.ListSessions(store, client))
-	r.Post("/api/sessions", handlers.CreateSession(store, client))
-	r.Get("/api/sessions/{id}", handlers.GetSession(store, client))
-	r.Delete("/api/sessions/{id}", handlers.DeleteSession(store, client))
-	r.Post("/api/sessions/{id}/read", handlers.ReadSession(store, client))
-	r.Post("/api/sessions/{id}/write", handlers.WriteSession(store, client))
-	r.Post("/api/sessions/{id}/switch", handlers.SwitchSession(store, client))
-	r.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(store, client))
+	r.Get("/api/sessions", handlers.ListSessions(client))
+	r.Post("/api/sessions", handlers.CreateSession(client))
+	r.Get("/api/sessions/{id}", handlers.GetSession(client))
+	r.Delete("/api/sessions/{id}", handlers.DeleteSession(client))
+	r.Post("/api/sessions/{id}/read", handlers.ReadSession(client))
+	r.Post("/api/sessions/{id}/write", handlers.WriteSession(client))
+	r.Post("/api/sessions/{id}/switch", handlers.SwitchSession(client))
+	r.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(client))
 }
 
 type sessionFixture struct {
 	router   http.Handler
 	platform *fakePlatform
-	store    *sessions.Store
-	count    func() int
 }
 
 func newSessionFixture(t *testing.T) sessionFixture {
 	t.Helper()
-	conn, err := db.Open(filepath.Join(t.TempDir(), "sessions.db"))
-	if err != nil {
-		t.Fatalf("db open: %v", err)
-	}
-	t.Cleanup(func() { _ = conn.Close() })
-	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1'), (2, 'u2')`); err != nil {
-		t.Fatalf("seed users: %v", err)
-	}
 	platform := newFakePlatform()
 	srv := httptest.NewServer(platform)
 	t.Cleanup(srv.Close)
-	store := sessions.New(conn)
 	r := chi.NewRouter()
-	sessionRoutes(r, store, sessions.NewClient(srv.URL))
-	return sessionFixture{router: r, platform: platform, store: store, count: func() int {
-		var n int
-		if err := conn.QueryRow(`SELECT COUNT(*) FROM agent_sessions`).Scan(&n); err != nil {
-			t.Fatalf("count: %v", err)
-		}
-		return n
-	}}
+	sessionRoutes(r, sessions.NewClient(srv.URL))
+	return sessionFixture{router: r, platform: platform}
 }
 
 func createSession(t *testing.T, fx sessionFixture, body map[string]any, userID int64) sessions.Session {
@@ -240,7 +223,7 @@ func TestSessionsRequireAuthAndNeverReachPlatform(t *testing.T) {
 	r := chi.NewRouter()
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(sessionVerifier{}, conn))
-		sessionRoutes(p, sessions.New(conn), sessions.NewClient(srv.URL))
+		sessionRoutes(p, sessions.NewClient(srv.URL))
 	})
 	for _, tc := range []struct{ method, target, token string }{
 		{http.MethodGet, "/api/sessions", ""},
@@ -330,19 +313,11 @@ func TestSessionUpstreamErrorKeepsStatusButNotBody(t *testing.T) {
 }
 
 func TestSessionPlatformUnreachableIsBadGateway(t *testing.T) {
-	conn, err := db.Open(filepath.Join(t.TempDir(), "down.db"))
-	if err != nil {
-		t.Fatalf("db open: %v", err)
-	}
-	t.Cleanup(func() { _ = conn.Close() })
-	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1')`); err != nil {
-		t.Fatalf("seed users: %v", err)
-	}
 	srv := httptest.NewServer(http.NotFoundHandler())
 	url := srv.URL
 	srv.Close()
 	r := chi.NewRouter()
-	sessionRoutes(r, sessions.New(conn), sessions.NewClient(url))
+	sessionRoutes(r, sessions.NewClient(url))
 	rec := doTodo(t, r, http.MethodPost, "/api/sessions", map[string]any{"name": "x"}, 1)
 	if rec.Code != http.StatusBadGateway {
 		t.Fatalf("got %d want 502 (body=%s)", rec.Code, rec.Body.String())
@@ -352,40 +327,55 @@ func TestSessionPlatformUnreachableIsBadGateway(t *testing.T) {
 	}
 }
 
-func TestSessionOwnershipIsolatesUsers(t *testing.T) {
+func TestSessionListShowsEveryPlatformSessionToEveryUser(t *testing.T) {
 	fx := newSessionFixture(t)
 	mine := createSession(t, fx, map[string]any{"name": "mine"}, 1)
-	if n := fx.count(); n != 1 {
-		t.Fatalf("mapping rows after create: got %d want 1", n)
-	}
 	spa := fx.platform.seed("spa shell", "shell", "2026-10-04T09:00:00Z")
-	if ids := listSessionIDs(t, fx, 1); len(ids) != 1 || ids[0] != mine.ID {
-		t.Fatalf("owner list: got %v want [%s] (SPA session %s must stay hidden)", ids, mine.ID, spa)
+	want := strings.Join([]string{spa, mine.ID}, ",")
+	for _, userID := range []int64{1, 2} {
+		if ids := listSessionIDs(t, fx, userID); strings.Join(ids, ",") != want {
+			t.Fatalf("user %d list: got %v want [%s] (app- and SPA-created sessions alike)", userID, ids, want)
+		}
 	}
-	if ids := listSessionIDs(t, fx, 2); len(ids) != 0 {
-		t.Fatalf("other user list: got %v want []", ids)
-	}
-	before := fx.platform.callCount("")
-	for _, id := range []string{mine.ID, spa, "s-404"} {
+	for _, id := range []string{mine.ID, spa} {
 		for _, tc := range []struct{ method, suffix string }{
 			{http.MethodGet, ""},
-			{http.MethodDelete, ""},
 			{http.MethodPost, "/read"},
 			{http.MethodPost, "/write"},
 			{http.MethodPost, "/switch"},
 			{http.MethodPost, "/snapshot"},
 		} {
 			rec := doTodo(t, fx.router, tc.method, "/api/sessions/"+id+tc.suffix, nil, 2)
-			if rec.Code != http.StatusNotFound {
-				t.Errorf("user 2 %s %s%s: got %d want 404", tc.method, id, tc.suffix, rec.Code)
+			if rec.Code != http.StatusOK {
+				t.Errorf("user 2 %s %s%s: got %d want 200 (body=%s)", tc.method, id, tc.suffix, rec.Code, rec.Body.String())
 			}
 		}
 	}
-	if after := fx.platform.callCount(""); after != before {
-		t.Fatalf("non-owner requests reached the platform: %d calls", after-before)
+	if rec := doTodo(t, fx.router, http.MethodDelete, "/api/sessions/"+spa, nil, 2); rec.Code != http.StatusNoContent {
+		t.Fatalf("user 2 delete of a SPA session: got %d want 204", rec.Code)
 	}
-	if ids := listSessionIDs(t, fx, 1); len(ids) != 1 {
-		t.Fatalf("owner session must survive the other user's delete attempts, got %v", ids)
+	if ids := listSessionIDs(t, fx, 1); len(ids) != 1 || ids[0] != mine.ID {
+		t.Fatalf("list after delete: got %v want [%s]", ids, mine.ID)
+	}
+}
+
+func TestSessionUnknownIDRelaysPlatformNotFound(t *testing.T) {
+	fx := newSessionFixture(t)
+	for _, tc := range []struct{ method, suffix string }{
+		{http.MethodGet, ""},
+		{http.MethodDelete, ""},
+		{http.MethodPost, "/read"},
+		{http.MethodPost, "/write"},
+		{http.MethodPost, "/switch"},
+		{http.MethodPost, "/snapshot"},
+	} {
+		rec := doTodo(t, fx.router, tc.method, "/api/sessions/s-404"+tc.suffix, nil, 1)
+		if rec.Code != http.StatusNotFound {
+			t.Errorf("%s s-404%s: got %d want 404", tc.method, tc.suffix, rec.Code)
+		}
+		if strings.Contains(rec.Body.String(), "pod") {
+			t.Errorf("%s s-404%s: body leaks upstream detail: %s", tc.method, tc.suffix, rec.Body.String())
+		}
 	}
 }
 
@@ -414,9 +404,6 @@ func TestSessionCreateValidatesAgainstPlatformCatalog(t *testing.T) {
 	if n := fx.platform.callCount("POST /api/v1/sessions"); n != 0 {
 		t.Fatalf("rejected creates reached the platform: %d", n)
 	}
-	if n := fx.count(); n != 0 {
-		t.Fatalf("rejected creates left %d mapping rows", n)
-	}
 	created := []sessions.Session{
 		createSession(t, fx, map[string]any{"name": "  trimmed  "}, 1),
 		createSession(t, fx, map[string]any{"name": "explicit", "workloadType": "claude-code", "model": "opus"}, 1),
@@ -431,7 +418,7 @@ func TestSessionCreateValidatesAgainstPlatformCatalog(t *testing.T) {
 		}
 	}
 	if ids := listSessionIDs(t, fx, 1); len(ids) != len(created) {
-		t.Errorf("owner list: got %v, want all %d app-created sessions of every type", ids, len(created))
+		t.Errorf("list: got %v, want all %d created sessions of every type", ids, len(created))
 	}
 	fx.platform.mu.Lock()
 	creates := fx.platform.creates
@@ -480,15 +467,12 @@ func TestSessionCreateUnreachableConfigDoesNotCreate(t *testing.T) {
 	}
 }
 
-func TestSessionDeleteRemovesMapping(t *testing.T) {
+func TestSessionDeleteRemovesPlatformSession(t *testing.T) {
 	fx := newSessionFixture(t)
 	s := createSession(t, fx, map[string]any{"name": "done"}, 1)
 	rec := doTodo(t, fx.router, http.MethodDelete, "/api/sessions/"+s.ID, nil, 1)
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("delete: got %d want 204 (body=%s)", rec.Code, rec.Body.String())
-	}
-	if n := fx.count(); n != 0 {
-		t.Fatalf("mapping rows after delete: got %d want 0", n)
 	}
 	if rec := doTodo(t, fx.router, http.MethodGet, "/api/sessions/"+s.ID, nil, 1); rec.Code != http.StatusNotFound {
 		t.Fatalf("get after delete: got %d want 404", rec.Code)
@@ -499,11 +483,7 @@ func TestSessionListSortedByLastAccess(t *testing.T) {
 	fx := newSessionFixture(t)
 	ids := []string{}
 	for _, last := range []string{"2026-10-01T00:00:00Z", "2026-10-03T00:00:00Z", "2026-10-02T00:00:00Z"} {
-		id := fx.platform.seed("s", "claude-code", last)
-		if err := fx.store.Add(context.Background(), 1, id); err != nil {
-			t.Fatalf("add: %v", err)
-		}
-		ids = append(ids, id)
+		ids = append(ids, fx.platform.seed("s", "claude-code", last))
 	}
 	got := listSessionIDs(t, fx, 1)
 	want := []string{ids[1], ids[2], ids[0]}

@@ -19,4 +19,5 @@ struct SessionsScreen {
     var createButton: XCUIElement { app.buttons["sessions.create.button"] }
     var saveButton: XCUIElement { app.buttons["sessions.create.save.button"] }
     var catalogRetry: XCUIElement { app.buttons["sessions.create.workload.retry"] }
+    var listRetry: XCUIElement { app.buttons["sessions.error.retry"] }
 }
