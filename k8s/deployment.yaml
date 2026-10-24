@@ -22,7 +22,7 @@ spec:
           # The tag on main is a placeholder: CI's `pin` job rewrites it on the `deploy`
           # branch (docs/runbook-deploy-and-preview.md). Keep no `images:` transformer in
           # kustomization.yaml — it would override the pinned tag.
-          image: ghcr.io/dlddu/pocket-aide:dd069899e13d7e88434cc0deabf7ba19c3142f31
+          image: ghcr.io/dlddu/pocket-aide:ff109c1e4832a53db47188e47f992cbe332444a7
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
