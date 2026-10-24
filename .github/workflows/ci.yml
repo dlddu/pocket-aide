@@ -237,7 +237,7 @@ jobs:
         run: python3 scripts/comment-policy/check_ledger.py
 
   data-model:
-    name: data-model check (report)
+    name: data-model check (gate)
     needs: changes
     if: needs.changes.outputs.data_model == 'true'
     runs-on: ubuntu-24.04-arm
@@ -255,7 +255,7 @@ jobs:
           { echo '```'; cat "$RUNNER_TEMP/report.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           case "$rc" in
             0) ;;
-            1) echo "::warning title=data-model::위반이 있다 — report 모드라 머지를 막지 않는다(docs/data-model/README.md 「체커」)" ;;
+            1) echo "::error title=data-model::위반이 있다 — 리포트의 기대 행을 ERD·카탈로그에 옮기거나 코드를 고친다(docs/data-model/README.md 「체커」)"; exit 1 ;;
             *) echo "::error title=data-model::판정 불가(종료 코드 $rc)"; exit 1 ;;
           esac
 
@@ -285,7 +285,7 @@ jobs:
 
   ci-success:
     name: ci-success
-    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload, journey-mockup]
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload, journey-mockup, data-model]
     if: always()
     runs-on: ubuntu-24.04-arm
     steps:
@@ -298,14 +298,16 @@ jobs:
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
           JOURNEY_MOCKUP_RESULT: ${{ needs.journey-mockup.result }}
+          DATA_MODEL_RESULT: ${{ needs.data-model.result }}
           BACKEND_UNIT_CHANGED: ${{ needs.changes.outputs.backend_unit }}
           BACKEND_INTEGRATION_CHANGED: ${{ needs.changes.outputs.backend_integration }}
           IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
+          DATA_MODEL_CHANGED: ${{ needs.changes.outputs.data_model }}
           IMAGE_EXPECTED: ${{ needs.changes.outputs.image }}
           TESTFLIGHT_EXPECTED: ${{ needs.changes.outputs.testflight }}
         run: |
           set -e
-          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
+          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT data-model=$DATA_MODEL_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
           [ "$JOURNEY_MOCKUP_RESULT" = "success" ] || { echo "journey-mockup must pass"; exit 1; }
           if [ "$BACKEND_UNIT_CHANGED" = "true" ]; then
@@ -316,6 +318,9 @@ jobs:
           fi
           if [ "$IOS_TESTS_CHANGED" = "true" ]; then
             [ "$IOS_TEST_RESULT" = "success" ] || { echo "ios-test must pass"; exit 1; }
+          fi
+          if [ "$DATA_MODEL_CHANGED" = "true" ]; then
+            [ "$DATA_MODEL_RESULT" = "success" ] || { echo "data-model check must pass"; exit 1; }
           fi
           if [ "$IMAGE_EXPECTED" = "true" ]; then
             [ "$BACKEND_PUSH_RESULT" = "success" ] || { echo "backend-docker-push must pass"; exit 1; }
