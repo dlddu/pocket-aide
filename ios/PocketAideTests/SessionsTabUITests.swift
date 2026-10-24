@@ -7,7 +7,6 @@ final class SessionsTabUITests: XCTestCase {
         UITestAuth.ensureSignedIn(self)
     }
 
-    // Step 2 (empty state) needs a session platform with no sessions; CI has none (BF-5).
     func testSessionsTabSitsInBottomBar() throws {
         let app = TodoUI.launch()
         let screen = SessionsScreen.open(in: app)
