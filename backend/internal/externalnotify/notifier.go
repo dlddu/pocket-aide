@@ -10,6 +10,12 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/apns"
 )
 
+// Data is the payload marker the app reads to open nothing on tap; without
+// it the app treats a push with no deep-link id as a CI push.
+func Data() map[string]any {
+	return map[string]any{"kind": "external_notification"}
+}
+
 type Sender interface {
 	SendWithData(ctx context.Context, deviceToken, title, body string, data map[string]any) error
 }
@@ -41,9 +47,10 @@ func (n *Notifier) Send(ctx context.Context, userID int64, title, body string) (
 		return Result{}, fmt.Errorf("list device tokens: %w", err)
 	}
 	res := Result{Devices: len(tokens)}
-	body = apns.FitAlertBody(title, body, nil)
+	data := Data()
+	body = apns.FitAlertBody(title, body, data)
 	for _, t := range tokens {
-		err := n.sender.SendWithData(ctx, t, title, body, nil)
+		err := n.sender.SendWithData(ctx, t, title, body, data)
 		if err == nil {
 			res.Sent++
 			continue

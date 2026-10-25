@@ -81,8 +81,8 @@ func TestSendGoesToEveryDeviceOfTheOwnerAsIs(t *testing.T) {
 	tokens := []string{}
 	for _, s := range sender.all() {
 		tokens = append(tokens, s.token)
-		if s.title != "백업 완료" || s.body != "스냅샷 3개" || s.data != nil {
-			t.Fatalf("alert: title=%q body=%q data=%v, want the caller's text and no deep-link data", s.title, s.body, s.data)
+		if s.title != "백업 완료" || s.body != "스냅샷 3개" || !reflect.DeepEqual(s.data, map[string]any{"kind": "external_notification"}) {
+			t.Fatalf("alert: title=%q body=%q data=%v, want the caller's text and only the kind marker", s.title, s.body, s.data)
 		}
 	}
 	sort.Strings(tokens)
@@ -118,7 +118,7 @@ func TestLongBodyIsCutToFitThePayload(t *testing.T) {
 	if !strings.HasSuffix(body, "…") || !strings.HasPrefix(long, strings.TrimSuffix(body, "…")) {
 		t.Fatalf("body should be a prefix of the input ending in …")
 	}
-	if size := apns.PayloadSize(got[0].title, body, nil); size > apns.MaxPayloadBytes {
+	if size := apns.PayloadSize(got[0].title, body, got[0].data); size > apns.MaxPayloadBytes {
 		t.Fatalf("payload %d bytes > %d", size, apns.MaxPayloadBytes)
 	}
 }
