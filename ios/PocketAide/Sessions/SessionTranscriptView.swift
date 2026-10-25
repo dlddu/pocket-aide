@@ -1,7 +1,6 @@
 import DesignSystem
 import PocketAideAPI
 import SwiftUI
-import UIKit
 
 struct SessionTranscriptView: View {
     let transcript: AgentSessionTranscript
@@ -21,8 +20,8 @@ struct SessionTranscriptView: View {
                     Text(text.trimmingCharacters(in: .newlines))
                         .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
                         .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.65))
+                        .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .contextMenu { SessionCopyButton(text: text) }
                         .accessibilityIdentifier("sessions.detail.output.text")
                 case .turn(let turn):
                     turnView(turn)
@@ -122,59 +121,11 @@ struct SessionTurnSection: View {
                     .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(full.isEmpty ? 0.45 : 1))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
                     .padding(.leading, DesignTokens.Spacing.lg)
                     .padding(.bottom, DesignTokens.Spacing.sm)
-                    .contentShape(Rectangle())
-                    .onTapGesture(perform: onToggle)
-                    .contextMenu { SessionCopyButton(text: full) }
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityHint("눌러서 접기")
                     .accessibilityIdentifier("\(identifier).full")
             }
-        }
-    }
-}
-
-struct SessionCopyButton: View {
-    let text: String
-
-    var body: some View {
-        Button {
-            UIPasteboard.general.string = text
-        } label: {
-            Label("복사", systemImage: "doc.on.doc")
-        }
-    }
-}
-
-struct SessionTurnStatusBadge: View {
-    let status: AgentSessionTurn.Status
-    let area: DesignTokens.Area
-
-    var body: some View {
-        HStack(spacing: 5) {
-            if status.isFinished {
-                Circle()
-                    .fill(color)
-                    .frame(width: 6, height: 6)
-            } else {
-                ProgressView().controlSize(.mini)
-            }
-            Text(status.label)
-                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
-                .tracking(0.5)
-                .foregroundStyle(color)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("sessions.turn.status")
-    }
-
-    private var color: Color {
-        switch status {
-        case .running: return DesignTokens.StatusColor.inProgress
-        case .ok: return DesignTokens.StatusColor.success
-        case .error, .timeout: return DesignTokens.StatusColor.failure
-        case .canceled, .other: return DesignTokens.Color.ink(area).opacity(0.55)
         }
     }
 }
