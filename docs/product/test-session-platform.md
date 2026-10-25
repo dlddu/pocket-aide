@@ -145,7 +145,7 @@
   - 3단계: 출력이 붙기 시작하면 「응답 진행 중」, 출력이 10초 늘지 않으면 「새 출력이 멈췄어요 · 응답이 끝났을 수 있어요」.
   - 4단계: 「1 MiB를 넘는 프롬프트는 보낼 수 없어요.」가 보이고 보내기를 누를 수 없다.
 - **검증 AC**: AC6, AC12
-- **구현 상태**: 구현됨 — 쓰기는 큐 등록이라 응답 단계를 출력 증가로 추정한다(플랫폼에 완료 신호가 없다 — PRD-11 결정 사항). 1 MiB는 UTF-8 바이트로 센다.
+- **구현 상태**: 구현됨 — 쓰기는 큐 등록이라 응답 단계를 출력 증가로 추정한다(플랫폼에 완료 신호가 없다 — PRD-11 결정 사항). 1 MiB는 UTF-8 바이트로 센다. turn 마커를 남기는 플랫폼에서는 3단계가 추정 대신 마커로 「응답 진행 중」→「응답 완료」가 된다(시나리오 14).
 - **관련 코드 테스트**: `ios/PocketAideUnitTests/SessionsTests.swift` — `testResponsePhaseNeverClaimsCompletionOnSend`·`testPromptLimitCountsUTF8Bytes`
 
 
@@ -235,3 +235,20 @@
 - **검증 AC**: AC3
 - **구현 상태**: 구현됨 — 카탈로그 `input`이 `terminal`인 타입은 끝에 개행을 붙여 보내고, 출력의 ANSI 이스케이프·캐리지 리턴을 걷어 보인다.
 - **관련 코드 테스트**: `ios/PocketAideUnitTests/SessionsTests.swift` — `testTerminalCleanStripsEscapesAndCarriageReturns`
+
+
+### 시나리오 14: 에이전트 출력은 write마다 입력·출력을 접어 두고 펼쳐 볼 수 있다
+- **사전 조건**: 사용자 A의 Claude Code 세션 S. turn 마커를 남기는 플랫폼(dlddu/session-platform#172 이후)이다.
+- **실행 단계**:
+  1. 「이 레포 테스트 실패 원인 찾아줘」를 보내고 응답이 끝날 때까지 본다.
+  2. 이어서 「lastAccess 로 바꾸고 테스트도 추가해줘」를 보낸다.
+  3. 첫 turn의 「입력」·「출력」 행을 차례로 누른다. 다시 누른다.
+  4. 세션을 나갔다 다시 들어온다.
+- **기대 결과**:
+  - 1단계: 출력 패널에 「#1」 turn이 생기고 「입력」·「출력」 행이 접힌 채 첫 줄·마지막 줄 미리보기를 보인다. 진행 중에는 turn 상태가 「진행 중」, 끝나면 「완료」와 시각·소요가 보이고 상태 줄이 「응답 완료」가 된다.
+  - 2단계: 「#2」 turn이 #1 아래에 구분선과 함께 생긴다. 시작 전에는 상태 줄이 「전송됨 · 응답 대기 중」이다.
+  - 3단계: 누른 행 자리에 그 write의 프롬프트·응답 전문이 펼쳐지고, 다시 누르면 접힌다. 마커 원문(`session-platform input …`)은 어디에도 보이지 않는다.
+  - 4단계: 같은 turn 목록이 처음부터 다시 보인다(모두 접힘).
+- **검증 AC**: AC7, AC6
+- **구현 상태**: 구현됨 — `AgentSessionTranscript.parse`가 커서로 모은 출력을 turn으로 가르고 `SessionTranscriptView`가 turn 구획을 그린다. 응답 단계는 마커가 있으면 마커로 판정한다. 터미널 타입과 마커 없는 출력은 기존 한 덩어리 표시 그대로다.
+- **관련 코드 테스트**: `ios/PocketAideUnitTests/SessionTranscriptTests.swift` — `testSplitsEachWriteIntoInputAndOutput`·`testPromptThatLooksLikeAMarkerStaysInput`·`testFailureStatusesAndTextBetweenTurns`·`testTurnWhoseInputWasTrimmedAway`·`testIgnoresAMarkerStillArriving`·`testTrimmedOutputStartsAtAWholeTurn`·`testPhaseFollowsTurnMarkers`·`testTurnTimingShowsClockAndDuration`·`testPlainOutputStaysOneTextSegment`

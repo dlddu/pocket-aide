@@ -631,13 +631,25 @@
       <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
     </div>
     <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
-      <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap">레포를 클론하고 실패한 테스트를 다시 돌려 볼게요.
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
 go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
 
---- FAIL: TestSessionListOrdersByLastAccess
-    expected lastAccess 내림차순, got 생성 순서
-
-원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</pre>
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
     </div>
     <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
       <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
@@ -830,13 +842,25 @@ user@sess:~$</pre>
       <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
     </div>
     <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
-      <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap">레포를 클론하고 실패한 테스트를 다시 돌려 볼게요.
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
 go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
 
---- FAIL: TestSessionListOrdersByLastAccess
-    expected lastAccess 내림차순, got 생성 순서
-
-원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</pre>
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
     </div>
     <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
       <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
@@ -903,13 +927,25 @@ go test ./internal/handlers/ -run TestSessionList
       <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
     </div>
     <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
-      <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap">레포를 클론하고 실패한 테스트를 다시 돌려 볼게요.
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
 go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
 
---- FAIL: TestSessionListOrdersByLastAccess
-    expected lastAccess 내림차순, got 생성 순서
-
-원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</pre>
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
     </div>
     <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
       <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
@@ -983,13 +1019,25 @@ go test ./internal/handlers/ -run TestSessionList
       </div>
     </div>
     <div class="absolute top-[214px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
-      <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap">레포를 클론하고 실패한 테스트를 다시 돌려 볼게요.
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
 go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
 
---- FAIL: TestSessionListOrdersByLastAccess
-    expected lastAccess 내림차순, got 생성 순서
-
-원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</pre>
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
     </div>
     <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
       <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>

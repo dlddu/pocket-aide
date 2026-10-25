@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-10-23
+last_updated: 2026-10-25
 ---
 
 # 구현 ↔ 목업 매핑
@@ -74,8 +74,9 @@ last_updated: 2026-10-23
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | 화면 | `screen-scratchpad` | 임시공간 탭 화면 전체 — `ScratchpadView`·진입점 `ScratchpadTab`·`ScratchpadCard`: 헤더·일자 그룹 목록·항목 카드(이동 액션)·빈 상태. 추가 시트는 `ScratchpadAddSheet.swift` 행, 「→ 다짐」 시트는 `PriorityEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Scratchpad/ScratchpadViewModel.swift` | 비렌더링 | — | 임시공간 항목 목록·분류 이동 상태와 API 호출 |
 | `ios/PocketAide/Sessions/SessionCreateSheet.swift` | 부분 | `screen-sessions` | 새 세션 시트(PRD-11 AC3·AC4) — 「새 세션」·「새 세션 — 타입 목록 실패」 프레임의 시트: 제목·이름 칸(자리표시 「예: 테스트 실패 원인 찾기」)·타입 라디오 목록(플랫폼 카탈로그 순서·라벨·설명, 기본 선택은 첫 prompt 타입)·모델(`takesModel` 일 때만 — 목록 있으면 메뉴 선택, 없으면 자유 입력)·불변성 안내·「만들기」(생성 중 「세션 띄우는 중…」)/「취소」, 타입 목록을 못 읽으면 안내 + 「다시 시도」. 시트 아래 목록은 `SessionsView.swift` 행 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | 부분 | `screen-sessions` | 세션 상세(PRD-11 AC3·AC6~AC10) — 「상세 — …」 여섯 프레임: 내비게이션 바(세션 이름·「세션 동작」 메뉴 — 지금 아카이브·세션 삭제)·상태 줄(상태 배지·타입·모델·응답 단계 / 상태 설명, 아카이브 중 문구)·출력 패널(모노스페이스, 비었을 때 안내)·아카이브된 세션 패널(안내·「복원」)·입력(에이전트 「에이전트에게 맡길 일」 / terminal 「명령 입력」, 1 MiB 안내)·삭제 확인 대화상자. 상태 배지·오류 배너는 `SessionsView.swift` 행, 탭 바는 `RootView.swift` 행 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | 부분 | `screen-sessions` | 세션 상세(PRD-11 AC3·AC6~AC10) — 「상세 — …」 여섯 프레임: 내비게이션 바(세션 이름·「세션 동작」 메뉴 — 지금 아카이브·세션 삭제)·상태 줄(상태 배지·타입·모델·응답 단계 / 상태 설명, 아카이브 중 문구)·출력 패널(모노스페이스, 비었을 때 안내 — 에이전트 타입의 turn 목록은 `SessionTranscriptView.swift` 행)·아카이브된 세션 패널(안내·「복원」)·입력(에이전트 「에이전트에게 맡길 일」 / terminal 「명령 입력」, 1 MiB 안내)·삭제 확인 대화상자. 상태 배지·오류 배너는 `SessionsView.swift` 행, 탭 바는 `RootView.swift` 행 |
 | `ios/PocketAide/Sessions/SessionDetailViewModel.swift` | 비렌더링 | — | 세션 출력 커서 폴링·전송·복원·아카이브·삭제·응답 단계와 API 호출 |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | 부분 | `screen-sessions` | 세션 상세 출력 패널의 turn 목록(PRD-11 AC7, 2026-10-25) — 「상세 — 에이전트 응답 중」 등 에이전트 출력 프레임: turn 머리(번호·시각·소요·turn 상태 배지)·「입력」/「출력」 접기 행(셰브런·라벨·두 줄 미리보기)·펼친 전문(모노스페이스)·turn 사이 구분선·마커 밖 텍스트 |
 | `ios/PocketAide/Sessions/SessionsView.swift` | 부분 | `screen-sessions` | 세션 탭 목록(PRD-11 AC5·AC11·AC12) — `SessionsView`·`SessionRow`(`Card.session-card`)·`SessionStateBadge`·`SessionErrorBanner`: 「목록」·「빈 상태」·「오류 — 연결 불가」 프레임의 헤더(「AGENT · SESSIONS」·「에이전트 세션」·「새 세션」)·세션 카드(상태 배지·생성 시각·이름·타입 줄·상태 설명 줄)·빈 상태 문구·오류 배너(「다시 시도」). 상태 배지·오류 배너는 상세 프레임에서도 쓰인다. 하단 TabBar 는 `RootView.swift` 행 |
 | `ios/PocketAide/Sessions/SessionsViewModel.swift` | 비렌더링 | — | 세션 목록·타입 카탈로그(실패 상태 포함)·세션 생성 상태와 API 호출 |
 | `ios/PocketAide/ShowHelloIntent.swift` | 비렌더링 | — | App Intent |
