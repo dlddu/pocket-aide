@@ -18,6 +18,45 @@ final class ApprovalsTests: XCTestCase {
         XCTAssertNil(item.processedAt)
     }
 
+    func testDecodesSessionAndReasonAndToleratesServersWithoutThem() throws {
+        let json = #"""
+        {"id":"r1","status":"PENDING","external_id":"x","context":"delete pod","requester_name":"","key_name":"k3s-mcp",
+         "key_revoked":false,"created_at":1,"expires_at":null,"processed_at":null,
+         "session_id":"0d9c8b7a-6f5e-4d3c","session_name":"배포 파이프라인 정리","reason":"재시작이 필요해서 지운다."}
+        """#
+        let item = try JSONDecoder().decode(ApprovalRequest.self, from: Data(json.utf8))
+        XCTAssertEqual(item.sessionId, "0d9c8b7a-6f5e-4d3c")
+        XCTAssertEqual(item.sessionName, "배포 파이프라인 정리")
+        XCTAssertEqual(item.reason, "재시작이 필요해서 지운다.")
+
+        let old = #"{"id":"a","status":"PENDING","external_id":"x","context":"c","requester_name":"","key_name":"k","key_revoked":false,"created_at":1,"expires_at":null,"processed_at":null}"#
+        let legacy = try JSONDecoder().decode(ApprovalRequest.self, from: Data(old.utf8))
+        XCTAssertNil(legacy.sessionId)
+        XCTAssertNil(legacy.sessionName)
+        XCTAssertNil(legacy.reason)
+        XCTAssertNil(ApprovalFormatting.sessionLabel(legacy))
+        XCTAssertNil(ApprovalFormatting.agentReason(legacy))
+    }
+
+    func testSessionRowLabel() {
+        func item(id: String?, name: String?) -> ApprovalRequest {
+            ApprovalRequest(id: "a", context: "c", sessionId: id, sessionName: name, createdAt: 1)
+        }
+        XCTAssertEqual(ApprovalFormatting.sessionLabel(item(id: "0d9c8b7a-6f5e", name: "배포 파이프라인 정리")), "배포 파이프라인 정리")
+        XCTAssertEqual(ApprovalFormatting.sessionLabel(item(id: "0d9c8b7a-6f5e", name: "")), "제목 없음 · 0d9c8b7a")
+        XCTAssertEqual(ApprovalFormatting.sessionLabel(item(id: "0d9c8b7a-6f5e", name: "  ")), "제목 없음 · 0d9c8b7a")
+        XCTAssertEqual(ApprovalFormatting.sessionLabel(item(id: "s-7", name: nil)), "제목 없음 · s-7")
+        XCTAssertNil(ApprovalFormatting.sessionLabel(item(id: "", name: "")))
+        XCTAssertNil(ApprovalFormatting.sessionLabel(item(id: nil, name: nil)))
+        XCTAssertEqual(ApprovalFormatting.sessionLabel(item(id: nil, name: "이름만")), "이름만")
+    }
+
+    func testAgentReasonShownOnlyWhenPresent() {
+        XCTAssertEqual(ApprovalFormatting.agentReason(ApprovalRequest(id: "a", context: "c", reason: "  이유  ", createdAt: 1)), "이유")
+        XCTAssertNil(ApprovalFormatting.agentReason(ApprovalRequest(id: "a", context: "c", reason: " \n ", createdAt: 1)))
+        XCTAssertNil(ApprovalFormatting.agentReason(ApprovalRequest(id: "a", context: "c", reason: "", createdAt: 1)))
+    }
+
     func testDecodesListWithoutDeadline() throws {
         let json = #"{"items":[{"id":"a","status":"PENDING","external_id":"x","context":"c","requester_name":"","key_name":"k","key_revoked":true,"created_at":1,"expires_at":null,"processed_at":null}]}"#
         let response = try JSONDecoder().decode(ApprovalListResponse.self, from: Data(json.utf8))

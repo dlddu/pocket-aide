@@ -81,6 +81,9 @@ erDiagram
 | `created_at` | INTEGER | NO |  |
 | `expires_at` | INTEGER | YES |  |
 | `processed_at` | INTEGER | YES |  |
+| `session_id` | TEXT | NO |  |
+| `session_name` | TEXT | NO |  |
+| `reason` | TEXT | NO |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |

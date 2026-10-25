@@ -40,12 +40,14 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 
 | 동작 | 경로 | 인증 | 요청 | 응답 |
 |------|------|------|------|------|
-| 요청 생성 | `POST /api/external/approvals` | `Authorization: Bearer <호출자 키 또는 k8s SA 토큰>` | `externalId`(필수), `context`(필수), `requesterName`(선택, 표시용), `timeoutSeconds`(선택) | 201 `{id, status, decisionMode, createdAt, expiresAt}` |
+| 요청 생성 | `POST /api/external/approvals` | `Authorization: Bearer <호출자 키 또는 k8s SA 토큰>` | `externalId`(필수), `context`(필수), `requesterName`(선택, 표시용), `sessionId`(선택, 표시용), `reason`(선택, 표시용), `timeoutSeconds`(선택) | 201 `{id, status, decisionMode, createdAt, expiresAt}` |
 | 결과 조회 | `GET /api/external/approvals/{id}` | 같음 | - | 200 `{id, externalId, status, decisionMode, createdAt, expiresAt, processedAt}` |
 | 단순 알림 (AC16) | `POST /api/external/notifications` | 같음 | `title`(필수, 120자 이하), `body`(선택) | 200 `{devices, sent}` |
 
 - `/api/external/` 아래는 호출자 키만, 그 밖의 `/api/`는 OIDC만 받는다. 인증 경계를 경로로 구분한다.
 - 수신자 필드는 없다. 알 수 없는 필드(예: 옛 `userId`)가 오면 400으로 거부해, 옛 클라이언트 설정이 섞여 들어오는 것을 전환 중에 바로 드러낸다.
+- `sessionId`·`reason`(2026-10-25)은 둘 다 문자열이고 앞뒤 공백을 걷은 뒤 빈 문자열이면 보내지 않은 것과 같다. 걷은 뒤 `sessionId`는 최대 128자, `reason`은 최대 2000자(유니코드 문자 수)이고 넘으면 400이다. `sessionId`는 요청을 낸 session-platform 세션의 id, `reason`은 에이전트가 쓴 「이 호출을 하려는 이유」(한국어 한두 문장)다. 둘 다 상세 화면 표시용이며 인가·판정에 쓰지 않는다 — 판정 근거는 여전히 `context` 전문이다. 응답 형태는 바뀌지 않는다.
+- `sessionId`가 있으면 서버가 생성 시점에 session-platform control-plane `GET /api/v1/sessions/{id}`로 세션 제목(`name`)을 조회해 요청과 함께 저장한다 — 세션이 나중에 지워져도 승인 기록에 제목이 남는다. 조회는 2초 타임아웃이고, 실패·404·타임아웃은 요청 생성을 실패시키지 않는다(제목 없이 저장). 앱용 JSON(`/api/approvals` 목록·상세·이력·결정 응답)에는 `session_id`·`session_name`·`reason`이 붙는다(값이 없으면 빈 문자열).
 - `externalId`는 같은 호출자 키 안에서 유일하다(키가 다르면 같은 값을 써도 충돌하지 않는다).
 - 상태 값은 gatekeeper와 같은 `PENDING` / `APPROVED` / `REJECTED` / `EXPIRED`를 쓴다.
 - `decisionMode`는 처리 방식이다 — `manual`(사용자 결정) / `auto`(자동 응답) / `expired`(만료), 아직 `PENDING`이면 `null`. 앱의 처리 이력(AC8)이 쓰는 값과 같다. 자동 응답 모드(AC9)로 생성 즉시 처리된 요청은 생성 응답부터 `auto`다.
@@ -62,9 +64,9 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 ## Acceptance Criteria
 
 ### AC1: 외부 자동화의 승인 요청 생성 (호출자 키 인증)
-- **설명**: 백엔드는 외부 자동화용 요청 생성 엔드포인트를 노출하고, 이를 OIDC와 분리된 호출자 미들웨어 뒤에 둔다. 호출자 자격 증명은 AC13으로 발급된 호출자 키 또는 AC15로 등록된 k8s ServiceAccount의 토큰이고, 폐기(AC14)되지 않은 것만 유효하며, gatekeeper식 단일 공유 시크릿은 두지 않는다. 요청 형식은 위 "호출자 API 계약"을 따른다. 필수 필드 누락·알 수 없는 필드는 400, 같은 키 안에서 `externalId` 중복은 409, 키 누락·불일치·폐기(SA 토큰은 미등록·폐기·검증 실패)는 401이다. 호출자 자격 증명은 요청 생성(AC1)과 상태 조회(AC3) 두 경로에만 유효하며, 앱용 목록·상세·결정 경로에는 쓸 수 없다. 반대로 OIDC 토큰으로는 요청을 생성할 수 없다.
+- **설명**: 백엔드는 외부 자동화용 요청 생성 엔드포인트를 노출하고, 이를 OIDC와 분리된 호출자 미들웨어 뒤에 둔다. 호출자 자격 증명은 AC13으로 발급된 호출자 키 또는 AC15로 등록된 k8s ServiceAccount의 토큰이고, 폐기(AC14)되지 않은 것만 유효하며, gatekeeper식 단일 공유 시크릿은 두지 않는다. 요청 형식은 위 "호출자 API 계약"을 따른다. 필수 필드 누락·알 수 없는 필드·선택 필드 `sessionId`(128자)·`reason`(2000자) 길이 초과는 400, 같은 키 안에서 `externalId` 중복은 409, 키 누락·불일치·폐기(SA 토큰은 미등록·폐기·검증 실패)는 401이다. 호출자 자격 증명은 요청 생성(AC1)과 상태 조회(AC3) 두 경로에만 유효하며, 앱용 목록·상세·결정 경로에는 쓸 수 없다. 반대로 OIDC 토큰으로는 요청을 생성할 수 없다.
 - **달성 가치**: V9
-- **검증 방법**: 유효 키로 생성 → 201 + `PENDING`. 같은 키로 동일 `externalId` 재생성 → 409, 다른 키로는 201. `userId` 필드를 넣어 생성 → 400. 키 없이 → 401. 호출자 키로 앱 목록 경로 호출 → 401. OIDC 토큰으로 생성 경로 호출 → 401. SA 토큰 경로는 AC15에서 검증한다.
+- **검증 방법**: 유효 키로 생성 → 201 + `PENDING`. 같은 키로 동일 `externalId` 재생성 → 409, 다른 키로는 201. `userId` 필드를 넣어 생성 → 400. 129자 `sessionId`·2001자 `reason` → 400, 앞뒤 공백만 있는 두 필드 → 201(없는 것과 같다). 키 없이 → 401. 호출자 키로 앱 목록 경로 호출 → 401. OIDC 토큰으로 생성 경로 호출 → 401. SA 토큰 경로는 AC15에서 검증한다.
 
 ### AC2: 요청 소유권과 비공개
 - **설명**: 모든 요청은 생성에 쓰인 호출자 키의 소유자(AC13) 한 명에게 귀속되며, 호출자가 수신자를 따로 지정하는 방법은 없다. 앱의 목록·상세·결정 경로는 OIDC 인증된 요청자 소유 요청으로 한정되며, 타인 소유 요청 id로의 접근은 존재 여부를 드러내지 않도록 404로 응답한다. 인증 없이 요청 목록이나 내용을 조회할 수 있는 경로는 존재하지 않는다(gatekeeper의 공개 `GET /api/requests`는 옮기지 않는다).
@@ -87,9 +89,9 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 - **검증 방법**: "승인" 탭이 "더 보기"가 아닌 하단 탭 바에 보이는지 확인. 요청 3건 생성 → 목록에 최신순 3건 + 배지 3. 하나 승인 → 목록 2건 + 배지 2. 백그라운드에서 신규 요청 생성 후 포그라운드 복귀 → 목록 반영 확인.
 
 ### AC6: 요청 상세와 만료 카운트다운
-- **설명**: 상세 화면은 `context` 전문, 요청자 이름, 생성에 쓰인 호출자 키 이름(AC13), `externalId`, 생성 시각, 현재 상태를 보여준다. 만료가 있는 `PENDING` 요청은 남은 시간을 초 단위로 실시간 표시하고, 0에 도달하면 서버 응답을 기다리지 않고 결정 버튼을 비활성화한 뒤 상태를 "만료"로 갱신한다. 이미 처리된 요청의 상세는 결정 결과·처리 시각·처리 방식(수동/자동)을 보여주고 결정 버튼을 표시하지 않는다.
+- **설명**: 상세 화면은 `context` 전문, 요청자 이름, 생성에 쓰인 호출자 키 이름(AC13), `externalId`, 생성 시각, 현재 상태를 보여준다. 호출자가 `sessionId`를 보냈으면 「세션」 행에 생성 시점에 조회해 둔 세션 제목을 보이고, 제목이 비었으면(조회 실패·이름 없는 세션) 「제목 없음 · <세션 id 앞 8자>」를 보이며, `sessionId`가 없으면 행 자체를 숨긴다. 호출자가 `reason`을 보냈으면 `context` 전문 위에 「에이전트 설명」 섹션으로 보이고, 에이전트가 쓴 검증되지 않은 문장임을 캡션(「에이전트가 작성 · 검증되지 않음」)으로 구분한다. `reason`이 없으면 섹션을 보이지 않는다. 대기 목록·처리 이력 항목과 푸시(AC10)는 이 두 값을 보이지 않는다(2026-10-25). 만료가 있는 `PENDING` 요청은 남은 시간을 초 단위로 실시간 표시하고, 0에 도달하면 서버 응답을 기다리지 않고 결정 버튼을 비활성화한 뒤 상태를 "만료"로 갱신한다. 이미 처리된 요청의 상세는 결정 결과·처리 시각·처리 방식(수동/자동)을 보여주고 결정 버튼을 표시하지 않는다.
 - **달성 가치**: V9
-- **검증 방법**: `timeoutSeconds=30` 요청 상세를 열고 카운트다운이 감소하는지, 0 도달 시 버튼이 비활성화되고 "만료"로 바뀌는지 확인. 처리된 요청 상세에 결정 버튼이 없는지 확인.
+- **검증 방법**: `timeoutSeconds=30` 요청 상세를 열고 카운트다운이 감소하는지, 0 도달 시 버튼이 비활성화되고 "만료"로 바뀌는지 확인. 처리된 요청 상세에 결정 버튼이 없는지 확인. `sessionId`·`reason`을 보낸 요청의 상세에 세션 제목과 「에이전트 설명」(캡션 포함)이 `context` 위에 보이는지, 세션 제목 조회가 실패한 요청은 「제목 없음 · <id 앞 8자>」로, 두 필드가 없는 요청은 세션 행·설명 섹션 없이 보이는지 확인.
 
 ### AC7: 승인·거절
 - **설명**: 상세 화면에서 승인 또는 거절을 선택하면 확인 단계를 거쳐 결정이 확정된다. 결정은 처리자와 처리 시각을 기록하며 되돌릴 수 없다. 이미 처리된 요청(다른 기기·잠금화면 액션에서 먼저 처리된 경우 포함)에 대한 결정은 409로 거부되고, 앱은 현재 상태를 다시 불러와 "이미 처리됨"을 안내한다. 결정은 먼저 도달한 하나만 유효하다(동시 요청 시 두 번째는 409).
@@ -153,6 +155,10 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 - **한 SA는 한 등록에만 묶인다.** 같은 SA가 두 사용자에게 등록되면 요청 수신자를 정할 수 없다. 사용자 안의 호출자 이름 유일성과 별개로, 폐기되지 않은 등록 사이에서 SA는 전역으로 유일하다.
 - **SA 호출자의 저장 형태(2026-10-16 구현으로 확정).** SA 호출자는 호출자 키와 같은 `approval_caller_keys` 행이고 `kind`(`key`/`k8s_sa`)와 `service_account`(`네임스페이스/이름`)로 구분한다 — 요청·이력·폐기·푸시가 키 id 하나로 그대로 이어진다. FK 가 걸린 테이블을 재생성하지 않으려고 `key_hash`·`key_prefix` 의 NOT NULL 을 유지하고, SA 행의 `key_hash` 는 어떤 키의 SHA-256 과도 겹칠 수 없는 `sa:` 채움값, `key_prefix` 는 빈 문자열이다. 앱용 API 는 같은 `POST /api/approval-keys` 에 `kind`=`k8s_sa`·`service_account` 를 보내 등록하고(응답에 `key` 없음), 목록 항목에 `kind`·`service_account` 가 붙는다. SA 토큰 검증 경로는 `K8S_CALLER_AUTH=true` 일 때만 켜지고, apiserver 에 닿지 못하면 503 이다(호출자 키 경로는 영향 없음).
 - **외부 응답에 처리 방식(`decisionMode`)을 싣는다.** homelab-k3s-mcp의 이벤트 로그는 자동 승인을 따로 기록한다(gatekeeper의 `autoApproved` 대응). 처리 방식은 사용자 식별 정보가 아니므로 AC3과 충돌하지 않는다.
+- **상세에 세션 제목과 에이전트 이유를 보인다(2026-10-25).** 승인 요청을 보고 「어느 세션의 어떤 작업에서 왜 나왔는지」를 `context` 전문만으로는 바로 알기 어렵다. 그래서 호출자 계약에 선택 필드 `sessionId`·`reason`을 더하고 상세(AC6)에만 보인다. 서버가 따로 만든 한글 「무엇을」 요약은 두지 않고 `context` 전문은 그대로 둔다. 목록·이력·푸시는 바꾸지 않는다 — 푸시 형식(AC10)은 그대로다.
+  - **세션 제목은 생성 시점에 서버가 조회해 저장한다.** 호출자가 제목을 직접 보내게 하지 않는 것은 화면의 제목이 PocketAide 세션 화면에 보이는 것(session-platform `Session.name`)과 같아야 하기 때문이다. 상세를 열 때마다 조회하지 않고 저장하는 것은 세션이 지워진 뒤에도 승인 기록에 남기기 위함이다. 조회는 응답을 2초 넘게 늦추지 않고, 실패해도 요청은 만들어진다 — 승인 경로가 세션 플랫폼의 가용성에 묶이지 않게 한다. 저장은 `approval_requests`의 `session_id`·`session_name`·`reason`(셋 다 `TEXT NOT NULL DEFAULT ''`, 마이그레이션 `0016_approval_session_reason`)이다.
+  - **두 값은 표시용이고 신뢰 경계 밖이다.** `sessionId`는 인증된 호출자가 붙인 표시용 값이며 인가 판단에 쓰지 않는다. minimax-code 세션 → helper 파드의 k3s-mcp-proxy → homelab-k3s-mcp 경로에서는 proxy 가 `X-Session-Platform-Session-Id` 헤더를 덮어써 워크로드가 위조할 수 없다. `reason`은 에이전트가 쓴 검증되지 않은 문장이라 상세에서 캡션으로 구분하고, 판정 근거는 여전히 `context` 전문이다.
+  - **이번 범위는 minimax-code 경로만이다.** claude-code 세션(플러그인 직접 호출)과 approval-gated 세션 자체의 승인은 `sessionId`·`reason`을 보내지 않으며, 그 요청의 상세는 세션 행·설명 섹션 없이 이전과 같다.
 - **폐기된 키의 대기 요청은 자동 처리하지 않는다.** 폐기는 대개 유출 의심 때문이므로 자동 승인은 위험하고, 자동 거절은 정상 요청까지 끊는다. 경고와 함께 사용자 판단에 맡긴다.
 - **승인 액션만 잠금 해제를 요구한다.** 거절은 자동화를 멈추는 안전한 방향이므로 마찰을 두지 않는다.
 - **수신자는 호출자 키의 소유자다.** 키가 사용자에게 귀속되므로(AC13) 요청에 수신자를 따로 적지 않는다. 수신자를 안 적은 요청이라는 경우 자체가 사라진다. 한 요청을 여러 사람에게 보내야 할 때 확장한다.
@@ -176,7 +182,7 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 
 | 레포 | 클라이언트 | 설정 | 비고 |
 |------|------------|------|------|
-| homelab-k3s-mcp | `internal/gatekeeper/gatekeeper.go` | `GATEKEEPER_BASE_URL` / `_API_KEY` / `_USER_ID` (flux-cd-apps ExternalSecret) | k8s 쓰기 도구의 승인 게이트. 통합 테스트 11개가 gatekeeper 형식에 의존. 호출자 키 대신 SA 토큰으로 전환한다(AC15) — 앱에서 `homelab-k3s-mcp/homelab-k3s-mcp`를 등록하고, 클라이언트는 projected 토큰(audience `pocket-aide`)을 `Authorization: Bearer`로 보낸다. 시크릿이 필요 없어진다 |
+| homelab-k3s-mcp | `internal/gatekeeper/gatekeeper.go` | `GATEKEEPER_BASE_URL` / `_API_KEY` / `_USER_ID` (flux-cd-apps ExternalSecret) | k8s 쓰기 도구의 승인 게이트. 통합 테스트 11개가 gatekeeper 형식에 의존. 호출자 키 대신 SA 토큰으로 전환한다(AC15) — 앱에서 `homelab-k3s-mcp/homelab-k3s-mcp`를 등록하고, 클라이언트는 projected 토큰(audience `pocket-aide`)을 `Authorization: Bearer`로 보낸다. 시크릿이 필요 없어진다. 2026-10-25부터 생성 본문에 `sessionId`(session-platform k3s-mcp-proxy 가 붙인 `X-Session-Platform-Session-Id` 헤더 값)와 `reason`(게이트 대상 도구의 선택 인자)을 값이 있을 때만 싣는다 — 아래 「선택 필드 배포 순서」 |
 | session-platform | `data-plane/cmd/agent/approval_gateway.go` | `GATEKEEPER_URL` 등 | e2e용 가짜 게이트웨이(`deploy/e2e-approval-gateway-fake.yaml`)도 함께 수정 |
 | pure-agent | `mcp-server/src/services/gatekeeper.ts` | `GATEKEEPER_URL` / `_API_KEY` / `_USER_ID` | 2026-08-05 이후 커밋 없음 — 전환할지 정리할지 전환 중 결정 |
 
@@ -185,6 +191,14 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 1. PocketAide에 승인 게이트를 배포한다(gatekeeper는 계속 운영).
 2. 레포마다: 앱에서 호출자 키를 발급 → 클라이언트를 새 API 계약으로 수정(경로, Bearer 인증, `userId` 제거) → 시크릿 교체 → 실제 요청 1건으로 앱 수신·결정·폴링 확인.
 3. 세 레포 전환 확인 후 gatekeeper(Next.js PWA·Web Push·Authelia 연동, flux-cd-apps 배포)를 내리고 SQLite 데이터를 삭제한다. 관련 ExternalSecret·SSM 파라미터도 정리한다.
+
+**선택 필드 배포 순서 (`sessionId`·`reason`, 2026-10-25)**
+
+1. PocketAide를 먼저 배포한다. 새 필드를 모르는 PocketAide에 보내면 알 수 없는 필드라 400이 되고, homelab-k3s-mcp 는 fail-closed 라 게이트 걸린 쓰기가 막힌다. 마이그레이션 `0016` 이 함께 나간다(`docs/review-policy.md` MA1 — 사람 승인).
+2. homelab-k3s-mcp 를 배포한다(두 필드를 값이 있을 때만 보낸다).
+3. session-platform(k3s-mcp-proxy 의 헤더 추가)은 언제 나가도 무해하다 — 모르는 헤더는 homelab-k3s-mcp 가 무시한다.
+
+PocketAide 쪽에 새 설정은 없다. 세션 제목 조회는 세션 화면이 이미 쓰는 `SESSION_PLATFORM_URL`(기본 `http://control-plane.session-platform.svc.cluster.local`)을 그대로 쓴다.
 
 ## 열린 질문
 

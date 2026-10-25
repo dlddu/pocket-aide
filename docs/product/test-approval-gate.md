@@ -37,6 +37,7 @@
   같은 날 서버 쪽(마이그레이션 `0014_approval_k8s_callers` · TokenReview · SA 호출자 등록 API · `decisionMode`)에 맞춰 시나리오 17을 「부분 구현」(앱 등록 화면 없음), 18을 「구현됨」으로 다시 판정했다.
   같은 날 앱의 SA 호출자 등록 시트·키 목록의 SA 메타 줄에 맞춰 시나리오 17을 「구현됨」으로 다시 판정했다.
   2026-10-25 AC16(호출자의 단순 푸시 알림)을 PRD에 더하며 시나리오 19를 덧붙였고, 같은 변경의 서버 구현(`POST /api/external/notifications`)에 맞춰 「구현됨」으로 판정했다.
+  2026-10-25 호출자 계약의 선택 필드 `sessionId`·`reason`과 상세의 세션 제목·에이전트 설명(PRD-12 AC6 개정)을 구현과 같은 PR 에서 더하며 시나리오 20을 덧붙였다(「구현됨」).
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
@@ -386,3 +387,24 @@
 - **검증 AC**: AC16, AC13, AC14, AC15
 - **구현 상태**: 구현됨 — 서버: `POST /api/external/notifications`가 승인 요청과 같은 호출자 미들웨어(키·SA 토큰) 뒤에 있고, 호출자를 등록한 사용자의 모든 기기에 제목·본문을 그대로 동기 발송해 `{devices, sent}`를 돌려준다(본문 4KB 맞춤 · 무효 토큰 정리 · APNs 미설정 503). 7단계는 페이로드의 `kind`=`external_notification` 표식을 앱의 `PushDeepLink` 가 보고 라우팅하지 않아 성립한다(2026-10-25 정정 — 처음 구현은 표식 없이 보내 앱의 「id 없는 푸시 = CI 푸시」 기본값에 걸려 PR 모니터가 열렸다). 1·5단계의 실기기 도달은 `EXT` — 시뮬레이터 기반 검증에서는 가짜 APNs 수신부가 받은 페이로드까지를 관찰 지점으로 삼는다.
 - **관련 코드 테스트**: `backend/internal/handlers/external_notifications_test.go` — `TestExternalNotificationGoesToCallerOwner`·`TestExternalNotificationBodyIsOptional`·`TestExternalNotificationRejectsBadBodies`·`TestExternalNotificationRequiresLiveCaller`·`TestExternalNotificationAcceptsServiceAccountCaller`·`TestExternalNotificationWithoutPushIsUnavailable`, `backend/internal/externalnotify/notifier_test.go`, `ios/PocketAideUnitTests/ApprovalPushPayloadTests.swift` — `testExternalNotificationOpensNoScreen`
+
+
+### 시나리오 20: 상세에서 요청을 낸 세션의 제목과 에이전트가 밝힌 이유를 본다
+- **사전 조건**: 사용자 A로 로그인. `homelab-k3s-mcp` 호출자가 등록돼 있고 자동 응답 모드 `없음`. session-platform 에 제목 「dear-baby 구버전 정리」인 세션 S가 있다.
+- **실행 단계**:
+  1. 호출자가 `sessionId`=S의 id(앞뒤 공백 포함), `reason`=「v2 롤아웃이 끝나 트래픽이 0인 구버전 deployment 를 지웁니다.」로 요청 R1을 만들고, 사용자 A가 R1의 상세를 연다.
+  2. session-platform 에서 세션 S를 지운 뒤 R1의 상세를 다시 연다.
+  3. 호출자가 session-platform 에 없는 세션 id `0d9c8b7a-6f5e-4d3c`와 `reason` 없이 요청 R2를 만들고 상세를 연다.
+  4. 호출자가 `sessionId`·`reason` 없이(또는 공백만 담아) 요청 R3을 만들고 상세를 연다.
+  5. 호출자가 129자 `sessionId`, 2001자 `reason`, 그리고 `sessionName` 같은 계약에 없는 필드를 각각 담아 요청을 만들려 한다.
+  6. 대기 목록과 R1의 푸시를 본다.
+- **기대 결과**:
+  - 1단계: 생성이 201이다. 상세의 메타에 「세션 dear-baby 구버전 정리」가 보이고, 요청 내용 전문 위에 「에이전트 설명」 섹션이 「에이전트가 작성 · 검증되지 않음」 캡션과 함께 이유 본문(앞뒤 공백 없이)을 보인다.
+  - 2단계: 세션 제목이 그대로 보인다(생성 시점에 저장됐다).
+  - 3단계: 생성이 201이고(세션 조회 실패가 생성을 막지 않는다), 「세션」 행은 「제목 없음 · 0d9c8b7a」이고 「에이전트 설명」 섹션은 없다.
+  - 4단계: 「세션」 행과 「에이전트 설명」 섹션이 모두 없고, 나머지 상세는 이전과 같다.
+  - 5단계: 셋 다 400이고 대기 목록에 새 요청이 생기지 않는다.
+  - 6단계: 대기 목록 항목과 푸시는 세션 제목·이유를 보이지 않고 이전 형식 그대로다.
+- **검증 AC**: AC6, AC1, AC10
+- **구현 상태**: 구현됨 — 서버: 호출자 계약의 선택 필드 `sessionId`(128자)·`reason`(2000자, 앞뒤 공백 trim · 빈 값 = 없음 · 초과 400 · 그 밖 필드 400), 생성 시점 session-platform `GET /api/v1/sessions/{id}` 2초 조회로 `session_name` 저장(실패·404·타임아웃은 빈 이름으로 201), 앱용 JSON `session_id`·`session_name`·`reason`(마이그레이션 `0016_approval_session_reason`). 앱: 상세 메타 「세션」 행(`ApprovalFormatting.sessionLabel`)과 「에이전트 설명」 섹션(`ApprovalFormatting.agentReason`), 필드가 없는 옛 서버 응답도 디코딩된다. 목록·푸시는 변경 없음. CI 에는 세션 플랫폼이 없어(`e2e-mocking-policy.md` BF-5 와 같은 원인) 1·2단계의 실제 제목 조회는 앱 E2E 로 관찰되지 않고 서버 핸들러 테스트의 가짜 control-plane 으로 잰다. 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
+- **관련 코드 테스트**: `backend/internal/handlers/approval_session_reason_test.go` — `TestApprovalCreateStoresTrimmedSessionAndReasonWithLookedUpName`·`TestApprovalCreateWithoutSessionOrReasonKeepsFieldsEmptyAndSkipsLookup`·`TestApprovalCreateSurvivesSessionLookupFailure`·`TestApprovalCreateSurvivesUnknownAndUnreachableSession`·`TestApprovalCreateRejectsOverlongSessionOrReason`, `ios/PocketAideUnitTests/ApprovalsTests.swift` — `testDecodesSessionAndReasonAndToleratesServersWithoutThem`·`testSessionRowLabel`·`testAgentReasonShownOnlyWhenPresent`

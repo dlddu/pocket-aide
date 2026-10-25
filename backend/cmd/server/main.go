@@ -160,7 +160,7 @@ func main() {
 	}
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, platform))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender))
 	})

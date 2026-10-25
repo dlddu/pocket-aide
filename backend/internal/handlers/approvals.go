@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 
@@ -17,7 +19,12 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
 )
 
-const maxApprovalRequestBytes = 1 << 20
+const (
+	maxApprovalRequestBytes = 1 << 20
+	maxSessionIDRunes       = 128
+	maxReasonRunes          = 2000
+	sessionNameTimeout      = 2 * time.Second
+)
 
 type callerCtxKey struct{}
 
@@ -25,6 +32,8 @@ type externalCreatePayload struct {
 	ExternalID     *string `json:"externalId"`
 	Context        *string `json:"context"`
 	RequesterName  *string `json:"requesterName"`
+	SessionID      *string `json:"sessionId"`
+	Reason         *string `json:"reason"`
 	TimeoutSeconds *int64  `json:"timeoutSeconds"`
 }
 
@@ -59,6 +68,9 @@ type approvalResponse struct {
 	ExternalID    string           `json:"external_id"`
 	Context       string           `json:"context"`
 	RequesterName string           `json:"requester_name"`
+	SessionID     string           `json:"session_id"`
+	SessionName   string           `json:"session_name"`
+	Reason        string           `json:"reason"`
 	KeyName       string           `json:"key_name"`
 	KeyRevoked    bool             `json:"key_revoked"`
 	DecisionMode  string           `json:"decision_mode,omitempty"`
@@ -88,6 +100,9 @@ func toApprovalResponse(r approvals.Request) approvalResponse {
 		ExternalID:    r.ExternalID,
 		Context:       r.Context,
 		RequesterName: r.RequesterName,
+		SessionID:     r.SessionID,
+		SessionName:   r.SessionName,
+		Reason:        r.Reason,
 		KeyName:       r.CallerKeyName,
 		KeyRevoked:    r.KeyRevoked,
 		DecisionMode:  r.DecisionMode,
@@ -172,7 +187,31 @@ type ApprovalPusher interface {
 	Notify(req approvalpush.Request)
 }
 
-func CreateExternalApproval(store *approvals.Store, push ApprovalPusher) http.HandlerFunc {
+type SessionNamer interface {
+	SessionName(ctx context.Context, id string) (string, error)
+}
+
+func trimmedOptional(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return strings.TrimSpace(*v)
+}
+
+func lookupSessionName(ctx context.Context, names SessionNamer, id string) string {
+	if names == nil || id == "" {
+		return ""
+	}
+	ctx, cancel := context.WithTimeout(ctx, sessionNameTimeout)
+	defer cancel()
+	name, err := names.SessionName(ctx, id)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(name)
+}
+
+func CreateExternalApproval(store *approvals.Store, push ApprovalPusher, names SessionNamer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		caller, ok := callerFromContext(r.Context())
 		if !ok {
@@ -196,13 +235,24 @@ func CreateExternalApproval(store *approvals.Store, push ApprovalPusher) http.Ha
 			writeError(w, http.StatusBadRequest, "timeoutSeconds must be positive")
 			return
 		}
+		sessionID := trimmedOptional(p.SessionID)
+		if utf8.RuneCountInString(sessionID) > maxSessionIDRunes {
+			writeError(w, http.StatusBadRequest, "sessionId must be at most 128 characters")
+			return
+		}
+		reason := trimmedOptional(p.Reason)
+		if utf8.RuneCountInString(reason) > maxReasonRunes {
+			writeError(w, http.StatusBadRequest, "reason must be at most 2000 characters")
+			return
+		}
 		in := approvals.NewRequest{
 			ExternalID:     *p.ExternalID,
 			Context:        *p.Context,
+			RequesterName:  trimmedOptional(p.RequesterName),
+			SessionID:      sessionID,
+			SessionName:    lookupSessionName(r.Context(), names, sessionID),
+			Reason:         reason,
 			TimeoutSeconds: p.TimeoutSeconds,
-		}
-		if p.RequesterName != nil {
-			in.RequesterName = strings.TrimSpace(*p.RequesterName)
 		}
 		created, err := store.Create(r.Context(), caller, in)
 		if errors.Is(err, approvals.ErrDuplicateExternal) {

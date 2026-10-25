@@ -98,6 +98,9 @@ type Request struct {
 	ExternalID    string
 	Context       string
 	RequesterName string
+	SessionID     string
+	SessionName   string
+	Reason        string
 	Status        Status
 	DecisionMode  string
 	CreatedAt     int64
@@ -109,6 +112,9 @@ type NewRequest struct {
 	ExternalID     string
 	Context        string
 	RequesterName  string
+	SessionID      string
+	SessionName    string
+	Reason         string
 	TimeoutSeconds *int64
 }
 
@@ -327,7 +333,7 @@ func (s *Store) touch(ctx context.Context, keyID int64) error {
 	return nil
 }
 
-const requestColumns = `r.id, r.user_id, r.caller_key_id, k.name, k.revoked_at, r.external_id, r.context, r.requester_name, r.status, r.decision_mode, r.created_at, r.expires_at, r.processed_at`
+const requestColumns = `r.id, r.user_id, r.caller_key_id, k.name, k.revoked_at, r.external_id, r.context, r.requester_name, r.session_id, r.session_name, r.reason, r.status, r.decision_mode, r.created_at, r.expires_at, r.processed_at`
 
 func (s *Store) scanRequest(sc interface{ Scan(...any) error }) (Request, error) {
 	var (
@@ -336,7 +342,7 @@ func (s *Store) scanRequest(sc interface{ Scan(...any) error }) (Request, error)
 		mode      sql.NullString
 	)
 	if err := sc.Scan(&r.ID, &r.UserID, &r.CallerKeyID, &r.CallerKeyName, &revokedAt, &r.ExternalID, &r.Context,
-		&r.RequesterName, &r.Status, &mode, &r.CreatedAt, &r.ExpiresAt, &r.ProcessedAt); err != nil {
+		&r.RequesterName, &r.SessionID, &r.SessionName, &r.Reason, &r.Status, &mode, &r.CreatedAt, &r.ExpiresAt, &r.ProcessedAt); err != nil {
 		return Request{}, err
 	}
 	r.KeyRevoked = revokedAt != nil
@@ -401,8 +407,8 @@ func (s *Store) Create(ctx context.Context, caller Caller, in NewRequest) (Reque
 		decisionMode, processedAt = &auto, &created
 	}
 	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO approval_requests (id, user_id, caller_key_id, external_id, context, requester_name, status, decision_mode, created_at, expires_at, processed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		id, caller.UserID, caller.KeyID, in.ExternalID, in.Context, in.RequesterName, status, decisionMode, created, expiresAt, processedAt)
+		`INSERT INTO approval_requests (id, user_id, caller_key_id, external_id, context, requester_name, session_id, session_name, reason, status, decision_mode, created_at, expires_at, processed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, caller.UserID, caller.KeyID, in.ExternalID, in.Context, in.RequesterName, in.SessionID, in.SessionName, in.Reason, status, decisionMode, created, expiresAt, processedAt)
 	if isUniqueViolation(err) {
 		return Request{}, ErrDuplicateExternal
 	}
