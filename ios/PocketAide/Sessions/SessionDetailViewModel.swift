@@ -7,6 +7,7 @@ final class SessionDetailViewModel: ObservableObject {
     @Published private(set) var type: AgentSessionWorkloadType?
     @Published private(set) var output = AgentSessionOutput()
     @Published private(set) var displayText = ""
+    @Published private(set) var transcript = AgentSessionTranscript()
     @Published private(set) var phase: AgentSessionResponsePhase = .none
     @Published private(set) var hasLoadedOutput = false
     @Published private(set) var isSending = false
@@ -23,6 +24,7 @@ final class SessionDetailViewModel: ObservableObject {
     private var lastOutputAt = Date()
     private var lastPollAt: Date?
     private var catalogChecked = false
+    private var awaitingThrough: Int?
 
     init(session: AgentSession, type: AgentSessionWorkloadType?, api: APIClient?) {
         self.session = session
@@ -85,13 +87,15 @@ final class SessionDetailViewModel: ObservableObject {
             }
             if outcome == .grew || !hasLoadedOutput {
                 displayText = isTerminal ? AgentSessionTerminal.clean(output.text) : output.text
+                transcript = isTerminal ? AgentSessionTranscript() : AgentSessionTranscript.parse(output.text)
             }
             let grew = outcome == .grew && hasLoadedOutput
             if grew {
                 lastOutputAt = Date()
             }
             if !isTerminal {
-                phase = phase.next(outputGrew: grew, secondsSinceLastOutput: Date().timeIntervalSince(lastOutputAt))
+                phase = AgentSessionResponsePhase.fromTurns(transcript, awaitingThrough: awaitingThrough)
+                    ?? phase.next(outputGrew: grew, secondsSinceLastOutput: Date().timeIntervalSince(lastOutputAt))
             }
             hasLoadedOutput = true
             error = nil
@@ -119,6 +123,7 @@ final class SessionDetailViewModel: ObservableObject {
                 session = latest
             }
             if !isTerminal {
+                awaitingThrough = max(awaitingThrough ?? 0, transcript.lastSeq ?? 0) + 1
                 phase = .queued
             }
             lastOutputAt = Date()

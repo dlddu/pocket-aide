@@ -114,7 +114,7 @@ public struct AgentSessionOutput: Equatable, Sendable {
     private mutating func append(_ payload: String) {
         text += payload
         if text.count > Self.displayLimit {
-            text = String(text.suffix(Self.displayLimit))
+            text = AgentSessionTranscript.keepingWholeTurns(String(text.suffix(Self.displayLimit)))
             isTrimmed = true
         }
     }
@@ -125,6 +125,7 @@ public enum AgentSessionResponsePhase: Equatable, Sendable {
     case queued
     case streaming
     case quiet
+    case done
 
     public static let quietAfter: TimeInterval = 10
 
@@ -134,6 +135,7 @@ public enum AgentSessionResponsePhase: Equatable, Sendable {
         case .queued: return "전송됨 · 응답 대기 중"
         case .streaming: return "응답 진행 중"
         case .quiet: return "새 출력이 멈췄어요 · 응답이 끝났을 수 있어요"
+        case .done: return "응답 완료"
         }
     }
 
@@ -146,7 +148,16 @@ public enum AgentSessionResponsePhase: Equatable, Sendable {
         case .streaming, .quiet:
             if outputGrew { return .streaming }
             return secondsSinceLastOutput >= Self.quietAfter ? .quiet : self
+        case .done:
+            return outputGrew ? .streaming : .done
         }
+    }
+
+    public static func fromTurns(_ transcript: AgentSessionTranscript, awaitingThrough: Int?) -> AgentSessionResponsePhase? {
+        guard let last = transcript.turns.last else { return nil }
+        if !last.status.isFinished { return .streaming }
+        guard let awaitingThrough else { return AgentSessionResponsePhase.none }
+        return last.seq >= awaitingThrough ? .done : .queued
     }
 }
 

@@ -133,6 +133,8 @@ struct SessionDetailView: View {
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.body))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                 .accessibilityIdentifier("sessions.detail.output.empty")
+        } else if !viewModel.isTerminal && viewModel.transcript.hasTurns {
+            SessionTranscriptView(transcript: viewModel.transcript, area: area)
         } else {
             Text(viewModel.displayText)
                 .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
