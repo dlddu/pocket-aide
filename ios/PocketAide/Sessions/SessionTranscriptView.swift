@@ -129,3 +129,35 @@ struct SessionTurnSection: View {
         }
     }
 }
+
+struct SessionTurnStatusBadge: View {
+    let status: AgentSessionTurn.Status
+    let area: DesignTokens.Area
+
+    var body: some View {
+        HStack(spacing: 5) {
+            if status.isFinished {
+                Circle()
+                    .fill(color)
+                    .frame(width: 6, height: 6)
+            } else {
+                ProgressView().controlSize(.mini)
+            }
+            Text(status.label)
+                .font(DesignTokens.Typography.font(size: 10.5, weight: .semibold))
+                .tracking(0.5)
+                .foregroundStyle(color)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("sessions.turn.status")
+    }
+
+    private var color: Color {
+        switch status {
+        case .running: return DesignTokens.StatusColor.inProgress
+        case .ok: return DesignTokens.StatusColor.success
+        case .error, .timeout: return DesignTokens.StatusColor.failure
+        case .canceled, .other: return DesignTokens.Color.ink(area).opacity(0.55)
+        }
+    }
+}
