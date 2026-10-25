@@ -1,6 +1,7 @@
 import DesignSystem
 import PocketAideAPI
 import SwiftUI
+import UIKit
 
 struct SessionTranscriptView: View {
     let transcript: AgentSessionTranscript
@@ -20,8 +21,8 @@ struct SessionTranscriptView: View {
                     Text(text.trimmingCharacters(in: .newlines))
                         .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
                         .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.65))
-                        .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .contextMenu { SessionCopyButton(text: text) }
                         .accessibilityIdentifier("sessions.detail.output.text")
                 case .turn(let turn):
                     turnView(turn)
@@ -119,11 +120,27 @@ struct SessionTurnSection: View {
                 Text(full.isEmpty ? placeholder : full)
                     .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(full.isEmpty ? 0.45 : 1))
-                    .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, DesignTokens.Spacing.lg)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: onToggle)
+                    .contextMenu { SessionCopyButton(text: full) }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint("눌러서 접기")
                     .accessibilityIdentifier("\(identifier).full")
             }
+        }
+    }
+}
+
+struct SessionCopyButton: View {
+    let text: String
+
+    var body: some View {
+        Button {
+            UIPasteboard.general.string = text
+        } label: {
+            Label("복사", systemImage: "doc.on.doc")
         }
     }
 }
