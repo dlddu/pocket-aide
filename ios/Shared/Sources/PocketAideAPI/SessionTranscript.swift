@@ -112,14 +112,24 @@ public struct AgentSessionTranscript: Equatable, Sendable {
         var openTurn: Int?
         for part in parts.dropFirst() {
             guard let newline = part.firstIndex(of: "\n") else { continue }
-            let header = part[..<newline]
             let body = String(part[part.index(after: newline)...])
-            guard header.hasPrefix(lead) else {
+            if let marker = Marker(header: part[..<newline]) {
+                transcript.apply(marker, body: body, openTurn: &openTurn)
+            } else {
                 transcript.appendBody(body, to: openTurn)
-                continue
             }
-            let fields = header.dropFirst(lead.count).split(separator: " ")
-            let kind = fields.first.map { String($0) } ?? ""
+        }
+        return transcript
+    }
+
+    struct Marker {
+        let kind: String
+        let seq: Int
+        let values: [String: String]
+
+        init?(header: Substring) {
+            guard header.hasPrefix(AgentSessionTranscript.lead) else { return nil }
+            let fields = header.dropFirst(AgentSessionTranscript.lead.count).split(separator: " ")
             var values: [String: String] = [:]
             for field in fields.dropFirst() {
                 let pair = field.split(separator: "=", maxSplits: 1)
@@ -127,41 +137,45 @@ public struct AgentSessionTranscript: Equatable, Sendable {
                     values[String(pair[0])] = String(pair[1])
                 }
             }
-            guard let seq = Int(values["seq"] ?? "") else {
-                transcript.appendBody(body, to: openTurn)
-                continue
-            }
-            switch kind {
-            case "input":
-                let prompt = body.hasSuffix("\n") ? String(body.dropLast()) : body
-                transcript.segments.append(.turn(AgentSessionTurn(seq: seq, input: prompt, startedAt: date(values["at"]))))
-                openTurn = nil
-            case "output":
-                transcript.ensureTurn(seq)
-                openTurn = seq
-                transcript.appendBody(body, to: seq)
-            case "end":
-                transcript.ensureTurn(seq)
-                transcript.updateTurn(seq) { turn in
-                    turn.status = Status(marker: values["status"] ?? "")
-                    turn.endedAt = date(values["at"])
-                    turn.output = trimmingTrailingNewlines(turn.output)
-                }
-                openTurn = nil
-                transcript.appendText(body)
-            default:
-                transcript.appendBody(body, to: openTurn)
-            }
+            guard let kind = fields.first, let seq = Int(values["seq"] ?? "") else { return nil }
+            self.kind = String(kind)
+            self.seq = seq
+            self.values = values
         }
-        return transcript
+
+        var timestamp: Date? {
+            values["at"].flatMap { ISO8601DateFormatter().date(from: $0) }
+        }
+    }
+
+    private mutating func apply(_ marker: Marker, body: String, openTurn: inout Int?) {
+        switch marker.kind {
+        case "input":
+            let prompt = body.hasSuffix("\n") ? String(body.dropLast()) : body
+            segments.append(.turn(AgentSessionTurn(seq: marker.seq, input: prompt, startedAt: marker.timestamp)))
+            openTurn = nil
+        case "output":
+            ensureTurn(marker.seq)
+            openTurn = marker.seq
+            appendBody(body, to: marker.seq)
+        case "end":
+            ensureTurn(marker.seq)
+            updateTurn(marker.seq) { turn in
+                turn.status = AgentSessionTurn.Status(marker: marker.values["status"] ?? "")
+                turn.endedAt = marker.timestamp
+                turn.output = Self.trimmingTrailingNewlines(turn.output)
+            }
+            openTurn = nil
+            appendText(body)
+        default:
+            appendBody(body, to: openTurn)
+        }
     }
 
     public static func keepingWholeTurns(_ tail: String) -> String {
         guard let start = tail.range(of: inputLead)?.lowerBound, start != tail.startIndex else { return tail }
         return String(tail[start...])
     }
-
-    private typealias Status = AgentSessionTurn.Status
 
     private mutating func appendText(_ text: String) {
         guard !text.isEmpty else { return }
@@ -197,11 +211,6 @@ public struct AgentSessionTranscript: Equatable, Sendable {
             if case .turn(let turn) = segment { return turn.seq == seq }
             return false
         }
-    }
-
-    private static func date(_ raw: String?) -> Date? {
-        guard let raw else { return nil }
-        return ISO8601DateFormatter().date(from: raw)
     }
 
     private static func trimmingTrailingNewlines(_ text: String) -> String {
