@@ -137,7 +137,7 @@
 
   <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">요청 상세</p>
 
-  <!-- 요청 상세 — AC6: 요청 내용 전문·보낸 키·요청자·요청 ID·시각, 남은 시간 초 단위 카운트다운. 결정 버튼 — AC7 -->
+  <!-- 요청 상세 — AC6: 요청 내용 전문·보낸 키·요청자·세션·요청 ID·시각, 남은 시간 초 단위 카운트다운. 결정 버튼 — AC7. 에이전트 설명(reason)은 호출자가 보냈을 때만 요청 내용 전문 위에 서고, 에이전트가 쓴 검증되지 않은 문장이라 캡션으로 구분한다. 세션 행은 세션 제목(session_name), 제목이 비고 id 만 있으면 「제목 없음 · <id 앞 8자>」, 세션 id 도 없으면 행을 숨긴다(「요청 상세 — 만료 · 재조회 실패」 프레임) -->
   <div class="frame relative overflow-hidden">
 
     <!-- top strip — area accent -->
@@ -170,6 +170,14 @@
           <span class="stamp text-[18px] font-bold text-[var(--accent)]">03:48</span>
           <div class="flex-1 h-1 rounded-full bg-[var(--soft)] overflow-hidden"><div class="h-full bg-[var(--accent)]" style="width:42%"></div></div>
         </div>
+        <!-- 에이전트 설명 — 구현 agentReason: 머리 줄(라벨 11 bold accent · 캡션 10 ink 55%) + 본문 카드(13 · card · rule 1px · 라운드 6 · 좌우 12 · 위아래 10) -->
+        <div class="mt-2.5">
+          <div class="flex items-baseline justify-between gap-2 mb-1">
+            <span class="text-[11px] font-bold text-[var(--accent)]">에이전트 설명</span>
+            <span class="text-[10px] text-stone-500">에이전트가 작성 · 검증되지 않음</span>
+          </div>
+          <p class="text-[13px] leading-[1.5] bg-white border border-[var(--rule)] rounded-md px-3 py-2.5">v2 롤아웃이 끝나 트래픽이 0인 구버전 deployment 를 지웁니다. 남은 service·configmap 도 이어서 지울 예정입니다.</p>
+        </div>
         <pre class="mono text-[10.5px] leading-[1.5] whitespace-pre-wrap bg-white border border-[var(--rule)] rounded-md px-3 py-2.5 mt-2.5">작업: dear-baby 구버전 리소스 정리 (3/5)
 대상: deployment/dear-baby-api
 네임스페이스: prod
@@ -184,6 +192,7 @@
         <dl class="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-2.5 text-[11px]">
           <div><dt class="text-stone-500">보낸 키</dt><dd class="stamp mt-0.5">k3s-mcp</dd></div>
           <div><dt class="text-stone-500">요청자</dt><dd class="mt-0.5">Claude Code · homelab 정리 세션</dd></div>
+          <div><dt class="text-stone-500">세션</dt><dd class="stamp mt-0.5">dear-baby 구버전 정리</dd></div>
           <div><dt class="text-stone-500">요청 ID</dt><dd class="stamp mt-0.5">cleanup-20261005-3</dd></div>
           <div><dt class="text-stone-500">요청 시각</dt><dd class="stamp mt-0.5">09:41:02</dd></div>
         </dl>

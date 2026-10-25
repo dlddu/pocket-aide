@@ -35,12 +35,13 @@ func (subVerifier) Verify(_ context.Context, raw string) (*oidc.IDToken, error) 
 }
 
 type approvalEnv struct {
-	t        *testing.T
-	conn     *sql.DB
-	router   http.Handler
-	reviewer *fakeReviewer
-	mu       sync.Mutex
-	now      time.Time
+	t            *testing.T
+	conn         *sql.DB
+	router       http.Handler
+	reviewer     *fakeReviewer
+	sessionNames handlers.SessionNamer
+	mu           sync.Mutex
+	now          time.Time
 }
 
 func newApprovalEnv(t *testing.T) *approvalEnv {
@@ -50,12 +51,17 @@ func newApprovalEnv(t *testing.T) *approvalEnv {
 
 func newApprovalEnvWithPush(t *testing.T, push handlers.ApprovalPusher) *approvalEnv {
 	t.Helper()
+	return newApprovalEnvWith(t, push, nil)
+}
+
+func newApprovalEnvWith(t *testing.T, push handlers.ApprovalPusher, names handlers.SessionNamer) *approvalEnv {
+	t.Helper()
 	conn, err := db.Open(filepath.Join(t.TempDir(), "approvals.db"))
 	if err != nil {
 		t.Fatalf("db open: %v", err)
 	}
 	t.Cleanup(func() { _ = conn.Close() })
-	env := &approvalEnv{t: t, conn: conn, reviewer: &fakeReviewer{tokens: map[string]string{}}, now: time.Unix(1_800_000_000, 0)}
+	env := &approvalEnv{t: t, conn: conn, reviewer: &fakeReviewer{tokens: map[string]string{}}, sessionNames: names, now: time.Unix(1_800_000_000, 0)}
 	store := approvals.NewWithClock(conn, env.clock)
 	r := chi.NewRouter()
 	r.Group(func(p chi.Router) {
@@ -73,7 +79,7 @@ func newApprovalEnvWithPush(t *testing.T, push handlers.ApprovalPusher) *approva
 	})
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(store, env.reviewer))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(store, push))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(store, push, env.sessionNames))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(store))
 	})
 	env.router = r
@@ -162,6 +168,9 @@ type appApprovalBody struct {
 	ExternalID    string `json:"external_id"`
 	Context       string `json:"context"`
 	RequesterName string `json:"requester_name"`
+	SessionID     string `json:"session_id"`
+	SessionName   string `json:"session_name"`
+	Reason        string `json:"reason"`
 	KeyName       string `json:"key_name"`
 	KeyRevoked    bool   `json:"key_revoked"`
 	DecisionMode  string `json:"decision_mode"`

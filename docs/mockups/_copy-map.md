@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-23
+last_updated: 2026-10-25
 ---
 
 # 카피 ↔ 구현 대응표
@@ -40,24 +40,24 @@ last_updated: 2026-10-23
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 231 |
+| A | 일치 | 234 |
 | A | 데이터 | 7 |
-| A | 비표시 | 35 |
+| A | 비표시 | 36 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 0 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
 | A | 목업 대기 | 10 |
-| B | 일치 | 265 |
+| B | 일치 | 267 |
 | B | 외부 | 75 |
-| B | 예시 데이터 | 156 |
+| B | 예시 데이터 | 158 |
 | B | 목업 전용 | 150 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 시스템 UI | 10 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 298행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 302행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -96,12 +96,16 @@ last_updated: 2026-10-23
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `승인` | 일치 | 결정 버튼 「승인」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(승인) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `거절` | 일치 | 결정 버튼 「거절」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(거절) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 상세 폐기된 키 경고 — 목업은 「자동 응답 모드 켜짐」 프레임 대기 카드(상세 프레임에는 폐기된 키 요청이 없다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `에이전트 설명` | 일치 | 에이전트 설명(`reason`) 섹션 라벨 — 「요청 상세」 프레임(호출자가 `reason` 을 보냈을 때만 선다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `에이전트가 작성 · 검증되지 않음` | 일치 | 에이전트 설명 섹션 캡션 — 「요청 상세」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `남은 시간` | 일치 | 카운트다운 라벨 — 「요청 상세」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `보낸 키` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `key` | 비표시 | `fact(_:_:id:)` 의 `id:` 인자 — `accessibilityIdentifier("approval.detail.\(id)")` 접미사, 화면에 그려지지 않는다 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청자` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `—` | 일치 | 요청자 이름이 비었거나 시각이 없을 때의 대체 문자 — 「요청 상세 — 만료 · 재조회 실패」 프레임 요청자 값 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `requester` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `세션` | 일치 | 메타 「세션」(값 `ApprovalFormatting.sessionLabel` — 세션 제목, 제목이 비면 「제목 없음 · <id 앞 8자>」, 세션 id 도 없으면 행을 숨긴다) — 「요청 상세」 프레임 `dl` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `session` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 ID` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `externalId` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 시각` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
@@ -360,7 +364,7 @@ last_updated: 2026-10-23
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 689행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 693행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -456,15 +460,19 @@ last_updated: 2026-10-23
 | `screen-approval` | `session-platform agent · 어제 18:02` | 예시 데이터 | 요청자 · 시각 — 서식은 `ApprovalFormatting.requestTime`(오늘 `HH:mm` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-approval` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
+| `screen-approval` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) · 요청 상세 메타 라벨(`ApprovalDetailView.swift`, 2026-10-25) |
 | `screen-approval` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `남은 시간` | 일치 | 요청 상세 카운트다운 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `03:48` | 예시 데이터 | 상세 카운트다운 값 |
+| `screen-approval` | `에이전트 설명` | 일치 | 요청 상세 에이전트 설명 섹션 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `에이전트가 작성 · 검증되지 않음` | 일치 | 요청 상세 에이전트 설명 섹션 캡션(`ApprovalDetailView.swift`) |
+| `screen-approval` | `v2 롤아웃이 끝나 트래픽이 0인 구버전 deployment 를 지웁니다. 남은 service·configmap 도 이어서 지울 예정입니다.` | 예시 데이터 | 에이전트 설명 본문(호출자가 보낸 `reason`) |
 | `screen-approval` | `작업: dear-baby 구버전 리소스 정리 (3/5) 대상: deployment/dear-baby-api 네임스페이스: prod 동작: delete (propagationPolicy=Foreground) 사유: v2 롤아웃(dear-baby-api-v2) 완료 후 트래픽 0 확인 — 최근 24시간 요청 0건 남은 단계: 4/5 service/dear-baby-api 삭제 5/5 configmap/dear-baby-api-env 삭제` | 예시 데이터 | 요청 내용 전문(호출자가 보낸 텍스트) |
 | `screen-approval` | `보낸 키` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `요청자` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `Claude Code · homelab 정리 세션` | 예시 데이터 | 요청자 이름 |
+| `screen-approval` | `dear-baby 구버전 정리` | 예시 데이터 | 세션 제목(생성 시점에 session-platform 에서 조회해 저장한 `session_name`) |
 | `screen-approval` | `요청 ID` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `cleanup-20261005-3` | 예시 데이터 | 요청 ID |
 | `screen-approval` | `요청 시각` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |

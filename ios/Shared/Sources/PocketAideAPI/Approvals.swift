@@ -13,6 +13,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
     public let externalId: String
     public let context: String
     public let requesterName: String
+    public let sessionId: String?
+    public let sessionName: String?
+    public let reason: String?
     public let keyName: String
     public let keyRevoked: Bool
     public let createdAt: Int64
@@ -26,6 +29,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
         case externalId = "external_id"
         case context
         case requesterName = "requester_name"
+        case sessionId = "session_id"
+        case sessionName = "session_name"
+        case reason
         case keyName = "key_name"
         case keyRevoked = "key_revoked"
         case createdAt = "created_at"
@@ -40,6 +46,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
         externalId: String = "",
         context: String,
         requesterName: String = "",
+        sessionId: String? = nil,
+        sessionName: String? = nil,
+        reason: String? = nil,
         keyName: String = "",
         keyRevoked: Bool = false,
         createdAt: Int64,
@@ -52,6 +61,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
         self.externalId = externalId
         self.context = context
         self.requesterName = requesterName
+        self.sessionId = sessionId
+        self.sessionName = sessionName
+        self.reason = reason
         self.keyName = keyName
         self.keyRevoked = keyRevoked
         self.createdAt = createdAt
@@ -147,6 +159,19 @@ public enum ApprovalFormatting {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .first { !$0.isEmpty }
         return firstLine ?? context.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public static func sessionLabel(_ item: ApprovalRequest) -> String? {
+        let name = (item.sessionName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !name.isEmpty { return name }
+        let id = (item.sessionId ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !id.isEmpty else { return nil }
+        return "제목 없음 · \(String(id.prefix(8)))"
+    }
+
+    public static func agentReason(_ item: ApprovalRequest) -> String? {
+        let reason = (item.reason ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return reason.isEmpty ? nil : reason
     }
 
     public static func pendingHeader(_ count: Int) -> String {
