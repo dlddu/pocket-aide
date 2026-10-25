@@ -22,6 +22,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
+	"github.com/dlddu/pocket-aide/backend/internal/externalnotify"
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
@@ -91,8 +92,10 @@ func main() {
 		}
 	}
 	var approvalPusher handlers.ApprovalPusher
+	var notificationSender handlers.NotificationSender
 	if apnsClient != nil {
 		approvalPusher = approvalpush.New(apnsClient, deviceStore)
+		notificationSender = externalnotify.New(apnsClient, deviceStore)
 	}
 
 	r.Group(func(p chi.Router) {
@@ -159,6 +162,7 @@ func main() {
 		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
 		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
+		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender))
 	})
 
 	srv := &http.Server{

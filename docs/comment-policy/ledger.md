@@ -26,8 +26,10 @@
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/devicetokens/store.go` | 7 | `2716161b6615` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
+| — | `backend/internal/externalnotify/notifier.go` | 3 | `5cda3d694198` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장만 있음, 미판정 |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
+| — | `backend/internal/handlers/external_notifications.go` | 1 | `25f21fb7842c` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장만 있음, 미판정 |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-09-29 | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 11 | `e12b892a3613` | 완료 | 필요성 판정 — 제거 1줄 · 유지 11줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | — | `backend/internal/k8sauth/tokenreview.go` | 5 | `1dae868df4d3` | — | 미판정 — 2026-10-16 k8s ServiceAccount 호출자(PRD-12 AC15) 기능 PR 이 들임 |
