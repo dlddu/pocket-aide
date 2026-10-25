@@ -25,7 +25,10 @@ struct ApprovalsView: View {
             .navigationTitle("승인")
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ApprovalRequest.self) { item in
+                // 푸시 딥링크가 열린 상세 위에서 path 를 다른 요청으로 바꾸면 같은 자리라
+                // StateObject 가 재사용돼 이전 요청이 남는다 — 요청 id 로 정체성을 묶는다.
                 ApprovalDetailView(item: item, api: viewModel.api ?? auth.api)
+                    .id(item.id)
             }
             .navigationDestination(isPresented: $showsSettings) {
                 ApprovalKeysView(api: viewModel.api ?? auth.api)

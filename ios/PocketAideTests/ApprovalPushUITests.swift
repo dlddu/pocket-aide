@@ -63,4 +63,40 @@ final class ApprovalPushUITests: XCTestCase {
         XCTAssertEqual(ApprovalLookup.status(api, first), "PENDING", "The first request should stay pending too")
         app.terminate()
     }
+
+    func testPushLinkOverAnOpenDetailSwitchesToTheNewRequest() throws {
+        let token = TodoUI.uniqueToken()
+        let api = try XCTUnwrap(BackendAPI.signIn(), "The runner should sign in as the app's user")
+        let caller = try XCTUnwrap(ApprovalSeed.issueKey(api, name: "push-swap-\(token.lowercased())"), "A caller key should be issued")
+        addTeardownBlock { _ = api.call("POST", "/api/approval-keys/\(caller.id)/revoke") }
+
+        let firstExternalID = "swap-\(token)-1"
+        let secondExternalID = "swap-\(token)-2"
+        let first = try XCTUnwrap(caller.create(firstExternalID, context: "첫 요청 \(token)", timeout: nil))
+        let second = try XCTUnwrap(caller.create(secondExternalID, context: "둘째 요청 \(token)", timeout: nil))
+
+        let app = TodoUI.launch()
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 15), "Tab bar should appear after sign-in")
+
+        let externalID = app.staticTexts["approval.detail.externalId"]
+        app.open(try XCTUnwrap(Self.link(first)))
+        XCTAssertTrue(externalID.waitForExistence(timeout: 20), "The first push should open its detail")
+        XCTAssertTrue(externalID.label.contains(firstExternalID), "The detail should show the first request: \(externalID.label)")
+
+        app.open(try XCTUnwrap(Self.link(second)))
+        let switched = NSPredicate(format: "label CONTAINS %@", secondExternalID)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [expectation(for: switched, evaluatedWith: externalID)], timeout: 20), .completed,
+            "A push over an open detail should switch to the new request: \(externalID.label)"
+        )
+        app.terminate()
+    }
+
+    private static func link(_ approvalID: String) -> URL? {
+        var link = URLComponents()
+        link.scheme = "pocketaide"
+        link.host = "approvals"
+        link.queryItems = [URLQueryItem(name: "id", value: approvalID)]
+        return link.url
+    }
 }
