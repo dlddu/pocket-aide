@@ -16,9 +16,10 @@
 - AC13: 호출자 키 발급 (PRD-12)
 - AC14: 호출자 키 폐기 (PRD-12)
 - AC15: k8s ServiceAccount 호출자 등록 (PRD-12)
+- AC16: 호출자의 단순 푸시 알림 (PRD-12)
 
 ## 달성 가치
-- V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」) — 검증 대상 AC 모두 V9를 달성한다.
+- V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」, AC16은 「알림」) — 검증 대상 AC 모두 V9를 달성한다.
 
 ## 작성 기준
 - 시나리오는 **사용자가 관찰할 수 있는 결과** 단위로 쓴다. 코드 레벨 테스트는 각 시나리오의
@@ -35,10 +36,11 @@
   2026-10-16 AC15(k8s ServiceAccount 호출자)와 호출자 응답의 `decisionMode`를 PRD에 더하며 시나리오 17·18을 덧붙였다 — 둘 다 구현 착수 전이라 「미구현」이었다.
   같은 날 서버 쪽(마이그레이션 `0014_approval_k8s_callers` · TokenReview · SA 호출자 등록 API · `decisionMode`)에 맞춰 시나리오 17을 「부분 구현」(앱 등록 화면 없음), 18을 「구현됨」으로 다시 판정했다.
   같은 날 앱의 SA 호출자 등록 시트·키 목록의 SA 메타 줄에 맞춰 시나리오 17을 「구현됨」으로 다시 판정했다.
+  2026-10-25 AC16(호출자의 단순 푸시 알림)을 PRD에 더하며 시나리오 19를 덧붙였고, 같은 변경의 서버 구현(`POST /api/external/notifications`)에 맞춰 「구현됨」으로 판정했다.
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
-- 관찰자가 둘이다. **호출자**(외부 자동화)의 관찰 지점은 호출자 API(`/api/external/approvals`)의 HTTP 응답이고,
+- 관찰자가 둘이다. **호출자**(외부 자동화)의 관찰 지점은 호출자 API(`/api/external/approvals`·`/api/external/notifications`)의 HTTP 응답이고,
   **사용자**의 관찰 지점은 앱 화면이다. 호출자 쪽 단계는 `curl` 같은 HTTP 클라이언트로 수행한다고 읽는다.
 - 「사용자 A」「사용자 B」는 서로 다른 OIDC 계정이다. CI에서는 oidcmock이 발급하는 두 계정으로 대신한다
   (`e2e-mocking-policy.md`의 `EXT`).
@@ -359,3 +361,28 @@
 - **검증 AC**: AC3, AC9
 - **구현 상태**: 구현됨 — 호출자 생성·조회 응답이 `decisionMode`를 싣는다(대기 `null` · 수동 결정 `manual` · 자동 응답 `auto` · 만료 `expired`). 모든 단계가 호출자 API 응답으로 관찰된다.
 - **관련 코드 테스트**: `backend/internal/handlers/approval_k8s_caller_test.go` — `TestApprovalExternalResponsesCarryDecisionMode`
+
+
+### 시나리오 19: 호출자가 보낸 단순 알림이 키 소유자의 기기에만 그대로 도착한다
+- **사전 조건**: 사용자 A가 `infra-ci` 키를 발급하고 기기 두 대를 등록한 상태. 사용자 B도 기기 하나를 등록한 상태. 사용자 A가 ServiceAccount `homelab-k3s-mcp/homelab-k3s-mcp`를 SA 호출자로 등록해 둔 상태.
+- **실행 단계**:
+  1. 호출자가 `infra-ci` 키로 `POST /api/external/notifications`에 `{"title": "백업 완료", "body": "nightly 스냅샷 3개 생성"}`을 보낸다.
+  2. 호출자가 `{"title": "ping"}`만 보낸다.
+  3. 호출자가 `title` 누락, 공백뿐인 `title`, 121자 `title`, 알 수 없는 필드(`userId`)를 섞은 요청을 각각 보낸다.
+  4. 호출자가 키 없이, 그리고 사용자 A의 OIDC 토큰으로 같은 요청을 보낸다.
+  5. SA 파드가 projected 토큰으로 `{"title": "배포 완료"}`를 보낸다.
+  6. 호출자가 10KB 이상 `body`로 보낸다.
+  7. 사용자 A가 1단계 알림을 탭한다.
+  8. 사용자 A가 키 목록에서 `infra-ci`를 폐기한 뒤 호출자가 1단계 요청을 다시 보낸다.
+- **기대 결과**:
+  - 1단계: 200 `{devices: 2, sent: 2}`. 사용자 A의 두 기기에 제목 `백업 완료`·본문 `nightly 스냅샷 3개 생성`이 키 이름 접두 없이 도착하고, 사용자 B의 기기에는 오지 않는다. 키 목록의 `infra-ci` 마지막 사용 시각이 방금이다.
+  - 2단계: 200, 본문 없는 알림이 도착한다.
+  - 3단계: 모두 400이고 어떤 기기에도 푸시가 가지 않는다.
+  - 4단계: 둘 다 401.
+  - 5단계: 200, 사용자 A의 기기에 도착한다.
+  - 6단계: 200, 본문이 「…」로 끝나는 알림이 도착한다.
+  - 7단계: 앱이 열리고, 승인 탭의 대기 목록·처리 이력·배지에 새 항목이 없다.
+  - 8단계: 401.
+- **검증 AC**: AC16, AC13, AC14, AC15
+- **구현 상태**: 구현됨 — 서버: `POST /api/external/notifications`가 승인 요청과 같은 호출자 미들웨어(키·SA 토큰) 뒤에 있고, 호출자를 등록한 사용자의 모든 기기에 제목·본문을 그대로 동기 발송해 `{devices, sent}`를 돌려준다(본문 4KB 맞춤 · 무효 토큰 정리 · APNs 미설정 503). 저장하지 않으므로 7단계는 앱 변경 없이 성립한다(딥링크 데이터가 없어 라우팅되지 않는다). 1·5단계의 실기기 도달은 `EXT` — 시뮬레이터 기반 검증에서는 가짜 APNs 수신부가 받은 페이로드까지를 관찰 지점으로 삼는다.
+- **관련 코드 테스트**: `backend/internal/handlers/external_notifications_test.go` — `TestExternalNotificationGoesToCallerOwner`·`TestExternalNotificationBodyIsOptional`·`TestExternalNotificationRejectsBadBodies`·`TestExternalNotificationRequiresLiveCaller`·`TestExternalNotificationAcceptsServiceAccountCaller`·`TestExternalNotificationWithoutPushIsUnavailable`, `backend/internal/externalnotify/notifier_test.go`
