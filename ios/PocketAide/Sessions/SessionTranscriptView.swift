@@ -33,7 +33,7 @@ struct SessionTranscriptView: View {
 
     private func turnView(_ turn: AgentSessionTurn) -> some View {
         let key = "sessions.detail.turn.\(turn.seq)"
-        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+        return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: DesignTokens.Spacing.sm) {
                 Text("#\(turn.seq)")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .semibold))
@@ -90,7 +90,7 @@ struct SessionTurnSection: View {
     let onToggle: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+        VStack(alignment: .leading, spacing: 0) {
             Button(action: onToggle) {
                 HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.sm) {
                     Image(systemName: "chevron.right")
@@ -109,6 +109,7 @@ struct SessionTurnSection: View {
                     }
                     Spacer(minLength: 0)
                 }
+                .padding(.vertical, DesignTokens.Spacing.sm)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -119,9 +120,10 @@ struct SessionTurnSection: View {
                 Text(full.isEmpty ? placeholder : full)
                     .font(.system(size: DesignTokens.Typography.bodySm, design: .monospaced))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(full.isEmpty ? 0.45 : 1))
-                    .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
                     .padding(.leading, DesignTokens.Spacing.lg)
+                    .padding(.bottom, DesignTokens.Spacing.sm)
                     .accessibilityIdentifier("\(identifier).full")
             }
         }
