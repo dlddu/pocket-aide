@@ -1,4 +1,4 @@
-// Package externalnotify sends a plain alert push from an external caller to every device of the caller's owner.
+// Package externalnotify sends and records plain alert pushes from an external caller to every device of the caller's owner.
 package externalnotify
 
 import (
@@ -10,7 +10,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/apns"
 )
 
-// Data is the payload marker the app reads to open nothing on tap; without
+// Data is the payload marker the app reads to open the notification history on tap; without
 // it the app treats a push with no deep-link id as a CI push.
 func Data() map[string]any {
 	return map[string]any{"kind": "external_notification"}

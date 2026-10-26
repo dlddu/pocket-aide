@@ -12,11 +12,12 @@ struct PocketAideApp: App {
     @State private var selectedTab: RootTab = .affirmations
     @State private var highlightedEventID: Int64?
     @State private var openedApprovalID: String?
+    @State private var notificationsReloadToken = 0
     @State private var showsWeather = false
 
     var body: some Scene {
         WindowGroup {
-            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID)
+            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID, notificationsReloadToken: $notificationsReloadToken)
                 .environmentObject(auth)
                 .sheet(isPresented: $showsWeather) { WeatherView() }
                 .task { await auth.bootstrap() }
@@ -95,6 +96,10 @@ struct PocketAideApp: App {
             selectedTab = .approval
             NSLog("[PocketAideApp] selectedTab set to .approval, openedApprovalID=%@",
                   openedApprovalID ?? "<nil>")
+        case "notifications":
+            showsWeather = false
+            notificationsReloadToken += 1
+            selectedTab = .notifications
         default:
             break
         }

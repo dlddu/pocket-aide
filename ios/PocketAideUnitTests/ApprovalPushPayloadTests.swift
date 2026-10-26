@@ -16,8 +16,11 @@ final class ApprovalPushPayloadTests: XCTestCase {
         XCTAssertEqual(PushDeepLink.url(fromUserInfo: [:])?.absoluteString, "pocketaide://pr-monitor")
     }
 
-    func testExternalNotificationOpensNoScreen() {
-        XCTAssertNil(PushDeepLink.url(fromUserInfo: ["aps": [:], "kind": "external_notification"]))
+    func testExternalNotificationOpensTheHistory() {
+        XCTAssertEqual(
+            PushDeepLink.url(fromUserInfo: ["aps": [:], "kind": "external_notification"])?.absoluteString,
+            "pocketaide://notifications"
+        )
         XCTAssertEqual(
             PushDeepLink.url(fromUserInfo: ["kind": "something-else"])?.absoluteString,
             "pocketaide://pr-monitor"

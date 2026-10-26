@@ -1,13 +1,13 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-25
+last_updated: 2026-10-27
 ---
 
 # 카피 ↔ 구현 대응표
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 28개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 33개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -40,24 +40,24 @@ last_updated: 2026-10-25
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 234 |
-| A | 데이터 | 7 |
+| A | 일치 | 245 |
+| A | 데이터 | 8 |
 | A | 비표시 | 36 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 0 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
 | A | 목업 대기 | 10 |
-| B | 일치 | 267 |
-| B | 외부 | 75 |
-| B | 예시 데이터 | 158 |
-| B | 목업 전용 | 150 |
+| B | 일치 | 286 |
+| B | 외부 | 77 |
+| B | 예시 데이터 | 180 |
+| B | 목업 전용 | 158 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
-| B | 시스템 UI | 10 |
+| B | 시스템 UI | 11 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 302행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 314행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -166,6 +166,17 @@ last_updated: 2026-10-25
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel` 자리 — 목업 「목록」·「빈 상태」·「오류」 프레임 머리 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `\(viewModel.unreadCount)` | 데이터 | 헤더 미확인 수 배지 숫자 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | 「빈 상태」 프레임 안내 둘째 줄 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `받은 알림이 없어요.` | 일치 | 「빈 상태」 프레임 안내 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `새 알림` | 일치 | 헤더 미확인 수 배지 라벨·미확인 행 칩 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `알림 기록` | 일치 | 헤더 제목 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `알림 기록을 불러오지 못했습니다` | 일치 | 「오류」 프레임 오류 배너 제목 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `이전 기록 불러오는 중…` | 일치 | 「목록」 프레임 끝 이어 불러오기 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | 헤더 설명 줄 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `최근 알림` | 일치 | 「목록」 프레임 섹션 머리 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `방금 진입` | 일치 | 푸시로 진입한 그룹의 헤더 상태 라벨(`isGroupHighlighted` 일 때만) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR 없음 · \(group.headBranch) 직접 푸시` | 일치 | PR 없는 그룹의 헤더 상태 라벨 「PR 없음 · main 직접 푸시」(브랜치가 비면 그리지 않는다 — 「—」 커밋 그룹) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
@@ -226,6 +237,7 @@ last_updated: 2026-10-25
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
+| `ios/PocketAide/RootView.swift` | `알림 기록` | 일치 | 「더 보기」 목록의 알림 기록 탭 항목(`screen-external-notifications` 「「더 보기」 진입」 프레임) |
 | `ios/PocketAide/Routines/RoutineErrorRow.swift` | `다시 시도` | 일치 | 오류 행 재시도 버튼 — 「상태 변형」 프레임 오류 행(실패 문구는 `RoutineFailureCopy` 가 만든 문자열을 받아 그린다 — 표 B 외부 행) |
 | `ios/PocketAide/Routines/RoutineHistoryRange.swift` | `오늘 · \(today.progressPercent)%` | 일치 | 이력 시트 히트맵 아래 끝 라벨 — 목업 history strip 「오늘 · 60%」(오늘 체크 단계 비율, 오늘이 예정일일 때만) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
@@ -364,7 +376,7 @@ last_updated: 2026-10-25
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 693행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 745행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -722,8 +734,8 @@ last_updated: 2026-10-25
 | `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
 | `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
-| `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
-| `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
+| `screen-widget` | `nightly 백업 완료` | 예시 데이터 | 최신 미확인 호출자 알림 제목(`NotificationSection` 이 `ExternalNotification.title` 을 그대로 그린다 — PRD-8 결정 「알림 영역 — 호출자 알림으로 대체」, 2026-10-27) |
+| `screen-widget` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 최신 미확인 호출자 알림 본문(`ExternalNotification.body`, 비어 있으면 줄 없음) |
 | `screen-widget` | `임시 공간` | 일치 | 임시 공간 슬라이스 라벨(`ScratchpadCountSection`) |
 | `screen-widget` | `미분류` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 미분류 수 앞 낱말 — 「미분류 N개」 서식은 `WidgetScratchpad.countText`(`ScratchpadCountSection` 이 그린다) |
 | `screen-widget` | `12` | 예시 데이터 | 미분류 수(`ScratchpadCountSection` 이 `.loaded(n)` 의 n 으로 그린다) |
@@ -1061,6 +1073,58 @@ last_updated: 2026-10-25
 | `screen-todo-work` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-work` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-todo-work` | `PRD-3 · AC1 별도 데이터·검색 분리(검색바에 "회사 영역만"), AC3 시각 차이(슬레이트·각진 카드·모노스페이스), AC4 영역 간 이동 UI 없음` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-external-notifications` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `16 · 알림 기록` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `「더 보기」 진입` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
+| `screen-external-notifications` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel`(`ExternalNotificationsView.swift`) |
+| `screen-external-notifications` | `알림 기록` | 일치 | 헤더 제목·「더 보기」 목록 항목(`ExternalNotificationsView.swift`·`RootView.swift`) |
+| `screen-external-notifications` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | 헤더 설명 줄 |
+| `screen-external-notifications` | `2` | 예시 데이터 | 미확인 수(헤더 배지) |
+| `screen-external-notifications` | `새 알림` | 일치 | 헤더 배지 라벨·미확인 행 칩 |
+| `screen-external-notifications` | `최근 알림` | 일치 | 섹션 머리 |
+| `screen-external-notifications` | `homelab-k3s-mcp · SA` | 예시 데이터 | 호출자 칩 — 구현은 `ExternalNotificationFormatting.callerLabel`(「<등록 이름> · 키/SA」) |
+| `screen-external-notifications` | `infra-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
+| `screen-external-notifications` | `old-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
+| `screen-external-notifications` | `09:41` | 예시 데이터 | 받은 시각 — `ExternalNotificationFormatting.time`(오늘 「HH:mm」) |
+| `screen-external-notifications` | `09:20` | 예시 데이터 | 받은 시각 |
+| `screen-external-notifications` | `어제 22:10` | 예시 데이터 | 받은 시각(어제) |
+| `screen-external-notifications` | `10/24 18:02` | 예시 데이터 | 받은 시각(그 전) |
+| `screen-external-notifications` | `dear-baby 구버전 정리 완료` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음.` | 예시 데이터 | 알림 본문 |
+| `screen-external-notifications` | `nightly 백업 완료` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 알림 본문 |
+| `screen-external-notifications` | `배포 롤백됨` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `ping` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `요청 jwt:8f2c1e9a-user` | 예시 데이터 | 요청 주체 — `ExternalNotificationFormatting.requesterLabel`(「요청 <requester>」) |
+| `screen-external-notifications` | `요청 github_oidc:dlddu/infrastructure/.github/workflows/backup.yml` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `요청 api_key:2` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `요청 주체 미상` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 요청 주체가 빈 기록(`ExternalNotificationFormatting.requesterLabel`) |
+| `screen-external-notifications` | `1/1 기기` | 예시 데이터 | 도달 — `ExternalNotificationFormatting.deliveryLabel`(「<sent>/<devices> 기기」) |
+| `screen-external-notifications` | `2/2 기기` | 예시 데이터 | 도달 |
+| `screen-external-notifications` | `등록된 기기 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 기기 0개인 기록의 도달(`ExternalNotificationFormatting.deliveryLabel`) |
+| `screen-external-notifications` | `이전 기록 불러오는 중…` | 일치 | 목록 끝 이어 불러오기 |
+| `screen-external-notifications` | `받은 알림이 없어요.` | 일치 | 「빈 상태」 안내 |
+| `screen-external-notifications` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | 「빈 상태」 안내 둘째 줄 |
+| `screen-external-notifications` | `알림 기록을 불러오지 못했습니다` | 일치 | 「오류」 배너 제목 |
+| `screen-external-notifications` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `errorMessage`(`String(describing:)`)를 그린다 |
+| `screen-external-notifications` | `다시 시도` | 일치 | 「오류」 배너 재시도 버튼 |
+| `screen-external-notifications` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `3` | 예시 데이터 | 승인 탭 배지(대기 수) |
+| `screen-external-notifications` | `승인` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `세션` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `더 보기` | 시스템 UI | 시스템 `TabView` 오버플로 탭·목록 제목 |
+| `screen-external-notifications` | `채팅` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `임시공간` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `4` | 예시 데이터 | 오버플로 목록 임시공간 배지(미분류 수) |
+| `screen-external-notifications` | `개인` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `회사` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `루틴` | 일치 | `RootView.swift` 오버플로 목록 |
 
 ## 검산
 

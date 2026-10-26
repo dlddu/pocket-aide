@@ -47,6 +47,11 @@ func (n *recordingNotifier) all() []sentNotification {
 
 func newNotificationEnv(t *testing.T, push handlers.NotificationSender) *approvalEnv {
 	t.Helper()
+	return newNotificationEnvWithLog(t, push, nil)
+}
+
+func newNotificationEnvWithLog(t *testing.T, push handlers.NotificationSender, log handlers.NotificationLog) *approvalEnv {
+	t.Helper()
 	conn, err := db.Open(filepath.Join(t.TempDir(), "notifications.db"))
 	if err != nil {
 		t.Fatalf("db open: %v", err)
@@ -54,16 +59,22 @@ func newNotificationEnv(t *testing.T, push handlers.NotificationSender) *approva
 	t.Cleanup(func() { _ = conn.Close() })
 	env := &approvalEnv{t: t, conn: conn, reviewer: &fakeReviewer{tokens: map[string]string{}}, now: time.Unix(1_800_000_000, 0)}
 	store := approvals.NewWithClock(conn, env.clock)
+	notes := externalnotify.NewStore(conn)
+	if log == nil {
+		log = notes
+	}
 	r := chi.NewRouter()
 	r.Group(func(p chi.Router) {
 		p.Use(auth.Middleware(subVerifier{}, conn))
 		p.Get("/api/approval-keys", handlers.ListApprovalKeys(store))
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(store))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(store))
+		p.Get("/api/external-notifications", handlers.ListExternalNotifications(notes))
+		p.Post("/api/external-notifications/read", handlers.MarkExternalNotificationsRead(notes))
 	})
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(store, env.reviewer))
-		x.Post("/api/external/notifications", handlers.CreateExternalNotification(push))
+		x.Post("/api/external/notifications", handlers.CreateExternalNotification(push, log))
 	})
 	env.router = r
 	return env

@@ -17,9 +17,10 @@
 - AC14: 호출자 키 폐기 (PRD-12)
 - AC15: k8s ServiceAccount 호출자 등록 (PRD-12)
 - AC16: 호출자의 단순 푸시 알림 (PRD-12)
+- AC17: 알림 기록 (PRD-12)
 
 ## 달성 가치
-- V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」, AC16은 「알림」) — 검증 대상 AC 모두 V9를 달성한다.
+- V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」, AC16·AC17은 「알림」) — 검증 대상 AC 모두 V9를 달성한다.
 
 ## 작성 기준
 - 시나리오는 **사용자가 관찰할 수 있는 결과** 단위로 쓴다. 코드 레벨 테스트는 각 시나리오의
@@ -38,6 +39,7 @@
   같은 날 앱의 SA 호출자 등록 시트·키 목록의 SA 메타 줄에 맞춰 시나리오 17을 「구현됨」으로 다시 판정했다.
   2026-10-25 AC16(호출자의 단순 푸시 알림)을 PRD에 더하며 시나리오 19를 덧붙였고, 같은 변경의 서버 구현(`POST /api/external/notifications`)에 맞춰 「구현됨」으로 판정했다.
   2026-10-25 호출자 계약의 선택 필드 `sessionId`·`reason`과 상세의 세션 제목·에이전트 설명(PRD-12 AC6 개정)을 구현과 같은 PR 에서 더하며 시나리오 20을 덧붙였다(「구현됨」).
+  2026-10-27 AC17(알림 기록)과 AC16 개정(발송 전 기록 · 푸시 탭 → 알림 기록 화면 · 선택 필드 `requester`)을 구현과 같은 PR 에서 더하며 시나리오 19의 3·7단계를 고치고 시나리오 21을 덧붙였다(「구현됨」).
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
@@ -369,7 +371,7 @@
 - **실행 단계**:
   1. 호출자가 `infra-ci` 키로 `POST /api/external/notifications`에 `{"title": "백업 완료", "body": "nightly 스냅샷 3개 생성"}`을 보낸다.
   2. 호출자가 `{"title": "ping"}`만 보낸다.
-  3. 호출자가 `title` 누락, 공백뿐인 `title`, 121자 `title`, 알 수 없는 필드(`userId`)를 섞은 요청을 각각 보낸다.
+  3. 호출자가 `title` 누락, 공백뿐인 `title`, 121자 `title`, 201자 `requester`, 알 수 없는 필드(`userId`)를 섞은 요청을 각각 보낸다.
   4. 호출자가 키 없이, 그리고 사용자 A의 OIDC 토큰으로 같은 요청을 보낸다.
   5. SA 파드가 projected 토큰으로 `{"title": "배포 완료"}`를 보낸다.
   6. 호출자가 10KB 이상 `body`로 보낸다.
@@ -378,15 +380,15 @@
 - **기대 결과**:
   - 1단계: 200 `{devices: 2, sent: 2}`. 사용자 A의 두 기기에 제목 `백업 완료`·본문 `nightly 스냅샷 3개 생성`이 키 이름 접두 없이 도착하고, 사용자 B의 기기에는 오지 않는다. 키 목록의 `infra-ci` 마지막 사용 시각이 방금이다.
   - 2단계: 200, 본문 없는 알림이 도착한다.
-  - 3단계: 모두 400이고 어떤 기기에도 푸시가 가지 않는다.
+  - 3단계: 모두 400이고 어떤 기기에도 푸시가 가지 않으며, 알림 기록에도 남지 않는다.
   - 4단계: 둘 다 401.
   - 5단계: 200, 사용자 A의 기기에 도착한다.
   - 6단계: 200, 본문이 「…」로 끝나는 알림이 도착한다.
-  - 7단계: 앱이 열리고, 승인 탭의 대기 목록·처리 이력·배지에 새 항목이 없다.
+  - 7단계: 앱이 열려 알림 기록 화면에 들어가고(1단계 알림이 목록에 있다), 승인 탭의 대기 목록·처리 이력·배지에는 새 항목이 없다.
   - 8단계: 401.
-- **검증 AC**: AC16, AC13, AC14, AC15
-- **구현 상태**: 구현됨 — 서버: `POST /api/external/notifications`가 승인 요청과 같은 호출자 미들웨어(키·SA 토큰) 뒤에 있고, 호출자를 등록한 사용자의 모든 기기에 제목·본문을 그대로 동기 발송해 `{devices, sent}`를 돌려준다(본문 4KB 맞춤 · 무효 토큰 정리 · APNs 미설정 503). 7단계는 페이로드의 `kind`=`external_notification` 표식을 앱의 `PushDeepLink` 가 보고 라우팅하지 않아 성립한다(2026-10-25 정정 — 처음 구현은 표식 없이 보내 앱의 「id 없는 푸시 = CI 푸시」 기본값에 걸려 PR 모니터가 열렸다). 1·5단계의 실기기 도달은 `EXT` — 시뮬레이터 기반 검증에서는 가짜 APNs 수신부가 받은 페이로드까지를 관찰 지점으로 삼는다.
-- **관련 코드 테스트**: `backend/internal/handlers/external_notifications_test.go` — `TestExternalNotificationGoesToCallerOwner`·`TestExternalNotificationBodyIsOptional`·`TestExternalNotificationRejectsBadBodies`·`TestExternalNotificationRequiresLiveCaller`·`TestExternalNotificationAcceptsServiceAccountCaller`·`TestExternalNotificationWithoutPushIsUnavailable`, `backend/internal/externalnotify/notifier_test.go`, `ios/PocketAideUnitTests/ApprovalPushPayloadTests.swift` — `testExternalNotificationOpensNoScreen`
+- **검증 AC**: AC16, AC13, AC14, AC15, AC17
+- **구현 상태**: 구현됨 — 서버: `POST /api/external/notifications`가 승인 요청과 같은 호출자 미들웨어(키·SA 토큰) 뒤에 있고, 호출자를 등록한 사용자의 모든 기기에 제목·본문을 그대로 동기 발송해 `{devices, sent}`를 돌려준다(본문 4KB 맞춤 · 무효 토큰 정리 · APNs 미설정 503). 7단계는 페이로드의 `kind`=`external_notification` 표식을 앱의 `PushDeepLink` 가 보고 알림 기록 화면(`pocketaide://notifications`)으로 보내 성립한다(2026-10-25 정정 — 처음 구현은 표식 없이 보내 앱의 「id 없는 푸시 = CI 푸시」 기본값에 걸려 PR 모니터가 열렸다. 2026-10-27 목적지를 「없음」에서 알림 기록 화면으로 바꿨다). 1·5단계의 실기기 도달은 `EXT` — 시뮬레이터 기반 검증에서는 가짜 APNs 수신부가 받은 페이로드까지를 관찰 지점으로 삼는다.
+- **관련 코드 테스트**: `backend/internal/handlers/external_notifications_test.go` — `TestExternalNotificationGoesToCallerOwner`·`TestExternalNotificationBodyIsOptional`·`TestExternalNotificationRejectsBadBodies`·`TestExternalNotificationRequiresLiveCaller`·`TestExternalNotificationAcceptsServiceAccountCaller`·`TestExternalNotificationWithoutPushIsUnavailable`, `backend/internal/externalnotify/notifier_test.go`, `ios/PocketAideUnitTests/ApprovalPushPayloadTests.swift` — `testExternalNotificationOpensTheHistory`
 
 
 ### 시나리오 20: 상세에서 요청을 낸 세션의 제목과 에이전트가 밝힌 이유를 본다
@@ -408,3 +410,26 @@
 - **검증 AC**: AC6, AC1, AC10
 - **구현 상태**: 구현됨 — 서버: 호출자 계약의 선택 필드 `sessionId`(128자)·`reason`(2000자, 앞뒤 공백 trim · 빈 값 = 없음 · 초과 400 · 그 밖 필드 400), 생성 시점 session-platform `GET /api/v1/sessions/{id}` 2초 조회로 `session_name` 저장(실패·404·타임아웃은 빈 이름으로 201), 앱용 JSON `session_id`·`session_name`·`reason`(마이그레이션 `0016_approval_session_reason`). 앱: 상세 메타 「세션」 행(`ApprovalFormatting.sessionLabel`)과 「에이전트 설명」 섹션(`ApprovalFormatting.agentReason`), 필드가 없는 옛 서버 응답도 디코딩된다. 목록·푸시는 변경 없음. CI 에는 세션 플랫폼이 없어(`e2e-mocking-policy.md` BF-5 와 같은 원인) 1·2단계의 실제 제목 조회는 앱 E2E 로 관찰되지 않고 서버 핸들러 테스트의 가짜 control-plane 으로 잰다. 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
 - **관련 코드 테스트**: `backend/internal/handlers/approval_session_reason_test.go` — `TestApprovalCreateStoresTrimmedSessionAndReasonWithLookedUpName`·`TestApprovalCreateWithoutSessionOrReasonKeepsFieldsEmptyAndSkipsLookup`·`TestApprovalCreateSurvivesSessionLookupFailure`·`TestApprovalCreateSurvivesUnknownAndUnreachableSession`·`TestApprovalCreateRejectsOverlongSessionOrReason`, `ios/PocketAideUnitTests/ApprovalsTests.swift` — `testDecodesSessionAndReasonAndToleratesServersWithoutThem`·`testSessionRowLabel`·`testAgentReasonShownOnlyWhenPresent`
+
+
+### 시나리오 21: 받은 알림이 보낸 호출자·요청 주체와 함께 알림 기록에 남는다
+- **사전 조건**: 사용자 A로 로그인, `infra-ci` 키와 SA 호출자 `homelab-k3s-mcp`(`homelab-k3s-mcp/homelab-k3s-mcp`)를 등록했고 기기 하나를 등록한 상태. 알림 기록이 비어 있다. 사용자 B도 키 `bob-ci`를 가진 상태.
+- **실행 단계**:
+  1. 「더 보기」 → 「알림 기록」을 연다.
+  2. 호출자가 `infra-ci` 키로 `{"title": "백업 완료", "body": "nightly 스냅샷 3개 생성", "requester": "jwt:user-123"}`을 보내고, 화면을 당겨서 새로고침한다.
+  3. SA 파드가 `{"title": "배포 완료", "requester": "github_oidc:dlddu/reconciler/.github/workflows/reconcile.yml"}`을, 이어서 `infra-ci` 키가 `requester` 없이 `{"title": "ping"}`을 보낸다. 화면을 나갔다가 다시 연다.
+  4. 화면을 연 채로 `infra-ci` 키가 `{"title": "열린 동안 도착"}`을 보낸다. 화면을 나갔다가 다시 연다.
+  5. `bob-ci` 키가 `{"title": "B의 알림"}`을 보낸다.
+  6. 호출자가 `infra-ci` 키로 51건을 더 보낸 뒤 목록 끝까지 내린다.
+  7. 백엔드를 멈추고 화면을 다시 연 다음, 백엔드를 되살리고 「다시 시도」를 누른다.
+- **기대 결과**:
+  - 1단계: 「받은 알림이 없어요.」가 보인다.
+  - 2단계: 맨 위 행에 제목 「백업 완료」, 본문, 「infra-ci · 키」, 「jwt:user-123」, 받은 시각, 「1/1 기기」와 「새 알림」 표시가 보인다.
+  - 3단계: 맨 위부터 「ping」(「요청 주체 미상」)·「배포 완료」(「homelab-k3s-mcp · SA」, 요청 주체 `github_oidc:…/reconcile.yml`)·「백업 완료」 순서다. 다시 열었을 때 「백업 완료」는 「새 알림」 표시가 없다(2단계에서 이미 봤다).
+  - 4단계: 열려 있는 동안 도착한 「열린 동안 도착」은 다시 열었을 때 「새 알림」 표시와 함께 맨 위에 있다.
+  - 5단계: 사용자 A의 알림 기록에 「B의 알림」은 없다.
+  - 6단계: 처음 50건 뒤로 이전 기록이 이어서 불러와지고, 같은 행이 두 번 보이지 않는다.
+  - 7단계: 오류 배너가 보이고 기록을 잘못 비우지 않는다. 다시 시도하면 목록이 돌아온다.
+- **검증 AC**: AC17, AC16, AC15
+- **구현 상태**: 구현됨 — 서버: 마이그레이션 `0017_external_notifications`, 발송 전 기록(기록 실패 시 500·발송 없음, 기기 목록 실패 시 기록 삭제), 앱용 `GET /api/external-notifications`(`items`·`unread_count`, `limit`·`before`)·`POST /api/external-notifications/read`(`up_to_id` 까지 확인). 앱: 「더 보기」의 「알림 기록」 탭(`ExternalNotificationsView`), 받은 목록의 최신 id 까지 확인 처리 후 위젯 타임라인 갱신, 끝에서 이전 기록 더 불러오기. 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
+- **관련 코드 테스트**: `backend/internal/handlers/external_notification_log_test.go` — `TestExternalNotificationIsRecordedWithCallerAndRequester`·`TestExternalNotificationRecordsServiceAccountCaller`·`TestExternalNotificationRequesterTooLongIsRejected`·`TestExternalNotificationsAreScopedToTheOwner`·`TestExternalNotificationSendFailureLeavesNoRecord`·`TestExternalNotificationIsNotSentWhenItCannotBeRecorded`·`TestExternalNotificationsMarkReadUpToShownID`·`TestExternalNotificationsPageWithBefore`, `ios/PocketAideUnitTests/ExternalNotificationsTests.swift`

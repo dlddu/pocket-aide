@@ -31,6 +31,7 @@ open docs/mockups/index.html
 | `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류·CI 상태 변형·알림 권한 꺼짐) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
 | `screen-approval.html` | 승인 게이트 (대기 목록·상세·결정 확인·처리 이력·빈 상태·오류·자동 응답 모드·설정·키 발급·처리된 상세·키 없음·조회 실패·발급 입력·복사됨·SA 호출자·SA 등록) | PRD-12 | AC5~AC9, AC12~AC15 (푸시·잠금 화면 AC10·AC11은 여정 mockup) |
 | `screen-sessions.html` | 에이전트 세션 (목록·빈 상태·오류·새 세션·타입 목록 실패·상세(에이전트·쉘)·아카이브됨·세션 동작·삭제 확인·아카이브 꺼짐) | PRD-11 | AC3 타입 카탈로그, AC4 생성, AC5 목록·상태, AC6~AC7 프롬프트·출력, AC8 아카이브, AC9 복원, AC10 삭제, AC11·AC12 오류·빈 상태 |
+| `screen-external-notifications.html` | 알림 기록 (목록·빈 상태·오류·「더 보기」 진입) | PRD-12 | AC17 알림 기록 · AC16 푸시 탭 도착지 (+PRD-8 AC6·AC8 위젯 알림 영역의 진입 대상) |
 
 ### 시스템 통합
 
@@ -81,7 +82,7 @@ open docs/mockups/index.html
 | V6 일상 정보 통합 시야 | widget |
 | V7 시스템 전역 글쓰기 보조 | keyboard-extension |
 | V8 일상 루틴 구조화 | routines |
-| V9 개발 워크플로우 인지 부하 감소 | pr-monitor-push, pr-monitor-history, approval, sessions |
+| V9 개발 워크플로우 인지 부하 감소 | pr-monitor-push, pr-monitor-history, approval, sessions, external-notifications |
 
 ## 메모
 

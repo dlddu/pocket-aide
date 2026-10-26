@@ -358,6 +358,8 @@ public enum ApprovalPushPayload {
 }
 
 public enum ExternalNotificationPushPayload {
+    public static let deepLinkURL = URL(string: "pocketaide://notifications")!
+
     public static func matches(_ info: [AnyHashable: Any]) -> Bool {
         (info["kind"] as? String) == "external_notification"
     }
@@ -365,7 +367,7 @@ public enum ExternalNotificationPushPayload {
 
 public enum PushDeepLink {
     public static func url(fromUserInfo info: [AnyHashable: Any]) -> URL? {
-        if ExternalNotificationPushPayload.matches(info) { return nil }
+        if ExternalNotificationPushPayload.matches(info) { return ExternalNotificationPushPayload.deepLinkURL }
         return ApprovalPushPayload.deepLinkURL(fromUserInfo: info) ?? PRMonitorPushPayload.deepLinkURL(fromUserInfo: info)
     }
 }
