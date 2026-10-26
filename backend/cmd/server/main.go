@@ -70,6 +70,7 @@ func main() {
 	deviceStore := devicetokens.New(conn)
 	excludedStore := excludedrepos.New(conn)
 	historyStore := notificationhistory.New(conn)
+	externalNotificationStore := externalnotify.NewStore(conn)
 	settingsStore := notificationsettings.New(conn)
 	todoStore := todos.New(conn)
 	scratchStore := scratchpad.New(conn)
@@ -111,6 +112,8 @@ func main() {
 		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
 		p.Get("/api/notification-history", handlers.ListNotificationHistory(historyStore))
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
+		p.Get("/api/external-notifications", handlers.ListExternalNotifications(externalNotificationStore))
+		p.Post("/api/external-notifications/read", handlers.MarkExternalNotificationsRead(externalNotificationStore))
 		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
 		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))
 		p.Get("/api/todos/{area}", handlers.ListTodos(todoStore))
@@ -162,7 +165,7 @@ func main() {
 		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
 		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, platform))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
-		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender))
+		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender, externalNotificationStore))
 	})
 
 	srv := &http.Server{

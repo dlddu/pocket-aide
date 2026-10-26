@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 enum RootTab: Hashable {
-    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, sessions
+    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, sessions, notifications
 }
 
 struct RootView: View {
@@ -11,6 +11,7 @@ struct RootView: View {
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
     @Binding var openedApprovalID: String?
+    @Binding var notificationsReloadToken: Int
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
 
@@ -31,12 +32,14 @@ struct RootView: View {
     init(
         selectedTab: Binding<RootTab>,
         highlightedEventID: Binding<Int64?> = .constant(nil),
-        openedApprovalID: Binding<String?> = .constant(nil)
+        openedApprovalID: Binding<String?> = .constant(nil),
+        notificationsReloadToken: Binding<Int> = .constant(0)
     ) {
         _ = Self.approvalBadgeAppearance
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
         _openedApprovalID = openedApprovalID
+        _notificationsReloadToken = notificationsReloadToken
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
         _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
     }
@@ -85,7 +88,7 @@ struct RootView: View {
 
     private var activeTint: Color {
         switch selectedTab {
-        case .prMonitor, .approval, .sessions: return DesignTokens.Color.accent(.prMonitor)
+        case .prMonitor, .approval, .sessions, .notifications: return DesignTokens.Color.accent(.prMonitor)
         case .affirmations: return DesignTokens.Color.accent(.affirmations)
         case .personal: return DesignTokens.Color.accent(.personal)
         case .work: return DesignTokens.Color.accent(.work)
@@ -127,6 +130,9 @@ struct RootView: View {
             }
             Tab("루틴", systemImage: "arrow.triangle.2.circlepath", value: RootTab.routines) {
                 RoutinesTab()
+            }
+            Tab("알림 기록", systemImage: "bell", value: RootTab.notifications) {
+                ExternalNotificationsView(reloadToken: notificationsReloadToken)
             }
         }
         .tint(activeTint)

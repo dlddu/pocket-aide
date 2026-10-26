@@ -73,6 +73,13 @@
 | Q-65 | `select user_approval_settings \| eq(user_id) \| - \| -` | PK(user_approval_settings) | `backend/internal/approvals/store.go::Store::AutoResponse` |
 | Q-66 | `upsert user_approval_settings \| eq(user_id) \| - \| -` | — | `backend/internal/approvals/store.go::Store::SetAutoResponse` |
 | Q-67 | `select approval_caller_keys \| eq(kind, revoked_at, service_account) \| - \| -` | idx_approval_caller_keys_active_service_account | `backend/internal/approvals/store.go::Store::AuthenticateServiceAccount` |
+| Q-68 | `insert external_notifications \| - \| - \| -` | — | `backend/internal/externalnotify/store.go::Store::Insert` |
+| Q-69 | `update external_notifications \| eq(id) \| - \| -` | PK(external_notifications) | `backend/internal/externalnotify/store.go::Store::SetDelivery` |
+| Q-70 | `delete external_notifications \| eq(id) \| - \| -` | PK(external_notifications) | `backend/internal/externalnotify/store.go::Store::Delete` |
+| Q-71 | `select approval_caller_keys,external_notifications \| eq(approval_caller_keys.id=external_notifications.caller_key_id, external_notifications.user_id) \| - \| order(external_notifications.id desc)` | approval_caller_keys: PK(approval_caller_keys); external_notifications: idx_external_notifications_user_id | `backend/internal/externalnotify/store.go::Store::List` |
+| Q-72 | `select approval_caller_keys,external_notifications \| eq(approval_caller_keys.id=external_notifications.caller_key_id, external_notifications.user_id) \| range(external_notifications.id) \| order(external_notifications.id desc)` | approval_caller_keys: PK(approval_caller_keys); external_notifications: idx_external_notifications_user_id | `backend/internal/externalnotify/store.go::Store::List` |
+| Q-73 | `select external_notifications \| eq(read_at, user_id) \| - \| -` | idx_external_notifications_user_read | `backend/internal/externalnotify/store.go::Store::UnreadCount` |
+| Q-74 | `update external_notifications \| eq(read_at, user_id) \| range(id) \| -` | idx_external_notifications_user_read | `backend/internal/externalnotify/store.go::Store::MarkRead` |
 
 ## 수동 형태
 

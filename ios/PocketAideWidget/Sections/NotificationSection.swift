@@ -6,7 +6,7 @@ struct NotificationSection: View {
     let state: WidgetNotificationState
 
     var body: some View {
-        Link(destination: URL(string: "pocketaide://pr-monitor")!) {
+        Link(destination: URL(string: "pocketaide://notifications")!) {
             Group {
                 if case .loaded(let summary) = state, let latest = summary.latest {
                     VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
@@ -30,16 +30,18 @@ struct NotificationSection: View {
         AreaLabel(area: .scratchpad, text: "PocketAide 알림", showsDot: false)
     }
 
-    private func detail(_ latest: NotificationHistoryItem, moreCount: Int) -> some View {
+    private func detail(_ latest: ExternalNotification, moreCount: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(PushText.title(for: latest))
+            Text(latest.title)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .bold))
                 .foregroundStyle(DesignTokens.Color.ink(.scratchpad))
                 .lineLimit(1)
-            Text(PushText.body(for: latest))
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
-                .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.75))
-                .lineLimit(1)
+            if !latest.body.isEmpty {
+                Text(latest.body)
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                    .foregroundStyle(DesignTokens.Color.ink(.scratchpad).opacity(0.75))
+                    .lineLimit(1)
+            }
             if moreCount > 0 {
                 Text("+ \(moreCount) 더")
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))

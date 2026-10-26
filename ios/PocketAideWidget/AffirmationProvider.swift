@@ -187,14 +187,13 @@ struct AffirmationProvider: TimelineProvider {
         case .error: return .error
         }
         do {
-            let items = try await api.listNotificationHistory()
-            let settings = try await api.notificationSettings()
-            return .loaded(WidgetNotifications.summarize(items, settings: settings))
+            let page = try await api.externalNotifications(limit: ExternalNotificationFormatting.pageSize)
+            return .loaded(WidgetNotifications.summarize(page))
         } catch APIError.badStatus(401, _) {
-            logger.info("listNotificationHistory → 401, needsLogin")
+            logger.info("externalNotifications → 401, needsLogin")
             return .needsLogin
         } catch {
-            logger.error("listNotificationHistory failed: \(String(describing: error), privacy: .public)")
+            logger.error("externalNotifications failed: \(String(describing: error), privacy: .public)")
             return .error
         }
     }
@@ -235,19 +234,16 @@ struct AffirmationProvider: TimelineProvider {
         precipitationChance: 60
     )
 
-    private static let previewNotification = NotificationHistoryItem(
+    private static let previewNotification = ExternalNotification(
         id: 0,
-        repoFullName: "dlddu/pocket-aide",
-        prNumber: 7,
-        prTitle: "feat(widget): 알림 모음",
-        prURL: nil,
-        commitURL: nil,
-        runURL: nil,
-        workflowName: "CI",
-        headBranch: "main",
-        headSHA: "",
-        conclusion: "success",
-        acknowledgedAt: nil,
+        title: "nightly 백업 완료",
+        body: "스냅샷 3개 생성 · 42.1 GB",
+        callerName: "infra-ci",
+        callerKind: "key",
+        requester: "",
+        devices: 1,
+        sent: 1,
+        readAt: nil,
         createdAt: 0
     )
 

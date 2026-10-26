@@ -5,12 +5,14 @@
 ```mermaid
 erDiagram
     approval_caller_keys ||--o{ approval_requests : caller_key_id
+    approval_caller_keys ||--o{ external_notifications : caller_key_id
     routine_steps ||--o{ routine_step_checks : step_id
     routines ||--o{ routine_steps : routine_id
     users ||--o{ affirmations : user_id
     users ||--o{ approval_caller_keys : user_id
     users ||--o{ approval_requests : user_id
     users ||--o{ device_tokens : user_id
+    users ||--o{ external_notifications : user_id
     users ||--o{ notification_history : user_id
     users ||--o{ personal_todos : user_id
     users ||--o{ routines : user_id
@@ -107,6 +109,28 @@ erDiagram
 | --- | --- | --- | --- |
 | `UNIQUE(device_tokens.token)` | `token` | YES | - |
 | `idx_device_tokens_user_id` | `user_id` | NO | - |
+
+### `external_notifications`
+
+의미: [`externalnotify.Item`](../../backend/internal/externalnotify/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | INTEGER | NO | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `caller_key_id` | INTEGER | NO | FK → approval_caller_keys.id |
+| `requester` | TEXT | NO |  |
+| `title` | TEXT | NO |  |
+| `body` | TEXT | NO |  |
+| `devices` | INTEGER | NO |  |
+| `sent` | INTEGER | NO |  |
+| `read_at` | INTEGER | YES |  |
+| `created_at` | INTEGER | NO |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `idx_external_notifications_user_id` | `user_id`, `id DESC` | NO | - |
+| `idx_external_notifications_user_read` | `user_id`, `read_at` | NO | - |
 
 ### `notification_history`
 
