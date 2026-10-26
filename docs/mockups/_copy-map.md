@@ -1100,9 +1100,9 @@ last_updated: 2026-10-27
 | `screen-external-notifications` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 알림 본문 |
 | `screen-external-notifications` | `배포 롤백됨` | 예시 데이터 | 알림 제목 |
 | `screen-external-notifications` | `ping` | 예시 데이터 | 알림 제목 |
-| `screen-external-notifications` | `요청 jwt:8f2c1e9a-user` | 예시 데이터 | 요청 주체 — `ExternalNotificationFormatting.requesterLabel`(「요청 <requester>」) |
-| `screen-external-notifications` | `요청 github_oidc:dlddu/infrastructure/.github/workflows/backup.yml` | 예시 데이터 | 요청 주체 |
-| `screen-external-notifications` | `요청 api_key:2` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `요청 Claude Code 세션 — dear-baby 정리` | 예시 데이터 | 요청 주체 — `ExternalNotificationFormatting.requesterLabel`(「요청 <requester>」) |
+| `screen-external-notifications` | `요청 nightly 백업 크론잡` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `요청 reconciler 정합성 루프` | 예시 데이터 | 요청 주체 |
 | `screen-external-notifications` | `요청 주체 미상` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 요청 주체가 빈 기록(`ExternalNotificationFormatting.requesterLabel`) |
 | `screen-external-notifications` | `1/1 기기` | 예시 데이터 | 도달 — `ExternalNotificationFormatting.deliveryLabel`(「<sent>/<devices> 기기」) |
 | `screen-external-notifications` | `2/2 기기` | 예시 데이터 | 도달 |
