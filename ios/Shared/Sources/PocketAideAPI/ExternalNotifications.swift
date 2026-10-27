@@ -117,6 +117,18 @@ public enum ExternalNotificationFormatting {
     public static func time(_ item: ExternalNotification, now: Date = Date(), calendar: Calendar = .current) -> String {
         ApprovalFormatting.requestTime(item.createdAt, now: now, calendar: calendar)
     }
+
+    public static func fullTime(_ item: ExternalNotification, timeZone: TimeZone = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter.string(from: Date(timeIntervalSince1970: TimeInterval(item.createdAt)))
+    }
+
+    public static func requesterValue(_ item: ExternalNotification) -> String {
+        item.requester.isEmpty ? "요청 주체 미상" : item.requester
+    }
 }
 
 public struct WidgetNotificationsSummary: Equatable, Sendable {

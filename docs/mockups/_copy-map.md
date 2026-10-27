@@ -7,7 +7,7 @@ last_updated: 2026-10-27
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 33개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 34개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -40,24 +40,24 @@ last_updated: 2026-10-27
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 245 |
+| A | 일치 | 251 |
 | A | 데이터 | 8 |
-| A | 비표시 | 36 |
+| A | 비표시 | 40 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 0 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
 | A | 목업 대기 | 10 |
-| B | 일치 | 286 |
+| B | 일치 | 291 |
 | B | 외부 | 77 |
-| B | 예시 데이터 | 180 |
-| B | 목업 전용 | 158 |
+| B | 예시 데이터 | 183 |
+| B | 목업 전용 | 159 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 시스템 UI | 11 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 314행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 324행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -166,6 +166,16 @@ last_updated: 2026-10-27
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `caller` | 비표시 | 메타 줄 접근성 식별자 접미사(`notifications.detail.caller`) |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `delivery` | 비표시 | 메타 줄 접근성 식별자 접미사 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `requester` | 비표시 | 메타 줄 접근성 식별자 접미사 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `time` | 비표시 | 메타 줄 접근성 식별자 접미사 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `닫기` | 일치 | 「상세」 프레임 시트 닫기 버튼 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `도달` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `받은 시각` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `보낸 호출자` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `새 알림` | 일치 | 「상세」 미확인 칩 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `요청 주체` | 일치 | 「상세」 메타 줄 라벨 |
 | `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel` 자리 — 목업 「목록」·「빈 상태」·「오류」 프레임 머리 |
 | `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `\(viewModel.unreadCount)` | 데이터 | 헤더 미확인 수 배지 숫자 |
 | `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼 |
@@ -376,7 +386,7 @@ last_updated: 2026-10-27
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 745행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 754행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -1125,6 +1135,15 @@ last_updated: 2026-10-27
 | `screen-external-notifications` | `개인` | 일치 | `RootView.swift` 오버플로 목록 |
 | `screen-external-notifications` | `회사` | 일치 | `RootView.swift` 오버플로 목록 |
 | `screen-external-notifications` | `루틴` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `닫기` | 일치 | 상세 시트 닫기(`ExternalNotificationDetailSheet.swift`) |
+| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음. v1 트래픽이 일주일째 0이라 v2 롤아웃이 끝난 것으로 보고 정리했습니다. 되돌리려면 이전 매니페스트를 다시 적용하세요.` | 예시 데이터 | 상세 본문 전체 — 구현은 `item.body` 를 줄임 없이 |
+| `screen-external-notifications` | `보낸 호출자` | 일치 | 상세 메타 라벨 |
+| `screen-external-notifications` | `요청 주체` | 일치 | 상세 메타 라벨 |
+| `screen-external-notifications` | `Claude Code 세션 — dear-baby 구버전 정리 (k8s 리소스 정리 · v1 트래픽 0 확인 후)` | 예시 데이터 | 상세 요청 주체 전체 — `ExternalNotificationFormatting.requesterValue` |
+| `screen-external-notifications` | `받은 시각` | 일치 | 상세 메타 라벨 |
+| `screen-external-notifications` | `2026-10-27 09:41:12` | 예시 데이터 | 상세 받은 시각 — `ExternalNotificationFormatting.fullTime`(「yyyy-MM-dd HH:mm:ss」) |
+| `screen-external-notifications` | `도달` | 일치 | 상세 메타 라벨 |
 
 ## 검산
 

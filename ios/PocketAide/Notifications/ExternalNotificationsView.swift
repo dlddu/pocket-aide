@@ -7,6 +7,7 @@ struct ExternalNotificationsView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = ExternalNotificationsViewModel(api: nil, onMarkedRead: WidgetRefresher.reloadAll)
+    @State private var selected: ExternalNotification?
 
     let reloadToken: Int
 
@@ -30,6 +31,10 @@ struct ExternalNotificationsView: View {
             if phase == .active {
                 Task { await viewModel.load() }
             }
+        }
+        .sheet(item: $selected) { item in
+            ExternalNotificationDetailSheet(item: item) { selected = nil }
+                .presentationDetents([.large])
         }
         .accessibilityIdentifier("notifications.screen")
     }
@@ -191,12 +196,17 @@ struct ExternalNotificationsView: View {
     }
 
     private func row(for item: ExternalNotification) -> some View {
-        ExternalNotificationRowCard(item: item, area: Self.area)
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 5, leading: DesignTokens.Spacing.xl, bottom: 5, trailing: DesignTokens.Spacing.xl))
-            .accessibilityElement(children: .combine)
-            .accessibilityIdentifier("notifications.row.\(item.id)")
+        Button {
+            selected = item
+        } label: {
+            ExternalNotificationRowCard(item: item, area: Self.area)
+        }
+        .buttonStyle(.plain)
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 5, leading: DesignTokens.Spacing.xl, bottom: 5, trailing: DesignTokens.Spacing.xl))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("notifications.row.\(item.id)")
     }
 }
 
@@ -241,13 +251,12 @@ private struct ExternalNotificationRowCard: View {
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.55))
                     .lineLimit(3)
             }
-            HStack(spacing: DesignTokens.Spacing.sm) {
+            HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.sm) {
                 Text(ExternalNotificationFormatting.requesterLabel(item))
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(item.requester.isEmpty ? 0.45 : 0.55))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Spacer(minLength: 0)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text(ExternalNotificationFormatting.deliveryLabel(item))
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.45))
