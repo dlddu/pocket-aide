@@ -92,8 +92,9 @@ func TestExternalNotificationGoesToCallerOwner(t *testing.T) {
 	env.issue("bob", "bob-ci")
 
 	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{
-		"title": "  백업 완료  ",
-		"body":  "nightly 스냅샷 3개 생성",
+		"title":     "  백업 완료  ",
+		"body":      "nightly 스냅샷 3개 생성",
+		"requester": "nightly 백업 크론잡",
 	})
 	expectCode(t, rec, http.StatusOK, "send notification")
 	got := decodeApproval[externalnotify.Result](t, rec)
@@ -116,7 +117,7 @@ func TestExternalNotificationBodyIsOptional(t *testing.T) {
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
 
-	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "ping"})
+	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "ping", "requester": "r"})
 	expectCode(t, rec, http.StatusOK, "title only")
 	if sent := push.all(); len(sent) != 1 || sent[0].body != "" {
 		t.Fatalf("sent = %+v, want one push with an empty body", sent)
@@ -132,17 +133,19 @@ func TestExternalNotificationRejectsBadBodies(t *testing.T) {
 		name string
 		body any
 	}{
-		{"missing title", map[string]any{"body": "x"}},
-		{"blank title", map[string]any{"title": "   "}},
-		{"title too long", map[string]any{"title": strings.Repeat("가", 121)}},
-		{"unknown field", map[string]any{"title": "x", "userId": "alice"}},
+		{"missing title", map[string]any{"body": "x", "requester": "r"}},
+		{"blank title", map[string]any{"title": "   ", "requester": "r"}},
+		{"title too long", map[string]any{"title": strings.Repeat("가", 121), "requester": "r"}},
+		{"unknown field", map[string]any{"title": "x", "userId": "alice", "requester": "r"}},
+		{"missing requester", map[string]any{"title": "x"}},
+		{"blank requester", map[string]any{"title": "x", "requester": "   "}},
 		{"not json", "{"},
 	}
 	for _, c := range cases {
 		rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, c.body)
 		expectCode(t, rec, http.StatusBadRequest, c.name)
 	}
-	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": strings.Repeat("가", 120)})
+	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": strings.Repeat("가", 120), "requester": "r"})
 	expectCode(t, rec, http.StatusOK, "title at the limit")
 	if n := len(push.all()); n != 1 {
 		t.Fatalf("pushes = %d, want only the valid request to send", n)
@@ -153,7 +156,7 @@ func TestExternalNotificationRequiresLiveCaller(t *testing.T) {
 	push := &recordingNotifier{}
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
-	body := map[string]any{"title": "x"}
+	body := map[string]any{"title": "x", "requester": "r"}
 
 	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", "", body), http.StatusUnauthorized, "no key")
 	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", "pak_nope", body), http.StatusUnauthorized, "unknown key")
@@ -173,7 +176,7 @@ func TestExternalNotificationAcceptsServiceAccountCaller(t *testing.T) {
 	env.reviewer.tokens["sa-token-mcp"] = "homelab-k3s-mcp/homelab-k3s-mcp"
 	expectCode(t, env.registerSA("alice", "homelab-k3s-mcp", "homelab-k3s-mcp/homelab-k3s-mcp"), http.StatusCreated, "register SA")
 
-	rec := env.do(http.MethodPost, "/api/external/notifications", "sa-token-mcp", map[string]any{"title": "배포 완료"})
+	rec := env.do(http.MethodPost, "/api/external/notifications", "sa-token-mcp", map[string]any{"title": "배포 완료", "requester": "r"})
 	expectCode(t, rec, http.StatusOK, "SA caller")
 	if sent := push.all(); len(sent) != 1 || sent[0].userID != env.userID("alice") {
 		t.Fatalf("sent = %+v, want one push to the SA's registrant", sent)
@@ -184,7 +187,7 @@ func TestExternalNotificationWithoutPushIsUnavailable(t *testing.T) {
 	env := newNotificationEnv(t, nil)
 	key := env.issue("alice", "infra-ci")
 
-	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x"})
+	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x", "requester": "r"})
 	expectCode(t, rec, http.StatusServiceUnavailable, "APNs not configured")
 }
 
@@ -193,6 +196,6 @@ func TestExternalNotificationDeviceListFailureIs500(t *testing.T) {
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
 
-	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x"})
+	rec := env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x", "requester": "r"})
 	expectCode(t, rec, http.StatusInternalServerError, "notifier error")
 }
