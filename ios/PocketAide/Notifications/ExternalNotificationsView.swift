@@ -10,6 +10,7 @@ struct ExternalNotificationsView: View {
     @State private var selected: ExternalNotification?
 
     let reloadToken: Int
+    @Binding var openedNotificationID: Int64?
 
     private static let area: DesignTokens.Area = .prMonitor
 
@@ -32,11 +33,29 @@ struct ExternalNotificationsView: View {
                 Task { await viewModel.load() }
             }
         }
+        .onChange(of: openedNotificationID, initial: true) { _, id in
+            guard let id else { return }
+            openedNotificationID = nil
+            Task { await open(id) }
+        }
+        .onChange(of: selected?.id) { _, _ in
+            guard let item = selected else { return }
+            Task { await viewModel.markRead(item) }
+        }
         .sheet(item: $selected) { item in
             ExternalNotificationDetailSheet(item: item) { selected = nil }
                 .presentationDetents([.large])
         }
         .accessibilityIdentifier("notifications.screen")
+    }
+
+    private func open(_ id: Int64) async {
+        if viewModel.api == nil, let api = auth.api {
+            viewModel.replaceAPI(api)
+        }
+        if let item = await viewModel.notification(id: id) {
+            selected = item
+        }
     }
 
     private var header: some View {

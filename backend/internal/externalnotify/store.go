@@ -3,6 +3,7 @@ package externalnotify
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -125,7 +126,7 @@ func (s *Store) List(ctx context.Context, userID int64, limit int, beforeID int6
 	return out, nil
 }
 
-// UnreadCount is how many of userID's notifications have not been seen in the history screen.
+// UnreadCount is how many of userID's notifications have not been opened in detail.
 func (s *Store) UnreadCount(ctx context.Context, userID int64) (int, error) {
 	var n int
 	if err := s.db.QueryRowContext(ctx, `
@@ -136,18 +137,48 @@ func (s *Store) UnreadCount(ctx context.Context, userID int64) (int, error) {
 	return n, nil
 }
 
-// MarkRead stamps userID's unread notifications up to and including upToID, the newest one the screen showed.
-func (s *Store) MarkRead(ctx context.Context, userID, upToID int64) (int64, error) {
-	res, err := s.db.ExecContext(ctx, `
-		UPDATE external_notifications SET read_at = unixepoch()
-		WHERE user_id = ? AND read_at IS NULL AND id <= ?
-	`, userID, upToID)
+// ErrNotFound is returned for a notification that does not exist or belongs to another user.
+var ErrNotFound = errors.New("external notification not found")
+
+// Get returns one of userID's notifications.
+func (s *Store) Get(ctx context.Context, userID, id int64) (Item, error) {
+	var (
+		it     Item
+		readAt sql.NullInt64
+	)
+	err := s.db.QueryRowContext(ctx, `SELECT `+itemColumns+`
+		FROM external_notifications n
+		JOIN approval_caller_keys k ON k.id = n.caller_key_id
+		WHERE n.id = ? AND n.user_id = ?`, id, userID).Scan(&it.ID, &it.Title, &it.Body, &it.CallerName, &it.CallerKind,
+		&it.Requester, &it.Devices, &it.Sent, &readAt, &it.CreatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Item{}, ErrNotFound
+	}
 	if err != nil {
-		return 0, fmt.Errorf("mark external notifications read: %w", err)
+		return Item{}, fmt.Errorf("get external notification: %w", err)
+	}
+	if readAt.Valid {
+		t := readAt.Int64
+		it.ReadAt = &t
+	}
+	return it, nil
+}
+
+// MarkRead stamps one of userID's notifications as seen; seeing it again keeps the first time.
+func (s *Store) MarkRead(ctx context.Context, userID, id int64) error {
+	res, err := s.db.ExecContext(ctx, `
+		UPDATE external_notifications SET read_at = COALESCE(read_at, unixepoch())
+		WHERE id = ? AND user_id = ?
+	`, id, userID)
+	if err != nil {
+		return fmt.Errorf("mark external notification read: %w", err)
 	}
 	n, err := res.RowsAffected()
 	if err != nil {
-		return 0, fmt.Errorf("rows affected: %w", err)
+		return fmt.Errorf("rows affected: %w", err)
 	}
-	return n, nil
+	if n == 0 {
+		return ErrNotFound
+	}
+	return nil
 }

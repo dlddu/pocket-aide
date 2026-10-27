@@ -32,7 +32,7 @@
 
   <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">목록</p>
 
-  <!-- 목록 — PRD-12 AC17: 호출자 알림 최신순. 행 = 보낸 호출자 칩(등록 이름 · 키/SA) · 받은 시각 · 제목 · 본문(최대 3줄) · 요청 주체(없으면 「요청 주체 미상」) · 도달(「N/M 기기」, 기기 0이면 「등록된 기기 없음」). 아직 확인하지 않은 행은 왼쪽 강조 띠 + 「새 알림」 칩. 화면이 목록을 받으면 받은 최신 id 까지 확인 처리하므로 다음 조회부터 띠·칩이 사라진다. 끝까지 내리면 이전 기록을 이어 불러온다. 요청 주체는 두 줄까지 줄바꿈해 보이고 넘치면 끝에 말줄임, 전체는 행을 눌러 여는 「상세」 시트에서 본다 -->
+  <!-- 목록 — PRD-12 AC17: 호출자 알림 최신순. 행 = 보낸 호출자 칩(등록 이름 · 키/SA) · 받은 시각 · 제목 · 본문(최대 3줄) · 요청 주체(없으면 「요청 주체 미상」) · 도달(「N/M 기기」, 기기 0이면 「등록된 기기 없음」). 아직 확인하지 않은 행은 왼쪽 강조 띠 + 「새 알림」 칩. 행을 눌러 상세를 열면 그 알림이 확인 처리되어 띠·칩이 사라진다(목록을 보는 것만으로는 사라지지 않는다). 끝까지 내리면 이전 기록을 이어 불러온다. 요청 주체는 두 줄까지 줄바꿈해 보이고 넘치면 끝에 말줄임, 전체는 행을 눌러 여는 「상세」 시트에서 본다 -->
   <div class="frame relative overflow-hidden">
 
     <!-- top strip — area accent -->
@@ -139,7 +139,7 @@
 
   <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세</p>
 
-  <!-- 상세 — PRD-12 AC17: 목록의 행을 누르면 열리는 시트. 제목·본문·보낸 호출자·요청 주체·받은 시각(날짜와 초까지)·도달을 줄임 없이 모두 보이고 글자를 선택해 복사할 수 있다. 시스템 시트(§1.8 iOS 컨벤션 — 승인 탭 키 발급 시트와 같은 모양)이고 「닫기」나 아래로 끌어 닫는다. 시트를 열어도 확인 상태는 바뀌지 않는다(확인은 목록을 받을 때 이미 처리) -->
+  <!-- 상세 — PRD-12 AC17: 목록의 행을 누르면 열리는 시트. 제목·본문·보낸 호출자·요청 주체·받은 시각(날짜와 초까지)·도달을 줄임 없이 모두 보이고 글자를 선택해 복사할 수 있다. 시스템 시트(§1.8 iOS 컨벤션 — 승인 탭 키 발급 시트와 같은 모양)이고 「닫기」나 아래로 끌어 닫는다. 시트를 열면 그 알림이 확인 처리된다(그래서 시트에는 「새 알림」 칩이 없다). 그 알림의 푸시를 탭해도 이 시트가 열리고, 다른 알림의 시트가 떠 있으면 탭한 알림으로 바뀐다 -->
   <div class="frame relative overflow-hidden">
 
     <!-- top strip — area accent -->
@@ -217,7 +217,7 @@
     <div class="absolute z-50 inset-x-0 bottom-0 top-[120px] rounded-t-[22px] bg-white px-5 pt-3 pb-10 overflow-y-auto scroll">
       <div class="w-9 h-1 rounded-full bg-stone-300 mx-auto mb-4"></div>
       <div class="flex items-center justify-between gap-2">
-        <span class="flex items-center gap-1.5"><span class="stamp text-[10.5px] font-bold px-2 py-0.5 rounded-[2px] bg-[var(--soft)] text-[var(--accent-strong)]">homelab-k3s-mcp · SA</span><span class="stamp text-[10px] font-bold px-1.5 py-0.5 rounded-[2px] bg-[var(--accent)] text-white">새 알림</span></span>
+        <span class="stamp text-[10.5px] font-bold px-2 py-0.5 rounded-[2px] bg-[var(--soft)] text-[var(--accent-strong)]">homelab-k3s-mcp · SA</span>
         <button class="text-[15px] font-semibold text-[var(--accent)]">닫기</button>
       </div>
       <div class="text-[17px] font-bold leading-snug mt-3">dear-baby 구버전 정리 완료</div>

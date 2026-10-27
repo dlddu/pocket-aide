@@ -79,7 +79,8 @@
 | Q-71 | `select approval_caller_keys,external_notifications \| eq(approval_caller_keys.id=external_notifications.caller_key_id, external_notifications.user_id) \| - \| order(external_notifications.id desc)` | approval_caller_keys: PK(approval_caller_keys); external_notifications: idx_external_notifications_user_id | `backend/internal/externalnotify/store.go::Store::List` |
 | Q-72 | `select approval_caller_keys,external_notifications \| eq(approval_caller_keys.id=external_notifications.caller_key_id, external_notifications.user_id) \| range(external_notifications.id) \| order(external_notifications.id desc)` | approval_caller_keys: PK(approval_caller_keys); external_notifications: idx_external_notifications_user_id | `backend/internal/externalnotify/store.go::Store::List` |
 | Q-73 | `select external_notifications \| eq(read_at, user_id) \| - \| -` | idx_external_notifications_user_read | `backend/internal/externalnotify/store.go::Store::UnreadCount` |
-| Q-74 | `update external_notifications \| eq(read_at, user_id) \| range(id) \| -` | idx_external_notifications_user_read | `backend/internal/externalnotify/store.go::Store::MarkRead` |
+| Q-75 | `select approval_caller_keys,external_notifications \| eq(approval_caller_keys.id=external_notifications.caller_key_id, external_notifications.id, external_notifications.user_id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); external_notifications: PK(external_notifications) | `backend/internal/externalnotify/store.go::Store::Get` |
+| Q-76 | `update external_notifications \| eq(id, user_id) \| - \| -` | PK(external_notifications) | `backend/internal/externalnotify/store.go::Store::MarkRead` |
 
 ## 수동 형태
 

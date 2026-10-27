@@ -70,7 +70,7 @@ func setup(t *testing.T, tokens ...string) (*devicetokens.Store, int64) {
 func TestSendGoesToEveryDeviceOfTheOwnerAsIs(t *testing.T) {
 	store, uid := setup(t, "phone", "ipad")
 	sender := &fakeSender{}
-	res, err := externalnotify.New(sender, store).Send(context.Background(), uid, "백업 완료", "스냅샷 3개")
+	res, err := externalnotify.New(sender, store).Send(context.Background(), uid, 7, "백업 완료", "스냅샷 3개")
 	if err != nil {
 		t.Fatalf("send: %v", err)
 	}
@@ -81,8 +81,8 @@ func TestSendGoesToEveryDeviceOfTheOwnerAsIs(t *testing.T) {
 	tokens := []string{}
 	for _, s := range sender.all() {
 		tokens = append(tokens, s.token)
-		if s.title != "백업 완료" || s.body != "스냅샷 3개" || !reflect.DeepEqual(s.data, map[string]any{"kind": "external_notification"}) {
-			t.Fatalf("alert: title=%q body=%q data=%v, want the caller's text and only the kind marker", s.title, s.body, s.data)
+		if s.title != "백업 완료" || s.body != "스냅샷 3개" || !reflect.DeepEqual(s.data, map[string]any{"kind": "external_notification", "notification_id": int64(7)}) {
+			t.Fatalf("alert: title=%q body=%q data=%v, want the caller's text, the kind marker and the notification id", s.title, s.body, s.data)
 		}
 	}
 	sort.Strings(tokens)
@@ -94,7 +94,7 @@ func TestSendGoesToEveryDeviceOfTheOwnerAsIs(t *testing.T) {
 func TestSendWithNoDevicesReportsZero(t *testing.T) {
 	store, uid := setup(t)
 	sender := &fakeSender{}
-	res, err := externalnotify.New(sender, store).Send(context.Background(), uid, "x", "")
+	res, err := externalnotify.New(sender, store).Send(context.Background(), uid, 7, "x", "")
 	if err != nil {
 		t.Fatalf("send: %v", err)
 	}
@@ -107,7 +107,7 @@ func TestLongBodyIsCutToFitThePayload(t *testing.T) {
 	store, uid := setup(t, "phone")
 	sender := &fakeSender{}
 	long := strings.Repeat("야간 백업 로그 ", 800)
-	if _, err := externalnotify.New(sender, store).Send(context.Background(), uid, "백업", long); err != nil {
+	if _, err := externalnotify.New(sender, store).Send(context.Background(), uid, 7, "백업", long); err != nil {
 		t.Fatalf("send: %v", err)
 	}
 	got := sender.all()
@@ -131,7 +131,7 @@ func TestFailuresAreCountedAndDeadTokensDropped(t *testing.T) {
 		"busy": &apns.RejectedError{StatusCode: 429, Reason: "TooManyRequests"},
 		"down": errors.New("network down"),
 	}}
-	res, err := externalnotify.New(sender, store).Send(context.Background(), uid, "x", "y")
+	res, err := externalnotify.New(sender, store).Send(context.Background(), uid, 7, "x", "y")
 	if err != nil {
 		t.Fatalf("send: %v", err)
 	}

@@ -143,38 +143,53 @@ func TestExternalNotificationIsNotSentWhenItCannotBeRecorded(t *testing.T) {
 	}
 }
 
-func TestExternalNotificationsMarkReadUpToShownID(t *testing.T) {
+func TestExternalNotificationPushCarriesTheRecordedID(t *testing.T) {
 	push := &recordingNotifier{}
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
-	env.notify(key.Key, map[string]any{"title": "one"})
+	env.notify(key.Key, map[string]any{"title": "one", "requester": "r"})
+	env.notify(key.Key, map[string]any{"title": "two", "requester": "r"})
+
+	items := env.externalNotifications("alice", "").Items
+	push.mu.Lock()
+	ids := append([]sentID(nil), push.ids...)
+	push.mu.Unlock()
+	if len(ids) != 2 || ids[0].notificationID != items[1].ID || ids[1].notificationID != items[0].ID {
+		t.Fatalf("pushed ids = %v, want the recorded ids %d then %d", ids, items[1].ID, items[0].ID)
+	}
+}
+
+func TestExternalNotificationDetailAndReadArePerItem(t *testing.T) {
+	push := &recordingNotifier{}
+	env := newNotificationEnv(t, push)
+	key := env.issue("alice", "infra-ci")
+	env.notify(key.Key, map[string]any{"title": "one", "requester": "긴 요청 주체"})
 	env.notify(key.Key, map[string]any{"title": "two"})
-	shown := env.externalNotifications("alice", "")
-	env.notify(key.Key, map[string]any{"title": "arrived while open"})
+	listed := env.externalNotifications("alice", "")
+	if listed.UnreadCount != 2 {
+		t.Fatalf("listing must not mark anything read: %+v", listed)
+	}
+	first := listed.Items[1]
 
-	rec := env.do(http.MethodPost, "/api/external-notifications/read", "oidc-alice", map[string]any{"up_to_id": shown.Items[0].ID})
-	expectCode(t, rec, http.StatusOK, "mark read")
-	if got := decodeApproval[map[string]int](t, rec); got["updated"] != 2 {
-		t.Fatalf("updated = %v, want the two shown notifications", got)
+	rec := env.do(http.MethodGet, "/api/external-notifications/"+strconv.FormatInt(first.ID, 10), "oidc-alice", nil)
+	expectCode(t, rec, http.StatusOK, "get detail")
+	got := decodeApproval[externalnotify.Item](t, rec)
+	if got.ID != first.ID || got.Title != "one" || got.Requester != "긴 요청 주체" || got.CallerName != "infra-ci" || got.ReadAt != nil {
+		t.Fatalf("detail = %+v, want the unread first notification", got)
 	}
 
+	path := "/api/external-notifications/" + strconv.FormatInt(first.ID, 10) + "/read"
+	expectCode(t, env.do(http.MethodPost, path, "oidc-alice", nil), http.StatusNoContent, "mark read")
+	expectCode(t, env.do(http.MethodPost, path, "oidc-alice", nil), http.StatusNoContent, "mark read again")
 	after := env.externalNotifications("alice", "")
-	if after.UnreadCount != 1 || after.Items[0].Title != "arrived while open" || after.Items[0].ReadAt != nil || after.Items[1].ReadAt == nil {
-		t.Fatalf("after = %+v, want only the later notification unread", after)
+	if after.UnreadCount != 1 || after.Items[1].ReadAt == nil || after.Items[0].ReadAt != nil {
+		t.Fatalf("after = %+v, want only the opened notification read", after)
 	}
 
-	expectCode(t, env.do(http.MethodPost, "/api/external-notifications/read", "oidc-bob", map[string]any{"up_to_id": after.Items[0].ID}), http.StatusOK, "bob marks")
-	if got := env.externalNotifications("alice", ""); got.UnreadCount != 1 {
-		t.Fatalf("alice unread = %d after bob's mark, want 1", got.UnreadCount)
-	}
-
-	for name, body := range map[string]any{
-		"missing id":    map[string]any{},
-		"zero id":       map[string]any{"up_to_id": 0},
-		"unknown field": map[string]any{"up_to_id": 1, "all": true},
-	} {
-		expectCode(t, env.do(http.MethodPost, "/api/external-notifications/read", "oidc-alice", body), http.StatusBadRequest, name)
-	}
+	expectCode(t, env.do(http.MethodGet, "/api/external-notifications/"+strconv.FormatInt(first.ID, 10), "oidc-bob", nil), http.StatusNotFound, "bob get")
+	expectCode(t, env.do(http.MethodPost, path, "oidc-bob", nil), http.StatusNotFound, "bob mark")
+	expectCode(t, env.do(http.MethodGet, "/api/external-notifications/999999", "oidc-alice", nil), http.StatusNotFound, "missing")
+	expectCode(t, env.do(http.MethodGet, "/api/external-notifications/abc", "oidc-alice", nil), http.StatusBadRequest, "bad id")
 }
 
 func TestExternalNotificationsPageWithBefore(t *testing.T) {

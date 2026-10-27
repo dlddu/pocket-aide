@@ -59,15 +59,6 @@ struct ExternalNotificationDetailSheet: View {
                 .background(DesignTokens.Color.soft(Self.area))
                 .foregroundStyle(DesignTokens.StatusColor.arrivalGlow)
                 .clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))
-            if item.isUnread {
-                Text("새 알림")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(DesignTokens.Color.accent(Self.area))
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))
-            }
             Spacer(minLength: DesignTokens.Spacing.sm)
             Button("닫기", action: onClose)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .semibold))

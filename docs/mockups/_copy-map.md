@@ -40,7 +40,7 @@ last_updated: 2026-10-27
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 251 |
+| A | 일치 | 250 |
 | A | 데이터 | 8 |
 | A | 비표시 | 40 |
 | A | 시스템 UI | 2 |
@@ -57,7 +57,7 @@ last_updated: 2026-10-27
 | B | 시스템 UI | 11 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 324행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 323행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -174,7 +174,6 @@ last_updated: 2026-10-27
 | `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `도달` | 일치 | 「상세」 메타 줄 라벨 |
 | `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `받은 시각` | 일치 | 「상세」 메타 줄 라벨 |
 | `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `보낸 호출자` | 일치 | 「상세」 메타 줄 라벨 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `새 알림` | 일치 | 「상세」 미확인 칩 |
 | `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `요청 주체` | 일치 | 「상세」 메타 줄 라벨 |
 | `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel` 자리 — 목업 「목록」·「빈 상태」·「오류」 프레임 머리 |
 | `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `\(viewModel.unreadCount)` | 데이터 | 헤더 미확인 수 배지 숫자 |

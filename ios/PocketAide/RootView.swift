@@ -12,6 +12,7 @@ struct RootView: View {
     @Binding var highlightedEventID: Int64?
     @Binding var openedApprovalID: String?
     @Binding var notificationsReloadToken: Int
+    @Binding var openedNotificationID: Int64?
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
 
@@ -33,13 +34,15 @@ struct RootView: View {
         selectedTab: Binding<RootTab>,
         highlightedEventID: Binding<Int64?> = .constant(nil),
         openedApprovalID: Binding<String?> = .constant(nil),
-        notificationsReloadToken: Binding<Int> = .constant(0)
+        notificationsReloadToken: Binding<Int> = .constant(0),
+        openedNotificationID: Binding<Int64?> = .constant(nil)
     ) {
         _ = Self.approvalBadgeAppearance
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
         _openedApprovalID = openedApprovalID
         _notificationsReloadToken = notificationsReloadToken
+        _openedNotificationID = openedNotificationID
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
         _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
     }
@@ -132,7 +135,7 @@ struct RootView: View {
                 RoutinesTab()
             }
             Tab("알림 기록", systemImage: "bell", value: RootTab.notifications) {
-                ExternalNotificationsView(reloadToken: notificationsReloadToken)
+                ExternalNotificationsView(reloadToken: notificationsReloadToken, openedNotificationID: $openedNotificationID)
             }
         }
         .tint(activeTint)

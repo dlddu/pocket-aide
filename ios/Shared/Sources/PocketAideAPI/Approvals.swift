@@ -358,16 +358,41 @@ public enum ApprovalPushPayload {
 }
 
 public enum ExternalNotificationPushPayload {
-    public static let deepLinkURL = URL(string: "pocketaide://notifications")!
-
     public static func matches(_ info: [AnyHashable: Any]) -> Bool {
         (info["kind"] as? String) == "external_notification"
+    }
+
+    public static func notificationID(from info: [AnyHashable: Any]) -> Int64? {
+        let raw = info["notification_id"]
+        if let n = raw as? Int64 { return n > 0 ? n : nil }
+        if let n = raw as? Int { return n > 0 ? Int64(n) : nil }
+        if let n = raw as? NSNumber { return n.int64Value > 0 ? n.int64Value : nil }
+        if let s = raw as? String, let n = Int64(s), n > 0 { return n }
+        return nil
+    }
+
+    public static func deepLinkURL(fromUserInfo info: [AnyHashable: Any]) -> URL? {
+        var components = URLComponents()
+        components.scheme = "pocketaide"
+        components.host = "notifications"
+        if let id = notificationID(from: info) {
+            components.queryItems = [URLQueryItem(name: "id", value: String(id))]
+        }
+        return components.url
+    }
+
+    public static func notificationID(fromDeepLink url: URL) -> Int64? {
+        guard url.scheme == "pocketaide", url.host == "notifications",
+              let raw = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "id" })?.value,
+              let id = Int64(raw), id > 0 else { return nil }
+        return id
     }
 }
 
 public enum PushDeepLink {
     public static func url(fromUserInfo info: [AnyHashable: Any]) -> URL? {
-        if ExternalNotificationPushPayload.matches(info) { return ExternalNotificationPushPayload.deepLinkURL }
+        if ExternalNotificationPushPayload.matches(info) { return ExternalNotificationPushPayload.deepLinkURL(fromUserInfo: info) }
         return ApprovalPushPayload.deepLinkURL(fromUserInfo: info) ?? PRMonitorPushPayload.deepLinkURL(fromUserInfo: info)
     }
 }

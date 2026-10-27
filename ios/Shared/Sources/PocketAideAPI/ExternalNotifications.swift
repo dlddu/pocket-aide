@@ -46,6 +46,13 @@ public struct ExternalNotification: Codable, Identifiable, Equatable, Sendable, 
     }
 
     public var isUnread: Bool { readAt == nil }
+
+    public func markedRead(at time: Int64) -> ExternalNotification {
+        ExternalNotification(
+            id: id, title: title, body: body, callerName: callerName, callerKind: callerKind,
+            requester: requester, devices: devices, sent: sent, readAt: readAt ?? time, createdAt: createdAt
+        )
+    }
 }
 
 /// A page of the notification history plus the user's total unread count.
@@ -64,18 +71,6 @@ public struct ExternalNotificationsPage: Decodable, Equatable, Sendable {
     }
 }
 
-struct MarkExternalNotificationsReadPayload: Encodable {
-    let upToID: Int64
-
-    enum CodingKeys: String, CodingKey {
-        case upToID = "up_to_id"
-    }
-}
-
-struct MarkExternalNotificationsReadResponse: Decodable {
-    let updated: Int
-}
-
 public extension APIClient {
     func externalNotifications(limit: Int? = nil, before: Int64? = nil) async throws -> ExternalNotificationsPage {
         var path = "/api/external-notifications"
@@ -86,15 +81,18 @@ public extension APIClient {
         return try await get(path, authenticated: true)
     }
 
-    /// Marks the user's unread notifications up to and including `id` as seen.
-    @discardableResult
-    func markExternalNotificationsRead(upTo id: Int64) async throws -> Int {
-        let response: MarkExternalNotificationsReadResponse = try await post(
-            "/api/external-notifications/read",
-            body: MarkExternalNotificationsReadPayload(upToID: id),
-            authenticated: true
+    func externalNotification(id: Int64) async throws -> ExternalNotification {
+        try await get("/api/external-notifications/\(id)", authenticated: true)
+    }
+
+    /// Marks one notification as seen; opening its detail is what counts as seeing it.
+    func markExternalNotificationRead(id: Int64) async throws {
+        _ = try await post(
+            "/api/external-notifications/\(id)/read",
+            body: EmptyPayload(),
+            authenticated: true,
+            decodeAs: APIClient.EmptyResponse.self
         )
-        return response.updated
     }
 }
 

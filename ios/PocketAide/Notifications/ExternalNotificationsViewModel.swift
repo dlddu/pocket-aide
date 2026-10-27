@@ -22,7 +22,6 @@ final class ExternalNotificationsViewModel: ObservableObject {
         self.api = api
     }
 
-    /// Rows keep the unread state they were fetched with, so 「새 알림」 stays for this viewing after the server marks them seen.
     func load() async {
         guard let api, !isLoading else { return }
         isLoading = true
@@ -34,7 +33,6 @@ final class ExternalNotificationsViewModel: ObservableObject {
             hasMore = page.items.count >= ExternalNotificationFormatting.pageSize
             errorMessage = nil
             hasLoaded = true
-            await markShownAsRead(page, api: api)
         } catch {
             errorMessage = String(describing: error)
         }
@@ -55,13 +53,33 @@ final class ExternalNotificationsViewModel: ObservableObject {
         }
     }
 
-    private func markShownAsRead(_ page: ExternalNotificationsPage, api: APIClient) async {
-        guard page.unreadCount > 0, let newest = page.items.first else { return }
-        do {
-            try await api.markExternalNotificationsRead(upTo: newest.id)
-            onMarkedRead()
-        } catch {
-            // Left unread on the server; the next load marks them again.
+    /// The notification a push tap names, from the loaded list when it is there and otherwise from the server.
+    func notification(id: Int64) async -> ExternalNotification? {
+        if let loaded = items.first(where: { $0.id == id }) {
+            return loaded
         }
+        guard let api else { return nil }
+        do {
+            return try await api.externalNotification(id: id)
+        } catch {
+            errorMessage = String(describing: error)
+            return nil
+        }
+    }
+
+    /// Opening the detail is what counts as seeing a notification (PRD-12 AC17).
+    func markRead(_ item: ExternalNotification) async {
+        guard item.isUnread, let api else { return }
+        do {
+            try await api.markExternalNotificationRead(id: item.id)
+        } catch {
+            return
+        }
+        let now = Int64(Date().timeIntervalSince1970)
+        if let index = items.firstIndex(where: { $0.id == item.id }), items[index].isUnread {
+            items[index] = items[index].markedRead(at: now)
+            unreadCount = max(0, unreadCount - 1)
+        }
+        onMarkedRead()
     }
 }

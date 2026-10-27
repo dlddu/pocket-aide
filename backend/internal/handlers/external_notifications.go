@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	stdlog "log"
 	"net/http"
 	"strconv"
@@ -26,7 +27,7 @@ type externalNotificationPayload struct {
 }
 
 type NotificationSender interface {
-	Send(ctx context.Context, userID int64, title, body string) (externalnotify.Result, error)
+	Send(ctx context.Context, userID, notificationID int64, title, body string) (externalnotify.Result, error)
 }
 
 // NotificationLog records every external notification with its caller (PRD-12 AC17).
@@ -78,7 +79,7 @@ func CreateExternalNotification(push NotificationSender, log NotificationLog) ht
 			writeError(w, http.StatusInternalServerError, "record failed")
 			return
 		}
-		res, err := push.Send(ctx, caller.UserID, title, body)
+		res, err := push.Send(ctx, caller.UserID, id, title, body)
 		if err != nil {
 			if err := log.Delete(context.WithoutCancel(ctx), id); err != nil {
 				stdlog.Printf("external notification %d: drop unsent record: %v", id, err)
@@ -97,7 +98,8 @@ func CreateExternalNotification(push NotificationSender, log NotificationLog) ht
 type ExternalNotificationReader interface {
 	List(ctx context.Context, userID int64, limit int, beforeID int64) ([]externalnotify.Item, error)
 	UnreadCount(ctx context.Context, userID int64) (int, error)
-	MarkRead(ctx context.Context, userID, upToID int64) (int64, error)
+	Get(ctx context.Context, userID, id int64) (externalnotify.Item, error)
+	MarkRead(ctx context.Context, userID, id int64) error
 }
 
 // ListExternalNotifications handles GET /api/external-notifications (PRD-12 AC17).
@@ -134,32 +136,54 @@ func ListExternalNotifications(store ExternalNotificationReader) http.HandlerFun
 	}
 }
 
-type markExternalNotificationsReadPayload struct {
-	UpToID *int64 `json:"up_to_id"`
-}
-
-// MarkExternalNotificationsRead handles POST /api/external-notifications/read (PRD-12 AC17).
-func MarkExternalNotificationsRead(store ExternalNotificationReader) http.HandlerFunc {
+// GetExternalNotification handles GET /api/external-notifications/{id}: the detail a push tap opens (PRD-12 AC16·AC17).
+func GetExternalNotification(store ExternalNotificationReader) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
 		if !ok {
 			writeError(w, http.StatusInternalServerError, "no user in context")
 			return
 		}
-		var p markExternalNotificationsReadPayload
-		if err := decodeApprovalBody(w, r, &p); err != nil {
+		id, err := pathID(r)
+		if err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		if p.UpToID == nil || *p.UpToID <= 0 {
-			writeError(w, http.StatusBadRequest, "up_to_id must be a positive id")
+		item, err := store.Get(r.Context(), u.ID, id)
+		if errors.Is(err, externalnotify.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "not found")
 			return
 		}
-		n, err := store.MarkRead(r.Context(), u.ID, *p.UpToID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "lookup failed")
+			return
+		}
+		writeJSON(w, http.StatusOK, item)
+	}
+}
+
+// MarkExternalNotificationRead handles POST /api/external-notifications/{id}/read: opening the detail marks it seen (PRD-12 AC17).
+func MarkExternalNotificationRead(store ExternalNotificationReader) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "no user in context")
+			return
+		}
+		id, err := pathID(r)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		err = store.MarkRead(r.Context(), u.ID, id)
+		if errors.Is(err, externalnotify.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "not found")
+			return
+		}
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "mark read failed")
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"updated": n})
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
