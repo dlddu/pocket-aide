@@ -64,6 +64,10 @@ func CreateExternalNotification(push NotificationSender, log NotificationLog) ht
 			body = strings.TrimSpace(*p.Body)
 		}
 		requester := trimmedOptional(p.Requester)
+		if requester == "" {
+			writeError(w, http.StatusBadRequest, "requester is required")
+			return
+		}
 		if utf8.RuneCountInString(requester) > maxNotificationRequesterRunes {
 			writeError(w, http.StatusBadRequest, "requester is too long")
 			return

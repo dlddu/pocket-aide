@@ -34,15 +34,15 @@ func TestExternalNotificationIsRecordedWithCallerAndRequester(t *testing.T) {
 	key := env.issue("alice", "infra-ci")
 
 	env.notify(key.Key, map[string]any{"title": " 백업 완료 ", "body": " 스냅샷 3개 ", "requester": "  jwt:user-123  "})
-	env.notify(key.Key, map[string]any{"title": "두 번째"})
+	env.notify(key.Key, map[string]any{"title": "두 번째", "requester": "r"})
 
 	got := env.externalNotifications("alice", "")
 	if len(got.Items) != 2 || got.UnreadCount != 2 {
 		t.Fatalf("list = %+v, want two unread items", got)
 	}
 	newest, first := got.Items[0], got.Items[1]
-	if newest.Title != "두 번째" || newest.Requester != "" {
-		t.Fatalf("newest = %+v, want the later notification first with no requester", newest)
+	if newest.Title != "두 번째" || newest.Requester != "r" {
+		t.Fatalf("newest = %+v, want the later notification first with its requester", newest)
 	}
 	want := externalnotify.Item{
 		ID: first.ID, Title: "백업 완료", Body: "스냅샷 3개", CallerName: "infra-ci", CallerKind: "key",
@@ -95,7 +95,7 @@ func TestExternalNotificationsAreScopedToTheOwner(t *testing.T) {
 	key := env.issue("alice", "infra-ci")
 	env.issue("bob", "bob-ci")
 
-	env.notify(key.Key, map[string]any{"title": "alice only"})
+	env.notify(key.Key, map[string]any{"title": "alice only", "requester": "r"})
 
 	if got := env.externalNotifications("bob", ""); len(got.Items) != 0 || got.UnreadCount != 0 {
 		t.Fatalf("bob sees %+v, want nothing", got)
@@ -108,7 +108,7 @@ func TestExternalNotificationSendFailureLeavesNoRecord(t *testing.T) {
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
 
-	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x"}), http.StatusInternalServerError, "notifier error")
+	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x", "requester": "r"}), http.StatusInternalServerError, "notifier error")
 	if items := env.externalNotifications("alice", "").Items; len(items) != 0 {
 		t.Fatalf("items = %+v, want no record for a send that never started", items)
 	}
@@ -118,7 +118,7 @@ func TestExternalNotificationWithoutPushIsNotRecorded(t *testing.T) {
 	env := newNotificationEnv(t, nil)
 	key := env.issue("alice", "infra-ci")
 
-	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x"}), http.StatusServiceUnavailable, "APNs not configured")
+	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x", "requester": "r"}), http.StatusServiceUnavailable, "APNs not configured")
 	if items := env.externalNotifications("alice", "").Items; len(items) != 0 {
 		t.Fatalf("items = %+v, want nothing recorded", items)
 	}
@@ -137,7 +137,7 @@ func TestExternalNotificationIsNotSentWhenItCannotBeRecorded(t *testing.T) {
 	env := newNotificationEnvWithLog(t, push, failingLog{})
 	key := env.issue("alice", "infra-ci")
 
-	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x"}), http.StatusInternalServerError, "record failure")
+	expectCode(t, env.do(http.MethodPost, "/api/external/notifications", key.Key, map[string]any{"title": "x", "requester": "r"}), http.StatusInternalServerError, "record failure")
 	if n := len(push.all()); n != 0 {
 		t.Fatalf("pushes = %d, want none without a record", n)
 	}
@@ -164,7 +164,7 @@ func TestExternalNotificationDetailAndReadArePerItem(t *testing.T) {
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
 	env.notify(key.Key, map[string]any{"title": "one", "requester": "긴 요청 주체"})
-	env.notify(key.Key, map[string]any{"title": "two"})
+	env.notify(key.Key, map[string]any{"title": "two", "requester": "r"})
 	listed := env.externalNotifications("alice", "")
 	if listed.UnreadCount != 2 {
 		t.Fatalf("listing must not mark anything read: %+v", listed)
@@ -197,7 +197,7 @@ func TestExternalNotificationsPageWithBefore(t *testing.T) {
 	env := newNotificationEnv(t, push)
 	key := env.issue("alice", "infra-ci")
 	for i := 1; i <= 3; i++ {
-		env.notify(key.Key, map[string]any{"title": "n" + strconv.Itoa(i)})
+		env.notify(key.Key, map[string]any{"title": "n" + strconv.Itoa(i), "requester": "r"})
 	}
 
 	page := env.externalNotifications("alice", "?limit=2")
