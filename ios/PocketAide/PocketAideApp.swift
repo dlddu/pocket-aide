@@ -13,11 +13,12 @@ struct PocketAideApp: App {
     @State private var highlightedEventID: Int64?
     @State private var openedApprovalID: String?
     @State private var notificationsReloadToken = 0
+    @State private var openedNotificationID: Int64?
     @State private var showsWeather = false
 
     var body: some Scene {
         WindowGroup {
-            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID, notificationsReloadToken: $notificationsReloadToken)
+            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID, notificationsReloadToken: $notificationsReloadToken, openedNotificationID: $openedNotificationID)
                 .environmentObject(auth)
                 .sheet(isPresented: $showsWeather) { WeatherView() }
                 .task { await auth.bootstrap() }
@@ -98,6 +99,7 @@ struct PocketAideApp: App {
                   openedApprovalID ?? "<nil>")
         case "notifications":
             showsWeather = false
+            openedNotificationID = ExternalNotificationPushPayload.notificationID(fromDeepLink: url)
             notificationsReloadToken += 1
             selectedTab = .notifications
         default:

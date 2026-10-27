@@ -53,8 +53,16 @@ final class ExternalNotificationsTests: XCTestCase {
         XCTAssertEqual(ExternalNotificationFormatting.requesterValue(named), long)
     }
 
-    func testMarkReadPayloadUsesSnakeCase() throws {
-        let data = try JSONEncoder().encode(MarkExternalNotificationsReadPayload(upToID: 42))
-        XCTAssertEqual(String(decoding: data, as: UTF8.self), #"{"up_to_id":42}"#)
+    func testMarkedReadKeepsEverythingButTheReadTime() {
+        let unread = ExternalNotification(
+            id: 5, title: "t", body: "b", callerName: "infra-ci", callerKind: "key",
+            requester: "r", devices: 2, sent: 1, readAt: nil, createdAt: 100
+        )
+        let read = unread.markedRead(at: 200)
+        XCTAssertFalse(read.isUnread)
+        XCTAssertEqual(read.readAt, 200)
+        XCTAssertEqual(read.markedRead(at: 300).readAt, 200)
+        XCTAssertEqual(read.title, "t")
+        XCTAssertEqual(read.createdAt, 100)
     }
 }

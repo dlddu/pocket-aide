@@ -26,11 +26,11 @@
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/devicetokens/store.go` | 7 | `2716161b6615` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| — | `backend/internal/externalnotify/notifier.go` | 5 | `e649e26ff478` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장 + `Data` 표식의 이유 2줄, 2026-10-27 알림 기록(AC17) PR 이 패키지 doc·`Data` 이유를 고침, 미판정 |
-| — | `backend/internal/externalnotify/store.go` | 10 | `648cf4f9feb4` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — exported 선언의 doc 첫 문장뿐, 미판정 |
+| — | `backend/internal/externalnotify/notifier.go` | 5 | `69a8803e6884` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장 + `Data` 표식의 이유 2줄, 2026-10-27 알림 기록(AC17) PR 이 패키지 doc·`Data` 이유를 고침, 미판정 · 2026-10-27 푸시 → 상세·상세를 열면 확인(AC16·AC17 개정) PR 이 doc 을 고치고 더함, 미판정 |
+| — | `backend/internal/externalnotify/store.go` | 12 | `d44b76e04e26` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — exported 선언의 doc 첫 문장뿐, 미판정 · 2026-10-27 푸시 → 상세·상세를 열면 확인(AC16·AC17 개정) PR 이 doc 을 고치고 더함, 미판정 |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| — | `backend/internal/handlers/external_notifications.go` | 5 | `afd26dfcf33a` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장만 있음, 2026-10-27 알림 기록(AC17) PR 이 exported 선언 doc 4줄을 더함, 미판정 |
+| — | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장만 있음, 2026-10-27 알림 기록(AC17) PR 이 exported 선언 doc 4줄을 더함, 미판정 · 2026-10-27 푸시 → 상세·상세를 열면 확인(AC16·AC17 개정) PR 이 doc 을 고치고 더함, 미판정 |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-09-29 | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 11 | `e12b892a3613` | 완료 | 필요성 판정 — 제거 1줄 · 유지 11줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | — | `backend/internal/k8sauth/tokenreview.go` | 5 | `1dae868df4d3` | — | 미판정 — 2026-10-16 k8s ServiceAccount 호출자(PRD-12 AC15) 기능 PR 이 들임 |
@@ -46,7 +46,7 @@
 | 2026-09-29 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | 3 | `9a6585e35c9a` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/PocketAide/AppAuthCoordinator.swift`, `ios/PocketAide/AppDelegate.swift`, `ios/PocketAide/DeepLinkRouter.swift`, `ios/PocketAide/PocketAideApp.swift`, `ios/PocketAide/PushRegistrar.swift`, `ios/PocketAide/RootView.swift` | 39 | `cca91708a5a4` | 완료 | 필요성 판정 — 제거 35줄 · 유지 39줄(개작 6블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | — | `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | 1 | `0f7fee2c5381` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — 화면 doc 1줄, 미판정 |
-| — | `ios/PocketAide/Notifications/ExternalNotificationsViewModel.swift` | 2 | `17d8c6240e06` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — 행의 미확인 표시 유지 이유 1줄 · 확인 실패 처리 1줄, 미판정 |
+| — | `ios/PocketAide/Notifications/ExternalNotificationsViewModel.swift` | 2 | `93eddd8ded64` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — 행의 미확인 표시 유지 이유 1줄 · 확인 실패 처리 1줄, 미판정 · 2026-10-27 푸시 → 상세·상세를 열면 확인(AC16·AC17 개정) PR 이 doc 을 고치고 더함, 미판정 |
 | 2026-09-29 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift`, `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 12 | `7f66d46d2454` | 완료 | 필요성 판정 — 제거 58줄 · 유지 12줄(개작 2블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/PocketAide/Todos/TodoEditSheet.swift`, `ios/PocketAide/Todos/TodoListView.swift` | 6 | `1413f9b4c157` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 33 | `66ff5e1c3e54` | 완료 | 필요성 판정 — 제거 48줄 · 유지 33줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
@@ -56,7 +56,7 @@
 | 2026-09-29 | `ios/Shared/Package.swift` | 1 | `9ea7cb80805c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 7 | `7eaa1de510bc` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Tokens.swift` | 14 | `542a9b308412` | 완료 | 필요성 판정 — 제거 3줄 · 유지 14줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| — | `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 5 | `3c19cfa9043f` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — public 선언의 doc 첫 문장뿐, 미판정 |
+| — | `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 5 | `d2ed925a83ec` | — | 2026-10-27 알림 기록(PRD-12 AC17) 기능 PR 이 들임 — public 선언의 doc 첫 문장뿐, 미판정 · 2026-10-27 푸시 → 상세·상세를 열면 확인(AC16·AC17 개정) PR 이 doc 을 고치고 더함, 미판정 |
 | 2026-09-29 | `ios/Shared/Sources/PocketAideAPI/HistoryGroup.swift`, `ios/Shared/Sources/PocketAideAPI/PRMonitor.swift`, `ios/Shared/Sources/PocketAideAPI/RotationSelector.swift`, `ios/Shared/Sources/PocketAideAPI/SeededRNG.swift`, `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 27 | `0e62232c8a8f` | 완료 | 필요성 판정 — 제거 22줄 · 유지 27줄(개작 6블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-10-01 | `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 3 | `7dbfb751ae6b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-10-15 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 7 | `ff85dec4c2e9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 · 2026-10-15 증분 유지 3줄(앱·위젯 동시 갱신) — [상세](passes/2026-09-29-ci-backend-ios.md) |

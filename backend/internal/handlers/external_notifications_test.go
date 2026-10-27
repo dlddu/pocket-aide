@@ -25,17 +25,21 @@ type sentNotification struct {
 	title, body string
 }
 
+type sentID struct{ notificationID int64 }
+
 type recordingNotifier struct {
 	mu     sync.Mutex
 	sent   []sentNotification
+	ids    []sentID
 	result externalnotify.Result
 	err    error
 }
 
-func (n *recordingNotifier) Send(_ context.Context, userID int64, title, body string) (externalnotify.Result, error) {
+func (n *recordingNotifier) Send(_ context.Context, userID, notificationID int64, title, body string) (externalnotify.Result, error) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	n.sent = append(n.sent, sentNotification{userID, title, body})
+	n.ids = append(n.ids, sentID{notificationID})
 	return n.result, n.err
 }
 
@@ -70,7 +74,8 @@ func newNotificationEnvWithLog(t *testing.T, push handlers.NotificationSender, l
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(store))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(store))
 		p.Get("/api/external-notifications", handlers.ListExternalNotifications(notes))
-		p.Post("/api/external-notifications/read", handlers.MarkExternalNotificationsRead(notes))
+		p.Get("/api/external-notifications/{id}", handlers.GetExternalNotification(notes))
+		p.Post("/api/external-notifications/{id}/read", handlers.MarkExternalNotificationRead(notes))
 	})
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(store, env.reviewer))
