@@ -40,6 +40,7 @@
   2026-10-25 AC16(호출자의 단순 푸시 알림)을 PRD에 더하며 시나리오 19를 덧붙였고, 같은 변경의 서버 구현(`POST /api/external/notifications`)에 맞춰 「구현됨」으로 판정했다.
   2026-10-25 호출자 계약의 선택 필드 `sessionId`·`reason`과 상세의 세션 제목·에이전트 설명(PRD-12 AC6 개정)을 구현과 같은 PR 에서 더하며 시나리오 20을 덧붙였다(「구현됨」).
   2026-10-27 AC17(알림 기록)과 AC16 개정(발송 전 기록 · 푸시 탭 → 알림 기록 화면 · 선택 필드 `requester`)을 구현과 같은 PR 에서 더하며 시나리오 19의 3·7단계를 고치고 시나리오 21을 덧붙였다(「구현됨」).
+  같은 날 알림 상세 시트(AC17 개정 — 줄임 없는 상세)를 구현과 같은 PR 에서 더하며 시나리오 21에 8단계를 덧붙였다(「구현됨」 유지).
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
@@ -422,6 +423,7 @@
   5. `bob-ci` 키가 `{"title": "B의 알림"}`을 보낸다.
   6. 호출자가 `infra-ci` 키로 51건을 더 보낸 뒤 목록 끝까지 내린다.
   7. 백엔드를 멈추고 화면을 다시 연 다음, 백엔드를 되살리고 「다시 시도」를 누른다.
+  8. 호출자가 200자 `requester` 와 여러 줄 `body` 로 알림을 보내고, 화면을 새로고침한 뒤 그 행을 누른다. 상세에서 요청 주체를 길게 눌러 복사한 다음 「닫기」를 누른다.
 - **기대 결과**:
   - 1단계: 「받은 알림이 없어요.」가 보인다.
   - 2단계: 맨 위 행에 제목 「백업 완료」, 본문, 「infra-ci · 키」, 「요청 nightly 백업 크론잡」, 받은 시각, 「1/1 기기」와 「새 알림」 표시가 보인다.
@@ -430,6 +432,7 @@
   - 5단계: 사용자 A의 알림 기록에 「B의 알림」은 없다.
   - 6단계: 처음 50건 뒤로 이전 기록이 이어서 불러와지고, 같은 행이 두 번 보이지 않는다.
   - 7단계: 오류 배너가 보이고 기록을 잘못 비우지 않는다. 다시 시도하면 목록이 돌아온다.
+  - 8단계: 목록 행의 요청 주체는 두 줄에서 끝이 말줄임으로 잘린다. 상세 시트에는 제목·본문 전체, 「보낸 호출자」 「infra-ci · 키」, 「요청 주체」 200자 전체, 「받은 시각」(날짜와 초), 「도달」이 줄임 없이 보이고 요청 주체를 복사할 수 있다. 닫으면 목록으로 돌아오고 그 행의 「새 알림」 표시는 그대로다.
 - **검증 AC**: AC17, AC16, AC15
-- **구현 상태**: 구현됨 — 서버: 마이그레이션 `0017_external_notifications`, 발송 전 기록(기록 실패 시 500·발송 없음, 기기 목록 실패 시 기록 삭제), 앱용 `GET /api/external-notifications`(`items`·`unread_count`, `limit`·`before`)·`POST /api/external-notifications/read`(`up_to_id` 까지 확인). 앱: 「더 보기」의 「알림 기록」 탭(`ExternalNotificationsView`), 받은 목록의 최신 id 까지 확인 처리 후 위젯 타임라인 갱신, 끝에서 이전 기록 더 불러오기. 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
+- **구현 상태**: 구현됨 — 서버: 마이그레이션 `0017_external_notifications`, 발송 전 기록(기록 실패 시 500·발송 없음, 기기 목록 실패 시 기록 삭제), 앱용 `GET /api/external-notifications`(`items`·`unread_count`, `limit`·`before`)·`POST /api/external-notifications/read`(`up_to_id` 까지 확인). 앱: 「더 보기」의 「알림 기록」 탭(`ExternalNotificationsView`), 받은 목록의 최신 id 까지 확인 처리 후 위젯 타임라인 갱신, 끝에서 이전 기록 더 불러오기, 행을 누르면 줄임 없는 상세 시트(`ExternalNotificationDetailSheet` — 텍스트 선택 가능). 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
 - **관련 코드 테스트**: `backend/internal/handlers/external_notification_log_test.go` — `TestExternalNotificationIsRecordedWithCallerAndRequester`·`TestExternalNotificationRecordsServiceAccountCaller`·`TestExternalNotificationRequesterTooLongIsRejected`·`TestExternalNotificationsAreScopedToTheOwner`·`TestExternalNotificationSendFailureLeavesNoRecord`·`TestExternalNotificationIsNotSentWhenItCannotBeRecorded`·`TestExternalNotificationsMarkReadUpToShownID`·`TestExternalNotificationsPageWithBefore`, `ios/PocketAideUnitTests/ExternalNotificationsTests.swift`

@@ -36,6 +36,23 @@ final class ExternalNotificationsTests: XCTestCase {
         XCTAssertEqual(ExternalNotificationFormatting.deliveryLabel(key), "등록된 기기 없음")
     }
 
+    func testDetailShowsFullTimeAndRequester() throws {
+        let item = ExternalNotification(
+            id: 3, title: "t", body: "", callerName: "infra-ci", callerKind: "key",
+            requester: "", devices: 1, sent: 1, readAt: nil, createdAt: 1_800_000_000
+        )
+        let seoul = try XCTUnwrap(TimeZone(identifier: "Asia/Seoul"))
+        XCTAssertEqual(ExternalNotificationFormatting.fullTime(item, timeZone: seoul), "2027-01-15 17:00:00")
+        XCTAssertEqual(ExternalNotificationFormatting.requesterValue(item), "요청 주체 미상")
+
+        let long = String(repeating: "가", count: 200)
+        let named = ExternalNotification(
+            id: 4, title: "t", body: "", callerName: "infra-ci", callerKind: "key",
+            requester: long, devices: 1, sent: 1, readAt: nil, createdAt: 0
+        )
+        XCTAssertEqual(ExternalNotificationFormatting.requesterValue(named), long)
+    }
+
     func testMarkReadPayloadUsesSnakeCase() throws {
         let data = try JSONEncoder().encode(MarkExternalNotificationsReadPayload(upToID: 42))
         XCTAssertEqual(String(decoding: data, as: UTF8.self), #"{"up_to_id":42}"#)
