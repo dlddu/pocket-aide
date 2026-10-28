@@ -103,7 +103,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(400, {"error": "invalid request"})
             sid = uuid.uuid4().hex[:12]
             stamp = now()
-            s = {"id": sid, "name": name, "workloadType": wl, "state": "running",
+            s = {"id": sid, "name": name, "workloadType": wl, "state": "active",
                  "createdAt": stamp, "lastAccess": stamp}
             if info["takesModel"]:
                 s["model"] = body.get("model") or info["defaultModel"]
@@ -129,8 +129,8 @@ class Handler(BaseHTTPRequestHandler):
     def action(self, s, action, body):
         sid = s["id"]
         if action == "read":
-            if s["state"] == "snapshotted":
-                s["state"] = "running"
+            if s["state"] == "snapshot":
+                s["state"] = "active"
             out = OUTPUTS.get(sid, "")
             offset = int(body.get("offset") or 0)
             if offset > len(out):
@@ -138,18 +138,18 @@ class Handler(BaseHTTPRequestHandler):
             s["lastAccess"] = now()
             return self.send_json(200, {"session": public(s), "payload": out[offset:], "nextOffset": len(out)})
         if action == "write":
-            if s["state"] == "snapshotted":
+            if s["state"] == "snapshot":
                 return self.send_json(422, {"error": "session is snapshotted"})
             data = str(body.get("payload", ""))
             OUTPUTS[sid] += data + "\n"
             s["lastAccess"] = now()
             return self.send_json(200, {"session": public(s), "path": "/sessions/%s/input" % sid})
         if action == "switch":
-            s["state"] = "running"
+            s["state"] = "active"
             s["lastAccess"] = now()
             return self.send_json(200, public(s))
         if action == "snapshot":
-            s["state"] = "snapshotted"
+            s["state"] = "snapshot"
             s["checkpoint"] = {"sizeBytes": 2048, "createdAt": now()}
             return self.send_json(200, public(s))
         return self.send_json(404, {"error": "not found"})
