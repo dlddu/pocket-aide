@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/sessions"
 )
 
@@ -67,47 +66,38 @@ func readSessionBody(w http.ResponseWriter, r *http.Request) ([]byte, bool) {
 	return raw, true
 }
 
+func fetchRuntimeConfig(w http.ResponseWriter, r *http.Request, client *sessions.Client) (sessions.RuntimeConfig, bool) {
+	var cfg sessions.RuntimeConfig
+	status, raw, err := client.Do(r.Context(), http.MethodGet, "/config", nil)
+	if err != nil {
+		writeUnreachable(w)
+		return cfg, false
+	}
+	if status != http.StatusOK {
+		writeSessionError(w, status)
+		return cfg, false
+	}
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		writeSessionError(w, http.StatusBadGateway)
+		return cfg, false
+	}
+	cfg.Normalize()
+	return cfg, true
+}
+
 func SessionConfig(client *sessions.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		status, raw, err := client.Do(r.Context(), http.MethodGet, "/config", nil)
-		if err != nil {
-			writeUnreachable(w)
+		cfg, ok := fetchRuntimeConfig(w, r, client)
+		if !ok {
 			return
-		}
-		if status != http.StatusOK {
-			writeSessionError(w, status)
-			return
-		}
-		var cfg sessions.RuntimeConfig
-		if err := json.Unmarshal(raw, &cfg); err != nil {
-			writeSessionError(w, http.StatusBadGateway)
-			return
-		}
-		if cfg.ClaudeCode.Models == nil {
-			cfg.ClaudeCode.Models = []string{}
 		}
 		w.Header().Set("Cache-Control", "no-store")
 		writeJSON(w, http.StatusOK, cfg)
 	}
 }
 
-func ListSessions(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
+func ListSessions(client *sessions.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		u, ok := auth.FromContext(r.Context())
-		if !ok {
-			http.Error(w, "no user in context", http.StatusInternalServerError)
-			return
-		}
-		owned, err := store.Owned(r.Context(), u.ID)
-		if err != nil {
-			http.Error(w, "list failed", http.StatusInternalServerError)
-			return
-		}
-		out := []sessions.Session{}
-		if len(owned) == 0 {
-			writeJSON(w, http.StatusOK, map[string]any{"sessions": out})
-			return
-		}
 		status, raw, err := client.Do(r.Context(), http.MethodGet, "/sessions", nil)
 		if err != nil {
 			writeUnreachable(w)
@@ -124,23 +114,17 @@ func ListSessions(store *sessions.Store, client *sessions.Client) http.HandlerFu
 			writeSessionError(w, http.StatusBadGateway)
 			return
 		}
-		for _, s := range body.Sessions {
-			if owned[s.ID] {
-				out = append(out, s)
-			}
+		out := body.Sessions
+		if out == nil {
+			out = []sessions.Session{}
 		}
 		sort.SliceStable(out, func(i, j int) bool { return out[i].LastAccess > out[j].LastAccess })
 		writeJSON(w, http.StatusOK, map[string]any{"sessions": out})
 	}
 }
 
-func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
+func CreateSession(client *sessions.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		u, ok := auth.FromContext(r.Context())
-		if !ok {
-			http.Error(w, "no user in context", http.StatusInternalServerError)
-			return
-		}
 		raw, ok := readSessionBody(w, r)
 		if !ok {
 			return
@@ -152,19 +136,33 @@ func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json body"})
 			return
 		}
-		if p.WorkloadType != nil && *p.WorkloadType != sessions.WorkloadClaudeCode {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "workloadType must be claude-code"})
-			return
+		workload := sessions.WorkloadClaudeCode
+		if p.WorkloadType != nil {
+			workload = *p.WorkloadType
 		}
 		name := strings.TrimSpace(p.Name)
 		if name == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
 			return
 		}
+		cfg, ok := fetchRuntimeConfig(w, r, client)
+		if !ok {
+			return
+		}
+		info, known := cfg.Workload(workload)
+		if !known {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "workloadType is not offered by the session platform"})
+			return
+		}
+		model := strings.TrimSpace(p.Model)
+		if model != "" && !info.TakesModel {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "this workloadType takes no model"})
+			return
+		}
 		upstream, err := json.Marshal(platformCreateRequest{
 			Name:         name,
-			WorkloadType: sessions.WorkloadClaudeCode,
-			Model:        strings.TrimSpace(p.Model),
+			WorkloadType: workload,
+			Model:        model,
 		})
 		if err != nil {
 			http.Error(w, "encode failed", http.StatusInternalServerError)
@@ -184,32 +182,8 @@ func CreateSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 			writeSessionError(w, http.StatusBadGateway)
 			return
 		}
-		if err := store.Add(r.Context(), u.ID, created.ID); err != nil {
-			_, _, _ = client.Do(r.Context(), http.MethodDelete, "/sessions/"+url.PathEscape(created.ID), nil)
-			http.Error(w, "create failed", http.StatusInternalServerError)
-			return
-		}
 		writeJSON(w, http.StatusCreated, created)
 	}
-}
-
-func ownedSessionID(w http.ResponseWriter, r *http.Request, store *sessions.Store) (int64, string, bool) {
-	u, ok := auth.FromContext(r.Context())
-	if !ok {
-		http.Error(w, "no user in context", http.StatusInternalServerError)
-		return 0, "", false
-	}
-	id := chi.URLParam(r, "id")
-	owns, err := store.Owns(r.Context(), u.ID, id)
-	if err != nil {
-		http.Error(w, "lookup failed", http.StatusInternalServerError)
-		return 0, "", false
-	}
-	if !owns {
-		writeSessionError(w, http.StatusNotFound)
-		return 0, "", false
-	}
-	return u.ID, id, true
 }
 
 func relaySession[T any](w http.ResponseWriter, status int, raw []byte) {
@@ -225,12 +199,9 @@ func relaySession[T any](w http.ResponseWriter, status int, raw []byte) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-func GetSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
+func GetSession(client *sessions.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, id, ok := ownedSessionID(w, r, store)
-		if !ok {
-			return
-		}
+		id := chi.URLParam(r, "id")
 		status, raw, err := client.Do(r.Context(), http.MethodGet, "/sessions/"+url.PathEscape(id), nil)
 		if err != nil {
 			writeUnreachable(w)
@@ -240,26 +211,15 @@ func GetSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc
 	}
 }
 
-func DeleteSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
+func DeleteSession(client *sessions.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, id, ok := ownedSessionID(w, r, store)
-		if !ok {
-			return
-		}
+		id := chi.URLParam(r, "id")
 		status, _, err := client.Do(r.Context(), http.MethodDelete, "/sessions/"+url.PathEscape(id), nil)
 		if err != nil {
 			writeUnreachable(w)
 			return
 		}
-		if status != http.StatusNoContent && status != http.StatusNotFound {
-			writeSessionError(w, status)
-			return
-		}
-		if err := store.Remove(r.Context(), userID, id); err != nil {
-			http.Error(w, "delete failed", http.StatusInternalServerError)
-			return
-		}
-		if status == http.StatusNotFound {
+		if status != http.StatusNoContent {
 			writeSessionError(w, status)
 			return
 		}
@@ -267,12 +227,9 @@ func DeleteSession(store *sessions.Store, client *sessions.Client) http.HandlerF
 	}
 }
 
-func sessionAction[T any](store *sessions.Store, client *sessions.Client, action string) http.HandlerFunc {
+func sessionAction[T any](client *sessions.Client, action string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, id, ok := ownedSessionID(w, r, store)
-		if !ok {
-			return
-		}
+		id := chi.URLParam(r, "id")
 		raw, ok := readSessionBody(w, r)
 		if !ok {
 			return
@@ -290,18 +247,18 @@ func sessionAction[T any](store *sessions.Store, client *sessions.Client, action
 	}
 }
 
-func ReadSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
-	return sessionAction[sessions.ReadResult](store, client, "read")
+func ReadSession(client *sessions.Client) http.HandlerFunc {
+	return sessionAction[sessions.ReadResult](client, "read")
 }
 
-func WriteSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
-	return sessionAction[sessions.WriteResult](store, client, "write")
+func WriteSession(client *sessions.Client) http.HandlerFunc {
+	return sessionAction[sessions.WriteResult](client, "write")
 }
 
-func SwitchSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
-	return sessionAction[sessions.Session](store, client, "switch")
+func SwitchSession(client *sessions.Client) http.HandlerFunc {
+	return sessionAction[sessions.Session](client, "switch")
 }
 
-func SnapshotSession(store *sessions.Store, client *sessions.Client) http.HandlerFunc {
-	return sessionAction[sessions.Session](store, client, "snapshot")
+func SnapshotSession(client *sessions.Client) http.HandlerFunc {
+	return sessionAction[sessions.Session](client, "snapshot")
 }

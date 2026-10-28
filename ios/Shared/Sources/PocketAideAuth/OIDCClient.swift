@@ -132,6 +132,12 @@ public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextP
             // transport errors leave the bundle in place so a later retry can
             // recover without forcing the user back to the login screen.
             if (400..<500).contains(http.statusCode) {
+                // The app and widget share this keychain item. If the other
+                // process rotated the refresh token while ours was in flight,
+                // ours is stale rather than revoked — adopt theirs.
+                if let latest = try? tokenStore.load(), latest.refreshToken != refreshToken {
+                    return latest
+                }
                 try? tokenStore.clear()
             }
             throw OIDCError.tokenExchange(http.statusCode, String(data: data, encoding: .utf8) ?? "")

@@ -13,6 +13,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
     public let externalId: String
     public let context: String
     public let requesterName: String
+    public let sessionId: String?
+    public let sessionName: String?
+    public let reason: String?
     public let keyName: String
     public let keyRevoked: Bool
     public let createdAt: Int64
@@ -26,6 +29,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
         case externalId = "external_id"
         case context
         case requesterName = "requester_name"
+        case sessionId = "session_id"
+        case sessionName = "session_name"
+        case reason
         case keyName = "key_name"
         case keyRevoked = "key_revoked"
         case createdAt = "created_at"
@@ -40,6 +46,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
         externalId: String = "",
         context: String,
         requesterName: String = "",
+        sessionId: String? = nil,
+        sessionName: String? = nil,
+        reason: String? = nil,
         keyName: String = "",
         keyRevoked: Bool = false,
         createdAt: Int64,
@@ -52,6 +61,9 @@ public struct ApprovalRequest: Codable, Identifiable, Equatable, Sendable, Hasha
         self.externalId = externalId
         self.context = context
         self.requesterName = requesterName
+        self.sessionId = sessionId
+        self.sessionName = sessionName
+        self.reason = reason
         self.keyName = keyName
         self.keyRevoked = keyRevoked
         self.createdAt = createdAt
@@ -147,6 +159,19 @@ public enum ApprovalFormatting {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .first { !$0.isEmpty }
         return firstLine ?? context.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    public static func sessionLabel(_ item: ApprovalRequest) -> String? {
+        let name = (item.sessionName ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !name.isEmpty { return name }
+        let id = (item.sessionId ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !id.isEmpty else { return nil }
+        return "제목 없음 · \(String(id.prefix(8)))"
+    }
+
+    public static func agentReason(_ item: ApprovalRequest) -> String? {
+        let reason = (item.reason ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return reason.isEmpty ? nil : reason
     }
 
     public static func pendingHeader(_ count: Int) -> String {
@@ -361,8 +386,42 @@ public enum ApprovalNotificationAction {
     }
 }
 
+public enum ExternalNotificationPushPayload {
+    public static func matches(_ info: [AnyHashable: Any]) -> Bool {
+        (info["kind"] as? String) == "external_notification"
+    }
+
+    public static func notificationID(from info: [AnyHashable: Any]) -> Int64? {
+        let raw = info["notification_id"]
+        if let n = raw as? Int64 { return n > 0 ? n : nil }
+        if let n = raw as? Int { return n > 0 ? Int64(n) : nil }
+        if let n = raw as? NSNumber { return n.int64Value > 0 ? n.int64Value : nil }
+        if let s = raw as? String, let n = Int64(s), n > 0 { return n }
+        return nil
+    }
+
+    public static func deepLinkURL(fromUserInfo info: [AnyHashable: Any]) -> URL? {
+        var components = URLComponents()
+        components.scheme = "pocketaide"
+        components.host = "notifications"
+        if let id = notificationID(from: info) {
+            components.queryItems = [URLQueryItem(name: "id", value: String(id))]
+        }
+        return components.url
+    }
+
+    public static func notificationID(fromDeepLink url: URL) -> Int64? {
+        guard url.scheme == "pocketaide", url.host == "notifications",
+              let raw = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "id" })?.value,
+              let id = Int64(raw), id > 0 else { return nil }
+        return id
+    }
+}
+
 public enum PushDeepLink {
     public static func url(fromUserInfo info: [AnyHashable: Any]) -> URL? {
-        ApprovalPushPayload.deepLinkURL(fromUserInfo: info) ?? PRMonitorPushPayload.deepLinkURL(fromUserInfo: info)
+        if ExternalNotificationPushPayload.matches(info) { return ExternalNotificationPushPayload.deepLinkURL(fromUserInfo: info) }
+        return ApprovalPushPayload.deepLinkURL(fromUserInfo: info) ?? PRMonitorPushPayload.deepLinkURL(fromUserInfo: info)
     }
 }

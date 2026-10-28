@@ -3,9 +3,11 @@ package sessions
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -51,4 +53,19 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte) (int,
 		return 0, nil, fmt.Errorf("read body: %w", err)
 	}
 	return resp.StatusCode, raw, nil
+}
+
+func (c *Client) SessionName(ctx context.Context, id string) (string, error) {
+	status, raw, err := c.Do(ctx, http.MethodGet, "/sessions/"+url.PathEscape(id), nil)
+	if err != nil {
+		return "", err
+	}
+	if status != http.StatusOK {
+		return "", fmt.Errorf("get session: status %d", status)
+	}
+	var s Session
+	if err := json.Unmarshal(raw, &s); err != nil {
+		return "", fmt.Errorf("decode session: %w", err)
+	}
+	return s.Name, nil
 }

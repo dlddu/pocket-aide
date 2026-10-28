@@ -5,13 +5,14 @@
 ```mermaid
 erDiagram
     approval_caller_keys ||--o{ approval_requests : caller_key_id
+    approval_caller_keys ||--o{ external_notifications : caller_key_id
     routine_steps ||--o{ routine_step_checks : step_id
     routines ||--o{ routine_steps : routine_id
     users ||--o{ affirmations : user_id
-    users ||--o{ agent_sessions : user_id
     users ||--o{ approval_caller_keys : user_id
     users ||--o{ approval_requests : user_id
     users ||--o{ device_tokens : user_id
+    users ||--o{ external_notifications : user_id
     users ||--o{ notification_history : user_id
     users ||--o{ personal_todos : user_id
     users ||--o{ routines : user_id
@@ -41,20 +42,6 @@ erDiagram
 | --- | --- | --- | --- |
 | `idx_affirmations_user_id` | `user_id` | NO | - |
 
-### `agent_sessions`
-
-의미: [`sessions.Store`](../../backend/internal/sessions/store.go)
-
-| 컬럼 | 타입 | NULL | 키 |
-| --- | --- | --- | --- |
-| `session_id` | TEXT | YES | PK |
-| `user_id` | INTEGER | NO | FK → users.id |
-| `created_at` | INTEGER | NO |  |
-
-| 인덱스 | 컬럼 | UNIQUE | 조건 |
-| --- | --- | --- | --- |
-| `idx_agent_sessions_user_id` | `user_id` | NO | - |
-
 ### `approval_caller_keys`
 
 의미: [`approvals.CallerKey`](../../backend/internal/approvals/store.go)
@@ -69,11 +56,14 @@ erDiagram
 | `created_at` | INTEGER | NO |  |
 | `last_used_at` | INTEGER | YES |  |
 | `revoked_at` | INTEGER | YES |  |
+| `kind` | TEXT | NO |  |
+| `service_account` | TEXT | YES |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
 | `UNIQUE(approval_caller_keys.key_hash)` | `key_hash` | YES | - |
 | `idx_approval_caller_keys_active_name` | `user_id`, `name` | YES | `revoked_at IS NULL` |
+| `idx_approval_caller_keys_active_service_account` | `service_account` | YES | `revoked_at IS NULL AND kind = 'k8s_sa'` |
 | `idx_approval_caller_keys_user_created` | `user_id`, `created_at` | NO | - |
 
 ### `approval_requests`
@@ -93,6 +83,9 @@ erDiagram
 | `created_at` | INTEGER | NO |  |
 | `expires_at` | INTEGER | YES |  |
 | `processed_at` | INTEGER | YES |  |
+| `session_id` | TEXT | NO |  |
+| `session_name` | TEXT | NO |  |
+| `reason` | TEXT | NO |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
@@ -116,6 +109,28 @@ erDiagram
 | --- | --- | --- | --- |
 | `UNIQUE(device_tokens.token)` | `token` | YES | - |
 | `idx_device_tokens_user_id` | `user_id` | NO | - |
+
+### `external_notifications`
+
+의미: [`externalnotify.Item`](../../backend/internal/externalnotify/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | INTEGER | NO | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `caller_key_id` | INTEGER | NO | FK → approval_caller_keys.id |
+| `requester` | TEXT | NO |  |
+| `title` | TEXT | NO |  |
+| `body` | TEXT | NO |  |
+| `devices` | INTEGER | NO |  |
+| `sent` | INTEGER | NO |  |
+| `read_at` | INTEGER | YES |  |
+| `created_at` | INTEGER | NO |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `idx_external_notifications_user_id` | `user_id`, `id DESC` | NO | - |
+| `idx_external_notifications_user_read` | `user_id`, `read_at` | NO | - |
 
 ### `notification_history`
 

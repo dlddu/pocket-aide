@@ -103,14 +103,14 @@
                 <div class="text-[12px] font-semibold mt-1 leading-tight truncate">윤정 · 분기 리뷰 자료</div>
                 <div class="text-[10.5px] text-stone-500 mt-0.5 leading-tight truncate">미리 받아보내드립니다 ─</div>
               </button>
-              <!-- notifications -->
+              <!-- notifications — PRD-8 AC6·AC8(2026-10-27): 알림 기록에서 아직 확인하지 않은 호출자 알림(PRD-12 AC16)의 최신 제목·본문. 누르면 알림 기록 화면 -->
               <button class="text-left active:scale-[0.98] transition border-l border-[#E5D7C0] pl-3">
                 <div class="flex items-center gap-1.5">
                   <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#B6855E]"><path d="M12 2a6 6 0 0 0-6 6v3l-2 4h16l-2-4V8a6 6 0 0 0-6-6zM10 20a2 2 0 0 0 4 0"/></svg>
                   <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#B6855E]">PocketAide 알림</span>
                 </div>
-                <div class="text-[12px] font-semibold mt-1 leading-tight">아침 루틴 1단계</div>
-                <div class="text-[10.5px] text-stone-500 mt-0.5">17:00 분기 리뷰 마감</div>
+                <div class="text-[12px] font-semibold mt-1 leading-tight">nightly 백업 완료</div>
+                <div class="text-[10.5px] text-stone-500 mt-0.5">스냅샷 3개 생성 · 42.1 GB</div>
               </button>
             </div>
 
@@ -147,6 +147,119 @@
         </div>
       </div>
     </div>
+
+    <!-- 1b. Home screen with extra-large portrait widget — 구현 PocketAideWidget 은 iOS 27 SDK(Xcode 27)로 빌드하면 iOS 27 기기에서 .systemExtraLargePortrait(4×6) 하나만 지원하고, 그 밖(iOS 26·Xcode 26 빌드)은 .systemLarge(4×4, 변형 1). 내용·순서는 4×4 와 같고 위젯만 세로로 길다: 구현은 각 슬라이스를 내용 크기로 두고 남는 높이를 맨 아래 빈 여백으로 둔다(#305, 구분선·행 간격은 늘지 않는다). 높이 490 은 4×4(≈345)의 6/4 근사이고 실기기 확인 전 값이다 -->
+    <div class="flex flex-col items-center gap-3">
+      <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">홈 스크린 · 초대형 위젯 (4×6 · iOS 27)</div>
+      <div class="frame relative">
+        <div class="absolute inset-0 wallpaper"></div>
+
+        <!-- status bar -->
+        <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold text-white">
+          <span>9:41</span>
+          <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+          <div class="flex items-center gap-1.5">
+            <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/></svg>
+            <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          </div>
+        </div>
+
+        <!-- The Large Widget -->
+        <div class="absolute top-[80px] left-5 right-5 z-20">
+          <div class="widget widget-large p-4 h-[490px]">
+            <!-- top: weather + calendar (one row, half/half) -->
+            <div class="grid grid-cols-2 gap-3 pb-3 border-b border-[#E5D7C0]">
+              <!-- weather -->
+              <button class="text-left active:scale-[0.98] transition">
+                <div class="flex items-center gap-1.5">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" class="text-[#C97D60]"><path d="M6 14a4 4 0 1 1 .5-7.97 5.5 5.5 0 0 1 10.4 2.04A4 4 0 0 1 17 16H7a4 4 0 0 1-1-2zM8.5 18l-1 3M12 18l-1 3M15.5 18l-1 3"/></svg>
+                  <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#8B6F47]">서울</span>
+                </div>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span class="text-[26px] font-bold tracking-tight tabular-nums">18°</span>
+                  <span class="text-[11px] text-stone-500">한때 비</span>
+                </div>
+                <div class="text-[10.5px] text-stone-500 mt-0.5">최고 22 · 최저 14</div>
+              </button>
+              <!-- calendar next event -->
+              <button class="text-left active:scale-[0.98] transition border-l border-[#E5D7C0] pl-3">
+                <div class="flex items-center gap-1.5">
+                  <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#355577]"><rect x="3" y="4" width="18" height="18" rx="2"/><rect x="3" y="4" width="18" height="5" fill="white" opacity=".3"/></svg>
+                  <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#355577]">다음 일정</span>
+                </div>
+                <div class="text-[13px] font-bold mt-1 leading-tight">분기 리뷰 · 회의실 4</div>
+                <div class="text-[11px] text-stone-600 mt-0.5">14:00 — 15:30</div>
+                <div class="text-[10px] text-stone-400 mt-0.5">+ 2 더</div>
+              </button>
+            </div>
+
+            <!-- middle: affirmation rotating -->
+            <button class="text-left w-full active:scale-[0.99] transition py-3 border-b border-[#E5D7C0]">
+              <div class="flex items-center gap-1.5">
+                <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#8B6F47]"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+                <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#8B6F47]">오늘의 다짐</span>
+                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-[#8B6F47] animate-pulse"></span>
+              </div>
+              <p class="mt-2 text-[15px] leading-snug" style="font-family:'Iowan Old Style',Georgia,serif">작게 시작해서 매일 1%씩. 1년에 37배.</p>
+            </button>
+
+            <!-- bottom: mail + notifications row -->
+            <div class="grid grid-cols-2 gap-3 pt-3">
+              <!-- mail -->
+              <button class="text-left active:scale-[0.98] transition">
+                <div class="flex items-center gap-1.5">
+                  <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#5E8B73]"><path d="M3 6l9 7 9-7M3 6v12h18V6"/></svg>
+                  <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#5E8B73]">메일 · 3 미확인</span>
+                </div>
+                <div class="text-[12px] font-semibold mt-1 leading-tight truncate">윤정 · 분기 리뷰 자료</div>
+                <div class="text-[10.5px] text-stone-500 mt-0.5 leading-tight truncate">미리 받아보내드립니다 ─</div>
+              </button>
+              <!-- notifications — PRD-8 AC6·AC8(2026-10-27): 알림 기록에서 아직 확인하지 않은 호출자 알림(PRD-12 AC16)의 최신 제목·본문. 누르면 알림 기록 화면 -->
+              <button class="text-left active:scale-[0.98] transition border-l border-[#E5D7C0] pl-3">
+                <div class="flex items-center gap-1.5">
+                  <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#B6855E]"><path d="M12 2a6 6 0 0 0-6 6v3l-2 4h16l-2-4V8a6 6 0 0 0-6-6zM10 20a2 2 0 0 0 4 0"/></svg>
+                  <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#B6855E]">PocketAide 알림</span>
+                </div>
+                <div class="text-[12px] font-semibold mt-1 leading-tight">nightly 백업 완료</div>
+                <div class="text-[10.5px] text-stone-500 mt-0.5">스냅샷 3개 생성 · 42.1 GB</div>
+              </button>
+            </div>
+
+            <!-- bottom: 임시 공간 미분류 수 (PRD-8 AC9) — 누르면 임시공간 탭(「더 보기」 안). 임시공간이 하단 탭 바에 없어 배지 대신 여기서 정리 필요를 알린다 -->
+            <button class="text-left w-full active:scale-[0.99] transition pt-3 mt-3 border-t border-[#E5D7C0] flex items-center gap-1.5">
+              <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24" class="text-[#B6855E]"><path d="M7 4h7l5 5v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm7 0v5h5"/></svg>
+              <span class="text-[10.5px] font-bold uppercase tracking-wider text-[#B6855E]">임시 공간</span>
+              <span class="ml-auto text-[12px] font-semibold">미분류 <span class="tabular-nums">12</span>개</span>
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="text-stone-400"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- app dock-ish at bottom, only icons to give context -->
+        <div class="absolute bottom-[100px] inset-x-0 grid grid-cols-4 gap-x-5 gap-y-5 px-7 z-10">
+          <div class="flex flex-col items-center"><div class="icon" style="background:linear-gradient(135deg,#34c759,#1d8a3a)">전화</div><div class="app-label">전화</div></div>
+          <div class="flex flex-col items-center"><div class="icon" style="background:linear-gradient(135deg,#65d96d,#2dac41)">메시지</div><div class="app-label">메시지</div></div>
+          <div class="flex flex-col items-center"><div class="icon" style="background:linear-gradient(135deg,#5ac8fa,#0a84ff)">사진</div><div class="app-label">사진</div></div>
+          <div class="flex flex-col items-center"><div class="icon" style="background:linear-gradient(135deg,#ff9500,#ff5500)">캘린더</div><div class="app-label">캘린더</div></div>
+        </div>
+
+        <!-- iOS dock -->
+        <div class="absolute bottom-[16px] left-3 right-3 h-[80px] rounded-[28px] z-10" style="background:rgba(255,255,255,0.18);backdrop-filter:blur(20px)">
+          <div class="grid grid-cols-4 gap-3 p-3">
+            <div class="icon" style="background:linear-gradient(135deg,#1c2624,#5E8B73)">PA</div>
+            <div class="icon" style="background:#fff;color:#000">메일</div>
+            <div class="icon" style="background:linear-gradient(135deg,#000,#333)">사파리</div>
+            <div class="icon" style="background:linear-gradient(135deg,#ff2d55,#ff375f)">음악</div>
+          </div>
+        </div>
+
+        <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30">
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+
 
     <!-- 2. Standalone widget detail (medium size 4x2) -->
     <div class="flex flex-col items-center gap-3">

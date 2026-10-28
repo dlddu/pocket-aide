@@ -6,6 +6,7 @@ namespace: pocket-aide
 # (apps/pocket-aide/external-secret.yaml); building the placeholder here lets
 # Flux (prune + force) overwrite it with dummy stubs and silently disable pr-monitor.
 resources:
+  - rbac.yaml
   - configmap.yaml
   - pvc.yaml
   - service.yaml

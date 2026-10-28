@@ -29,21 +29,23 @@ open docs/mockups/index.html
 | `screen-affirmations.html` | 다짐 (목록·빈 상태) | PRD-5 | AC2 우선순위, AC3 회전 노출 |
 | `screen-affirmations-priority-edit.html` | 다짐 — 추가·우선순위 시트 (생성·편집) | PRD-5 | AC1 추가, AC2 우선순위 (편집 시트 패턴) |
 | `screen-pr-monitor-history.html` | PR 모니터 — 알림 이력 (목록·빈 상태·오류·CI 상태 변형·알림 권한 꺼짐) | PRD-10 | AC7 도착지, AC11 이력, AC12 명시적 확인, AC13 그룹핑, AC14 그룹 일괄 확인 |
-| `screen-approval.html` | 승인 게이트 (대기 목록·상세·결정 확인·처리 이력·빈 상태·오류·자동 응답 모드·설정·키 발급·처리된 상세·키 없음·조회 실패·발급 입력·복사됨) | PRD-12 | AC5~AC9, AC12~AC14 (푸시·잠금 화면 AC10·AC11은 여정 mockup) |
+| `screen-approval.html` | 승인 게이트 (대기 목록·상세·결정 확인·처리 이력·빈 상태·오류·자동 응답 모드·설정·키 발급·처리된 상세·키 없음·조회 실패·발급 입력·복사됨·SA 호출자·SA 등록) | PRD-12 | AC5~AC9, AC12~AC15 (푸시·잠금 화면 AC10·AC11은 여정 mockup) |
+| `screen-sessions.html` | 에이전트 세션 (목록·빈 상태·오류·새 세션·타입 목록 실패·상세(에이전트·쉘)·아카이브됨·세션 동작·삭제 확인·아카이브 꺼짐) | PRD-11 | AC3 타입 카탈로그, AC4 생성, AC5 목록·상태, AC6~AC7 프롬프트·출력, AC8 아카이브, AC9 복원, AC10 삭제, AC11·AC12 오류·빈 상태 |
+| `screen-external-notifications.html` | 알림 기록 (목록·빈 상태·오류·「더 보기」 진입) | PRD-12 | AC17 알림 기록 · AC16 푸시 탭 도착지 (+PRD-8 AC6·AC8 위젯 알림 영역의 진입 대상) |
 
 ### 시스템 통합
 
 | 파일 | 화면 | PRD | 핵심 AC |
 |---|---|---|---|
 | `screen-shortcut-capture.html` | Shortcut 즉시 캡처 | PRD-6 | AC1 숏컷 호출, AC2 즉시 녹음, AC3 되묻기 없음, AC4 임시공간 자동 저장 |
-| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·중간 크기·다짐·일정·알림·날씨·임시 공간 슬라이스 상태) | PRD-8 | AC1 6영역 통합, AC5 다짐 회전, AC8 영역 탭 진입, AC9 임시 공간 미분류 수 |
+| `screen-widget.html` | 홈 화면 위젯 (큰 위젯·초대형 위젯·중간 크기·다짐·일정·알림·날씨·임시 공간 슬라이스 상태) | PRD-8 | AC1 6영역 통합, AC5 다짐 회전, AC8 영역 탭 진입, AC9 임시 공간 미분류 수 |
 | `screen-keyboard-extension.html` | LLM 키보드 확장 | PRD-9 (+PRD-7 AC6) | AC2~6, AC9, AC10, AC12 |
 | `screen-pr-monitor-push.html` | PR 모니터 — CI 완료 푸시 | PRD-10 | AC6 워크플로우 완료 푸시, AC7 진입점 |
 
 ### 기타
 
 - `index.html` — 라이트 갤러리 진입 페이지
-- `mockups-dark.html` — 다크 변형 통합 갤러리 (14화면)
+- `mockups-dark.html` — 다크 변형 통합 갤러리 (15화면)
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`ios/`) ↔ 화면 목업 ID 매핑 (기계 판독용)
 - `_token-map.md` — `tokens.md` ↔ 구현 토큰(`Colors.xcassets`·`Tokens.swift`) 값 대응표 (기계 판독용, 검산 포함)
@@ -63,7 +65,7 @@ open docs/mockups/index.html
 | 회사 | `#EEF2F8` | `#1E2A3A` | slate `#355577` | 직각·모노스페이스 |
 | 루틴 | `#F0F2EC` | `#243329` | forest `#4F6E5C` | 단정 |
 | 다짐 | `#F4EBDD` | `#2E251A` | tan `#8B6F47` | serif |
-| PR 모니터 · 승인 | `#EEEDF5` | `#221F33` | indigo `#5B4DB8` | 도구·메타 (승인은 §1.11 차용) |
+| PR 모니터 · 승인 · 세션 | `#EEEDF5` | `#221F33` | indigo `#5B4DB8` | 도구·메타 (승인·세션은 §1.11 차용) |
 | 음성 모드 | `#0F1614` | `#FFFFFF` | sage `#5E8B73` | 다크 + 호흡하는 오브 |
 
 공통 폰트: `'Apple SD Gothic Neo', 'SF Pro Text', -apple-system, system-ui, sans-serif`
@@ -80,7 +82,7 @@ open docs/mockups/index.html
 | V6 일상 정보 통합 시야 | widget |
 | V7 시스템 전역 글쓰기 보조 | keyboard-extension |
 | V8 일상 루틴 구조화 | routines |
-| V9 개발 워크플로우 인지 부하 감소 | pr-monitor-push, pr-monitor-history, approval |
+| V9 개발 워크플로우 인지 부하 감소 | pr-monitor-push, pr-monitor-history, approval, sessions, external-notifications |
 
 ## 메모
 

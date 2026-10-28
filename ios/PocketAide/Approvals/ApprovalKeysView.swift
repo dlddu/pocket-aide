@@ -6,6 +6,7 @@ import UIKit
 struct ApprovalKeysView: View {
     @StateObject private var viewModel: ApprovalKeysViewModel
     @State private var showsIssueSheet = false
+    @State private var showsRegisterSheet = false
     @State private var revoking: ApprovalCallerKey?
 
     private static let area: DesignTokens.Area = .prMonitor
@@ -32,6 +33,7 @@ struct ApprovalKeysView: View {
                     }
                     keyList
                     issueButton
+                    ApprovalServiceAccountRegisterButton { showsRegisterSheet = true }
                 }
                 .padding(.horizontal, DesignTokens.Spacing.xl)
                 .padding(.top, DesignTokens.Spacing.md)
@@ -45,6 +47,10 @@ struct ApprovalKeysView: View {
             ApprovalKeyIssueSheet(viewModel: viewModel, isPresented: $showsIssueSheet)
                 .presentationDetents([.medium, .large])
         })
+        .sheet(isPresented: $showsRegisterSheet, onDismiss: { viewModel.finishRegistering() }, content: {
+            ApprovalServiceAccountSheet(viewModel: viewModel, isPresented: $showsRegisterSheet)
+                .presentationDetents([.medium, .large])
+        })
         .alert(
             revoking.map(ApprovalKeyFormatting.revokeTitle) ?? "",
             isPresented: Binding(get: { revoking != nil }, set: { if !$0 { revoking = nil } }),
@@ -54,8 +60,8 @@ struct ApprovalKeysView: View {
             Button("폐기", role: .destructive) {
                 Task { await viewModel.revoke(key) }
             }
-        } message: { _ in
-            Text(ApprovalKeyFormatting.revokeMessage)
+        } message: { key in
+            Text(ApprovalKeyFormatting.revokeMessage(for: key))
         }
     }
 
