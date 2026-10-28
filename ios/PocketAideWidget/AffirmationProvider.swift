@@ -1,6 +1,7 @@
 import Foundation
 import os
 import PocketAideAPI
+import PocketAideAuth
 import PocketAideStorage
 import WidgetKit
 
@@ -34,7 +35,7 @@ struct AffirmationProvider: TimelineProvider {
         }
         Task {
             let now = Date()
-            let client = makeClient()
+            let client = await makeClient()
             let state = await fetchState(client, at: now)
             let notifications = await fetchNotifications(client)
             let scratchpad = await fetchScratchpad(client)
@@ -54,7 +55,7 @@ struct AffirmationProvider: TimelineProvider {
     func getTimeline(in _: Context, completion: @escaping (Timeline<PocketAideWidgetEntry>) -> Void) {
         Task {
             let now = Date()
-            let client = makeClient()
+            let client = await makeClient()
             let items = await fetchAffirmations(client)
             let notifications = await fetchNotifications(client)
             let scratchpad = await fetchScratchpad(client)
@@ -127,7 +128,7 @@ struct AffirmationProvider: TimelineProvider {
         case error
     }
 
-    private func makeClient() -> ClientResult {
+    private func makeClient() async -> ClientResult {
         let accessGroup = Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String
         let resolvedGroup = accessGroup.flatMap { $0.isEmpty ? nil : $0 }
         let baseURL = Bundle.main.object(forInfoDictionaryKey: "BackendBaseURL") as? String ?? "<nil>"
@@ -147,6 +148,10 @@ struct AffirmationProvider: TimelineProvider {
 
         do {
             let api = try APIClient.fromBundle(.main, tokenStore: store)
+            // Without a refresher the widget stalls at needsLogin once the
+            // access token lapses, until the app is next opened.
+            let oidc = await MainActor.run { OIDCClient(api: api, tokenStore: store) }
+            api.setTokenRefresher(oidc)
             return .ready(api)
         } catch {
             logger.error("APIClient.fromBundle failed: \(String(describing: error), privacy: .public)")
@@ -182,14 +187,13 @@ struct AffirmationProvider: TimelineProvider {
         case .error: return .error
         }
         do {
-            let items = try await api.listNotificationHistory()
-            let settings = try await api.notificationSettings()
-            return .loaded(WidgetNotifications.summarize(items, settings: settings))
+            let page = try await api.externalNotifications(limit: ExternalNotificationFormatting.pageSize)
+            return .loaded(WidgetNotifications.summarize(page))
         } catch APIError.badStatus(401, _) {
-            logger.info("listNotificationHistory → 401, needsLogin")
+            logger.info("externalNotifications → 401, needsLogin")
             return .needsLogin
         } catch {
-            logger.error("listNotificationHistory failed: \(String(describing: error), privacy: .public)")
+            logger.error("externalNotifications failed: \(String(describing: error), privacy: .public)")
             return .error
         }
     }
@@ -230,19 +234,16 @@ struct AffirmationProvider: TimelineProvider {
         precipitationChance: 60
     )
 
-    private static let previewNotification = NotificationHistoryItem(
+    private static let previewNotification = ExternalNotification(
         id: 0,
-        repoFullName: "dlddu/pocket-aide",
-        prNumber: 7,
-        prTitle: "feat(widget): 알림 모음",
-        prURL: nil,
-        commitURL: nil,
-        runURL: nil,
-        workflowName: "CI",
-        headBranch: "main",
-        headSHA: "",
-        conclusion: "success",
-        acknowledgedAt: nil,
+        title: "nightly 백업 완료",
+        body: "스냅샷 3개 생성 · 42.1 GB",
+        callerName: "infra-ci",
+        callerKind: "key",
+        requester: "",
+        devices: 1,
+        sent: 1,
+        readAt: nil,
         createdAt: 0
     )
 

@@ -20,3 +20,7 @@ data:
   APNS_TEAM_ID: "REPLACE_ME"
   APNS_BUNDLE_ID: "com.dlddu.PocketAide"
   APNS_USE_PRODUCTION: "true"
+
+  K8S_CALLER_AUTH: "true"
+  K8S_TOKEN_AUDIENCE: "pocket-aide"
+  K8S_TOKEN_ISSUER: "https://kubernetes.default.svc.cluster.local"

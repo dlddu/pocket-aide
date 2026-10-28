@@ -1,13 +1,13 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-13
+last_updated: 2026-10-27
 ---
 
 # 카피 ↔ 구현 대응표
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 27개 ↔ 목업 9장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 34개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 
 ## 판독 규약
@@ -36,28 +36,28 @@ last_updated: 2026-10-13
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 6행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 10행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 183 |
-| A | 데이터 | 7 |
-| A | 비표시 | 27 |
+| A | 일치 | 250 |
+| A | 데이터 | 8 |
+| A | 비표시 | 40 |
 | A | 시스템 UI | 2 |
-| A | 미구현 영역 | 1 |
+| A | 미구현 영역 | 0 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 6 |
-| B | 일치 | 217 |
-| B | 외부 | 60 |
-| B | 예시 데이터 | 141 |
-| B | 목업 전용 | 128 |
+| A | 목업 대기 | 10 |
+| B | 일치 | 291 |
+| B | 외부 | 77 |
+| B | 예시 데이터 | 183 |
+| B | 목업 전용 | 159 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
-| B | 시스템 UI | 9 |
+| B | 시스템 UI | 11 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 239행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 323행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -96,12 +96,16 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `승인` | 일치 | 결정 버튼 「승인」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(승인) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `거절` | 일치 | 결정 버튼 「거절」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(거절) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 상세 폐기된 키 경고 — 목업은 「자동 응답 모드 켜짐」 프레임 대기 카드(상세 프레임에는 폐기된 키 요청이 없다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `에이전트 설명` | 일치 | 에이전트 설명(`reason`) 섹션 라벨 — 「요청 상세」 프레임(호출자가 `reason` 을 보냈을 때만 선다) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `에이전트가 작성 · 검증되지 않음` | 일치 | 에이전트 설명 섹션 캡션 — 「요청 상세」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `남은 시간` | 일치 | 카운트다운 라벨 — 「요청 상세」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `보낸 키` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `key` | 비표시 | `fact(_:_:id:)` 의 `id:` 인자 — `accessibilityIdentifier("approval.detail.\(id)")` 접미사, 화면에 그려지지 않는다 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청자` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `—` | 일치 | 요청자 이름이 비었거나 시각이 없을 때의 대체 문자 — 「요청 상세 — 만료 · 재조회 실패」 프레임 요청자 값 |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `requester` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `세션` | 일치 | 메타 「세션」(값 `ApprovalFormatting.sessionLabel` — 세션 제목, 제목이 비면 「제목 없음 · <id 앞 8자>」, 세션 id 도 없으면 행을 숨긴다) — 「요청 상세」 프레임 `dl` |
+| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `session` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 ID` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `externalId` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 시각` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
@@ -118,26 +122,40 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `다시 시도` | 일치 | 이력 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구(이력 화면 오류 상태 프레임은 목업에 없다) |
 | `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `이전 이력 불러오는 중…` | 일치 | 커서 이어 불러오기 줄 — 「처리 이력」 프레임 하단 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `승인 게이트 설정` | 일치 | 설정 화면 제목 — 「설정」·「키 발급」 프레임 `h2` |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 목업에 두 상태 프레임은 없고, 같은 문구가 「결정 확인」 프레임 취소 버튼에 있다(대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 「키 발급 — 이름 입력」 프레임 시트 · 「결정 확인」 프레임 취소 버튼(폐기 확인 대화상자는 목업이 없다 — 대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `폐기` | 일치 | 키 행 「폐기」 버튼 — 「설정」 프레임 · 폐기 확인 대화상자 확정 버튼 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `자동 응답 모드` | 일치 | 「자동 응답 모드」 섹션 머리 — 「설정」 프레임(stamp uppercase accent, #278) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키` | 일치 | 섹션 머리 — 「설정」·「키 발급」 프레임(stamp uppercase accent) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 목업 대기 | 빈 목록 안내 — 목업 「설정」 프레임은 키가 있는 목록만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 일치 | 빈 목록 안내 — 「설정 — 키 없음 · 조회 실패」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `+ 호출자 키 발급` | 일치 | 점선 발급 버튼 — 「설정」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 목업 대기 | 목록 조회 실패 배너 제목 — 목업에 설정 화면 오류 상태 프레임이 없다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 목업 대기 | 발급 입력 시트 제목 — 목업은 발급 직후(원문 표시) 시트만 그리고 이름 입력 단계는 그리지 않는다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 일치 | 목록 조회 실패 배너 제목 — 「설정 — 키 없음 · 조회 실패」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 「설정 — 키 없음 · 조회 실패」 프레임 · 「오류」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 일치 | 발급 입력 시트 제목 — 「키 발급 — 이름 입력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 이름` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임(발급 입력 시트에서도 같은 라벨) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 목업 대기 | 발급 입력 시트 이름 필드 placeholder — 같은 문자열이 「설정」 프레임 키 이름 칩(표 B `예시 데이터`)에 있을 뿐, 입력 단계 프레임이 없다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 일치 | 발급 입력 시트 이름 필드 placeholder — 「키 발급 — 이름 입력」 프레임 `placeholder`(같은 문자열이 「설정」 프레임 키 이름 칩에도 있다) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰이고 화면에 그려지지 않는다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 목업 대기 | 발급 입력 시트 확정 버튼 — 입력 단계 프레임이 없다(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 일치 | 발급 입력 시트 확정 버튼 — 「키 발급 — 이름 입력」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.submit` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `키 원문` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 목업 대기 | 복사 뒤 버튼 라벨 — 목업은 복사 전 상태만 그린다 |
+| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 일치 | 복사 뒤 버튼 라벨 — 「키 발급 — 복사됨」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사` | 일치 | 시트 주 버튼 — 「키 발급」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.copy` | 비표시 | `id:` 인자(위와 같음) |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `완료` | 일치 | 시트 보조 버튼 — 「키 발급」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.done` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `+ k8s 서비스 어카운트 등록` | 일치 | 점선 SA 등록 버튼 — 「설정 — SA 호출자」 프레임 둘째 점선 버튼(PRD-12 AC15) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `k8s 서비스 어카운트 등록` | 일치 | SA 등록 시트 제목 — 「SA 등록 — 입력」·「SA 등록 — 이미 등록됨」 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.name` | 비표시 | `field(text:id:refused:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰인다 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `호출자 이름` | 일치 | SA 등록 시트 첫 입력 라벨 — 「SA 등록」 두 프레임(키 발급 시트와 같은 라벨) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `네임스페이스` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.namespace` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `서비스 어카운트` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.account` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | SA 등록 시트 안내 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `취소` | 일치 | SA 등록 시트 취소 버튼 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `등록` | 일치 | SA 등록 시트 확정 버튼 — 「SA 등록」 두 프레임 |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.submit` | 비표시 | `id:` 인자(위와 같음) |
+| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `homelab-k3s-mcp` | 일치 | SA 등록 시트 세 입력 칸 `placeholder` — 「SA 등록 — 입력」 프레임(같은 문자열이 「설정 — SA 호출자」 프레임 이름 칩에 예시 데이터로도 있다) |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`AreaLabel`) — 「대기 목록」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
@@ -148,6 +166,26 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
 | `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `caller` | 비표시 | 메타 줄 접근성 식별자 접미사(`notifications.detail.caller`) |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `delivery` | 비표시 | 메타 줄 접근성 식별자 접미사 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `requester` | 비표시 | 메타 줄 접근성 식별자 접미사 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `time` | 비표시 | 메타 줄 접근성 식별자 접미사 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `닫기` | 일치 | 「상세」 프레임 시트 닫기 버튼 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `도달` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `받은 시각` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `보낸 호출자` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `요청 주체` | 일치 | 「상세」 메타 줄 라벨 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel` 자리 — 목업 「목록」·「빈 상태」·「오류」 프레임 머리 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `\(viewModel.unreadCount)` | 데이터 | 헤더 미확인 수 배지 숫자 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | 「빈 상태」 프레임 안내 둘째 줄 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `받은 알림이 없어요.` | 일치 | 「빈 상태」 프레임 안내 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `새 알림` | 일치 | 헤더 미확인 수 배지 라벨·미확인 행 칩 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `알림 기록` | 일치 | 헤더 제목 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `알림 기록을 불러오지 못했습니다` | 일치 | 「오류」 프레임 오류 배너 제목 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `이전 기록 불러오는 중…` | 일치 | 「목록」 프레임 끝 이어 불러오기 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | 헤더 설명 줄 |
+| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `최근 알림` | 일치 | 「목록」 프레임 섹션 머리 |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `방금 진입` | 일치 | 푸시로 진입한 그룹의 헤더 상태 라벨(`isGroupHighlighted` 일 때만) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR 없음 · \(group.headBranch) 직접 푸시` | 일치 | PR 없는 그룹의 헤더 상태 라벨 「PR 없음 · main 직접 푸시」(브랜치가 비면 그리지 않는다 — 「—」 커밋 그룹) |
 | `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
@@ -202,11 +240,13 @@ last_updated: 2026-10-13
 | `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
 | `ios/PocketAide/RootView.swift` | `승인` | 일치 | 탭 바 항목(셋째 칸, #244) |
-| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 바 항목(넷째 칸 — 목업과 같은 자리) |
+| `ios/PocketAide/RootView.swift` | `세션` | 일치 | 탭 바 항목(넷째 칸, PRD-11 — tokens.md §7 하단 노출 개정 2026-10-23) |
+| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 첫 항목(`screen-scratchpad` 「더 보기 — 미분류 배지」 프레임). 세션 탭 뒤 다섯째라 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `임시공간` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). #244 부터 다섯째 탭이라 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
 | `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
+| `ios/PocketAide/RootView.swift` | `알림 기록` | 일치 | 「더 보기」 목록의 알림 기록 탭 항목(`screen-external-notifications` 「「더 보기」 진입」 프레임) |
 | `ios/PocketAide/Routines/RoutineErrorRow.swift` | `다시 시도` | 일치 | 오류 행 재시도 버튼 — 「상태 변형」 프레임 오류 행(실패 문구는 `RoutineFailureCopy` 가 만든 문자열을 받아 그린다 — 표 B 외부 행) |
 | `ios/PocketAide/Routines/RoutineHistoryRange.swift` | `오늘 · \(today.progressPercent)%` | 일치 | 이력 시트 히트맵 아래 끝 라벨 — 목업 history strip 「오늘 · 60%」(오늘 체크 단계 비율, 오늘이 예정일일 때만) |
 | `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
@@ -251,6 +291,51 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
 | `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 비표시 | 항목 메타 줄의 접근성 라벨(`accessibilityLabel`) — 화면에는 목업처럼 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다(`Text(item.source.displayName)` · `Text(time)` — 보간 아닌 데이터) |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `새 세션` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `이름` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `예: 테스트 실패 원인 찾기` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `모델` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `다시 시도` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `largecircle.fill.circle` | 비표시 | SF Symbol 이름 — 선택된 타입 라디오 아이콘(삼항이라 `systemName:` 바로 뒤가 아님) |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `circle` | 비표시 | SF Symbol 이름 — 고르지 않은 타입 라디오 아이콘 |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `platform-default` | 목업 대기 | 모델 자유 입력 칸 자리표시(카탈로그 `defaultModel` 이 비었을 때) — 목업은 모델 선택 메뉴 상태만 그린다 |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션 띄우는 중…` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `만들기` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `취소` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입 목록을 불러오는 중…` | 목업 대기 | 타입 카탈로그 로딩 상태 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션 플랫폼이 제공하는 타입이 없어요.` | 목업 대기 | 카탈로그가 빈 배열일 때 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `선택한` | 목업 대기 | 생성 실패 문구의 타입 이름 대체어 — 아래 실패 문구 행과 같은 상태 |
+| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션을 띄우지 못했어요. 세션 플랫폼에 「\(name)」 타입 설정(이미지·자격증명)이 있는지 확인해 주세요.` | 목업 대기 | 생성 실패(플랫폼 500 등) 안내 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `sessions.detail.output.bottom` | 비표시 | 출력 패널 스크롤 앵커 id |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `세션을 삭제할까요?` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `취소` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `삭제` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아카이브하는 중… 환경을 반납하고 작업 내용을 보관해요` | 목업 대기 | 아카이브 진행 중 상태 줄 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `앞부분 출력은 생략했어요.` | 목업 대기 | 출력이 표시 한도(12만 자)를 넘었을 때 머리 안내 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아직 출력이 없어요. 아래에 명령을 입력해 보세요.` | 목업 대기 | terminal 타입 세션의 빈 출력 — 목업은 에이전트 빈 출력만 그린다 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `1 MiB를 넘는 프롬프트는 보낼 수 없어요.` | 목업 대기 | 프롬프트 1 MiB 초과 사전 안내 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `명령 입력` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `에이전트에게 맡길 일` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `보내기` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `지금 아카이브` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `세션 삭제` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `세션 동작` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아카이브된 세션이에요` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `복원하는 중…` | 목업 대기 | 복원 진행 중 버튼 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionDetailView.swift` | `복원` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionsView.swift` | `AGENT · SESSIONS` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionsView.swift` | `에이전트 세션` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionsView.swift` | `새 세션` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionsView.swift` | `아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionsView.swift` | `생성 \(AgentSessionFormatting.relative(session.createdAt))` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionsView.swift` | `다시 시도` | 일치 | `screen-sessions` |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
 | `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
@@ -263,7 +348,7 @@ last_updated: 2026-10-13
 | `ios/PocketAideWidget/Sections/CalendarSection.swift` | `+ \(summary.moreCount) 더` | 일치 | 남은 일정 수 「+ 2 더」 |
 | `ios/PocketAideWidget/Sections/CalendarSection.swift` | `다가오는 일정이 없어요.` | 일치 | 일정 0건 상태 — 「일정 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`AreaLabel` — #106 에서 `PocketAideWidget.swift` 의 자리표시자 라벨 「알림」 을 대체했다) |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `+ \(summary.moreCount) 더` | 일치 | 남은 알림 수 — 문구는 일정 슬라이스 「+ 2 더」 와 같은 서식(목업 알림 슬라이스는 예시가 1건이라 이 줄을 그리지 않는다 — 줄 유무는 기준 4 구조 대조의 몫) |
+| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `+ \(moreCount) 더` | 일치 | 남은 알림 수 — 문구는 일정 슬라이스 「+ 2 더」 와 같은 서식(목업 알림 슬라이스는 예시가 1건이라 이 줄을 그리지 않는다 — 줄 유무는 기준 4 구조 대조의 몫) |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `확인할 알림이 없어요.` | 일치 | 알림 0건 상태 — 「알림 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「알림 슬라이스 상태」 변형 |
 | `ios/PocketAideWidget/Sections/NotificationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「알림 슬라이스 상태」 변형 |
@@ -300,7 +385,7 @@ last_updated: 2026-10-13
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 588행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 754행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -333,7 +418,7 @@ last_updated: 2026-10-13
 | `screen-affirmations` | `가끔` | 일치 | 범례 항목 — 위와 같음 |
 | `screen-affirmations` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-affirmations` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
 | `screen-affirmations` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 카드 제목 |
@@ -351,7 +436,7 @@ last_updated: 2026-10-13
 | `screen-affirmations-priority-edit` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-affirmations-priority-edit` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-affirmations-priority-edit` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-affirmations-priority-edit` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
 | `screen-affirmations-priority-edit` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
 | `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
@@ -396,15 +481,19 @@ last_updated: 2026-10-13
 | `screen-approval` | `session-platform agent · 어제 18:02` | 예시 데이터 | 요청자 · 시각 — 서식은 `ApprovalFormatting.requestTime`(오늘 `HH:mm` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-approval` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-approval` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-approval` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) · 요청 상세 메타 라벨(`ApprovalDetailView.swift`, 2026-10-25) |
 | `screen-approval` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `남은 시간` | 일치 | 요청 상세 카운트다운 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `03:48` | 예시 데이터 | 상세 카운트다운 값 |
+| `screen-approval` | `에이전트 설명` | 일치 | 요청 상세 에이전트 설명 섹션 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `에이전트가 작성 · 검증되지 않음` | 일치 | 요청 상세 에이전트 설명 섹션 캡션(`ApprovalDetailView.swift`) |
+| `screen-approval` | `v2 롤아웃이 끝나 트래픽이 0인 구버전 deployment 를 지웁니다. 남은 service·configmap 도 이어서 지울 예정입니다.` | 예시 데이터 | 에이전트 설명 본문(호출자가 보낸 `reason`) |
 | `screen-approval` | `작업: dear-baby 구버전 리소스 정리 (3/5) 대상: deployment/dear-baby-api 네임스페이스: prod 동작: delete (propagationPolicy=Foreground) 사유: v2 롤아웃(dear-baby-api-v2) 완료 후 트래픽 0 확인 — 최근 24시간 요청 0건 남은 단계: 4/5 service/dear-baby-api 삭제 5/5 configmap/dear-baby-api-env 삭제` | 예시 데이터 | 요청 내용 전문(호출자가 보낸 텍스트) |
 | `screen-approval` | `보낸 키` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `요청자` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `Claude Code · homelab 정리 세션` | 예시 데이터 | 요청자 이름 |
+| `screen-approval` | `dear-baby 구버전 정리` | 예시 데이터 | 세션 제목(생성 시점에 session-platform 에서 조회해 저장한 `session_name`) |
 | `screen-approval` | `요청 ID` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `cleanup-20261005-3` | 예시 데이터 | 요청 ID |
 | `screen-approval` | `요청 시각` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
@@ -479,7 +568,28 @@ last_updated: 2026-10-13
 | `screen-approval` | `상태` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `처리 방식` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
 | `screen-approval` | `처리 시각` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
-| `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
+| `screen-approval` | `설정 — 키 없음 · 조회 실패` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `호출자 키를 불러오지 못했습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 조회 실패 배너 제목(`ApprovalKeysView.swift`) |
+| `screen-approval` | `발급한 호출자 키가 없습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 키 0건 안내(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 발급 — 이름 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `호출자 키 발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 제목(`ApprovalKeysView.swift`) |
+| `screen-approval` | `발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 확정 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `키 발급 — 복사됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `복사됨` | 일치 | 「키 발급 — 복사됨」 프레임 주 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `설정 — SA 호출자` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `homelab-k3s-mcp` | 일치 | 「SA 등록」 두 프레임의 세 입력 칸 `placeholder`(`ApprovalServiceAccountSheet.swift`) · 「설정 — SA 호출자」 프레임 SA 호출자 이름 칩(이름은 데이터) |
+| `screen-approval` | `SA homelab-k3s-mcp/homelab-k3s-mcp · 등록 10/16 · 마지막 사용 09:41` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | SA 호출자 메타 줄 — `ApprovalKeyFormatting.meta` 의 SA 분기(「SA 네임스페이스/이름 · 등록 MM/dd · 마지막 사용」, PRD-12 AC15) |
+| `screen-approval` | `+ k8s 서비스 어카운트 등록` | 일치 | 「설정 — SA 호출자」 프레임 둘째 점선 버튼(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `SA 등록 — 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `pak_Xm91… · 발급 09/30` | 예시 데이터 | 「SA 등록」 시트 뒤 목록의 키 메타 줄 — 「설정 — SA 호출자」 프레임 둘째 행과 같은 키(`infra-ci`)를 「마지막 사용」 없이 줄여 그린 배경. 구현은 같은 자리를 `ApprovalKeyFormatting.meta` 로 그린다 |
+| `screen-approval` | `k8s 서비스 어카운트 등록` | 일치 | 「SA 등록」 시트 제목(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `네임스페이스` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `서비스 어카운트` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | 「SA 등록」 시트 안내(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `등록` | 일치 | 「SA 등록」 시트 확정 버튼(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `SA 등록 — 이미 등록됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-approval` | `이미 등록된 서비스 어카운트입니다` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 「SA 등록 — 이미 등록됨」 프레임 서버 409 안내 — `ApprovalKeyFormatting.duplicateServiceAccountNotice`(서비스 어카운트 칸 destructive 테두리와 함께) |
+| `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고, AC15 k8s 서비스 어카운트 호출자 등록. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -573,7 +683,7 @@ last_updated: 2026-10-13
 | `screen-pr-monitor-history` | `"모두 확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-pr-monitor-history` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-pr-monitor-history` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
 | `screen-pr-monitor-history` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-pr-monitor-history` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
@@ -618,6 +728,7 @@ last_updated: 2026-10-13
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `홈 스크린 · 큰 위젯 (4×4)` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `홈 스크린 · 초대형 위젯 (4×6 · iOS 27)` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-widget` | `서울` | 예시 데이터 | 날씨 슬라이스 지명 라벨(`WeatherSection` 이 앱이 저장한 위치의 역지오코딩 `placeName` 으로 그린다) |
 | `screen-widget` | `18°` | 외부 `ios/Shared/Sources/PocketAideAPI/Weather.swift` | 현재 기온 — 값은 데이터, 「°」 서식은 `Weather.temperatureLabel` |
@@ -633,8 +744,8 @@ last_updated: 2026-10-13
 | `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
 | `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
 | `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
-| `screen-widget` | `아침 루틴 1단계` | 예시 데이터 | 최신 알림 제목(`NotificationSection` 이 `PushText.title(for:)` 로 그린다 — 현재 유일한 푸시 원천은 PR 모니터 CI 결과라 실제 제목은 「CI 통과 — <레포> #N」 꼴. 예시 내용 차이는 범위 밖 후속) |
-| `screen-widget` | `17:00 분기 리뷰 마감` | 예시 데이터 | 최신 알림 본문(`PushText.body(for:)` — PR 제목 또는 「워크플로 on 브랜치」) |
+| `screen-widget` | `nightly 백업 완료` | 예시 데이터 | 최신 미확인 호출자 알림 제목(`NotificationSection` 이 `ExternalNotification.title` 을 그대로 그린다 — PRD-8 결정 「알림 영역 — 호출자 알림으로 대체」, 2026-10-27) |
+| `screen-widget` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 최신 미확인 호출자 알림 본문(`ExternalNotification.body`, 비어 있으면 줄 없음) |
 | `screen-widget` | `임시 공간` | 일치 | 임시 공간 슬라이스 라벨(`ScratchpadCountSection`) |
 | `screen-widget` | `미분류` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 미분류 수 앞 낱말 — 「미분류 N개」 서식은 `WidgetScratchpad.countText`(`ScratchpadCountSection` 이 그린다) |
 | `screen-widget` | `12` | 예시 데이터 | 미분류 수(`ScratchpadCountSection` 이 `.loaded(n)` 의 n 으로 그린다) |
@@ -648,12 +759,12 @@ last_updated: 2026-10-13
 | `screen-widget` | `사파리` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `음악` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `중간 크기 (4×2 축약)` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `14:00` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `분기 리뷰` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `회의실 4` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `메일 3` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
+| `screen-widget` | `14:00` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `분기 리뷰` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `회의실 4` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `메일 3` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
 | `screen-widget` | `크기에 따라 영역의 표현 방식 축약 — AC1` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `다짐 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `다짐 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
@@ -718,7 +829,7 @@ last_updated: 2026-10-13
 | `screen-routines` | `오늘 · 60%` | 일치 | 30일 히트맵 끝 라벨 — `RoutineHistoryRange.swift` 「오늘 · \(today.progressPercent)%」(이력 시트 히트맵 아래, 오늘이 예정일일 때) |
 | `screen-routines` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-routines` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-routines` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
 | `screen-routines` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-routines` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
@@ -788,7 +899,8 @@ last_updated: 2026-10-13
 | `screen-scratchpad` | `이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정` | 예시 데이터 | 메모 본문(사용자 데이터) |
 | `screen-scratchpad` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-scratchpad` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-scratchpad` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
+| `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 라벨 — 「더 보기 — 미분류 배지」 프레임의 목록 첫 항목 |
 | `screen-scratchpad` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-scratchpad` | `임시공간` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(#244 부터 구현도 시스템 More 목록 안. 미분류 수는 `.badge`) |
 | `screen-scratchpad` | `개인` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
@@ -805,6 +917,85 @@ last_updated: 2026-10-13
 | `screen-scratchpad` | `편집` | 시스템 UI | 「더 보기」 목록 내비게이션 바 버튼 — 시스템 More 목록이 그리는 자리라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「편집」으로 그린다 |
 | `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현에 없다(시스템 More 목록에는 꼬리말 자리가 없다) |
 | `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12 — 임시공간이 「더 보기」로 옮겨져 「더 보기」 목록의 임시공간 항목에 표시, 위젯 PRD-8 AC9로 보완)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-sessions` | `← 모든 목업` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `/` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `15 · 에이전트 세션` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `목록` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `9:41` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `AGENT · SESSIONS` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `에이전트 세션` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `새 세션` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `실행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `생성 2시간 전` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `테스트 실패 원인 찾기` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `Claude Code · sonnet` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `환경이 떠 있어요 · 마지막 사용 3분 전` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `대기` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `생성 어제` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `homelab 디스크 정리` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `Shell` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `아카이브됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `생성 3일 전` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `릴리스 노트 초안` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `MiniMax Code · platform-default` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `아카이브 2일 전 · 3.1 MB · 환경 반납됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `다짐` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `PR 모니터` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `승인` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `더 보기` | 시스템 UI | 시스템 `TabView` 오버플로 탭 |
+| `screen-sessions` | `빈 상태` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `오류 — 연결 불가` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `다시 시도` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `이름` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `예: 테스트 실패 원인 찾기` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `타입` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `Interactive bash. You type the commands.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `Claude Code` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `Agent CLI. You send prompts, it does the work.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `MiniMax Code` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `MiniMax Code CLI on the same prompt loop.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `Approval-gated` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `Same agent, but every outbound call waits for your approval.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `모델` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `sonnet` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `만들기` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `취소` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `새 세션 — 띄우는 중` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `세션 띄우는 중…` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `새 세션 — 타입 목록 실패` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `상세 — 전송 직후` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `세션 동작` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `전송됨 · 응답 대기 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `환경이 떠 있어요 · 마지막 사용 방금` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `에이전트에게 맡길 일` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `보내기` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `상세 — 에이전트 응답 중` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `응답 진행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `레포를 클론하고 실패한 테스트를 다시 돌려 볼게요. go test ./internal/handlers/ -run TestSessionList --- FAIL: TestSessionListOrdersByLastAccess expected lastAccess 내림차순, got 생성 순서 원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `상세 — 쉘` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `user@sess:~$ df -h /var/lib Filesystem Size Used Avail Use% Mounted on /dev/nvme0n1p1 80G 71G 9.0G 89% / user@sess:~$ du -sh /var/lib/containerd 38G /var/lib/containerd user@sess:~$` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `명령 입력` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `상세 — 아카이브됨` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `아카이브된 세션이에요` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `복원` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `상세 — 세션 동작` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `지금 아카이브` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션 삭제` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `상세 — 삭제 확인` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `세션을 삭제할까요?` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `삭제` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `상세 — 아카이브 꺼짐` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-sessions` | `이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요.` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
 | `screen-todo-personal` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `04 · 개인 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -835,7 +1026,7 @@ last_updated: 2026-10-13
 | `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-todo-personal` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
 | `screen-todo-personal` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-personal` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
@@ -882,7 +1073,7 @@ last_updated: 2026-10-13
 | `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
 | `screen-todo-work` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-todo-work` | `채팅` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
 | `screen-todo-work` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
 | `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
 | `screen-todo-work` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
@@ -892,6 +1083,67 @@ last_updated: 2026-10-13
 | `screen-todo-work` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-work` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-todo-work` | `PRD-3 · AC1 별도 데이터·검색 분리(검색바에 "회사 영역만"), AC3 시각 차이(슬레이트·각진 카드·모노스페이스), AC4 영역 간 이동 UI 없음` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-external-notifications` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `16 · 알림 기록` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `「더 보기」 진입` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
+| `screen-external-notifications` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel`(`ExternalNotificationsView.swift`) |
+| `screen-external-notifications` | `알림 기록` | 일치 | 헤더 제목·「더 보기」 목록 항목(`ExternalNotificationsView.swift`·`RootView.swift`) |
+| `screen-external-notifications` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | 헤더 설명 줄 |
+| `screen-external-notifications` | `2` | 예시 데이터 | 미확인 수(헤더 배지) |
+| `screen-external-notifications` | `새 알림` | 일치 | 헤더 배지 라벨·미확인 행 칩 |
+| `screen-external-notifications` | `최근 알림` | 일치 | 섹션 머리 |
+| `screen-external-notifications` | `homelab-k3s-mcp · SA` | 예시 데이터 | 호출자 칩 — 구현은 `ExternalNotificationFormatting.callerLabel`(「<등록 이름> · 키/SA」) |
+| `screen-external-notifications` | `infra-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
+| `screen-external-notifications` | `old-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
+| `screen-external-notifications` | `09:41` | 예시 데이터 | 받은 시각 — `ExternalNotificationFormatting.time`(오늘 「HH:mm」) |
+| `screen-external-notifications` | `09:20` | 예시 데이터 | 받은 시각 |
+| `screen-external-notifications` | `어제 22:10` | 예시 데이터 | 받은 시각(어제) |
+| `screen-external-notifications` | `10/24 18:02` | 예시 데이터 | 받은 시각(그 전) |
+| `screen-external-notifications` | `dear-baby 구버전 정리 완료` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음.` | 예시 데이터 | 알림 본문 |
+| `screen-external-notifications` | `nightly 백업 완료` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 알림 본문 |
+| `screen-external-notifications` | `배포 롤백됨` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `ping` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `요청 Claude Code 세션 — dear-baby 정리` | 예시 데이터 | 요청 주체 — `ExternalNotificationFormatting.requesterLabel`(「요청 <requester>」) |
+| `screen-external-notifications` | `요청 nightly 백업 크론잡` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `요청 reconciler 정합성 루프` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `요청 주체 미상` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 요청 주체가 빈 기록(`ExternalNotificationFormatting.requesterLabel`) |
+| `screen-external-notifications` | `1/1 기기` | 예시 데이터 | 도달 — `ExternalNotificationFormatting.deliveryLabel`(「<sent>/<devices> 기기」) |
+| `screen-external-notifications` | `2/2 기기` | 예시 데이터 | 도달 |
+| `screen-external-notifications` | `등록된 기기 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 기기 0개인 기록의 도달(`ExternalNotificationFormatting.deliveryLabel`) |
+| `screen-external-notifications` | `이전 기록 불러오는 중…` | 일치 | 목록 끝 이어 불러오기 |
+| `screen-external-notifications` | `받은 알림이 없어요.` | 일치 | 「빈 상태」 안내 |
+| `screen-external-notifications` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | 「빈 상태」 안내 둘째 줄 |
+| `screen-external-notifications` | `알림 기록을 불러오지 못했습니다` | 일치 | 「오류」 배너 제목 |
+| `screen-external-notifications` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `errorMessage`(`String(describing:)`)를 그린다 |
+| `screen-external-notifications` | `다시 시도` | 일치 | 「오류」 배너 재시도 버튼 |
+| `screen-external-notifications` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `3` | 예시 데이터 | 승인 탭 배지(대기 수) |
+| `screen-external-notifications` | `승인` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `세션` | 일치 | `RootView.swift` 탭 바 |
+| `screen-external-notifications` | `더 보기` | 시스템 UI | 시스템 `TabView` 오버플로 탭·목록 제목 |
+| `screen-external-notifications` | `채팅` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `임시공간` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `4` | 예시 데이터 | 오버플로 목록 임시공간 배지(미분류 수) |
+| `screen-external-notifications` | `개인` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `회사` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `루틴` | 일치 | `RootView.swift` 오버플로 목록 |
+| `screen-external-notifications` | `상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `닫기` | 일치 | 상세 시트 닫기(`ExternalNotificationDetailSheet.swift`) |
+| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음. v1 트래픽이 일주일째 0이라 v2 롤아웃이 끝난 것으로 보고 정리했습니다. 되돌리려면 이전 매니페스트를 다시 적용하세요.` | 예시 데이터 | 상세 본문 전체 — 구현은 `item.body` 를 줄임 없이 |
+| `screen-external-notifications` | `보낸 호출자` | 일치 | 상세 메타 라벨 |
+| `screen-external-notifications` | `요청 주체` | 일치 | 상세 메타 라벨 |
+| `screen-external-notifications` | `Claude Code 세션 — dear-baby 구버전 정리 (k8s 리소스 정리 · v1 트래픽 0 확인 후)` | 예시 데이터 | 상세 요청 주체 전체 — `ExternalNotificationFormatting.requesterValue` |
+| `screen-external-notifications` | `받은 시각` | 일치 | 상세 메타 라벨 |
+| `screen-external-notifications` | `2026-10-27 09:41:12` | 예시 데이터 | 상세 받은 시각 — `ExternalNotificationFormatting.fullTime`(「yyyy-MM-dd HH:mm:ss」) |
+| `screen-external-notifications` | `도달` | 일치 | 상세 메타 라벨 |
 
 ## 검산
 

@@ -88,6 +88,9 @@ struct ApprovalDetailView: View {
                     .foregroundStyle(DesignTokens.StatusColor.failure)
                     .accessibilityIdentifier("approval.detail.revoked")
             }
+            if let reason = ApprovalFormatting.agentReason(item) {
+                agentReason(reason)
+            }
             Text(item.context)
                 .font(.system(size: 10.5, design: .monospaced))
                 .foregroundStyle(DesignTokens.Color.ink(Self.area))
@@ -104,6 +107,33 @@ struct ApprovalDetailView: View {
             if item.status == .pending {
                 decisionButtons(enabled: viewModel.canDecide(at: now))
             }
+        }
+    }
+
+    private func agentReason(_ reason: String) -> some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("에이전트 설명")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionXs, weight: .bold))
+                    .foregroundStyle(DesignTokens.Color.accent(Self.area))
+                Spacer(minLength: DesignTokens.Spacing.sm)
+                Text("에이전트가 작성 · 검증되지 않음")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                    .foregroundStyle(DesignTokens.Color.ink(Self.area).opacity(0.55))
+                    .accessibilityIdentifier("approval.detail.reason.caption")
+            }
+            Text(reason)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodySm))
+                .foregroundStyle(DesignTokens.Color.ink(Self.area))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.vertical, 10)
+                .background(DesignTokens.Color.card(Self.area))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(DesignTokens.Color.rule(Self.area), lineWidth: 1)
+                )
+                .accessibilityIdentifier("approval.detail.reason")
         }
     }
 
@@ -133,6 +163,9 @@ struct ApprovalDetailView: View {
         LazyVGrid(columns: [GridItem(.flexible(), alignment: .topLeading), GridItem(.flexible(), alignment: .topLeading)], spacing: 6) {
             fact("보낸 키", item.keyName, id: "key")
             fact("요청자", item.requesterName.isEmpty ? "—" : item.requesterName, id: "requester")
+            if let session = ApprovalFormatting.sessionLabel(item) {
+                fact("세션", session, id: "session")
+            }
             fact("요청 ID", item.externalId, id: "externalId")
             fact("요청 시각", time(item.createdAt), id: "createdAt")
             fact("상태", ApprovalFormatting.statusLabel(status), id: "status")
@@ -162,25 +195,31 @@ struct ApprovalDetailView: View {
 
     private func decisionButtons(enabled: Bool) -> some View {
         HStack(spacing: 10) {
-            Button("거절") { confirming = .reject }
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.Spacing.md)
-                .foregroundStyle(DesignTokens.Color.accent(Self.area))
-                .background(DesignTokens.Color.card(Self.area))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)
-                )
-                .accessibilityIdentifier("approval.detail.reject")
-            Button("승인") { confirming = .approve }
-                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DesignTokens.Spacing.md)
-                .foregroundStyle(.white)
-                .background(DesignTokens.Color.accent(Self.area))
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .accessibilityIdentifier("approval.detail.approve")
+            Button { confirming = .reject } label: {
+                Text("거절")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.md)
+                    .foregroundStyle(DesignTokens.Color.accent(Self.area))
+                    .background(DesignTokens.Color.card(Self.area))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .accessibilityIdentifier("approval.detail.reject")
+            Button { confirming = .approve } label: {
+                Text("승인")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, DesignTokens.Spacing.md)
+                    .foregroundStyle(.white)
+                    .background(DesignTokens.Color.accent(Self.area))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .accessibilityIdentifier("approval.detail.approve")
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

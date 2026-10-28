@@ -22,8 +22,10 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
+	"github.com/dlddu/pocket-aide/backend/internal/externalnotify"
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
+	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
 	"github.com/dlddu/pocket-aide/backend/internal/routines"
@@ -68,11 +70,11 @@ func main() {
 	deviceStore := devicetokens.New(conn)
 	excludedStore := excludedrepos.New(conn)
 	historyStore := notificationhistory.New(conn)
+	externalNotificationStore := externalnotify.NewStore(conn)
 	settingsStore := notificationsettings.New(conn)
 	todoStore := todos.New(conn)
 	scratchStore := scratchpad.New(conn)
 	routineStore := routines.New(conn)
-	sessionStore := sessions.New(conn)
 	platform := sessions.NewClient(cfg.SessionPlatformURL)
 	approvalStore := approvals.New(conn)
 
@@ -91,8 +93,10 @@ func main() {
 		}
 	}
 	var approvalPusher handlers.ApprovalPusher
+	var notificationSender handlers.NotificationSender
 	if apnsClient != nil {
 		approvalPusher = approvalpush.New(apnsClient, deviceStore)
+		notificationSender = externalnotify.New(apnsClient, deviceStore)
 	}
 
 	r.Group(func(p chi.Router) {
@@ -108,6 +112,9 @@ func main() {
 		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
 		p.Get("/api/notification-history", handlers.ListNotificationHistory(historyStore))
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
+		p.Get("/api/external-notifications", handlers.ListExternalNotifications(externalNotificationStore))
+		p.Get("/api/external-notifications/{id}", handlers.GetExternalNotification(externalNotificationStore))
+		p.Post("/api/external-notifications/{id}/read", handlers.MarkExternalNotificationRead(externalNotificationStore))
 		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
 		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))
 		p.Get("/api/todos/{area}", handlers.ListTodos(todoStore))
@@ -127,14 +134,14 @@ func main() {
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
 		p.Get("/api/sessions/config", handlers.SessionConfig(platform))
-		p.Get("/api/sessions", handlers.ListSessions(sessionStore, platform))
-		p.Post("/api/sessions", handlers.CreateSession(sessionStore, platform))
-		p.Get("/api/sessions/{id}", handlers.GetSession(sessionStore, platform))
-		p.Delete("/api/sessions/{id}", handlers.DeleteSession(sessionStore, platform))
-		p.Post("/api/sessions/{id}/read", handlers.ReadSession(sessionStore, platform))
-		p.Post("/api/sessions/{id}/write", handlers.WriteSession(sessionStore, platform))
-		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(sessionStore, platform))
-		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(sessionStore, platform))
+		p.Get("/api/sessions", handlers.ListSessions(platform))
+		p.Post("/api/sessions", handlers.CreateSession(platform))
+		p.Get("/api/sessions/{id}", handlers.GetSession(platform))
+		p.Delete("/api/sessions/{id}", handlers.DeleteSession(platform))
+		p.Post("/api/sessions/{id}/read", handlers.ReadSession(platform))
+		p.Post("/api/sessions/{id}/write", handlers.WriteSession(platform))
+		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(platform))
+		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(platform))
 		p.Get("/api/approval-keys", handlers.ListApprovalKeys(approvalStore))
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(approvalStore))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(approvalStore))
@@ -147,10 +154,19 @@ func main() {
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(approvalStore, approvals.DecisionReject))
 	})
 
+	var reviewer handlers.TokenReviewer
+	if cfg.K8SCallerAuth {
+		rv, err := k8sauth.InCluster(cfg.K8STokenAudience, cfg.K8STokenIssuer)
+		if err != nil {
+			log.Fatalf("k8s caller auth: %v", err)
+		}
+		reviewer = rv
+	}
 	r.Group(func(x chi.Router) {
-		x.Use(handlers.CallerKeyMiddleware(approvalStore))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher))
+		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, platform))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
+		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender, externalNotificationStore))
 	})
 
 	srv := &http.Server{
@@ -280,6 +296,10 @@ type config struct {
 	// push fan-out, so the E2E backend can run the pipeline without Apple
 	// credentials (docs/e2e-mocking-policy.md).
 	APNSDisabled bool
+
+	K8SCallerAuth    bool
+	K8STokenAudience string
+	K8STokenIssuer   string
 }
 
 func loadConfig() config {
@@ -293,6 +313,10 @@ func loadConfig() config {
 		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
+
+		K8SCallerAuth:    os.Getenv("K8S_CALLER_AUTH") == "true",
+		K8STokenAudience: envOr("K8S_TOKEN_AUDIENCE", "pocket-aide"),
+		K8STokenIssuer:   os.Getenv("K8S_TOKEN_ISSUER"),
 	}
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true

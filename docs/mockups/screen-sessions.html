@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>15 · 에이전트 세션 — PocketAide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* §1.11 PR 모니터 영역 팔레트 차용 — 세션 화면(PRD-11, tokens.md §1.11 제약 개정 2026-10-23) */
+  :root {
+    --bg:#EEEDF5; --ink:#221F33; --accent:#5B4DB8; --accent-strong:#3D2F8E;
+    --rule:#D8D5E4; --soft:#DDDAEB;
+    --forest:#4F6E5C; --destructive:#9C3F2D; --tan:#8B6F47;
+  }
+  html,body{font-family:'Apple SD Gothic Neo','SF Pro Text','-apple-system',BlinkMacSystemFont,system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+  .frame{width:393px;height:852px;border-radius:56px;background:var(--bg);box-shadow:0 30px 80px -20px rgba(28,38,36,.25),0 0 0 12px #0a0a0a,0 0 0 13px #2a2a2a;color:var(--ink)}
+  .island{width:118px;height:35px;border-radius:20px;background:#0a0a0a}
+  .home-bar{width:140px;height:5px;border-radius:3px;background:#0a0a0a}
+  .scroll::-webkit-scrollbar{display:none}
+  .mono{font-family:'SF Mono','Menlo',monospace}
+</style>
+</head>
+<body class="bg-stone-200/70 min-h-screen flex flex-col items-center gap-5 py-8">
+
+  <nav class="text-stone-700 text-sm flex items-center gap-2">
+    <a href="index.html" class="underline underline-offset-4 decoration-stone-400 hover:text-stone-900">← 모든 목업</a>
+    <span class="text-stone-400">/</span>
+    <span>15 · 에이전트 세션</span>
+  </nav>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">목록</p>
+
+  <!-- 목록 — AC5: 플랫폼 세션, 상태 배지(실행 중/대기/아카이브됨)·타입·모델·생성 시각·상태 설명 줄(마지막 사용 / 아카이브 시각·크기). 목록 조회는 승격 없음 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — AreaLabel(점) + 제목 + 「새 세션」 pill (ink 채움) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)] font-bold">AGENT · SESSIONS</div>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight leading-none">에이전트 세션</h1>
+        </div>
+        <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--bg)]">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-[12px] font-semibold">새 세션</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="absolute top-[150px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500">생성 2시간 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">테스트 실패 원인 찾기</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Claude Code · sonnet</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 3분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--tan)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">대기</span></span><span class="text-[11px] text-stone-500">생성 어제</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">homelab 디스크 정리</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Shell</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--accent)">아카이브됨</span></span><span class="text-[11px] text-stone-500">생성 3일 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">릴리스 노트 초안</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">MiniMax Code · platform-default</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">아카이브 2일 전 · 3.1 MB · 환경 반납됨</div>
+      </div>
+    </main>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">빈 상태</p>
+
+  <!-- 빈 상태 — AC12: 플랫폼 세션 0개, 「새 세션」 유도 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — AreaLabel(점) + 제목 + 「새 세션」 pill (ink 채움) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)] font-bold">AGENT · SESSIONS</div>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight leading-none">에이전트 세션</h1>
+        </div>
+        <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--bg)]">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-[12px] font-semibold">새 세션</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="absolute top-[150px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <p class="text-[14px] leading-relaxed text-stone-500 py-5 px-1">아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.</p>
+    </main>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">오류 — 연결 불가</p>
+
+  <!-- 오류 — AC11: 플랫폼·백엔드 도달 불가(503·502·네트워크)는 같은 안내 + 다시 시도. 상류 원문은 보이지 않는다 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — AreaLabel(점) + 제목 + 「새 세션」 pill (ink 채움) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)] font-bold">AGENT · SESSIONS</div>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight leading-none">에이전트 세션</h1>
+        </div>
+        <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--bg)]">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-[12px] font-semibold">새 세션</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="absolute top-[150px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <div class="flex items-start gap-2 px-3 py-2.5 mb-3 rounded-md bg-[var(--soft)] border border-[var(--accent)]">
+        <svg class="shrink-0 mt-0.5" width="16" height="16" fill="none" stroke="var(--destructive)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></svg>
+        <p class="flex-1 text-[12px] leading-snug">세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.</p>
+        <button class="text-[12px] font-semibold text-[var(--accent)] shrink-0">다시 시도</button>
+      </div>
+    </main>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">새 세션</p>
+
+  <!-- 새 세션 — AC3·AC4: 타입은 플랫폼 GET /config 카탈로그 순서(라벨·설명은 플랫폼 문구). 기본 선택은 첫 prompt 타입. takesModel 이면 모델(목록이 있으면 선택, 없으면 자유 입력). 시트는 편집 시트 패턴(patterns §9) -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — AreaLabel(점) + 제목 + 「새 세션」 pill (ink 채움) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)] font-bold">AGENT · SESSIONS</div>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight leading-none">에이전트 세션</h1>
+        </div>
+        <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--bg)]">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-[12px] font-semibold">새 세션</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="absolute top-[150px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500">생성 2시간 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">테스트 실패 원인 찾기</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Claude Code · sonnet</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 3분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--tan)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">대기</span></span><span class="text-[11px] text-stone-500">생성 어제</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">homelab 디스크 정리</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Shell</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--accent)">아카이브됨</span></span><span class="text-[11px] text-stone-500">생성 3일 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">릴리스 노트 초안</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">MiniMax Code · platform-default</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">아카이브 2일 전 · 3.1 MB · 환경 반납됨</div>
+      </div>
+    </main>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.35)"></div>
+    <div class="absolute z-50 inset-x-0 bottom-0 rounded-t-[24px] bg-[var(--bg)] px-6 pt-2.5 pb-8">
+      <div class="w-9 h-1 rounded-full bg-[var(--rule)] mx-auto mb-3"></div>
+      <div class="text-[18px] font-bold pt-2">새 세션</div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">이름</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-3 text-[15px] text-stone-400">예: 테스트 실패 원인 찾기</div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">타입</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-1 divide-y divide-[var(--rule)]">
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/></svg><div><div class="text-[15px] font-semibold">Shell</div><div class="text-[11px] text-stone-500">Interactive bash. You type the commands.</div></div></div>
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="var(--accent)" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="var(--accent)"/></svg><div><div class="text-[15px] font-semibold">Claude Code</div><div class="text-[11px] text-stone-500">Agent CLI. You send prompts, it does the work.</div></div></div>
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/></svg><div><div class="text-[15px] font-semibold">MiniMax Code</div><div class="text-[11px] text-stone-500">MiniMax Code CLI on the same prompt loop.</div></div></div>
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/></svg><div><div class="text-[15px] font-semibold">Approval-gated</div><div class="text-[11px] text-stone-500">Same agent, but every outbound call waits for your approval.</div></div></div>
+      </div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">모델</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-3 flex items-center justify-between"><span class="text-[15px]">sonnet</span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></div>
+      <p class="text-[11px] text-stone-500 mt-4 leading-snug">타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.</p>
+      <button class="w-full mt-5 py-3.5 rounded-full bg-[var(--ink)] text-[var(--bg)] text-[15px] font-bold opacity-50">만들기</button>
+      <button class="w-full mt-1 py-2 text-[13px] text-stone-500">취소</button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">새 세션 — 띄우는 중</p>
+
+  <!-- 새 세션 — AC4: 생성은 세션 전용 환경 프로비저닝을 수반해 수 초 걸린다. 진행 표시, 끝나면 바로 상세로 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — AreaLabel(점) + 제목 + 「새 세션」 pill (ink 채움) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)] font-bold">AGENT · SESSIONS</div>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight leading-none">에이전트 세션</h1>
+        </div>
+        <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--bg)]">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-[12px] font-semibold">새 세션</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="absolute top-[150px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500">생성 2시간 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">테스트 실패 원인 찾기</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Claude Code · sonnet</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 3분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--tan)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">대기</span></span><span class="text-[11px] text-stone-500">생성 어제</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">homelab 디스크 정리</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Shell</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--accent)">아카이브됨</span></span><span class="text-[11px] text-stone-500">생성 3일 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">릴리스 노트 초안</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">MiniMax Code · platform-default</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">아카이브 2일 전 · 3.1 MB · 환경 반납됨</div>
+      </div>
+    </main>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.35)"></div>
+    <div class="absolute z-50 inset-x-0 bottom-0 rounded-t-[24px] bg-[var(--bg)] px-6 pt-2.5 pb-8">
+      <div class="w-9 h-1 rounded-full bg-[var(--rule)] mx-auto mb-3"></div>
+      <div class="text-[18px] font-bold pt-2">새 세션</div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">이름</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-3 text-[15px]">테스트 실패 원인 찾기</div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">타입</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-1 divide-y divide-[var(--rule)]">
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/></svg><div><div class="text-[15px] font-semibold">Shell</div><div class="text-[11px] text-stone-500">Interactive bash. You type the commands.</div></div></div>
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="var(--accent)" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="var(--accent)"/></svg><div><div class="text-[15px] font-semibold">Claude Code</div><div class="text-[11px] text-stone-500">Agent CLI. You send prompts, it does the work.</div></div></div>
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/></svg><div><div class="text-[15px] font-semibold">MiniMax Code</div><div class="text-[11px] text-stone-500">MiniMax Code CLI on the same prompt loop.</div></div></div>
+          <div class="flex items-start gap-3 py-2"><svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/></svg><div><div class="text-[15px] font-semibold">Approval-gated</div><div class="text-[11px] text-stone-500">Same agent, but every outbound call waits for your approval.</div></div></div>
+      </div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">모델</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-3 flex items-center justify-between"><span class="text-[15px]">sonnet</span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10l4-4 4 4M8 14l4 4 4-4"/></svg></div>
+      <p class="text-[11px] text-stone-500 mt-4 leading-snug">타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.</p>
+      <button class="w-full mt-5 py-3.5 rounded-full bg-[var(--ink)] text-[var(--bg)] text-[15px] font-bold flex items-center justify-center gap-2"><span class="w-3.5 h-3.5 rounded-full border-2 border-[var(--bg)]/40 border-t-[var(--bg)]"></span>세션 띄우는 중…</button>
+      <button class="w-full mt-1 py-2 text-[13px] text-stone-500">취소</button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">새 세션 — 타입 목록 실패</p>
+
+  <!-- 새 세션 — AC11: 카탈로그를 읽지 못하면 만들기 비활성 + 다시 시도 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- header — AreaLabel(점) + 제목 + 「새 세션」 pill (ink 채움) -->
+    <header class="absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95">
+      <div class="flex items-end justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-1.5 h-1.5 bg-[var(--accent)] rounded-full"></span>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)] font-bold">AGENT · SESSIONS</div>
+          </div>
+          <h1 class="text-[26px] font-bold tracking-tight leading-none">에이전트 세션</h1>
+        </div>
+        <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--bg)]">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="text-[12px] font-semibold">새 세션</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="absolute top-[150px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-3 pb-6">
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500">생성 2시간 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">테스트 실패 원인 찾기</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Claude Code · sonnet</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 3분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--tan)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">대기</span></span><span class="text-[11px] text-stone-500">생성 어제</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">homelab 디스크 정리</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">Shell</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전</div>
+      </div>
+      <div class="bg-white border border-[var(--rule)] rounded-2xl p-4 mb-2.5">
+        <div class="flex items-center justify-between"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--accent)">아카이브됨</span></span><span class="text-[11px] text-stone-500">생성 3일 전</span></div>
+        <div class="text-[15px] font-semibold mt-1.5 leading-snug">릴리스 노트 초안</div>
+        <div class="text-[11px] font-medium text-stone-600 mt-1">MiniMax Code · platform-default</div>
+        <div class="text-[11px] text-stone-500 mt-0.5">아카이브 2일 전 · 3.1 MB · 환경 반납됨</div>
+      </div>
+    </main>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.35)"></div>
+    <div class="absolute z-50 inset-x-0 bottom-0 rounded-t-[24px] bg-[var(--bg)] px-6 pt-2.5 pb-8">
+      <div class="w-9 h-1 rounded-full bg-[var(--rule)] mx-auto mb-3"></div>
+      <div class="text-[18px] font-bold pt-2">새 세션</div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">이름</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-3 text-[15px] text-stone-400">예: 테스트 실패 원인 찾기</div>
+      <div class="text-[11px] font-semibold text-stone-600 mt-4 mb-1.5">타입</div>
+      <div class="rounded-2xl bg-white border border-[var(--rule)] px-3.5 py-3 flex items-center gap-2"><span class="flex-1 text-[14px] text-stone-500 leading-snug">세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.</span><button class="text-[12px] font-semibold text-[var(--accent)] shrink-0">다시 시도</button></div>
+      <p class="text-[11px] text-stone-500 mt-4 leading-snug">타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.</p>
+      <button class="w-full mt-5 py-3.5 rounded-full bg-[var(--ink)] text-[var(--bg)] text-[15px] font-bold opacity-50">만들기</button>
+      <button class="w-full mt-1 py-2 text-[13px] text-stone-500">취소</button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 전송 직후</p>
+
+  <!-- 상세 — AC6·AC12: 갓 만든 세션은 출력이 비어 있다. 전송은 큐 등록이라 완료가 아니라 「전송됨 · 응답 대기 중」 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">테스트 실패 원인 찾기</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500 truncate">Claude Code · sonnet</span><span class="flex-1"></span><span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[11px] font-semibold text-stone-600">전송됨 · 응답 대기 중</span></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
+    </div>
+    <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4">
+      <p class="text-[14px] text-stone-500 leading-relaxed">아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.</p>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 에이전트 응답 중</p>
+
+  <!-- 상세 — AC6·AC7: 서버 커서로 출력을 이어 붙인다(포그라운드 2초 폴링). 응답 단계는 에이전트(prompt) 타입만 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">테스트 실패 원인 찾기</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500 truncate">Claude Code · sonnet</span><span class="flex-1"></span><span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[11px] font-semibold text-stone-600">응답 진행 중</span></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
+    </div>
+    <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
+go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
+
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 쉘</p>
+
+  <!-- 상세 — AC3: terminal 타입은 명령 끝에 개행을 붙여 보내고 ANSI 이스케이프·캐리지 리턴을 걷어 보인다. 응답 단계 없음 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">homelab 디스크 정리</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500 truncate">Shell</span><span class="flex-1"></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
+    </div>
+    <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
+      <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap">user@sess:~$ df -h /var/lib
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   80G   71G  9.0G  89% /
+user@sess:~$ du -sh /var/lib/containerd
+38G	/var/lib/containerd
+user@sess:~$</pre>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">명령 입력</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 아카이브됨</p>
+
+  <!-- 상세 — AC9: 아카이브된 세션은 출력 대신 안내 + 「복원」. 폴링은 아카이브된 세션을 읽지 않는다(read 가 복원을 일으키므로). 입력 비활성 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">릴리스 노트 초안</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--accent)">아카이브됨</span></span><span class="text-[11px] text-stone-500 truncate">MiniMax Code · platform-default</span><span class="flex-1"></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">아카이브 2일 전 · 3.1 MB · 환경 반납됨</div>
+    </div>
+    <div class="absolute top-[150px] inset-x-0 px-5 pt-3">
+      <div class="text-[15px] font-semibold">아카이브된 세션이에요</div>
+      <p class="text-[14px] text-stone-600 mt-2 leading-relaxed">오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.</p>
+      <button class="w-full mt-4 py-3 rounded-full bg-[var(--ink)] text-[var(--bg)] text-[15px] font-bold">복원</button>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 세션 동작</p>
+
+  <!-- 상세 — AC8·AC10: 내비게이션 바 「세션 동작」 메뉴. 시스템 메뉴 — 「세션 삭제」는 앱에서 iOS 시스템 destructive 로 그려진다. 목업은 §1.11 상태 시그널 --destructive 로 표기(patterns §9-1) -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">테스트 실패 원인 찾기</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500 truncate">Claude Code · sonnet</span><span class="flex-1"></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
+    </div>
+    <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
+go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
+
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.12)"></div>
+    <div class="absolute z-50 right-3 top-[92px] w-[230px] rounded-[14px] bg-white/95 backdrop-blur shadow-xl overflow-hidden divide-y divide-[var(--rule)]">
+      <div class="flex items-center justify-between px-4 py-3"><span class="text-[15px]">지금 아카이브</span><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg></div>
+      <div class="flex items-center justify-between px-4 py-3 text-[var(--destructive)]"><span class="text-[15px]">세션 삭제</span><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 삭제 확인</p>
+
+  <!-- 상세 — AC10: 되돌릴 수 없음과 아카이브 보존을 알리는 확인 대화상자(iOS alert 컨벤션 §1.8). 삭제되면 목록으로 돌아가고 목록에서 사라진다 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">테스트 실패 원인 찾기</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500 truncate">Claude Code · sonnet</span><span class="flex-1"></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
+    </div>
+    <div class="absolute top-[150px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
+go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
+
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+    <div class="absolute inset-0 z-40" style="background:rgba(34,31,51,.35)"></div>
+    <div class="absolute z-50 left-10 right-10 top-[300px] rounded-[14px] bg-white text-center overflow-hidden">
+      <div class="px-4 pt-4 pb-3.5"><div class="text-[16px] font-bold">세션을 삭제할까요?</div><p class="text-[12.5px] text-stone-600 mt-1.5 leading-relaxed">되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.</p></div>
+      <div class="flex border-t border-[var(--rule)]"><button class="flex-1 py-3 text-[15px] text-[var(--accent)]">취소</button><button class="flex-1 py-3 text-[15px] text-[var(--destructive)] font-semibold border-l border-[var(--rule)]">삭제</button></div>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+  <p class="text-stone-500 text-[11px] font-semibold tracking-[0.12em]">상세 — 아카이브 꺼짐</p>
+
+  <!-- 상세 — AC8: 아카이브 요청의 503(플랫폼 아카이브 게이트 off)은 실패가 아니라 비활성 안내. 세션은 그대로 실행 중 -->
+  <div class="frame relative overflow-hidden">
+    <div class="absolute top-0 inset-x-0 h-[3px] bg-[var(--accent)] z-10"></div>
+    <div class="absolute top-0 inset-x-0 h-[54px] flex items-center justify-between px-9 z-30 text-[15px] font-semibold">
+      <span>9:41</span>
+      <div class="island absolute left-1/2 -translate-x-1/2 top-3"></div>
+      <div class="flex items-center gap-1.5">
+        <svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="0.6"/><rect x="5" y="4" width="3" height="7" rx="0.6"/><rect x="10" y="2" width="3" height="9" rx="0.6"/><rect x="15" y="0" width="3" height="11" rx="0.6"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5C9.7 2.5 11.3 3.1 12.5 4.3l1.4-1.4C12.3 1.3 10.2 0.5 8 0.5S3.7 1.3 2.1 2.9l1.4 1.4C4.7 3.1 6.3 2.5 8 2.5z"/><path d="M8 5.5c0.9 0 1.7 0.3 2.3 0.9l1.4-1.4C10.7 4.1 9.4 3.5 8 3.5s-2.7 0.6-3.7 1.5l1.4 1.4C6.3 5.8 7.1 5.5 8 5.5z"/><circle cx="8" cy="9" r="1.5"/></svg>
+        <div class="flex items-center gap-0.5">
+          <div class="w-[22px] h-[11px] rounded-[3px] border border-current relative"><div class="absolute inset-[1.5px] right-[5px] bg-current rounded-[1px]"></div></div>
+          <div class="w-[1.5px] h-[4px] bg-current rounded-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 시스템 내비게이션 바 — 뒤로 · 세션 이름(inline) · 「세션 동작」 메뉴 -->
+    <div class="absolute top-[54px] inset-x-0 h-[44px] px-3 flex items-center justify-between z-20 bg-[var(--bg)]/95">
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+      <span class="text-[16px] font-semibold">테스트 실패 원인 찾기</span>
+      <svg width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.8" viewBox="0 0 24 24" aria-label="세션 동작"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/></svg>
+    </div>
+    <div class="absolute top-[98px] inset-x-0 px-4 py-2 z-10">
+      <div class="flex items-center gap-2"><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">실행 중</span></span><span class="text-[11px] text-stone-500 truncate">Claude Code · sonnet</span><span class="flex-1"></span></div>
+      <div class="text-[11px] text-stone-500 mt-0.5">환경이 떠 있어요 · 마지막 사용 방금</div>
+    </div>
+    <div class="absolute top-[150px] inset-x-4 z-10">
+      <div class="flex items-start gap-2 px-3 py-2.5 mb-3 rounded-md bg-[var(--soft)] border border-[var(--accent)]">
+        <svg class="shrink-0 mt-0.5" width="16" height="16" fill="none" stroke="var(--destructive)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5h.01"/></svg>
+        <p class="flex-1 text-[12px] leading-snug">이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요.</p>
+        <button class="text-[12px] font-semibold text-[var(--accent)] shrink-0">다시 시도</button>
+      </div>
+    </div>
+    <div class="absolute top-[214px] bottom-[148px] inset-x-4 rounded-2xl bg-white border border-[var(--rule)] p-4 overflow-hidden">
+      <!-- AC7: write 마다 입력·출력을 접어 두는 turn (플랫폼 turn 마커 — PRD 결정 2026-10-25). 기본은 접힘, 행을 누르면 전문 -->
+      <div class="space-y-3">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#1</span><span class="text-[11px] text-stone-400">21:02 · 48초</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--forest)"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--forest)">완료</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">이 레포 테스트 실패 원인 찾아줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span><span class="text-[14px] leading-snug line-clamp-2">원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.</span></div>
+        </div>
+        <div class="h-px bg-[var(--rule)]"></div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-stone-500">#2</span><span class="text-[11px] text-stone-400">21:04</span><span class="flex-1"></span><span class="flex items-center gap-[5px]"><span class="w-2.5 h-2.5 rounded-full border-2 border-stone-300 border-t-[var(--accent)]"></span><span class="text-[10.5px] font-semibold tracking-[0.03em]" style="color:var(--tan)">진행 중</span></span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">입력</span><span class="text-[14px] leading-snug line-clamp-2">lastAccess 로 바꾸고 테스트도 추가해줘</span></div>
+          <div class="flex items-baseline gap-2"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" class="shrink-0 text-stone-400 rotate-90"><path d="M9 5l7 7-7 7"/></svg><span class="text-[11px] font-bold text-[var(--accent)] shrink-0">출력</span></div>
+          <pre class="mono text-[13px] leading-[1.45] whitespace-pre-wrap pl-4 mt-1">네, 비교 함수를 lastAccess 기준으로 바꿀게요.
+go test ./internal/handlers/ -run TestSessionList
+ok   pocket-aide/backend/internal/handlers  0.41s
+
+정렬 테스트를 하나 더 추가하는 중이에요…</pre>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-[88px] inset-x-0 px-4 py-2 flex items-end gap-2 z-10">
+      <div class="flex-1 px-3 py-2.5 rounded-[18px] bg-white border border-[var(--rule)]"><span class="text-[15px] text-stone-400">에이전트에게 맡길 일</span></div>
+      <button class="w-10 h-10 rounded-full bg-[var(--ink)] text-[var(--bg)] grid place-items-center opacity-40" aria-label="보내기"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    </div>
+
+    <!-- tab bar — 하단 노출 구성(tokens.md §7, 2026-10-23 개정): 세션 탭(넷째 칸) 활성 -->
+    <div class="absolute bottom-0 inset-x-0 h-[88px] bg-[var(--bg)]/95 backdrop-blur border-t border-[var(--rule)] flex items-end justify-around px-2 pb-7 z-20">
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>
+        <span class="text-[10px] font-medium">다짐</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 12h6a4 4 0 0 0 4-4V7"/></svg>
+        <span class="text-[10px] font-medium">PR 모니터</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span class="text-[10px] font-medium">승인</span>
+      </button>
+      <button class="text-[var(--accent)] flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>
+        <span class="text-[10px] font-bold">세션</span>
+      </button>
+      <button class="text-stone-400 flex flex-col items-center gap-0.5 py-1 px-1">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        <span class="text-[10px] font-medium">더 보기</span>
+      </button>
+    </div>
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-30"><div class="home-bar"></div></div>
+  </div>
+
+</body>
+</html>

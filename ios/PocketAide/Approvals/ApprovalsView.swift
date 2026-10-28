@@ -26,6 +26,7 @@ struct ApprovalsView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ApprovalRequest.self) { item in
                 ApprovalDetailView(item: item, api: viewModel.api ?? auth.api)
+                    .id(item.id)
             }
             .navigationDestination(isPresented: $showsSettings) {
                 ApprovalKeysView(api: viewModel.api ?? auth.api)

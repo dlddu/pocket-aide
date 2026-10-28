@@ -35,7 +35,7 @@ struct ApprovalDetailScreen {
 
     func choose(_ decision: XCUIElement, thenTap label: String, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(decision.waitForExistence(timeout: 5), "The decision button should be on screen", file: file, line: line)
-        decision.tap()
+        decision.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.2)).tap()
         let alert = app.alerts.firstMatch
         XCTAssertTrue(alert.waitForExistence(timeout: 5), "A confirmation step should appear", file: file, line: line)
         alert.buttons[label].tap()

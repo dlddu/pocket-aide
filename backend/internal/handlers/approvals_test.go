@@ -35,11 +35,13 @@ func (subVerifier) Verify(_ context.Context, raw string) (*oidc.IDToken, error) 
 }
 
 type approvalEnv struct {
-	t      *testing.T
-	conn   *sql.DB
-	router http.Handler
-	mu     sync.Mutex
-	now    time.Time
+	t            *testing.T
+	conn         *sql.DB
+	router       http.Handler
+	reviewer     *fakeReviewer
+	sessionNames handlers.SessionNamer
+	mu           sync.Mutex
+	now          time.Time
 }
 
 func newApprovalEnv(t *testing.T) *approvalEnv {
@@ -49,12 +51,17 @@ func newApprovalEnv(t *testing.T) *approvalEnv {
 
 func newApprovalEnvWithPush(t *testing.T, push handlers.ApprovalPusher) *approvalEnv {
 	t.Helper()
+	return newApprovalEnvWith(t, push, nil)
+}
+
+func newApprovalEnvWith(t *testing.T, push handlers.ApprovalPusher, names handlers.SessionNamer) *approvalEnv {
+	t.Helper()
 	conn, err := db.Open(filepath.Join(t.TempDir(), "approvals.db"))
 	if err != nil {
 		t.Fatalf("db open: %v", err)
 	}
 	t.Cleanup(func() { _ = conn.Close() })
-	env := &approvalEnv{t: t, conn: conn, now: time.Unix(1_800_000_000, 0)}
+	env := &approvalEnv{t: t, conn: conn, reviewer: &fakeReviewer{tokens: map[string]string{}}, sessionNames: names, now: time.Unix(1_800_000_000, 0)}
 	store := approvals.NewWithClock(conn, env.clock)
 	r := chi.NewRouter()
 	r.Group(func(p chi.Router) {
@@ -71,8 +78,8 @@ func newApprovalEnvWithPush(t *testing.T, push handlers.ApprovalPusher) *approva
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(store, approvals.DecisionReject))
 	})
 	r.Group(func(x chi.Router) {
-		x.Use(handlers.CallerKeyMiddleware(store))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(store, push))
+		x.Use(handlers.CallerKeyMiddleware(store, env.reviewer))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(store, push, env.sessionNames))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(store))
 	})
 	env.router = r
@@ -133,23 +140,26 @@ func expectCode(t *testing.T, rec *httptest.ResponseRecorder, want int, what str
 }
 
 type issuedKeyBody struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	Key        string `json:"key"`
-	KeyPrefix  string `json:"key_prefix"`
-	CreatedAt  int64  `json:"created_at"`
-	LastUsedAt *int64 `json:"last_used_at"`
-	RevokedAt  *int64 `json:"revoked_at"`
+	ID             int64   `json:"id"`
+	Name           string  `json:"name"`
+	Key            string  `json:"key"`
+	KeyPrefix      string  `json:"key_prefix"`
+	Kind           string  `json:"kind"`
+	ServiceAccount *string `json:"service_account"`
+	CreatedAt      int64   `json:"created_at"`
+	LastUsedAt     *int64  `json:"last_used_at"`
+	RevokedAt      *int64  `json:"revoked_at"`
 }
 
 type externalBody struct {
-	ID          string  `json:"id"`
-	ExternalID  string  `json:"externalId"`
-	Status      string  `json:"status"`
-	CreatedAt   int64   `json:"createdAt"`
-	ExpiresAt   *int64  `json:"expiresAt"`
-	ProcessedAt *int64  `json:"processedAt"`
-	UserID      *string `json:"userId"`
+	ID           string  `json:"id"`
+	ExternalID   string  `json:"externalId"`
+	Status       string  `json:"status"`
+	DecisionMode *string `json:"decisionMode"`
+	CreatedAt    int64   `json:"createdAt"`
+	ExpiresAt    *int64  `json:"expiresAt"`
+	ProcessedAt  *int64  `json:"processedAt"`
+	UserID       *string `json:"userId"`
 }
 
 type appApprovalBody struct {
@@ -158,6 +168,9 @@ type appApprovalBody struct {
 	ExternalID    string `json:"external_id"`
 	Context       string `json:"context"`
 	RequesterName string `json:"requester_name"`
+	SessionID     string `json:"session_id"`
+	SessionName   string `json:"session_name"`
+	Reason        string `json:"reason"`
 	KeyName       string `json:"key_name"`
 	KeyRevoked    bool   `json:"key_revoked"`
 	DecisionMode  string `json:"decision_mode"`

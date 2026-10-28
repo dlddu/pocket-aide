@@ -45,6 +45,13 @@ var (
 	ErrNotPending        = errors.New("request is not pending")
 	ErrInvalidCursor     = errors.New("invalid history cursor")
 	ErrInvalidMode       = errors.New("auto_response must be one of NONE, AUTO_APPROVE, AUTO_REJECT")
+	ErrInvalidSA         = errors.New("service_account must be <namespace>/<name> with DNS-1123 labels")
+	ErrDuplicateSA       = errors.New("service account already registered")
+)
+
+const (
+	KindKey            = "key"
+	KindServiceAccount = "k8s_sa"
 )
 
 // AutoResponse is a user's row in user_approval_settings: how requests filed by caller keys are processed at creation; a user without a row gets AutoResponseNone.
@@ -64,14 +71,16 @@ func (m AutoResponse) Valid() bool {
 	return false
 }
 
-// CallerKey is a row of approval_caller_keys: a named key an external caller presents to file approval requests for one user.
+// CallerKey is a row of approval_caller_keys: a named credential an external caller presents to file approval requests for one user — a hashed key, or a k8s ServiceAccount whose tokens are verified by TokenReview.
 type CallerKey struct {
-	ID         int64  `json:"id"`
-	Name       string `json:"name"`
-	KeyPrefix  string `json:"key_prefix"`
-	CreatedAt  int64  `json:"created_at"`
-	LastUsedAt *int64 `json:"last_used_at"`
-	RevokedAt  *int64 `json:"revoked_at"`
+	ID             int64   `json:"id"`
+	Name           string  `json:"name"`
+	Kind           string  `json:"kind"`
+	KeyPrefix      string  `json:"key_prefix"`
+	ServiceAccount *string `json:"service_account"`
+	CreatedAt      int64   `json:"created_at"`
+	LastUsedAt     *int64  `json:"last_used_at"`
+	RevokedAt      *int64  `json:"revoked_at"`
 }
 
 type IssuedKey struct {
@@ -89,6 +98,9 @@ type Request struct {
 	ExternalID    string
 	Context       string
 	RequesterName string
+	SessionID     string
+	SessionName   string
+	Reason        string
 	Status        Status
 	DecisionMode  string
 	CreatedAt     int64
@@ -100,6 +112,9 @@ type NewRequest struct {
 	ExternalID     string
 	Context        string
 	RequesterName  string
+	SessionID      string
+	SessionName    string
+	Reason         string
 	TimeoutSeconds *int64
 }
 
@@ -148,7 +163,7 @@ func (s *Store) IssueKey(ctx context.Context, userID int64, name string) (Issued
 	}
 	raw := keyRawPrefix + secret
 	k := IssuedKey{
-		CallerKey: CallerKey{Name: name, KeyPrefix: raw[:keyPrefixChars], CreatedAt: s.now().Unix()},
+		CallerKey: CallerKey{Name: name, Kind: KindKey, KeyPrefix: raw[:keyPrefixChars], CreatedAt: s.now().Unix()},
 		Key:       raw,
 	}
 	res, err := s.db.ExecContext(ctx,
@@ -166,9 +181,57 @@ func (s *Store) IssueKey(ctx context.Context, userID int64, name string) (Issued
 	return k, nil
 }
 
+const keyColumns = `id, name, kind, key_prefix, service_account, created_at, last_used_at, revoked_at`
+
+// key_hash stays NOT NULL UNIQUE for k8s_sa rows: the "sa:" filler is not a hex SHA-256, so Authenticate can never match it.
+func (s *Store) RegisterServiceAccount(ctx context.Context, userID int64, name, serviceAccount string) (CallerKey, error) {
+	if _, _, ok := SplitServiceAccount(serviceAccount); !ok {
+		return CallerKey{}, ErrInvalidSA
+	}
+	filler, err := randomToken(32)
+	if err != nil {
+		return CallerKey{}, err
+	}
+	k := CallerKey{Name: name, Kind: KindServiceAccount, ServiceAccount: &serviceAccount, CreatedAt: s.now().Unix()}
+	res, err := s.db.ExecContext(ctx,
+		`INSERT INTO approval_caller_keys (user_id, name, kind, key_hash, key_prefix, service_account, created_at) VALUES (?, ?, 'k8s_sa', ?, '', ?, ?)`,
+		userID, name, "sa:"+filler, serviceAccount, k.CreatedAt)
+	if isUniqueViolation(err) {
+		if strings.Contains(err.Error(), "service_account") {
+			return CallerKey{}, ErrDuplicateSA
+		}
+		return CallerKey{}, ErrDuplicateName
+	}
+	if err != nil {
+		return CallerKey{}, fmt.Errorf("insert service account caller: %w", err)
+	}
+	if k.ID, err = res.LastInsertId(); err != nil {
+		return CallerKey{}, fmt.Errorf("service account caller id: %w", err)
+	}
+	return k, nil
+}
+
+func SplitServiceAccount(sa string) (namespace, name string, ok bool) {
+	namespace, name, ok = strings.Cut(sa, "/")
+	return namespace, name, ok && isDNSLabel(namespace) && isDNSLabel(name)
+}
+
+func isDNSLabel(s string) bool {
+	if len(s) == 0 || len(s) > 63 {
+		return false
+	}
+	for i, c := range s {
+		alnum := c >= 'a' && c <= 'z' || c >= '0' && c <= '9'
+		if !alnum && (c != '-' || i == 0 || i == len(s)-1) {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *Store) ListKeys(ctx context.Context, userID int64) ([]CallerKey, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, name, key_prefix, created_at, last_used_at, revoked_at FROM approval_caller_keys WHERE user_id = ? ORDER BY created_at DESC, id DESC`,
+		`SELECT `+keyColumns+` FROM approval_caller_keys WHERE user_id = ? ORDER BY created_at DESC, id DESC`,
 		userID)
 	if err != nil {
 		return nil, fmt.Errorf("list caller keys: %w", err)
@@ -177,7 +240,7 @@ func (s *Store) ListKeys(ctx context.Context, userID int64) ([]CallerKey, error)
 	keys := []CallerKey{}
 	for rows.Next() {
 		var k CallerKey
-		if err := rows.Scan(&k.ID, &k.Name, &k.KeyPrefix, &k.CreatedAt, &k.LastUsedAt, &k.RevokedAt); err != nil {
+		if err := rows.Scan(&k.ID, &k.Name, &k.Kind, &k.KeyPrefix, &k.ServiceAccount, &k.CreatedAt, &k.LastUsedAt, &k.RevokedAt); err != nil {
 			return nil, fmt.Errorf("scan caller key: %w", err)
 		}
 		keys = append(keys, k)
@@ -210,8 +273,8 @@ func (s *Store) RevokeKey(ctx context.Context, userID, keyID int64) (CallerKey, 
 func (s *Store) getKey(ctx context.Context, userID, keyID int64) (CallerKey, error) {
 	var k CallerKey
 	err := s.db.QueryRowContext(ctx,
-		`SELECT id, name, key_prefix, created_at, last_used_at, revoked_at FROM approval_caller_keys WHERE id = ? AND user_id = ?`,
-		keyID, userID).Scan(&k.ID, &k.Name, &k.KeyPrefix, &k.CreatedAt, &k.LastUsedAt, &k.RevokedAt)
+		`SELECT `+keyColumns+` FROM approval_caller_keys WHERE id = ? AND user_id = ?`,
+		keyID, userID).Scan(&k.ID, &k.Name, &k.Kind, &k.KeyPrefix, &k.ServiceAccount, &k.CreatedAt, &k.LastUsedAt, &k.RevokedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return CallerKey{}, ErrNotFound
 	}
@@ -245,14 +308,32 @@ func (s *Store) Authenticate(ctx context.Context, raw string) (Caller, error) {
 	if revokedAt != nil {
 		return Caller{}, ErrInvalidKey
 	}
-	if _, err := s.db.ExecContext(ctx,
-		`UPDATE approval_caller_keys SET last_used_at = ? WHERE id = ?`, s.now().Unix(), c.KeyID); err != nil {
-		return Caller{}, fmt.Errorf("touch caller key: %w", err)
-	}
-	return c, nil
+	return c, s.touch(ctx, c.KeyID)
 }
 
-const requestColumns = `r.id, r.user_id, r.caller_key_id, k.name, k.revoked_at, r.external_id, r.context, r.requester_name, r.status, r.decision_mode, r.created_at, r.expires_at, r.processed_at`
+func (s *Store) AuthenticateServiceAccount(ctx context.Context, serviceAccount string) (Caller, error) {
+	var c Caller
+	err := s.db.QueryRowContext(ctx,
+		`SELECT id, user_id, name FROM approval_caller_keys WHERE service_account = ? AND kind = 'k8s_sa' AND revoked_at IS NULL`,
+		serviceAccount).Scan(&c.KeyID, &c.UserID, &c.Name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Caller{}, ErrInvalidKey
+	}
+	if err != nil {
+		return Caller{}, fmt.Errorf("select service account caller: %w", err)
+	}
+	return c, s.touch(ctx, c.KeyID)
+}
+
+func (s *Store) touch(ctx context.Context, keyID int64) error {
+	if _, err := s.db.ExecContext(ctx,
+		`UPDATE approval_caller_keys SET last_used_at = ? WHERE id = ?`, s.now().Unix(), keyID); err != nil {
+		return fmt.Errorf("touch caller key: %w", err)
+	}
+	return nil
+}
+
+const requestColumns = `r.id, r.user_id, r.caller_key_id, k.name, k.revoked_at, r.external_id, r.context, r.requester_name, r.session_id, r.session_name, r.reason, r.status, r.decision_mode, r.created_at, r.expires_at, r.processed_at`
 
 func (s *Store) scanRequest(sc interface{ Scan(...any) error }) (Request, error) {
 	var (
@@ -261,7 +342,7 @@ func (s *Store) scanRequest(sc interface{ Scan(...any) error }) (Request, error)
 		mode      sql.NullString
 	)
 	if err := sc.Scan(&r.ID, &r.UserID, &r.CallerKeyID, &r.CallerKeyName, &revokedAt, &r.ExternalID, &r.Context,
-		&r.RequesterName, &r.Status, &mode, &r.CreatedAt, &r.ExpiresAt, &r.ProcessedAt); err != nil {
+		&r.RequesterName, &r.SessionID, &r.SessionName, &r.Reason, &r.Status, &mode, &r.CreatedAt, &r.ExpiresAt, &r.ProcessedAt); err != nil {
 		return Request{}, err
 	}
 	r.KeyRevoked = revokedAt != nil
@@ -326,8 +407,8 @@ func (s *Store) Create(ctx context.Context, caller Caller, in NewRequest) (Reque
 		decisionMode, processedAt = &auto, &created
 	}
 	_, err = s.db.ExecContext(ctx,
-		`INSERT INTO approval_requests (id, user_id, caller_key_id, external_id, context, requester_name, status, decision_mode, created_at, expires_at, processed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		id, caller.UserID, caller.KeyID, in.ExternalID, in.Context, in.RequesterName, status, decisionMode, created, expiresAt, processedAt)
+		`INSERT INTO approval_requests (id, user_id, caller_key_id, external_id, context, requester_name, session_id, session_name, reason, status, decision_mode, created_at, expires_at, processed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, caller.UserID, caller.KeyID, in.ExternalID, in.Context, in.RequesterName, in.SessionID, in.SessionName, in.Reason, status, decisionMode, created, expiresAt, processedAt)
 	if isUniqueViolation(err) {
 		return Request{}, ErrDuplicateExternal
 	}
