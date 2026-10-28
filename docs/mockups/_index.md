@@ -52,7 +52,7 @@ last_updated: 2026-10-28
 - **여정**: `JRN-ci-push-to-ack` (`user-journeys/JRN-ci-push-to-ack.md`)
 - **달성 가치**: V9 (개발 워크플로우 인지 부하 감소)
 - **담은 단계**: `STP-push-glance`, `STP-open-from-push`, `STP-check-details`, `STP-ack-item`
-- **분기 상태**: `STP-push-glance/in-progress`(CI 실행 중 — 아직 푸시 없음), `STP-push-glance/no-pr`(PR 없는 실행), `STP-push-glance/excluded`(제외 레포 — 여정 밖 종료), `STP-open-from-push/from-tab`(푸시 놓침 후 탭 직접 진입), `STP-open-from-push/commit-group`(커밋 단위 그룹), `STP-ack-item/done`(확인 완료 — 여정 완료), `STP-ack-item/bulk`(그룹 모두 확인)
+- **분기 상태**: `STP-push-glance/in-progress`(CI 실행 중 — 아직 푸시 없음), `STP-push-glance/no-pr`(PR 없는 실행), `STP-push-glance/excluded`(제외 레포 — 여정 밖 종료), `STP-open-from-push/from-tab`(푸시 놓침 후 탭 직접 진입), `STP-open-from-push/commit-group`(커밋 단위 그룹), `STP-open-from-push/loading`(이력 불러오는 중), `STP-open-from-push/empty`(도착한 알림 없음 — 여정 밖 종료), `STP-open-from-push/error`(이력 불러오기 실패 — 다시 시도), `STP-open-from-push/excluded-sheet`(여정 밖 — 제외 레포 관리 시트), `STP-open-from-push/settings-sheet`(여정 밖 — 알림 설정 시트), `STP-ack-item/done`(확인 완료 — 여정 완료), `STP-ack-item/bulk`(그룹 모두 확인)
 - **단계별 화면**: 단계·분기 상태마다 보이는 화면(`.screen[data-screen]`) 식별자. 하네스가 페이지의 실제 DOM과 대조한다.
   - `STP-push-glance`: `lock-screen`
   - `STP-push-glance/in-progress`: `lock-screen`
@@ -61,10 +61,20 @@ last_updated: 2026-10-28
   - `STP-open-from-push`: `pr-monitor-history`
   - `STP-open-from-push/from-tab`: `pr-monitor-history`
   - `STP-open-from-push/commit-group`: `pr-monitor-history`
+  - `STP-open-from-push/loading`: `pr-monitor-history`
+  - `STP-open-from-push/empty`: `pr-monitor-history`
+  - `STP-open-from-push/error`: `pr-monitor-history`
+  - `STP-open-from-push/excluded-sheet`: `pr-monitor-excluded-sheet`, `pr-monitor-history`
+  - `STP-open-from-push/settings-sheet`: `pr-monitor-history`, `pr-monitor-settings-sheet`
   - `STP-check-details`: `in-app-browser`
   - `STP-ack-item`: `pr-monitor-history`
   - `STP-ack-item/done`: `pr-monitor-history`
   - `STP-ack-item/bulk`: `pr-monitor-history`
+- **의도적 제외**: 근거(여정 문서·구현 화면) 대비 그리지 않은 화면·상태와 사유. 하네스는 항목의 사유 유무와, 제외한 화면 식별자가 페이지에 실제로 그려져 있지 않은지를 본다.
+  - `open-pull-requests-sheet`: 헤더 「열린 PR」 시트(`OpenPullRequestsSheet`)는 여정 문서 §1이 이 여정 밖(AC1~AC5·AC9·AC10)이라 명시한 별개 흐름이다. 필터·오류 배너까지 자체 상태가 많아 별도 슬라이스로 그린다. 헤더 버튼은 그려 두되 시트로 연결하지 않는다.
+  - `pr-monitor-signout-dialog`: 알림 설정 시트의 「로그아웃」 확인 다이얼로그(`confirmationDialog`)는 인증 해제 흐름이라 푸시 → 확인 처리 여정과 무관하다. 로그아웃 버튼은 그려 두되 연결하지 않는다.
+  - `pr-monitor-permission-notice`: 시스템 알림 권한이 꺼졌을 때 설정 시트 상단 안내(`permissionNotice`)는 이 여정이 알림 수신을 전제(여정 문서 §2 진입 맥락)하는 범위 밖의 상태다.
+  - `pr-monitor-excluded-sheet/empty`, `pr-monitor-excluded-sheet/error`, `pr-monitor-settings-sheet/error`: 제외 레포 목록 비었을 때 문구·추가 실패 메시지·설정 저장 실패 메시지는 여정 밖 시트의 내부 변형이라 시트 기본 모습만 그린다.
 - **원본 화면 mockup**: screen-pr-monitor-push, screen-pr-monitor-history
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
@@ -113,8 +123,8 @@ last_updated: 2026-10-28
 - **화면 = 기기 프레임(`.frame`) 하나, 그 위에 뜨는 시트·다이얼로그·토스트·잠금 해제 패널은 각각 별개 화면**이다. 프레임과 오버레이 모두 `class="screen"`과 `data-screen`을 갖는다.
 - **같은 화면은 단계·여정이 달라도 같은 식별자**다(예: 잠금 화면은 `lock-screen`, PR 모니터 이력은 `pr-monitor-history`, 승인 상세는 `approval-detail`). 상태는 식별자에 넣지 않고 기존 `data-state`로 표현한다.
 - 식별자는 소문자 kebab-case이며 한 단계·상태에서 동시에 보이는 화면 집합이 위 각 여정의 「단계별 화면」 목록과 같아야 한다.
-- 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 해당 요소 없음).
-- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. 대조가 끝나기 전까지 「의도적 제외」 등재는 없다.
+- 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 `JRN-ci-push-to-ack`의 헤더 시트 버튼·시트).
+- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. `JRN-ci-push-to-ack`은 대조를 마쳐 누락을 그리거나 「의도적 제외」로 등재했다. `JRN-affirmation-daily-exposure`·`JRN-approval-push-to-decision`은 아직 대조 전이라 「의도적 제외」 등재가 없다.
 
 ## 디자인 시스템 매핑
 

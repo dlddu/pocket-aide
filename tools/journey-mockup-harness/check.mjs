@@ -346,6 +346,22 @@ function checkIndexes(pages) {
           if (!listed) fail('5i', 'docs/mockups/_index.md', `${id} 의 「단계별 화면」에 ${node} 가 없다`);
           else if (listed.join() !== actual.join()) fail('5i', 'docs/mockups/_index.md', `${id} 의 ${node} 화면 목록 [${listed}] ≠ 페이지 [${actual}]`);
         }
+        // 5(i)-4: 「의도적 제외」 — 항목마다 사유가 있고, 제외했다는 화면이 페이지에 실제로 그려져 있지 않다
+        const exAt = subLines.findIndex((l) => /^-\s+\*\*의도적 제외\*\*/.test(l));
+        if (exAt >= 0) {
+          const drawn = new Set([...info.screens.values()].flat());
+          const exBlock = subLines.slice(exAt + 1).filter((l, i, arr) => arr.slice(0, i + 1).every((x) => /^\s+-\s/.test(x)));
+          for (const l of exBlock) {
+            checks++;
+            const m = l.match(/^\s+-\s+((?:`[^`]+`(?:,\s*)?)+):\s*(\S.*)$/);
+            if (!m) { fail('5i', 'docs/mockups/_index.md', `${id} 의 「의도적 제외」 항목에 식별자 또는 사유가 없다: ${l.trim().slice(0, 60)}`); continue; }
+            for (const k of m[1].matchAll(/`([^`]+)`/g)) {
+              const key = k[1];
+              if (!/^[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)?$/.test(key)) fail('5i', 'docs/mockups/_index.md', `${id} 의 「의도적 제외」 식별자 "${key}" 형식이 맞지 않다`);
+              else if (!key.includes('/') && drawn.has(key)) fail('5i', 'docs/mockups/_index.md', `${id} 의 「의도적 제외」 ${key} 는 페이지에 그려져 있다`);
+            }
+          }
+        }
         for (const node of listedScreens.keys()) if (!info.screens.has(node)) fail('5i', 'docs/mockups/_index.md', `${id} 의 「단계별 화면」 ${node} 가 페이지에 없다`);
       }
     }
