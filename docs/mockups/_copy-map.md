@@ -728,6 +728,7 @@ last_updated: 2026-10-27
 | `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-widget` | `홈 스크린 · 큰 위젯 (4×4)` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `홈 스크린 · 초대형 위젯 (4×6 · iOS 27)` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
 | `screen-widget` | `서울` | 예시 데이터 | 날씨 슬라이스 지명 라벨(`WeatherSection` 이 앱이 저장한 위치의 역지오코딩 `placeName` 으로 그린다) |
 | `screen-widget` | `18°` | 외부 `ios/Shared/Sources/PocketAideAPI/Weather.swift` | 현재 기온 — 값은 데이터, 「°」 서식은 `Weather.temperatureLabel` |
@@ -758,12 +759,12 @@ last_updated: 2026-10-27
 | `screen-widget` | `사파리` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `음악` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
 | `screen-widget` | `중간 크기 (4×2 축약)` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `14:00` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `분기 리뷰` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `회의실 4` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `메일 3` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
-| `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 는 `.systemLarge` 뿐 |
+| `screen-widget` | `14:00` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `분기 리뷰` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `회의실 4` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `메일 3` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
+| `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
 | `screen-widget` | `크기에 따라 영역의 표현 방식 축약 — AC1` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-widget` | `다짐 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
 | `screen-widget` | `다짐 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
