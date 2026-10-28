@@ -226,7 +226,7 @@
 
   <section data-step="STP-add-affirmation" data-title="다짐 문장 등록">
     <div class="stage">
-      <div class="default"><div class="frame area-affirm">
+      <div class="default"><div class="screen frame area-affirm" data-screen="affirmations">
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
@@ -242,7 +242,7 @@
   <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
 </nav>
 <div class="backdrop"></div>
-<div class="sheet" role="dialog" aria-label="새 다짐">
+<div class="screen sheet" role="dialog" aria-label="새 다짐" data-screen="affirmation-new-sheet">
   <div class="handle"></div>
   <h2>새 다짐</h2>
   <textarea class="field serif" rows="3" aria-label="다짐 문장">결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</textarea>
@@ -256,7 +256,7 @@
 </div>
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
 </div></div>
-      <div class="frame area-scratch" data-state="from-scratchpad" hidden>
+      <div class="screen frame area-scratch" data-screen="scratchpad" data-state="from-scratchpad" hidden>
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="s-header"><div class="area-label">임시 공간 <b class="badge">12</b></div><h1>분류되지 않은 메모</h1></header>
 <main class="s-main">
@@ -277,7 +277,7 @@
 </nav>
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
 </div>
-      <div class="frame area-affirm" data-state="scratchpad-priority" hidden>
+      <div class="screen frame area-affirm" data-screen="affirmations" data-state="scratchpad-priority" hidden>
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
@@ -293,7 +293,7 @@
   <span class="tab is-active"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 6.5-7 11-7 11z"/></svg>다짐</span>
 </nav>
 <div class="backdrop"></div>
-<div class="sheet" role="dialog" aria-label="우선순위 설정">
+<div class="screen sheet" role="dialog" aria-label="우선순위 설정" data-screen="affirmation-priority-sheet">
   <div class="handle"></div>
   <h2>우선순위 설정</h2>
   <div class="preview serif"><span class="quote serif">"</span>결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.</div>
@@ -307,7 +307,7 @@
 </div>
 <div class="home-bar-wrap"><i class="home-bar"></i></div>
 </div>
-      <div class="frame area-affirm" data-state="cancelled" data-end="이탈: 저장하지 않고 닫음 — 다짐이 추가되지 않고 여정 종료" hidden>
+      <div class="screen frame area-affirm" data-screen="affirmations" data-state="cancelled" data-end="이탈: 저장하지 않고 닫음 — 다짐이 추가되지 않고 여정 종료" hidden>
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
@@ -334,7 +334,7 @@
 
   <section data-step="STP-rotation-in-app" data-title="앱에서 회전 문장 마주치기">
     <div class="stage">
-      <div class="default"><div class="frame area-affirm">
+      <div class="default"><div class="screen frame area-affirm" data-screen="affirmations">
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
@@ -357,7 +357,7 @@
 
 <button type="button" class="home-bar-btn" data-go="STP-widget-glance" aria-label="홈 화면으로 스와이프"><i class="home-bar"></i><span>홈 화면으로 스와이프</span></button>
 </div></div>
-      <div data-state="empty" hidden><div class="frame area-affirm">
+      <div data-state="empty" hidden><div class="screen frame area-affirm" data-screen="affirmations">
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
@@ -389,7 +389,7 @@
 
   <section data-step="STP-widget-glance" data-title="홈 화면 위젯에서 마주치기">
     <div class="stage">
-      <div class="default"><div class="frame home-screen">
+      <div class="default"><div class="screen frame home-screen" data-screen="home-screen-widget">
 <div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <div class="widget-wrap"><div class="widget">
   <div class="w-row">
@@ -406,7 +406,7 @@
 <div class="dock"><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#fff;--c2:#fff;color:#000">메일</span><span class="app" style="--c1:#000;--c2:#333">사파리</span><span class="app" style="--c1:#ff2d55;--c2:#ff375f">음악</span></div>
 <div class="home-bar-wrap"><i class="home-bar light"></i></div>
 </div></div>
-      <div class="frame home-screen" data-state="delayed" hidden>
+      <div class="screen frame home-screen" data-screen="home-screen-widget" data-state="delayed" hidden>
 <div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <div class="widget-wrap"><div class="widget">
   <div class="w-row">
@@ -423,7 +423,7 @@
 <div class="dock"><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#fff;--c2:#fff;color:#000">메일</span><span class="app" style="--c1:#000;--c2:#333">사파리</span><span class="app" style="--c1:#ff2d55;--c2:#ff375f">음악</span></div>
 <div class="home-bar-wrap"><i class="home-bar light"></i></div>
 </div>
-      <div class="frame home-screen" data-state="no-widget" data-end="이탈: 위젯 미설치 — 앱 안의 회전 노출까지만 이어지고 여정 종료" hidden>
+      <div class="screen frame home-screen" data-screen="home-screen" data-state="no-widget" data-end="이탈: 위젯 미설치 — 앱 안의 회전 노출까지만 이어지고 여정 종료" hidden>
 <div class="status light"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <div class="grid-apps"><span class="app" style="--c1:#8e8e93;--c2:#636366">설정</span><span class="app" style="--c1:#ffcc00;--c2:#ff9500">메모</span><span class="app" style="--c1:#1c2624;--c2:#5E8B73">PA</span><span class="app" style="--c1:#0a84ff;--c2:#0060df">지도</span></div>
 <div class="apps"><span class="app" style="--c1:#34c759;--c2:#1d8a3a">전화</span><span class="app" style="--c1:#65d96d;--c2:#2dac41">메시지</span><span class="app" style="--c1:#5ac8fa;--c2:#0a84ff">사진</span><span class="app" style="--c1:#ff9500;--c2:#ff5500">캘린더</span></div>
@@ -438,7 +438,7 @@
   </section>
 
   <section data-step="STP-widget-to-app" data-title="위젯에서 다짐 탭으로" data-end="여정 완료 — 위젯 노출 후 다짐 탭 진입">
-    <div class="stage"><div class="default"><div class="frame area-affirm">
+    <div class="stage"><div class="default"><div class="screen frame area-affirm" data-screen="affirmations">
 <div class="status"><span>9:41</span><i class="island"></i><span class="batt"></span></div>
 <header class="a-header">
   <div><div class="area-label">다짐</div><h1 class="serif">자주 읽어줘야 할 것</h1></div>
