@@ -53,7 +53,7 @@ final class ExternalNotificationsViewModel: ObservableObject {
         }
     }
 
-    /// The notification a push tap names, from the loaded list when it is there and otherwise from the server.
+    /// The notification a push tap names, which may not be in the loaded page.
     func notification(id: Int64) async -> ExternalNotification? {
         if let loaded = items.first(where: { $0.id == id }) {
             return loaded

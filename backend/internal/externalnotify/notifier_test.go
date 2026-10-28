@@ -118,7 +118,7 @@ func TestLongBodyIsCutToFitThePayload(t *testing.T) {
 	if !strings.HasSuffix(body, "…") || !strings.HasPrefix(long, strings.TrimSuffix(body, "…")) {
 		t.Fatalf("body should be a prefix of the input ending in …")
 	}
-	if size := apns.PayloadSize(got[0].title, body, got[0].data); size > apns.MaxPayloadBytes {
+	if size := apns.PayloadSize("", got[0].title, body, got[0].data); size > apns.MaxPayloadBytes {
 		t.Fatalf("payload %d bytes > %d", size, apns.MaxPayloadBytes)
 	}
 }

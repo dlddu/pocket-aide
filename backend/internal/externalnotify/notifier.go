@@ -48,7 +48,7 @@ func (n *Notifier) Send(ctx context.Context, userID, notificationID int64, title
 	}
 	res := Result{Devices: len(tokens)}
 	data := Data(notificationID)
-	body = apns.FitAlertBody(title, body, data)
+	body = apns.FitAlertBody("", title, body, data)
 	for _, t := range tokens {
 		err := n.sender.SendWithData(ctx, t, title, body, data)
 		if err == nil {

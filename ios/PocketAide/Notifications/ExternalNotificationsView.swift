@@ -2,7 +2,6 @@ import DesignSystem
 import PocketAideAPI
 import SwiftUI
 
-/// PRD-12 AC17 알림 기록 — notifications external callers sent, with who sent them.
 struct ExternalNotificationsView: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase

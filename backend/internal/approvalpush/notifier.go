@@ -10,8 +10,10 @@ import (
 )
 
 type Sender interface {
-	SendWithData(ctx context.Context, deviceToken, title, body string, data map[string]any) error
+	SendWithCategory(ctx context.Context, deviceToken, category, title, body string, data map[string]any) error
 }
+
+const Category = "APPROVAL_REQUEST"
 
 type Tokens interface {
 	ListByUserID(ctx context.Context, userID int64) ([]string, error)
@@ -59,9 +61,9 @@ func (n *Notifier) Send(ctx context.Context, req Request) {
 	}
 	title := Title(req.KeyName)
 	data := Data(req.ApprovalID)
-	body := apns.FitAlertBody(title, req.Context, data)
+	body := apns.FitAlertBody(Category, title, req.Context, data)
 	for _, t := range tokens {
-		err := n.sender.SendWithData(ctx, t, title, body, data)
+		err := n.sender.SendWithCategory(ctx, t, Category, title, body, data)
 		if err == nil {
 			continue
 		}

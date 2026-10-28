@@ -133,6 +133,28 @@ function visibleText(w, root) {
   return out.filter((t) => visible(w, t.parentElement)).map((t) => t.data);
 }
 
+const SCREEN_OVERLAYS = '.frame, .sheet, .dialog, .toast, .unlock, [role=dialog], [role=alertdialog]';
+
+function checkScreens(pg, at_) {
+  const { w, d } = pg;
+  checks++;
+  const ids = [];
+  for (const el of d.querySelectorAll(SCREEN_OVERLAYS)) {
+    if (isWrapper(el) || !visible(w, el)) continue;
+    const id = el.matches('.screen[data-screen]') ? el.dataset.screen.trim() : '';
+    if (!id) fail('5i', at_, `화면 식별자가 없다: <${el.tagName.toLowerCase()} class="${el.className}">`);
+    else if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) fail('5i', at_, `화면 식별자 "${id}" 는 소문자 kebab-case 가 아니다`);
+    else ids.push(id);
+  }
+  for (const el of d.querySelectorAll('.screen[data-screen]')) {
+    if (!el.matches(SCREEN_OVERLAYS)) fail('5i', at_, `.screen[data-screen="${el.dataset.screen}"] 가 프레임·오버레이가 아닌 요소다`);
+  }
+  checks++;
+  if (!ids.length) fail('5i', at_, '보이는 화면이 없다');
+  if (new Set(ids).size !== ids.length) fail('5i', at_, `같은 화면 식별자가 한 번에 둘 이상 보인다: ${ids.join(', ')}`);
+  return [...new Set(ids)].sort();
+}
+
 function checkMeta(pg, at_) {
   checks++;
   for (const t of visibleText(pg.w, pg.d.body)) {
@@ -247,6 +269,7 @@ async function checkPage(journey, file) {
 
   const edges = new Map();
   const ends = new Map();
+  const screens = new Map();
   for (const n of nodes) {
     const [step, state] = n.split('/');
     const pg = await load(file, n);
@@ -256,6 +279,7 @@ async function checkPage(journey, file) {
     if (at.step !== step || at.state !== (state || null)) { fail('5f', `${rel}#${n}`, `딥링크가 ${key(at.step, at.state)} 을 연다`); continue; }
     for (const e of pg.errors) fail('5h', `${rel}#${n}`, `스크립트 오류: ${e}`);
     checkMeta(pg, `${rel}#${n}`);
+    screens.set(n, checkScreens(pg, `${rel}#${n}`));
     checkInputs(pg, at, `${rel}#${n}`);
     ends.set(n, at.end);
     edges.set(n, await outgoing(file, n, actions(pg, at).length));
@@ -286,7 +310,7 @@ async function checkPage(journey, file) {
   checks++;
   if (!sections[sections.length - 1].getAttribute('data-end')) fail('5g', `${rel}#${pageSteps[pageSteps.length - 1]}`, '마지막 단계에 data-end 가 없다');
 
-  return { pageSteps, states };
+  return { pageSteps, states, screens };
 }
 
 function checkIndexes(pages) {
@@ -306,6 +330,37 @@ function checkIndexes(pages) {
       const got = new Set([...sub.matchAll(/`(STP-[^`/]+\/[^`]+)`/g)].map((m) => m[1]));
       for (const k of want) if (!got.has(k)) fail('7', 'docs/mockups/_index.md', `${id} 의 분기 상태에 ${k} 가 없다`);
       for (const k of got) if (!want.has(k)) fail('7', 'docs/mockups/_index.md', `${id} 의 분기 상태 ${k} 가 페이지에 없다`);
+      const listedScreens = new Map();
+      const subLines = sub.split('\n');
+      const at = subLines.findIndex((l) => /^-\s+\*\*단계별 화면\*\*/.test(l));
+      const block = at < 0 ? null : subLines.slice(at + 1).filter((l, i, arr) => arr.slice(0, i + 1).every((x) => /^\s+-\s/.test(x))).join('\n');
+      if (block === null) fail('5i', 'docs/mockups/_index.md', `${id} 에 「단계별 화면」 목록이 없다`);
+      else {
+        for (const m of block.matchAll(/^\s+-\s+`(STP-[^`]+)`:\s*(.+)$/gm)) {
+          listedScreens.set(m[1], [...m[2].matchAll(/`([^`]+)`/g)].map((x) => x[1]).sort());
+        }
+        for (const [node, actual] of info.screens) {
+          const listed = listedScreens.get(node);
+          if (!listed) fail('5i', 'docs/mockups/_index.md', `${id} 의 「단계별 화면」에 ${node} 가 없다`);
+          else if (listed.join() !== actual.join()) fail('5i', 'docs/mockups/_index.md', `${id} 의 ${node} 화면 목록 [${listed}] ≠ 페이지 [${actual}]`);
+        }
+        const exAt = subLines.findIndex((l) => /^-\s+\*\*의도적 제외\*\*/.test(l));
+        if (exAt >= 0) {
+          const drawn = new Set([...info.screens.values()].flat());
+          const exBlock = subLines.slice(exAt + 1).filter((l, i, arr) => arr.slice(0, i + 1).every((x) => /^\s+-\s/.test(x)));
+          for (const l of exBlock) {
+            checks++;
+            const m = l.match(/^\s+-\s+((?:`[^`]+`(?:,\s*)?)+):\s*(\S.*)$/);
+            if (!m) { fail('5i', 'docs/mockups/_index.md', `${id} 의 「의도적 제외」 항목에 식별자 또는 사유가 없다: ${l.trim().slice(0, 60)}`); continue; }
+            for (const k of m[1].matchAll(/`([^`]+)`/g)) {
+              const key = k[1];
+              if (!/^[a-z0-9]+(-[a-z0-9]+)*(\/[a-z0-9]+(-[a-z0-9]+)*)?$/.test(key)) fail('5i', 'docs/mockups/_index.md', `${id} 의 「의도적 제외」 식별자 "${key}" 형식이 맞지 않다`);
+              else if (!key.includes('/') && drawn.has(key)) fail('5i', 'docs/mockups/_index.md', `${id} 의 「의도적 제외」 ${key} 는 페이지에 그려져 있다`);
+            }
+          }
+        }
+        for (const node of listedScreens.keys()) if (!info.screens.has(node)) fail('5i', 'docs/mockups/_index.md', `${id} 의 「단계별 화면」 ${node} 가 페이지에 없다`);
+      }
     }
     if (!linked.has(id)) fail('7', 'docs/index.html', `journeys/${id}/ 링크가 없다`);
   }
