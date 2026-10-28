@@ -1,6 +1,6 @@
 ---
 type: mockup-index
-last_updated: 2026-10-27
+last_updated: 2026-10-28
 ---
 
 # Mockup 인덱스
@@ -28,6 +28,17 @@ last_updated: 2026-10-27
 - **달성 가치**: V4 (의도된 반복 노출)
 - **담은 단계**: `STP-add-affirmation`, `STP-rotation-in-app`, `STP-widget-glance`, `STP-widget-to-app`
 - **분기 상태**: `STP-add-affirmation/from-scratchpad`(우회 — 임시공간 화면), `STP-add-affirmation/scratchpad-priority`(우회 — 이동 즉시 보통 저장 + 우선순위 시트, PR #64 구현 기준), `STP-add-affirmation/cancelled`(시트 취소 — 저장 안 함, 여정 밖 종료), `STP-rotation-in-app/empty`(문장 없음), `STP-widget-glance/delayed`(위젯 갱신 대기), `STP-widget-glance/no-widget`(위젯 미설치 — 여정 밖 종료)
+- **단계별 화면**: 단계·분기 상태마다 보이는 화면(`.screen[data-screen]`) 식별자. 하네스가 페이지의 실제 DOM과 대조한다.
+  - `STP-add-affirmation`: `affirmations`, `affirmation-new-sheet`
+  - `STP-add-affirmation/from-scratchpad`: `scratchpad`
+  - `STP-add-affirmation/scratchpad-priority`: `affirmations`, `affirmation-priority-sheet`
+  - `STP-add-affirmation/cancelled`: `affirmations`
+  - `STP-rotation-in-app`: `affirmations`
+  - `STP-rotation-in-app/empty`: `affirmations`
+  - `STP-widget-glance`: `home-screen-widget`
+  - `STP-widget-glance/delayed`: `home-screen-widget`
+  - `STP-widget-glance/no-widget`: `home-screen`
+  - `STP-widget-to-app`: `affirmations`
 - **원본 화면 mockup**: screen-affirmations, screen-affirmations-priority-edit, screen-widget, screen-scratchpad
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (§1), `다짐 회전 노출` (§7), `편집 시트` (§9 — 입력 시트·우선순위 시트), `임시공간 분류 흐름` (§8), `시스템 통합 — 위젯` (§6.2)
@@ -42,6 +53,18 @@ last_updated: 2026-10-27
 - **달성 가치**: V9 (개발 워크플로우 인지 부하 감소)
 - **담은 단계**: `STP-push-glance`, `STP-open-from-push`, `STP-check-details`, `STP-ack-item`
 - **분기 상태**: `STP-push-glance/in-progress`(CI 실행 중 — 아직 푸시 없음), `STP-push-glance/no-pr`(PR 없는 실행), `STP-push-glance/excluded`(제외 레포 — 여정 밖 종료), `STP-open-from-push/from-tab`(푸시 놓침 후 탭 직접 진입), `STP-open-from-push/commit-group`(커밋 단위 그룹), `STP-ack-item/done`(확인 완료 — 여정 완료), `STP-ack-item/bulk`(그룹 모두 확인)
+- **단계별 화면**: 단계·분기 상태마다 보이는 화면(`.screen[data-screen]`) 식별자. 하네스가 페이지의 실제 DOM과 대조한다.
+  - `STP-push-glance`: `lock-screen`
+  - `STP-push-glance/in-progress`: `lock-screen`
+  - `STP-push-glance/no-pr`: `lock-screen`
+  - `STP-push-glance/excluded`: `lock-screen`
+  - `STP-open-from-push`: `pr-monitor-history`
+  - `STP-open-from-push/from-tab`: `pr-monitor-history`
+  - `STP-open-from-push/commit-group`: `pr-monitor-history`
+  - `STP-check-details`: `in-app-browser`
+  - `STP-ack-item`: `pr-monitor-history`
+  - `STP-ack-item/done`: `pr-monitor-history`
+  - `STP-ack-item/bulk`: `pr-monitor-history`
 - **원본 화면 mockup**: screen-pr-monitor-push, screen-pr-monitor-history
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
@@ -56,6 +79,24 @@ last_updated: 2026-10-27
 - **달성 가치**: V9 (개발 워크플로우 인지 부하 감소 — 범위의 「결정」)
 - **담은 단계**: `STP-request-glance`, `STP-open-request`, `STP-judge-context`, `STP-confirm-decision`
 - **분기 상태**: `STP-request-glance/actions`(잠금 화면 알림 액션 펼침), `STP-request-glance/unlock`(승인 전 잠금 해제 요구), `STP-request-glance/approved-lock`(잠금 화면 승인 — 여정 완료), `STP-request-glance/rejected-lock`(잠금 화면 거절 — 여정 완료), `STP-request-glance/auto-mode`(자동 응답 모드 — 여정 밖 종료), `STP-open-request/from-list`(푸시 놓침 후 승인 탭 대기 목록에서 진입), `STP-open-request/expired`(결정 전 만료 — 미완료 종료), `STP-judge-context/suspicious`(폐기 키·이름 불일치 경고), `STP-confirm-decision/confirm-reject`(거절 확인), `STP-confirm-decision/approved`(승인 — 여정 완료), `STP-confirm-decision/rejected`(거절 — 여정 완료), `STP-confirm-decision/send-failed`(전송 실패 — 결정되지 않음, 재시도), `STP-confirm-decision/already`(다른 기기에서 먼저 처리)
+- **단계별 화면**: 단계·분기 상태마다 보이는 화면(`.screen[data-screen]`) 식별자. 하네스가 페이지의 실제 DOM과 대조한다.
+  - `STP-request-glance`: `lock-screen`
+  - `STP-request-glance/actions`: `lock-screen`
+  - `STP-request-glance/unlock`: `lock-screen`, `lock-unlock-prompt`
+  - `STP-request-glance/approved-lock`: `lock-screen`
+  - `STP-request-glance/rejected-lock`: `lock-screen`
+  - `STP-request-glance/auto-mode`: `lock-screen`
+  - `STP-open-request`: `approval-detail`
+  - `STP-open-request/from-list`: `approval-list`
+  - `STP-open-request/expired`: `approval-detail`
+  - `STP-judge-context`: `approval-detail`
+  - `STP-judge-context/suspicious`: `approval-detail`
+  - `STP-confirm-decision`: `approval-detail`, `approval-confirm-dialog`
+  - `STP-confirm-decision/confirm-reject`: `approval-detail`, `approval-reject-dialog`
+  - `STP-confirm-decision/approved`: `approval-detail`
+  - `STP-confirm-decision/rejected`: `approval-detail`
+  - `STP-confirm-decision/send-failed`: `approval-detail`
+  - `STP-confirm-decision/already`: `approval-detail`
 - **원본 화면 mockup**: 없음 (PRD-12 승인 탭 화면 mockup 미작성 — 이 여정 mockup이 승인 화면의 첫 그림)
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
@@ -64,6 +105,16 @@ last_updated: 2026-10-27
   - 디자인 시스템 밖 값: 잠금 화면 벽지·알림 카드·알림 액션·잠금 해제 시트·확인 다이얼로그(§1.8/§6.1 iOS 컨벤션 차용), 승인 탭 아이콘(shield-check 형태 인라인 SVG), 탭 배지(iOS 시스템 빨강 대신 §1.11 강조색), 요청 상세·카운트다운·결정 버튼 레이아웃(components/patterns에 승인 화면 항목 없음 — 승인 탭 화면 mockup 작성 시 정식화)
 - **공개 경로**: `journeys/JRN-approval-push-to-decision/`
 - **외부 의존**: 없음
+
+### 화면 식별자 규약
+
+여정 mockup의 모든 화면은 구현 화면과 잇는 키로 `.screen[data-screen="<식별자>"]`를 노출한다. 규약은 journey-mockup-builder의 화면 식별자 규약을 따른다.
+
+- **화면 = 기기 프레임(`.frame`) 하나, 그 위에 뜨는 시트·다이얼로그·토스트·잠금 해제 패널은 각각 별개 화면**이다. 프레임과 오버레이 모두 `class="screen"`과 `data-screen`을 갖는다.
+- **같은 화면은 단계·여정이 달라도 같은 식별자**다(예: 잠금 화면은 `lock-screen`, PR 모니터 이력은 `pr-monitor-history`, 승인 상세는 `approval-detail`). 상태는 식별자에 넣지 않고 기존 `data-state`로 표현한다.
+- 식별자는 소문자 kebab-case이며 한 단계·상태에서 동시에 보이는 화면 집합이 위 각 여정의 「단계별 화면」 목록과 같아야 한다.
+- 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 해당 요소 없음).
+- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. 대조가 끝나기 전까지 「의도적 제외」 등재는 없다.
 
 ## 디자인 시스템 매핑
 
