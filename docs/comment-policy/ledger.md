@@ -26,7 +26,7 @@
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/devicetokens/store.go` | 7 | `2716161b6615` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| — | `backend/internal/externalnotify/notifier.go` | 5 | `69a8803e6884` | — | 2026-10-25 호출자 단순 알림(PRD-12 AC16) 기능 PR 이 들임 — doc 첫 문장 + `Data` 표식의 이유 2줄, 2026-10-27 알림 기록(AC17) PR 이 패키지 doc·`Data` 이유를 고침, 미판정 · 2026-10-27 푸시 → 상세·상세를 열면 확인(AC16·AC17 개정) PR 이 doc 을 고치고 더함, 미판정 |
+| 2026-10-28 | `backend/internal/externalnotify/notifier.go` | 5 | `69a8803e6884` | 완료 | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-externalnotify-notifier.md) |
 | 2026-10-28 | `backend/internal/externalnotify/store.go` | 12 | `d44b76e04e26` | 완료 | 필요성 판정 — 제거 0줄 · 유지 12줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -62,7 +62,7 @@
 | 2026-09-29 | `ios/fastlane/Fastfile` | 1 | `e7198c27c7fd` | 완료 | 필요성 판정 — 제거 6줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-09-29 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 13 | `d35a61f48de6` | 완료 | 필요성 판정 — 제거 24줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-10-09 | `scripts/ci/ios_test_shards.py` | 2 | `c60d84630c62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 2줄 — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
-| 2026-09-29 | `tools/journey-mockup-harness/check.mjs` | 3 | `1b2b6f9a788a` | 완료 | 필요성 판정 — 제거 26줄 · 유지 3줄(개작 2블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
+| 2026-10-28 | `tools/journey-mockup-harness/check.mjs` | 3 | `1b2b6f9a788a` | 완료 | 필요성 판정 — 제거 26줄 · 유지 3줄(개작 2블록 포함) · 2026-10-28 증분 제거 3줄(5(i) 규칙 번호 주석 — README 표 재진술) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 
 ## E — 줄 끝·줄 중간 주석
 
