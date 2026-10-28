@@ -27,7 +27,7 @@ last_updated: 2026-10-28
 - **여정**: `JRN-affirmation-daily-exposure` (`user-journeys/JRN-affirmation-daily-exposure.md`)
 - **달성 가치**: V4 (의도된 반복 노출)
 - **담은 단계**: `STP-add-affirmation`, `STP-rotation-in-app`, `STP-widget-glance`, `STP-widget-to-app`
-- **분기 상태**: `STP-add-affirmation/from-scratchpad`(우회 — 임시공간 화면), `STP-add-affirmation/scratchpad-priority`(우회 — 이동 즉시 보통 저장 + 우선순위 시트, PR #64 구현 기준), `STP-add-affirmation/cancelled`(시트 취소 — 저장 안 함, 여정 밖 종료), `STP-rotation-in-app/empty`(문장 없음), `STP-widget-glance/delayed`(위젯 갱신 대기), `STP-widget-glance/no-widget`(위젯 미설치 — 여정 밖 종료)
+- **분기 상태**: `STP-add-affirmation/from-scratchpad`(우회 — 임시공간 화면), `STP-add-affirmation/scratchpad-priority`(우회 — 이동 즉시 보통 저장 + 우선순위 시트, PR #64 구현 기준), `STP-add-affirmation/cancelled`(시트 취소 — 저장 안 함, 여정 밖 종료), `STP-rotation-in-app/empty`(문장 없음), `STP-rotation-in-app/loading`(목록 불러오는 중), `STP-rotation-in-app/edit-sheet`(여정 밖 — 카드 길게 눌러 우선순위 편집·삭제 시트), `STP-widget-glance/delayed`(위젯 갱신 대기), `STP-widget-glance/empty`(위젯 — 등록된 문장 없음), `STP-widget-glance/no-widget`(위젯 미설치 — 여정 밖 종료)
 - **단계별 화면**: 단계·분기 상태마다 보이는 화면(`.screen[data-screen]`) 식별자. 하네스가 페이지의 실제 DOM과 대조한다.
   - `STP-add-affirmation`: `affirmations`, `affirmation-new-sheet`
   - `STP-add-affirmation/from-scratchpad`: `scratchpad`
@@ -35,10 +35,17 @@ last_updated: 2026-10-28
   - `STP-add-affirmation/cancelled`: `affirmations`
   - `STP-rotation-in-app`: `affirmations`
   - `STP-rotation-in-app/empty`: `affirmations`
+  - `STP-rotation-in-app/loading`: `affirmations`
+  - `STP-rotation-in-app/edit-sheet`: `affirmation-priority-sheet`, `affirmations`
   - `STP-widget-glance`: `home-screen-widget`
   - `STP-widget-glance/delayed`: `home-screen-widget`
+  - `STP-widget-glance/empty`: `home-screen-widget`
   - `STP-widget-glance/no-widget`: `home-screen`
   - `STP-widget-to-app`: `affirmations`
+- **의도적 제외**: 근거(여정 문서·구현 화면) 대비 그리지 않은 화면·상태와 사유. 하네스는 항목의 사유 유무와, 제외한 화면 식별자가 페이지에 실제로 그려져 있지 않은지를 본다.
+  - `affirmations-row-swipe-delete`: 목록 행 왼쪽 스와이프 「삭제」 액션(`AffirmationsView` swipeActions)은 편집 시트의 「삭제」와 같은 삭제 흐름이고 이 여정(등록→노출 접점)의 어느 단계도 지나지 않는다. 삭제 자체는 편집 시트에 그렸다.
+  - `affirmations/sort-recent`: 목록 헤더 정렬 칩 「최신순」을 눌렀을 때의 목록 순서 변형은 PRD-5 AC3 회전 노출과 무관한 목록 보기 옵션이다. 칩은 그려 두되 전환은 연결하지 않는다.
+  - `home-screen-widget/error`: 위젯이 서버를 못 불러왔을 때의 폴백 모습은 위젯 날씨·일정·메일 영역의 것이고 다짐 노출 접점의 상태가 아니다(이 여정은 다짐 영역만 다룬다 — 여정 문서 §1).
 - **원본 화면 mockup**: screen-affirmations, screen-affirmations-priority-edit, screen-widget, screen-scratchpad
 - **사용 디자인 시스템**:
   - 패턴: `영역 화면` (§1), `다짐 회전 노출` (§7), `편집 시트` (§9 — 입력 시트·우선순위 시트), `임시공간 분류 흐름` (§8), `시스템 통합 — 위젯` (§6.2)
@@ -124,7 +131,7 @@ last_updated: 2026-10-28
 - **같은 화면은 단계·여정이 달라도 같은 식별자**다(예: 잠금 화면은 `lock-screen`, PR 모니터 이력은 `pr-monitor-history`, 승인 상세는 `approval-detail`). 상태는 식별자에 넣지 않고 기존 `data-state`로 표현한다.
 - 식별자는 소문자 kebab-case이며 한 단계·상태에서 동시에 보이는 화면 집합이 위 각 여정의 「단계별 화면」 목록과 같아야 한다.
 - 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 `JRN-ci-push-to-ack`의 헤더 시트 버튼·시트).
-- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. `JRN-ci-push-to-ack`은 대조를 마쳐 누락을 그리거나 「의도적 제외」로 등재했다. `JRN-affirmation-daily-exposure`·`JRN-approval-push-to-decision`은 아직 대조 전이라 「의도적 제외」 등재가 없다.
+- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. `JRN-ci-push-to-ack`은 대조를 마쳐 누락을 그리거나 「의도적 제외」로 등재했다. `JRN-affirmation-daily-exposure`도 대조를 마쳤다. `JRN-approval-push-to-decision`은 아직 대조 전이라 「의도적 제외」 등재가 없다.
 
 ## 디자인 시스템 매핑
 
