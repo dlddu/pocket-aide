@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-27
+last_updated: 2026-10-28
 ---
 
 # 카피 ↔ 구현 대응표
@@ -36,28 +36,28 @@ last_updated: 2026-10-27
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 10행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 14행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 250 |
-| A | 데이터 | 8 |
-| A | 비표시 | 40 |
+| A | 일치 | 253 |
+| A | 데이터 | 9 |
+| A | 비표시 | 43 |
 | A | 시스템 UI | 2 |
 | A | 미구현 영역 | 0 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 8 |
-| A | 목업 대기 | 10 |
-| B | 일치 | 291 |
-| B | 외부 | 77 |
-| B | 예시 데이터 | 183 |
-| B | 목업 전용 | 159 |
+| A | 목업 대기 | 14 |
+| B | 일치 | 295 |
+| B | 외부 | 79 |
+| B | 예시 데이터 | 188 |
+| B | 목업 전용 | 160 |
 | B | 미구현 영역 | 10 |
 | B | 기준 4 | 4 |
 | B | 시스템 UI | 11 |
 | B | 구현 대기 | 19 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 323행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 334행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -330,6 +330,17 @@ last_updated: 2026-10-27
 | `ios/PocketAide/Sessions/SessionDetailView.swift` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
 | `ios/PocketAide/Sessions/SessionDetailView.swift` | `복원하는 중…` | 목업 대기 | 복원 진행 중 버튼 — 목업 없음 |
 | `ios/PocketAide/Sessions/SessionDetailView.swift` | `복원` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `sessions.detail.turn.\(turn.seq)` | 비표시 | turn 행 접근성 id |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `#\(turn.seq)` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `입력` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `빈 프롬프트` | 목업 대기 | 입력이 빈 turn 의 접기 줄 자리표시 — 목업은 입력이 있는 turn 만 그린다 |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `앞부분이 생략돼 입력을 볼 수 없어요` | 목업 대기 | 입력 앞부분이 표시 한도에서 잘린 turn 의 자리표시 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `\(key).input` | 비표시 | 입력 구역 접근성 id |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `출력` | 일치 | `screen-sessions` |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `출력이 없어요` | 목업 대기 | 끝난 turn 인데 출력이 빈 경우의 자리표시 — 목업 없음 |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `응답을 기다리는 중…` | 목업 대기 | 진행 중 turn 의 출력이 아직 빈 경우의 자리표시 — 목업의 진행 중 turn 은 출력이 이미 흐르는 모습만 그린다 |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `\(key).output` | 비표시 | 출력 구역 접근성 id |
+| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `\(title) \(isExpanded ? "접기" : "펼치기")` | 데이터 | 접기·펼치기 버튼의 접근성 라벨(구역 제목 + 상태) — 보간만 있다 |
 | `ios/PocketAide/Sessions/SessionsView.swift` | `AGENT · SESSIONS` | 일치 | `screen-sessions` |
 | `ios/PocketAide/Sessions/SessionsView.swift` | `에이전트 세션` | 일치 | `screen-sessions` |
 | `ios/PocketAide/Sessions/SessionsView.swift` | `새 세션` | 일치 | `screen-sessions` |
@@ -385,7 +396,7 @@ last_updated: 2026-10-27
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
 | `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 754행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 766행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -979,7 +990,18 @@ last_updated: 2026-10-27
 | `screen-sessions` | `보내기` | 일치 | `Sessions/` 화면 파일 |
 | `screen-sessions` | `상세 — 에이전트 응답 중` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `응답 진행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `레포를 클론하고 실패한 테스트를 다시 돌려 볼게요. go test ./internal/handlers/ -run TestSessionList --- FAIL: TestSessionListOrdersByLastAccess expected lastAccess 내림차순, got 생성 순서 원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `#1` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `21:02 · 48초` | 예시 데이터 | turn 시각·소요 값(서식은 `AgentSessionFormatting.turnTiming`) |
+| `screen-sessions` | `완료` | 외부 `ios/Shared/Sources/PocketAideAPI/SessionTranscript.swift` | 공유 API 모델의 표시 문구(turn 상태 라벨) |
+| `screen-sessions` | `입력` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `이 레포 테스트 실패 원인 찾아줘` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `출력` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `#2` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `21:04` | 예시 데이터 | turn 시각·소요 값(서식은 `AgentSessionFormatting.turnTiming`) |
+| `screen-sessions` | `진행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/SessionTranscript.swift` | 공유 API 모델의 표시 문구(turn 상태 라벨) |
+| `screen-sessions` | `lastAccess 로 바꾸고 테스트도 추가해줘` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
+| `screen-sessions` | `네, 비교 함수를 lastAccess 기준으로 바꿀게요. go test ./internal/handlers/ -run TestSessionList ok pocket-aide/backend/internal/handlers 0.41s 정렬 테스트를 하나 더 추가하는 중이에요…` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `상세 — 쉘` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `user@sess:~$ df -h /var/lib Filesystem Size Used Avail Use% Mounted on /dev/nvme0n1p1 80G 71G 9.0G 89% / user@sess:~$ du -sh /var/lib/containerd 38G /var/lib/containerd user@sess:~$` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `명령 입력` | 일치 | `Sessions/` 화면 파일 |
