@@ -3,9 +3,10 @@ description: >
   Starts prebuilt cmd/oidcmock + cmd/server binaries (bin_dir/oidcmock,
   bin_dir/pocket-aide — ci.yml's ios-test-backend job cross-compiles them)
   in the background together with the local GitHub API stub
-  (github_api_stub.py) and the fake APNs receiver (apns_receiver.py), and
-  exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID
-  via $GITHUB_ENV so a later step can kill them. Assumes the caller already
+  (github_api_stub.py), the fake APNs receiver (apns_receiver.py) and the
+  session-platform stub (session_platform_stub.py), and
+  exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID /
+  SESSION_PLATFORM_STUB_PID via $GITHUB_ENV so a later step can kill them. Assumes the caller already
   checked out the repo. Required env vars on the calling
   job (read by the binaries themselves, not this action):
     OIDC_ISSUER, OIDC_AUDIENCE, OIDC_CLIENT_ID, OIDC_REDIRECT_URI,
@@ -36,6 +37,13 @@ inputs:
     required: false
     default: '5558'
 
+  session_platform_port:
+    description: >
+      Port the session-platform stub listens on. Must match the port in the
+      SESSION_PLATFORM_URL the backend reads and in SessionsUITestSupport.
+    required: false
+    default: '5559'
+
 runs:
   using: composite
   steps:
@@ -60,6 +68,17 @@ runs:
         echo "APNS_RECEIVER_PID=$!" >> "$GITHUB_ENV"
         for i in {1..30}; do
           curl -fsS http://localhost:${{ inputs.apns_receiver_port }}/healthz && break || sleep 1
+        done
+    # mock-exception: EXT — 실 세션 플랫폼은 k8s 클러스터·데이터 플레인 이미지·공급자 자격증명이 필요해 macOS 러너에서 못 띄운다; 백엔드가 SESSION_PLATFORM_URL 로 부르는 앱 경로를 로컬 스텁이 대신한다 (docs/e2e-mocking-policy.md)
+    - name: Start session platform stub
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/session_platform_stub.py" ${{ inputs.session_platform_port }} > /tmp/session-platform-stub.log 2>&1 &
+        echo "SESSION_PLATFORM_STUB_PID=$!" >> "$GITHUB_ENV"
+        # mock-exception: EXT — 백엔드의 세션 플랫폼 주소만 로컬 스텁으로 바꾼다; 프록시·카탈로그 검증·정렬·오류 변환은 실경로 (docs/e2e-mocking-policy.md)
+        echo "SESSION_PLATFORM_URL=http://localhost:${{ inputs.session_platform_port }}" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS http://localhost:${{ inputs.session_platform_port }}/healthz && break || sleep 1
         done
     - name: Start backend
       shell: bash
