@@ -135,7 +135,6 @@ function visibleText(w, root) {
 
 const SCREEN_OVERLAYS = '.frame, .sheet, .dialog, .toast, .unlock, [role=dialog], [role=alertdialog]';
 
-// 5(i): 지금 보이는 화면(프레임·시트·다이얼로그·토스트·잠금 해제 패널)은 모두 .screen[data-screen] 이어야 하고, 그 식별자 집합을 돌려준다.
 function checkScreens(pg, at_) {
   const { w, d } = pg;
   checks++;
@@ -331,7 +330,6 @@ function checkIndexes(pages) {
       const got = new Set([...sub.matchAll(/`(STP-[^`/]+\/[^`]+)`/g)].map((m) => m[1]));
       for (const k of want) if (!got.has(k)) fail('7', 'docs/mockups/_index.md', `${id} 의 분기 상태에 ${k} 가 없다`);
       for (const k of got) if (!want.has(k)) fail('7', 'docs/mockups/_index.md', `${id} 의 분기 상태 ${k} 가 페이지에 없다`);
-      // 5(i): 단계·상태별 화면 목록 ↔ 페이지가 실제로 보이는 화면
       const listedScreens = new Map();
       const subLines = sub.split('\n');
       const at = subLines.findIndex((l) => /^-\s+\*\*단계별 화면\*\*/.test(l));
@@ -346,7 +344,6 @@ function checkIndexes(pages) {
           if (!listed) fail('5i', 'docs/mockups/_index.md', `${id} 의 「단계별 화면」에 ${node} 가 없다`);
           else if (listed.join() !== actual.join()) fail('5i', 'docs/mockups/_index.md', `${id} 의 ${node} 화면 목록 [${listed}] ≠ 페이지 [${actual}]`);
         }
-        // 5(i)-4: 「의도적 제외」 — 항목마다 사유가 있고, 제외했다는 화면이 페이지에 실제로 그려져 있지 않다
         const exAt = subLines.findIndex((l) => /^-\s+\*\*의도적 제외\*\*/.test(l));
         if (exAt >= 0) {
           const drawn = new Set([...info.screens.values()].flat());
