@@ -95,7 +95,7 @@ last_updated: 2026-10-28
 - **여정**: `JRN-approval-push-to-decision` (`user-journeys/JRN-approval-push-to-decision.md`)
 - **달성 가치**: V9 (개발 워크플로우 인지 부하 감소 — 범위의 「결정」)
 - **담은 단계**: `STP-request-glance`, `STP-open-request`, `STP-judge-context`, `STP-confirm-decision`
-- **분기 상태**: `STP-request-glance/actions`(잠금 화면 알림 액션 펼침), `STP-request-glance/unlock`(승인 전 잠금 해제 요구), `STP-request-glance/approved-lock`(잠금 화면 승인 — 여정 완료), `STP-request-glance/rejected-lock`(잠금 화면 거절 — 여정 완료), `STP-request-glance/auto-mode`(자동 응답 모드 — 여정 밖 종료), `STP-open-request/from-list`(푸시 놓침 후 승인 탭 대기 목록에서 진입), `STP-open-request/expired`(결정 전 만료 — 미완료 종료), `STP-judge-context/suspicious`(폐기 키·이름 불일치 경고), `STP-confirm-decision/confirm-reject`(거절 확인), `STP-confirm-decision/approved`(승인 — 여정 완료), `STP-confirm-decision/rejected`(거절 — 여정 완료), `STP-confirm-decision/send-failed`(전송 실패 — 결정되지 않음, 재시도), `STP-confirm-decision/already`(다른 기기에서 먼저 처리)
+- **분기 상태**: `STP-request-glance/actions`(잠금 화면 알림 액션 펼침), `STP-request-glance/unlock`(승인 전 잠금 해제 요구), `STP-request-glance/approved-lock`(잠금 화면 승인 — 여정 완료), `STP-request-glance/rejected-lock`(잠금 화면 거절 — 여정 완료), `STP-request-glance/auto-mode`(자동 응답 모드 — 여정 밖 종료), `STP-request-glance/lock-failed`(잠금 화면 액션 전송 실패 — 결정되지 않음), `STP-request-glance/lock-expired`(알림 액션 시점에 이미 만료 — 미완료 종료), `STP-open-request/from-list`(푸시 놓침 후 승인 탭 대기 목록에서 진입), `STP-open-request/expired`(결정 전 만료 — 미완료 종료), `STP-open-request/loading`(대기 목록 불러오는 중 — 이전 목록 유지), `STP-open-request/error`(대기 목록 불러오기 실패 — 다시 시도), `STP-open-request/empty`(대기 요청 없음 — 여정 밖 종료), `STP-open-request/auto-banner`(자동 응답 모드 배너가 선 대기 목록 — 여정 밖 종료), `STP-judge-context/suspicious`(폐기 키·이름 불일치 경고), `STP-judge-context/reload-failed`(상세 재조회 실패 배너 — 다시 시도), `STP-confirm-decision/confirm-reject`(거절 확인), `STP-confirm-decision/approved`(승인 — 여정 완료), `STP-confirm-decision/rejected`(거절 — 여정 완료), `STP-confirm-decision/send-failed`(전송 실패 — 결정되지 않음, 재시도), `STP-confirm-decision/already`(다른 기기에서 먼저 처리)
 - **단계별 화면**: 단계·분기 상태마다 보이는 화면(`.screen[data-screen]`) 식별자. 하네스가 페이지의 실제 DOM과 대조한다.
   - `STP-request-glance`: `lock-screen`
   - `STP-request-glance/actions`: `lock-screen`
@@ -103,17 +103,29 @@ last_updated: 2026-10-28
   - `STP-request-glance/approved-lock`: `lock-screen`
   - `STP-request-glance/rejected-lock`: `lock-screen`
   - `STP-request-glance/auto-mode`: `lock-screen`
+  - `STP-request-glance/lock-failed`: `lock-screen`
+  - `STP-request-glance/lock-expired`: `lock-screen`
   - `STP-open-request`: `approval-detail`
   - `STP-open-request/from-list`: `approval-list`
+  - `STP-open-request/loading`: `approval-list`
+  - `STP-open-request/error`: `approval-list`
+  - `STP-open-request/empty`: `approval-list`
+  - `STP-open-request/auto-banner`: `approval-list`
   - `STP-open-request/expired`: `approval-detail`
   - `STP-judge-context`: `approval-detail`
   - `STP-judge-context/suspicious`: `approval-detail`
+  - `STP-judge-context/reload-failed`: `approval-detail`
   - `STP-confirm-decision`: `approval-detail`, `approval-confirm-dialog`
   - `STP-confirm-decision/confirm-reject`: `approval-detail`, `approval-reject-dialog`
   - `STP-confirm-decision/approved`: `approval-detail`
   - `STP-confirm-decision/rejected`: `approval-detail`
   - `STP-confirm-decision/send-failed`: `approval-detail`
   - `STP-confirm-decision/already`: `approval-detail`
+- **의도적 제외**: 근거(여정 문서·구현 화면) 대비 그리지 않은 화면·상태와 사유. 하네스는 항목의 사유 유무와, 제외한 화면 식별자가 페이지에 실제로 그려져 있지 않은지를 본다.
+  - `approval-history`: 처리 이력 화면(PRD-12 AC8 — 수동/자동/만료 구분, 커서 페이징)은 여정 문서 §1이 「다루지 않는 것」으로 명시한 별개 흐름이다. 헤더 이력 버튼은 그려 두되 연결하지 않는다. 원본은 screen-approval.html.
+  - `approval-settings`, `approval-key-issue-sheet`, `approval-sa-register-sheet`: 자동 응답 모드 설정(AC9)·호출자 키 발급·폐기(AC13·AC14)·SA 호출자 등록(AC15)은 여정 문서 §1이 승인 요청을 받기 전의 설정으로 이 여정 밖이라 명시했다. 헤더 설정 버튼은 그려 두되 연결하지 않는다. 원본은 screen-approval.html.
+  - `approval-detail/session-title-fallback`, `approval-detail/no-agent-reason`: 세션 제목이 비었을 때 「제목 없음 · <세션 id 앞 8자>」 문구, `sessionId`·`reason`이 없어 세션 행·에이전트 설명 섹션을 숨기는 변형은 같은 상세 화면의 데이터 변형이다. 구조(행·섹션 위치)는 채워진 모습으로 그렸고 문구·생략 규칙은 PRD-12 AC6가 SSOT다.
+  - `approval-list/pull-to-refresh`: 당겨서 새로고침·포그라운드 복귀 갱신(AC5)은 제스처이고 화면 구성이 달라지지 않아 그리지 않는다. 불러오는 중 상태(`loading`)만 그렸다.
 - **원본 화면 mockup**: 없음 (PRD-12 승인 탭 화면 mockup 미작성 — 이 여정 mockup이 승인 화면의 첫 그림)
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
@@ -131,7 +143,7 @@ last_updated: 2026-10-28
 - **같은 화면은 단계·여정이 달라도 같은 식별자**다(예: 잠금 화면은 `lock-screen`, PR 모니터 이력은 `pr-monitor-history`, 승인 상세는 `approval-detail`). 상태는 식별자에 넣지 않고 기존 `data-state`로 표현한다.
 - 식별자는 소문자 kebab-case이며 한 단계·상태에서 동시에 보이는 화면 집합이 위 각 여정의 「단계별 화면」 목록과 같아야 한다.
 - 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 `JRN-ci-push-to-ack`의 헤더 시트 버튼·시트).
-- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. `JRN-ci-push-to-ack`은 대조를 마쳐 누락을 그리거나 「의도적 제외」로 등재했다. `JRN-affirmation-daily-exposure`도 대조를 마쳤다. `JRN-approval-push-to-decision`은 아직 대조 전이라 「의도적 제외」 등재가 없다.
+- 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. `JRN-ci-push-to-ack`은 대조를 마쳐 누락을 그리거나 「의도적 제외」로 등재했다. `JRN-affirmation-daily-exposure`·`JRN-approval-push-to-decision`도 대조를 마쳤다.
 
 ## 디자인 시스템 매핑
 
