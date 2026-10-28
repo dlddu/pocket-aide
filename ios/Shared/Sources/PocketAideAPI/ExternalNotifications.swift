@@ -85,7 +85,6 @@ public extension APIClient {
         try await get("/api/external-notifications/\(id)", authenticated: true)
     }
 
-    /// Marks one notification as seen; opening its detail is what counts as seeing it.
     func markExternalNotificationRead(id: Int64) async throws {
         _ = try await post(
             "/api/external-notifications/\(id)/read",
@@ -139,7 +138,7 @@ public struct WidgetNotificationsSummary: Equatable, Sendable {
     }
 }
 
-/// What the widget's 「PocketAide 알림」 slice shows: unread caller notifications (PRD-8 AC6, 2026-10-27).
+/// What the widget's 「PocketAide 알림」 slice shows: unread caller notifications (PRD-8 AC6).
 public enum WidgetNotifications {
     public static func summarize(_ page: ExternalNotificationsPage) -> WidgetNotificationsSummary {
         let latest = page.items.filter(\.isUnread).max { $0.id < $1.id }
