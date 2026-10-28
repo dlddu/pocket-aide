@@ -18,8 +18,8 @@ import (
 )
 
 type sent struct {
-	token, title, body string
-	data               map[string]any
+	token, category, title, body string
+	data                         map[string]any
 }
 
 type fakeSender struct {
@@ -28,10 +28,10 @@ type fakeSender struct {
 	errFor map[string]error
 }
 
-func (f *fakeSender) SendWithData(_ context.Context, token, title, body string, data map[string]any) error {
+func (f *fakeSender) SendWithCategory(_ context.Context, token, category, title, body string, data map[string]any) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.sent = append(f.sent, sent{token, title, body, data})
+	f.sent = append(f.sent, sent{token, category, title, body, data})
 	return f.errFor[token]
 }
 
@@ -85,6 +85,9 @@ func TestSendGoesToEveryDeviceOfTheOwner(t *testing.T) {
 		if !reflect.DeepEqual(s.data, map[string]any{"approval_id": "req-1"}) {
 			t.Fatalf("data: %v", s.data)
 		}
+		if s.category != "APPROVAL_REQUEST" {
+			t.Fatalf("category: %q", s.category)
+		}
 	}
 	sort.Strings(tokens)
 	if !reflect.DeepEqual(tokens, []string{"ipad", "phone"}) {
@@ -108,7 +111,7 @@ func TestLongContextIsCutToFitThePayload(t *testing.T) {
 	if !strings.HasSuffix(body, "…") || !strings.HasPrefix(ctx, strings.TrimSuffix(body, "…")) {
 		t.Fatalf("body should be a prefix of the context ending in …: %q", body[len(body)-20:])
 	}
-	if size := apns.PayloadSize(got[0].title, body, got[0].data); size > apns.MaxPayloadBytes {
+	if size := apns.PayloadSize(got[0].category, got[0].title, body, got[0].data); size > apns.MaxPayloadBytes {
 		t.Fatalf("payload %d bytes > %d", size, apns.MaxPayloadBytes)
 	}
 }
@@ -144,7 +147,7 @@ type gate struct {
 	done    chan struct{}
 }
 
-func (g *gate) SendWithData(context.Context, string, string, string, map[string]any) error {
+func (g *gate) SendWithCategory(context.Context, string, string, string, string, map[string]any) error {
 	<-g.release
 	close(g.done)
 	return nil

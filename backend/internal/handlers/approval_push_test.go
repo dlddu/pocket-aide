@@ -34,7 +34,7 @@ type blockingSender struct {
 	sent    chan struct{}
 }
 
-func (s *blockingSender) SendWithData(_ context.Context, _ string, title, _ string, _ map[string]any) error {
+func (s *blockingSender) SendWithCategory(_ context.Context, _, _, title, _ string, _ map[string]any) error {
 	<-s.release
 	s.mu.Lock()
 	s.titles = append(s.titles, title)

@@ -70,10 +70,14 @@ func (c *Client) Send(ctx context.Context, deviceToken, title, body string) erro
 // (PRD-10 AC7 — we send `event_id` so the receiver can highlight the right
 // notification-history row).
 func (c *Client) SendWithData(ctx context.Context, deviceToken, title, body string, data map[string]any) error {
+	return c.SendWithCategory(ctx, deviceToken, "", title, body, data)
+}
+
+func (c *Client) SendWithCategory(ctx context.Context, deviceToken, category, title, body string, data map[string]any) error {
 	n := &apns2.Notification{
 		DeviceToken: deviceToken,
 		Topic:       c.bundleID,
-		Payload:     alertPayload(title, body, data),
+		Payload:     alertPayload(category, title, body, data),
 	}
 	resp, err := c.cli.PushWithContext(ctx, n)
 	if err != nil {
@@ -105,31 +109,34 @@ func (e *RejectedError) TokenInvalid() bool {
 	return e.StatusCode == http.StatusGone
 }
 
-func alertPayload(title, body string, data map[string]any) *payload.Payload {
+func alertPayload(category, title, body string, data map[string]any) *payload.Payload {
 	p := payload.NewPayload().AlertTitle(title).AlertBody(body).Sound("default")
+	if category != "" {
+		p = p.Category(category)
+	}
 	for k, v := range data {
 		p = p.Custom(k, v)
 	}
 	return p
 }
 
-func PayloadSize(title, body string, data map[string]any) int {
-	raw, err := json.Marshal(alertPayload(title, body, data))
+func PayloadSize(category, title, body string, data map[string]any) int {
+	raw, err := json.Marshal(alertPayload(category, title, body, data))
 	if err != nil {
 		return 0
 	}
 	return len(raw)
 }
 
-func FitAlertBody(title, body string, data map[string]any) string {
-	if PayloadSize(title, body, data) <= MaxPayloadBytes {
+func FitAlertBody(category, title, body string, data map[string]any) string {
+	if PayloadSize(category, title, body, data) <= MaxPayloadBytes {
 		return body
 	}
 	runes := []rune(body)
 	lo, hi := 0, len(runes)
 	for lo < hi {
 		mid := (lo + hi + 1) / 2
-		if PayloadSize(title, string(runes[:mid])+"…", data) <= MaxPayloadBytes {
+		if PayloadSize(category, title, string(runes[:mid])+"…", data) <= MaxPayloadBytes {
 			lo = mid
 		} else {
 			hi = mid - 1
