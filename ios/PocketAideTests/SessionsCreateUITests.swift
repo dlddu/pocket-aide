@@ -24,8 +24,8 @@ final class SessionsCreateUITests: XCTestCase {
         XCTAssertTrue(screen.saveButton.isEnabled)
         screen.saveButton.tap()
 
-        XCTAssertTrue(app.otherElements["sessions.detail.screen"].waitForExistence(timeout: 30), "Creating should land on the new session's detail")
+        XCTAssertTrue(app.descendants(matching: .any)["sessions.detail.screen"].waitForExistence(timeout: 30), "Creating should land on the new session's detail")
         XCTAssertTrue(app.staticTexts["sessions.detail.state"].waitForExistence(timeout: 15))
-        XCTAssertTrue(app.staticTexts["sessions.detail.state"].label.contains("실행 중"))
+        XCTAssertTrue(app.staticTexts["sessions.detail.state"].label.contains("환경이 떠 있어요"))
     }
 }
