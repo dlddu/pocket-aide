@@ -17,7 +17,6 @@ final class ApprovalDecisionModeUITests: XCTestCase {
             _ = owner.call("POST", "/api/approval-keys/\(caller.id)/revoke")
         }
 
-        // Step 1: with no auto mode, the decision mode is null until the user decides.
         let manualID = try create("mode-r1", caller: caller, timeout: 600, step: "Step 1")
         let pending = try XCTUnwrap(ApprovalLookup.callerView(caller, manualID), "Step 1: the caller should read R1")
         XCTAssertEqual(pending["status"] as? String, "PENDING", "Step 1: R1 should wait for the user")
@@ -30,7 +29,6 @@ final class ApprovalDecisionModeUITests: XCTestCase {
         XCTAssertEqual(approved["decisionMode"] as? String, "manual", "Step 1: a user decision should read manual")
         assertNoUserIdentity(approved, step: "Step 1 after the decision")
 
-        // Step 2: with AUTO_APPROVE, the create response is already decided.
         setAutoResponse("AUTO_APPROVE", for: owner, step: "Step 2")
         let autoReply = createReply("mode-r2", caller: caller, timeout: 600, step: "Step 2")
         XCTAssertEqual(autoReply.json?["status"] as? String, "APPROVED", "Step 2: R2 should be APPROVED at creation: \(autoReply.text)")
@@ -40,7 +38,6 @@ final class ApprovalDecisionModeUITests: XCTestCase {
         let autoView = try XCTUnwrap(ApprovalLookup.callerView(caller, autoID), "Step 2: the caller should read R2")
         XCTAssertEqual(autoView["decisionMode"] as? String, "auto", "Step 2: the lookup should read auto")
 
-        // Step 3: with the mode off again, an unanswered request expires.
         setAutoResponse("NONE", for: owner, step: "Step 3")
         let expiringID = try create("mode-r3", caller: caller, timeout: 5, step: "Step 3")
         Thread.sleep(forTimeInterval: 6)
