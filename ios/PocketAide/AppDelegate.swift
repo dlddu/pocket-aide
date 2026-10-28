@@ -1,5 +1,7 @@
 import Foundation
 import PocketAideAPI
+import PocketAideAuth
+import PocketAideStorage
 import UIKit
 import UserNotifications
 
@@ -21,6 +23,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        UNUserNotificationCenter.current().setNotificationCategories([Self.approvalCategory])
 
         // Cold-start path: the system surfaces the originating notification
         // here when the app launched in response to a push tap. Hand the URL
@@ -72,11 +75,70 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) {
         let info = response.notification.request.content.userInfo
         NSLog("[AppDelegate] didReceive response userInfo=%@", String(describing: info))
+        if let decision = ApprovalNotificationAction.decision(forActionIdentifier: response.actionIdentifier),
+           let approvalID = ApprovalPushPayload.approvalID(from: info) {
+            decideFromNotification(approvalID, decision, replacing: response.notification.request, completion: completionHandler)
+            return
+        }
         if let url = PushDeepLink.url(fromUserInfo: info) {
             Task { @MainActor in
                 DeepLinkRouter.shared.receive(url)
             }
         }
         completionHandler()
+    }
+
+    private static var approvalCategory: UNNotificationCategory {
+        UNNotificationCategory(
+            identifier: ApprovalNotificationAction.categoryIdentifier,
+            actions: [
+                UNNotificationAction(
+                    identifier: ApprovalNotificationAction.approveIdentifier,
+                    title: ApprovalNotificationAction.title(.approve),
+                    options: [.authenticationRequired]
+                ),
+                UNNotificationAction(
+                    identifier: ApprovalNotificationAction.rejectIdentifier,
+                    title: ApprovalNotificationAction.title(.reject),
+                    options: [.destructive]
+                ),
+            ],
+            intentIdentifiers: []
+        )
+    }
+
+    private func decideFromNotification(
+        _ approvalID: String,
+        _ decision: ApprovalDecision,
+        replacing request: UNNotificationRequest,
+        completion: @escaping () -> Void
+    ) {
+        Task { @MainActor in
+            let result: Result<ApprovalDecisionOutcome, Error>
+            do {
+                guard let api = Self.makeActionAPI() else { throw APIError.missingBaseURL }
+                result = .success(try await api.decideApproval(id: approvalID, decision))
+            } catch {
+                result = .failure(error)
+            }
+            let content = UNMutableNotificationContent()
+            content.title = request.content.title
+            content.body = ApprovalNotificationAction.resultNotice(result)
+            content.userInfo = request.content.userInfo
+            try? await UNUserNotificationCenter.current().add(
+                UNNotificationRequest(identifier: request.identifier, content: content, trigger: nil)
+            )
+            completion()
+        }
+    }
+
+    @MainActor
+    private static func makeActionAPI() -> APIClient? {
+        let accessGroup = (Bundle.main.object(forInfoDictionaryKey: "KeychainAccessGroup") as? String)
+            .flatMap { $0.isEmpty ? nil : $0 }
+        let store = KeychainTokenStore(accessGroup: accessGroup)
+        guard let api = try? APIClient.fromBundle(.main, tokenStore: store) else { return nil }
+        api.setTokenRefresher(OIDCClient(api: api, tokenStore: store))
+        return api
     }
 }
