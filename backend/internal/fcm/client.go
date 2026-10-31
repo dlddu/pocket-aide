@@ -173,7 +173,6 @@ func (c *Client) message(token, category, title, body string, data map[string]an
 	}
 }
 
-// FCM data values must be strings.
 func stringData(category string, data map[string]any) map[string]string {
 	if len(data) == 0 && category == "" {
 		return nil

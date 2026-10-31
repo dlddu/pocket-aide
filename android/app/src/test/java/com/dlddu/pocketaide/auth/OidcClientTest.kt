@@ -32,7 +32,7 @@ class OidcClientTest {
                 val base = server.url("/").toString().trimEnd('/')
                 return when (request.path) {
                     "/api/auth/config" -> MockResponse().setBody(
-                        """{"issuer":"$base/","client_id":"app","redirect_uri":"pocketaide://callback","audience":"api"}""",
+                        """{"issuer":"$base/","client_id":"app","redirect_uri":"$REDIRECT_URI","audience":"api"}""",
                     )
                     "/.well-known/openid-configuration" -> MockResponse().setBody(
                         """{"issuer":"$base","authorization_endpoint":"$base/authorize","token_endpoint":"$base/token"}""",
@@ -156,5 +156,9 @@ class OidcClientTest {
 
         assertEquals(1, tokenCalls.get())
         results.forEach { assertEquals("new", it.accessToken) }
+    }
+
+    private companion object {
+        const val REDIRECT_URI = "pocketaide://callback"
     }
 }
