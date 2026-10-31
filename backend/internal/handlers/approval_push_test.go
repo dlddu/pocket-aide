@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dlddu/pocket-aide/backend/internal/approvalpush"
+	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 )
 
 type recordingPusher struct {
@@ -34,7 +35,7 @@ type blockingSender struct {
 	sent    chan struct{}
 }
 
-func (s *blockingSender) SendWithCategory(_ context.Context, _, _, title, _ string, _ map[string]any) error {
+func (s *blockingSender) SendWithCategory(_ context.Context, _ devicetokens.Device, _, title, _ string, _ map[string]any) error {
 	<-s.release
 	s.mu.Lock()
 	s.titles = append(s.titles, title)
@@ -111,8 +112,8 @@ func TestApprovalCreateDoesNotWaitForPush(t *testing.T) {
 
 type oneDevice struct{}
 
-func (oneDevice) ListByUserID(context.Context, int64) ([]string, error) {
-	return []string{"phone"}, nil
+func (oneDevice) ListByUserID(context.Context, int64) ([]devicetokens.Device, error) {
+	return []devicetokens.Device{{Token: "phone", Platform: devicetokens.PlatformIOS}}, nil
 }
 
 func (oneDevice) Delete(context.Context, int64, string) error {

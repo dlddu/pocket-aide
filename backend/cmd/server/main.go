@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,11 +24,13 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
 	"github.com/dlddu/pocket-aide/backend/internal/externalnotify"
+	"github.com/dlddu/pocket-aide/backend/internal/fcm"
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
+	"github.com/dlddu/pocket-aide/backend/internal/push"
 	"github.com/dlddu/pocket-aide/backend/internal/routines"
 	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
 	"github.com/dlddu/pocket-aide/backend/internal/sessions"
@@ -92,11 +95,26 @@ func main() {
 			apnsClient = apnsClient.WithHost(cfg.APNSHost)
 		}
 	}
+	var fcmClient *fcm.Client
+	if cfg.FCMServiceAccountJSON != "" {
+		fcmClient, err = fcm.New([]byte(cfg.FCMServiceAccountJSON))
+		if err != nil {
+			log.Fatalf("fcm: %v", err)
+		}
+		fcmClient = fcmClient.WithChannels(map[string]string{approvalpush.Category: fcm.ChannelApproval})
+		if cfg.FCMHost != "" {
+			log.Printf("fcm: pushes go to %s (FCM_HOST)", cfg.FCMHost)
+			fcmClient = fcmClient.WithEndpoint(cfg.FCMHost)
+		}
+		log.Printf("fcm: enabled for project %s", fcmClient.ProjectID())
+	}
+	var pushRouter *push.Router
 	var approvalPusher handlers.ApprovalPusher
 	var notificationSender handlers.NotificationSender
-	if apnsClient != nil {
-		approvalPusher = approvalpush.New(apnsClient, deviceStore)
-		notificationSender = externalnotify.New(apnsClient, deviceStore)
+	if apnsClient != nil || fcmClient != nil {
+		pushRouter = push.New(apnsClient, fcmClient)
+		approvalPusher = approvalpush.New(pushRouter, deviceStore)
+		notificationSender = externalnotify.New(pushRouter, deviceStore)
 	}
 
 	r.Group(func(p chi.Router) {
@@ -219,7 +237,7 @@ func main() {
 				// SQS redelivers after VisibilityTimeout.
 				return fmt.Errorf("persist history: %w", err)
 			}
-			if apnsClient == nil {
+			if pushRouter == nil {
 				return nil
 			}
 
@@ -234,21 +252,21 @@ func main() {
 			for i, uid := range userIDs {
 				settings, err := settingsStore.Get(ctx, uid)
 				if err != nil {
-					log.Printf("apns: notification settings for user=%d: %v", uid, err)
+					log.Printf("push: notification settings for user=%d: %v", uid, err)
 					continue
 				}
 				if !settings.AllowsPush(evt.Conclusion) {
 					continue
 				}
-				tokens, err := deviceStore.ListByUserID(ctx, uid)
+				devices, err := deviceStore.ListByUserID(ctx, uid)
 				if err != nil {
-					log.Printf("apns: list tokens for user=%d: %v", uid, err)
+					log.Printf("push: list tokens for user=%d: %v", uid, err)
 					continue
 				}
-				for _, t := range tokens {
+				for _, d := range devices {
 					data := map[string]any{"event_id": ids[i]}
-					if err := apnsClient.SendWithData(ctx, t, title, body, data); err != nil {
-						log.Printf("apns send user=%d token=%s…: %v", uid, safePrefix(t), err)
+					if err := pushRouter.SendWithData(ctx, d, title, body, data); err != nil && !errors.Is(err, push.ErrPlatformDisabled) {
+						log.Printf("push send user=%d platform=%s token=%s…: %v", uid, d.Platform, safePrefix(d.Token), err)
 					}
 				}
 			}
@@ -297,6 +315,9 @@ type config struct {
 	// credentials (docs/e2e-mocking-policy.md).
 	APNSDisabled bool
 
+	FCMServiceAccountJSON string
+	FCMHost               string
+
 	K8SCallerAuth    bool
 	K8STokenAudience string
 	K8STokenIssuer   string
@@ -313,6 +334,9 @@ func loadConfig() config {
 		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
+
+		FCMServiceAccountJSON: os.Getenv("FCM_SERVICE_ACCOUNT_JSON"),
+		FCMHost:               os.Getenv("FCM_HOST"),
 
 		K8SCallerAuth:    os.Getenv("K8S_CALLER_AUTH") == "true",
 		K8STokenAudience: envOr("K8S_TOKEN_AUDIENCE", "pocket-aide"),
