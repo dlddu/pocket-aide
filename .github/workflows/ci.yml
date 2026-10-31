@@ -37,6 +37,7 @@ jobs:
       # rerun holds macOS slots for ~40 min that queued PRs are waiting on. The
       # cost is no check for two PRs that each passed but break when combined.
       ios_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.ios_tests == 'true') }}
+      android_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_tests == 'true') }}
       backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
       data_model: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.data_model == 'true' }}
       ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
@@ -66,6 +67,8 @@ jobs:
               - 'backend/internal/githubwebhook/**'
               - 'backend/internal/devicetokens/**'
               - 'backend/internal/apns/**'
+              - 'backend/internal/fcm/**'
+              - 'backend/internal/push/**'
               - 'backend/internal/db/**'
               - 'backend/go.mod'
               - 'backend/go.sum'
@@ -97,6 +100,10 @@ jobs:
               - '.github/actions/start-test-sqs/**'
               - '.github/fixtures/github-webhook/**'
               - '.github/actions/generate-xcode-project/**'
+            android_tests:
+              - 'android/**'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/android-test.yml'
             # k8s/** is here because production only moves when the `pin` job
             # republishes the deploy branch, and pin runs after an image build.
             # A manifest-only change on main must still reach production.
@@ -221,6 +228,12 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.ios_tests == 'true' && needs.ios-test-backend.result == 'success' && needs.backend-unit-test.result != 'failure' && needs.backend-integration-test.result != 'failure' }}
     uses: ./.github/workflows/ios-test.yml
 
+  android-test:
+    name: Android build + test
+    needs: changes
+    if: needs.changes.outputs.android_tests == 'true'
+    uses: ./.github/workflows/android-test.yml
+
   # No path filter: runs on every PR and main push (tens of seconds). The PR
   # checkout is the merge ref, so a broken mockup already on main fails every PR
   # until fixed — which is the point of gating on it.
@@ -285,7 +298,7 @@ jobs:
 
   ci-success:
     name: ci-success
-    needs: [changes, backend-unit-test, backend-integration-test, ios-test, backend-docker-push, testflight-upload, journey-mockup, data-model]
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test, android-test, backend-docker-push, testflight-upload, journey-mockup, data-model]
     if: always()
     runs-on: ubuntu-24.04-arm
     steps:
@@ -295,6 +308,7 @@ jobs:
           BACKEND_UNIT_RESULT: ${{ needs.backend-unit-test.result }}
           BACKEND_INTEGRATION_RESULT: ${{ needs.backend-integration-test.result }}
           IOS_TEST_RESULT: ${{ needs.ios-test.result }}
+          ANDROID_TEST_RESULT: ${{ needs.android-test.result }}
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
           JOURNEY_MOCKUP_RESULT: ${{ needs.journey-mockup.result }}
@@ -302,12 +316,13 @@ jobs:
           BACKEND_UNIT_CHANGED: ${{ needs.changes.outputs.backend_unit }}
           BACKEND_INTEGRATION_CHANGED: ${{ needs.changes.outputs.backend_integration }}
           IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
+          ANDROID_TESTS_CHANGED: ${{ needs.changes.outputs.android_tests }}
           DATA_MODEL_CHANGED: ${{ needs.changes.outputs.data_model }}
           IMAGE_EXPECTED: ${{ needs.changes.outputs.image }}
           TESTFLIGHT_EXPECTED: ${{ needs.changes.outputs.testflight }}
         run: |
           set -e
-          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT data-model=$DATA_MODEL_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
+          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT android-test=$ANDROID_TEST_RESULT data-model=$DATA_MODEL_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
           [ "$JOURNEY_MOCKUP_RESULT" = "success" ] || { echo "journey-mockup must pass"; exit 1; }
           if [ "$BACKEND_UNIT_CHANGED" = "true" ]; then
@@ -318,6 +333,9 @@ jobs:
           fi
           if [ "$IOS_TESTS_CHANGED" = "true" ]; then
             [ "$IOS_TEST_RESULT" = "success" ] || { echo "ios-test must pass"; exit 1; }
+          fi
+          if [ "$ANDROID_TESTS_CHANGED" = "true" ]; then
+            [ "$ANDROID_TEST_RESULT" = "success" ] || { echo "android-test must pass"; exit 1; }
           fi
           if [ "$DATA_MODEL_CHANGED" = "true" ]; then
             [ "$DATA_MODEL_RESULT" = "success" ] || { echo "data-model check must pass"; exit 1; }

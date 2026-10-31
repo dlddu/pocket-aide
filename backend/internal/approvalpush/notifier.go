@@ -7,16 +7,18 @@ import (
 	"time"
 
 	"github.com/dlddu/pocket-aide/backend/internal/apns"
+	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
+	"github.com/dlddu/pocket-aide/backend/internal/push"
 )
 
 type Sender interface {
-	SendWithCategory(ctx context.Context, deviceToken, category, title, body string, data map[string]any) error
+	SendWithCategory(ctx context.Context, d devicetokens.Device, category, title, body string, data map[string]any) error
 }
 
 const Category = "APPROVAL_REQUEST"
 
 type Tokens interface {
-	ListByUserID(ctx context.Context, userID int64) ([]string, error)
+	ListByUserID(ctx context.Context, userID int64) ([]devicetokens.Device, error)
 	Delete(ctx context.Context, userID int64, token string) error
 }
 
@@ -54,7 +56,7 @@ func (n *Notifier) Notify(req Request) {
 }
 
 func (n *Notifier) Send(ctx context.Context, req Request) {
-	tokens, err := n.tokens.ListByUserID(ctx, req.UserID)
+	devices, err := n.tokens.ListByUserID(ctx, req.UserID)
 	if err != nil {
 		log.Printf("approval push: list tokens for user=%d: %v", req.UserID, err)
 		return
@@ -62,15 +64,14 @@ func (n *Notifier) Send(ctx context.Context, req Request) {
 	title := Title(req.KeyName)
 	data := Data(req.ApprovalID)
 	body := apns.FitAlertBody(Category, title, req.Context, data)
-	for _, t := range tokens {
-		err := n.sender.SendWithCategory(ctx, t, Category, title, body, data)
-		if err == nil {
+	for _, d := range devices {
+		err := n.sender.SendWithCategory(ctx, d, Category, title, body, data)
+		if err == nil || errors.Is(err, push.ErrPlatformDisabled) {
 			continue
 		}
-		log.Printf("approval push user=%d approval=%s: %v", req.UserID, req.ApprovalID, err)
-		var rejected *apns.RejectedError
-		if errors.As(err, &rejected) && rejected.TokenInvalid() {
-			if err := n.tokens.Delete(ctx, req.UserID, t); err != nil {
+		log.Printf("approval push user=%d approval=%s platform=%s: %v", req.UserID, req.ApprovalID, d.Platform, err)
+		if push.IsTokenInvalid(err) {
+			if err := n.tokens.Delete(ctx, req.UserID, d.Token); err != nil {
 				log.Printf("approval push: drop invalid token for user=%d: %v", req.UserID, err)
 			}
 		}
