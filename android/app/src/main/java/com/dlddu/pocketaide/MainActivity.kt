@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabsIntent
 import com.dlddu.pocketaide.auth.AuthBrowser
+import com.dlddu.pocketaide.auth.OidcRedirectBus
 import com.dlddu.pocketaide.designsystem.PocketAideTheme
 import com.dlddu.pocketaide.push.PushDeepLink
 import com.dlddu.pocketaide.ui.RootScreen
@@ -65,17 +66,12 @@ class MainActivity : ComponentActivity() {
     private fun handle(intent: Intent?) {
         intent ?: return
         val data = intent.data
-        if (data != null && data.scheme in REDIRECT_SCHEMES && data.host == REDIRECT_HOST) {
+        if (data != null && OidcRedirectBus.isRedirect(data.toString())) {
             container.redirectBus.deliver(data.toString())
             return
         }
         val extras = intent.extras ?: return
         val payload = PushDeepLink.KEYS.associateWith { key -> extras.get(key)?.toString() }
         PushDeepLink.from(payload)?.let(container.deepLinks::receive)
-    }
-
-    private companion object {
-        val REDIRECT_SCHEMES = setOf("pocketaide", "pocketaide-dev")
-        const val REDIRECT_HOST = "callback"
     }
 }
