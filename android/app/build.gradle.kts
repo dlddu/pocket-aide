@@ -20,7 +20,7 @@ android {
         applicationId = "com.dlddu.pocketaide"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        versionCode = config("versionCode", "1").toInt()
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -28,6 +28,18 @@ android {
         buildConfigField("String", "FIREBASE_PROJECT_ID", quoted(config("firebaseProjectId", "dlddu-play-console")))
         buildConfigField("String", "FIREBASE_API_KEY", quoted(config("firebaseApiKey")))
         buildConfigField("String", "FIREBASE_SENDER_ID", quoted(config("firebaseSenderId", "657421381831")))
+    }
+
+    signingConfigs {
+        create("release") {
+            val store = config("signingStoreFile")
+            if (store.isNotEmpty()) {
+                storeFile = file(store)
+                storePassword = config("signingStorePassword")
+                keyAlias = config("signingKeyAlias")
+                keyPassword = config("signingKeyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -39,6 +51,7 @@ android {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release").takeIf { it.storeFile != null }
             buildConfigField("String", "BACKEND_BASE_URL", quoted(config("backendBaseUrl")))
             buildConfigField("String", "FIREBASE_APP_ID", quoted(config("firebaseAppId", "1:657421381831:android:c98abab847b61adbe84ee2")))
         }

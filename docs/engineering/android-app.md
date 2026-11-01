@@ -34,11 +34,14 @@
 
 - 백엔드 주소는 빌드 속성 `pocketaide.backendBaseUrl`(또는 `BACKEND_BASE_URL`)로 주입한다. 디버그 기본값은 에뮬레이터 호스트 `http://10.0.2.2:8080`.
 - CI: `.github/workflows/android-test.yml`이 `assembleDebug testDebugUnitTest lintDebug`를 돌리고, `ci.yml`의 `android_tests` 필터(`android/**`)로 호출되어 `ci-success`에 묶인다.
+- 배포: `.github/workflows/android-distribute.yml`이 서명한 release APK를 Firebase App Distribution 그룹 `testers`에 올린다(iOS의 TestFlight 자리). 시점은 TestFlight와 같다 — `deploy/preview` 레이블이 붙은 PR(앱·백엔드 변경 시, 프리뷰 백엔드 `pocket-aide-pr-<N>`을 가리킴), `android/**`가 바뀐 main push 또는 레이블 PR이 머지된 main push(운영 백엔드), 수동 실행. 백엔드 주소는 레포 변수 `BACKEND_BASE_URL`, `versionCode`는 실행 번호다.
+- 업로드 인증은 키 없이 GitHub OIDC → Workload Identity Federation으로 `pocket-aide-app-dist` 서비스 계정을 쓴다. 서명 keystore는 Secret Manager `pocket-aide-android-signing`(JSON: `keystore` base64·`store_password`·`key_alias`·`key_password`)에서 읽는다. 둘 다 dlddu/infrastructure `terraform/dlddu/google/pocket-aide-app-distribution.tf`가 만든다. 서명 키를 바꾸면 이미 설치된 앱은 업데이트되지 않으니 지우고 다시 설치해야 한다.
+- 테스터는 초대 메일 링크로 App Tester 앱을 받아 설치한다.
 
 ## 5. 남은 이식 (후속 PR)
 
 1. 탭: 다짐 · 루틴 · PR 모니터 · 승인(알림 액션 승인/거부 포함) · 세션 · 알림 기록 · 날씨.
 2. 홈 화면 위젯(Glance) — 일정·날씨·다짐·알림·임시공간 섹션. 캘린더(CalendarProvider)·위치 권한.
 3. 키보드(InputMethodService) — iOS 키보드 확장과 같은 범위.
-4. 계측 테스트(에뮬레이터 + 실 백엔드, `../e2e-mocking-policy.md` 기준)와 배포 파이프라인(서명·Play 내부 테스트 트랙).
+4. 계측 테스트(에뮬레이터 + 실 백엔드, `../e2e-mocking-policy.md` 기준). 정식 배포가 필요해지면 Play 내부 테스트 트랙(App Distribution과 같은 서명 키 재사용).
 5. 패리티 도달 후 `ios/`와 iOS 전용 CI(`ios-test.yml`, `testflight-upload.yml`) 제거.

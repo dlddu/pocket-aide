@@ -1,0 +1,105 @@
+name: Android App Distribution
+
+on:
+  workflow_call:
+    inputs:
+      preview_pr:
+        type: string
+        default: ""
+      build_source:
+        type: string
+        default: ""
+    secrets:
+      FIREBASE_API_KEY:
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT: dlddu-play-console
+  WORKLOAD_IDENTITY_PROVIDER: projects/657421381831/locations/global/workloadIdentityPools/github-actions/providers/github
+  SERVICE_ACCOUNT: pocket-aide-app-dist@dlddu-play-console.iam.gserviceaccount.com
+  SIGNING_SECRET: pocket-aide-android-signing
+  FIREBASE_RELEASE_APP_ID: "1:657421381831:android:c98abab847b61adbe84ee2"
+  TESTER_GROUP: testers
+
+jobs:
+  distribute:
+    name: Build + upload release APK
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Fetch signing keystore
+        run: |
+          set -euo pipefail
+          json="$RUNNER_TEMP/signing.json"
+          gcloud secrets versions access latest --secret="$SIGNING_SECRET" --project="$GCP_PROJECT" > "$json"
+          jq -r .keystore "$json" | base64 -d > "$RUNNER_TEMP/release.jks"
+          for key in store_password key_alias key_password; do
+            echo "::add-mask::$(jq -r ".$key" "$json")"
+          done
+          {
+            echo "SIGNING_STORE_FILE=$RUNNER_TEMP/release.jks"
+            echo "SIGNING_STORE_PASSWORD=$(jq -r .store_password "$json")"
+            echo "SIGNING_KEY_ALIAS=$(jq -r .key_alias "$json")"
+            echo "SIGNING_KEY_PASSWORD=$(jq -r .key_password "$json")"
+          } >> "$GITHUB_ENV"
+          rm -f "$json"
+
+      - name: Resolve backend URL
+        env:
+          BACKEND_BASE_URL: ${{ vars.BACKEND_BASE_URL }}
+          PREVIEW_PR: ${{ inputs.preview_pr }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BACKEND_BASE_URL" ]; then
+            echo "Missing repository variable: BACKEND_BASE_URL" >&2
+            exit 1
+          fi
+          if [ -n "$PREVIEW_PR" ]; then
+            case "$BACKEND_BASE_URL" in
+              https://pocket-aide.*) ;;
+              *) echo "BACKEND_BASE_URL must start with https://pocket-aide. to derive the preview host" >&2; exit 1;;
+            esac
+            BACKEND_BASE_URL="https://pocket-aide-pr-${PREVIEW_PR}.${BACKEND_BASE_URL#https://pocket-aide.}"
+          fi
+          echo "BACKEND_BASE_URL=$BACKEND_BASE_URL"
+          echo "BACKEND_BASE_URL=$BACKEND_BASE_URL" >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: ./gradlew --no-daemon --stacktrace assembleRelease
+
+      - name: Upload to Firebase App Distribution
+        env:
+          BUILD_SOURCE: ${{ inputs.build_source }}
+        run: |
+          set -euo pipefail
+          notes="${BUILD_SOURCE:-main} · ${GITHUB_SHA::7} · run ${GITHUB_RUN_NUMBER}"
+          npx --yes firebase-tools@13.29.1 appdistribution:distribute \
+            app/build/outputs/apk/release/app-release.apk \
+            --app "$FIREBASE_RELEASE_APP_ID" \
+            --groups "$TESTER_GROUP" \
+            --release-notes "$notes"
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
