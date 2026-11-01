@@ -80,6 +80,9 @@ object E2e {
 object AppSession {
     private const val TAG = "PocketAideE2e"
     private const val SIGN_IN_TIMEOUT_MILLIS = 120_000L
+    private const val SIGN_IN_LABEL = "Sign in with OIDC"
+    private const val CANCELLED_AFTER_MILLIS = 3_000L
+    private const val MAX_SIGN_IN_RETRIES = 3
     private val browserButtons = Pattern.compile(
         "(?i)(accept & continue|accept and continue|use without an account|no thanks|no, thanks|continue|got it|skip|not now|open|ok)",
     )
@@ -110,10 +113,27 @@ object AppSession {
 
     private fun passBrowser() {
         val deadline = System.currentTimeMillis() + SIGN_IN_TIMEOUT_MILLIS
+        var retries = 0
+        var backOnLoginSince = 0L
         while (System.currentTimeMillis() < deadline) {
             if (device.hasObject(By.pkg(appPackage).text(Tags.SHELL_LABEL))) return
             val foreground = device.currentPackageName
-            if (foreground != appPackage) dismissBrowserPrompt(foreground)
+            if (foreground != appPackage) {
+                backOnLoginSince = 0L
+                dismissBrowserPrompt(foreground)
+            } else {
+                val signIn = device.findObject(By.pkg(appPackage).text(SIGN_IN_LABEL).enabled(true))
+                if (signIn == null) {
+                    backOnLoginSince = 0L
+                } else if (backOnLoginSince == 0L) {
+                    backOnLoginSince = System.currentTimeMillis()
+                } else if (System.currentTimeMillis() - backOnLoginSince > CANCELLED_AFTER_MILLIS && retries < MAX_SIGN_IN_RETRIES) {
+                    retries += 1
+                    backOnLoginSince = 0L
+                    Log.i(TAG, "sign-in returned to the login screen, retrying ($retries)")
+                    signIn.click()
+                }
+            }
             device.waitForIdle(1_000)
             Thread.sleep(500)
         }
