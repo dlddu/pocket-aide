@@ -25,7 +25,10 @@ data class ScratchpadUiState(
         ScratchpadSections.group(items, clock)
 }
 
-class ScratchpadViewModel(private val api: ApiClient) : ViewModel() {
+class ScratchpadViewModel(
+    private val api: ApiClient,
+    private val onChanged: () -> Unit = {},
+) : ViewModel() {
     private val _state = MutableStateFlow(ScratchpadUiState())
     val state: StateFlow<ScratchpadUiState> = _state.asStateFlow()
 
@@ -87,6 +90,7 @@ class ScratchpadViewModel(private val api: ApiClient) : ViewModel() {
         try {
             val created = api.createScratchpadItem(text)
             setItems(listOf(created) + _state.value.items)
+            onChanged()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -98,6 +102,7 @@ class ScratchpadViewModel(private val api: ApiClient) : ViewModel() {
         try {
             api.deleteScratchpadItem(id)
             setItems(_state.value.items.filterNot { it.id == id })
+            onChanged()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -109,6 +114,7 @@ class ScratchpadViewModel(private val api: ApiClient) : ViewModel() {
         try {
             val result = api.moveScratchpadItem(item.id, target)
             setItems(_state.value.items.filterNot { it.id == item.id })
+            onChanged()
             result.affirmation
         } catch (e: CancellationException) {
             throw e

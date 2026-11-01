@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -56,6 +57,7 @@ import com.dlddu.pocketaide.approvals.rememberNowMillis
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
 import com.dlddu.pocketaide.designsystem.components.AreaLabel
+import com.dlddu.pocketaide.widget.WidgetRefresher
 
 private val AREA = Area.PrMonitor
 private val HEADER_DOT_SIZE = 8.dp
@@ -74,7 +76,10 @@ fun ExternalNotificationsScreen(
     openedNotificationId: Long? = null,
     onOpenedNotificationConsumed: () -> Unit = {},
 ) {
-    val viewModel: ExternalNotificationsViewModel = viewModel(key = "notifications") { ExternalNotificationsViewModel(api) }
+    val appContext = LocalContext.current.applicationContext
+    val viewModel: ExternalNotificationsViewModel = viewModel(key = "notifications") {
+        ExternalNotificationsViewModel(api, onMarkedRead = { WidgetRefresher.reloadAll(appContext) })
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val now = rememberNowMillis()
 

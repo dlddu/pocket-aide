@@ -27,4 +27,15 @@ class DeepLinkRouter {
     fun consumeWeather() {
         _weather.value = false
     }
+
+    private val _tab = MutableStateFlow<RootTab?>(null)
+    val tab: StateFlow<RootTab?> = _tab.asStateFlow()
+
+    fun openTab(tab: RootTab) {
+        _tab.value = tab
+    }
+
+    fun consumeTab(tab: RootTab) {
+        _tab.compareAndSet(tab, null)
+    }
 }
