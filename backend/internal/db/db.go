@@ -12,6 +12,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "modernc.org/sqlite"
 
+	"github.com/dlddu/pocket-aide/backend/internal/telemetry"
 	"github.com/dlddu/pocket-aide/backend/migrations"
 )
 
@@ -29,7 +30,7 @@ import (
 // tuning pass from silently weakening durability.
 func Open(path string) (*sql.DB, error) {
 	dsn := fmt.Sprintf("file:%s?_pragma=journal_mode(DELETE)&_pragma=foreign_keys(ON)&_pragma=busy_timeout(5000)&_pragma=synchronous(FULL)", path)
-	conn, err := sql.Open("sqlite", dsn)
+	conn, err := telemetry.OpenDB("sqlite", dsn, "sqlite")
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
