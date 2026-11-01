@@ -2,6 +2,7 @@
 package com.dlddu.pocketaide.e2e
 
 import android.Manifest
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.util.Base64
@@ -82,7 +83,11 @@ object AppSession {
     private const val SIGN_IN_TIMEOUT_MILLIS = 120_000L
     private const val SIGN_IN_LABEL = "Sign in with OIDC"
     private const val CANCELLED_AFTER_MILLIS = 3_000L
-    private const val MAX_SIGN_IN_RETRIES = 3
+    private const val MAX_SIGN_IN_ATTEMPTS = 3
+    private const val CHROME = "com.android.chrome"
+    private const val WARM_UP_URL = "${BackendApi.IDP}/.well-known/openid-configuration"
+    private const val WARM_UP_MARKER = "authorization_endpoint"
+    private const val WARM_UP_TIMEOUT_MILLIS = 60_000L
     private val browserButtons = Pattern.compile(
         "(?i)(accept & continue|accept and continue|use without an account|no thanks|no, thanks|continue|got it|skip|not now|open|ok)",
     )
@@ -99,40 +104,63 @@ object AppSession {
     private val device: UiDevice get() = UiDevice.getInstance(instrumentation)
     private val appPackage: String get() = instrumentation.targetContext.packageName
 
+    private var browserWarmedUp = false
+
     fun launchSignedIn(compose: ComposeTestRule): ActivityScenario<MainActivity> {
+        warmUpBrowser()
         val scenario = ActivityScenario.launch(MainActivity::class.java)
         compose.waitUntil(30_000) { compose.exists(Tags.SHELL) || compose.exists(Tags.SIGN_IN) }
-        if (!compose.exists(Tags.SHELL)) {
+        var attempts = 0
+        while (!compose.exists(Tags.SHELL)) {
+            attempts += 1
+            if (attempts > MAX_SIGN_IN_ATTEMPTS) {
+                throw AssertionError("Sign-in kept returning to the login screen: texts=${visibleTexts()}")
+            }
             compose.waitUntil(15_000) { compose.isEnabled(Tags.SIGN_IN) }
             compose.onNodeWithTag(Tags.SIGN_IN).performClick()
-            passBrowser()
-            compose.waitUntil(30_000) { compose.exists(Tags.SHELL) }
+            if (passBrowser()) break
+            Log.i(TAG, "sign-in returned to the login screen, retrying ($attempts)")
         }
+        compose.waitUntil(30_000) { compose.exists(Tags.SHELL) }
         return scenario
     }
 
-    private fun passBrowser() {
+    private fun warmUpBrowser() {
+        if (browserWarmedUp) return
+        browserWarmedUp = true
+        val context = instrumentation.targetContext
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(WARM_UP_URL))
+            .setPackage(CHROME)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (intent.resolveActivity(context.packageManager) == null) return
+        context.startActivity(intent)
+        val deadline = System.currentTimeMillis() + WARM_UP_TIMEOUT_MILLIS
+        while (System.currentTimeMillis() < deadline) {
+            val foreground = device.currentPackageName
+            if (foreground == CHROME && device.hasObject(By.textContains(WARM_UP_MARKER))) break
+            if (foreground != null && foreground != appPackage) dismissBrowserPrompt(foreground)
+            device.waitForIdle(1_000)
+            Thread.sleep(500)
+        }
+        Log.i(TAG, "browser warm-up finished: foreground=${device.currentPackageName}")
+        device.pressHome()
+    }
+
+    private fun passBrowser(): Boolean {
         val deadline = System.currentTimeMillis() + SIGN_IN_TIMEOUT_MILLIS
-        var retries = 0
         var backOnLoginSince = 0L
         while (System.currentTimeMillis() < deadline) {
-            if (device.hasObject(By.pkg(appPackage).text(Tags.SHELL_LABEL))) return
+            if (device.hasObject(By.pkg(appPackage).text(Tags.SHELL_LABEL))) return true
             val foreground = device.currentPackageName
             if (foreground != appPackage) {
                 backOnLoginSince = 0L
                 dismissBrowserPrompt(foreground)
-            } else {
-                val signIn = device.findObject(By.pkg(appPackage).text(SIGN_IN_LABEL).enabled(true))
-                if (signIn == null) {
-                    backOnLoginSince = 0L
-                } else if (backOnLoginSince == 0L) {
-                    backOnLoginSince = System.currentTimeMillis()
-                } else if (System.currentTimeMillis() - backOnLoginSince > CANCELLED_AFTER_MILLIS && retries < MAX_SIGN_IN_RETRIES) {
-                    retries += 1
-                    backOnLoginSince = 0L
-                    Log.i(TAG, "sign-in returned to the login screen, retrying ($retries)")
-                    signIn.click()
-                }
+            } else if (!device.hasObject(By.pkg(appPackage).text(SIGN_IN_LABEL))) {
+                backOnLoginSince = 0L
+            } else if (backOnLoginSince == 0L) {
+                backOnLoginSince = System.currentTimeMillis()
+            } else if (System.currentTimeMillis() - backOnLoginSince > CANCELLED_AFTER_MILLIS) {
+                return false
             }
             device.waitForIdle(1_000)
             Thread.sleep(500)
