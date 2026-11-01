@@ -25,7 +25,7 @@ class OpenPullRequestsTest {
     private fun node(repo: String, number: Int, updated: String, author: String? = "me", rollup: String? = "SUCCESS"): String {
         val authorPart = author?.let { """"author":{"login":"$it"},""" } ?: """"author":null,"""
         val rollupPart = rollup?.let { """{"state":"$it"}""" } ?: "null"
-        return """{"number":$number,"title":"PR $number","url":"https://github.com/$repo/pull/$number","updatedAt":"$updated","repository":{"nameWithOwner":"$repo"},$authorPart"commits":{"nodes":[{"commit":{"statusCheckRollup":$rollupPart}}]}}"""
+        return """{"number":$number,"title":"PR $number","url":"$GITHUB/$repo/pull/$number","updatedAt":"$updated","repository":{"nameWithOwner":"$repo"},$authorPart"commits":{"nodes":[{"commit":{"statusCheckRollup":$rollupPart}}]}}"""
     }
 
     private fun searchBody(authored: List<String>, requested: List<String> = emptyList(), reviewed: List<String> = emptyList()) =
@@ -191,5 +191,9 @@ class OpenPullRequestsTest {
         vm.setFilter(OpenPullRequestFilter.MINE)
 
         assertEquals(OpenPullRequestFilter.MINE, filters.load())
+    }
+
+    private companion object {
+        const val GITHUB = "https://github.com"
     }
 }

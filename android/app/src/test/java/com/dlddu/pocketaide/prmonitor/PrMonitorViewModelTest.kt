@@ -30,7 +30,7 @@ class PrMonitorViewModelTest {
     }
 
     private fun itemJson(id: Long, pr: Int? = 42, acked: Long? = null): String {
-        val prPart = pr?.let { ""","pr_number":$it,"pr_title":"제목","pr_url":"https://github.com/a/b/pull/$it"""" } ?: ""
+        val prPart = pr?.let { ""","pr_number":$it,"pr_title":"제목","pr_url":"$GITHUB/a/b/pull/$it"""" } ?: ""
         val ackPart = acked?.let { ""","acknowledged_at":$it""" } ?: ""
         return """{"id":$id,"repo_full_name":"a/b"$prPart,"workflow_name":"ci","head_branch":"feat","head_sha":"abc$id","conclusion":"success","created_at":${100 + id}$ackPart}"""
     }
@@ -188,5 +188,9 @@ class PrMonitorViewModelTest {
         assertEquals("/api/excluded-repos/1", delete.path)
         assertEquals(listOf(1L), vm.state.value.excludedRepos.map { it.id })
         assertNotNull(vm.state.value.excludedRepoError)
+    }
+
+    private companion object {
+        const val GITHUB = "https://github.com"
     }
 }
