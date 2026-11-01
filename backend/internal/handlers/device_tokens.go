@@ -5,14 +5,18 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"unicode"
 
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 )
 
 type deviceTokenPayload struct {
-	Token string `json:"token"`
+	Token    string `json:"token"`
+	Platform string `json:"platform"`
 }
+
+const maxFCMTokenLen = 4096
 
 // RegisterDeviceToken handles POST /api/device-tokens.
 func RegisterDeviceToken(store *devicetokens.Store) http.HandlerFunc {
@@ -27,7 +31,7 @@ func RegisterDeviceToken(store *devicetokens.Store) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := store.Upsert(r.Context(), u.ID, body.Token); err != nil {
+		if err := store.Upsert(r.Context(), u.ID, body.Token, body.Platform); err != nil {
 			http.Error(w, "upsert failed", http.StatusInternalServerError)
 			return
 		}
@@ -46,10 +50,20 @@ func decodeDeviceTokenPayload(r *http.Request) (deviceTokenPayload, error) {
 	if p.Token == "" {
 		return p, errors.New("token is required")
 	}
-	// APNs device tokens are 32 raw bytes → 64 hex chars. Reject anything else
-	// before it reaches the DB or APNs.
-	if len(p.Token) != 64 || !isHex(p.Token) {
-		return p, errors.New("token must be 64 hex characters")
+	switch p.Platform {
+	case "", devicetokens.PlatformIOS:
+		p.Platform = devicetokens.PlatformIOS
+		// APNs device tokens are 32 raw bytes → 64 hex chars. Reject anything else
+		// before it reaches the DB or APNs.
+		if len(p.Token) != 64 || !isHex(p.Token) {
+			return p, errors.New("token must be 64 hex characters")
+		}
+	case devicetokens.PlatformAndroid:
+		if len(p.Token) > maxFCMTokenLen || strings.IndexFunc(p.Token, unicode.IsSpace) >= 0 {
+			return p, errors.New("token must be at most 4096 characters without whitespace")
+		}
+	default:
+		return p, errors.New("platform must be ios or android")
 	}
 	return p, nil
 }
