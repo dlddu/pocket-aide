@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.dlddu.pocketaide.MainActivity
 import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.R
+import com.dlddu.pocketaide.approvals.ApprovalActionReceiver
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.launch
@@ -25,7 +26,9 @@ class PocketAideMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val notification = message.notification ?: return
+        val title = message.notification?.title ?: message.data["title"]
+        val body = message.notification?.body ?: message.data["body"]
+        if (title == null && body == null) return
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             message.data.forEach { (k, v) -> putExtra(k, v) }
@@ -37,14 +40,15 @@ class PocketAideMessagingService : FirebaseMessagingService() {
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val built = NotificationCompat.Builder(this, NotificationChannels.forCategory(message.data["category"]))
+        val builder = NotificationCompat.Builder(this, NotificationChannels.forCategory(message.data["category"]))
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(notification.title)
-            .setContentText(notification.body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(notification.body))
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setAutoCancel(true)
             .setContentIntent(pending)
-            .build()
+        ApprovalActionReceiver.addActions(this, builder, message.data, requestCode, title)
+        val built = builder.build()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED

@@ -16,4 +16,15 @@ class DeepLinkRouter {
     fun consume(link: PushDeepLink) {
         _pending.compareAndSet(link, null)
     }
+
+    private val _weather = MutableStateFlow(false)
+    val weather: StateFlow<Boolean> = _weather.asStateFlow()
+
+    fun openWeather() {
+        _weather.value = true
+    }
+
+    fun consumeWeather() {
+        _weather.value = false
+    }
 }
