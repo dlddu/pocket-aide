@@ -39,6 +39,19 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".keyboard.PocketAideKeyboardService"
+            android:exported="true"
+            android:label="@string/keyboard_name"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/pocket_aide_input_method" />
+        </service>
+
         <receiver
             android:name=".approvals.ApprovalActionReceiver"
             android:exported="false" />
