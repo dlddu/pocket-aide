@@ -51,6 +51,7 @@ import com.dlddu.pocketaide.affirmations.AffirmationsScreen
 import com.dlddu.pocketaide.approvals.ApprovalsScreen
 import com.dlddu.pocketaide.approvals.ApprovalsViewModel
 import com.dlddu.pocketaide.notifications.ExternalNotificationsScreen
+import com.dlddu.pocketaide.prmonitor.PrMonitorScreen
 import com.dlddu.pocketaide.push.PushDeepLink
 import com.dlddu.pocketaide.routines.RoutinesScreen
 import com.dlddu.pocketaide.weather.WeatherScreen
@@ -58,6 +59,7 @@ import com.dlddu.pocketaide.auth.AuthBrowser
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
 import com.dlddu.pocketaide.scratchpad.ScratchpadScreen
+import com.dlddu.pocketaide.sessions.SessionsScreen
 import com.dlddu.pocketaide.scratchpad.ScratchpadViewModel
 import com.dlddu.pocketaide.todos.TodoArea
 import com.dlddu.pocketaide.todos.TodoListScreen
@@ -89,6 +91,7 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
     var openedNotificationId by rememberSaveable { mutableStateOf<Long?>(null) }
     var notificationsReloadToken by remember { mutableIntStateOf(0) }
     var showsWeather by rememberSaveable { mutableStateOf(false) }
+    var highlightedEventId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     val pendingLink by container.deepLinks.pending.collectAsStateWithLifecycle()
     LaunchedEffect(pendingLink) {
@@ -99,7 +102,7 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
                     openedNotificationId = it.notificationId
                     notificationsReloadToken += 1
                 }
-                is PushDeepLink.PrMonitorEvent -> Unit
+                is PushDeepLink.PrMonitorEvent -> highlightedEventId = it.eventId
             }
             selected = RootTab.forDeepLink(it)
             container.deepLinks.consume(it)
@@ -155,8 +158,15 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
                         openedNotificationId = openedNotificationId,
                         onOpenedNotificationConsumed = { openedNotificationId = null },
                     )
+                    RootTab.PrMonitor -> PrMonitorScreen(
+                        api = auth.api,
+                        highlightedEventId = highlightedEventId,
+                        onHighlightExpired = { highlightedEventId = null },
+                        pushDenied = pushDenied,
+                        onSignOut = auth::signOut,
+                    )
+                    RootTab.Sessions -> SessionsScreen(api = auth.api)
                     RootTab.Chat -> PlaceholderScreen(Area.AiChat, "AI 채팅")
-                    else -> PlaceholderScreen(selected.area, selected.title)
                 }
             }
         }

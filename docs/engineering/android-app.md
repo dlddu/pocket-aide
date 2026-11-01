@@ -8,7 +8,7 @@
 | 최종 수정일 | 2026-10-31 |
 | 결정 출처 | 사용자 본인(단독 소유자), 2026-10-31 — 「iOS 앱을 안드로이드로 마이그레이션, Kotlin + Compose 네이티브, 골격·핵심 탭부터 단계 이식, 백엔드 FCM 경로 함께 추가, 패리티 도달 후 iOS 제거」 |
 | 관련 PRD | PRD-3(개인/회사 투두) · PRD-4(임시공간) · PRD-10(PR 모니터 푸시) · PRD-12(승인 푸시) |
-| 구현 상태 | 1단계 — 골격·인증·API·푸시 수신·투두·임시공간. 나머지 탭은 「준비 중」 플레이스홀더 |
+| 구현 상태 | 2단계 — 골격·인증·API·푸시 수신과 탭 전부(다짐·PR 모니터·승인·세션·임시공간·개인·회사·루틴·알림 기록, 날씨 화면). AI 채팅만 iOS처럼 「준비 중」. 위젯·키보드는 아직 |
 
 ## 1. 결정
 
@@ -27,6 +27,7 @@
 
 - 앱은 FCM 토큰을 `POST /api/device-tokens`에 `{"token": …, "platform": "android"}`로 등록한다. iOS는 `platform`을 보내지 않으므로 서버 기본값 `ios`가 유지된다.
 - 백엔드는 `device_tokens.platform`(마이그레이션 0003부터 존재)으로 APNs/FCM을 가른다(`backend/internal/push`). FCM은 HTTP v1 API로 보내며 `FCM_SERVICE_ACCOUNT_JSON`이 설정된 경우에만 켜진다. 데이터 페이로드 키(`approval_id`, `event_id`, `kind`·`notification_id`)는 APNs와 같고, 앱은 같은 규칙으로 탭을 고른다(`push/PushDeepLink.kt`).
+- 승인 요청(`APPROVAL_REQUEST`)만 데이터 전용 메시지로 보낸다(`fcm.Client.WithDataOnly`, title·body 는 data 에). notification 블록이 있으면 앱이 백그라운드일 때 OS 가 알림을 직접 띄워 승인/거절 버튼(`approvals/ApprovalActionReceiver`)을 붙일 수 없기 때문이다. 나머지 푸시는 종료된 앱에도 확실히 보이도록 notification 메시지로 둔다.
 - Firebase 설정은 `google-services.json` 대신 `app/build.gradle.kts`에서 읽는다. 프로젝트 ID·발신자 ID는 공통 기본값, 앱 ID는 빌드 타입별 기본값(release `com.dlddu.pocketaide`, debug `com.dlddu.pocketaide.debug`)으로 둔다. API 키는 레포에 두지 않는다. CI는 레포 Actions secret `FIREBASE_API_KEY`를 환경 변수로 받고(`android-test.yml`), 로컬 빌드는 빌드 속성 `pocketaide.firebaseApiKey`(예: `~/.gradle/gradle.properties`)로 넣는다. 값의 원천은 dlddu/infrastructure `terraform/dlddu/google/pocket-aide-firebase.tf`의 `pocket_aide_android_firebase` 출력이다. API 키가 비어 있으면 앱은 푸시 없이 동작한다.
 - 백엔드 발송 키 `FCM_SERVICE_ACCOUNT_JSON`은 같은 Terraform이 SSM `/flux-cd/pocket-aide/fcm`에 쓰고, flux-cd-apps의 ExternalSecret이 `pocket-aide-secrets`로 넣는다(`refreshPolicy: CreatedOnce`라 키가 바뀌면 Secret을 지워 재생성하고 pod를 재시작한다).
 
@@ -40,7 +41,7 @@
 
 ## 5. 남은 이식 (후속 PR)
 
-1. 탭: 다짐 · 루틴 · PR 모니터 · 승인(알림 액션 승인/거부 포함) · 세션 · 알림 기록 · 날씨.
+1. ~~탭: 다짐 · 루틴 · PR 모니터 · 승인(알림 액션 승인/거부 포함) · 세션 · 알림 기록 · 날씨.~~ 완료(2026-11-01). iOS와 다른 점: 내비게이션은 화면 상태로(내비게이션 라이브러리 없음), iOS 세그먼트 컨트롤은 `FilterPills`, 위젯 갱신 호출은 위젯 이식 때 연결.
 2. 홈 화면 위젯(Glance) — 일정·날씨·다짐·알림·임시공간 섹션. 캘린더(CalendarProvider)·위치 권한.
 3. 키보드(InputMethodService) — iOS 키보드 확장과 같은 범위.
 4. 계측 테스트(에뮬레이터 + 실 백엔드, `../e2e-mocking-policy.md` 기준). 정식 배포가 필요해지면 Play 내부 테스트 트랙(App Distribution과 같은 서명 키 재사용).
