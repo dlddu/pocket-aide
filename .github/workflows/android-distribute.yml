@@ -51,7 +51,7 @@ jobs:
           json="$RUNNER_TEMP/signing.json"
           gcloud secrets versions access latest --secret="$SIGNING_SECRET" --project="$GCP_PROJECT" > "$json"
           jq -r .keystore "$json" | base64 -d > "$RUNNER_TEMP/release.jks"
-          for key in store_password key_alias key_password; do
+          for key in store_password key_password; do
             echo "::add-mask::$(jq -r ".$key" "$json")"
           done
           {
