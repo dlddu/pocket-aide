@@ -37,6 +37,7 @@ type Client struct {
 	endpoint  string
 	http      *http.Client
 	channels  map[string]string
+	dataOnly  map[string]bool
 }
 
 type serviceAccount struct {
@@ -100,6 +101,15 @@ func (c *Client) WithChannels(byCategory map[string]string) *Client {
 	return c
 }
 
+// WithDataOnly sends these categories without a notification block, title and body in data, so the app builds the notification (and its action buttons) even in the background.
+func (c *Client) WithDataOnly(categories ...string) *Client {
+	c.dataOnly = make(map[string]bool, len(categories))
+	for _, category := range categories {
+		c.dataOnly[category] = true
+	}
+	return c
+}
+
 // ProjectID reports the Firebase project the client sends to.
 func (c *Client) ProjectID() string { return c.projectID }
 
@@ -138,7 +148,7 @@ type sendRequest struct {
 
 type message struct {
 	Token        string            `json:"token"`
-	Notification notification      `json:"notification"`
+	Notification *notification     `json:"notification,omitempty"`
 	Data         map[string]string `json:"data,omitempty"`
 	Android      androidConfig     `json:"android"`
 }
@@ -149,8 +159,8 @@ type notification struct {
 }
 
 type androidConfig struct {
-	Priority     string              `json:"priority"`
-	Notification androidNotification `json:"notification"`
+	Priority     string               `json:"priority"`
+	Notification *androidNotification `json:"notification,omitempty"`
 }
 
 type androidNotification struct {
@@ -162,13 +172,19 @@ func (c *Client) message(token, category, title, body string, data map[string]an
 	if !ok {
 		channel = ChannelDefault
 	}
+	if c.dataOnly[category] {
+		payload := stringData(category, data)
+		payload["title"] = title
+		payload["body"] = body
+		return message{Token: token, Data: payload, Android: androidConfig{Priority: "high"}}
+	}
 	return message{
 		Token:        token,
-		Notification: notification{Title: title, Body: body},
+		Notification: &notification{Title: title, Body: body},
 		Data:         stringData(category, data),
 		Android: androidConfig{
 			Priority:     "high",
-			Notification: androidNotification{ChannelID: channel},
+			Notification: &androidNotification{ChannelID: channel},
 		},
 	}
 }

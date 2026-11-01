@@ -88,6 +88,39 @@ func TestSendWithCategoryPostsTheV1Message(t *testing.T) {
 	}
 }
 
+func TestDataOnlyCategoryCarriesTitleAndBodyInData(t *testing.T) {
+	srv, got := fcmServer(t, http.StatusOK, `{}`)
+	c := staticClient(t, srv.URL).
+		WithChannels(map[string]string{"APPROVAL_REQUEST": fcm.ChannelApproval}).
+		WithDataOnly("APPROVAL_REQUEST")
+
+	if err := c.SendWithCategory(context.Background(), "reg-token", "APPROVAL_REQUEST", "승인 요청", "prod 배포", map[string]any{"approval_id": "req-1"}); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+	want := map[string]any{
+		"message": map[string]any{
+			"token": "reg-token",
+			"data": map[string]any{
+				"approval_id": "req-1",
+				"category":    "APPROVAL_REQUEST",
+				"title":       "승인 요청",
+				"body":        "prod 배포",
+			},
+			"android": map[string]any{"priority": "high"},
+		},
+	}
+	if !reflect.DeepEqual(got.body, want) {
+		t.Fatalf("body:\n got %v\nwant %v", got.body, want)
+	}
+
+	if err := c.SendWithData(context.Background(), "reg-token", "t", "b", nil); err != nil {
+		t.Fatalf("send: %v", err)
+	}
+	if _, ok := got.body["message"].(map[string]any)["notification"]; !ok {
+		t.Fatal("other categories keep the notification block")
+	}
+}
+
 func TestSendWithDataUsesTheDefaultChannelAndNoCategory(t *testing.T) {
 	srv, got := fcmServer(t, http.StatusOK, `{}`)
 	c := staticClient(t, srv.URL).WithChannels(map[string]string{"APPROVAL_REQUEST": fcm.ChannelApproval})
