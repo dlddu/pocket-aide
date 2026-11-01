@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import com.dlddu.pocketaide.MainActivity
 import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.R
+import com.dlddu.pocketaide.approvals.ApprovalActionReceiver
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.launch
@@ -37,14 +38,15 @@ class PocketAideMessagingService : FirebaseMessagingService() {
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val built = NotificationCompat.Builder(this, NotificationChannels.forCategory(message.data["category"]))
+        val builder = NotificationCompat.Builder(this, NotificationChannels.forCategory(message.data["category"]))
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(notification.title)
             .setContentText(notification.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(notification.body))
             .setAutoCancel(true)
             .setContentIntent(pending)
-            .build()
+        ApprovalActionReceiver.addActions(this, builder, message.data, requestCode, notification.title)
+        val built = builder.build()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
