@@ -19,6 +19,8 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - name: Build, unit test, lint
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         run: ./gradlew --no-daemon --stacktrace assembleDebug testDebugUnitTest lintDebug
       - uses: actions/upload-artifact@v4
         if: always()

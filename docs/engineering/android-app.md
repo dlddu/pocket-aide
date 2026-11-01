@@ -27,7 +27,7 @@
 
 - 앱은 FCM 토큰을 `POST /api/device-tokens`에 `{"token": …, "platform": "android"}`로 등록한다. iOS는 `platform`을 보내지 않으므로 서버 기본값 `ios`가 유지된다.
 - 백엔드는 `device_tokens.platform`(마이그레이션 0003부터 존재)으로 APNs/FCM을 가른다(`backend/internal/push`). FCM은 HTTP v1 API로 보내며 `FCM_SERVICE_ACCOUNT_JSON`이 설정된 경우에만 켜진다. 데이터 페이로드 키(`approval_id`, `event_id`, `kind`·`notification_id`)는 APNs와 같고, 앱은 같은 규칙으로 탭을 고른다(`push/PushDeepLink.kt`).
-- Firebase 설정은 `google-services.json` 대신 `app/build.gradle.kts`에서 읽는다. 프로젝트 ID·발신자 ID는 공통 기본값, 앱 ID는 빌드 타입별 기본값(release `com.dlddu.pocketaide`, debug `com.dlddu.pocketaide.debug`)으로 둔다. API 키는 레포에 두지 않고 빌드 속성 `pocketaide.firebaseApiKey`(예: `~/.gradle/gradle.properties`) 또는 환경 변수 `FIREBASE_API_KEY`로 주입한다. 값의 원천은 dlddu/infrastructure `terraform/dlddu/google/pocket-aide-firebase.tf`의 `pocket_aide_android_firebase` 출력이다. API 키가 비어 있으면 앱은 푸시 없이 동작한다.
+- Firebase 설정은 `google-services.json` 대신 `app/build.gradle.kts`에서 읽는다. 프로젝트 ID·발신자 ID는 공통 기본값, 앱 ID는 빌드 타입별 기본값(release `com.dlddu.pocketaide`, debug `com.dlddu.pocketaide.debug`)으로 둔다. API 키는 레포에 두지 않는다. CI는 레포 Actions secret `FIREBASE_API_KEY`를 환경 변수로 받고(`android-test.yml`), 로컬 빌드는 빌드 속성 `pocketaide.firebaseApiKey`(예: `~/.gradle/gradle.properties`)로 넣는다. 값의 원천은 dlddu/infrastructure `terraform/dlddu/google/pocket-aide-firebase.tf`의 `pocket_aide_android_firebase` 출력이다. API 키가 비어 있으면 앱은 푸시 없이 동작한다.
 - 백엔드 발송 키 `FCM_SERVICE_ACCOUNT_JSON`은 같은 Terraform이 SSM `/flux-cd/pocket-aide/fcm`에 쓰고, flux-cd-apps의 ExternalSecret이 `pocket-aide-secrets`로 넣는다(`refreshPolicy: CreatedOnce`라 키가 바뀌면 Secret을 지워 재생성하고 pod를 재시작한다).
 
 ## 4. 빌드·CI
