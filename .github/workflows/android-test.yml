@@ -2,6 +2,9 @@ name: Android tests
 
 on:
   workflow_call:
+    secrets:
+      FIREBASE_API_KEY:
+        required: false
 
 jobs:
   android:

@@ -233,6 +233,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android_tests == 'true'
     uses: ./.github/workflows/android-test.yml
+    secrets:
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
   # No path filter: runs on every PR and main push (tens of seconds). The PR
   # checkout is the merge ref, so a broken mockup already on main fails every PR
