@@ -38,6 +38,7 @@ jobs:
       # cost is no check for two PRs that each passed but break when combined.
       ios_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.ios_tests == 'true') }}
       android_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_tests == 'true') }}
+      android_instrumented_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_instrumented_tests == 'true') }}
       backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
       data_model: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.data_model == 'true' }}
       ios: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
@@ -105,6 +106,13 @@ jobs:
               - 'android/**'
               - '.github/workflows/ci.yml'
               - '.github/workflows/android-test.yml'
+            android_instrumented_tests:
+              - 'android/**'
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/android-instrumented-test.yml'
+              - '.github/actions/setup-go-backend/**'
+              - '.github/actions/start-test-backend/**'
             android_deploy: &android_deploy
               - 'android/**'
             android:
@@ -248,6 +256,12 @@ jobs:
     secrets:
       FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
+  android-instrumented-test:
+    name: Android instrumented test
+    needs: changes
+    if: needs.changes.outputs.android_instrumented_tests == 'true'
+    uses: ./.github/workflows/android-instrumented-test.yml
+
   # No path filter: runs on every PR and main push (tens of seconds). The PR
   # checkout is the merge ref, so a broken mockup already on main fails every PR
   # until fixed — which is the point of gating on it.
@@ -326,7 +340,7 @@ jobs:
 
   ci-success:
     name: ci-success
-    needs: [changes, backend-unit-test, backend-integration-test, ios-test, android-test, backend-docker-push, testflight-upload, android-distribute, journey-mockup, data-model]
+    needs: [changes, backend-unit-test, backend-integration-test, ios-test, android-test, android-instrumented-test, backend-docker-push, testflight-upload, android-distribute, journey-mockup, data-model]
     if: always()
     runs-on: ubuntu-24.04-arm
     steps:
@@ -337,6 +351,7 @@ jobs:
           BACKEND_INTEGRATION_RESULT: ${{ needs.backend-integration-test.result }}
           IOS_TEST_RESULT: ${{ needs.ios-test.result }}
           ANDROID_TEST_RESULT: ${{ needs.android-test.result }}
+          ANDROID_INSTRUMENTED_RESULT: ${{ needs.android-instrumented-test.result }}
           BACKEND_PUSH_RESULT: ${{ needs.backend-docker-push.result }}
           TESTFLIGHT_RESULT: ${{ needs.testflight-upload.result }}
           ANDROID_DISTRIBUTE_RESULT: ${{ needs.android-distribute.result }}
@@ -346,13 +361,14 @@ jobs:
           BACKEND_INTEGRATION_CHANGED: ${{ needs.changes.outputs.backend_integration }}
           IOS_TESTS_CHANGED: ${{ needs.changes.outputs.ios_tests }}
           ANDROID_TESTS_CHANGED: ${{ needs.changes.outputs.android_tests }}
+          ANDROID_INSTRUMENTED_CHANGED: ${{ needs.changes.outputs.android_instrumented_tests }}
           DATA_MODEL_CHANGED: ${{ needs.changes.outputs.data_model }}
           IMAGE_EXPECTED: ${{ needs.changes.outputs.image }}
           TESTFLIGHT_EXPECTED: ${{ needs.changes.outputs.testflight }}
           ANDROID_DISTRIBUTE_EXPECTED: ${{ needs.changes.outputs.android_distribute }}
         run: |
           set -e
-          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT android-test=$ANDROID_TEST_RESULT data-model=$DATA_MODEL_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT android-distribute=$ANDROID_DISTRIBUTE_RESULT"
+          echo "journey-mockup=$JOURNEY_MOCKUP_RESULT changes=$CHANGES_RESULT backend-unit=$BACKEND_UNIT_RESULT backend-integration=$BACKEND_INTEGRATION_RESULT ios-test=$IOS_TEST_RESULT android-test=$ANDROID_TEST_RESULT android-instrumented-test=$ANDROID_INSTRUMENTED_RESULT data-model=$DATA_MODEL_RESULT docker-push=$BACKEND_PUSH_RESULT testflight=$TESTFLIGHT_RESULT android-distribute=$ANDROID_DISTRIBUTE_RESULT"
           [ "$CHANGES_RESULT" = "success" ] || { echo "changes job failed"; exit 1; }
           [ "$JOURNEY_MOCKUP_RESULT" = "success" ] || { echo "journey-mockup must pass"; exit 1; }
           if [ "$BACKEND_UNIT_CHANGED" = "true" ]; then
@@ -366,6 +382,9 @@ jobs:
           fi
           if [ "$ANDROID_TESTS_CHANGED" = "true" ]; then
             [ "$ANDROID_TEST_RESULT" = "success" ] || { echo "android-test must pass"; exit 1; }
+          fi
+          if [ "$ANDROID_INSTRUMENTED_CHANGED" = "true" ]; then
+            [ "$ANDROID_INSTRUMENTED_RESULT" = "success" ] || { echo "android-instrumented-test must pass"; exit 1; }
           fi
           if [ "$DATA_MODEL_CHANGED" = "true" ]; then
             [ "$DATA_MODEL_RESULT" = "success" ] || { echo "data-model check must pass"; exit 1; }

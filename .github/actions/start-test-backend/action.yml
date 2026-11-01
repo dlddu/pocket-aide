@@ -1,7 +1,8 @@
 name: Start the test backend
 description: >
   Starts prebuilt cmd/oidcmock + cmd/server binaries (bin_dir/oidcmock,
-  bin_dir/pocket-aide — ci.yml's ios-test-backend job cross-compiles them)
+  bin_dir/pocket-aide — ci.yml's ios-test-backend job cross-compiles them
+  for macOS; android-instrumented-test.yml builds them for its runner)
   in the background together with the local GitHub API stub
   (github_api_stub.py) and the fake APNs receiver (apns_receiver.py), and
   exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID
