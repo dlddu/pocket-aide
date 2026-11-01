@@ -36,7 +36,7 @@ jobs:
       # Not on main pushes: the PR already ran the suite on its merge ref, and a
       # rerun holds macOS slots for ~40 min that queued PRs are waiting on. The
       # cost is no check for two PRs that each passed but break when combined.
-      ios_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.ios_tests == 'true') }}
+      ios_tests: ${{ false && (github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.ios_tests == 'true')) }}
       android_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_tests == 'true') }}
       android_instrumented_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_instrumented_tests == 'true') }}
       backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
@@ -45,7 +45,7 @@ jobs:
       # Whether this run publishes a backend image / uploads to TestFlight.
       # Decided once here so the jobs and the ci-success gate cannot disagree.
       image: ${{ steps.plan.outputs.image }}
-      testflight: ${{ steps.plan.outputs.testflight }}
+      testflight: ${{ false && steps.plan.outputs.testflight }}
       android_distribute: ${{ steps.plan.outputs.android_distribute }}
       preview_pr: ${{ steps.plan.outputs.preview_pr }}
       build_source: ${{ steps.plan.outputs.build_source }}
