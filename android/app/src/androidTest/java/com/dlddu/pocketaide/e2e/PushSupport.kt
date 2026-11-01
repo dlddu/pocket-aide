@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -95,16 +96,17 @@ object Shade {
         context.getSystemService(NotificationManager::class.java)?.cancelAll()
     }
 
-    fun find(text: String, timeoutMillis: Long = 20_000): UiObject2? {
-        device.openNotification()
-        device.wait(Until.hasObject(By.pkg(SYSTEM_UI).text(text)), timeoutMillis)
-        return device.findObject(By.pkg(SYSTEM_UI).text(text))
-    }
+    fun find(text: String, timeoutMillis: Long = 20_000): UiObject2? = find(By.pkg(SYSTEM_UI).text(text), timeoutMillis)
 
-    fun findContaining(text: String, timeoutMillis: Long = 20_000): UiObject2? {
+    fun findContaining(text: String, timeoutMillis: Long = 20_000): UiObject2? =
+        find(By.pkg(SYSTEM_UI).textContains(text), timeoutMillis)
+
+    private fun find(selector: BySelector, timeoutMillis: Long): UiObject2? {
+        if (!device.hasObject(By.res(NOTIFICATION_STACK))) device.openNotification()
+        if (device.wait(Until.hasObject(selector), timeoutMillis / 2) == true) return device.findObject(selector)
         device.openNotification()
-        device.wait(Until.hasObject(By.pkg(SYSTEM_UI).textContains(text)), timeoutMillis)
-        return device.findObject(By.pkg(SYSTEM_UI).textContains(text))
+        device.wait(Until.hasObject(selector), timeoutMillis / 2)
+        return device.findObject(selector)
     }
 
     fun tap(title: String) {
@@ -128,7 +130,7 @@ object Shade {
     }
 
     fun close() {
-        device.pressBack()
+        device.executeShellCommand("cmd statusbar collapse")
         device.waitForIdle()
     }
 
@@ -149,5 +151,6 @@ object Shade {
     }
 
     private const val MAX_ANCESTORS = 10
+    private const val NOTIFICATION_STACK = "com.android.systemui:id/notification_stack_scroller"
     private const val EXPAND_BUTTON = "android:id/expand_button"
 }

@@ -65,6 +65,7 @@ abstract class E2eTest {
 
     @After
     fun closeApp() {
+        Shade.close()
         AppSession.closeAll()
     }
 }

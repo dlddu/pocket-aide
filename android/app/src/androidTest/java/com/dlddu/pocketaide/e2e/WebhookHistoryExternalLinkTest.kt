@@ -65,7 +65,7 @@ class WebhookHistoryExternalLinkTest : E2eTest() {
         Webhooks.send(event)
         val group = event.groupKey
 
-        var scenario = PrMonitor.openUntil(compose, group, "미확인 1")
+        PrMonitor.openUntil(compose, group, "미확인 1")
         val before = PrMonitor.unreadCount(compose)
         assertNotNull("The header should show the unacknowledged badge", before)
         for (label in listOf("PR", "런")) {
@@ -73,9 +73,8 @@ class WebhookHistoryExternalLinkTest : E2eTest() {
             assertStillUnacknowledged(group, before!!)
         }
 
-        scenario.close()
         AppSession.closeAll()
-        scenario = PrMonitor.openUntil(compose, group, "미확인 1")
+        val scenario = PrMonitor.openUntil(compose, group, "미확인 1")
         assertStillUnacknowledged(group, before!!)
         scenario.close()
     }

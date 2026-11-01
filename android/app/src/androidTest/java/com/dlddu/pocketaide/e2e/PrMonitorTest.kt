@@ -1,5 +1,9 @@
 package com.dlddu.pocketaide.e2e
 
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -139,7 +143,11 @@ class PrMonitorTest : E2eTest() {
 
     private fun row(number: Int) = "openprs.row.dlddu/pocket-aide-e2e#$number"
 
+    private val rowList = hasScrollToNodeAction() and hasAnyDescendant(hasTagMatching(Regex("openprs\\.row\\..+")))
+
     private fun assertRow(number: Int, vararg parts: String) {
+        compose.waitUntil(15_000) { compose.onAllNodes(rowList).fetchSemanticsNodes().isNotEmpty() }
+        runCatching { compose.onAllNodes(rowList)[0].performScrollToNode(hasTestTag(row(number))) }
         compose.waitForTag(row(number))
         val label = compose.mergedText(row(number))
         parts.forEach { assertTrue("PR #$number row should read $it: $label", label.contains(it)) }
