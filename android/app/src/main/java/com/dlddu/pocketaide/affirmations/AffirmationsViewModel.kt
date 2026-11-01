@@ -30,6 +30,7 @@ class AffirmationsViewModel(
     private val api: ApiClient,
     private val random: RandomSource = RandomSource.system,
     private val selector: RotationSelector = RotationSelector(),
+    private val onChanged: () -> Unit = {},
 ) : ViewModel() {
     private val _state = MutableStateFlow(AffirmationsUiState())
     val state: StateFlow<AffirmationsUiState> = _state.asStateFlow()
@@ -78,6 +79,7 @@ class AffirmationsViewModel(
         try {
             val created = api.createAffirmation(text, priority)
             _state.update { it.copy(items = listOf(created) + it.items, heroId = created.id) }
+            onChanged()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -94,6 +96,7 @@ class AffirmationsViewModel(
                     heroId = updated.id,
                 )
             }
+            onChanged()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -105,6 +108,7 @@ class AffirmationsViewModel(
         try {
             api.deleteAffirmation(id)
             _state.update { state -> state.copy(items = state.items.filterNot { it.id == id }) }
+            onChanged()
             if (_state.value.heroId == id) rotateHero()
         } catch (e: CancellationException) {
             throw e

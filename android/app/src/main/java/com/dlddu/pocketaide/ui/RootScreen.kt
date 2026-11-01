@@ -63,9 +63,10 @@ import com.dlddu.pocketaide.sessions.SessionsScreen
 import com.dlddu.pocketaide.scratchpad.ScratchpadViewModel
 import com.dlddu.pocketaide.todos.TodoArea
 import com.dlddu.pocketaide.todos.TodoListScreen
+import com.dlddu.pocketaide.widget.WidgetRefresher
 
 @Composable
-fun RootScreen(authBrowser: AuthBrowser, onRequestNotificationPermission: () -> Unit) {
+fun RootScreen(authBrowser: AuthBrowser, onRequestStartupPermissions: () -> Unit) {
     val auth: AuthViewModel = viewModel()
     val state by auth.state.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { auth.refreshPushPermission() }
@@ -74,7 +75,7 @@ fun RootScreen(authBrowser: AuthBrowser, onRequestNotificationPermission: () -> 
         LoginScreen(state = state, canSignIn = auth.canSignIn, onSignIn = { auth.signIn(authBrowser) })
         return
     }
-    LaunchedEffect(Unit) { onRequestNotificationPermission() }
+    LaunchedEffect(Unit) { onRequestStartupPermissions() }
     SignedInRoot(auth = auth, pushDenied = state.pushDenied)
 }
 
@@ -82,7 +83,10 @@ fun RootScreen(authBrowser: AuthBrowser, onRequestNotificationPermission: () -> 
 private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
     val context = LocalContext.current
     val container = (context.applicationContext as PocketAideApplication).container
-    val scratchpad: ScratchpadViewModel = viewModel { ScratchpadViewModel(auth.api) }
+    val appContext = context.applicationContext
+    val scratchpad: ScratchpadViewModel = viewModel {
+        ScratchpadViewModel(auth.api, onChanged = { WidgetRefresher.reloadAll(appContext) })
+    }
     val unclassified by scratchpad.unclassifiedCount.collectAsStateWithLifecycle()
     val approvals: ApprovalsViewModel = viewModel { ApprovalsViewModel(auth.api) }
     val pendingApprovals by approvals.pendingCount.collectAsStateWithLifecycle()
@@ -113,6 +117,15 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
         if (weatherLink) {
             showsWeather = true
             container.deepLinks.consumeWeather()
+        }
+    }
+    val tabLink by container.deepLinks.tab.collectAsStateWithLifecycle()
+    LaunchedEffect(tabLink) {
+        tabLink?.let {
+            showsWeather = false
+            if (it == RootTab.Notifications) notificationsReloadToken += 1
+            selected = it
+            container.deepLinks.consumeTab(it)
         }
     }
     LaunchedEffect(Unit) {

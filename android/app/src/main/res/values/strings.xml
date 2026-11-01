@@ -3,4 +3,8 @@
     <string name="app_name">Pocket Aide</string>
     <string name="notification_channel_default">알림</string>
     <string name="notification_channel_approval">승인 요청</string>
+    <string name="widget_name">PocketAide</string>
+    <string name="widget_description">하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.</string>
+    <string name="keyboard_name">Pocket Aide 키보드</string>
+    <string name="keyboard_subtype">Pocket Aide</string>
 </resources>
