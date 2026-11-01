@@ -43,6 +43,6 @@
 
 1. ~~탭: 다짐 · 루틴 · PR 모니터 · 승인(알림 액션 승인/거부 포함) · 세션 · 알림 기록 · 날씨.~~ 완료(2026-11-01). iOS와 다른 점: 내비게이션은 화면 상태로(내비게이션 라이브러리 없음), iOS 세그먼트 컨트롤은 `FilterPills`, 위젯 갱신 호출은 위젯 이식 때 연결(2번에서 연결됨).
 2. ~~홈 화면 위젯(Glance) — 일정·날씨·다짐·알림·임시공간 섹션. 캘린더(CalendarProvider)·위치 권한.~~ 완료(2026-11-01, `widget/`). 섹션 순서·한국어 카피·딥링크(`pocketaide://affirmations|calendar|notifications|scratchpad|weather`)는 iOS와 같다. iOS와 다른 점: 타임라인 엔트리 24개 대신 `updatePeriodMillis` 30분마다 다시 그리고(오류도 30분 뒤 재시도 — iOS와 같음), 다짐은 30분 구간 시작 시각을 시드로 앱과 같은 `RotationSelector`로 고른다. 날씨는 30분 예보 캐시가 살아 있으면 다시 받지 않는다. 캘린더는 캘린더 앱에서 보이는 캘린더(`VISIBLE = 1`)만 읽는다. 알림·캘린더·위치 권한은 로그인된 앱이 뜰 때 한 번에 요청하고, 위치는 앱이 앞으로 나올 때마다 갱신한다. 위젯 즉시 갱신(`WidgetRefresher.reloadAll`)은 iOS와 같은 지점(다짐 추가·편집·삭제, 임시공간 추가·삭제·분류, 알림 확인, PR 모니터 확인, 로그인·로그아웃, 캘린더 권한 허용, 위치 변경)에서 부른다.
-3. 키보드(InputMethodService) — iOS 키보드 확장과 같은 범위.
+3. ~~키보드(InputMethodService) — iOS 키보드 확장과 같은 범위.~~ 완료(2026-11-01, `keyboard/PocketAideKeyboardService`). iOS처럼 「Insert hello from pocket-aide」·「next ⇄」 두 버튼 뼈대이고, 실제 키보드 기능(PRD-9, `keyboard-voice-input.md`)은 iOS와 함께 아직 구현 전. 안드로이드는 입력기가 직접 마이크를 쓸 수 있어 iOS의 App Group 우회가 필요 없다.
 4. 계측 테스트(에뮬레이터 + 실 백엔드, `../e2e-mocking-policy.md` 기준). 정식 배포가 필요해지면 Play 내부 테스트 트랙(App Distribution과 같은 서명 키 재사용).
 5. 패리티 도달 후 `ios/`와 iOS 전용 CI(`ios-test.yml`, `testflight-upload.yml`) 제거.
