@@ -77,6 +77,10 @@ object DesignTokens {
 
         @Composable
         @ReadOnlyComposable
+        fun arrivalGlow(): Color = adaptive(light = 0xFF3D2F8E, dark = 0xFFA99FE6)
+
+        @Composable
+        @ReadOnlyComposable
         private fun adaptive(light: Long, dark: Long): Color =
             Color(if (isSystemInDarkTheme()) dark else light)
     }
