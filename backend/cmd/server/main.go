@@ -34,11 +34,19 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/routines"
 	"github.com/dlddu/pocket-aide/backend/internal/scratchpad"
 	"github.com/dlddu/pocket-aide/backend/internal/sessions"
+	"github.com/dlddu/pocket-aide/backend/internal/telemetry"
 	"github.com/dlddu/pocket-aide/backend/internal/todos"
 )
 
 func main() {
 	cfg := loadConfig()
+
+	shutdownTracing, err := telemetry.Setup(context.Background(), "pocket-aide")
+	if err != nil {
+		log.Printf("tracing setup failed; continuing without traces: %v", err)
+	} else if telemetry.Enabled() {
+		log.Printf("tracing enabled")
+	}
 
 	conn, err := db.Open(cfg.DatabasePath)
 	if err != nil {
@@ -61,6 +69,7 @@ func main() {
 	}
 
 	r := chi.NewRouter()
+	r.Use(telemetry.ChiRouteName)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
@@ -189,7 +198,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           r,
+		Handler:           telemetry.Handler(r, "/healthz"),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -289,6 +298,9 @@ func main() {
 	shutdownCtx, sc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer sc()
 	_ = srv.Shutdown(shutdownCtx)
+	if err := shutdownTracing(shutdownCtx); err != nil {
+		log.Printf("tracing shutdown: %v", err)
+	}
 }
 
 type config struct {

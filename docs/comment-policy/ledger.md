@@ -43,6 +43,7 @@
 | — | `backend/internal/push/router.go` | 8 | `85ae2e5dfca9` | — | 2026-10-31 Android FCM 푸시 기능 PR 이 들임 — exported 선언의 doc 첫 문장뿐, 미판정 |
 | 2026-10-04 | `backend/internal/routines/store.go` | 3 | `49861c75fd62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-10-01 | `backend/internal/scratchpad/store.go` | 20 | `61dc59d49236` | 완료 | 필요성 판정 — 제거 3줄 · 유지 20줄 — [상세](passes/2026-10-01-scratchpad.md) |
+| 2026-11-01 | `backend/internal/telemetry/telemetry.go`, `backend/internal/telemetry/telemetry_test.go` | 43 | `569d21409824` | — | 미판정 — 등재만. OpenTelemetry SDK 트레이싱(OTLP/HTTP·W3C 전파·서버 미들웨어·chi 라우트 span 이름·`http.DefaultTransport`·database/sql 계측)을 들인 신규 패키지. |
 | 2026-09-29 | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 24줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/migrations/0007_todos.up.sql` | 3 | `b37ba16e4205` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
