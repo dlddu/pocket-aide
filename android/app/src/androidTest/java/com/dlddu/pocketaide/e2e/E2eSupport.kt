@@ -7,8 +7,10 @@ import android.net.Uri
 import android.os.Build
 import android.util.Base64
 import android.util.Log
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasScrollToNodeAction
@@ -37,6 +39,7 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -58,6 +61,11 @@ abstract class E2eTest {
     protected fun relaunch(scenario: ActivityScenario<MainActivity>): ActivityScenario<MainActivity> {
         scenario.close()
         return AppSession.launchSignedIn(compose)
+    }
+
+    @After
+    fun closeApp() {
+        AppSession.closeAll()
     }
 }
 
@@ -131,6 +139,10 @@ object AppSession {
             compose.waitUntil(30_000) { compose.exists(Tags.SHELL) }
         }
         return scenario
+    }
+
+    fun closeAll() {
+        finishAppActivities()
     }
 
     private fun finishAppActivities() {
@@ -246,6 +258,44 @@ fun ComposeTestRule.waitForText(tag: String, expected: String, timeoutMillis: Lo
     assertTrue("$tag should read '$expected' but read '${if (exists(tag)) textOf(tag) else "<missing>"}'", matched)
 }
 
+fun ComposeTestRule.mergedText(tag: String): String {
+    val node = onAllNodesWithTag(tag).fetchSemanticsNodes().firstOrNull() ?: return ""
+    val parts = node.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } +
+        node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
+    return parts.joinToString(" ")
+}
+
+fun ComposeTestRule.isSelected(tag: String): Boolean =
+    onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes()
+        .any { it.config.getOrNull(SemanticsProperties.Selected) == true }
+
+fun ComposeTestRule.isOn(tag: String): Boolean =
+    onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes()
+        .any { it.config.getOrNull(SemanticsProperties.ToggleableState) == ToggleableState.On }
+
+fun ComposeTestRule.subtree(tag: String): List<SemanticsNode> {
+    val root = onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes().firstOrNull() ?: return emptyList()
+    val out = mutableListOf<SemanticsNode>()
+    fun walk(node: SemanticsNode) {
+        out += node
+        node.children.forEach(::walk)
+    }
+    walk(root)
+    return out
+}
+
+fun ComposeTestRule.textsUnder(tag: String): List<String> =
+    subtree(tag)
+        .mapNotNull { node -> node.config.getOrNull(SemanticsProperties.Text)?.let { node.boundsInRoot.top to it.joinToString("") { t -> t.text } } }
+        .sortedBy { it.first }
+        .map { it.second }
+
+fun ComposeTestRule.tagsUnder(tag: String): List<String> =
+    subtree(tag).mapNotNull { it.config.getOrNull(SemanticsProperties.TestTag) }
+
+fun ComposeTestRule.anyTextContains(text: String): Boolean =
+    onAllNodes(hasText(text, substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+
 fun ComposeTestRule.hasAnyText(text: String): Boolean =
     onAllNodes(hasText(text), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
 
@@ -315,7 +365,7 @@ class BackendApi(private val token: String) {
             .build()
         private val jsonType = "application/json".toMediaType()
 
-        fun signIn(): BackendApi {
+        fun signIn(subject: String? = null): BackendApi {
             val verifier = randomVerifier()
             val challenge = Base64.encodeToString(
                 MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray()),
@@ -329,6 +379,7 @@ class BackendApi(private val token: String) {
                 .appendQueryParameter("state", UUID.randomUUID().toString())
                 .appendQueryParameter("code_challenge", challenge)
                 .appendQueryParameter("code_challenge_method", "S256")
+                .apply { if (subject != null) appendQueryParameter("login_hint", subject) }
                 .build()
                 .toString()
             val redirect = send(Request.Builder().url(authorize).build())
@@ -345,6 +396,12 @@ class BackendApi(private val token: String) {
             val token = reply.json?.optString("access_token").orEmpty()
             assertTrue("/token should issue an access token: ${reply.status} ${reply.body}", reply.status == 200 && token.isNotEmpty())
             return BackendApi(token)
+        }
+
+        fun setNextAppLoginSubject(subject: String) {
+            val form = FormBody.Builder().add("sub", subject).build()
+            val reply = send(Request.Builder().url("$IDP/e2e/next-login-subject").post(form).build())
+            assertEquals("oidcmock should take the next app login subject: ${reply.body}", 204, reply.status)
         }
 
         fun perform(method: String, path: String, authorization: String?, json: JSONObject?): BackendReply {

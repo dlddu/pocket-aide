@@ -17,6 +17,16 @@ jobs:
       DATABASE_PATH: /tmp/pocket-aide-android-e2e.db
       PORT: "8080"
       BACKEND_BASE_URL: http://localhost:8080
+      SQS_QUEUE_URL: http://localhost:4566/123456789012/pocket-aide-e2e
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      APNS_DISABLED: "true"
+      # mock-exception: EXT — FCM 발송은 Firebase 서비스 계정 키·실 기기 등록 토큰 경계라 CI 안에서 못 한다; 발송 대상만 로컬 가짜 수신부로 바꾸고 알림 설정 판정·토큰 교환·발송 호출은 실경로 (docs/e2e-mocking-policy.md)
+      FCM_HOST: http://localhost:5559
+      # mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 디버그 앱의 GitHubClient 를 로컬 GitHub API 스텁으로 향하게 빌드한다 (docs/e2e-mocking-policy.md)
+      GITHUB_API_BASE_URL: http://localhost:5557
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-go-backend
@@ -28,9 +38,40 @@ jobs:
         run: |
           go build -o "$RUNNER_TEMP/android-test-backend/oidcmock" ./cmd/oidcmock
           go build -o "$RUNNER_TEMP/android-test-backend/pocket-aide" ./cmd/server
+      # mock-exception: EXT — FCM 발송은 Firebase 서비스 계정 키 경계라 CI 안에서 못 한다; 일회용 RSA 키로 만든 서비스 계정의 token_uri 를 로컬 가짜 FCM 수신부로 둔다 (docs/e2e-mocking-policy.md)
+      - name: Generate a throwaway FCM service account for the fake receiver
+        run: |
+          key=$(openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 2>/dev/null)
+          json=$(KEY="$key" python3 -c 'import json, os; print(json.dumps({"type": "service_account", "project_id": "pocket-aide-e2e", "private_key_id": "e2e-throwaway", "private_key": os.environ["KEY"], "client_email": "fcm-e2e@pocket-aide-e2e.iam.gserviceaccount.com", "token_uri": os.environ["FCM_HOST"] + "/token"}))')
+          { echo 'FCM_SERVICE_ACCOUNT_JSON<<FCM_SA_EOF'; echo "$json"; echo 'FCM_SA_EOF'; } >> "$GITHUB_ENV"
+      - uses: ./.github/actions/start-test-sqs
       - uses: ./.github/actions/start-test-backend
         with:
           bin_dir: ${{ runner.temp }}/android-test-backend
+      - name: Check the backend sends FCM pushes
+        run: |
+          curl -fsS "$BACKEND_BASE_URL/healthz"
+          grep -q 'fcm: enabled for project pocket-aide-e2e' /tmp/pocket-aide-backend.log
+      # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; 러너가 oidcmock 과 PKCE 왕복으로 앱 사용자의 토큰을 받아 실 API 로 가짜 FCM 수신부용 기기 토큰을 등록한 뒤 웹훅 픽스처를 큐에 넣는다 (docs/e2e-mocking-policy.md)
+      - name: Register the fixture device and enqueue the webhook fixture
+        run: |
+          set -euo pipefail
+          verifier=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')
+          challenge=$(python3 -c 'import base64, hashlib, sys; print(base64.urlsafe_b64encode(hashlib.sha256(sys.argv[1].encode()).digest()).decode().rstrip("="))' "$verifier")
+          redirect=$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["OIDC_REDIRECT_URI"], safe=""))')
+          location=$(curl -fsS -o /dev/null -w '%{redirect_url}' "$OIDC_ISSUER/authorize?response_type=code&client_id=$OIDC_CLIENT_ID&redirect_uri=$redirect&scope=openid&state=fixture&code_challenge=$challenge&code_challenge_method=S256")
+          code=$(python3 -c 'import sys, urllib.parse; print(urllib.parse.parse_qs(urllib.parse.urlparse(sys.argv[1]).query)["code"][0])' "$location")
+          access=$(curl -fsS "$OIDC_ISSUER/token" -d grant_type=authorization_code -d "code=$code" -d "code_verifier=$verifier" -d "client_id=$OIDC_CLIENT_ID" --data-urlencode "redirect_uri=$OIDC_REDIRECT_URI" | python3 -c 'import json, sys; print(json.load(sys.stdin)["access_token"])')
+          curl -fsS "$BACKEND_BASE_URL/api/device-tokens" -H "Authorization: Bearer $access" -H 'Content-Type: application/json' \
+            -d '{"token":"e2e-fcm-fixture","platform":"android"}'
+          curl -fsS "$SQS_QUEUE_URL" \
+            --aws-sigv4 "aws:amz:$AWS_REGION:sqs" \
+            --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
+            --data-urlencode 'Action=SendMessage' \
+            --data-urlencode 'MessageBody@.github/fixtures/github-webhook/workflow_run.completed.json' \
+            --data-urlencode 'MessageAttribute.1.Name=x-github-event' \
+            --data-urlencode 'MessageAttribute.1.Value.DataType=String' \
+            --data-urlencode 'MessageAttribute.1.Value.StringValue=workflow_run'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -55,16 +96,22 @@ jobs:
           working-directory: android
           script: |
             nohup adb logcat -v time > "$RUNNER_TEMP/logcat.txt" 2>&1 < /dev/null &
-            adb reverse tcp:5556 tcp:5556
-            adb reverse tcp:8080 tcp:8080
+            for port in 5556 8080 4566 5557 5559; do adb reverse tcp:$port tcp:$port; done
             adb reverse --list
             adb shell pm list packages | grep -i -e chrome -e browser || true
             adb shell "echo '_ --disable-fre --no-default-browser-check --no-first-run' > /data/local/tmp/chrome-command-line"
             adb shell am set-debug-app --persistent com.android.chrome
             ./gradlew --no-daemon --stacktrace connectedDebugAndroidTest
+      - name: Dump the push pipeline logs on failure
+        if: failure()
+        run: |
+          echo '--- backend ---'; tail -n 200 /tmp/pocket-aide-backend.log || true
+          echo '--- fcm receiver ---'; tail -n 100 /tmp/fcm-receiver.log || true
+          echo '--- moto ---'; tail -n 50 /tmp/moto.log || true
+          echo '--- github stub ---'; tail -n 50 /tmp/github-stub.log || true
       - name: Stop the test backend
         if: always()
-        run: kill "$OIDCMOCK_PID" "$BACKEND_PID" "$GITHUB_STUB_PID" "$APNS_RECEIVER_PID" 2>/dev/null || true
+        run: kill "$OIDCMOCK_PID" "$BACKEND_PID" "$GITHUB_STUB_PID" "$APNS_RECEIVER_PID" "$FCM_RECEIVER_PID" "$MOTO_PID" 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -73,4 +120,6 @@ jobs:
             android/app/build/reports/androidTests/
             android/app/build/outputs/androidTest-results/
             ${{ runner.temp }}/logcat.txt
+            /tmp/pocket-aide-backend.log
+            /tmp/fcm-receiver.log
           retention-days: 7

@@ -4,9 +4,11 @@ description: >
   bin_dir/pocket-aide — ci.yml's ios-test-backend job cross-compiles them
   for macOS; android-instrumented-test.yml builds them for its runner)
   in the background together with the local GitHub API stub
-  (github_api_stub.py) and the fake APNs receiver (apns_receiver.py), and
-  exports OIDCMOCK_PID / BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID
-  via $GITHUB_ENV so a later step can kill them. Assumes the caller already
+  (github_api_stub.py), the fake APNs receiver (apns_receiver.py) and the
+  fake FCM receiver (fcm_receiver.py), and exports OIDCMOCK_PID /
+  BACKEND_PID / GITHUB_STUB_PID / APNS_RECEIVER_PID / FCM_RECEIVER_PID via
+  $GITHUB_ENV so a later step can kill them. The backend log goes to
+  /tmp/pocket-aide-backend.log. Assumes the caller already
   checked out the repo. Required env vars on the calling
   job (read by the binaries themselves, not this action):
     OIDC_ISSUER, OIDC_AUDIENCE, OIDC_CLIENT_ID, OIDC_REDIRECT_URI,
@@ -36,6 +38,13 @@ inputs:
       the backend sends to and the port WebhookPushSettingsUITests reads.
     required: false
     default: '5558'
+  fcm_receiver_port:
+    description: >
+      Port the fake FCM receiver listens on. Must match the FCM_HOST and the
+      service account token_uri the backend uses, and the port the Android
+      instrumented tests read.
+    required: false
+    default: '5559'
 
 runs:
   using: composite
@@ -62,10 +71,19 @@ runs:
         for i in {1..30}; do
           curl -fsS http://localhost:${{ inputs.apns_receiver_port }}/healthz && break || sleep 1
         done
+    # mock-exception: EXT — FCM 발송은 Firebase 서비스 계정 키·실 기기 등록 토큰 경계라 CI 안에서 못 한다; 백엔드가 FCM_HOST 와 일회용 서비스 계정 token_uri 로 보내는 요청을 로컬 가짜 수신부가 받아 기록한다 (docs/e2e-mocking-policy.md)
+    - name: Start fake FCM receiver
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/fcm_receiver.py" ${{ inputs.fcm_receiver_port }} > /tmp/fcm-receiver.log 2>&1 &
+        echo "FCM_RECEIVER_PID=$!" >> "$GITHUB_ENV"
+        for i in {1..30}; do
+          curl -fsS http://localhost:${{ inputs.fcm_receiver_port }}/healthz && break || sleep 1
+        done
     - name: Start backend
       shell: bash
       run: |
-        "${{ inputs.bin_dir }}/pocket-aide" &
+        "${{ inputs.bin_dir }}/pocket-aide" > /tmp/pocket-aide-backend.log 2>&1 &
         echo "BACKEND_PID=$!" >> "$GITHUB_ENV"
         for i in {1..30}; do
           curl -fsS http://localhost:${{ inputs.backend_port }}/healthz && break || sleep 1

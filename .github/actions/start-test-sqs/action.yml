@@ -1,9 +1,10 @@
 name: Start the test SQS endpoint
 description: >
-  Starts a local SQS endpoint (moto server) on the macOS runner and creates
-  the queue the backend's PR-monitor consumer long-polls. macOS runners have
-  no Docker, so the LocalStack container used by backend-integration-test
-  cannot run here; moto serves the same SQS wire protocol from a venv.
+  Starts a local SQS endpoint (moto server) on the runner and creates the
+  queue the backend's PR-monitor consumer long-polls. macOS runners have no
+  Docker, so the LocalStack container used by backend-integration-test
+  cannot run there; moto serves the same SQS wire protocol from a venv, and
+  the Android emulator job uses the same action so both E2E jobs share it.
   Exports MOTO_PID via $GITHUB_ENV so a later step can kill it. Required env
   vars on the calling job: AWS_ENDPOINT_URL (http://localhost:<port>),
   AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, SQS_QUEUE_URL (its
