@@ -15,11 +15,13 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/approvalpush"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
+	"github.com/dlddu/pocket-aide/backend/internal/fcm"
+	"github.com/dlddu/pocket-aide/backend/internal/push"
 )
 
 type sent struct {
-	token, category, title, body string
-	data                         map[string]any
+	token, platform, category, title, body string
+	data                                   map[string]any
 }
 
 type fakeSender struct {
@@ -28,11 +30,11 @@ type fakeSender struct {
 	errFor map[string]error
 }
 
-func (f *fakeSender) SendWithCategory(_ context.Context, token, category, title, body string, data map[string]any) error {
+func (f *fakeSender) SendWithCategory(_ context.Context, d devicetokens.Device, category, title, body string, data map[string]any) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.sent = append(f.sent, sent{token, category, title, body, data})
-	return f.errFor[token]
+	f.sent = append(f.sent, sent{d.Token, d.Platform, category, title, body, data})
+	return f.errFor[d.Token]
 }
 
 func (f *fakeSender) all() []sent {
@@ -42,6 +44,15 @@ func (f *fakeSender) all() []sent {
 }
 
 func setup(t *testing.T, tokens ...string) (*devicetokens.Store, int64) {
+	t.Helper()
+	devices := make([]devicetokens.Device, 0, len(tokens))
+	for _, tok := range tokens {
+		devices = append(devices, devicetokens.Device{Token: tok, Platform: devicetokens.PlatformIOS})
+	}
+	return setupDevices(t, devices...)
+}
+
+func setupDevices(t *testing.T, devices ...devicetokens.Device) (*devicetokens.Store, int64) {
 	t.Helper()
 	conn, err := db.Open(filepath.Join(t.TempDir(), "push.db"))
 	if err != nil {
@@ -57,12 +68,12 @@ func setup(t *testing.T, tokens ...string) (*devicetokens.Store, int64) {
 		t.Fatalf("user: %v", err)
 	}
 	store := devicetokens.New(conn)
-	for _, tok := range tokens {
-		if err := store.Upsert(context.Background(), uid, tok); err != nil {
+	for _, d := range devices {
+		if err := store.Upsert(context.Background(), uid, d.Token, d.Platform); err != nil {
 			t.Fatalf("token: %v", err)
 		}
 	}
-	if err := store.Upsert(context.Background(), uid+1, "bob-device"); err != nil {
+	if err := store.Upsert(context.Background(), uid+1, "bob-device", devicetokens.PlatformIOS); err != nil {
 		t.Fatalf("token: %v", err)
 	}
 	return store, uid
@@ -128,18 +139,56 @@ func TestInvalidTokensAreDroppedOthersKept(t *testing.T) {
 		UserID: uid, KeyName: "infra-ci", ApprovalID: "req-1", Context: "ctx",
 	})
 
-	left, err := store.ListByUserID(context.Background(), uid)
+	if left := tokensOf(t, store, uid); !reflect.DeepEqual(left, []string{"busy", "fine"}) {
+		t.Fatalf("tokens left: %v", left)
+	}
+	if other := tokensOf(t, store, uid+1); !reflect.DeepEqual(other, []string{"bob-device"}) {
+		t.Fatalf("another user's tokens must stay: %v", other)
+	}
+}
+
+func TestAndroidDevicesGetTheSamePushAndDeadFCMTokensAreDropped(t *testing.T) {
+	store, uid := setupDevices(t,
+		devicetokens.Device{Token: "phone", Platform: devicetokens.PlatformIOS},
+		devicetokens.Device{Token: "pixel", Platform: devicetokens.PlatformAndroid},
+		devicetokens.Device{Token: "old-pixel", Platform: devicetokens.PlatformAndroid},
+		devicetokens.Device{Token: "no-fcm", Platform: devicetokens.PlatformAndroid},
+	)
+	sender := &fakeSender{errFor: map[string]error{
+		"old-pixel": &fcm.RejectedError{StatusCode: 404, Status: "NOT_FOUND", ErrorCode: "UNREGISTERED"},
+		"no-fcm":    push.ErrPlatformDisabled,
+	}}
+	approvalpush.New(sender, store).Send(context.Background(), approvalpush.Request{
+		UserID: uid, KeyName: "infra-ci", ApprovalID: "req-1", Context: "ctx",
+	})
+
+	platforms := map[string]string{}
+	for _, s := range sender.all() {
+		platforms[s.token] = s.platform
+		if s.category != approvalpush.Category {
+			t.Fatalf("category for %s: %q", s.token, s.category)
+		}
+	}
+	if platforms["pixel"] != devicetokens.PlatformAndroid || platforms["phone"] != devicetokens.PlatformIOS {
+		t.Fatalf("sends: %v", platforms)
+	}
+	if left := tokensOf(t, store, uid); !reflect.DeepEqual(left, []string{"no-fcm", "phone", "pixel"}) {
+		t.Fatalf("tokens left: %v (a disabled platform must not drop its tokens)", left)
+	}
+}
+
+func tokensOf(t *testing.T, store *devicetokens.Store, uid int64) []string {
+	t.Helper()
+	devices, err := store.ListByUserID(context.Background(), uid)
 	if err != nil {
 		t.Fatalf("list: %v", err)
 	}
-	sort.Strings(left)
-	if !reflect.DeepEqual(left, []string{"busy", "fine"}) {
-		t.Fatalf("tokens left: %v", left)
+	out := make([]string, 0, len(devices))
+	for _, d := range devices {
+		out = append(out, d.Token)
 	}
-	other, _ := store.ListByUserID(context.Background(), uid+1)
-	if !reflect.DeepEqual(other, []string{"bob-device"}) {
-		t.Fatalf("another user's tokens must stay: %v", other)
-	}
+	sort.Strings(out)
+	return out
 }
 
 type gate struct {
@@ -147,7 +196,7 @@ type gate struct {
 	done    chan struct{}
 }
 
-func (g *gate) SendWithCategory(context.Context, string, string, string, string, map[string]any) error {
+func (g *gate) SendWithCategory(context.Context, devicetokens.Device, string, string, string, map[string]any) error {
 	<-g.release
 	close(g.done)
 	return nil
