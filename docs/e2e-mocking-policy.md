@@ -5,7 +5,7 @@ pocket-aide 의 E2E(XCUITest)는 **시뮬레이터의 실 앱 빌드 + CI 가 �
 (`launchEnvironment` → `ProcessInfo.processInfo.environment`), 외부 상류를 끄는 가짜 자격증명·엔드포인트는
 **실환경으로 재현이 불가능한 경우에 한해서만** 허용하고, 그 예외는 이 문서의 허용목록에 등재된 것만 인정한다.
 
-- 대상 범위: `ios` · `backend` · `.github` 중 E2E 경로. Go 단위·통합 테스트(`*_test.go`, LocalStack SQS 포함)와
+- 대상 범위: `ios` · `backend` · `.github` 중 E2E 경로와 안드로이드 계측 테스트(`android/app/src/androidTest/` — 에뮬레이터의 실 앱 빌드 + 같은 실 백엔드). Go 단위·통합 테스트(`*_test.go`, LocalStack SQS 포함)와
   `ios/PocketAideUnitTests/` 의 모킹은 대상이 아니다.
 - 실 백엔드 API 를 통한 데이터 시드, 전용 테스트 계정·테넌트, 결정적 입력 데이터는 모킹이 아니라 권장 **대안**이다.
 
@@ -39,9 +39,11 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 |------|------|----------|------------------|
 | `.github/workflows/ios-test.yml` | `oidcmock` | `EXT` | 잡 env 가 OIDC issuer 를 로컬 oidcmock(`http://localhost:5556`)으로 향하게 한다. 실 IdP 는 브라우저 동의·실 계정을 요구하고, 운영 설정조차 `idp.example.com` 자리표시자라 CI 시크릿으로 쓸 테스트 테넌트가 없다. |
 | `.github/workflows/ci.yml` | `oidcmock` | `EXT` | `ios-test-backend` 잡이 위 IdP 대체 서버(`backend/cmd/oidcmock`)를 macOS 러너용(`darwin/arm64`)으로 교차 빌드해 아티팩트로 넘긴다. 사유 동일. |
-| `.github/actions/start-test-backend/action.yml` | `oidcmock` | `EXT` | 위 잡이 빌드한 IdP 대체 서버를 기동한다. 사유 동일. |
+| `.github/workflows/android-instrumented-test.yml` | `oidcmock` | `EXT` | 안드로이드 계측 테스트 잡이 IdP 대체 서버를 러너용(`linux/amd64`)으로 빌드하고, 잡 env 가 OIDC issuer 를 그 서버(`http://localhost:5556`)로 향하게 한다. 에뮬레이터는 `adb reverse` 로 같은 `localhost` 주소에 닿아 앱·백엔드가 같은 issuer 문자열을 본다. 사유 동일. |
+| `.github/actions/start-test-backend/action.yml` | `oidcmock` | `EXT` | 위 두 잡이 빌드한 IdP 대체 서버를 기동한다. 사유 동일. |
 | `backend/cmd/oidcmock/main.go` | `oidcmock` | `EXT` | IdP 대체 서버의 실행 진입점. 사유 동일. |
 | `backend/internal/oidcmock/oidcmock.go` | `oidcmock` | `EXT` | IdP 대체 서버 구현(discovery·JWKS·PKCE authorize·token). `/authorize` 의 선택 파라미터 `login_hint` 는 그 코드로 발급하는 토큰의 subject 를 정한다(없으면 기본 subject — 앱 로그인 불변) — 둘째 사용자의 실 API 호출(사용자별 격리 단정)용이다. 테스트 러너용 `POST /e2e/next-login-subject`(form `sub`)는 `login_hint` 없는 **다음** `/authorize` 한 번의 subject 를 정한다(소비되면 기본으로 돌아가고, 빈 값이면 해제) — 앱은 `login_hint` 를 싣지 않으므로 앱 로그인을 둘째 사용자로 끝내는 유일한 길이며, 앱 경로(로그아웃 → `LoginView` → `ASWebAuthenticationSession`)는 바뀌지 않는다(github-monitor #12). 사유 동일. |
+| `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/E2eSupport.kt` | `oidcmock` | `EXT` | 계측 테스트 공유 헬퍼 — 앱 로그인은 실 Custom Tab(Chrome) 왕복을 IdP 대체 서버 상대로 하고(UiAutomator 가 브라우저 첫 실행 안내만 넘긴다), 테스트 러너 쪽 `BackendApi` 는 같은 서버와 PKCE 왕복을 해 앱과 같은 subject 의 토큰으로 실 백엔드 API 에 시드한다. iOS `UITestAuth.swift` · `BackendAPIUITestSupport.swift` 행과 같은 역할이다. 사유 동일. |
 | `ios/PocketAideTests/UITestAuth.swift` | `oidcmock` | `EXT` | UI 테스트 공유 로그인 헬퍼 — 실 `ASWebAuthenticationSession` 왕복을 oidcmock 상대로 1회 수행한다. 사유 동일. |
 | `ios/PocketAideTests/LoginUITests.swift` | `oidcmock` | `EXT` | oidcmock 토큰으로 로그인한 뒤 실 탭 셸에 착지하는지 단정한다. 사유 동일. |
 | `ios/PocketAideTests/BackendAPIUITestSupport.swift` | `oidcmock` | `EXT` | 테스트 러너 쪽 백엔드 API 헬퍼 — oidcmock 과 PKCE 왕복(authorize 의 code → token)을 해 앱과 같은 subject 의 토큰을 받는다(`login_hint` 를 실으면 둘째 사용자의 토큰). `setNextAppLoginSubject` 는 oidcmock 에 다음 앱 로그인의 subject 를 지정한다(위 `oidcmock.go` 행). 그 토큰으로 부르는 것은 실 백엔드 API 라 시드이고 치환이 아니며, IdP 쪽 사유는 위 행과 같다. |
@@ -60,7 +62,7 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `ios/PocketAideTests/RotationWeightedAffirmationUITests.swift` | `launchEnvironment["ROTATION_SEED"]` | `DET` | 우선순위 셋(높음·보통·낮음)을 백엔드 API 로 시드한 뒤 고정 시드로 앱을 띄워 회전 30회의 노출 순서를 단정한다. 사유는 위 행과 같다. |
 
 각 행의 파일에는 그 행의 카테고리로 `mock-exception:` 주석이 함께 있다(표기 규약 — `DET` 네 행 외에는 모두 `EXT`). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
-계정·테넌트가 마련되면 `oidcmock` 여덟 행 모두 실 상류로 대체하고 지운다. APNs 발송 쪽은
+계정·테넌트가 마련되면 `oidcmock` 열 행 모두 실 상류로 대체하고 지운다. APNs 발송 쪽은
 차단 요인 BF-2(푸시 수신) 해소 때 `APNS_DISABLED`(발송 끄기)로 **유지**했다가, github-monitor 시나리오 9(알림 설정에 따른
 도달 여부)가 발송 결정을 관측해야 해서 `APNS_HOST`(발송 대상 재지정) 세 행으로 바꿨다 — 끄기보다 치환 구간이 좁다(알림
 설정 판정 · 서명 · 발송 호출이 실경로로 들어왔다). 수신 이후는 여전히 `simctl push` 행이 실경로로 연다. APNs 네 행은 CI

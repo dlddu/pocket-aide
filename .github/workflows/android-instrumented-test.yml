@@ -1,0 +1,76 @@
+name: Android instrumented tests
+
+on:
+  workflow_call:
+
+jobs:
+  android-instrumented:
+    name: Android instrumented test (emulator)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; oidcmock 이 대신하고 에뮬레이터는 adb reverse 로 같은 issuer 주소에 닿는다 (docs/e2e-mocking-policy.md)
+      OIDC_ISSUER: http://localhost:5556
+      OIDC_AUDIENCE: pocket-aide-dev
+      OIDC_CLIENT_ID: pocket-aide-ios-dev
+      OIDC_REDIRECT_URI: pocketaide-dev://callback
+      DATABASE_PATH: /tmp/pocket-aide-android-e2e.db
+      PORT: "8080"
+      BACKEND_BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-backend
+      # mock-exception: EXT — 실 OIDC IdP(브라우저 동의·실 계정)는 CI 안에서 못 띄운다; 이 잡이 띄울 oidcmock 을 러너용으로 빌드한다 (docs/e2e-mocking-policy.md)
+      - name: Build oidcmock + server
+        working-directory: backend
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          go build -o "$RUNNER_TEMP/android-test-backend/oidcmock" ./cmd/oidcmock
+          go build -o "$RUNNER_TEMP/android-test-backend/pocket-aide" ./cmd/server
+      - uses: ./.github/actions/start-test-backend
+        with:
+          bin_dir: ${{ runner.temp }}/android-test-backend
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the app and test APKs
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace assembleDebug assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run instrumented tests on the emulator
+        uses: reactivecircus/android-emulator-runner@v2.33.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          working-directory: android
+          script: |
+            nohup adb logcat -v time > "$RUNNER_TEMP/logcat.txt" 2>&1 < /dev/null &
+            adb reverse tcp:5556 tcp:5556
+            adb reverse tcp:8080 tcp:8080
+            adb reverse --list
+            adb shell pm list packages | grep -i -e chrome -e browser || true
+            adb shell "echo '_ --disable-fre --no-default-browser-check --no-first-run' > /data/local/tmp/chrome-command-line"
+            adb shell am set-debug-app --persistent com.android.chrome
+            ./gradlew --no-daemon --stacktrace connectedDebugAndroidTest
+      - name: Stop the test backend
+        if: always()
+        run: kill "$OIDCMOCK_PID" "$BACKEND_PID" "$GITHUB_STUB_PID" "$APNS_RECEIVER_PID" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-instrumented-reports
+          path: |
+            android/app/build/reports/androidTests/
+            android/app/build/outputs/androidTest-results/
+            ${{ runner.temp }}/logcat.txt
+          retention-days: 7
