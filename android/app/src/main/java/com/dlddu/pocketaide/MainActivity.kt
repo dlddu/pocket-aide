@@ -15,6 +15,7 @@ import com.dlddu.pocketaide.auth.OidcRedirectBus
 import com.dlddu.pocketaide.designsystem.PocketAideTheme
 import com.dlddu.pocketaide.push.PushDeepLink
 import com.dlddu.pocketaide.ui.RootScreen
+import com.dlddu.pocketaide.weather.WeatherDeepLink
 
 class MainActivity : ComponentActivity() {
     private val container: AppContainer
@@ -66,6 +67,10 @@ class MainActivity : ComponentActivity() {
     private fun handle(intent: Intent?) {
         intent ?: return
         val data = intent.data
+        if (data != null && WeatherDeepLink.matches(data.toString())) {
+            container.deepLinks.openWeather()
+            return
+        }
         if (data != null && OidcRedirectBus.isRedirect(data.toString())) {
             container.redirectBus.deliver(data.toString())
             return
