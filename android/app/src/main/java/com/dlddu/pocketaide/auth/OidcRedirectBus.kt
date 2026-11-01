@@ -1,6 +1,7 @@
 package com.dlddu.pocketaide.auth
 
 import kotlinx.coroutines.CompletableDeferred
+import java.net.URI
 
 class OidcRedirectBus {
     private var pending: CompletableDeferred<String>? = null
@@ -32,5 +33,12 @@ class OidcRedirectBus {
         pending = null
         leftForBrowser = false
         target.completeExceptionally(OidcException.Cancelled())
+    }
+
+    companion object {
+        private val SCHEMES = setOf("pocketaide", "pocketaide-dev")
+
+        fun isRedirect(uri: String): Boolean =
+            runCatching { URI(uri).scheme in SCHEMES }.getOrDefault(false)
     }
 }

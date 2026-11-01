@@ -20,7 +20,7 @@
 
 ## 2. 인증
 
-- 백엔드 `/api/auth/config`가 주는 issuer·client_id·redirect_uri(`pocketaide://callback`)로 OIDC Authorization Code + PKCE를 수행한다. 브라우저는 Custom Tabs, 콜백은 `MainActivity`의 intent-filter(디버그 빌드는 `pocketaide-dev` 스킴도 받는다)가 `OidcRedirectBus`로 넘긴다. iOS와 달리 콜백의 `state`를 검증한다.
+- 백엔드 `/api/auth/config`가 주는 issuer·client_id·redirect_uri(Authelia 등록값 `pocketaide://oidc/callback`)로 OIDC Authorization Code + PKCE를 수행한다. 브라우저는 Custom Tabs, 콜백은 `MainActivity`의 intent-filter가 받아, 스킴(`pocketaide`, 디버그는 `pocketaide-dev`도)만 맞으면 `OidcRedirectBus`로 넘긴다 — host·path는 보지 않고 `state`로 검증한다. iOS와 달리 콜백의 `state`를 검증한다.
 - 토큰 번들은 Android Keystore AES-GCM 키로 암호화해 SharedPreferences에 저장한다(`KeystoreTokenStore`). 갱신 규칙은 iOS와 같다 — 만료 30초 전 선제 갱신, 401이면 1회 갱신 후 재시도, 갱신 4xx면 저장소 비움.
 
 ## 3. 푸시 (FCM)

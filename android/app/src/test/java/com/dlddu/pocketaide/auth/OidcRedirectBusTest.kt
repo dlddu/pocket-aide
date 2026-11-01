@@ -18,6 +18,14 @@ class OidcRedirectBusTest {
     }
 
     @Test
+    fun recognisesRedirectBySchemeWhateverItsPath() {
+        assertTrue(OidcRedirectBus.isRedirect("pocketaide://oidc/callback?code=1&state=s"))
+        assertTrue(OidcRedirectBus.isRedirect("pocketaide-dev://oidc/callback?code=1"))
+        assertFalse(OidcRedirectBus.isRedirect("https://auth.example/oidc/callback?code=1"))
+        assertFalse(OidcRedirectBus.isRedirect("not a uri"))
+    }
+
+    @Test
     fun ignoresRedirectWithoutPendingSignIn() {
         assertFalse(OidcRedirectBus().deliver("pocketaide://callback?code=1"))
     }
