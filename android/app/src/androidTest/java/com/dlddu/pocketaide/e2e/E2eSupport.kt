@@ -24,6 +24,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import com.dlddu.pocketaide.MainActivity
@@ -108,8 +110,9 @@ object AppSession {
 
     fun launchSignedIn(compose: ComposeTestRule): ActivityScenario<MainActivity> {
         warmUpBrowser()
-        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        var scenario = ActivityScenario.launch(MainActivity::class.java)
         compose.waitUntil(30_000) { compose.exists(Tags.SHELL) || compose.exists(Tags.SIGN_IN) }
+        val signedInBefore = compose.exists(Tags.SHELL)
         var attempts = 0
         while (!compose.exists(Tags.SHELL)) {
             attempts += 1
@@ -122,7 +125,25 @@ object AppSession {
             Log.i(TAG, "sign-in returned to the login screen, retrying ($attempts)")
         }
         compose.waitUntil(30_000) { compose.exists(Tags.SHELL) }
+        if (!signedInBefore) {
+            finishAppActivities()
+            scenario = ActivityScenario.launch(MainActivity::class.java)
+            compose.waitUntil(30_000) { compose.exists(Tags.SHELL) }
+        }
         return scenario
+    }
+
+    private fun finishAppActivities() {
+        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
+        val live = listOf(Stage.PRE_ON_CREATE, Stage.CREATED, Stage.STARTED, Stage.RESUMED, Stage.PAUSED, Stage.STOPPED)
+        fun appActivities() = live.flatMap { monitor.getActivitiesInStage(it) }.filterIsInstance<MainActivity>()
+        instrumentation.runOnMainSync { appActivities().forEach { it.finish() } }
+        val gone = E2e.eventually(10_000) {
+            var empty = false
+            instrumentation.runOnMainSync { empty = appActivities().isEmpty() }
+            empty
+        }
+        Log.i(TAG, "closed the sign-in activities before relaunching: allGone=$gone")
     }
 
     private fun warmUpBrowser() {
