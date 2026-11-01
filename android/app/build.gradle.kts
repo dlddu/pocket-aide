@@ -25,21 +25,22 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "FIREBASE_PROJECT_ID", quoted(config("firebaseProjectId")))
-        buildConfigField("String", "FIREBASE_APP_ID", quoted(config("firebaseAppId")))
+        buildConfigField("String", "FIREBASE_PROJECT_ID", quoted(config("firebaseProjectId", "dlddu-play-console")))
         buildConfigField("String", "FIREBASE_API_KEY", quoted(config("firebaseApiKey")))
-        buildConfigField("String", "FIREBASE_SENDER_ID", quoted(config("firebaseSenderId")))
+        buildConfigField("String", "FIREBASE_SENDER_ID", quoted(config("firebaseSenderId", "657421381831")))
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
             buildConfigField("String", "BACKEND_BASE_URL", quoted(config("backendBaseUrl", "http://10.0.2.2:8080")))
+            buildConfigField("String", "FIREBASE_APP_ID", quoted(config("firebaseAppId", "1:657421381831:android:16491d777af54099e84ee2")))
         }
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "BACKEND_BASE_URL", quoted(config("backendBaseUrl")))
+            buildConfigField("String", "FIREBASE_APP_ID", quoted(config("firebaseAppId", "1:657421381831:android:c98abab847b61adbe84ee2")))
         }
     }
 
