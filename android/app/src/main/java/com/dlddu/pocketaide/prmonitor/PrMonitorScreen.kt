@@ -50,6 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.designsystem.DesignTokens
 import com.dlddu.pocketaide.designsystem.components.ScreenHeader
+import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.delay
 
 const val PR_MONITOR_ARRIVAL_HIGHLIGHT_MILLIS = 5_000L
@@ -73,7 +74,9 @@ fun PrMonitorScreen(
     onSignOut: () -> Unit = {},
 ) {
     val context = LocalContext.current.applicationContext
-    val viewModel: PrMonitorViewModel = viewModel(key = "prmonitor") { PrMonitorViewModel(api) }
+    val viewModel: PrMonitorViewModel = viewModel(key = "prmonitor") {
+        PrMonitorViewModel(api, onAcknowledged = { WidgetRefresher.reloadAll(context) })
+    }
     val openPullRequests: OpenPullRequestsViewModel = viewModel(key = "prmonitor.openprs") {
         OpenPullRequestsViewModel(
             store = KeystoreGitHubCredentialStore(context),

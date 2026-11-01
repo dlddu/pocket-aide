@@ -37,4 +37,6 @@ internal object GeneratedPalettes {
     )
     val widgetSurfaceLight = Color(0xFFF5EFE0)
     val widgetSurfaceDark = Color(0xFF1F1B12)
+    val widgetRuleLight = Color(0xFFE5D7C0)
+    val widgetRuleDark = Color(0xFF3D3528)
 }

@@ -31,6 +31,7 @@ data class PrMonitorUiState(
 class PrMonitorViewModel(
     private val api: ApiClient,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val onAcknowledged: () -> Unit = {},
 ) : ViewModel() {
     private val _state = MutableStateFlow(PrMonitorUiState())
     val state: StateFlow<PrMonitorUiState> = _state.asStateFlow()
@@ -155,6 +156,7 @@ class PrMonitorViewModel(
         replaceItem(id, stamped)
         try {
             api.acknowledgeNotification(id)
+            onAcknowledged()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

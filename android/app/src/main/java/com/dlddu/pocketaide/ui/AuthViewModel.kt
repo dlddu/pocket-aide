@@ -8,6 +8,7 @@ import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.MeResponse
 import com.dlddu.pocketaide.auth.AuthBrowser
 import com.dlddu.pocketaide.auth.OidcException
+import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,6 +56,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 container.oidc.signIn(browser)
                 _state.update { it.copy(signedIn = true) }
+                WidgetRefresher.reloadAll(getApplication<Application>())
                 refreshMe()
                 registerForPush()
             } catch (e: OidcException.Cancelled) {
@@ -73,6 +75,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         container.oidc.signOut()
         container.pushRegistrar.unregister()
         _state.update { it.copy(signedIn = false, me = null, meError = null) }
+        WidgetRefresher.reloadAll(getApplication<Application>())
     }
 
     fun refreshPushPermission() {

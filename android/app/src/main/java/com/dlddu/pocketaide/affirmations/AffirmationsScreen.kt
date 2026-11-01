@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -64,6 +65,7 @@ import com.dlddu.pocketaide.designsystem.components.Card
 import com.dlddu.pocketaide.designsystem.components.CardPadding
 import com.dlddu.pocketaide.designsystem.components.ScreenHeader
 import com.dlddu.pocketaide.designsystem.components.SwipeToDelete
+import com.dlddu.pocketaide.widget.WidgetRefresher
 
 private val AREA = Area.Affirmations
 private val ADD_BUTTON_SIZE = 36.dp
@@ -99,7 +101,10 @@ private const val PULSE_DURATION_MILLIS = 1000
 
 @Composable
 fun AffirmationsScreen(api: ApiClient) {
-    val viewModel: AffirmationsViewModel = viewModel(key = "affirmations") { AffirmationsViewModel(api) }
+    val appContext = LocalContext.current.applicationContext
+    val viewModel: AffirmationsViewModel = viewModel(key = "affirmations") {
+        AffirmationsViewModel(api, onChanged = { WidgetRefresher.reloadAll(appContext) })
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     var sheetMode by remember { mutableStateOf<PriorityEditMode?>(null) }
 
