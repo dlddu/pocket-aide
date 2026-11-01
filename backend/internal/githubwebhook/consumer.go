@@ -24,6 +24,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+
+	"github.com/dlddu/pocket-aide/backend/internal/telemetry"
 )
 
 // WorkflowRunEvent is the subset of fields the dispatcher cares about.
@@ -127,7 +129,10 @@ func (c *Consumer) Run(ctx context.Context) {
 }
 
 func (c *Consumer) handleMessage(ctx context.Context, msg types.Message) {
+	ctx, span := telemetry.StartSQSMessage(ctx, c.queueURL, aws.ToString(msg.MessageId), githubEventType(msg))
+	defer span.End()
 	if err := c.process(ctx, msg); err != nil {
+		telemetry.RecordError(span, err)
 		// Two kinds of failure land here:
 		//   1) Malformed body — replays would never succeed.
 		//   2) Transient dispatch error (e.g. SQLite busy, history write

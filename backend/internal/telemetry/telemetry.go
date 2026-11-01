@@ -29,6 +29,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -144,4 +146,31 @@ func OpenDB(driverName, dsn, dbSystem string) (*sql.DB, error) {
 			},
 		}),
 	)
+}
+
+// StartSQSMessage starts the root span for handling one SQS message, so the
+// SQL and outgoing calls made while processing it share a trace. The long
+// poll itself (ReceiveMessage every 20s) is deliberately not traced: it is a
+// background loop with no request behind it and would only add root spans.
+func StartSQSMessage(ctx context.Context, queueURL, messageID, githubEvent string) (context.Context, trace.Span) {
+	queue := queueURL
+	if i := strings.LastIndex(queueURL, "/"); i >= 0 {
+		queue = queueURL[i+1:]
+	}
+	return otel.Tracer("github.com/dlddu/pocket-aide/backend/internal/telemetry").Start(ctx, "process "+queue,
+		trace.WithSpanKind(trace.SpanKindConsumer),
+		trace.WithAttributes(
+			semconv.MessagingSystemAWSSQS,
+			semconv.MessagingOperationTypeProcess,
+			semconv.MessagingDestinationName(queue),
+			semconv.MessagingMessageID(messageID),
+			attribute.String("github.event", githubEvent),
+		),
+	)
+}
+
+// RecordError marks span as failed with err.
+func RecordError(span trace.Span, err error) {
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
 }

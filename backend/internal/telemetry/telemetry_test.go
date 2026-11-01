@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -10,9 +11,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 	_ "modernc.org/sqlite"
 )
 
@@ -113,5 +116,43 @@ func TestSetupIsNoopWithoutEndpoint(t *testing.T) {
 	}
 	if http.DefaultTransport != before {
 		t.Error("Setup replaced http.DefaultTransport while tracing is disabled")
+	}
+}
+
+func TestStartSQSMessageRootsProcessingWork(t *testing.T) {
+	rec := withRecorder(t)
+	db, err := OpenDB("sqlite", "file:"+filepath.Join(t.TempDir(), "q.db"), "sqlite")
+	if err != nil {
+		t.Fatalf("OpenDB: %v", err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	ctx, span := StartSQSMessage(context.Background(),
+		"https://sqs.ap-northeast-2.amazonaws.com/123456789012/github-events", "m-1", "workflow_run")
+	if _, err := db.ExecContext(ctx, "CREATE TABLE t (id INTEGER)"); err != nil {
+		t.Fatalf("exec: %v", err)
+	}
+	RecordError(span, errors.New("dispatch failed"))
+	span.End()
+
+	spans := rec.Ended()
+	if len(spans) != 2 {
+		t.Fatalf("got %d spans, want 2 (CREATE + process)", len(spans))
+	}
+	root := spans[1]
+	if got := root.Name(); got != "process github-events" {
+		t.Errorf("root name = %q, want %q", got, "process github-events")
+	}
+	if root.SpanKind() != trace.SpanKindConsumer {
+		t.Errorf("root kind = %v, want consumer", root.SpanKind())
+	}
+	if root.Parent().IsValid() {
+		t.Error("message span should be a trace root")
+	}
+	if root.Status().Code != codes.Error {
+		t.Errorf("root status = %v, want error", root.Status().Code)
+	}
+	if spans[0].Parent().SpanID() != root.SpanContext().SpanID() {
+		t.Error("SQL span is not a child of the message span")
 	}
 }
