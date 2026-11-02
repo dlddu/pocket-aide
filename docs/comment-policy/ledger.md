@@ -69,7 +69,7 @@
 | 2026-10-01 | `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 3 | `7dbfb751ae6b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-10-15 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 7 | `ff85dec4c2e9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 · 2026-10-15 증분 유지 3줄(앱·위젯 동시 갱신) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/fastlane/Fastfile` | 1 | `e7198c27c7fd` | 완료 | 필요성 판정 — 제거 6줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
-| 2026-09-29 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 13 | `d35a61f48de6` | 완료 | 필요성 판정 — 제거 24줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
+| 2026-09-29 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 20 | `e32344b085a5` | — | **재측정 2026-11-02**(운영 설정값을 pocket-aide-ssm-config ConfigMap 으로 나눈 PR): `k8s/deployment.yaml` envFrom 위 3줄(세 소스의 우선순위)·`k8s/kustomization.yaml` 1줄·`k8s/secret.yaml` 의 ConfigMap 예시 주석 3줄로 7줄 늘었다(13 → 20). 새 줄이 미판정이라 판정 칸을 `—` 로 되돌린다. 필요성 판정 — 제거 24줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-10-09 | `scripts/ci/ios_test_shards.py` | 2 | `c60d84630c62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 2줄 — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-10-28 | `tools/journey-mockup-harness/check.mjs` | 3 | `1b2b6f9a788a` | 완료 | 필요성 판정 — 제거 26줄 · 유지 3줄(개작 2블록 포함) · 2026-10-28 증분 제거 3줄(5(i) 규칙 번호 주석 — README 표 재진술) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 
