@@ -75,6 +75,7 @@ object E2e {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
         add(Manifest.permission.READ_CALENDAR)
         add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        add(Manifest.permission.ACCESS_FINE_LOCATION)
     }.toTypedArray()
 
     fun uniqueToken(): String = UUID.randomUUID().toString().take(8)

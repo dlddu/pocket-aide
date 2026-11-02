@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                 add(Manifest.permission.POST_NOTIFICATIONS)
             }
             if (!CalendarSnapshot.hasPermission(this@MainActivity)) add(CalendarSnapshot.PERMISSION)
-            if (!weatherAccess.hasPermission()) add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (!weatherAccess.hasPrecisePermission()) addAll(WeatherLocationAccess.PERMISSIONS)
         }
         if (missing.isNotEmpty()) startupPermissions.launch(missing.toTypedArray())
         if (weatherAccess.hasPermission()) refreshWeatherLocation()

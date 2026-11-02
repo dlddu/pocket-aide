@@ -16,10 +16,10 @@ object WidgetRefresher {
     fun reloadAll(context: Context) {
         val appContext = context.applicationContext
         val container = (appContext as? PocketAideApplication)?.container ?: return
-        container.appScope.launch { reload(appContext) }
+        container.appScope.launch { reloadNow(appContext) }
     }
 
-    private suspend fun reload(context: Context) {
+    suspend fun reloadNow(context: Context) {
         try {
             val revision = System.currentTimeMillis()
             GlanceAppWidgetManager(context).getGlanceIds(PocketAideWidget::class.java).forEach { id ->
