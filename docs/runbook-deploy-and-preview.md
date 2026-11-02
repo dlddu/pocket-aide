@@ -39,7 +39,8 @@ What a preview is and is not:
 - **Same sign-in.** It shares production's Authelia client; the app signs in
   exactly as against production.
 - **No PR monitor / push notifications.** The preview gets an empty
-  `pocket-aide-secrets` and `SQS_QUEUE_URL=""`, so it never consumes
+  `pocket-aide-secrets`, an empty `pocket-aide-ssm-config` and
+  `SQS_QUEUE_URL=""`, so it never consumes
   production's SQS queue and never calls APNs.
 - **At most 5** previews at once (input provider `filter.limit`).
 - A PR that edits a migration already applied to its preview database may
