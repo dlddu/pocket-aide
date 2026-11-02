@@ -1,3 +1,4 @@
+// 검증 시나리오: test-github-monitor.md#시나리오 15
 package com.dlddu.pocketaide.e2e
 
 import android.content.Intent
