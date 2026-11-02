@@ -18,11 +18,11 @@
 | 2026-10-04 | `.github/actions/start-test-sqs/action.yml` | 1 | `4a8622eeb479` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-10-04-test-sqs-action.md) |
 | 2026-11-02 | `.github/workflows/android-test.yml` | 1 | `9dac1c010296` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 91 | `631eeb49ad6b` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) · 2026-10-11 증분 유지 2줄(iOS 테스트 백엔드 교차 빌드) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
-| — | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 1 | `4a77c750667d` | — | 2026-11-02 위젯 날씨 백그라운드 위치 PR 이 들임 — Android 9 이하 백그라운드 권한·작업이 권한 없을 때 하는 일·네트워크 제약 이유·조용한 거절 처리, 미판정 |
-| — | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 2 | `1e02f2576bfd` | — | 2026-11-02 위젯 날씨 백그라운드 위치 PR 이 들임 — Android 9 이하 백그라운드 권한·작업이 권한 없을 때 하는 일·네트워크 제약 이유·조용한 거절 처리, 미판정 |
-| — | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 1 | `241224badd21` | — | 2026-11-02 위젯 날씨 백그라운드 위치 PR 이 들임 — Android 9 이하 백그라운드 권한·작업이 권한 없을 때 하는 일·네트워크 제약 이유·조용한 거절 처리, 미판정 |
-| — | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 1 | `74928df54084` | — | 2026-11-02 위젯 상단 세로선 PR 이 들임 — Glance 에 내용 높이 맞춤이 없어 세로선 높이를 추정하는 이유·섹션과의 동기화 계약·한글 줄 높이·SizeMode.Exact 이유, 미판정 |
-| — | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 4 | `22c0305195ad` | — | 2026-11-02 위젯 상단 세로선 PR 이 들임 — Glance 에 내용 높이 맞춤이 없어 세로선 높이를 추정하는 이유·섹션과의 동기화 계약·한글 줄 높이·SizeMode.Exact 이유, 미판정 |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 1 | `4a77c750667d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 1 | `d805164c7960` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 1 | `241224badd21` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 1 | `74928df54084` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 4 | `22c0305195ad` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-08 | `backend/cmd/server/main.go` | 17 | `9600452f468b` | 완료 | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -48,7 +48,7 @@
 | 2026-11-02 | `backend/internal/push/router.go` | 8 | `85ae2e5dfca9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 8줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-04 | `backend/internal/routines/store.go` | 3 | `49861c75fd62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-10-01 | `backend/internal/scratchpad/store.go` | 20 | `61dc59d49236` | 완료 | 필요성 판정 — 제거 3줄 · 유지 20줄 — [상세](passes/2026-10-01-scratchpad.md) |
-| 2026-11-01 | `backend/internal/telemetry/telemetry.go`, `backend/internal/telemetry/telemetry_test.go` | 43 | `569d21409824` | — | 미판정 — 등재만. OpenTelemetry SDK 트레이싱(OTLP/HTTP·W3C 전파·서버 미들웨어·chi 라우트 span 이름·`http.DefaultTransport`·database/sql 계측)을 들인 신규 패키지. |
+| 2026-11-02 | `backend/internal/telemetry/telemetry.go`, `backend/internal/telemetry/telemetry_test.go` | 42 | `c80f2d2466c2` | 완료 | 필요성 판정 — 제거 1문장(Setup doc 의 service.name 우선순위 — 인라인 주석과 중복) · 유지 42줄(개작 1블록 포함) — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 24줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/migrations/0007_todos.up.sql` | 3 | `b37ba16e4205` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |

@@ -12,7 +12,6 @@ import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.CancellationException
 import java.time.Duration
 
-// "항상 허용"이 없으면 아무것도 하지 않는다 — 그때 위치는 앱을 열 때(MainActivity·WeatherScreen)만 갱신된다.
 class WeatherLocationWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val store = WeatherLocationStore(SharedPreferencesWeatherStorage(applicationContext))

@@ -47,9 +47,8 @@ func Enabled() bool {
 
 // Setup installs the global tracer provider and propagator and wraps
 // http.DefaultTransport so outgoing requests from clients that use it carry
-// traceparent and get client spans. serviceName is the default for
-// service.name; OTEL_SERVICE_NAME and OTEL_RESOURCE_ATTRIBUTES override it.
-// The returned function flushes and stops the exporter.
+// traceparent and get client spans. The returned function flushes and stops
+// the exporter.
 func Setup(ctx context.Context, serviceName string) (func(context.Context) error, error) {
 	noop := func(context.Context) error { return nil }
 	if !Enabled() {
