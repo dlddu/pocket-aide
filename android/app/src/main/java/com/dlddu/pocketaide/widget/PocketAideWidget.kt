@@ -12,10 +12,12 @@ import androidx.core.net.toUri
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -26,7 +28,6 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
-import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -46,16 +47,20 @@ import com.dlddu.pocketaide.weather.Weather
 import com.dlddu.pocketaide.weather.WeatherDeepLink
 
 class PocketAideWidget : GlanceAppWidget() {
+    // 세로선 높이를 추정할 때 일정 제목 줄바꿈을 실제 위젯 너비로 계산하려면 크기마다 따로 그려야 한다.
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val loader = PocketAideWidgetLoader(context)
         val initial = loader.load()
+        val fontScale = context.resources.configuration.fontScale
         provideContent {
             val revision = currentState(WidgetRefresher.REVISION) ?: 0L
             val firstRevision = remember { revision }
             val entry by produceState(initial, revision) {
                 if (revision != firstRevision) value = loader.load()
             }
-            WidgetContent(entry)
+            WidgetContent(entry, fontScale)
         }
     }
 }
@@ -64,8 +69,8 @@ class PocketAideWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = PocketAideWidget()
 }
 
-private val RULE_WIDTH = 1.dp
-private val LINE_GAP = 2.dp
+internal val RULE_WIDTH = 1.dp
+internal val LINE_GAP = 2.dp
 private const val SECONDARY_OPACITY = 0.75f
 private const val NOTICE_OPACITY = 0.6f
 private const val MORE_OPACITY = 0.55f
@@ -73,7 +78,7 @@ private const val PLACEHOLDER_OPACITY = 0.55f
 private const val AFFIRMATION_MAX_LINES = 5
 
 @Composable
-private fun WidgetContent(entry: PocketAideWidgetEntry) {
+private fun WidgetContent(entry: PocketAideWidgetEntry, fontScale: Float) {
     val context = LocalContext.current
     Column(
         GlanceModifier
@@ -85,7 +90,7 @@ private fun WidgetContent(entry: PocketAideWidgetEntry) {
         Row(GlanceModifier.fillMaxWidth().padding(bottom = DesignTokens.Spacing.md)) {
             WeatherSection(entry.weather, GlanceModifier.defaultWeight())
             Spacer(GlanceModifier.width(DesignTokens.Spacing.md))
-            Box(GlanceModifier.width(RULE_WIDTH).fillMaxHeight().background(WidgetColors.rule)) {}
+            HeaderRule(entry, fontScale)
             Spacer(GlanceModifier.width(DesignTokens.Spacing.md))
             CalendarSection(entry.calendar, entry, GlanceModifier.defaultWeight())
         }
@@ -96,6 +101,13 @@ private fun WidgetContent(entry: PocketAideWidgetEntry) {
         HorizontalRule()
         ScratchpadSection(entry.scratchpad)
     }
+}
+
+@Composable
+private fun HeaderRule(entry: PocketAideWidgetEntry, fontScale: Float) {
+    val sectionWidth = WidgetHeaderLayout.sectionWidth(LocalSize.current.width.value)
+    val ruleHeight = WidgetHeaderLayout.ruleHeight(entry, sectionWidth, fontScale)
+    Box(GlanceModifier.width(RULE_WIDTH).height(ruleHeight.dp).background(WidgetColors.rule)) {}
 }
 
 @Composable
@@ -130,7 +142,7 @@ private fun WeatherSection(state: WidgetWeatherState, modifier: GlanceModifier) 
                 maxLines = 1,
             )
         } else {
-            Notice(area, WidgetCopy.weatherNotice(state).orEmpty(), maxLines = 2)
+            Notice(area, WidgetCopy.weatherNotice(state).orEmpty(), maxLines = WidgetHeaderLayout.NOTICE_MAX_LINES)
         }
     }
 }
@@ -148,7 +160,7 @@ private fun CalendarSection(state: WidgetCalendarState, entry: PocketAideWidgetE
             Text(
                 first.title,
                 style = style(DesignTokens.Typography.bodySm, WidgetColors.ink(area), FontWeight.Bold),
-                maxLines = 2,
+                maxLines = WidgetHeaderLayout.EVENT_TITLE_MAX_LINES,
             )
             Spacer(GlanceModifier.height(LINE_GAP))
             Text(
@@ -161,12 +173,12 @@ private fun CalendarSection(state: WidgetCalendarState, entry: PocketAideWidgetE
                 Text(
                     "${UpcomingEvents.startLabel(event, entry.date)} ${event.title}",
                     style = style(DesignTokens.Typography.caption2xs, WidgetColors.ink(area, SECONDARY_OPACITY)),
-                    maxLines = 2,
+                    maxLines = WidgetHeaderLayout.EVENT_LINE_MAX_LINES,
                 )
             }
             WidgetCopy.moreLabel(summary.moreCount)?.let { MoreLine(area, it) }
         } else {
-            Notice(area, notice.orEmpty(), maxLines = 2)
+            Notice(area, notice.orEmpty(), maxLines = WidgetHeaderLayout.NOTICE_MAX_LINES)
         }
     }
 }
