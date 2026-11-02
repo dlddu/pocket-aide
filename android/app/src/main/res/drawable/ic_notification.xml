@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 런처 아이콘과 같은 심볼을 24dp 알림 칸에 꽉 차게(약 22dp) 맞춘다. 상태 표시줄은 알파만 쓰므로 단색 흰색. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

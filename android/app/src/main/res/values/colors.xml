@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="launch_background">#FFF5EFE0</color>
-    <!-- 앱 아이콘 색은 다크 모드에서도 바뀌지 않도록 values-night 에 두지 않는다. -->
     <color name="icon_background">#FF5E8B73</color>
     <color name="icon_foreground">#FFFAFAF7</color>
 </resources>
