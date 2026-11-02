@@ -68,6 +68,14 @@
                 android:resource="@xml/pocket_aide_widget_info" />
         </receiver>
 
+        <!-- 백그라운드에서 FCM SDK 가 직접 띄우는 알림도 앱 알림 아이콘을 쓰게 한다.
+             지정하지 않으면 적응형 런처 아이콘으로 대체돼 심볼이 1/3 크기로 작게 보인다. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/icon_background" />
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
             android:value="false" />

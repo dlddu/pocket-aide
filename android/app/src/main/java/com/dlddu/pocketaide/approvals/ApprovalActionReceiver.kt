@@ -50,6 +50,7 @@ class ApprovalActionReceiver : BroadcastReceiver() {
         }
         val notification = NotificationCompat.Builder(context, NotificationChannels.APPROVAL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(context, R.color.icon_background))
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))

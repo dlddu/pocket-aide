@@ -42,6 +42,7 @@ class PocketAideMessagingService : FirebaseMessagingService() {
         )
         val builder = NotificationCompat.Builder(this, NotificationChannels.forCategory(message.data["category"]))
             .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(this, R.color.icon_background))
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))

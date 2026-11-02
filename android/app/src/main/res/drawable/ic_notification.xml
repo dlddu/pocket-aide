@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 런처 아이콘과 같은 심볼을 24dp 알림 칸에 꽉 차게(약 22dp) 맞춘다. 상태 표시줄은 알파만 쓰므로 단색 흰색. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M6,3h9l4,4v12a2,2 0,0 1,-2 2H6a2,2 0,0 1,-2 -2V5a2,2 0,0 1,2 -2zM14,4.5V8h3.5zM7,11v1.6h10V11zM7,14.5v1.6h7v-1.6z" />
+    android:viewportWidth="62"
+    android:viewportHeight="62">
+    <group
+        android:translateX="-23"
+        android:translateY="-22.5">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M34,46H74V50H34Z M34,53H74V65Q74,71 68.5,74L57.5,80Q54,82 50.5,80L39.5,74Q34,71 34,65Z M54,25.5Q55.4,33.6 63.5,35Q55.4,36.4 54,44.5Q52.6,36.4 44.5,35Q52.6,33.6 54,25.5Z" />
+    </group>
 </vector>
