@@ -53,7 +53,7 @@
   - 4단계: 재진입·재실행 뒤에도 메모가 남아 있다(서버 영속).
 - **검증 AC**: AC2
 - **구현 상태**: 구현됨
-- **관련 코드 테스트**: `backend/internal/handlers/scratchpad_test.go` — `TestScratchpadCreateRecordsMetadata`, `TestScratchpadValidation`(빈 텍스트 거부)
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ScratchpadTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/handlers/scratchpad_test.go` — `TestScratchpadCreateRecordsMetadata`, `TestScratchpadValidation`(빈 텍스트 거부)
 
 ### 시나리오 3: 탭에서 음성으로 새 메모를 추가한다
 - **사전 조건**: 로그인된 상태. 마이크·음성 인식 권한 허용.

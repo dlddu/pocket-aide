@@ -34,7 +34,7 @@
   - 빈 문장은 저장되지 않는다.
 - **검증 AC**: AC1, AC2
 - **구현 상태**: 구현됨
-- **관련 코드 테스트**: `backend/internal/handlers/affirmations_test.go` — `TestCreateThenList`, `TestCreateRejectsEmptyText`, `TestCreateRejectsInvalidPriority`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/AffirmationTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/handlers/affirmations_test.go` — `TestCreateThenList`, `TestCreateRejectsEmptyText`, `TestCreateRejectsInvalidPriority`
 
 ### 시나리오 2: 기존 문장의 텍스트와 우선순위를 편집한다
 - **사전 조건**: 로그인된 상태. 우선순위 「보통」인 문장이 1개 이상 있음.

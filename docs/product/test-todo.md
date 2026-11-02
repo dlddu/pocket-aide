@@ -118,7 +118,7 @@
   - 4단계: 삭제한 항목이 다시 나타나지 않는다. 다른 영역의 항목은 영향이 없다.
 - **검증 AC**: AC2
 - **구현 상태**: 구현됨 — 삭제 확인 대화상자는 없다(밀어서 삭제는 전체 밀기 비활성으로 한 번 더 눌러야 실행).
-- **관련 코드 테스트**: `backend/internal/handlers/todos_test.go` — `TestTodoCRUDInBothAreas`, `TestTodoUserScopingAndValidation`(다른 사용자 항목 삭제 404)
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/PersonalTodoTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/handlers/todos_test.go` — `TestTodoCRUDInBothAreas`, `TestTodoUserScopingAndValidation`(다른 사용자 항목 삭제 404)
 
 ### 시나리오 7: 개인 탭과 회사 탭은 한눈에 구분된다
 - **사전 조건**: 로그인된 상태. 두 탭 모두 미완료·완료 항목이 1개 이상.

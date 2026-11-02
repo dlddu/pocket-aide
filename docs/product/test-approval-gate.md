@@ -79,7 +79,7 @@
   - (서버) 저장소에 키 원문이 남아 있지 않다(해시만 있다).
 - **검증 AC**: AC13
 - **구현 상태**: 구현됨 — 승인 탭 머리의 설정 버튼으로 여는 「승인 게이트 설정」에서 호출자 이름을 넣어 발급하면 시트가 「호출자 키를 발급했습니다」로 바뀌어 원문과 「복사」를 보인다(서버는 원문을 발급 응답에만 싣고 SHA-256 해시만 저장한다). 시트를 닫으면 원문은 어디에도 남지 않고, 키 목록에는 이름·원문 앞 12자·발급 날짜·마지막 사용(아직 없으면 「마지막 사용 없음」)만 보인다. 같은 이름 재발급은 서버 409를 받아 시트에 「이미 쓰이고 있는 호출자 이름입니다」를 안내하고 원문을 보이지 않는다. 다른 사용자로 로그인한 설정의 키 목록에는 그 키가 없다.
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyIssueUITests.swift`, `ios/PocketAideUnitTests/ApprovalKeysTests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyIssuedOnceAndHashedOnly`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalKeyIssueTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalKeyIssueUITests.swift`, `ios/PocketAideUnitTests/ApprovalKeysTests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyIssuedOnceAndHashedOnly`
 
 
 ### 시나리오 2: 발급한 키로 요청을 만들고 결과를 폴링한다
@@ -94,7 +94,7 @@
   - 3단계: `infra-ci`의 마지막 사용 시각이 방금으로 갱신되어 있다.
 - **검증 AC**: AC1, AC3, AC13
 - **구현 상태**: 구현됨 — 1·2단계(호출자 API 생성 201·조회 200, 사용자 식별 정보 없음)는 서버에서, 3단계는 앱 「승인 게이트 설정」 키 목록이 그 키의 마지막 사용 시각(오늘이면 시:분)을 보여 화면으로 관찰된다.
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyLastUsedUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalCreateAndPoll`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalKeyLastUsedTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalKeyLastUsedUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalCreateAndPoll`
 
 
 ### 시나리오 3: 형식이 틀리거나 인증이 맞지 않는 요청은 거부된다
@@ -164,7 +164,7 @@
   - 푸시를 누른 것만으로는 결정되지 않는다 — 상태는 `PENDING`이다.
 - **검증 AC**: AC10, AC6, AC13
 - **구현 상태**: 구현됨 — 호출자 키로 요청이 만들어지면 서버가 응답과 별개로 그 사용자의 등록 기기 전부에 APNs 푸시를 보낸다. 제목은 「승인 요청 · <키 이름>」(호출자가 밝힌 `requesterName`이 아니라 실제 키 이름), 본문은 `context`, 페이로드에 요청 id(`approval_id`)가 실린다. 앱은 `approval_id`가 있는 알림을 누르면(앱이 종료된 상태 포함) 승인 탭을 고르고 그 요청을 불러와 상세를 연다 — `approval_id`가 없는 알림은 전처럼 PR 모니터로 간다. 알림을 누르는 것은 결정하지 않는다.
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalPushUITests.swift`(발송 요청은 가짜 APNs 수신부에서, 3단계 진입은 알림이 여는 딥링크 `pocketaide://approvals?id=<id>`로 관찰), `ios/PocketAideUnitTests/ApprovalPushPayloadTests.swift`, `backend/internal/approvalpush/notifier_test.go` — `TestSendGoesToEveryDeviceOfTheOwner`, `backend/internal/handlers/approval_push_test.go` — `TestApprovalCreatePushesKeyNameAndContext`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalPushTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalPushUITests.swift`(발송 요청은 가짜 APNs 수신부에서, 3단계 진입은 알림이 여는 딥링크 `pocketaide://approvals?id=<id>`로 관찰), `ios/PocketAideUnitTests/ApprovalPushPayloadTests.swift`, `backend/internal/approvalpush/notifier_test.go` — `TestSendGoesToEveryDeviceOfTheOwner`, `backend/internal/handlers/approval_push_test.go` — `TestApprovalCreatePushesKeyNameAndContext`
 
 
 ### 시나리오 7: 긴 요청도 푸시가 나가고, 푸시 장애가 요청 생성을 막지 않는다
@@ -179,7 +179,7 @@
   - 3단계: 두 요청 모두 대기 목록에 있다.
 - **검증 AC**: AC10
 - **구현 상태**: 구현됨 — 1단계: 본문은 `context` 앞부분을 직렬화된 페이로드가 4096바이트 안에 들도록 잘라 「…」로 끝낸다. 2단계: 발송은 생성 응답을 쓴 뒤 별도 고루틴에서 하므로(시간 제한 30초) APNs가 응답하지 않아도 생성은 바로 201이다. APNs가 무효 토큰(`BadDeviceToken`·`Unregistered`·`DeviceTokenNotForTopic`·410)으로 거절하면 그 토큰을 지운다. 3단계: 두 요청 모두 대기 목록에 있다.
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalLongPushUITests.swift`(1·3단계 — 2단계의 APNs 무응답은 CI 가짜 수신부로 만들 수 없어 서버 테스트가 맡는다), `backend/internal/handlers/approval_push_test.go` — `TestApprovalCreateDoesNotWaitForPush`, `backend/internal/approvalpush/notifier_test.go` — `TestLongContextIsCutToFitThePayload`, `TestInvalidTokensAreDroppedOthersKept`, `TestNotifyReturnsBeforeTheSendFinishes`, `backend/internal/apns/payload_test.go` — `TestFitAlertBodyCutsToThePayloadLimit`, `TestSendWithDataReportsRejections`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalLongPushTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalLongPushUITests.swift`(1·3단계 — 2단계의 APNs 무응답은 CI 가짜 수신부로 만들 수 없어 서버 테스트가 맡는다), `backend/internal/handlers/approval_push_test.go` — `TestApprovalCreateDoesNotWaitForPush`, `backend/internal/approvalpush/notifier_test.go` — `TestLongContextIsCutToFitThePayload`, `TestInvalidTokensAreDroppedOthersKept`, `TestNotifyReturnsBeforeTheSendFinishes`, `backend/internal/apns/payload_test.go` — `TestFitAlertBodyCutsToThePayloadLimit`, `TestSendWithDataReportsRejections`
 
 
 ### 시나리오 8: 상세의 남은 시간이 0이 되면 결정할 수 없다
@@ -210,7 +210,7 @@
   - 거절도 같은 절차로 `REJECTED`가 된다(같은 방식으로 별도 요청 하나에 확인).
 - **검증 AC**: AC7, AC3, AC6
 - **구현 상태**: 구현됨 — 상세의 「승인」·「거절」은 확인 대화상자(「승인할까요?」 · 되돌릴 수 없다는 안내 · 취소)를 거쳐 결정 API(`POST /api/approvals/{id}/approve`·`reject`)를 부르고, 서버가 상태·처리 시각·처리 방식(`manual`)을 기록한다. 취소하면 요청을 보내지 않는다. 처리된 요청의 상세는 결과·처리 시각·처리 방식(「수동 결정」)을 보이고 결정 버튼이 없다. 상세에서 돌아오면 대기 목록을 다시 불러와 R이 빠진다. 3단계 호출자 조회는 `APPROVED`·`processedAt`을 돌려준다.
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalDecisionUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalDecisionFirstWins`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalDecisionTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalDecisionUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalDecisionFirstWins`
 
 
 ### 시나리오 10: 먼저 도착한 결정 하나만 유효하다
@@ -276,7 +276,7 @@
   - `자동 거절`도 같은 절차로 `REJECTED`·「자동 거절」이 된다.
 - **검증 AC**: AC9
 - **구현 상태**: 구현됨 — 1단계: 승인 탭 머리의 설정 버튼으로 연 「승인 게이트 설정」의 「자동 응답 모드」 섹션에서 「없음 — 알림으로 받기」·「자동 승인」·「자동 거절」 중 하나를 고르면 서버(`PATCH /api/approval-settings`, 사용자 단위 — 마이그레이션 `0013_approval_settings`)에 저장된다. 2단계: 자동 모드가 켜져 있으면 승인 탭 머리에 「자동 응답 <모드>」가, 대기 목록 위에 「자동 승인 모드가 켜져 있습니다. 새 요청은 알림 없이 바로 승인됩니다.」 배너와 「끄기」 버튼이 보인다. 모드 변경은 기존 `PENDING` 요청을 건드리지 않는다. 3단계: 자동 모드에서 호출자 키로 만든 요청은 생성 응답부터 `APPROVED`(자동 거절이면 `REJECTED`)이고, 푸시를 보내지 않는다. 4단계: 이력에 「자동 승인」「자동 거절」로 남는다(`decision_mode` `auto`). 5단계: 배너의 「끄기」나 설정의 「없음」으로 되돌리면 배너가 사라진다.
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalAutoResponseUITests.swift`, `ios/PocketAideUnitTests/ApprovalsTests.swift` — `testAutoResponseSettingsRoundTripAndCopy`, `backend/internal/handlers/approval_auto_response_test.go` — `TestApprovalSettingsDefaultUpdateAndValidation`, `TestApprovalAutoResponseProcessesNewRequestsWithoutPushOrRetroaction`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalAutoResponseTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalAutoResponseUITests.swift`, `ios/PocketAideUnitTests/ApprovalsTests.swift` — `testAutoResponseSettingsRoundTripAndCopy`, `backend/internal/handlers/approval_auto_response_test.go` — `TestApprovalSettingsDefaultUpdateAndValidation`, `TestApprovalAutoResponseProcessesNewRequestsWithoutPushOrRetroaction`
 
 
 ### 시나리오 14: 잠금화면에서 거절은 바로, 승인은 잠금 해제 후에 된다
@@ -330,7 +330,7 @@
   - 6단계: 이력의 R에 키 이름 `infra-ci`가 그대로 보인다.
 - **검증 AC**: AC14
 - **구현 상태**: 구현됨 — 1단계: 앱 「승인 게이트 설정」 키 목록의 「폐기」가 확인 대화상자(취소 가능)를 거쳐 폐기 API(`POST /api/approval-keys/{id}/revoke`)를 부른다. 폐기 키 401(2단계)·다른 키 201·폐기 키 요청이 `PENDING`으로 남고 `key_revoked`·키 이름이 실리는 것은 서버에서 구현됨. 4단계의 「폐기된 키로 생성됨」 경고는 앱의 대기 목록 항목과 상세에 있다. 5단계: 폐기된 키는 키 목록에 취소선 이름과 「폐기됨 MM/dd」로 남고 「폐기」 버튼이 없다(다시 활성화할 방법 없음). 6단계: 처리 이력의 R 항목에 키 이름 칩 `infra-ci`가 보이고 처리 방식 뒤에 「· 폐기된 키로 생성됨」이 붙는다. 3단계: 자동 승인 모드에서 다른 키로 만든 요청은 생성 응답부터 `APPROVED`이고, 폐기 전에 만든 R은 모드와 무관하게 `PENDING`으로 남는다(모드는 생성 시점에만 적용된다).
-- **관련 코드 테스트**: `ios/PocketAideTests/ApprovalKeyRevokeUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyRevocation`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalKeyRevokeTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideTests/ApprovalKeyRevokeUITests.swift`, `backend/internal/handlers/approvals_test.go` — `TestApprovalKeyRevocation`
 
 
 ### 시나리오 17: k8s ServiceAccount를 등록하면 그 파드의 토큰으로 요청을 만들 수 있다
@@ -351,7 +351,7 @@
   - 6단계: 둘 다 401. 2단계 요청은 `PENDING` 그대로 「폐기된 키로 생성됨」 경고와 함께 대기 목록에 남는다.
 - **검증 AC**: AC15, AC1, AC2, AC14
 - **구현 상태**: 구현됨 — 서버: SA 호출자 등록(`POST /api/approval-keys` `kind`=`k8s_sa`, 원문 없음 · 같은 SA 409 · 형식 400), TokenReview 검증(audience `pocket-aide` · `iss` 사전 필터 · 60초 캐시), 미등록·기본 토큰·폐기 401, 폐기 전 대기 요청 유지, 키 목록의 `kind`·`service_account`·마지막 사용 시각. 앱: 승인 게이트 설정의 「+ k8s 서비스 어카운트 등록」 시트(호출자 이름 · 네임스페이스 · 서비스 어카운트, 원문 단계 없음, 409 안내)와 키 목록 SA 행의 「SA 네임스페이스/이름 · 등록 · 마지막 사용」 메타 줄(1·3·5단계). 2·4·6단계의 실 projected 토큰 경로는 dlddu/homelab-k3s-mcp 의 kind e2e(실물 apiserver TokenReview)가 이 서버를 소스에서 빌드해 잰다.
-- **관련 코드 테스트**: `backend/internal/handlers/approval_k8s_caller_test.go` — `TestApprovalServiceAccountCallerRegistrationAndUse`·`TestApprovalServiceAccountCallerVerificationFailures`, `backend/internal/k8sauth/tokenreview_test.go`, `ios/PocketAideUnitTests/ApprovalKeysTests.swift` — `testDecodesServiceAccountCallersAlongsideKeysWithOrWithoutTheField`·`testServiceAccountMetaNamesTheAccountInsteadOfAKeyPrefix`·`testRevokeMessageFollowsTheCallerKind`·`testServiceAccountJoinsTwoDNSLabelsLikeTheServer`·`testServiceAccountPayloadAsksForAK8sCaller`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/ApprovalServiceAccountRegisterTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/handlers/approval_k8s_caller_test.go` — `TestApprovalServiceAccountCallerRegistrationAndUse`·`TestApprovalServiceAccountCallerVerificationFailures`, `backend/internal/k8sauth/tokenreview_test.go`, `ios/PocketAideUnitTests/ApprovalKeysTests.swift` — `testDecodesServiceAccountCallersAlongsideKeysWithOrWithoutTheField`·`testServiceAccountMetaNamesTheAccountInsteadOfAKeyPrefix`·`testRevokeMessageFollowsTheCallerKind`·`testServiceAccountJoinsTwoDNSLabelsLikeTheServer`·`testServiceAccountPayloadAsksForAK8sCaller`
 
 
 ### 시나리오 18: 호출자는 응답에서 자동 처리 여부를 안다
