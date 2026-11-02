@@ -84,7 +84,7 @@ jobs:
     secrets: inherit
 
   android:
-    name: Android App Distribution (preview)
+    name: Android Play internal testing (preview)
     needs: [plan, image]
     if: ${{ !cancelled() && needs.plan.outputs.run == 'true' && needs.image.result != 'failure' }}
     permissions:
