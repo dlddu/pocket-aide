@@ -102,7 +102,6 @@ jobs:
             --release-notes "$notes"
 
       - name: Authorize Google Play upload
-        if: inputs.preview_pr == ''
         id: play_auth
         uses: google-github-actions/auth@v2
         with:
@@ -113,7 +112,6 @@ jobs:
           create_credentials_file: false
 
       - name: Upload to Google Play internal testing
-        if: inputs.preview_pr == ''
         id: play
         env:
           TOKEN: ${{ steps.play_auth.outputs.access_token }}
