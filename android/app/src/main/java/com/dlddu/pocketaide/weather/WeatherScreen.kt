@@ -3,6 +3,8 @@ package com.dlddu.pocketaide.weather
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.SystemClock
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +34,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -97,15 +100,35 @@ fun WeatherScreen(onClose: () -> Unit) {
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         refreshLocation()
+    }
+
+    val openAppSettings: () -> Unit = {
+        context.startActivity(
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
+        )
+    }
+
+    // 위젯이 앱 밖에서도 위치를 따라가려면 "항상 허용"이 필요하다(WeatherLocationWorker).
+    var needsBackground by remember { mutableStateOf(needsBackgroundLocation(access)) }
+    var backgroundAskedAt by remember { mutableLongStateOf(0L) }
+    val backgroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        needsBackground = needsBackgroundLocation(access)
+        // 이미 여러 번 거절해 시스템이 창을 띄우지 않고 바로 거절하면, 설정 화면으로 보낸다.
+        if (!granted && SystemClock.elapsedRealtime() - backgroundAskedAt < SILENT_DENIAL_MILLIS) openAppSettings()
+    }
+    val requestBackground: () -> Unit = {
+        backgroundAskedAt = SystemClock.elapsedRealtime()
+        backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
     }
 
     LaunchedEffect(viewModel) {
         viewModel.load(useCache = true)
-        if (!access.hasPermission()) permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        if (!access.hasPrecisePermission()) permissionLauncher.launch(WeatherLocationAccess.PERMISSIONS.toTypedArray())
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        needsBackground = needsBackgroundLocation(access)
         if (access.hasPermission()) refreshLocation()
     }
     BackHandler(onBack = onClose)
@@ -143,14 +166,7 @@ fun WeatherScreen(onClose: () -> Unit) {
                                     text = "앱에서 위치 접근을 허용해 주세요.",
                                     action = "설정 열기",
                                     tag = "weather.settings",
-                                    onClick = {
-                                        context.startActivity(
-                                            Intent(
-                                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                                Uri.fromParts("package", context.packageName, null),
-                                            ),
-                                        )
-                                    },
+                                    onClick = openAppSettings,
                                 )
                             }
                         WeatherContent.Error -> Notice(
@@ -159,13 +175,29 @@ fun WeatherScreen(onClose: () -> Unit) {
                             tag = "weather.retry",
                             onClick = { viewModel.load(useCache = false) },
                         )
-                        is WeatherContent.Loaded -> Forecast(content.snapshot)
+                        is WeatherContent.Loaded -> {
+                            Forecast(content.snapshot)
+                            if (needsBackground) {
+                                Notice(
+                                    text = "위젯 날씨가 앱을 열지 않아도 현재 위치를 따라가게 하려면 위치 권한을 '항상 허용'으로 바꿔 주세요.",
+                                    action = "항상 허용으로 바꾸기",
+                                    tag = "weather.background",
+                                    onClick = requestBackground,
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
+private const val SILENT_DENIAL_MILLIS = 500L
+
+/** 위치는 허용했지만 "항상 허용"은 아닌 상태. Android 9 이하는 따로 묻지 않는다. */
+private fun needsBackgroundLocation(access: WeatherLocationAccess): Boolean =
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && access.hasPermission() && !access.hasBackgroundPermission()
 
 @Composable
 private fun Header(title: String, onClose: () -> Unit) {
