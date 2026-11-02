@@ -14,12 +14,12 @@ fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\
 
 android {
     namespace = "com.dlddu.pocketaide"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.dlddu.pocketaide"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = config("versionCode", "1").toInt()
         versionName = "1.0"
 

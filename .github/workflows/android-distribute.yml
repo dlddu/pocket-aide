@@ -24,6 +24,7 @@ env:
   SIGNING_SECRET: pocket-aide-android-signing
   FIREBASE_RELEASE_APP_ID: "1:657421381831:android:c98abab847b61adbe84ee2"
   TESTER_GROUP: testers
+  PLAY_PACKAGE: com.dlddu.pocketaide
 
 jobs:
   distribute:
@@ -82,11 +83,11 @@ jobs:
           echo "BACKEND_BASE_URL=$BACKEND_BASE_URL"
           echo "BACKEND_BASE_URL=$BACKEND_BASE_URL" >> "$GITHUB_ENV"
 
-      - name: Build release APK
+      - name: Build release APK and bundle
         env:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           VERSION_CODE: ${{ github.run_number }}
-        run: ./gradlew --no-daemon --stacktrace assembleRelease
+        run: ./gradlew --no-daemon --stacktrace assembleRelease bundleRelease
 
       - name: Upload to Firebase App Distribution
         env:
@@ -99,6 +100,74 @@ jobs:
             --app "$FIREBASE_RELEASE_APP_ID" \
             --groups "$TESTER_GROUP" \
             --release-notes "$notes"
+
+      - name: Authorize Google Play upload
+        id: play_auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+
+      - name: Upload to Google Play internal testing
+        id: play
+        env:
+          TOKEN: ${{ steps.play_auth.outputs.access_token }}
+          BUILD_SOURCE: ${{ inputs.build_source }}
+        run: |
+          set -euo pipefail
+          api="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PLAY_PACKAGE"
+          upload="https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PLAY_PACKAGE"
+          call() {
+            local body code
+            body=$(mktemp)
+            code=$(curl -sS -o "$body" -w '%{http_code}' -X "$1" -H "Authorization: Bearer $TOKEN" "${@:2}")
+            cat "$body"
+            rm -f "$body"
+            [ "$code" -lt 300 ]
+          }
+          fail() { echo "$1" >&2; exit 1; }
+          notes="${BUILD_SOURCE:-main} · ${GITHUB_SHA::7} · run ${GITHUB_RUN_NUMBER}"
+          release() {
+            jq -n --arg v "$version" --arg s "$1" --arg n "$notes" \
+              '{track: "internal", releases: [{versionCodes: [$v], status: $s, releaseNotes: [{language: "ko-KR", text: $n}]}]}'
+          }
+
+          resp=$(call POST "$api/edits") || {
+            if jq -e '.error.code == 404' <<<"$resp" >/dev/null 2>&1; then
+              echo "::warning::Play has no app for $PLAY_PACKAGE yet. Upload the 'play-first-bundle' artifact of this run once in Play Console (internal testing); later runs upload through the API."
+              echo "first_bundle=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            fail "edit insert failed: $resp"
+          }
+          edit=$(jq -r .id <<<"$resp")
+          resp=$(call POST "$upload/edits/$edit/bundles?uploadType=media" \
+            -H 'Content-Type: application/octet-stream' \
+            --data-binary @app/build/outputs/bundle/release/app-release.aab) || fail "bundle upload failed: $resp"
+          version=$(jq -r .versionCode <<<"$resp")
+
+          status=completed
+          resp=$(call PUT "$api/edits/$edit/tracks/internal" -H 'Content-Type: application/json' -d "$(release "$status")") \
+            && resp=$(call POST "$api/edits/$edit:commit") && ok=true || ok=false
+          if [ "$ok" = false ] && grep -qi 'draft app' <<<"$resp"; then
+            echo "::warning::Play still treats pocket-aide as a draft app, so this release is uploaded as a draft. Roll it out once in Play Console; later releases go out automatically."
+            status=draft
+            resp=$(call PUT "$api/edits/$edit/tracks/internal" -H 'Content-Type: application/json' -d "$(release "$status")") \
+              && resp=$(call POST "$api/edits/$edit:commit") && ok=true
+          fi
+          [ "$ok" = true ] || fail "Play internal track release failed: $resp"
+          echo "Play internal testing: versionCode $version ($status)"
+
+      - name: Keep the first Play bundle
+        if: steps.play.outputs.first_bundle == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-first-bundle
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 7
 
       - name: Remove keystore
         if: always()
