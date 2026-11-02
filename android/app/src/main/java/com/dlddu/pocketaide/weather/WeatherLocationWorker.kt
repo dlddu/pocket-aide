@@ -12,13 +12,7 @@ import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.CancellationException
 import java.time.Duration
 
-/**
- * 앱을 열지 않아도 위젯 날씨가 현재 위치를 따라가도록, 주기적으로 위치를 새로 잡아
- * 저장하고 위치가 바뀌었으면 위젯을 다시 그린다.
- *
- * 백그라운드 위치 권한("항상 허용")이 없으면 아무것도 하지 않는다. 그 경우 위치는
- * 지금처럼 앱을 열 때만 갱신된다. 예보 자체는 위젯 주기 갱신(30분)이 저장된 위치로 받아온다.
- */
+// "항상 허용"이 없으면 아무것도 하지 않는다 — 그때 위치는 앱을 열 때(MainActivity·WeatherScreen)만 갱신된다.
 class WeatherLocationWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val store = WeatherLocationStore(SharedPreferencesWeatherStorage(applicationContext))

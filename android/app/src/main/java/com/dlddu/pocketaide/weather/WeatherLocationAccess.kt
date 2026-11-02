@@ -48,11 +48,10 @@ class WeatherLocationAccess(context: Context, private val store: WeatherLocation
         appContext.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
     }
 
-    /** 정확한 위치(ACCESS_FINE_LOCATION)를 허용받았는지. */
     fun hasPrecisePermission(): Boolean =
         appContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-    /** 앱이 화면에 없을 때도 위치를 받을 수 있는지("항상 허용"). Android 9 이하는 위치 권한이 곧 백그라운드 권한이다. */
+    // Android 9 이하에는 백그라운드 위치 권한이 따로 없고 위치 권한이 곧 백그라운드 권한이다.
     fun hasBackgroundPermission(): Boolean {
         if (!hasPermission()) return false
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return true

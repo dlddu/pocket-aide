@@ -110,7 +110,6 @@ fun WeatherScreen(onClose: () -> Unit) {
         )
     }
 
-    // 위젯이 앱 밖에서도 위치를 따라가려면 "항상 허용"이 필요하다(WeatherLocationWorker).
     var needsBackground by remember { mutableStateOf(needsBackgroundLocation(access)) }
     var backgroundAskedAt by remember { mutableLongStateOf(0L) }
     val backgroundLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -195,7 +194,6 @@ fun WeatherScreen(onClose: () -> Unit) {
 
 private const val SILENT_DENIAL_MILLIS = 500L
 
-/** 위치는 허용했지만 "항상 허용"은 아닌 상태. Android 9 이하는 따로 묻지 않는다. */
 private fun needsBackgroundLocation(access: WeatherLocationAccess): Boolean =
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && access.hasPermission() && !access.hasBackgroundPermission()
 

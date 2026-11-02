@@ -19,7 +19,6 @@ object WidgetRefresher {
         container.appScope.launch { reloadNow(appContext) }
     }
 
-    /** 백그라운드 작업처럼 끝나기 전에 갱신까지 마쳐야 할 때 쓴다. */
     suspend fun reloadNow(context: Context) {
         try {
             val revision = System.currentTimeMillis()

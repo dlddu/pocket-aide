@@ -18,6 +18,9 @@
 | 2026-10-04 | `.github/actions/start-test-sqs/action.yml` | 1 | `4a8622eeb479` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-10-04-test-sqs-action.md) |
 | — | `.github/workflows/android-test.yml` | 1 | `9dac1c010296` | — | 2026-10-31 Android 앱 PR 이 들임 — arm 러너를 쓰지 못하는 이유 1줄, 미판정 |
 | 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 91 | `631eeb49ad6b` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) · 2026-10-11 증분 유지 2줄(iOS 테스트 백엔드 교차 빌드) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
+| — | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 1 | `4a77c750667d` | — | 2026-11-02 위젯 날씨 백그라운드 위치 PR 이 들임 — Android 9 이하 백그라운드 권한·작업이 권한 없을 때 하는 일·네트워크 제약 이유·조용한 거절 처리, 미판정 |
+| — | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 2 | `1e02f2576bfd` | — | 2026-11-02 위젯 날씨 백그라운드 위치 PR 이 들임 — Android 9 이하 백그라운드 권한·작업이 권한 없을 때 하는 일·네트워크 제약 이유·조용한 거절 처리, 미판정 |
+| — | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 1 | `241224badd21` | — | 2026-11-02 위젯 날씨 백그라운드 위치 PR 이 들임 — Android 9 이하 백그라운드 권한·작업이 권한 없을 때 하는 일·네트워크 제약 이유·조용한 거절 처리, 미판정 |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-08 | `backend/cmd/server/main.go` | 17 | `9600452f468b` | 완료 | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
