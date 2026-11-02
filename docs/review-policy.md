@@ -37,7 +37,7 @@
 scope: backend ios/Shared ios/PocketAide k8s
 exclude: _test\.go$|^backend/go\.sum$|^backend/cmd/datamodelcheck/
 ere: CREATE[[:space:]]+(TABLE|INDEX|UNIQUE[[:space:]]+INDEX|VIEW|TRIGGER)|ALTER[[:space:]]+TABLE|DROP[[:space:]]+(TABLE|INDEX|VIEW|TRIGGER)
-ere: "github\.com/golang-migrate/migrate/v4"|go:embed \*\.sql|sql\.Open\("sqlite"
+ere: "github\.com/golang-migrate/migrate/v4"|go:embed \*\.sql|sql\.Open\("sqlite"|telemetry\.OpenDB\(|otelsql\.Open\(
 ere: coreos/go-oidc/v3/oidc"|oidc\.NewProvider
 ere: ASWebAuthenticationSession\(|code_verifier|code_challenge|kSecClassGenericPassword
 ere: ^kind: (Deployment|PersistentVolumeClaim|Secret|StatefulSet)|claimName: [a-z0-9-]+|type: Recreate|^[[:space:]]+replicas: [0-9]+
@@ -64,7 +64,7 @@ docs/data-model/fullscan-criteria.md
 
 | 대상 | 사유 | 재개 조건 | 소관 |
 |---|---|---|---|
-| `backend/internal/db/db.go` 의 SQLite 연결 · 마이그레이션 적용 호출 | MA1 의 전제(마이그레이션을 바이너리에 싣고 부팅 때 적용하는 배선)이지 스키마 변경 자체가 아니고, 연결 옵션 수정 대부분은 데이터와 무관하다 | 마이그레이션 소스가 바뀌거나 두 번째 DB 연결이 생긴다 — `git grep -c 'iofs.New(migrations.FS' backend/internal/db/db.go` 가 0, 또는 `git grep -l 'sql.Open("sqlite"' -- backend ':!*_test.go' ':!backend/cmd/datamodelcheck'` 가 2파일 이상 | 코드 리뷰 |
+| `backend/internal/db/db.go` 의 SQLite 연결 · 마이그레이션 적용 호출, 그리고 그 연결을 여는 `backend/internal/telemetry/` 의 `OpenDB`(`otelsql.Open` 추적 래퍼) | MA1 의 전제(마이그레이션을 바이너리에 싣고 부팅 때 적용하는 배선)이지 스키마 변경 자체가 아니고, 연결 옵션 수정 대부분은 데이터와 무관하다. `telemetry.OpenDB` 는 드라이버 이름과 DSN 을 그대로 넘기고 쿼리마다 span 을 남길 뿐이다 — DSN·pragma(저널 모드·동기화·외래키)와 연결 수 제한은 `db.go` 에 남아 있다 | 마이그레이션 소스가 바뀌거나 두 번째 DB 연결이 생기거나 추적 래퍼가 다른 곳에서 쓰인다 — `git grep -c 'iofs.New(migrations.FS' backend/internal/db/db.go` 가 0, 또는 `git grep -lE 'sql\.Open\("sqlite"\|telemetry\.OpenDB\(' -- backend ':!*_test.go' ':!backend/cmd/datamodelcheck'` 가 2파일 이상(현재 `db.go` 1), 또는 `git grep -l 'otelsql\.Open(' -- backend ':!*_test.go'` 가 2파일 이상(현재 `telemetry.go` 1) | 코드 리뷰 |
 | `backend/internal/oidcmock/` E2E 용 OIDC mock IdP(`code_challenge`·`code_verifier` 를 흉내 낸다) | 운영 서버에 링크되지 않는 테스트 전용 mock 이고(`backend/cmd/oidcmock` 바이너리와 통합 테스트만 쓴다), 허용 여부는 `docs/e2e-mocking-policy.md` 허용목록이 관리한다 | 운영 서버 경로가 mock 을 import 한다 — `git grep -l 'internal/oidcmock' -- backend/cmd/server backend/internal ':!*_test.go' ':!backend/internal/oidcmock'` 가 1파일 이상 | e2e 모킹 정책 |
 | `ios/Shared/Sources/PocketAideStorage/` 의 키체인 저장(`TokenStore.swift` · `GitHubCredentialStore.swift`) | 로그인 결과 토큰과 GitHub 자격증명을 보관할 뿐 인증 판단(토큰 검증·발급 흐름)을 하지 않고, 저장 형식이 바뀌면 재로그인으로 복구된다 | 키체인 접근 가능성이 `ThisDeviceOnly` 밖으로 바뀌거나 키체인을 쓰는 파일이 늘어난다 — `git grep -c 'kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly' -- ios` 합계가 `git grep -c 'kSecAttrAccessible as String' -- ios` 합계보다 작아지거나(현재 둘 다 2), 또는 `git grep -l 'kSecClassGenericPassword' -- ios` 가 3파일 이상 | 코드 리뷰 |
 
