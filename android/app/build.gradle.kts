@@ -47,6 +47,8 @@ android {
             applicationIdSuffix = ".debug"
             buildConfigField("String", "BACKEND_BASE_URL", quoted(config("backendBaseUrl", "http://10.0.2.2:8080")))
             buildConfigField("String", "FIREBASE_APP_ID", quoted(config("firebaseAppId", "1:657421381831:android:16491d777af54099e84ee2")))
+            // mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 디버그 빌드만 GITHUB_API_BASE_URL 이 있을 때 앱의 GitHubClient 를 로컬 GitHub API 스텁으로 향하게 한다 (docs/e2e-mocking-policy.md)
+            buildConfigField("String", "GITHUB_API_BASE_URL", quoted(config("githubApiBaseUrl", "https://api.github.com")))
         }
         release {
             isMinifyEnabled = true
@@ -54,6 +56,7 @@ android {
             signingConfig = signingConfigs.getByName("release").takeIf { it.storeFile != null }
             buildConfigField("String", "BACKEND_BASE_URL", quoted(config("backendBaseUrl")))
             buildConfigField("String", "FIREBASE_APP_ID", quoted(config("firebaseAppId", "1:657421381831:android:c98abab847b61adbe84ee2")))
+            buildConfigField("String", "GITHUB_API_BASE_URL", quoted("https://api.github.com"))
         }
     }
 

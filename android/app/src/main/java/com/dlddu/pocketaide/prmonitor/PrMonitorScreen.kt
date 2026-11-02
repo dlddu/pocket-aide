@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dlddu.pocketaide.BuildConfig
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.designsystem.DesignTokens
 import com.dlddu.pocketaide.designsystem.components.ScreenHeader
@@ -80,7 +81,8 @@ fun PrMonitorScreen(
     val openPullRequests: OpenPullRequestsViewModel = viewModel(key = "prmonitor.openprs") {
         OpenPullRequestsViewModel(
             store = KeystoreGitHubCredentialStore(context),
-            client = GitHubClient(),
+            // mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 디버그 빌드의 GITHUB_API_BASE_URL(기본 https://api.github.com)로 GitHubClient 의 호스트만 바꾼다 (docs/e2e-mocking-policy.md)
+            client = GitHubClient(baseUrl = BuildConfig.GITHUB_API_BASE_URL),
             filterStore = SharedPreferencesOpenPullRequestFilterStore(context),
         )
     }
