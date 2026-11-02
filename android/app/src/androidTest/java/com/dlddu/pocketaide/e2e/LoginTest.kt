@@ -1,3 +1,4 @@
+// 검증 시나리오: 없음 (스모크/인프라)
 package com.dlddu.pocketaide.e2e
 
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -1,3 +1,4 @@
+// 검증 시나리오: test-todo.md#시나리오 6
 package com.dlddu.pocketaide.e2e
 
 import androidx.compose.ui.test.performTouchInput

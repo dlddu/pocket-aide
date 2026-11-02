@@ -1,3 +1,4 @@
+// 검증 시나리오: test-approval-gate.md#시나리오 7
 package com.dlddu.pocketaide.e2e
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
