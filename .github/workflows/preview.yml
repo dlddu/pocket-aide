@@ -76,9 +76,23 @@ jobs:
   testflight:
     name: TestFlight (preview)
     needs: [plan, image]
-    if: ${{ !cancelled() && needs.plan.outputs.run == 'true' && needs.image.result != 'failure' }}
+    if: ${{ false && !cancelled() && needs.plan.outputs.run == 'true' && needs.image.result != 'failure' }}
     uses: ./.github/workflows/testflight-upload.yml
     with:
       preview_pr: ${{ format('{0}', github.event.pull_request.number) }}
       build_source: ${{ needs.plan.outputs.build_source }}
     secrets: inherit
+
+  android:
+    name: Android App Distribution (preview)
+    needs: [plan, image]
+    if: ${{ !cancelled() && needs.plan.outputs.run == 'true' && needs.image.result != 'failure' }}
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/android-distribute.yml
+    with:
+      preview_pr: ${{ format('{0}', github.event.pull_request.number) }}
+      build_source: ${{ needs.plan.outputs.build_source }}
+    secrets:
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
