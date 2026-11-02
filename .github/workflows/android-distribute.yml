@@ -1,4 +1,4 @@
-name: Android App Distribution
+name: Android Google Play internal testing
 
 on:
   workflow_call:
@@ -22,13 +22,11 @@ env:
   WORKLOAD_IDENTITY_PROVIDER: projects/657421381831/locations/global/workloadIdentityPools/github-actions/providers/github
   SERVICE_ACCOUNT: pocket-aide-app-dist@dlddu-play-console.iam.gserviceaccount.com
   SIGNING_SECRET: pocket-aide-android-signing
-  FIREBASE_RELEASE_APP_ID: "1:657421381831:android:c98abab847b61adbe84ee2"
-  TESTER_GROUP: testers
   PLAY_PACKAGE: com.dlddu.pocketaide
 
 jobs:
   distribute:
-    name: Build + upload release APK
+    name: Build + upload release bundle
     runs-on: ubuntu-24.04
     defaults:
       run:
@@ -83,23 +81,11 @@ jobs:
           echo "BACKEND_BASE_URL=$BACKEND_BASE_URL"
           echo "BACKEND_BASE_URL=$BACKEND_BASE_URL" >> "$GITHUB_ENV"
 
-      - name: Build release APK and bundle
+      - name: Build release bundle
         env:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           VERSION_CODE: ${{ github.run_number }}
-        run: ./gradlew --no-daemon --stacktrace assembleRelease bundleRelease
-
-      - name: Upload to Firebase App Distribution
-        env:
-          BUILD_SOURCE: ${{ inputs.build_source }}
-        run: |
-          set -euo pipefail
-          notes="${BUILD_SOURCE:-main} · ${GITHUB_SHA::7} · run ${GITHUB_RUN_NUMBER}"
-          npx --yes firebase-tools@13.29.1 appdistribution:distribute \
-            app/build/outputs/apk/release/app-release.apk \
-            --app "$FIREBASE_RELEASE_APP_ID" \
-            --groups "$TESTER_GROUP" \
-            --release-notes "$notes"
+        run: ./gradlew --no-daemon --stacktrace bundleRelease
 
       - name: Authorize Google Play upload
         id: play_auth

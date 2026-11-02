@@ -327,7 +327,7 @@ jobs:
     secrets: inherit
 
   android-distribute:
-    name: Android App Distribution
+    name: Android Play internal testing
     needs: [changes, android-test, backend-docker-push]
     if: ${{ !cancelled() && needs.changes.outputs.android_distribute == 'true' && (needs.android-test.result == 'success' || needs.android-test.result == 'skipped') && needs.backend-docker-push.result != 'failure' }}
     permissions:
