@@ -30,7 +30,6 @@ class WidgetHeaderLayoutTest {
 
     @Test
     fun sectionWidthSplitsWhatIsLeftAfterPaddingAndRule() {
-        // 360 - (16*2 + 12*2 + 1) = 303 → 한 섹션 151.5
         assertEquals(151.5f, width, 0.01f)
     }
 
@@ -52,7 +51,6 @@ class WidgetHeaderLayoutTest {
 
     @Test
     fun ruleStaysWellBelowAFullWidgetHeight() {
-        // 상단 구분선이 위젯 전체(4x4 ≈ 360dp)를 차지하던 회귀를 막는다.
         val busy = entry(
             WidgetWeatherState.NeedsLocation,
             calendar(event("아주 긴 제목의 일정이 두 줄로 접히는 경우", 2), event("회의", 4), event("저녁", 6), more = 5),

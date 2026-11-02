@@ -47,19 +47,20 @@ import com.dlddu.pocketaide.weather.Weather
 import com.dlddu.pocketaide.weather.WeatherDeepLink
 
 class PocketAideWidget : GlanceAppWidget() {
-    // 상단 구분선 높이를 실제 위젯 너비로 추정하려면 크기마다 따로 그려야 한다.
+    // 세로선 높이를 추정할 때 일정 제목 줄바꿈을 실제 위젯 너비로 계산하려면 크기마다 따로 그려야 한다.
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val loader = PocketAideWidgetLoader(context)
         val initial = loader.load()
+        val fontScale = context.resources.configuration.fontScale
         provideContent {
             val revision = currentState(WidgetRefresher.REVISION) ?: 0L
             val firstRevision = remember { revision }
             val entry by produceState(initial, revision) {
                 if (revision != firstRevision) value = loader.load()
             }
-            WidgetContent(entry)
+            WidgetContent(entry, fontScale)
         }
     }
 }
@@ -77,7 +78,7 @@ private const val PLACEHOLDER_OPACITY = 0.55f
 private const val AFFIRMATION_MAX_LINES = 5
 
 @Composable
-private fun WidgetContent(entry: PocketAideWidgetEntry) {
+private fun WidgetContent(entry: PocketAideWidgetEntry, fontScale: Float) {
     val context = LocalContext.current
     Column(
         GlanceModifier
@@ -89,7 +90,7 @@ private fun WidgetContent(entry: PocketAideWidgetEntry) {
         Row(GlanceModifier.fillMaxWidth().padding(bottom = DesignTokens.Spacing.md)) {
             WeatherSection(entry.weather, GlanceModifier.defaultWeight())
             Spacer(GlanceModifier.width(DesignTokens.Spacing.md))
-            HeaderRule(entry)
+            HeaderRule(entry, fontScale)
             Spacer(GlanceModifier.width(DesignTokens.Spacing.md))
             CalendarSection(entry.calendar, entry, GlanceModifier.defaultWeight())
         }
@@ -102,13 +103,8 @@ private fun WidgetContent(entry: PocketAideWidgetEntry) {
     }
 }
 
-/**
- * 날씨와 다음 일정 사이 세로선. Glance 에는 내용 높이에 맞추는 수단이 없어 fillMaxHeight 를 쓰면
- * 위젯 전체 높이로 늘어나 아래 섹션을 밀어내므로, 두 섹션 중 긴 쪽 높이를 추정해 직접 준다.
- */
 @Composable
-private fun HeaderRule(entry: PocketAideWidgetEntry) {
-    val fontScale = LocalContext.current.resources.configuration.fontScale
+private fun HeaderRule(entry: PocketAideWidgetEntry, fontScale: Float) {
     val sectionWidth = WidgetHeaderLayout.sectionWidth(LocalSize.current.width.value)
     val ruleHeight = WidgetHeaderLayout.ruleHeight(entry, sectionWidth, fontScale)
     Box(GlanceModifier.width(RULE_WIDTH).height(ruleHeight.dp).background(WidgetColors.rule)) {}
