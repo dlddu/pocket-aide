@@ -160,6 +160,36 @@ test environments run without any of this set up.
 | `APNS_AUTH_KEY_P8`      | Secret     | PR monitor enabled (unless `APNS_DISABLED`) |
 | `APNS_DISABLED`         | env        | never in production; `true` keeps the consumer + history but skips pushes (local runs without Apple credentials) |
 | `APNS_HOST`             | env        | never in production; sends pushes to this APNs-compatible host instead of Apple's (`http://` = plain HTTP). E2E CI points it at the fake receiver, see `docs/e2e-mocking-policy.md` |
+| `FCM_SERVICE_ACCOUNT_JSON` | Secret  | Android pushes; empty disables FCM (Android devices are then skipped). Independent of `SQS_QUEUE_URL` / `APNS_DISABLED`. The service-account key JSON (see below) |
+| `FCM_HOST`              | env        | never in production; sends FCM HTTP v1 requests to this host instead of Google's (`http://` = plain HTTP). The Android E2E job points it at the fake FCM receiver, see `docs/engineering/android-app.md` §5 |
+
+### Push providers by platform
+
+Pushes go through a router (`backend/internal/push`) that picks the
+provider from `device_tokens.platform` (column from migration `0003`,
+default `ios`): `ios` → APNs, `android` → FCM. Each provider is optional
+and enabled on its own — APNs by the PR-monitor vars above, FCM by
+`FCM_SERVICE_ACCOUNT_JSON` alone. A device whose platform has no
+configured provider is skipped, not an error.
+
+- **`POST /api/device-tokens`** body is `{"token": …, "platform": "ios"|"android"}`.
+  `platform` may be omitted and then means `ios`. iOS tokens must be 64 hex
+  characters; Android (FCM registration) tokens must be at most 4096
+  characters without whitespace; any other `platform` is rejected (400).
+- **FCM service account**: the backend sends through the FCM HTTP v1 API
+  with a service-account key. The key JSON is provisioned by
+  `dlddu/infrastructure` (`terraform/dlddu/google/pocket-aide-firebase.tf`),
+  stored in SSM `/flux-cd/pocket-aide/fcm`, and injected as
+  `FCM_SERVICE_ACCOUNT_JSON` through the `pocket-aide-secrets` Secret
+  (ExternalSecret with `refreshPolicy: CreatedOnce` — after rotating the
+  key, delete the Secret so it is recreated, then restart the pod). An
+  invalid JSON makes the backend exit at startup (`fcm: ...`); on success
+  it logs `fcm: enabled for project <id>`.
+- **Message shape**: the data payload keys (`approval_id`, `event_id`,
+  `kind`, `notification_id`) are the same as for APNs. Approval requests
+  are sent as data-only messages (title/body inside data) so the app can
+  attach its approve/reject actions; all other pushes are notification
+  messages.
 
 Message authenticity is enforced by IAM/queue-policy on the SQS queue —
 there is no GitHub webhook secret in the backend.
@@ -222,6 +252,9 @@ Both rows must be exercised before declaring the feature shipped.
 | iOS never POSTs to `/api/device-tokens`  | Notification permission denied → check banner; or `aps-environment` entitlement missing |
 | `apns rejected (status=400 reason="BadDeviceToken")` | Token from sandbox device sent to production APNs (env mismatch)    |
 | `apns rejected (status=403 reason="ExpiredProviderToken")` | .p8 PEM truncated in the secret, or wrong Key ID / Team ID          |
+| Android never POSTs to `/api/device-tokens` or the row stays `ios` | App has no Firebase API key (build property `pocketaide.firebaseApiKey` / CI secret `FIREBASE_API_KEY`) so it gets no FCM token; or the request omitted `"platform": "android"` and was stored with the default `ios` |
+| Android devices get no push, no `fcm: enabled` line at startup | `FCM_SERVICE_ACCOUNT_JSON` empty or the `pocket-aide-secrets` Secret not recreated after a key rotation — the router skips Android devices (`push: platform has no configured client`) |
+| `fcm rejected` for a token | Registration token is stale/unregistered, or the service account's project differs from the app's Firebase project |
 | Push appears on device only when app is foreground | `UNUserNotificationCenter` delegate missing — `AppDelegate.application(_:didFinishLaunchingWithOptions:)` not running |
 | `skipping x-github-event="..." (not workflow_run)` repeating | The GitHub webhook subscribes to more events than the consumer acts on, or a non-integration producer is publishing to the queue. Use the debug toggles below to identify the source. |
 | `skipping x-github-event=""` repeating   | No `x-github-event` message attribute — not from the API Gateway integration. Likely a direct SendMessage from outside (AWS Console test, ad-hoc script), or the integration's `MessageAttributes` mapping is missing / misnamed. |
@@ -314,10 +347,11 @@ Backend changes that landed with PRD-10 AC6/7/11/12:
 - Dispatch (`cmd/server/main.go`) now:
   1. Resolves matched users (`ListUserIDsExcluding`).
   2. Writes one history row per matched user in a single transaction.
-  3. Sends APNs per token, with custom data `{ "event_id": <id> }`.
+  3. Sends a push per device token through the platform router (APNs for
+     `ios`, FCM for `android`), with custom data `{ "event_id": <id> }`.
   - History persistence failure aborts the dispatch and leaves the SQS
     message for retry (§2 visibility-timeout note).
-  - APNs failures are logged and skipped per-token; the history row
+  - Push failures (APNs or FCM) are logged and skipped per-token; the history row
     remains so the user still sees the unacked card on next app open.
 - iOS: PR monitor is the 7th tab (`RootTab.prMonitor`). Push tap →
   deep-link `pocketaide://pr-monitor?eventId=<id>` → tab switch with the
