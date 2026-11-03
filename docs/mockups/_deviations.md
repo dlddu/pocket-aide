@@ -1,6 +1,6 @@
 ---
 type: mockup-deviations
-last_updated: 2026-10-12
+last_updated: 2026-11-03
 ---
 
 # 허용목록 (문서화된 목업 이탈)
@@ -22,18 +22,22 @@ last_updated: 2026-10-12
 - **대상**: `system/ink`(라이트 `#1C2624` · 다크 `#FFFFFF`), `system/rule` 라이트 `#E5E5E5`, `system/soft`(라이트 `#F5F5F5` · 다크 `#1C1C1E`),
   `system/surface` 라이트 `#FFFFFF`. 역방향으로 `tokens.md` §1.9 시스템 다크 「보조 텍스트」 `#8E8E93` 은 대응 슬롯이 없다.
 - **사유**: `tokens.md` §1.8 은 시스템 통합 영역이 「iOS 시스템 컨벤션을 차용하므로 영역 토큰을 따르지 않는다」고만 적고 라이트 값을 정하지 않으며,
-  §1.9 는 다크 페이지 배경·카드·구분선·보조 텍스트만 정한다. 반면 `DesignTokens.Color.<슬롯>(area)` 는 모든 영역 × 여섯 슬롯
-  (`surface`·`ink`·`accent`·`rule`·`soft`·`card`)에 값을 요구하므로 에셋이 빈 슬롯을 iOS 기본값에 가까운 값으로 채웠다.
+  §1.9 는 다크 페이지 배경·카드·구분선·보조 텍스트만 정한다. 반면 `DesignTokens.Colors.<슬롯>(area)`(`designsystem/DesignTokens.kt`)는 모든 영역 × 여섯 슬롯
+  (`surface`·`ink`·`accent`·`rule`·`soft`·`card`)에 값을 요구하므로 `designsystem/GeneratedPalettes.kt` 가 빈 슬롯을 iOS 기본값에 가까운 값으로 채웠다.
   보조 텍스트는 슬롯 체계에 없어 구현은 `ink(...).opacity(...)` 로 그린다.
-- **렌더 영향**: 없음. `system` 영역을 쓰는 파일은 목업이 없는 `ios/PocketAide/HelloWorldView.swift` 뿐이다(`_impl-map.md` 의 `화면`·`부분` 행 파일에서 사용 0).
-- **해제 조건**: `tokens.md` §1.8·§1.9 가 이 슬롯들의 값을 정하면 에셋을 그 값에 맞추고 이 항목을 지운다.
+- **렌더 영향**: 있음(하단 탭 바). `system` 영역을 쓰는 구현은 `ui/RootScreen.kt`(하단 탭 바 배경 `surface`·선택 탭 글자 `ink`·비선택 탭 글자 `ink` 50%·더 보기 목록 배경 `surface`·제목 `ink`)·
+  `ui/RootTab.kt`(「더 보기」 탭의 영역 매핑)·`designsystem/PocketAideTheme.kt`(테마 팔레트)·`keyboard/KeyboardStyle.kt`(키보드 버튼 글자 `card`)다.
+  `system` 의 `rule`·`soft` 는 이 트리 어디에서도 쓰이지 않는다. (2026-11-02 전환 전 iOS 구현 기준으로는 「목업 없는 `ios/PocketAide/HelloWorldView.swift` 만 쓴다」였으나,
+  전환 뒤 안드로이드 구현은 하단 탭 바에 `system` 슬롯을 쓴다 — 2026-11-03 갱신.)
+- **해제 조건**: `tokens.md` §1.8·§1.9 가 이 슬롯들의 값을 정하면 `GeneratedPalettes.kt` 를 그 값에 맞추고 이 항목을 지운다.
 
 ### T2 — 영역 팔레트의 미정의 슬롯(음성 `rule`·`soft`, AI 채팅·임시공간 라이트 `soft`)
 
 - **대상**: `voice/rule` `#1C2624` · `voice/soft` `#1A2421`(라이트·다크 같은 값), `aiChat/soft` 라이트 `#ECEAE3`, `scratchpad/soft` 라이트 `#FBF7EC`.
 - **사유**: `tokens.md` 는 음성 모드의 `--rule`·`--soft` 를 `—` 로(§1.9), AI 채팅·임시공간은 라이트 `--soft` 를 정의하지 않는다(§1.3·§1.4).
   T1 과 같은 이유(슬롯 전칭 API)로 에셋이 이웃 토큰 값 — AI 채팅은 채팅 버블 보더, 임시공간은 카드 배경, 음성은 AI 채팅 라이트 `--ink`·음성 `--card` — 을 빌렸다.
-- **렌더 영향**: 없음. `soft(.aiChat)` 는 목업 없는 `HelloWorldView.swift` 만 쓰고, 음성·임시공간 `soft`·`rule` 은 구현 어디에서도 쓰지 않는다.
+- **렌더 영향**: 없음. `soft(.aiChat)` 는 쓰이지 않는다(AI 채팅 화면이 미구현이라 자리표시자뿐이다 — `ui/PlaceholderScreen.kt` 행), 음성·임시공간 `soft`·`rule` 은 구현 어디에서도 쓰지 않는다.
+  (iOS 구현 기준의 근거 파일 `ios/PocketAide/HelloWorldView.swift` 는 2026-11-02 전환 뒤 이 모델의 구현이 아니다 — 2026-11-03 갱신.)
 - **해제 조건**: `tokens.md` 가 해당 슬롯을 정의하거나, 그 슬롯을 쓰는 화면이 구현되면(그때는 목업 값에 맞춘 뒤) 지운다.
 
 ### T3 — 폰트 패밀리는 iOS 시스템 서체

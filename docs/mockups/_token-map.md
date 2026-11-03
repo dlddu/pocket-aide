@@ -3,6 +3,10 @@ type: mockup-token-map
 last_updated: 2026-10-04
 ---
 
+> **2026-11-03 — 이 표는 아직 iOS 기준이다.** 렌더링 소스가 `android/` 로 옮겨갔으나 이 표의 행은
+> `ios/**/*.swift` 를 가리킨다. 안드로이드 기준 매핑은 [`_impl-map.md`](./_impl-map.md) 에 있고,
+> 이 표를 그 기준으로 다시 세우는 일은 남은 작업이다.
+
 # 토큰 ↔ 구현 대응표
 
 > [`tokens.md`](../design-system/tokens.md)(목업 `:root` 변수의 원천)의 토큰과 `ios/Shared/Sources/DesignSystem/` 의

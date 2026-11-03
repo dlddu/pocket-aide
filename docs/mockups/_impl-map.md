@@ -1,21 +1,31 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-10-27
+last_updated: 2026-11-03
 ---
 
 # 구현 ↔ 목업 매핑
 
-> 구현된 SwiftUI 렌더링 소스가 어느 화면 목업(`screen-<슬러그>`)을 그리는지 적은 **기계 판독용 매핑**이다.
+> 구현된 **안드로이드 Compose** 렌더링 소스가 어느 화면 목업(`screen-<슬러그>`)을 그리는지 적은 **기계 판독용 매핑**이다.
 > 목업 ↔ 가치·여정·PRD·디자인 시스템의 연결은 [`_index.md`](./_index.md)가 맡고, 이 파일은 그 반대편
-> (목업 ↔ `ios/` 구현 파일)만 맡는다. 목업이 시각의 단일 진실 원천(SSOT)이므로, 이 표는 토큰·카피·구조
+> (목업 ↔ 안드로이드 구현 파일)만 맡는다. 목업이 시각의 단일 진실 원천(SSOT)이므로, 이 표는 토큰·카피·구조
 > 대조를 **어느 파일과 어느 목업 사이에서 할지** 정하는 전제다.
+
+> **2026-11-02 전환으로 이 표의 대상 트리가 바뀌었다.** 렌더링 소스는 `ios/`(SwiftUI)에서
+> `android/app/src/main/java/com/dlddu/pocketaide/`(Kotlin · Jetpack Compose)로 옮겨졌다. `ios/` 트리는
+> 레포에 남아 있으나 이 모델의 구현이 아니다. 이 표는 2026-11-03 에 안드로이드 기준으로 다시 세웠다
+> (reconciler `rct_20261102-0001` · 모델 `tbm_pocket-aide-mockup-render`).
+>
+> **아직 iOS 기준인 표** — [`_copy-map.md`](./_copy-map.md) · [`_structure-map.md`](./_structure-map.md) ·
+> [`_token-map.md`](./_token-map.md) 은 아직 `ios/**/*.swift` 를 가리킨다. 이 표가 정한 안드로이드 행을
+> 기준으로 세 표를 다시 세우는 일은 남은 작업이다 — 그 전까지 이 표와 세 표 사이의 교차 참조는 옛 경로를 가리킨다.
 
 ## 판독 규약
 
-- 대상 파일은 렌더링 소스 네 트리 — `ios/PocketAide/`, `ios/PocketAideWidget/`, `ios/PocketAideKeyboard/`,
-  `ios/Shared/Sources/DesignSystem/` — 의 `*.swift` **전부**와 색 에셋 카탈로그
-  `ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets` 1개다. 각 파일은 아래 표에 **정확히 한 번** 나온다.
-  (`Info*.plist`·`*.entitlements`·앱 아이콘 `Assets.xcassets` 는 화면을 그리지 않으므로 대상이 아니다.)
+- 대상 파일은 렌더링 소스 한 트리 — `android/app/src/main/java/com/dlddu/pocketaide/` 아래 **비렌더링 패키지
+  (`api`·`auth`·`push`)를 뺀** `*.kt` 전부 — 와 색 리소스 2개다
+  (`android/app/src/main/res/values/colors.xml` · `android/app/src/main/res/values-night/colors.xml`).
+  각 파일은 아래 표에 **정확히 한 번** 나온다. 그 밖의 파일(테스트·빌드 설정·`backend/`·`ios/` 전체·
+  `res/` 의 나머지 — `strings.xml`·`themes.xml`·드로어블·매니페스트)은 화면을 그리지 않으므로 대상이 아니다.
 - 표의 데이터 행은 `` | `<레포 루트 기준 경로>` | <분류> | <목업> | <대조 범위> | `` 형태다.
   - **분류**는 다음 일곱 값 중 하나다.
     - `화면` — 목업 한 장의 화면 셸 전체를 그린다.
@@ -32,90 +42,116 @@ last_updated: 2026-10-27
 
 ## 매핑
 
-| 구현 파일 | 분류 | 목업 | 대조 범위 |
-|---|---|---|---|
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `ScreenHeader`·히어로 다짐 카드·목록(머리 정렬 칩)·우선순위 점 범례·빈 상태. 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Affirmations/AffirmationsViewModel.swift` | 비렌더링 | — | 다짐 목록·회전 상태 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `Sheet`·`Backdrop`·`Handle`·3-tier 단일 선택·1차/2차 액션. 시트 아래 다짐 화면은 `AffirmationsView.swift` 행 |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | 부분 | `screen-approval` | 자동 응답 모드(#278, PRD-12 AC9·AC12) — 「대기 목록」·「빈 상태」 프레임 헤더 아래 「자동 응답 <모드>」 줄(`ApprovalAutoResponseHeader`)·「자동 응답 모드 켜짐」 프레임의 모드 배너(굵은 제목 + 결과 안내 + 「끄기」 — `ApprovalAutoResponseBanner`)·「빈 상태」 프레임의 안내 문구와 「자동 응답 모드 <모드> — <결과 안내>」 줄(`ApprovalEmptyState`)·「설정 — 자동 응답·호출자 키」 프레임의 모드 선택지 행(라벨·라디오 — `ApprovalAutoResponseOption`). 모드 값·선택지·배너 제목·결과 안내 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalAutoResponse.label`·`optionLabel`·`bannerTitle`·`outcomeNotice`. 배너·빈 상태는 `ApprovalsView.swift` 행, 선택지 카드와 섹션 머리는 `ApprovalKeysView.swift` 행이 놓는다 |
-| `ios/PocketAide/Approvals/ApprovalDeepLinkOpener.swift` | 비렌더링 | — | 승인 푸시 딥링크 → 요청 상세 진입(`ViewModifier`) — `openedApprovalID` 를 받아 요청을 조회하고 설정·이력 화면을 닫은 뒤 상세(`ApprovalDetailView.swift` 행)를 연다. `ApprovalsView.swift` 에 붙는다 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | 부분 | `screen-approval` | 승인 요청 상세(#251, PRD-12 AC6·AC7) — 「요청 상세」 프레임의 헤더(백버튼 「승인」·보낸 키 칩)·요청 요약 제목·「남은 시간」 카운트다운(라벨·초 단위 값·진행 막대)·「에이전트 설명」 섹션(호출자가 `reason` 을 보냈을 때만 — 라벨·캡션 「에이전트가 작성 · 검증되지 않음」·본문, 2026-10-25)·요청 내용 전문·메타(보낸 키·요청자·세션·요청 ID·요청 시각 — 세션 값은 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.sessionLabel`, 세션 id 가 없으면 행을 숨긴다)·폐기된 키 경고·「거절」/「승인」 버튼과 「요청 상세 — 만료 · 재조회 실패」 프레임의 처리된 요청(카운트다운·결정 버튼 없음, 메타 상태·처리 방식·처리 시각, 요청자 「—」)과 재조회 실패 배너, 「결정 확인」 프레임의 확인 다이얼로그(제목·본문·「취소」 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.confirmTitle`·`confirmMessage`). 목업에 없는 구현 상태 — 메타 「상태」·처리된 요청의 「처리 방식」·「처리 시각」, 최신 상태 조회 오류 배너, 결정 충돌·실패 안내 배너 — 는 `_copy-map.md` 표 A `목업 대기` |
-| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | 부분 | `screen-approval` | 처리 이력(#264, PRD-12 AC8) — 「처리 이력」 프레임의 섹션 머리 「처리 이력」·이력 행(결과 점·결과 「승인됨/거절됨/만료」·처리 시각·요청 요약·보낸 키 칩·처리 방식 — 문구는 `PocketAideAPI/Approvals.swift` 의 `ApprovalFormatting.statusLabel`·`historyTime`·`historyMeta`(`decisionModeLabel` + 「 · 폐기된 키로 생성됨」))·하단 「이전 이력 불러오는 중…」. 승인 탭 헤더의 이력 버튼으로 진입한다(`ApprovalsView.swift` 행). 목업에 없는 구현 상태 — 조회 오류 배너(오류 설명·「다시 시도」)·첫 조회 중 진행 표시 — 는 목업 「오류」 프레임의 같은 문구로 대조한다. 이력 프레임의 구조·수치 대조는 `_structure-map.md` 의 몫이다 |
-| `ios/PocketAide/Approvals/ApprovalHistoryViewModel.swift` | 비렌더링 | — | 처리 이력 커서 페이지 조회·이어 불러오기·오류 상태와 API 호출 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | 부분 | `screen-approval` | 승인 게이트 설정(#257, PRD-12 AC13·AC14) — 「설정 — 자동 응답·호출자 키」 프레임의 제목 「승인 게이트 설정」·「호출자 키」 섹션 머리·키 행(이름 칩·「폐기」 버튼 또는 「폐기됨 MM/dd」·메타 줄 — 문구는 `PocketAideAPI/ApprovalKeys.swift` 의 `ApprovalKeyFormatting.meta`·`revokedLabel`)·점선 「+ 호출자 키 발급」 버튼과 「키 발급 — 원문 1회 표시」 프레임의 시트(제목 `ApprovalKeyFormatting.issuedTitle`·「호출자 이름」·「키 원문」·경고 `secretWarning`·「복사」/「완료」). 승인 탭 헤더의 설정 버튼으로 진입한다(`ApprovalsView.swift` 행). 「설정」 프레임 맨 위 「자동 응답 모드」 섹션(#278, AC9) — 섹션 머리와 모드 선택 카드(선택지 사이 rule 1px·외곽선·변경 실패 안내 줄; 선택지 행은 `ApprovalAutoResponseViews.swift` 행). 「설정 — 키 없음 · 조회 실패」 프레임의 목록 조회 실패 배너(제목·「다시 시도」)와 키 0건 안내, 「키 발급 — 이름 입력」 프레임의 발급 입력 시트(「호출자 키 발급」·이름 입력 `infra-ci`·「취소」/「발급」), 「키 발급 — 복사됨」 프레임의 「복사됨」. 목업에 없는 구현 상태는 폐기 확인 대화상자(시스템 `alert`)와 모드 변경 실패 안내 줄이다 |
-| `ios/PocketAide/Approvals/ApprovalKeysViewModel.swift` | 비렌더링 | — | 호출자 키 목록·발급(원문 1회 보관)·폐기 상태와 API 호출 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | 부분 | `screen-approval` | k8s ServiceAccount 호출자 등록(PRD-12 AC15) — 「설정 — SA 호출자」 프레임의 둘째 점선 버튼 「+ k8s 서비스 어카운트 등록」(`ApprovalServiceAccountRegisterButton`, `ApprovalKeysView.swift` 의 키 목록 아래에 붙는다)과 「SA 등록 — 입력」·「SA 등록 — 이미 등록됨」 프레임의 등록 시트(제목 · 호출자 이름 · 네임스페이스/서비스 어카운트 두 칸 · 409 안내와 서비스 어카운트 칸 destructive 테두리 · 안내 · 취소/등록). SA 행의 메타 줄은 `ApprovalKeysView.swift` 행이 그리고 문구는 `PocketAideAPI/ApprovalKeys.swift` 의 `ApprovalKeyFormatting.meta` 다. 시트 뒤 딤·탭 바는 시스템 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | 부분 | `screen-approval` | 승인 탭 1차(#244) — 「대기 목록」 프레임의 헤더(`AreaLabel` 「APPROVAL · GATE」·제목 「승인」·대기 수 배지)·「대기 · N건」 섹션 머리·요청 카드(보낸 키 칩·남은 시간·요약·요청자 · 시각·폐기된 키 경고 — 누르면 `NavigationStack` 으로 상세에 진입한다, 상세는 `ApprovalDetailView.swift` 행)와 「빈 상태」 프레임의 안내 문구, 「오류」 프레임의 오류 배너(제목·오류 설명·다시 시도), 헤더 설정 버튼(목업 `title` 「승인 게이트 설정」 — 누르면 설정 화면에 진입한다, 설정은 `ApprovalKeysView.swift` 행), 헤더 이력 버튼(목업 `title` 「처리 이력」 — 누르면 처리 이력 화면에 진입하고 돌아오면 목록을 다시 조회한다, 이력 화면은 `ApprovalHistoryView.swift` 행). 자동 응답 모드(#278, AC9)의 헤더 줄·배너·빈 상태 모드 줄은 `ApprovalAutoResponseViews.swift` 행이 그리고 이 파일은 놓기만 한다(빈 상태 안내 문구도 그 파일로 옮겨 갔다). 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Approvals/ApprovalsViewModel.swift` | 비렌더링 | — | 대기 승인 요청 목록·대기 수·오류 상태와 API 호출 |
-| `ios/PocketAide/AppAuthCoordinator.swift` | 비렌더링 | — | 로그인·푸시 권한 상태 |
-| `ios/PocketAide/AppDelegate.swift` | 비렌더링 | — | 앱 수명주기·푸시 등록 |
-| `ios/PocketAide/CalendarAccess.swift` | 비렌더링 | — | 캘린더 전체 접근 권한 요청(EventKit) — 허용되면 위젯 타임라인 재요청 |
-| `ios/PocketAide/DeepLinkRouter.swift` | 비렌더링 | — | `pocketaide://` 딥링크 → 탭 선택 |
-| `ios/PocketAide/HelloWorldView.swift` | 목업 없음 | — | 옛 레거시 홈. #54 가 `RootView` 의 레거시 홈 분기를 지운 뒤 자기 파일의 `#Preview` 밖에서 인스턴스화되지 않는다(도달 불가 — 화면에 뜨지 않는다) |
-| `ios/PocketAide/LoginView.swift` | 목업 없음 | — | 로그인 화면 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | 부분 | `screen-external-notifications` | 「상세」 프레임의 시트 — 호출자 칩·「닫기」·제목·본문(줄임 없음)·메타 네 줄(「보낸 호출자」·「요청 주체」·「받은 시각」 날짜와 초·「도달」 — 문구는 `ExternalNotificationFormatting.callerLabel`·`requesterValue`·`fullTime`·`deliveryLabel`), 텍스트 선택 가능. 목록 행을 누르거나 그 알림의 푸시를 탭하면 시스템 시트로 띄우고, 띄우면 그 알림을 확인 처리한다(`ExternalNotificationsView.swift` 행) |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | 화면 | `screen-external-notifications` | 알림 기록 탭 화면 전체(PRD-12 AC17) — `ExternalNotificationsView`·`ExternalNotificationRowCard`: 「목록」 프레임의 헤더(「NOTIFY · LOG」·제목 「알림 기록」·설명 줄·미확인 수 배지 「새 알림」)·「최근 알림」 섹션 머리·알림 카드(호출자 칩 「<이름> · 키/SA」·「새 알림」 칩과 왼쪽 강조 띠·받은 시각·제목 2줄·본문 3줄·요청 주체 2줄(없으면 「요청 주체 미상」)·도달 「N/M 기기」/「등록된 기기 없음」 — 문구는 `PocketAideAPI/ExternalNotifications.swift` 의 `ExternalNotificationFormatting`)·하단 「이전 기록 불러오는 중…」, 행을 누르면 상세 시트(`ExternalNotificationDetailSheet.swift` 행), 「빈 상태」 프레임의 안내, 「오류」 프레임의 오류 배너(제목·오류 설명·「다시 시도」). 「더 보기」 진입 프레임의 목록 항목과 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Notifications/ExternalNotificationsViewModel.swift` | 비렌더링 | — | 알림 기록 조회·이어 불러오기·푸시가 가리킨 알림 찾기(목록에 없으면 단건 조회)·상세를 연 알림 하나 확인 처리(그 뒤 위젯 타임라인 갱신)·오류 상태와 API 호출 |
-| `ios/PocketAide/PRMonitor/OpenPullRequestsSheet.swift` | 목업 없음 | — | 열린 PR 시트(PRD-10 AC1·2·3·5·10 — GitHub PAT 연결·열린 PR 목록·CI 상태·새로고침·빈/로딩/오류 상태). 대응 목업은 `_index.md` 의 follow-up 이다 — 목업은 진입 버튼(`ScreenHeader` 우측 PR 아이콘)까지만 그린다 — 버튼은 `PRMonitorView.swift` 행 |
-| `ios/PocketAide/PRMonitor/OpenPullRequestsViewModel.swift` | 비렌더링 | — | 열린 PR 조회·PAT 연결 상태 |
-| `ios/PocketAide/PRMonitor/PRMonitorExcludedReposSheet.swift` | 목업 없음 | — | 제외 레포 관리 시트. 목업은 진입 버튼(`ScreenHeader` 우측 `IconCircleButton`)까지만 그린다 — 버튼은 `PRMonitorView.swift` 행 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | 부분 | `screen-pr-monitor-history` | PR/커밋 단위 그룹 카드 `Card.history-group.unacked`·`.acked` — 헤더(키 정보·종합 상태·항목 수·PR 링크 칩·미확인 배지·「모두 확인」)·펼침 영역·그룹 글로우 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | 부분 | `screen-pr-monitor-history` | 이벤트 row `Card.history-item.unacked`·`.acked`(커밋·런 외부 링크 칩·「확인」 버튼·취소선) + 푸시 진입 강조(펄스 글로우, PRD-10 AC7 도착지) |
-| `ios/PocketAide/PRMonitor/PRMonitorNotificationSettingsSheet.swift` | 목업 없음 | — | 알림 설정 시트(PRD-10 AC8 — 전체 켜기/끄기·받을 결과 세그먼트·권한 꺼짐 안내). 목업은 진입 버튼(`ScreenHeader` 우측 종 아이콘)까지만 그린다 — 버튼은 `PRMonitorView.swift` 행 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 화면 | `screen-pr-monitor-history` | PR 모니터 탭 화면 셸 — `AreaStrip`·`AreaLabel`·`ScreenHeader`(미확인 배지·열린 PR 버튼·알림 설정 버튼·제외 레포 버튼)·미확인/확인 완료 섹션. 카드·row 는 위 두 행 |
-| `ios/PocketAide/PRMonitor/PRMonitorViewModel.swift` | 비렌더링 | — | 이력 조회·확인 처리 |
-| `ios/PocketAide/Placeholders/PlaceholderTab.swift` | 미구현 | `screen-chat-text` | 채팅 탭의 「준비 중」 자리표시자(`ChatTab`). 임시공간·루틴 탭은 #64·#88 이 실제 화면으로 바꿨다 — `Scratchpad/`·`Routines/` 행 |
-| `ios/PocketAide/PocketAideApp.swift` | 비렌더링 | — | 앱 진입점(`WindowGroup` → `RootView`)·딥링크 처리 — `pocketaide://weather` 는 날씨 시트(`Weather/WeatherView.swift` 행)를 띄우고, `pocketaide://calendar` 는 시스템 캘린더(`calshow:`)를 열고, `pocketaide://approvals?id=<요청 ID>` 는 날씨 시트를 닫고 승인 탭을 선택해 요청 상세를 연다(`Approvals/ApprovalDeepLinkOpener.swift` 행), `pocketaide://notifications`(위젯 알림 슬라이스)는 날씨 시트를 닫고 알림 기록 탭을 선택해 목록을 다시 조회하고, `pocketaide://notifications?id=<알림 ID>`(단순 알림 푸시 탭)는 거기에 더해 그 알림의 상세 시트를 연다(떠 있는 상세는 교체)(`Notifications/ExternalNotificationsView.swift` 행) |
-| `ios/PocketAide/PushRegistrar.swift` | 비렌더링 | — | APNs 토큰 등록 |
-| `ios/PocketAide/RootView.swift` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 하단 탭 바(`TabBar`·`TabBarItem` — 목업은 다섯 칸 다짐·PR 모니터·승인·세션·더 보기(tokens.md §7 하단 노출 개정 2026-10-23), 목업별 활성 탭: 다짐·다짐·승인·PR 모니터·더 보기·더 보기·더 보기·더 보기·세션·더 보기 — `screen-chat-text` 도 「더 보기」 활성으로 그리지만 채팅 화면이 `미구현` 이라 대조하지 않는다). 구현은 시스템 `TabView` 열 탭(다짐·PR 모니터·승인·세션·채팅·임시공간·개인·회사·루틴·알림 기록 — 세션 탭(PRD-11 — `Sessions/SessionsView.swift` 행)이 승인 뒤에 들어오면서 이 순서, 알림 기록(PRD-12 AC17)은 2026-10-27 맨 끝에 더했다)이라 iPhone 에서는 앞 넷 + 시스템 오버플로 탭(「더 보기」 — `ios/project.yml` `developmentLanguage: ko` 라 UIKit 이 한국어로 그린다)으로 목업의 하단 다섯 칸과 같은 자리가 되고 채팅·임시공간·개인·회사·루틴·알림 기록은 오버플로 목록에 들어간다.  승인 탭 배지는 `.badge(pendingCount)` 에 탭 바 외형(`UITabBarAppearance` 배지 배경 = `accent(.prMonitor)`)을 더해 목업과 같은 §1.11 강조색이다(배지 글자는 시스템 기본 흰색 = 목업 `text-white`). `screen-scratchpad` 「더 보기 — 미분류 배지」 프레임과 `screen-external-notifications` 「「더 보기」 진입」 프레임은 그 오버플로 목록. 알림 권한 꺼짐 배너(`PushDeniedBanner`)는 `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
-| `ios/PocketAide/Routines/RoutineErrorRow.swift` | 부분 | `screen-routines` | 목록 위 오류 행 `RoutineErrorRow`(실패 문구 + 재시도할 수 있는 실패에만 「다시 시도」) — 목업 「상태 변형」 프레임 맨 위 오류 행. 문구는 `ios/Shared/Sources/PocketAideAPI/Routines.swift` 의 `RoutineFailureCopy`(동작 7종 × 원인 안내 3종)가 만들고 목업은 그중 「단계 체크 · 연결 실패」 한 쌍을 그린다 |
-| `ios/PocketAide/Routines/RoutineHistoryRange.swift` | 부분 | `screen-routines` | 30일 이력 시트 히트맵 아래 시작일·끝 라벨 줄 `RoutineHistoryRange` — 목업 history strip 히트맵 아래 줄(왼쪽 시작일 「4월 7일」 · 오른쪽 「오늘 · 60%」, 10.5pt · stone-500 · 히트맵 아래 8). 오늘이 예정일일 때만 끝 라벨을 그리고 비율은 오늘 체크 단계 수 / 단계 수(`RoutineHistoryDay.progressPercent`). `RoutineSheets.swift` 의 `RoutineHistorySheet` 가 히트맵 바로 아래에 둔다 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | 부분 | `screen-routines` | 30일 이력 시트 `RoutineHistorySheet`(제목 「<루틴> · 30일」·요약 줄·분모 안내 줄·30칸 히트맵·일자별 행) — 목업 화면 하단 history strip(「아침 루틴 · 30일」·30칸 히트맵·「전체 이력」)의 구현. 목업은 화면 안 인라인, 구현은 카드 「이력」 버튼 뒤 시트다(자리 차이는 기준 4). 같은 파일의 루틴 추가·단계 추가 시트(`RoutineAddSheet`·`RoutineStepAddSheet`)는 목업의 「루틴 추가」·「단계 추가」 프레임이 대응한다 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | 화면 | `screen-routines` | 루틴 탭 화면 전체 — `RoutinesView`·진입점 `RoutinesTab`·`RoutineCard`: 헤더(날짜·「새 루틴」)·루틴 카드(진행률·단계 체크)·「오늘 쉬는 루틴」·빈 상태. 목록 위 오류 행은 `RoutineErrorRow.swift` 행, 이력·추가 시트는 `RoutineSheets.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Routines/RoutinesViewModel.swift` | 비렌더링 | — | 루틴 목록·일자별 체크·이력 상태와 API 호출 |
-| `ios/PocketAide/Scratchpad/ScratchpadAddSheet.swift` | 목업 없음 | — | 임시공간 텍스트 추가 시트(PRD-4) — 대응 화면 목업이 없다 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | 화면 | `screen-scratchpad` | 임시공간 탭 화면 전체 — `ScratchpadView`·진입점 `ScratchpadTab`·`ScratchpadCard`: 헤더·일자 그룹 목록·항목 카드(이동 액션)·빈 상태. 추가 시트는 `ScratchpadAddSheet.swift` 행, 「→ 다짐」 시트는 `PriorityEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Scratchpad/ScratchpadViewModel.swift` | 비렌더링 | — | 임시공간 항목 목록·분류 이동 상태와 API 호출 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | 부분 | `screen-sessions` | 새 세션 시트(PRD-11 AC3·AC4) — 「새 세션」·「새 세션 — 타입 목록 실패」 프레임의 시트: 제목·이름 칸(자리표시 「예: 테스트 실패 원인 찾기」)·타입 라디오 목록(플랫폼 카탈로그 순서·라벨·설명, 기본 선택은 첫 prompt 타입)·모델(`takesModel` 일 때만 — 목록 있으면 메뉴 선택, 없으면 자유 입력)·불변성 안내·「만들기」(생성 중 「세션 띄우는 중…」)/「취소」, 타입 목록을 못 읽으면 안내 + 「다시 시도」. 시트 아래 목록은 `SessionsView.swift` 행 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | 부분 | `screen-sessions` | 세션 상세(PRD-11 AC3·AC6~AC10) — 「상세 — …」 여섯 프레임: 내비게이션 바(세션 이름·「세션 동작」 메뉴 — 지금 아카이브·세션 삭제)·상태 줄(상태 배지·타입·모델·응답 단계 / 상태 설명, 아카이브 중 문구)·출력 패널(모노스페이스, 비었을 때 안내 — 에이전트 타입의 turn 목록은 `SessionTranscriptView.swift` 행)·아카이브된 세션 패널(안내·「복원」)·입력(에이전트 「에이전트에게 맡길 일」 / terminal 「명령 입력」, 1 MiB 안내)·삭제 확인 대화상자. 상태 배지·오류 배너는 `SessionsView.swift` 행, 탭 바는 `RootView.swift` 행 |
-| `ios/PocketAide/Sessions/SessionDetailViewModel.swift` | 비렌더링 | — | 세션 출력 커서 폴링·전송·복원·아카이브·삭제·응답 단계와 API 호출 |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | 부분 | `screen-sessions` | 세션 상세 출력 패널의 turn 목록(PRD-11 AC7, 2026-10-25) — 「상세 — 에이전트 응답 중」 등 에이전트 출력 프레임: turn 머리(번호·시각·소요·turn 상태 배지)·「입력」/「출력」 접기 행(셰브런·라벨·두 줄 미리보기)·펼친 전문(모노스페이스)·turn 사이 구분선·마커 밖 텍스트 |
-| `ios/PocketAide/Sessions/SessionsView.swift` | 부분 | `screen-sessions` | 세션 탭 목록(PRD-11 AC5·AC11·AC12) — `SessionsView`·`SessionRow`(`Card.session-card`)·`SessionStateBadge`·`SessionErrorBanner`: 「목록」·「빈 상태」·「오류 — 연결 불가」 프레임의 헤더(「AGENT · SESSIONS」·「에이전트 세션」·「새 세션」)·세션 카드(상태 배지·생성 시각·이름·타입 줄·상태 설명 줄)·빈 상태 문구·오류 배너(「다시 시도」). 상태 배지·오류 배너는 상세 프레임에서도 쓰인다. 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Sessions/SessionsViewModel.swift` | 비렌더링 | — | 세션 목록·타입 카탈로그(실패 상태 포함)·세션 생성 상태와 API 호출 |
-| `ios/PocketAide/ShowHelloIntent.swift` | 비렌더링 | — | App Intent |
-| `ios/PocketAide/Todos/TodoCheckBox.swift` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 왼쪽 완료 체크 `TodoCheckBox` — 목업 `.check`·`.check.done`(개인 원 · 회사 각진 사각, 영역 accent 1.6 외곽선 · 완료 채움 · 흰 체크 글리프 12). `TodoListView.swift` 의 `TodoRow` 가 쓴다 |
-| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | 부분 | `screen-todo-personal` | 개인 투두 검색 필드 아래 기한 필터 칩 줄 `TodoDueFilterChips` — 목업 `<!-- filter pills -->`(「전체 · N」 · 「오늘」 · 「이번 주」 · 「날짜 없음」, 단일 선택 · 가로 스크롤 · 칩 간격 6 · 칩 여백 12×4 · 12pt). 거르는 규칙은 `PocketAideAPI` 의 `TodoDueFilter`. 항목이 있을 때만 `TodoListView.swift` 가 그린다(빈 상태 프레임은 칩이 없다) |
-| `ios/PocketAide/Todos/TodoEditSheet.swift` | 목업 없음 | — | 투두 생성·편집 시트(PRD-3 AC2) — 대응 화면 목업이 없다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListView(area:)`와 진입점 `PersonalTab`·`WorkTab`: 헤더·섹션 목록·행·빈 상태. 편집 시트는 `TodoEditSheet.swift` 행, 하단 TabBar 는 `RootView.swift` 행 |
-| `ios/PocketAide/Todos/TodoListViewModel.swift` | 비렌더링 | — | 영역별 투두 목록 상태·API 호출 |
-| `ios/PocketAide/Todos/TodoPriorityTag.swift` | 부분 | `screen-todo-personal` | 개인 투두 행 제목 위 「우선」 태그 줄 `TodoPriorityTag` — 목업 `<!-- task with priority -->` 의 태그 줄(10pt bold · 개인 accent · 대문자 · 자간 0.5 · 태그 줄 아래 2). 우선순위 `high` 인 개인 행에만 `TodoListView.swift` 의 `TodoRow` 가 그린다(회사는 메타 줄 「P1」) |
-| `ios/PocketAide/Todos/TodoRowMeta.swift` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 제목 아래 메타 줄 `TodoRowMeta` — 목업 메타 줄(`flex items-center gap-3`: 항목 간격 12, 개인은 기한 앞 달력 글리프 11 · 글리프↔기한 4, 회사는 대문자 고정폭 · 항목 사이 「·」). `TodoListView.swift` 의 `TodoRow` 가 쓴다 |
-| `ios/PocketAide/WeatherLocationAccess.swift` | 비렌더링 | — | 위젯 날씨용 현재 위치 갱신(`CLLocationUpdate`·역지오코딩 → App Group `WeatherLocationStore`) — 앱 진입·로그인 시 호출. 갱신이 끝나면 `didRefresh` 알림을 보내 열린 날씨 시트가 다시 조회한다 |
-| `ios/PocketAide/Weather/WeatherView.swift` | 목업 없음 | — | 앱 내 날씨 시트(PRD-8 AC10 — 위젯 날씨 슬라이스 탭 `pocketaide://weather` 로 `PocketAideApp.swift` 가 띄운다): `AreaLabel` 「날씨」·지명 제목·「닫기」·현재 기온·「시간별 예보」·「주간 예보」 카드, 위치 권한 없음·조회 오류 안내와 「설정 열기」·「다시 시도」. 대응 화면 목업이 없다 — 위젯 안의 날씨는 `WeatherSection.swift` 행 |
-| `ios/PocketAide/Weather/WeatherViewModel.swift` | 비렌더링 | — | 날씨 시트의 예보 조회·위치·지명 상태 |
-| `ios/PocketAide/WidgetRefresher.swift` | 비렌더링 | — | 위젯 타임라인 즉시 재요청(`WidgetCenter.reloadAllTimelines`) — 다짐 변경·로그인 상태 변경 시 호출 |
-| `ios/PocketAideKeyboard/KeyboardViewController.swift` | 미구현 | `screen-keyboard-extension` | 키보드 확장 골격(삽입 버튼·다음 키보드 버튼)뿐 |
-| `ios/PocketAideWidget/AffirmationProvider.swift` | 비렌더링 | — | 위젯 타임라인·다짐 조회·알림 이력 조회(`WidgetNotificationState`)·날씨 예보 조회(`WidgetWeatherState`)·임시 공간 미분류 수 조회(`WidgetScratchpadState`) |
-| `ios/PocketAideWidget/CalendarEvents.swift` | 비렌더링 | — | 위젯 캘린더 스냅샷 — EventKit 일정 조회·권한 상태(`WidgetCalendarState`) |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | 화면 | `screen-widget` | 위젯 본체(Large · iOS 27 초대형 4×6) — 슬라이스 배치·구분선·배경. 메일 슬라이스는 미구현이라 자리를 두지 않는다(2026-10-14 「곧 추가」 자리표시 걷음 — 알림 슬라이스가 전폭 줄). 홈 화면 벽지·앱 아이콘 등 위젯 밖은 iOS 시스템 UI |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | 부분 | `screen-widget` | 다짐 슬라이스(「오늘의 다짐」 라벨·다짐 문장) |
-| `ios/PocketAideWidget/Sections/CalendarSection.swift` | 부분 | `screen-widget` | 다음 일정 슬라이스(「다음 일정」 라벨·첫 일정 제목·시간 범위·「+ N 더」, 캘린더 권한 없음·일정 없음 안내). 탭하면 `pocketaide://calendar` |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | 부분 | `screen-widget` | 알림 슬라이스(「PocketAide 알림」 라벨·알림 기록에서 아직 확인하지 않은 호출자 알림(PRD-12 AC16)의 최신 제목·본문(본문이 비면 줄 없음)·「+ N 더」, 알림 없음·미로그인·조회 오류 안내 — 안내는 임시 공간 줄처럼 라벨 오른쪽 한 줄). 탭하면 `pocketaide://notifications`(2026-10-27 — 이전에는 미확인 CI 알림·`pocketaide://pr-monitor`) |
-| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | 부분 | `screen-widget` | 임시 공간 슬라이스(「임시 공간」 라벨·「미분류 N개」, 미분류 0건·미로그인·조회 오류 안내). 수 문구는 `PocketAideAPI/Scratchpad.swift` 의 `WidgetScratchpad.countText`. 탭하면 `pocketaide://scratchpad` |
-| `ios/PocketAideWidget/Sections/WeatherSection.swift` | 부분 | `screen-widget` | 날씨 슬라이스(지명 라벨(없으면 「날씨」)·현재 기온·상태·최고/최저, 위치 권한 없음·조회 오류 안내). 기온·최고/최저 서식은 `PocketAideAPI/Weather.swift`. 탭하면 `pocketaide://weather` |
-| `ios/PocketAideWidget/WidgetEntry.swift` | 비렌더링 | — | 위젯 타임라인 엔트리 |
-| `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 컴포넌트 | — | `AreaLabel` |
-| `ios/Shared/Sources/DesignSystem/Components/Card.swift` | 컴포넌트 | — | `Card` |
-| `ios/Shared/Sources/DesignSystem/Components/FilterPills.swift` | 컴포넌트 | — | `FilterPills` |
-| `ios/Shared/Sources/DesignSystem/Components/ScreenHeader.swift` | 컴포넌트 | — | `ScreenHeader` |
-| `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 컴포넌트 | — | `Sheet`(+ `Backdrop`·`Handle`) |
-| `ios/Shared/Sources/DesignSystem/Components/TabBarItem.swift` | 컴포넌트 | — | `TabBarItem` — 앱의 탭 바는 시스템 `TabView` 를 쓰며 현재 이 컴포넌트를 호출하지 않는다 |
-| `ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets` | 토큰 | — | `tokens.md` §1.1~§1.11 영역 팔레트·다크 변형·파괴적 액션·PR 모니터 |
-| `ios/Shared/Sources/DesignSystem/Tokens.swift` | 토큰 | — | `tokens.md` §1 색 접근자·§1.11 상태색(`StatusColor`)·§3 타이포·§4 스페이싱/라운드 |
+| `android/app/src/main/java/com/dlddu/pocketaide/AppContainer.kt` | 비렌더링 | — | 의존성 컨테이너 — API 클라이언트·리포지토리 조립. 화면을 그리지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/MainActivity.kt` | 비렌더링 | — | 안드로이드 액티비티 — Compose 진입점·Intent 수신·권한 요청. 화면 셸은 `ui/RootScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/PocketAideApplication.kt` | 비렌더링 | — | 애플리케이션 클래스 — 의존성 초기화·푸시 등록. 화면을 그리지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationRotation.kt` | 비렌더링 | — | 다짐 회전 순서 계산(가중치·다음 문장 선택) — 회전 노출 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 비렌더링 | — | 다짐 도메인 모델 — 문장·우선순위 정렬 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | 화면 | `screen-affirmations` | 다짐 탭 화면 전체 — `AffirmationsScreen`·`HeroSection`·`HeroCard`·`EmptyHero`·회전 표시점·목록(우선순위 태그·메타 줄)·빈 상태. 하단 탭 바는 `ui/RootScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsViewModel.kt` | 비렌더링 | — | 다짐 목록·회전 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | 화면 | `screen-affirmations-priority-edit` | 우선순위 시트 본체 — `PriorityEditSheet`·`EditorCard`·`AffirmationTextField`·`PrioritySection`·`PriorityDots`(3-tier 단일 선택)·저장/취소 액션. 시트 아래 다짐 화면은 `affirmations/AffirmationsScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalActionReceiver.kt` | 비렌더링 | — | 푸시 액션 수신기 — 승인 결정·상세 진입 인텐트 처리 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | 부분 | `screen-approval` | 자동 응답 모드 뷰 — `ApprovalAutoResponseHeader`·`ApprovalAutoResponseBanner`·`ApprovalEmptyState`·`ApprovalAutoResponseOption`. 대기 목록·빈 상태 프레임의 자동 응답 줄과 배너, 설정 화면의 모드 선택지 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | 부분 | `screen-approval` | 승인 요청 상세 — `ApprovalDetailScreen`·`DetailContent`·`BorderedBlock`·`AgentReason`·`Countdown`·`Facts`(헤더·요약·남은 시간·요청 전문·메타·폐기 경고·결정 버튼). 처리 이력·설정은 `approvals/ApprovalHistoryScreen.kt`·`approvals/ApprovalKeysScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalHistoryScreen.kt` | 부분 | `screen-approval` | 처리 이력 — `ApprovalHistoryScreen`·`HistoryRowCard`(목록 헤더·이력 행·결과 점·시각·요약·메타·하단 「이전 이력 불러오는 중…」). 진입점은 `approvals/ApprovalsScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalHistoryViewModel.kt` | 비렌더링 | — | 처리 이력 커서 페이지 조회와 불러오기·오류 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | 부분 | `screen-approval` | 키 발급·SA 등록 시트 — `ApprovalKeyIssueSheet`·`ApprovalServiceAccountSheet`·`SheetTitle`·`FieldLabel`·`FailureNotice`(발급 입력·원문 1회 표시·복사됨·SA 등록 입력·409 안내) |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 비렌더링 | — | 호출자 키 포맷 — 발급 원문 표시·정렬·메타·폐기 라벨 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | 부분 | `screen-approval` | 승인 게이트 설정 — `ApprovalKeysScreen`·`CardList`·`RuleDivider`·`AutoResponseOptions`·`KeyList`·`KeyRow`(설정 화면 헤더·키 행·메타·폐기 칩·선택지 카드) |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysViewModel.kt` | 비렌더링 | — | 호출자 키 목록·발급·SA 등록·자동 응답 모드 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalParts.kt` | 부분 | `screen-approval` | 승인 공용 파트 — `CallerChip`·`ApprovalSectionHeader`·`ApprovalErrorBanner`·`ApprovalBackBar`(헤더·섹션 머리·호출자 칩·오류 배너·뒤로 막대) |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 비렌더링 | — | 승인 도메인 — 만료 판정·정렬·남은 시간·진행률·요약 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | 화면 | `screen-approval` | 승인 게이트 대기 목록 화면 전체 — `ApprovalsScreen`·`PendingList`·`PendingHeader`·`CountBadge`·`HeaderIconButton`·`ApprovalRowCard`(목록 헤더·검증자·키 칩·남은 시간·진행 막대·결정 버튼·목록 행). 상세·이력·설정은 각 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsViewModel.kt` | 비렌더링 | — | 대기 목록 상태·자동 응답 끄기·네비게이션·API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | 토큰 | — | `tokens.md` §1 영역 팔레트 접근자(surface·ink·accent·rule·soft·card)·§3 타이포(9사이즈)·§4 스페이싱·라운드 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/GeneratedPalettes.kt` | 토큰 | — | `tokens.md` §1.1~§1.11 영역 팔레트(light/dark 9종)·파괴적 액션·PR 모니터 상태색·위젯·키보드 보조 토큰의 실측 hex 값 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/PocketAideTheme.kt` | 토큰 | — | 컴포저블 테마 — 영역 팔레트·타이포를 Compose `MaterialTheme` 에 넣는다(`Area.System` 팔레트 참조 포함) |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | 컴포넌트 | — | `AreaLabel` — 영역 라벨·점 모양 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | 컴포넌트 | — | `Card` — 카드·히어로 컨테이너 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/FilterPills.kt` | 컴포넌트 | — | `FilterPills` — 단일 선택 칩(활성·비활성 라벨·`soft` 배경) |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/PlainTextField.kt` | 컴포넌트 | — | `PlainTextField` — 입력 필드 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | 컴포넌트 | — | `ScreenHeader` — 탭 화면 헤더 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | 컴포넌트 | — | `Sheet`(+`Handle`·주·취소 버튼) — 시트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | 컴포넌트 | — | `SwipeToDelete` — 스와이프 삭제 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/keyboard/KeyboardStyle.kt` | 토큰 | — | `tokens.md` §1.8 키보드 보조 토큰 — 입력기 표면·키·잉크·강조 값(라이트/다크) |
+| `android/app/src/main/java/com/dlddu/pocketaide/keyboard/PocketAideKeyboardService.kt` | 미구현 | `screen-keyboard-extension` | 키보드 확장 골격(삽입 버튼·다음 키보드 버튼)뿐 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | 부분 | `screen-external-notifications` | 알림 상세 시트 — `ExternalNotificationDetailSheet`·`Rule`·`MetaRow`(발신자·요청자·배달 상태·시각) |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotifications.kt` | 비렌더링 | — | 알림 도메인 — 읽음 처리·호출자·요청자·배달 상태·시각 표기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | 화면 | `screen-external-notifications` | 알림 기록 화면 전체 — `ExternalNotificationsScreen`·`Header`·`EmptyState`·`NotificationRowCard`(목록 헤더·미확인 배지·행·빈 상태·오류). 상세는 `notifications/ExternalNotificationDetailSheet.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsViewModel.kt` | 비렌더링 | — | 알림 목록 조회·페이지 추가 로드·상세 선택·API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/GitHubCredentialStore.kt` | 비렌더링 | — | GitHub 자격증명 저장·조회·지우기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/OpenPullRequests.kt` | 비렌더링 | — | 열린 PR 판독 — 롤업 파싱·상태 분류·메시지 조립 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/OpenPullRequestsSheet.kt` | 목업 없음 | — | 열린 PR 시트(저장소 연결 폼·계정 바·상태 줄·PR 목록·오류 배너) — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/OpenPullRequestsViewModel.kt` | 비렌더링 | — | 저장소 연결·필터·연결 해제 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 비렌더링 | — | CI 상태 도메인 — 성공·진행·실패 판정과 라벨 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorExcludedReposSheet.kt` | 목업 없음 | — | 제외 저장소 관리 시트 — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | 부분 | `screen-pr-monitor-history` | PR 알림 그룹 카드 — `PrMonitorGroupCard`·`GroupHeader`·`GroupTitle`·`StatusSummary`·`StatusDot`·`GroupBadge`(그룹 헤더·제목·상태 요약·그룹 배지) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | 부분 | `screen-pr-monitor-history` | PR 알림 행 — `PrMonitorHistoryRow`·`RowHeader`·`RowTitle`·`RowMeta`·`RowActions`(행 헤더·제목·메타 줄·확인 액션) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorNotificationSettingsSheet.kt` | 목업 없음 | — | 알림 설정 시트·권한 안내 — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | 화면 | `screen-pr-monitor-history` | PR 모니터 알림 이력 화면 전체 — `PrMonitorScreen`·`Content`·`SectionHeader`·`UnreadBadge`·`HeaderIcon`(목록 헤더·미확인 배지·섹션 머리·그룹 카드·행·빈 상태·오류) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorSheetScaffold.kt` | 목업 없음 | — | PR 모니터 시트 공통 껍데기 — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorStyle.kt` | 부분 | `screen-pr-monitor-history` | PR 모니터 공용 스타일 — `clock`(상대 시각)·`ciColor`(CI 상태색)·`PrLinkChip`(PR 링크 칩) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorViewModel.kt` | 비렌더링 | — | 알림 이력·제외 저장소·알림 설정 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineErrorRow.kt` | 부분 | `screen-routines` | 루틴 오류 행 — 실패 사유와 재시도 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineHistoryRange.kt` | 부분 | `screen-routines` | 루틴 이력 기간 선택자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | 부분 | `screen-routines` | 루틴 추가·편집 시트 — `RoutineAddSheet`·`WeekdayPicker`·`MonthDayStepper`·`selectCadence`(반복 주기 세그먼트·요일 선택·일자 스텝퍼·저장) |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 비렌더링 | — | 루틴 도메인 — 요일 비트·진행률·날짜 표기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | 화면 | `screen-routines` | 루틴 화면 전체 — `RoutinesScreen`·`AddButton`(목록 헤더·진행률·30일 히트맵·상태 변형·빈 상태·오류 행). 시트는 `routines/RoutineSheets.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesViewModel.kt` | 비렌더링 | — | 루틴 목록·오늘 요약 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 비렌더링 | — | 임시공간 도메인 — 분류 그룹·시각·제목·개수 표기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadAddSheet.kt` | 목업 없음 | — | 임시공간 추가 시트 — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | 화면 | `screen-scratchpad` | 임시공간 화면 전체 — `ScratchpadScreen`·`AddButton`·`DayHeader`·`ScratchpadCard`(목록 헤더·날짜 머리·카드·분류 이동·미분류 배지·빈 상태). 추가 시트는 `scratchpad/ScratchpadAddSheet.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadViewModel.kt` | 비렌더링 | — | 임시공간 목록·분류 이동 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionComponents.kt` | 부분 | `screen-sessions` | 세션 공용 파트 — `SessionRow`·`SessionStateBadge`·`SessionTurnStatusBadge`·`SmallSpinner`·`SessionErrorBanner`(세션 카드·상태 배지·오류 배너) |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | 부분 | `screen-sessions` | 새 세션 시트 — `SessionCreateSheet`·`Field`·`FieldLabel`·`WorkloadPicker`·`ModelInput`·`CreateButton`(타입 라디오 목록·모델 선택·이름 칸·생성/취소) |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | 부분 | `screen-sessions` | 세션 상세 — `SessionDetailScreen`·`TopBar`·`StatusStrip`·`Composer`(상단 바·상태 줄·입력·아카이브·삭제 확인) |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailViewModel.kt` | 비렌더링 | — | 세션 출력 폴링·전송·복원·아카이브·삭제 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscript.kt` | 비렌더링 | — | 출력 파싱 — 마커·첫 줄·줄 목록 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | 부분 | `screen-sessions` | 세션 상세 출력 패널 — `SessionTranscriptView`·`TurnView`·`TurnSection`(turn 머리·입력/출력 접기·전문·구분선) |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionWorkloads.kt` | 비렌더링 | — | 워크로드 타입 판독과 설정 변환 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 비렌더링 | — | 세션 도메인 — 판독·직렬화·종류 라벨·병합 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionsScreen.kt` | 화면 | `screen-sessions` | 세션 목록 화면 전체 — `SessionsScreen`·`Header`·`SessionList`(목록 헤더·세션 카드·빈 상태·오류·타입 목록 실패). 상세·새 세션은 각 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionsViewModel.kt` | 비렌더링 | — | 세션 목록·워크로드 구성·생성 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 영역별 투두 스타일 — 개인/회사 행 라운드·섹션 제목 크기·자간·구분선 여백 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 비렌더링 | — | 투두 표시 문구 — 라벨 조각·표시 문자열 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoEditSheet.kt` | 목업 없음 | — | 투두 생성·편집 시트(마감일 선택 다이얼로그 포함) — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | 화면 | `screen-todo-personal`, `screen-todo-work` | 개인·회사 투두 탭 화면 전체 — `TodoListScreen`·`AddButton`·`SearchField`·`TodoList`·`SectionHeader`·`TodoRow`(헤더·검색 필드·섹션 목록·행·빈 상태). 편집 시트는 `todos/TodoEditSheet.kt` 행, 하단 탭 바는 `ui/RootScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListViewModel.kt` | 비렌더링 | — | 영역별 투두 목록·검색·마감 필터 상태와 API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 메타 줄 — 마감일·우선순위·구분자 표기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 공용 파트 — `TodoCheckBox`·`TodoPriorityTag`·`TodoDueFilterChips`(완료 체크·우선순위 태그·개인 전용 기한 필터 칩 줄) |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/Todos.kt` | 비렌더링 | — | 투두 도메인 — 항목 변환·마감일·필터·미완료 개수 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthViewModel.kt` | 비렌더링 | — | 로그인 상태·푸시 권한·헬스 조회·토큰 갱신 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeepLinkRouter.kt` | 비렌더링 | — | 딥링크 수신 — 날씨·탭·푸시 도착지 진입점 처리 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/LoginScreen.kt` | 목업 없음 | — | 로그인 화면 — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/PlaceholderScreen.kt` | 미구현 | `screen-chat-text` | AI 채팅 탭 자리표시자 — `RootScreen.kt` 의 채팅 탭이 `PlaceholderScreen(Area.AiChat, "AI 채팅")` 를 그린다. 채팅 화면이 구현되면 `화면`/`부분` 으로 바꾼다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 탭 정의 — `RootTab` 열거형의 탭 라벨(다짐·PR 모니터·승인·세션·더 보기·채팅·임시공간·개인·회사·루틴·알림 기록)·아이콘·영역(`Area`) 매핑과 하단 5칸(`BOTTOM_TABS`)·더 보기 6칸(`MORE_TABS`) 구분. 탭 바를 그리는 쪽은 `ui/RootScreen.kt` 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 하단 탭 바(`RootNavigationBar` — 하단 5칸 다짐·PR 모니터·승인·세션·더 보기, 목업별 활성 탭은 `ui/RootTab.kt` 행)·더 보기 목록(`MoreList`)·푸시 권한 거부 배너. 각 탭 화면 본체는 해당 행 |
+| `android/app/src/main/java/com/dlddu/pocketaide/weather/Weather.kt` | 비렌더링 | — | 날씨 도메인 — 예보 파싱·표기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherDeepLink.kt` | 비렌더링 | — | 날씨 딥링크 정의 |
+| `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 비렌더링 | — | 현재 위치 갱신·역지오코딩·위치 권한 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 비렌더링 | — | 백그라운드 위치 갱신 워커 |
+| `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 목업 없음 | — | 앱 내 날씨 시트(위젯 날씨 슬라이스 진입) — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherViewModel.kt` | 비렌더링 | — | 날씨 시트의 예보 조회·위치·지명 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/CalendarEvents.kt` | 비렌더링 | — | 위젯 캘린더 스냅샷 — 일정 조회와 권한 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 화면 | `screen-widget` | 위젯 본체(Large·중간 크기) — 슬라이스 배치·구분선·배경과 다짐·일정·알림·날씨·임시공간 슬라이스(`WeatherSection`·`CalendarSection`·`AffirmationSection`·`NotificationSection`·`ScratchpadSection` 이 모두 이 파일에 있다). 홈 화면 벽지·앱 아이콘 등 위젯 밖은 안드로이드 시스템 UI |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidgetLoader.kt` | 비렌더링 | — | 위젯 데이터 로드 — 조회·직렬화·배치 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/UpcomingEvents.kt` | 비렌더링 | — | 다가오는 일정 파싱·표기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetColors.kt` | 토큰 | — | `tokens.md` §1.8 위젯 보조 토큰 — 위젯 표면·구분선·영역 ink/accent 의 라이트/다크 값 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 비렌더링 | — | 위젯 문자열 상수 — 슬라이스 라벨·안내 문구 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetDeepLink.kt` | 비렌더링 | — | 위젯 딥링크 정의(영역 탭 진입) |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetEntry.kt` | 비렌더링 | — | 위젯 타임라인 엔트리 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 부분 | `screen-widget` | 위젯 상단 영역 배치 — 영역 라벨·구분선·레이아웃 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetRefresher.kt` | 비렌더링 | — | 위젯 타임라인 즉시 재요청 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetTimeline.kt` | 비렌더링 | — | 위젯 타임라인 정책(갱신 주기·호출) |
+| `android/app/src/main/res/values-night/colors.xml` | 토큰 | — | `tokens.md` §1.9 다크 런처용 1색(#FF1F1B12) |
+| `android/app/src/main/res/values/colors.xml` | 토큰 | — | `tokens.md` §1.8 위젯·런처용 라이트 3색(#FFF5EFE0·#FF5E8B73·#FFFAFAF7) — 영역 팔레트는 Kotlin 상수(`designsystem/GeneratedPalettes.kt`)에 있고 여기는 런처 색뿐 |
 
-`screen-pr-monitor-push` 는 이 표에 없다 — 잠금 화면 알림은 iOS 시스템 UI 가 그리고 알림 제목·본문은
-`backend/`(APNs 발송)가 정하므로 `ios/` 렌더링 소스가 없다. 푸시를 탭한 뒤의 도착지 강조는
-`screen-pr-monitor-history` 행(`PRMonitorHistoryRow.swift`)에 들어 있다.
+`screen-pr-monitor-push` 는 이 표에 없다 — 잠금 화면 알림은 안드로이드 시스템 UI 가 그리고 알림 제목·본문은
+`backend/`(FCM 발송)가 정하므로 `android/` 렌더링 소스가 없다. 푸시를 탭한 뒤의 도착지 강조는
+`screen-pr-monitor-history` 행(`prmonitor/PrMonitorHistoryRow.kt`)에 들어 있다.
+
+`screen-chat-voice` · `screen-shortcut-capture` 도 이 표에 없다 — 대응하는 안드로이드 화면이 아직 구현되지 않았다.
+채팅 탭은 자리표시자(`ui/PlaceholderScreen.kt` 행 — `미구현`)다. 목업만 있고 구현이 없는 것은 이 모델의 drift 가 아니다.
 
 ## 검산
 
@@ -124,9 +160,11 @@ last_updated: 2026-10-27
 ```bash
 python3 - <<'EOF'
 import re, subprocess, pathlib
-roots = ["ios/PocketAide", "ios/PocketAideWidget", "ios/PocketAideKeyboard", "ios/Shared/Sources/DesignSystem"]
-files = subprocess.run(["git", "ls-files", "--", *roots], capture_output=True, text=True, check=True).stdout.split()
-want = {f for f in files if f.endswith(".swift")} | {"ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets"}
+root = "android/app/src/main/java/com/dlddu/pocketaide"
+skip = ("api/", "auth/", "push/")
+files = subprocess.run(["git", "ls-files", "--", root], capture_output=True, text=True, check=True).stdout.split()
+want = {f for f in files if f.endswith(".kt") and not any(f"{root}/{s}" in f for s in skip)}
+want |= {"android/app/src/main/res/values/colors.xml", "android/app/src/main/res/values-night/colors.xml"}
 text = pathlib.Path("docs/mockups/_impl-map.md").read_text()
 rows = re.findall(r"^\| `([^`]+)` \| ([^|]+?) \| ([^|]+?) \| [^|]+ \|$", text, re.M)
 paths = [r[0] for r in rows]
