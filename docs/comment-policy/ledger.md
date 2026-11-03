@@ -16,7 +16,13 @@
 | --- | --- | ---: | --- | :-: | --- |
 | 2026-10-11 | `.github/actions/start-test-backend/github_api_stub.py` | 1 | `edf8d7a3afdd` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-10-04 | `.github/actions/start-test-sqs/action.yml` | 1 | `4a8622eeb479` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-10-04-test-sqs-action.md) |
+| 2026-11-02 | `.github/workflows/android-test.yml` | 1 | `9dac1c010296` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 91 | `631eeb49ad6b` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) · 2026-10-11 증분 유지 2줄(iOS 테스트 백엔드 교차 빌드) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 1 | `4a77c750667d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 1 | `d805164c7960` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 1 | `241224badd21` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 1 | `74928df54084` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 4 | `22c0305195ad` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-08 | `backend/cmd/server/main.go` | 17 | `9600452f468b` | 완료 | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -24,10 +30,11 @@
 | 2026-10-28 | `backend/internal/approvals/store.go` | 4 | `2250bf0d22b9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/auth/middleware.go` | 13 | `2cf46a05430f` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
-| 2026-09-29 | `backend/internal/devicetokens/store.go` | 7 | `2716161b6615` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) |
+| 2026-09-29 | `backend/internal/devicetokens/store.go` | 9 | `b3d186c91592` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) · 2026-11-02 증분 유지 4줄(개작 2블록 포함 · 안드로이드 플랫폼) — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-10-28 | `backend/internal/externalnotify/notifier.go` | 5 | `69a8803e6884` | 완료 | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-externalnotify-notifier.md) |
+| 2026-10-28 | `backend/internal/externalnotify/notifier.go` | 5 | `8b145e93749b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-externalnotify-notifier.md) · 2026-11-02 증분 개작 1블록(APNs → 푸시 서비스) — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-28 | `backend/internal/externalnotify/store.go` | 12 | `d44b76e04e26` | 완료 | 필요성 판정 — 제거 0줄 · 유지 12줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
+| 2026-11-02 | `backend/internal/fcm/client.go` | 13 | `27ab47a96b5b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
@@ -38,8 +45,10 @@
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 26 | `ebe1e7cd5f5e` | 완료 | 필요성 판정 — 제거 10줄 · 유지 26줄(개작 4블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-04 | `backend/internal/notificationsettings/store.go` | 1 | `2922bc9b4d31` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-09-29 | `backend/internal/oidcmock/oidcmock.go` | 17 | `dc59f9ab7528` | 완료 | 필요성 판정 — 제거 4줄 · 유지 17줄(개작 4블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
+| 2026-11-02 | `backend/internal/push/router.go` | 8 | `85ae2e5dfca9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 8줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-04 | `backend/internal/routines/store.go` | 3 | `49861c75fd62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-10-01 | `backend/internal/scratchpad/store.go` | 20 | `61dc59d49236` | 완료 | 필요성 판정 — 제거 3줄 · 유지 20줄 — [상세](passes/2026-10-01-scratchpad.md) |
+| 2026-11-02 | `backend/internal/telemetry/telemetry.go`, `backend/internal/telemetry/telemetry_test.go` | 42 | `c80f2d2466c2` | 완료 | 필요성 판정 — 제거 1문장(Setup doc 의 service.name 우선순위 — 인라인 주석과 중복) · 유지 42줄(개작 1블록 포함) — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 24줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/migrations/0007_todos.up.sql` | 3 | `b37ba16e4205` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
@@ -62,7 +71,7 @@
 | 2026-10-01 | `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 3 | `7dbfb751ae6b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-10-15 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 7 | `ff85dec4c2e9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 · 2026-10-15 증분 유지 3줄(앱·위젯 동시 갱신) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/fastlane/Fastfile` | 1 | `e7198c27c7fd` | 완료 | 필요성 판정 — 제거 6줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
-| 2026-09-29 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 13 | `d35a61f48de6` | 완료 | 필요성 판정 — 제거 24줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
+| 2026-09-29 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 20 | `e32344b085a5` | — | **재측정 2026-11-02**(운영 설정값을 pocket-aide-ssm-config ConfigMap 으로 나눈 PR): `k8s/deployment.yaml` envFrom 위 3줄(세 소스의 우선순위)·`k8s/kustomization.yaml` 1줄·`k8s/secret.yaml` 의 ConfigMap 예시 주석 3줄로 7줄 늘었다(13 → 20). 새 줄이 미판정이라 판정 칸을 `—` 로 되돌린다. 필요성 판정 — 제거 24줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-10-09 | `scripts/ci/ios_test_shards.py` | 2 | `c60d84630c62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 2줄 — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-10-28 | `tools/journey-mockup-harness/check.mjs` | 3 | `1b2b6f9a788a` | 완료 | 필요성 판정 — 제거 26줄 · 유지 3줄(개작 2블록 포함) · 2026-10-28 증분 제거 3줄(5(i) 규칙 번호 주석 — README 표 재진술) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 

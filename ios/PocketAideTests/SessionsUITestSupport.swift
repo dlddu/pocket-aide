@@ -25,7 +25,7 @@ struct SessionsScreen {
 /// 세션 플랫폼 스텁(`.github/actions/start-test-backend/session_platform_stub.py`)을 부르는 테스트 러너 쪽 헬퍼.
 /// 앱이 부르는 경로는 백엔드 프록시를 거치는 실경로이고, 여기서 하는 일은 시드(세션 만들기)와 스텁 제어뿐이다.
 enum SessionPlatformStub {
-    private static let base = "http://127.0.0.1:5559"
+    private static let base = "http://127.0.0.1:5560"
 
     static func reset() { _ = send("POST", "/e2e/reset") }
     static func makeUnreachable() { _ = send("POST", "/e2e/unreachable") }

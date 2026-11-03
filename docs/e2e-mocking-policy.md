@@ -5,7 +5,7 @@ pocket-aide 의 E2E(XCUITest)는 **시뮬레이터의 실 앱 빌드 + CI 가 �
 (`launchEnvironment` → `ProcessInfo.processInfo.environment`), 외부 상류를 끄는 가짜 자격증명·엔드포인트는
 **실환경으로 재현이 불가능한 경우에 한해서만** 허용하고, 그 예외는 이 문서의 허용목록에 등재된 것만 인정한다.
 
-- 대상 범위: `ios` · `backend` · `.github` 중 E2E 경로. Go 단위·통합 테스트(`*_test.go`, LocalStack SQS 포함)와
+- 대상 범위: `ios` · `backend` · `.github` 중 E2E 경로와 안드로이드 계측 테스트(`android/app/src/androidTest/` — 에뮬레이터의 실 앱 빌드 + 같은 실 백엔드). Go 단위·통합 테스트(`*_test.go`, LocalStack SQS 포함)와
   `ios/PocketAideUnitTests/` 의 모킹은 대상이 아니다.
 - 실 백엔드 API 를 통한 데이터 시드, 전용 테스트 계정·테넌트, 결정적 입력 데이터는 모킹이 아니라 권장 **대안**이다.
 
@@ -25,8 +25,8 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 
 허용된 모킹 지점에는 지점 직전 줄(파일 전체가 지점이면 파일 머리, doc 주석이 있으면 그 앞)에 사유 주석을 단다.
 
-- Swift·Go: `// mock-exception: <CODE> — <사유>`
-- 워크플로·액션 YAML: `# mock-exception: <CODE> — <사유>`
+- Swift·Go·Kotlin(`.kt`·`.kts`): `// mock-exception: <CODE> — <사유>`
+- 워크플로·액션 YAML·Python: `# mock-exception: <CODE> — <사유>`
 
 같은 지점이 아래 허용목록에도 있어야 한다. 주석만 있고 미등재이거나, 등재만 있고 코드에 없으면 drift 다.
 
@@ -39,9 +39,11 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 |------|------|----------|------------------|
 | `.github/workflows/ios-test.yml` | `oidcmock` | `EXT` | 잡 env 가 OIDC issuer 를 로컬 oidcmock(`http://localhost:5556`)으로 향하게 한다. 실 IdP 는 브라우저 동의·실 계정을 요구하고, 운영 설정조차 `idp.example.com` 자리표시자라 CI 시크릿으로 쓸 테스트 테넌트가 없다. |
 | `.github/workflows/ci.yml` | `oidcmock` | `EXT` | `ios-test-backend` 잡이 위 IdP 대체 서버(`backend/cmd/oidcmock`)를 macOS 러너용(`darwin/arm64`)으로 교차 빌드해 아티팩트로 넘긴다. 사유 동일. |
-| `.github/actions/start-test-backend/action.yml` | `oidcmock` | `EXT` | 위 잡이 빌드한 IdP 대체 서버를 기동한다. 사유 동일. |
+| `.github/workflows/android-instrumented-test.yml` | `oidcmock` | `EXT` | 안드로이드 계측 테스트 잡이 IdP 대체 서버를 러너용(`linux/amd64`)으로 빌드하고, 잡 env 가 OIDC issuer 를 그 서버(`http://localhost:5556`)로 향하게 한다. 에뮬레이터는 `adb reverse` 로 같은 `localhost` 주소에 닿아 앱·백엔드가 같은 issuer 문자열을 본다. 같은 파일의 「Register the fixture device and enqueue the webhook fixture」 스텝은 러너가 그 서버와 PKCE 왕복(curl)을 해 앱 사용자(`mock-user-123`)의 토큰을 받고, 그 토큰으로 실 백엔드 `POST /api/device-tokens` 에 가짜 FCM 수신부용 안드로이드 기기 토큰(`e2e-fcm-fixture`)을 등록한 뒤 웹훅 픽스처를 큐에 넣는다 — 토큰으로 부르는 것은 실 API 라 시드다(픽스처 이벤트의 푸시가 `PrMonitorTest` 가 앱에 넣을 FCM 메시지가 된다). 사유 동일. |
+| `.github/actions/start-test-backend/action.yml` | `oidcmock` | `EXT` | 위 두 잡이 빌드한 IdP 대체 서버를 기동한다. 사유 동일. |
 | `backend/cmd/oidcmock/main.go` | `oidcmock` | `EXT` | IdP 대체 서버의 실행 진입점. 사유 동일. |
 | `backend/internal/oidcmock/oidcmock.go` | `oidcmock` | `EXT` | IdP 대체 서버 구현(discovery·JWKS·PKCE authorize·token). `/authorize` 의 선택 파라미터 `login_hint` 는 그 코드로 발급하는 토큰의 subject 를 정한다(없으면 기본 subject — 앱 로그인 불변) — 둘째 사용자의 실 API 호출(사용자별 격리 단정)용이다. 테스트 러너용 `POST /e2e/next-login-subject`(form `sub`)는 `login_hint` 없는 **다음** `/authorize` 한 번의 subject 를 정한다(소비되면 기본으로 돌아가고, 빈 값이면 해제) — 앱은 `login_hint` 를 싣지 않으므로 앱 로그인을 둘째 사용자로 끝내는 유일한 길이며, 앱 경로(로그아웃 → `LoginView` → `ASWebAuthenticationSession`)는 바뀌지 않는다(github-monitor #12). 사유 동일. |
+| `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/E2eSupport.kt` | `oidcmock` | `EXT` | 계측 테스트 공유 헬퍼 — 앱 로그인은 실 Custom Tab(Chrome) 왕복을 IdP 대체 서버 상대로 하고(UiAutomator 가 브라우저 첫 실행 안내만 넘긴다), 테스트 러너 쪽 `BackendApi` 는 같은 서버와 PKCE 왕복을 해 앱과 같은 subject 의 토큰으로 실 백엔드 API 에 시드한다. `signIn(subject)` 는 `login_hint` 로 둘째 사용자의 토큰을 받고, `setNextAppLoginSubject` 는 위 `oidcmock.go` 행의 `POST /e2e/next-login-subject` 로 다음 앱 로그인을 둘째 사용자로 끝낸다(앱 경로 — 로그아웃 → 로그인 화면 → Custom Tab — 는 그대로, 사용자별 격리 단정용). iOS `UITestAuth.swift` · `BackendAPIUITestSupport.swift` 행과 같은 역할이다. 사유 동일. |
 | `ios/PocketAideTests/UITestAuth.swift` | `oidcmock` | `EXT` | UI 테스트 공유 로그인 헬퍼 — 실 `ASWebAuthenticationSession` 왕복을 oidcmock 상대로 1회 수행한다. 사유 동일. |
 | `ios/PocketAideTests/LoginUITests.swift` | `oidcmock` | `EXT` | oidcmock 토큰으로 로그인한 뒤 실 탭 셸에 착지하는지 단정한다. 사유 동일. |
 | `ios/PocketAideTests/BackendAPIUITestSupport.swift` | `oidcmock` | `EXT` | 테스트 러너 쪽 백엔드 API 헬퍼 — oidcmock 과 PKCE 왕복(authorize 의 code → token)을 해 앱과 같은 subject 의 토큰을 받는다(`login_hint` 를 실으면 둘째 사용자의 토큰). `setNextAppLoginSubject` 는 oidcmock 에 다음 앱 로그인의 subject 를 지정한다(위 `oidcmock.go` 행). 그 토큰으로 부르는 것은 실 백엔드 API 라 시드이고 치환이 아니며, IdP 쪽 사유는 위 행과 같다. |
@@ -49,13 +51,21 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `.github/workflows/ios-test.yml` | `APNS_HOST` | `EXT` | 잡 env 가 백엔드의 APNs **발송 대상만** 로컬 가짜 수신부(`http://localhost:5558`)로 바꾼다 — SQS 컨슈머 · 이력 저장 · 알림 설정 판정(`AllowsPush`) · 기기 토큰 조회 · 페이로드(`formatPushText` + `event_id`) 생성 · 토큰 서명 · 발송 호출은 실경로로 돈다. 실 APNs 는 Apple 인증키(.p8)와 실 기기 토큰이라는 외부 신원 경계라 CI 안에서 발송할 수 없다. 서명 키(`APNS_AUTH_KEY_P8`)는 잡이 `openssl` 로 만든 일회용 P-256 키이고 `APNS_KEY_ID`·`APNS_TEAM_ID` 는 자리표시자다 — 가짜 수신부에만 가는 요청을 서명할 뿐 끄는 상류가 없어 모킹 지점이 아니다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` `loadConfig` 의 `APNS_HOST` → `apns.Client.WithHost`(미설정이면 기존대로 `APNS_USE_PRODUCTION` 이분의 Apple 호스트 — 운영 설정 불변). |
 | `.github/actions/start-test-backend/action.yml` | 가짜 APNs 수신부 | `EXT` | 「Start fake APNs receiver」 스텝이 같은 폴더의 `apns_receiver.py` 를 `localhost:5558` 에 띄운다. 사유는 위 `APNS_HOST` 행과 같다. |
 | `.github/actions/start-test-backend/apns_receiver.py` | 가짜 APNs 수신부 | `EXT` | APNs 프로바이더 API 의 발송 엔드포인트(`POST /3/device/<token>`)만 받는다 — `apns-topic` 과 `bearer` 프로바이더 토큰이 없으면 실 APNs 처럼 거부하고, 받은 요청(토큰 · 토픽 · 페이로드)을 기록해 200 과 `apns-id` 로 답한다. 테스트 러너는 `GET /e2e/received?device=<token>` 으로 그 기록을 읽어 발송 결정(알림 설정에 따른 도달 여부)을 단정한다(github-monitor 시나리오 9). 기기로의 전달은 하지 않는다 — 전달 구간은 위 `simctl push` 행이다. 사유는 위 `APNS_HOST` 행과 같다. |
+| `.github/workflows/android-instrumented-test.yml` | `FCM_HOST` | `EXT` | 잡 env 가 백엔드의 FCM **발송 대상만** 로컬 가짜 수신부(`http://localhost:5559`)로 바꾼다 — SQS 컨슈머 · 이력 저장 · 알림 설정 판정(`AllowsPush`) · 기기 토큰 조회와 플랫폼 라우팅(`push.Router`) · 메시지(`notification`+`data`, 승인은 data-only) 생성 · 서비스 계정 JWT 서명과 OAuth 토큰 교환 · 발송 호출은 실경로로 돈다. 실 FCM 은 Firebase 서비스 계정 키와 실 기기 등록 토큰이라는 외부 신원 경계라 CI 안에서 발송할 수 없다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` 의 `FCM_HOST` → `fcm.Client.WithEndpoint`(미설정이면 `https://fcm.googleapis.com` — 운영 설정 불변). iOS 의 `APNS_HOST` 행과 같은 갈래다. |
+| `.github/workflows/android-instrumented-test.yml` | 일회용 FCM 서비스 계정(`FCM_SERVICE_ACCOUNT_JSON`) | `EXT` | 「Generate a throwaway FCM service account for the fake receiver」 스텝이 `openssl` 로 만든 일회용 RSA 키로 서비스 계정 JSON 을 만들어 `FCM_SERVICE_ACCOUNT_JSON` 에 넣는다. `project_id`·`client_email` 은 자리표시자이고, `token_uri` 를 실 `oauth2.googleapis.com` 대신 가짜 수신부의 `/token` 으로 둔다 — 백엔드의 `golang.org/x/oauth2/jwt` 토큰 교환은 그대로 돌고 상대만 바뀐다. 사유는 위 `FCM_HOST` 행과 같다. |
+| `.github/actions/start-test-backend/action.yml` | 가짜 FCM 수신부 | `EXT` | 「Start fake FCM receiver」 스텝이 같은 폴더의 `fcm_receiver.py` 를 `localhost:5559` 에 띄운다(iOS 잡에서도 뜨지만 그 잡은 FCM 을 켜지 않아 닿는 요청이 없다). 사유는 위 `FCM_HOST` 행과 같다. |
+| `.github/actions/start-test-backend/fcm_receiver.py` | 가짜 FCM 수신부 | `EXT` | 두 엔드포인트만 받는다: OAuth 토큰 교환(`POST /token` — `jwt-bearer` grant, RS256 서명된 3조각 assertion, `firebase.messaging` scope, `aud` 가 자기 `/token` 주소, 만료 전이어야 하고 아니면 실 상류처럼 `invalid_grant`)과 FCM HTTP v1 발송(`POST /v1/projects/<id>/messages:send` — 자기가 발급한 Bearer 토큰이 없으면 401 `UNAUTHENTICATED`, `message.token` 이 없거나 `data` 값이 문자열이 아니거나 4KB 를 넘으면 400 `INVALID_ARGUMENT`). 받은 메시지(토큰 · `notification` · `data` · `android`)를 기록해 `{"name": "projects/<id>/messages/<n>"}` 로 답하고, 테스트 러너는 `GET /e2e/received?token=<기기 토큰>` 으로 그 기록을 읽어 발송 결정(알림 설정에 따른 도달 여부 · 승인 푸시 제목·본문·자르기 · 자동 응답일 때 미발송)을 단정한다. 기기로의 전달은 하지 않는다 — 전달 구간은 아래 `PushSupport.kt` 행이다. 사유는 위 `FCM_HOST` 행과 같다. |
+| `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/PushSupport.kt` | FCM 전달(`PocketAideMessagingService.onMessageReceived`) | `EXT` | FCM **전달**(Google 서버 → 기기)만 대신한다 — 디버그 앱은 CI 에 Firebase 설정(`FIREBASE_API_KEY`)이 없어 등록 토큰을 받지 못하므로, 테스트 러너가 실 API 로 가짜 기기 토큰(`platform: "android"`)을 등록하고(시드), 가짜 수신부가 기록한 백엔드 메시지를 그대로 `RemoteMessage`(`data` 전부 + `notification` 은 FCM SDK 의 `gcm.n.*` 키)로 만들어 앱 프로세스 안에서 `PocketAideMessagingService.onMessageReceived` 에 넣는다. 알림 채널 · 알림 빌드 · 승인 알림의 「승인」·「거절」 액션(`ApprovalActionReceiver` → 실 백엔드 결정) · 시스템 알림 표시 · 탭(UiAutomator) · `MainActivity` 딥링크 · 탭 전환 · 강조는 실경로다. 백그라운드 notification 메시지를 FCM SDK 가 직접 그리는 경로(`DisplayNotification`)는 밟지 않는다 — 앞그라운드 수신 경로로 같은 알림을 앱이 그린다. 실 전달은 Firebase 프로젝트 자격증명과 실 등록 토큰이라는 외부 신원 경계다. iOS `simctl push` 행과 같은 갈래다. |
+| `.github/workflows/android-instrumented-test.yml` | `GITHUB_API_BASE_URL` | `EXT` | 잡 env 가 디버그 앱 빌드 속성 `GITHUB_API_BASE_URL` 을 GitHub API 스텁(`http://localhost:5557`, 에뮬레이터는 `adb reverse`)으로 둔다 — 잡 전체 env 라 `connectedDebugAndroidTest` 의 재구성도 같은 값을 본다. 사유는 위 GitHub API 스텁 행과 같다. |
+| `android/app/build.gradle.kts` | `GITHUB_API_BASE_URL` | `EXT` | `debug` 빌드 타입만 `BuildConfig.GITHUB_API_BASE_URL` 을 빌드 속성 `pocketaide.githubApiBaseUrl`(또는 env `GITHUB_API_BASE_URL`)에서 읽고, 없으면 `https://api.github.com` 이다. `release` 는 상수 `https://api.github.com` 이라 배포 빌드는 바뀌지 않는다. iOS `processInfo.environment["GITHUB_API_BASE_URL"]` 행과 같은 역할이다. 사유는 위 GitHub API 스텁 행과 같다. |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `BuildConfig.GITHUB_API_BASE_URL` | `EXT` | 「열린 PR」 시트의 `GitHubClient(baseUrl = BuildConfig.GITHUB_API_BASE_URL)` — 바뀌는 것은 호스트뿐이고 요청 헤더 · 상태 분류 · GraphQL 해석 · Keystore 토큰 저장 · 시트 화면은 실경로다. 사유는 위 GitHub API 스텁 행과 같다. |
 | `.github/actions/start-test-backend/action.yml` | GitHub API 스텁 | `EXT` | 「Start GitHub API stub」 스텝이 같은 폴더의 `github_api_stub.py` 를 `localhost:5557` 에 띄운다. 실 상류(`api.github.com`)는 사용자 PAT 를 요구하는데, CI 가 가진 GitHub 신원은 Actions `GITHUB_TOKEN` 과 App 설치 토큰뿐이고 둘 다 앱의 연결 첫 호출 `GET /user` 에서 `403 Resource not accessible by integration` 으로 거절된다(2026-10-04 실측). 레포 시크릿(2026-10-04 실측 12개 — App Store·서명용)에 GitHub 사용자 PAT 는 없고, 전용 테스트 계정은 사람이 가입해야 만들어진다. |
 | `.github/actions/start-test-backend/github_api_stub.py` | GitHub API 스텁 | `EXT` | 앱의 `GitHubClient` 가 부르는 두 엔드포인트(`GET /user` · `POST /graphql`)만 실 응답 모양(2026-10-04 실 `api.github.com` 응답과 필드 대조)으로 서빙한다. 응답은 토큰이 정한다: 연결 성공(작성자·리뷰 요청·리뷰함 PR 과 HEAD 종합 CI 상태 4종, SAML 로 가려진 노드 1건) · 연결 거절 401 · 연결 뒤 401 · 한도 소진 403 · 열린 PR 0건 · 검색 응답 지연(첫 로딩 관측) · HEAD 커밋 체크 조합이 다른 PR 여섯(전부 성공 · 하나 실패 · 실행 중 · 체크 없음 · 성공+실행 중 · 성공+실행 중+실패 — 종합 상태는 스텁이 체크 목록에서 GitHub 의 롤업 규칙으로 지어 `statusCheckRollup.state` 만 싣는다; 혼합 규칙은 상류가 계산하는 값이라 앱 쪽에서는 그 결과의 표시만 관측된다) · 실행 고유 접미사가 붙는 두 접두 토큰은 그 토큰의 첫 검색과 둘째 이후 검색에 다른 결과를 준다(열린 PR 2건 → 0건 · 한 PR 의 CI 상태 진행 중 → 성공) — PR 이 닫히거나 체크가 끝나는 것은 상류에서 일어나는 변화라 E2E 가 만들 길이 스텁뿐이고, 전환을 토큰의 검색 횟수에 묶어 테스트 러너가 스텁을 직접 부르는 제어 경로는 두지 않는다. GraphQL 질의가 세 검색 별칭과 연결된 login 의 한정자를 싣지 않으면 오류로 답해, 실 상류보다 관대하지 않다. 사유는 위 행과 같다. |
 | `ios/PocketAide/PRMonitor/OpenPullRequestsViewModel.swift` | `processInfo.environment["GITHUB_API_BASE_URL"]` | `EXT` | `launchClient()` 가 이 프로세스 env 가 있을 때만 `GitHubClient(baseURL:)` 를 그 주소로 만든다 — 없으면 기존대로 `https://api.github.com`(운영 동작 불변). 바뀌는 것은 호스트뿐이고 요청 헤더 · 상태 분류 · GraphQL 해석 · 키체인 저장 · 시트 화면은 실경로다. 사유는 위 행과 같다. |
 | `ios/PocketAideTests/PRMonitorUITests.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시트를 여는 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
 | `ios/PocketAideTests/OpenPullRequestsUITestSupport.swift` | `launchEnvironment["GITHUB_API_BASE_URL"]` | `EXT` | 「열린 PR」 시나리오 전용 파일(github-monitor 시나리오 1·2·3·4·5·10·11)이 공유하는 실행 헬퍼가 앱을 GitHub API 스텁 주소로 띄운다. 사유는 위 행과 같다. |
-| `.github/actions/start-test-backend/action.yml` | `SESSION_PLATFORM_URL` | `EXT` | 「Start session platform stub」 스텝이 `$GITHUB_ENV` 로 백엔드의 세션 플랫폼 주소만 로컬 스텁(`http://localhost:5559`)으로 바꾼다(백엔드 기동 스텝 앞에 놓인다) — OIDC 미들웨어 · 프록시 · 카탈로그 검증(타입·모델) · 마지막 접근 정렬 · 오류 변환(도달 불가 502 등)은 실경로로 돈다. 실 플랫폼(session-platform 컨트롤 플레인)은 k8s 클러스터 · 데이터 플레인 이미지 · 공급자 자격증명(Claude·MiniMax 구독)을 요구하는데, macOS 러너에는 Docker 가 없어 kind 를 띄울 수 없고 운영 플랫폼은 클러스터 밖에 노출되지 않는다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` 의 `SESSION_PLATFORM_URL`(미설정이면 `sessions.DefaultPlatformURL` — 운영 설정 불변). |
-| `.github/actions/start-test-backend/action.yml` | 세션 플랫폼 스텁 | `EXT` | 「Start session platform stub」 스텝이 같은 폴더의 `session_platform_stub.py` 를 `localhost:5559` 에 띄운다. 사유는 위 `SESSION_PLATFORM_URL` 행과 같다. |
+| `.github/actions/start-test-backend/action.yml` | `SESSION_PLATFORM_URL` | `EXT` | 「Start session platform stub」 스텝이 `$GITHUB_ENV` 로 백엔드의 세션 플랫폼 주소만 로컬 스텁(`http://localhost:5560`)으로 바꾼다(백엔드 기동 스텝 앞에 놓인다) — OIDC 미들웨어 · 프록시 · 카탈로그 검증(타입·모델) · 마지막 접근 정렬 · 오류 변환(도달 불가 502 등)은 실경로로 돈다. 실 플랫폼(session-platform 컨트롤 플레인)은 k8s 클러스터 · 데이터 플레인 이미지 · 공급자 자격증명(Claude·MiniMax 구독)을 요구하는데, macOS 러너에는 Docker 가 없어 kind 를 띄울 수 없고 운영 플랫폼은 클러스터 밖에 노출되지 않는다. 백엔드 쪽 진입점은 `backend/cmd/server/main.go` 의 `SESSION_PLATFORM_URL`(미설정이면 `sessions.DefaultPlatformURL` — 운영 설정 불변). |
+| `.github/actions/start-test-backend/action.yml` | 세션 플랫폼 스텁 | `EXT` | 「Start session platform stub」 스텝이 같은 폴더의 `session_platform_stub.py` 를 `localhost:5560` 에 띄운다. 사유는 위 `SESSION_PLATFORM_URL` 행과 같다. |
 | `.github/actions/start-test-backend/session_platform_stub.py` | 세션 플랫폼 스텁 | `EXT` | 백엔드 `sessions.Client` 가 부르는 앱 경로(`GET /api/v1/config` · 세션 목록·생성·조회·삭제 · `read` · `write` · `switch` · `snapshot`)만 실 응답 모양(백엔드 `sessions.Session`·`RuntimeConfig`·`ReadResult` 가 읽는 필드)으로 서빙한다. 세션은 메모리에만 있고 파드를 띄우지 않는다. 카탈로그는 셸(터미널) · Claude Code · MiniMax Code 이고, 생성은 카탈로그에 없는 타입을 400 으로 거절한다. 테스트 러너용 제어 경로 `POST /e2e/reset`(세션 비우기 · 도달 가능으로 복귀) · `/e2e/unreachable`(이후 요청의 연결을 응답 없이 끊는다 — 플랫폼 중지의 대역) · `/e2e/reachable` 는 앱 경로가 아니며, 시나리오 12(도달 불가)와 빈 상태(시나리오 1)를 만드는 유일한 길이다. 사유는 위 `SESSION_PLATFORM_URL` 행과 같다. |
 | `ios/PocketAide/Routines/RoutinesViewModel.swift` | `processInfo.environment["ROUTINES_TODAY"]` | `DET` | 루틴 탭의 「오늘」(서버에 보내는 날짜 키와 머리 날짜 표시)은 기기 달력이 정하고, 서버는 그 날짜 문자열로 요일·일자를 판정해 「오늘」·「오늘 쉬는 루틴」 섹션을 가른다. XCUITest 는 시뮬레이터 시계를 바꿀 수 없어 「고른 요일이 된 날」·「31일 → 짧은 달의 말일」 같은 결과를 결정적으로 만들 수 없다. `launchToday()` 가 이 프로세스 env(`yyyy-MM-dd`)가 있을 때만 그 날을 「오늘」로 쓴다 — 없으면 기기 달력(운영 동작 불변). 바뀌는 것은 날짜 값뿐이고 API 호출 · 서버 판정 · 섹션 화면은 실경로다. 그 값에 기대는 단정은 `RoutineScheduleDayUITests.swift`(`test-routines.md#시나리오 4`)다. |
 | `ios/PocketAideTests/RoutineScheduleDayUITests.swift` | `launchEnvironment["ROUTINES_TODAY"]` | `DET` | 고정 날짜 셋(2026-09-28 · 2026-09-30 · 2027-02-28)으로 앱을 다시 띄워 그 날의 섹션을 단정한다. 사유는 위 행과 같다. |
@@ -63,12 +73,14 @@ real 경로보다 관대한 테스트 분기. 실환경으로 준비 가능하�
 | `ios/PocketAideTests/RotationWeightedAffirmationUITests.swift` | `launchEnvironment["ROTATION_SEED"]` | `DET` | 우선순위 셋(높음·보통·낮음)을 백엔드 API 로 시드한 뒤 고정 시드로 앱을 띄워 회전 30회의 노출 순서를 단정한다. 사유는 위 행과 같다. |
 
 각 행의 파일에는 그 행의 카테고리로 `mock-exception:` 주석이 함께 있다(표기 규약 — `DET` 네 행 외에는 모두 `EXT`). 재검토: 실 IdP 가 정해지고 CI 시크릿용 테스트
-계정·테넌트가 마련되면 `oidcmock` 여덟 행 모두 실 상류로 대체하고 지운다. APNs 발송 쪽은
+계정·테넌트가 마련되면 `oidcmock` 열 행 모두 실 상류로 대체하고 지운다. APNs 발송 쪽은
 차단 요인 BF-2(푸시 수신) 해소 때 `APNS_DISABLED`(발송 끄기)로 **유지**했다가, github-monitor 시나리오 9(알림 설정에 따른
 도달 여부)가 발송 결정을 관측해야 해서 `APNS_HOST`(발송 대상 재지정) 세 행으로 바꿨다 — 끄기보다 치환 구간이 좁다(알림
 설정 판정 · 서명 · 발송 호출이 실경로로 들어왔다). 수신 이후는 여전히 `simctl push` 행이 실경로로 연다. APNs 네 행은 CI
 시크릿으로 쓸 수 있는 APNs 인증키가 마련되면 함께 실 발송으로 대체하고 지운다.
-GitHub API 스텁 다섯 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
+FCM 다섯 행(`FCM_HOST` · 일회용 서비스 계정 · 가짜 FCM 수신부 두 행 · `PushSupport.kt`)은 CI 시크릿으로 쓸 수 있는 Firebase 서비스 계정과
+실 등록 토큰을 받는 테스트 기기(또는 FCM 이 닿는 에뮬레이터 + 앱의 Firebase 설정)가 마련되면 함께 실 발송·전달로 대체하고 지운다.
+GitHub API 스텁 다섯 행과 안드로이드의 `GITHUB_API_BASE_URL` 세 행은 전용 테스트 GitHub 계정의 PAT 가 CI 시크릿으로 마련되면 함께 실 `api.github.com` 으로 대체하고 지운다
 (차단 요인 BF-3 해소 때 원장이 정한 해소 방향의 둘째 갈래 — 첫째 갈래의 선행이 사람의 계정 가입이라 이 갈래로 닫았다).
 세션 플랫폼 스텁 세 행은 전용 테스트 플랫폼(러너에서 닿는 session-platform 배포)이 마련되면 함께 실 플랫폼으로 대체하고 지운다 — 그때 시나리오 12 는
 플랫폼 중지로 도달 불가를 만들도록 다시 쓴다(차단 요인 BF-5 해소 때 원장이 정한 해소 방향).
@@ -91,6 +103,9 @@ E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_AC
 상류가 없다 — 모킹 지점이 아니다. 테스트 러너가 같은 큐에 `workflow_run` envelope 을 넣는 `ios/PocketAideTests/WebhookEventUITestSupport.swift`
 의 `Authorization` 헤더 리터럴(에뮬레이터가 서비스 라우팅에만 읽는 자격 범위 · 서명 값은 검증되지 않는다)도 같다 — 넣는 것은 API Gateway 통합과
 같은 원문 body + `x-github-event` 속성이고 컨슈머부터 화면까지는 실경로라, 구성요소를 대신하는 치환이 아니라 시드다.
+안드로이드 계측 테스트의 `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookSupport.kt`(같은 큐에 같은 envelope 을 `adb reverse tcp:4566` 으로 넣는다)와
+그 잡이 쓰는 `start-test-sqs` 도 같다.
+가짜 FCM 수신부·FCM 전달·`GITHUB_API_BASE_URL` 행들도 지문 사각지대다 — 각 파일의 `mock-exception: EXT` 주석(YAML·Python 은 `#`, Kotlin 은 `//`)으로만 잡힌다.
 
 ## 해소된 지점 (등재 대신 제거)
 

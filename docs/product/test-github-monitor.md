@@ -126,7 +126,7 @@
   - 잘못된 형식(`owner/name` 아님)이나 이미 제외된 레포를 다시 추가하면 거절된다.
 - **검증 AC**: AC6
 - **구현 상태**: 구현됨
-- **관련 코드 테스트**: `backend/internal/excludedrepos/store_test.go` — `TestListUserIDsExcluding`, `TestAdd_ValidatesShape`, `TestAdd_DuplicateReturnsAlreadyExcluded`; `backend/internal/handlers/excluded_repos_test.go`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookExcludedRepoTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/excludedrepos/store_test.go` — `TestListUserIDsExcluding`, `TestAdd_ValidatesShape`, `TestAdd_DuplicateReturnsAlreadyExcluded`; `backend/internal/handlers/excluded_repos_test.go`
 
 ### 시나리오 8: 푸시를 탭하면 해당 이력 항목이 강조되고 확인 처리는 되지 않는다
 - **사전 조건**: 워크플로우 완료 푸시 1건이 도달해 있고, 해당 이력 항목은 미확인.
@@ -140,7 +140,7 @@
   - 푸시 페이로드에 이벤트 ID가 없으면 PR 모니터 탭으로만 진입하고 강조는 없다.
 - **검증 AC**: AC7, AC12
 - **구현 상태**: 구현됨 (`pocketaide://pr-monitor?eventId=<id>` 딥링크, 이벤트 ID가 없거나 읽을 수 없으면 `pocketaide://pr-monitor` — 탭 진입만, 강조 없음)
-- **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift` — `testDeepLinkURLShape`, `testDeepLinkURLFallsBackToTabWhenNoEventID`, `testEventIDReturnsNilWhenMissing`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookPushTapTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift` — `testDeepLinkURLShape`, `testDeepLinkURLFallsBackToTabWhenNoEventID`, `testEventIDReturnsNilWhenMissing`
 
 ### 시나리오 9: 알림 설정에 따라 푸시 도달 여부가 달라진다
 - **사전 조건**: 로그인되어 디바이스 토큰이 등록된 상태.
@@ -155,7 +155,7 @@
   - 4단계: 시스템 권한이 꺼져 있다는 안내가 보인다.
 - **검증 AC**: AC8
 - **구현 상태**: 구현됨 (PR 모니터 화면 머리의 종 버튼 → 「알림 설정」 시트. 레포 제외는 시나리오 7의 제외 레포 시트)
-- **관련 코드 테스트**: `backend/internal/notificationsettings/store_test.go` — `TestAllowsPush`, `TestGet_DefaultsWhenNoRow`, `TestUpdate_PartialPatchKeepsOtherField`, `TestUpdate_RejectsUnknownOutcomes`; `backend/internal/handlers/notification_settings_test.go`; `ios/PocketAideUnitTests/NotificationSettingsTests.swift`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookPushSettingsTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/notificationsettings/store_test.go` — `TestAllowsPush`, `TestGet_DefaultsWhenNoRow`, `TestUpdate_PartialPatchKeepsOtherField`, `TestUpdate_RejectsUnknownOutcomes`; `backend/internal/handlers/notification_settings_test.go`; `ios/PocketAideUnitTests/NotificationSettingsTests.swift`
 
 ### 시나리오 10: 토큰 만료·권한 부족·레이트 리밋이 배너로 드러나고 해결 동작을 준다
 - **사전 조건**: GitHub 계정 연결됨.
@@ -197,7 +197,7 @@
   - 이력은 기간이 지나도 사라지지 않는다(영구 보존).
 - **검증 AC**: AC11
 - **구현 상태**: 구현됨
-- **관련 코드 테스트**: `backend/internal/notificationhistory/store_test.go` — `TestInsertBatchTx_FansOutAcrossUsers`, `TestInsertBatchTx_PRFieldsNilWhenEmpty`, `TestList_KeysetPagination`; `backend/internal/handlers/notification_history_test.go` — `TestNotificationHistory_ListIsUserScoped`, `TestNotificationHistory_ListSupportsBeforeAndLimit`; `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testUnacknowledgedGroupsComeFirst`, `testWithinUnreadSectionLatestGroupComesFirst`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookUserScopedHistoryTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/notificationhistory/store_test.go` — `TestInsertBatchTx_FansOutAcrossUsers`, `TestInsertBatchTx_PRFieldsNilWhenEmpty`, `TestList_KeysetPagination`; `backend/internal/handlers/notification_history_test.go` — `TestNotificationHistory_ListIsUserScoped`, `TestNotificationHistory_ListSupportsBeforeAndLimit`; `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testUnacknowledgedGroupsComeFirst`, `testWithinUnreadSectionLatestGroupComesFirst`
 - **비고**: 3단계의 계정 전환은 PR 모니터 「알림 설정」 시트 맨 아래 「로그아웃」 → 확인 → 로그인 화면에서 다른 계정으로 로그인하는 경로다(`prd-github-monitor.md` 결정 사항 「앱 로그아웃 진입점」). 2026-10-09 이전에는 이 경로가 없어 3단계를 앱에서 수행할 수 없었다.
 
 ### 시나리오 13: 이력 저장에 실패하면 푸시를 보내지 않고 나중에 재처리한다
@@ -225,7 +225,7 @@
   - 2단계: 거절된다(404). 3단계: 오류 없이 기존 확인 시각이 유지된다.
 - **검증 AC**: AC12, AC13
 - **구현 상태**: 구현됨
-- **관련 코드 테스트**: `backend/internal/notificationhistory/store_test.go` — `TestAcknowledge_OwnRowSetsTimestamp`, `TestAcknowledge_OtherUserReturnsNotFound`, `TestAcknowledge_IsIdempotent`; `backend/internal/handlers/notification_history_test.go` — `TestNotificationHistory_AckOwnRow`, `TestNotificationHistory_AckOtherUserReturns404`; `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testUnacknowledgedCountPerGroup`, `testGroupAllAcknowledgedWhenEveryItemAcked`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookItemAcknowledgeTest.kt`(CI E2E — 안드로이드 계측), `backend/internal/notificationhistory/store_test.go` — `TestAcknowledge_OwnRowSetsTimestamp`, `TestAcknowledge_OtherUserReturnsNotFound`, `TestAcknowledge_IsIdempotent`; `backend/internal/handlers/notification_history_test.go` — `TestNotificationHistory_AckOwnRow`, `TestNotificationHistory_AckOtherUserReturns404`; `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testUnacknowledgedCountPerGroup`, `testGroupAllAcknowledgedWhenEveryItemAcked`
 - **비고**: 그룹 「모두 확인」은 AC14로 따로 검증한다(시나리오 17).
 
 ### 시나리오 15: 이력의 외부 링크를 열어도 확인 처리되지 않는다
@@ -238,7 +238,7 @@
   - 항목은 미확인 그대로이고, 미확인 배지·그룹 미확인 수도 변하지 않는다.
 - **검증 AC**: AC12
 - **구현 상태**: 구현됨
-- **관련 코드 테스트**: 없음
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookHistoryExternalLinkTest.kt`(CI E2E — 안드로이드 계측), 없음
 
 ### 시나리오 16: 같은 PR·같은 커밋의 이벤트가 하나의 그룹 카드로 묶인다
 - **사전 조건**: 로그인된 상태. 이력이 비어 있음.
@@ -254,7 +254,7 @@
   - 이벤트 도착 순서를 바꿔도 같은 그룹 구성이 나온다.
 - **검증 AC**: AC13
 - **구현 상태**: 구현됨 (클라이언트 측 그룹핑)
-- **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testItemsWithSamePRAreGroupedTogether`, `testPRLessItemsFallBackToHeadSHAGroup`, `testGroupCountsSuccessAndFailureSeparately`, `testGroupCountsInProgressSeparately`, `testInputOrderDoesNotAffectGrouping`, `testNeitherPRNorHeadSHAResultsInSingletonGroups`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookHistoryGroupingTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testItemsWithSamePRAreGroupedTogether`, `testPRLessItemsFallBackToHeadSHAGroup`, `testGroupCountsSuccessAndFailureSeparately`, `testGroupCountsInProgressSeparately`, `testInputOrderDoesNotAffectGrouping`, `testNeitherPRNorHeadSHAResultsInSingletonGroups`
 
 ### 시나리오 17: 그룹 「모두 확인」은 그 그룹의 미확인 항목만 한 번에 확인한다
 - **사전 조건**: 그룹 A에 미확인 항목 2개와 확인된 항목 1개가 있음. 그룹 B에 미확인 항목 1개가 있음. 모두 확인된 그룹 C가 있음.
@@ -269,4 +269,4 @@
   - 그룹 B는 미확인 1개 그대로다.
 - **검증 AC**: AC14
 - **구현 상태**: 구현됨 (`PRMonitorViewModel.acknowledgeGroup` — 미확인 row마다 개별 확인 API 호출)
-- **관련 코드 테스트**: `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testGroupAllAcknowledgedWhenEveryItemAcked`; `backend/internal/notificationhistory/store_test.go` — `TestAcknowledge_IsIdempotent`
+- **관련 코드 테스트**: `android/app/src/androidTest/java/com/dlddu/pocketaide/e2e/WebhookHistoryGroupAcknowledgeAllTest.kt`(CI E2E — 안드로이드 계측), `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift` — `testGroupAllAcknowledgedWhenEveryItemAcked`; `backend/internal/notificationhistory/store_test.go` — `TestAcknowledge_IsIdempotent`
