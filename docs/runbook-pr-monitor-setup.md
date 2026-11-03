@@ -162,6 +162,11 @@ test environments run without any of this set up.
 | `APNS_HOST`             | env        | never in production; sends pushes to this APNs-compatible host instead of Apple's (`http://` = plain HTTP). E2E CI points it at the fake receiver, see `docs/e2e-mocking-policy.md` |
 | `FCM_SERVICE_ACCOUNT_JSON` | Secret  | Android pushes; empty disables FCM (Android devices are then skipped). Independent of `SQS_QUEUE_URL` / `APNS_DISABLED`. The service-account key JSON (see below) |
 | `FCM_HOST`              | env        | never in production; sends FCM HTTP v1 requests to this host instead of Google's (`http://` = plain HTTP). The Android E2E job points it at the fake FCM receiver, see `docs/engineering/android-app.md` §5 |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | env | optional; tracing is opt-in — empty (and `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` empty) leaves the no-op tracer in place and exports nothing. Production sets it in `k8s/deployment.yaml` to `http://alloy.alloy.svc.cluster.local:4318` (OTLP/HTTP, see below) |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | env | optional; traces-only alternative to the variable above (either one enables tracing) |
+| `OTEL_RESOURCE_ATTRIBUTES` | env | optional; extra resource attributes, they override the compiled-in `service.name`. Production sets `k8s.namespace.name=$(POD_NAMESPACE)` |
+| `OTEL_SERVICE_NAME` | env | optional; overrides the compiled-in service name `pocket-aide` |
+| `POD_NAMESPACE` | env | set by `k8s/deployment.yaml` from the pod's `metadata.namespace` (downward API); only feeds `OTEL_RESOURCE_ATTRIBUTES` |
 
 ### Push providers by platform
 
@@ -190,6 +195,30 @@ configured provider is skipped, not an error.
   are sent as data-only messages (title/body inside data) so the app can
   attach its approve/reject actions; all other pushes are notification
   messages.
+
+### Tracing (OpenTelemetry)
+
+The backend exports traces over OTLP/HTTP (`backend/internal/telemetry`).
+It is **opt-in**: with no OTLP endpoint variable set, `telemetry.Setup` does
+nothing, so tests, the E2E stacks and local runs export no spans. When an
+endpoint is set the startup log shows `tracing enabled`; an exporter setup
+failure logs `tracing setup failed; continuing without traces` and the server
+keeps running.
+
+- **What is traced**: one server span per request (`METHOD /route/{pattern}`,
+  `/healthz` probes excluded), client spans for outgoing requests that use
+  `http.DefaultTransport`, and `database/sql` spans for SQLite queries. W3C
+  trace context and baggage are propagated.
+- **Why an SDK next to OBI**: the eBPF instrumentation (OBI) reads
+  `traceparent` only from the first 1024 bytes of a request, and the long OIDC
+  `Authorization` header pushes Traefik's `Traceparent` past that window, which
+  split traces at the app boundary. The SDK reads parsed headers, so the
+  Traefik → app link holds; OBI skips processes that export OTLP themselves.
+- **Where it goes in production**: `k8s/deployment.yaml` points
+  `OTEL_EXPORTER_OTLP_ENDPOINT` at the Alloy collector
+  (`http://alloy.alloy.svc.cluster.local:4318`) and tags spans with
+  `k8s.namespace.name`. These two are plain `env` entries in the deployment
+  manifest, not ConfigMap/Secret keys, so changing them is a manifest change.
 
 Message authenticity is enforced by IAM/queue-policy on the SQS queue —
 there is no GitHub webhook secret in the backend.
@@ -255,6 +284,7 @@ Both rows must be exercised before declaring the feature shipped.
 | Android never POSTs to `/api/device-tokens` or the row stays `ios` | App has no Firebase API key (build property `pocketaide.firebaseApiKey` / CI secret `FIREBASE_API_KEY`) so it gets no FCM token; or the request omitted `"platform": "android"` and was stored with the default `ios` |
 | Android devices get no push, no `fcm: enabled` line at startup | `FCM_SERVICE_ACCOUNT_JSON` empty or the `pocket-aide-secrets` Secret not recreated after a key rotation — the router skips Android devices (`push: platform has no configured client`) |
 | `fcm rejected` for a token | Registration token is stale/unregistered, or the service account's project differs from the app's Firebase project |
+| No traces in the trace backend, no `tracing enabled` startup line | `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` empty or the pod not restarted after a manifest change; `tracing setup failed` in the log means the exporter could not be created (check the endpoint URL), the server runs on without traces |
 | Push appears on device only when app is foreground | `UNUserNotificationCenter` delegate missing — `AppDelegate.application(_:didFinishLaunchingWithOptions:)` not running |
 | `skipping x-github-event="..." (not workflow_run)` repeating | The GitHub webhook subscribes to more events than the consumer acts on, or a non-integration producer is publishing to the queue. Use the debug toggles below to identify the source. |
 | `skipping x-github-event=""` repeating   | No `x-github-event` message attribute — not from the API Gateway integration. Likely a direct SendMessage from outside (AWS Console test, ad-hoc script), or the integration's `MessageAttributes` mapping is missing / misnamed. |
