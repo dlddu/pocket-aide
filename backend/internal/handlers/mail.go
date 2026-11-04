@@ -44,8 +44,7 @@ func ListMailAccounts(svc *mail.Service) http.HandlerFunc {
 	}
 }
 
-// ConnectMailAccount handles POST /api/mail/accounts. The login is tested
-// before anything is stored.
+// ConnectMailAccount handles POST /api/mail/accounts.
 func ConnectMailAccount(svc *mail.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -91,8 +90,7 @@ func ReconnectMailAccount(svc *mail.Service) http.HandlerFunc {
 	}
 }
 
-// DisconnectMailAccount handles DELETE /api/mail/accounts/{id}. The stored
-// app password is deleted with the row.
+// DisconnectMailAccount handles DELETE /api/mail/accounts/{id}.
 func DisconnectMailAccount(svc *mail.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -137,8 +135,6 @@ func ListMailMessages(svc *mail.Service) http.HandlerFunc {
 	}
 }
 
-// writeMailError maps a mail error to a response. It reports whether it wrote
-// one (false for nil).
 func writeMailError(w http.ResponseWriter, err error) bool {
 	switch {
 	case err == nil:

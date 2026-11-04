@@ -14,7 +14,6 @@ final class SessionsTabUITests: XCTestCase {
         XCTAssertTrue(screen.createButton.exists, "The 새 세션 button should be in the header")
     }
 
-    // 시나리오 1 의 2단계 — 플랫폼에 세션이 하나도 없으면 시작을 안내한다.
     func testEmptyPlatformShowsStartHint() throws {
         SessionPlatformStub.reset()
         let app = TodoUI.launch()

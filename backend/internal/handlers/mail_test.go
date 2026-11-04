@@ -100,7 +100,6 @@ func TestMail_ConnectListMessagesDisconnect(t *testing.T) {
 		t.Fatalf("messages: %d %+v", rec.Code, list)
 	}
 
-	// Another user sees nothing and cannot delete it.
 	rec = do(h, http.MethodGet, "/api/mail/accounts", nil, 2)
 	var accts struct{ Items []mail.Account }
 	_ = json.NewDecoder(rec.Body).Decode(&accts)
