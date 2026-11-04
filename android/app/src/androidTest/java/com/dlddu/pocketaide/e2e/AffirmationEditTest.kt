@@ -41,7 +41,7 @@ class AffirmationEditTest : E2eTest() {
             openEditSheet(untouchedId)
             compose.tap("filter.pill.high")
             compose.waitForTag("sheet.text.field").performTextReplacement(discarded)
-            compose.tap("sheet.cancel.button")
+            compose.waitForTag("sheet.cancel.button").performSemanticsAction(SemanticsActions.OnClick)
             compose.waitForTagGone("sheet.text.field")
             assertEquals("A cancelled edit must keep the sentence", untouched, stored(api, untouchedId).optString("text"))
             assertEquals("A cancelled edit must keep the priority", "normal", stored(api, untouchedId).optString("priority"))
