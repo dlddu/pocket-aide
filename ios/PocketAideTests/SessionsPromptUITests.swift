@@ -31,7 +31,6 @@ final class SessionsPromptUITests: XCTestCase {
         XCTAssertTrue(output.label.contains(prompt), "The output should carry the prompt the platform received")
         XCTAssertEqual(field.value as? String, "에이전트에게 맡길 일", "A sent prompt clears the input (placeholder is back)")
 
-        // 시나리오 8 3단계: 세션을 나갔다 다시 들어와도 전체 출력이 같은 내용으로, 중복 없이 보인다.
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.staticTexts["sessions.title"].waitForExistence(timeout: 15))
         row.tap()
