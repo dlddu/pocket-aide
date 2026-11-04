@@ -63,7 +63,7 @@ last_updated: 2026-11-04
 ### S1 — 시트 안 보조 텍스트 색은 영역 `ink` 55%
 
 - **대상**: `screen-affirmations-priority-edit` 시트 안의 흐린 글자 세 자리 — 비활성 pill 라벨 `text-stone-600`(`#57534E`), 도움말·취소 버튼 `text-stone-500`(`#78716C`)
-  ↔ 구현 `DesignTokens.Color.ink(area).opacity(0.55)`(`FilterPills.swift` 비활성 라벨, `PriorityEditSheet.swift` 도움말·취소 — 다짐 라이트 `#2E251A` 55%).
+  ↔ 구현 `DesignTokens.Colors.ink(area).copy(alpha = 0.55f)`(`FilterPills.kt` 비활성 라벨, `PriorityEditSheet.kt` 도움말, `Sheet.kt` 취소 버튼 — 다짐 라이트 `#2E251A` 55%).
 - **사유**: `tokens.md` §2 는 보조 텍스트를 `text-stone-500`/`text-stone-400` 으로 적으면서 같은 절 끝에서 「영역 토큰이 정의된 곳에서는 stone 팔레트보다 영역 토큰을 우선한다.
   stone 은 어디에도 속하지 않는 메타 영역(목업 외부 nav, 페이지 배경 등)에서만 쓴다」고 정한다. 시트는 다짐 영역 화면이라 구현은 뒤 문장을 따라 영역 `ink` 를 흐려 쓴다
   (`_token-map.md` 표 C 의 「§2 stone 팔레트 — 목업 전용」 판정, T1 의 「보조 텍스트는 슬롯 체계에 없어 `ink(...).opacity(...)` 로 그린다」와 같은 규약).
