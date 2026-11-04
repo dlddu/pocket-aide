@@ -5,6 +5,9 @@ final class SessionsPlatformUnreachableUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         UITestAuth.ensureSignedIn(self)
+        // 스텁은 연결을 응답 없이 끊어 플랫폼 도달 불가를 만든다(BF-5 — 실 플랫폼 중지의 대역).
+        SessionPlatformStub.makeUnreachable()
+        addTeardownBlock { SessionPlatformStub.makeReachable() }
     }
 
     func testCreateSheetExplainsUnreachablePlatformWithoutLeakingDetails() throws {
