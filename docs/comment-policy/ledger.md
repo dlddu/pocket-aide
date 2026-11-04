@@ -29,7 +29,7 @@
 | 2026-09-29 | `backend/internal/apns/client.go`, `backend/internal/apns/client_test.go` | 17 | `a268892ac7fb` | 완료 | 필요성 판정 — 제거 3줄 · 유지 17줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/approvals/store.go` | 4 | `2250bf0d22b9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/auth/middleware.go` | 13 | `2cf46a05430f` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-04 | `backend/internal/chat/store.go` | 18 | `9b5a0b7d281e` | — | 신규 파일(rct_20261104-0002 PR) — 필요성 판정 대기 |
+| 2026-11-04 | `backend/internal/chat/store.go` | 17 | `98bcc304c1b2` | 완료 | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-chat-api-sessions.md) |
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/devicetokens/store.go` | 9 | `b3d186c91592` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) · 2026-11-02 증분 유지 4줄(개작 2블록 포함 · 안드로이드 플랫폼) — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -38,8 +38,7 @@
 | 2026-11-02 | `backend/internal/fcm/client.go` | 13 | `27ab47a96b5b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-04 | `backend/internal/handlers/chat.go` | 15 | `376efe57bc4a` | — | 신규 파일(rct_20261104-0002 PR) — 필요성 판정 대기 |
-| 2026-11-04 | `backend/internal/handlers/chat_test.go` | 2 | `413c1686efb6` | — | 신규 파일(rct_20261104-0002 PR) — 필요성 판정 대기 |
+| 2026-11-04 | `backend/internal/handlers/chat.go` | 13 | `06e509dec4e2` | 완료 | 필요성 판정 — 제거 2줄 · 유지 13줄 — [상세](passes/2026-11-04-chat-api-sessions.md) |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-11-04 | `backend/internal/handlers/mail.go` | 7 | `f9ccc4202240` | 완료 | 필요성 판정 — 제거 4줄 · 유지 7줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |

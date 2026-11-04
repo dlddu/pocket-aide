@@ -108,7 +108,6 @@ func TestChat_SendStreamsAndPersists(t *testing.T) {
 		t.Fatalf("unexpected LLM request: %+v", fs.got)
 	}
 
-	// Re-entry restores the history (AC1) and the title comes from the first message.
 	rec = chatDo(t, router, http.MethodGet, target, nil, 1)
 	var got struct {
 		Session  chat.Session   `json:"session"`
@@ -123,7 +122,6 @@ func TestChat_SendStreamsAndPersists(t *testing.T) {
 		t.Fatalf("unexpected history: %+v", got)
 	}
 
-	// The next turn carries the earlier context to the LLM (AC4 resume).
 	fs.chunks = []string{"ok"}
 	chatDo(t, router, http.MethodPost, target+"/messages", map[string]string{"content": "again"}, 1)
 	if len(fs.got.Messages) != 3 {

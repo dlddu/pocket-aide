@@ -18,7 +18,6 @@ const (
 	RoleAssistant Role = "assistant"
 )
 
-// titleRunes caps the auto-generated session title (first user message).
 const titleRunes = 40
 
 // ErrNotFound is returned when a session does not exist or is not owned by
