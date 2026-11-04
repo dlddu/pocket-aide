@@ -81,6 +81,11 @@
 | Q-73 | `select external_notifications \| eq(read_at, user_id) \| - \| -` | idx_external_notifications_user_read | `backend/internal/externalnotify/store.go::Store::UnreadCount` |
 | Q-75 | `select approval_caller_keys,external_notifications \| eq(approval_caller_keys.id=external_notifications.caller_key_id, external_notifications.id, external_notifications.user_id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); external_notifications: PK(external_notifications) | `backend/internal/externalnotify/store.go::Store::Get` |
 | Q-76 | `update external_notifications \| eq(id, user_id) \| - \| -` | PK(external_notifications) | `backend/internal/externalnotify/store.go::Store::MarkRead` |
+| Q-77 | `select mail_accounts \| eq(user_id) \| - \| order(created_at asc, id asc)` | UNIQUE(mail_accounts.user_id,mail_accounts.email) | `backend/internal/mail/store.go::Store::List` |
+| Q-78 | `insert mail_accounts \| - \| - \| -` | — | `backend/internal/mail/store.go::Store::Add` |
+| Q-79 | `select mail_accounts \| eq(id, user_id) \| - \| -` | PK(mail_accounts) | `backend/internal/mail/store.go::Store::Account`, `backend/internal/mail/store.go::Store::Add`, `backend/internal/mail/store.go::Store::Credentials` |
+| Q-80 | `update mail_accounts \| eq(id, user_id) \| - \| -` | PK(mail_accounts) | `backend/internal/mail/store.go::Store::ReplacePassword`, `backend/internal/mail/store.go::Store::SetNeedsReconnect` |
+| Q-81 | `delete mail_accounts \| eq(id, user_id) \| - \| -` | PK(mail_accounts) | `backend/internal/mail/store.go::Store::Delete` |
 | Q-90 | `insert chat_sessions \| - \| - \| -` | — | `backend/internal/chat/store.go::Store::CreateSession` |
 | Q-91 | `select chat_sessions \| eq(id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::AppendMessage`, `backend/internal/chat/store.go::Store::GetSession` |
 | Q-92 | `select chat_sessions \| eq(user_id) \| - \| order(updated_at desc, id desc)` | idx_chat_sessions_user_updated | `backend/internal/chat/store.go::Store::ListSessions` |

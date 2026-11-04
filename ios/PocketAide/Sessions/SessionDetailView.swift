@@ -57,7 +57,9 @@ struct SessionDetailView: View {
             guard scenePhase == .active else { return }
             await viewModel.pollWhileVisible()
         }
-        .accessibilityIdentifier("sessions.detail.screen")
+        // No outer accessibilityIdentifier here — on iOS 26 SwiftUI cascades a container
+        // identifier onto every leaf, clobbering sessions.detail.state, sessions.detail.phase
+        // and the composer identifiers that UI tests query.
     }
 
     private var statusStrip: some View {

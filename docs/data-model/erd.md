@@ -15,6 +15,7 @@ erDiagram
     users ||--o{ chat_sessions : user_id
     users ||--o{ device_tokens : user_id
     users ||--o{ external_notifications : user_id
+    users ||--o{ mail_accounts : user_id
     users ||--o{ notification_history : user_id
     users ||--o{ personal_todos : user_id
     users ||--o{ routines : user_id
@@ -165,6 +166,25 @@ erDiagram
 | --- | --- | --- | --- |
 | `idx_external_notifications_user_id` | `user_id`, `id DESC` | NO | - |
 | `idx_external_notifications_user_read` | `user_id`, `read_at` | NO | - |
+
+### `mail_accounts`
+
+의미: [`mail.Account`](../../backend/internal/mail/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | INTEGER | NO | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `email` | TEXT | NO |  |
+| `imap_host` | TEXT | NO |  |
+| `imap_port` | INTEGER | NO |  |
+| `password_enc` | TEXT | NO |  |
+| `needs_reconnect` | INTEGER | NO |  |
+| `created_at` | INTEGER | NO |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `UNIQUE(mail_accounts.user_id,mail_accounts.email)` | `user_id`, `email` | YES | - |
 
 ### `notification_history`
 

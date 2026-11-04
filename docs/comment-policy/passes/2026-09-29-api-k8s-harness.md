@@ -83,3 +83,23 @@
 | --- | --- | --- |
 | `check.mjs` 138 | 「5(i): 지금 보이는 화면(프레임·시트·다이얼로그·토스트·잠금 해제 패널)은 모두 .screen[data-screen] 이어야 하고, 그 식별자 집합을 돌려준다.」 | 저장소 문서 재진술(`tools/journey-mockup-harness/README.md` 「검사 항목」 표 5(i) 행) · 코드 재진술(`SCREEN_OVERLAYS` 상수와 함수 본문) — 규칙 번호는 `fail` 의 첫 인자가 이미 단다 |
 | `check.mjs` 334 | 「5(i): 단계·상태별 화면 목록 ↔ 페이지가 실제로 보이는 화면」 | 저장소 문서 재진술(같은 README 5(i) 행) — 규칙 번호는 `fail('5i', …)` 가 이미 단다 || `check.mjs` 349(`2ab283c` 기준, 5(i)-4) | 「5(i)-4: 「의도적 제외」 — 항목마다 사유가 있고, 제외했다는 화면이 페이지에 실제로 그려져 있지 않다」 | 코드 재진술(바로 아래 `drawn`·사유 검사 코드가 같은 일을 한다) · 저장소 문서 재진술(README 35행이 「의도적 제외」 검사의 형식·모순 범위를 정한다) — 규칙 번호는 `fail('5i', …)` 가 이미 단다 |
+
+## 2026-11-03 증분 — `k8s/` 운영 설정값 ConfigMap 분리 (`rct_20261101-0001`)
+
+- **기준 커밋**: `04ac770`. #355(운영 설정값을 `pocket-aide-ssm-config` ConfigMap 으로 읽기)가 주석 7줄을 들였다(13 → 20).
+- **결과**: 제거 2줄 · 유지 4줄(개작 1블록 포함), 17줄. 비주석 변경은 없다.
+
+### 제거
+
+| 자리 | 주석 | 불필요 유형 |
+| --- | --- | --- |
+| `k8s/secret.yaml` ConfigMap `data:` 첫 줄 | 「PR-monitor (empty SQS_QUEUE_URL disables the whole pipeline)」 | 저장소 문서 재진술(`docs/runbook-pr-monitor-setup.md` §4 — `SQS_QUEUE_URL` 이 비면 PR 모니터가 꺼진다) |
+| `k8s/secret.yaml` APNs 키 위 | 「APNs identifiers (the .p8 key itself stays in the Secret)」 | 코드 재진술(바로 위 Secret 의 `APNS_AUTH_KEY_P8` 와 키 이름이 말한다) |
+
+### 유지
+
+| 자리 | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `k8s/deployment.yaml` envFrom 위 → 2줄 | 「Later sources win, so keep this order: repo defaults, then the operator's non-secret SSM values, then the secrets.」 | `envFrom` 순서가 우선순위라는 계약 — 지우면 소스를 정렬·재배치해 SSM 값이 repo 기본값에, 또는 비밀이 비비밀 값에 덮이는 것을 모른다. 걷은 것: 키 이름 열거(ConfigMap·Secret 내용 재진술 · 개작) |
+| `k8s/kustomization.yaml` 5–6 (1줄 증가) | 「`pocket-aide-secrets` Secret and the `pocket-aide-ssm-config` ConfigMap are owned by the ExternalSecrets in dlddu/flux-cd-apps …」 | 기존 유지 사유 그대로(레포 밖 ExternalSecret 과의 짝) — ConfigMap 도 같은 이유로 목록에서 빠진 것이라 지우면 `secret.yaml` 의 ConfigMap 을 목록에 더해 Flux 가 실 설정값을 스텁으로 덮는다 |
+| `k8s/secret.yaml` 3–4 (1줄 증가) | 「…key sets the Deployment's envFrom expects: secrets here, and the non-secret operator values in the pocket-aide-ssm-config ConfigMap below.」 | 기존 유지 사유 그대로(이 파일은 적용되지 않는 참조용) — 아래 ConfigMap 도 같은 참조용이라는 범위 확장 |

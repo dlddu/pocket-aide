@@ -30,6 +30,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
 	"github.com/dlddu/pocket-aide/backend/internal/llm"
+	"github.com/dlddu/pocket-aide/backend/internal/mail"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
 	"github.com/dlddu/pocket-aide/backend/internal/push"
@@ -124,6 +125,17 @@ func main() {
 		}
 		log.Printf("fcm: enabled for project %s", fcmClient.ProjectID())
 	}
+	var mailService *mail.Service
+	if cfg.MailEncryptionKey != "" {
+		mailCipher, err := mail.NewCipher(cfg.MailEncryptionKeyVersion, cfg.MailEncryptionKey)
+		if err != nil {
+			log.Fatalf("mail: %v", err)
+		}
+		mailService = &mail.Service{Store: mail.NewStore(conn, mailCipher), IMAP: &mail.Client{}}
+		log.Printf("mail: enabled (key version %s)", cfg.MailEncryptionKeyVersion)
+	} else {
+		log.Printf("mail: disabled (MAIL_ENCRYPTION_KEY not set)")
+	}
 	var pushRouter *push.Router
 	var approvalPusher handlers.ApprovalPusher
 	var notificationSender handlers.NotificationSender
@@ -141,6 +153,15 @@ func main() {
 		p.Patch("/api/affirmations/{id}", handlers.UpdateAffirmation(affStore))
 		p.Delete("/api/affirmations/{id}", handlers.DeleteAffirmation(affStore))
 		p.Post("/api/device-tokens", handlers.RegisterDeviceToken(deviceStore))
+		if mailService != nil {
+			p.Get("/api/mail/accounts", handlers.ListMailAccounts(mailService))
+			p.Post("/api/mail/accounts", handlers.ConnectMailAccount(mailService))
+			p.Put("/api/mail/accounts/{id}/password", handlers.ReconnectMailAccount(mailService))
+			p.Delete("/api/mail/accounts/{id}", handlers.DisconnectMailAccount(mailService))
+			p.Get("/api/mail/messages", handlers.ListMailMessages(mailService))
+		} else {
+			p.Handle("/api/mail/*", handlers.MailDisabled())
+		}
 		p.Get("/api/excluded-repos", handlers.ListExcludedRepos(excludedStore))
 		p.Post("/api/excluded-repos", handlers.AddExcludedRepo(excludedStore))
 		p.Delete("/api/excluded-repos/{id}", handlers.DeleteExcludedRepo(excludedStore))
@@ -344,6 +365,9 @@ type config struct {
 	FCMServiceAccountJSON string
 	FCMHost               string
 
+	MailEncryptionKey        string
+	MailEncryptionKeyVersion string
+
 	K8SCallerAuth    bool
 	K8STokenAudience string
 	K8STokenIssuer   string
@@ -366,6 +390,9 @@ func loadConfig() config {
 
 		FCMServiceAccountJSON: os.Getenv("FCM_SERVICE_ACCOUNT_JSON"),
 		FCMHost:               os.Getenv("FCM_HOST"),
+
+		MailEncryptionKey:        os.Getenv("MAIL_ENCRYPTION_KEY"),
+		MailEncryptionKeyVersion: envOr("MAIL_ENCRYPTION_KEY_VERSION", "1"),
 
 		K8SCallerAuth:    os.Getenv("K8S_CALLER_AUTH") == "true",
 		K8STokenAudience: envOr("K8S_TOKEN_AUDIENCE", "pocket-aide"),

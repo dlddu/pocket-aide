@@ -37,9 +37,8 @@ spec:
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: k8s.namespace.name=$(POD_NAMESPACE)
           envFrom:
-            # Later sources win: repo defaults/placeholders, then the operator's
-            # non-secret values from SSM (PR-monitor region/role/SQS URL, APNs
-            # key/team/bundle ids), then the actual secrets (APNs .p8, FCM JSON).
+            # Later sources win, so keep this order: repo defaults, then the
+            # operator's non-secret SSM values, then the secrets.
             - configMapRef:
                 name: pocket-aide-config
             - configMapRef:
