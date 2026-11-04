@@ -25,7 +25,6 @@
 |---|---|---|
 | MA1 | `backend/migrations/` 아래 **모든** 변경(추가·수정·삭제·개명 — 개명은 옛 경로와 새 경로 둘 다 판정 입력이 된다) | golang-migrate 가 서버 부팅 때 운영 SQLite 에 순서대로 적용한다(`backend/internal/db/db.go`). 새 마이그레이션은 운영 데이터의 스키마를 바꾸고, 적용된 마이그레이션의 수정은 운영 DB 와 코드의 스키마를 조용히 갈라 놓는다 |
 | MA2 | 인증 — `backend/internal/auth/` · `ios/Shared/Sources/PocketAideAuth/` 아래 모든 변경 | 백엔드 OIDC ID 토큰 검증 미들웨어와 앱의 OIDC(PKCE) 로그인 클라이언트다. 검증이 느슨해지면 모든 API 의 사용자 경계가 무너지고, 단위 테스트는 「통과하지만 덜 검증하는」 변경을 잡지 못한다 |
-| MA3 | 배포 매니페스트 — `k8s/` 아래 모든 변경 | main 의 매니페스트는 `pin` 잡이 deploy 브랜치로 옮겨 그대로 운영에 반영된다(`.github/workflows/ci.yml` paths-filter `backend`). SQLite 단일 writer 전제(PVC 하나 · `replicas: 1` · `Recreate`)와 비밀 참조가 여기에 있다 |
 | MA4 | 판정기·워크플로·정책 자신 — `scripts/review-policy/` · `.github/workflows/review-policy.yml` · `docs/review-policy.md` | 워크플로가 `pull_request_target` 이라 PR 은 **base 쪽 판정기**로 판정된다 — PR 이 규칙을 고쳐 자기를 통과시킬 수는 없지만, 그 변경 자체(케이스를 줄이거나 자기 경로를 빼는 편집)는 옛 판정기가 보지 못한 채 다음 PR 부터 효력을 가진다. 그래서 이 경로의 변경은 사람 눈에 올린다 |
 | MA5 | 사람이 소유한 풀스캔 허용 기준표 — `docs/data-model/fullscan-criteria.md` 의 **모든** 변경 | 기준을 새로 만들거나 넓히는 것은 사람의 결정이다(그 파일 머리 · `docs/data-model/README.md` §2). 체커(`backend/cmd/datamodelcheck`)는 이 표의 기준 ID 로 불변식 3 의 `no-support` 를 「풀스캔 허용」으로 바꾸므로, 행 하나가 곧 위반을 없애는 결정이다. 자동 리뷰만 거친 PR 이 이 표를 바꾸면 사람의 채택 없이 기준이 착지한다 |
 | MA6 | 제품 문서 — 가치·PRD·테스트·여정: `docs/product/values.md` · `docs/product/prd-*.md` · `docs/product/test-*.md` · `docs/user-journeys/` 아래 **모든** 변경(개명은 옛 경로와 새 경로 둘 다 판정 입력이 된다). 집계(`docs/product/doc-tracker/`)·여정 목업(`docs/journeys/`)은 대상이 아니다 | 제품이 무엇을 왜 하는가의 결정이고, 소유자는 사용자다(`docs/product/values.md` 「제품 소유자」). 정합성 루프(reconciler docs-impl·scenario-e2e 등)가 어긋남을 「문서를 구현에 맞추는」 방향으로 닫으면 제품 결정이 사람 눈 없이 바뀐다 — 문서 변경이라 다른 케이스에 걸리지 않아 판정기가 자동 success 를 붙여 왔다(2026-11-04 점검: pocket-aide #364 PRD-8 AC4 결정 개정에 자동 success). 테스트 문서는 AC 의 검증 기준을 정하므로 함께 건다. 집계 문서(doc-tracker)는 결정을 담지 않아 대상이 아니다 |
@@ -52,7 +51,6 @@ ere: ^kind: (Deployment|PersistentVolumeClaim|Secret|StatefulSet)|claimName: [a-
 backend/migrations/*.up.sql
 backend/internal/auth/middleware.go
 ios/Shared/Sources/PocketAideAuth/OIDCClient.swift
-k8s/deployment.yaml
 scripts/review-policy/judge.py
 .github/workflows/review-policy.yml
 docs/review-policy.md
@@ -72,6 +70,7 @@ docs/user-journeys/*.md
 | `backend/internal/db/db.go` 의 SQLite 연결 · 마이그레이션 적용 호출, 그리고 그 연결을 여는 `backend/internal/telemetry/` 의 `OpenDB`(`otelsql.Open` 추적 래퍼) | MA1 의 전제(마이그레이션을 바이너리에 싣고 부팅 때 적용하는 배선)이지 스키마 변경 자체가 아니고, 연결 옵션 수정 대부분은 데이터와 무관하다. `telemetry.OpenDB` 는 드라이버 이름과 DSN 을 그대로 넘기고 쿼리마다 span 을 남길 뿐이다 — DSN·pragma(저널 모드·동기화·외래키)와 연결 수 제한은 `db.go` 에 남아 있다 | 마이그레이션 소스가 바뀌거나 두 번째 DB 연결이 생기거나 추적 래퍼가 다른 곳에서 쓰인다 — `git grep -c 'iofs.New(migrations.FS' backend/internal/db/db.go` 가 0, 또는 `git grep -lE 'sql\.Open\("sqlite"\|telemetry\.OpenDB\(' -- backend ':!*_test.go' ':!backend/cmd/datamodelcheck'` 가 2파일 이상(현재 `db.go` 1), 또는 `git grep -l 'otelsql\.Open(' -- backend ':!*_test.go'` 가 2파일 이상(현재 `telemetry.go` 1) | 코드 리뷰 |
 | `backend/internal/oidcmock/` E2E 용 OIDC mock IdP(`code_challenge`·`code_verifier` 를 흉내 낸다) | 운영 서버에 링크되지 않는 테스트 전용 mock 이고(`backend/cmd/oidcmock` 바이너리와 통합 테스트만 쓴다), 허용 여부는 `docs/e2e-mocking-policy.md` 허용목록이 관리한다 | 운영 서버 경로가 mock 을 import 한다 — `git grep -l 'internal/oidcmock' -- backend/cmd/server backend/internal ':!*_test.go' ':!backend/internal/oidcmock'` 가 1파일 이상 | e2e 모킹 정책 |
 | `ios/Shared/Sources/PocketAideStorage/` 의 키체인 저장(`TokenStore.swift` · `GitHubCredentialStore.swift`) | 로그인 결과 토큰과 GitHub 자격증명을 보관할 뿐 인증 판단(토큰 검증·발급 흐름)을 하지 않고, 저장 형식이 바뀌면 재로그인으로 복구된다 | 키체인 접근 가능성이 `ThisDeviceOnly` 밖으로 바뀌거나 키체인을 쓰는 파일이 늘어난다 — `git grep -c 'kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly' -- ios` 합계가 `git grep -c 'kSecAttrAccessible as String' -- ios` 합계보다 작아지거나(현재 둘 다 2), 또는 `git grep -l 'kSecClassGenericPassword' -- ios` 가 3파일 이상 | 코드 리뷰 |
+| `k8s/` 배포 매니페스트 — 2026-11-04 까지 케이스 MA3 이었다 | 저장소 소유자 결정(2026-11-04)으로 수동 승인 케이스에서 뺐다. main 의 매니페스트는 `pin` 잡이 deploy 브랜치로 옮겨 그대로 운영에 반영되므로(`.github/workflows/ci.yml` paths-filter `backend`), SQLite 단일 writer 전제(PVC 하나 · `replicas: 1` · `Recreate`)와 비밀 참조의 변경은 일반 코드 리뷰가 본다. 케이스 ID `MA3` 은 다시 쓰지 않는다 | 단일 writer 전제가 깨진다 — `git grep -hE '^[[:space:]]+replicas: [0-9]+' -- k8s` 출력이 `replicas: 1` 한 줄이 아니게 되거나, `git grep -c 'type: Recreate' -- k8s/deployment.yaml` 가 0, 또는 `git grep -l '^kind: PersistentVolumeClaim' -- k8s` 가 2파일 이상(현재 `pvc.yaml` 1), 또는 `git grep -l '^kind: StatefulSet' -- k8s` 가 1파일 이상(현재 0) | 코드 리뷰 |
 
 ## 미탐 원장
 
