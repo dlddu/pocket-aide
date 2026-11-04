@@ -1,404 +1,344 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-10-28
+last_updated: 2026-11-04
 ---
-
-> **2026-11-03 — 이 표는 아직 iOS 기준이다.** 렌더링 소스가 `android/` 로 옮겨갔으나 이 표의 행은
-> `ios/**/*.swift` 를 가리킨다. 안드로이드 기준 매핑은 [`_impl-map.md`](./_impl-map.md) 에 있고,
-> 이 표를 그 기준으로 다시 세우는 일은 남은 작업이다.
 
 # 카피 ↔ 구현 대응표
 
-> 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`ios/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
+> 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`android/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 34개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 `_token-map.md`, 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 33개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 [`_token-map.md`](./_token-map.md), 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
+> 2026-11-04 에 안드로이드(Kotlin · Jetpack Compose) 기준으로 다시 세웠다(reconciler `rct_20261104-0002` · 모델 `tbm_pocket-aide-mockup-render`) — 그 전 판은 `ios/**/*.swift` 를 가리켰다.
 
 ## 판독 규약
 
-- **정방향**(구현 → 목업, 표 A): `_impl-map.md` 의 `화면`·`부분` 행 파일마다, 주석 밖 Swift 문자열 리터럴을 파일 안에서 중복 없이 한 번씩 적는다.
-  빈 문자열과 **기계 식별자 자리**의 리터럴 — `accessibilityIdentifier(`·`systemName:`·`systemImage:`·`identifier:`·`dateFormat =`·
-  `URL(string:`·`kind =`·`initialValue:` 바로 뒤, `case "…"` 패턴 — 는 뺀다. 리터럴은 소스에 적힌 그대로(보간 `\(…)`·이스케이프 포함) 적는다.
+- **정방향**(구현 → 목업, 표 A): `_impl-map.md` 의 `화면`·`부분` 행 파일마다, 주석 밖 Kotlin 문자열 리터럴을 파일 안에서 중복 없이 한 번씩 적는다.
+  빈 문자열과 **기계 식별자 자리**의 리터럴 — `testTag(`·`key =`·`tag =`(`retryTag`·`semanticsTestTag`·`bannerTag`·`countTag` 포함)·`idPrefix =`·`identifier =`·
+  `DateTimeFormatter.ofPattern(`·`fontFeatureSettings =` 바로 뒤 — 는 뺀다. 한 글자 문자(`'x'`)는 문자열이 아니라 뺀다. 리터럴은 소스에 적힌 그대로(보간 `$이름`·`${…}`·이스케이프 포함) 적는다.
 - **역방향**(목업 → 구현, 표 B): 그 행들이 가리키는 목업마다, `<head>`·`<script>`·`<style>` 밖의 텍스트 노드와 `title`·`placeholder`·`aria-label`·`alt`
   속성 값을 공백을 접어 목업 안에서 중복 없이 한 번씩 적는다.
-- 대조는 공백을 접고 **대소문자를 무시**한다(대문자화는 스타일 — 기준 4). 리터럴의 보간 `\(…)` 은 임의의 비어 있지 않은 문자열로 읽는다.
+- 대조는 공백을 접고 **대소문자를 무시**한다(대문자화는 스타일 — 기준 4). 리터럴의 보간 `$이름`·`${…}` 은 임의의 비어 있지 않은 문자열로 읽는다.
+  정적 조각이 구분 기호(`·`·`—`·`/` 등)뿐인 리터럴(예 `"$a · $b"`)은 아무 노드나 받아들이므로 문구가 없는 **서식**으로 보고(`데이터` / 표 B `예시 데이터`) 일치 근거로 쓰지 않는다.
 - **판정** 열은 다음 중 하나다. 남은 카피 drift 는 `구현 대기`·`목업 대기` 행이다.
   - `일치` — 정방향: 리터럴이 대응 목업의 텍스트 노드(또는 이어진 노드 2~4개를 공백으로 이은 것)와 같다. 역방향: 노드가 대응 파일의 리터럴과 같거나,
     보간으로 나뉜 리터럴의 정적 조각 하나와 같다. 검산은 이 문자열 일치를 확인한다(필요조건 — 자리가 맞는지는 근거 열이 적는다).
-  - `외부 <경로>` — 역방향 전용. 노드의 문구가 대응 파일이 아닌 Swift 파일(컴포넌트 기본 문구·API 모델의 표시 이름 등)의 리터럴에서 온다. 검산이 그 파일에서 확인한다.
-  - `데이터` — 정방향 전용. 보간만 있는 리터럴(런타임 값의 서식). 정적 문구가 없어 대조할 카피가 없다.
-  - `예시 데이터` — 역방향 전용. 목업이 채워 넣은 예시 값(다짐 문장·PR 제목·시각·SHA·개수 등). 구현은 같은 자리를 데이터로 그린다.
-  - `비표시` — 정방향 전용. 화면에 글자로 그려지지 않는 리터럴(SF Symbol 이름 등).
-  - `시스템 UI` — 정방향: iOS 가 앱 밖에서 그리는 문구(위젯 갤러리 이름·설명). 대응 화면 목업이 없다. 역방향: 앱 리터럴 없이 UIKit 이 앱 개발 지역 언어로 그리는
-    시스템 컴포넌트 문구(시스템 `TabView` 오버플로 탭·목록의 「더 보기」·「편집」). 검산이 그 낱말과 `ios/project.yml` 의 `developmentLanguage: ko` 를 확인한다.
-  - `목업 전용` — 역방향 전용. 목업 갤러리 크롬·프레임 밖 캡션·설계 주석 박스·상태바·홈 화면 크롬. 앱이 그리지 않는다.
-  - `미구현 영역` — 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행, 그 행 대조 범위가 미구현이라 적은 슬라이스, 또는 지원하지 않는 위젯 크기).
-  - `기준 4` — 낱말은 같고 차이가 글리프·아이콘·자리뿐이다. 구조 대조의 몫이다.
-  - `구현 대기` — 목업 문구가 구현에 없거나 다르다. 구현(`ios/`)을 고쳐야 닫힌다.
-  - `목업 대기` — 구현 문구를 목업이 그리지 않는다(주로 빈·오류·생성 모드 같은 목업에 없는 상태). 목업을 보강하거나 허용목록에 사유를 남겨야 닫힌다.
+  - `외부 <경로>` — 역방향 전용. 노드의 문구가 대응 파일이 아닌 Kotlin 파일(컴포넌트 기본 문구·도메인 모델의 표시 이름·위젯 문구 등)의 리터럴에서 온다. 검산이 그 파일에서 확인한다.
+  - `데이터` — 정방향 전용. 보간만 있거나 정적 조각이 구분 기호뿐인 리터럴(런타임 값의 서식). 정적 문구가 없어 대조할 카피가 없다.
+  - `예시 데이터` — 역방향 전용. 목업이 채워 넣은 예시 값(다짐 문장·PR 제목·시각·SHA·개수 등)과 값 서식. 구현은 같은 자리를 데이터로 그린다.
+  - `비표시` — 정방향 전용. 화면에 글자로 그려지지 않는 리터럴(접근성 `contentDescription`·`stateDescription`, 애니메이션 `label`, 컴포저블의 태그·키 인자, 클립 라벨, OpenType 기능 이름 등).
+  - `목업 전용` — 역방향 전용. 목업 갤러리 크롬·프레임 밖 캡션·설계 주석 박스·상태바·홈 화면 크롬. 앱이 그리지 않는다(상태바·런처는 안드로이드가 그린다).
+  - `미구현 영역` — 역방향 전용. 그 문구가 속한 영역이 아직 구현되지 않았다(`_impl-map.md` 의 `미구현` 행, 위젯이 아직 그리지 않는 슬라이스, 지원하지 않는 위젯 크기).
+  - `기준 4` — 낱말은 같고 차이가 글리프·아이콘·서식·자리뿐이다. 구조 대조의 몫이다.
+  - `구현 대기` — 목업 문구가 구현에 없거나 다르다. 구현(`android/`)을 고쳐야 닫힌다.
+  - `목업 대기` — 정방향 전용. 구현 문구를 목업이 그리지 않는다(주로 빈·오류·진행 중 같은 목업에 없는 상태). 목업을 보강하거나 허용목록에 사유를 남겨야 닫힌다.
 - 대조 대상 파일의 문자열, 대응 목업의 텍스트, `_impl-map.md` 의 `화면`·`부분` 행이 바뀌면 이 표를 함께 갱신한다. 아래 검산이 실패하면 표가 낡은 것이다.
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 8행 · `목업 대기` 14행, 표 B `구현 대기` 19행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 5행 · `목업 대기` 15행, 표 B `구현 대기` 21행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 253 |
-| A | 데이터 | 9 |
-| A | 비표시 | 43 |
-| A | 시스템 UI | 2 |
-| A | 미구현 영역 | 0 |
+| A | 일치 | 201 |
+| A | 데이터 | 14 |
+| A | 비표시 | 41 |
 | A | 기준 4 | 5 |
-| A | 구현 대기 | 8 |
-| A | 목업 대기 | 14 |
-| B | 일치 | 295 |
-| B | 외부 | 79 |
-| B | 예시 데이터 | 188 |
-| B | 목업 전용 | 160 |
-| B | 미구현 영역 | 10 |
+| A | 구현 대기 | 5 |
+| A | 목업 대기 | 15 |
+| B | 일치 | 265 |
+| B | 외부 | 118 |
+| B | 예시 데이터 | 191 |
+| B | 목업 전용 | 158 |
+| B | 미구현 영역 | 9 |
 | B | 기준 4 | 4 |
-| B | 시스템 UI | 11 |
-| B | 구현 대기 | 19 |
+| B | 구현 대기 | 21 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 334행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 281행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `오늘 회전` | 구현 대기 | 목업 히어로 라벨은 「오늘 회전 · 1/14」 — 회전 위치(n/전체)가 없다(표 B 같은 행) |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 \(priorityValue)` | 일치 | 히어로 메타 「우선순위 높음」(값 「높음」은 굵은 ink `Text` 를 끼운 보간). 뒤따르는 「· 13회 노출」 은 표 B 에서 `구현 대기` |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `\"` | 일치 | 히어로 카드 장식 인용부호 — 카드 좌상단 serif 120 글리프(U+0022, 목업과 같은 문자) |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨 — 목록 프레임 히어로 카드 하단 우측(자동 회전 AC3 과 별개인 수동 회전) |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 히어로 자리 카드 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 히어로 자리 카드 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 목록의 스와이프된 행 패널 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `전체 \(viewModel.items.count)개` | 일치 | 목록 헤더 「전체 14개」 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `우선순위 순` | 일치 | 목록 머리 정렬 칩(기본 선택) |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `최신순` | 일치 | 목록 머리 정렬 칩 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `자주 노출` | 일치 | 우선순위 점 범례 — 목록 아래 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `보통` | 일치 | 범례 항목 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `가끔` | 일치 | 범례 항목 |
-| `ios/PocketAide/Affirmations/AffirmationsView.swift` | `ROTATION_SEED` | 비표시 | 프로세스 env 키 — `launchRotationSeed()` 가 읽는 테스트 시드(모킹 정책 `DET`), 화면에 그려지지 않는다 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `새 다짐` | 일치 | 생성 모드 시트 제목 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `우선순위 설정` | 일치 | 편집 모드 시트 제목 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `\"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 serif 64 글리프(U+0022, 목업과 같은 문자) |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `노출 빈도` | 일치 | `AreaLabel` 섹션 라벨 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 일치 | 노출 빈도 도움말 — 생성·편집 두 프레임 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `저장` | 일치 | 1차 액션 |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `삭제` | 일치 | 편집 모드 파괴적 액션 — 목업 편집 모드 프레임의 외곽선 버튼(생성 모드엔 없음) |
-| `ios/PocketAide/Affirmations/PriorityEditSheet.swift` | `취소` | 일치 | 2차 액션 |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `자동 응답` | 일치 | 헤더 아래 「자동 응답 <모드>」 줄의 머리 — 「대기 목록」·「빈 상태」·「자동 응답 모드 켜짐」 프레임 헤더(모드 값은 `ApprovalAutoResponse.label`, 표 B 외부) |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `\(Text(title).bold()) \(notice)` | 데이터 | 자동 응답 모드 배너 본문 — 굵은 제목(`ApprovalAutoResponse.bannerTitle`) + 결과 안내(`outcomeNotice`). 목업 「자동 거절 모드가 켜져 있습니다.」·「새 요청은 알림 없이 바로 거절됩니다.」 는 표 B 외부 |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `끄기` | 일치 | 자동 응답 모드 배너 버튼 — 「자동 응답 모드 켜짐」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `대기 중인 승인 요청이 없습니다` | 일치 | 「빈 상태」 프레임 안내 문구(#278 에서 `ApprovalsView.swift` 에서 옮겨 왔다) |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `자동 응답 모드 \(Text(mode.label).bold()) — \(mode.outcomeNotice)` | 일치 | 「빈 상태」 프레임의 현재 모드 줄 「자동 응답 모드 없음 — 새 요청은 알림으로 받습니다.」(노드 3개를 이은 것) |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `largecircle.fill.circle` | 비표시 | 설정 모드 선택지의 선택된 라디오 SF Symbol 이름(`Image(systemName: selected ? …)` 삼항이라 `systemName:` 제외 규칙에 걸리지 않는다) |
-| `ios/PocketAide/Approvals/ApprovalAutoResponseViews.swift` | `circle` | 비표시 | 설정 모드 선택지의 선택 안 된 라디오 SF Symbol 이름(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `취소` | 일치 | 확인 다이얼로그 취소 버튼 — 「결정 확인」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `승인` | 일치 | 결정 버튼 「승인」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(승인) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `거절` | 일치 | 결정 버튼 「거절」 — 「요청 상세」 프레임 · 확인 다이얼로그 확정 버튼(거절) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 상세 폐기된 키 경고 — 목업은 「자동 응답 모드 켜짐」 프레임 대기 카드(상세 프레임에는 폐기된 키 요청이 없다) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `에이전트 설명` | 일치 | 에이전트 설명(`reason`) 섹션 라벨 — 「요청 상세」 프레임(호출자가 `reason` 을 보냈을 때만 선다) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `에이전트가 작성 · 검증되지 않음` | 일치 | 에이전트 설명 섹션 캡션 — 「요청 상세」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `남은 시간` | 일치 | 카운트다운 라벨 — 「요청 상세」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `보낸 키` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `key` | 비표시 | `fact(_:_:id:)` 의 `id:` 인자 — `accessibilityIdentifier("approval.detail.\(id)")` 접미사, 화면에 그려지지 않는다 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청자` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `—` | 일치 | 요청자 이름이 비었거나 시각이 없을 때의 대체 문자 — 「요청 상세 — 만료 · 재조회 실패」 프레임 요청자 값 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `requester` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `세션` | 일치 | 메타 「세션」(값 `ApprovalFormatting.sessionLabel` — 세션 제목, 제목이 비면 「제목 없음 · <id 앞 8자>」, 세션 id 도 없으면 행을 숨긴다) — 「요청 상세」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `session` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 ID` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `externalId` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `요청 시각` | 일치 | 메타 라벨 — 「요청 상세」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `createdAt` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `상태` | 일치 | 메타 「상태」(값 `ApprovalFormatting.statusLabel`) — 「요청 상세 — 만료 · 재조회 실패」 프레임 `dl`(「요청 상세」 프레임의 대기 요청 `dl` 은 보낸 키·요청자·요청 ID·요청 시각 넷만 그린다) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `status` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 방식` | 일치 | 처리된 요청의 메타 「처리 방식」 — 「요청 상세 — 만료 · 재조회 실패」 프레임 `dl` |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `mode` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `처리 시각` | 일치 | 처리된 요청의 메타 「처리 시각」 — 「요청 상세 — 만료 · 재조회 실패」 프레임 `dl`(만료면 만료 시각) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `processedAt` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `최신 상태를 불러오지 못했습니다` | 일치 | 상세 재조회 실패 배너 제목 — 「요청 상세 — 만료 · 재조회 실패」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalDetailView.swift` | `다시 시도` | 일치 | 상세 재조회 실패 배너 재시도 버튼 — 「요청 상세 — 만료 · 재조회 실패」 프레임 · 「오류」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `처리 이력` | 일치 | 섹션 머리 — 「처리 이력」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `다시 시도` | 일치 | 이력 조회 실패 배너 재시도 버튼 — 목업 「오류」 프레임의 같은 문구(이력 화면 오류 상태 프레임은 목업에 없다) |
-| `ios/PocketAide/Approvals/ApprovalHistoryView.swift` | `이전 이력 불러오는 중…` | 일치 | 커서 이어 불러오기 줄 — 「처리 이력」 프레임 하단 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `승인 게이트 설정` | 일치 | 설정 화면 제목 — 「설정」·「키 발급」 프레임 `h2` |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `취소` | 일치 | 폐기 확인 대화상자·발급 입력 시트의 취소 버튼 — 「키 발급 — 이름 입력」 프레임 시트 · 「결정 확인」 프레임 취소 버튼(폐기 확인 대화상자는 목업이 없다 — 대화상자 문구 `ApprovalKeyFormatting.revokeTitle`·`revokeMessage` 는 표 A 규약상 이 파일 리터럴이 아니다) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `폐기` | 일치 | 키 행 「폐기」 버튼 — 「설정」 프레임 · 폐기 확인 대화상자 확정 버튼 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `자동 응답 모드` | 일치 | 「자동 응답 모드」 섹션 머리 — 「설정」 프레임(stamp uppercase accent, #278) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키` | 일치 | 섹션 머리 — 「설정」·「키 발급」 프레임(stamp uppercase accent) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급한 호출자 키가 없습니다` | 일치 | 빈 목록 안내 — 「설정 — 키 없음 · 조회 실패」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `+ 호출자 키 발급` | 일치 | 점선 발급 버튼 — 「설정」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키를 불러오지 못했습니다` | 일치 | 목록 조회 실패 배너 제목 — 「설정 — 키 없음 · 조회 실패」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `다시 시도` | 일치 | 목록 조회 실패 배너 재시도 버튼 — 「설정 — 키 없음 · 조회 실패」 프레임 · 「오류」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 키 발급` | 일치 | 발급 입력 시트 제목 — 「키 발급 — 이름 입력」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `호출자 이름` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임(발급 입력 시트에서도 같은 라벨) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `infra-ci` | 일치 | 발급 입력 시트 이름 필드 placeholder — 「키 발급 — 이름 입력」 프레임 `placeholder`(같은 문자열이 「설정」 프레임 키 이름 칩에도 있다) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰이고 화면에 그려지지 않는다 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `발급` | 일치 | 발급 입력 시트 확정 버튼 — 「키 발급 — 이름 입력」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issue.submit` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `키 원문` | 일치 | 시트 필드 라벨 — 「키 발급」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사됨` | 일치 | 복사 뒤 버튼 라벨 — 「키 발급 — 복사됨」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `복사` | 일치 | 시트 주 버튼 — 「키 발급」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.copy` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `완료` | 일치 | 시트 보조 버튼 — 「키 발급」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalKeysView.swift` | `approval.keys.issued.done` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `+ k8s 서비스 어카운트 등록` | 일치 | 점선 SA 등록 버튼 — 「설정 — SA 호출자」 프레임 둘째 점선 버튼(PRD-12 AC15) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `k8s 서비스 어카운트 등록` | 일치 | SA 등록 시트 제목 — 「SA 등록 — 입력」·「SA 등록 — 이미 등록됨」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.name` | 비표시 | `field(text:id:refused:)` 의 `id:` 인자 — `accessibilityIdentifier(id)` 로만 쓰인다 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `호출자 이름` | 일치 | SA 등록 시트 첫 입력 라벨 — 「SA 등록」 두 프레임(키 발급 시트와 같은 라벨) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `네임스페이스` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.namespace` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `서비스 어카운트` | 일치 | SA 등록 시트 입력 라벨 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.account` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | SA 등록 시트 안내 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `취소` | 일치 | SA 등록 시트 취소 버튼 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.cancel` | 비표시 | `sheetButton(_:primary:id:action:)` 의 `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `등록` | 일치 | SA 등록 시트 확정 버튼 — 「SA 등록」 두 프레임 |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `approval.keys.sa.submit` | 비표시 | `id:` 인자(위와 같음) |
-| `ios/PocketAide/Approvals/ApprovalServiceAccountSheet.swift` | `homelab-k3s-mcp` | 일치 | SA 등록 시트 세 입력 칸 `placeholder` — 「SA 등록 — 입력」 프레임(같은 문자열이 「설정 — SA 호출자」 프레임 이름 칩에 예시 데이터로도 있다) |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`AreaLabel`) — 「대기 목록」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인` | 일치 | 헤더 제목 `h1` |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(viewModel.pendingCount)` | 데이터 | 헤더 대기 수 배지의 숫자(목업 `3`·`0`·`1` 은 표 B `예시 데이터`) |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `대기` | 일치 | 헤더 대기 수 배지 아래 라벨 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 게이트 설정` | 일치 | 헤더 설정 버튼의 `accessibilityLabel` — 목업 헤더 설정 버튼 `title`(글리프는 `gearshape`) |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `처리 이력` | 일치 | 헤더 이력 버튼의 `accessibilityLabel` — 목업 헤더 이력 버튼 `title`(글리프는 `clock`) |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `승인 요청을 불러오지 못했습니다` | 일치 | 오류 배너 제목 — 「오류」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `다시 시도` | 일치 | 오류 배너 재시도 버튼 — 「오류」 프레임 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `\(item.requesterName) · \(createdText)` | 일치 | 요청 카드 메타 줄 「요청자 · 시각」(「Deploy Bot · 09:20」 등). 요청자 이름이 비면 시각만 그린다 |
-| `ios/PocketAide/Approvals/ApprovalsView.swift` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고 — 「자동 응답 모드 켜짐」 프레임 대기 카드 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `caller` | 비표시 | 메타 줄 접근성 식별자 접미사(`notifications.detail.caller`) |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `delivery` | 비표시 | 메타 줄 접근성 식별자 접미사 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `requester` | 비표시 | 메타 줄 접근성 식별자 접미사 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `time` | 비표시 | 메타 줄 접근성 식별자 접미사 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `닫기` | 일치 | 「상세」 프레임 시트 닫기 버튼 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `도달` | 일치 | 「상세」 메타 줄 라벨 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `받은 시각` | 일치 | 「상세」 메타 줄 라벨 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `보낸 호출자` | 일치 | 「상세」 메타 줄 라벨 |
-| `ios/PocketAide/Notifications/ExternalNotificationDetailSheet.swift` | `요청 주체` | 일치 | 「상세」 메타 줄 라벨 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel` 자리 — 목업 「목록」·「빈 상태」·「오류」 프레임 머리 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `\(viewModel.unreadCount)` | 데이터 | 헤더 미확인 수 배지 숫자 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | 「빈 상태」 프레임 안내 둘째 줄 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `받은 알림이 없어요.` | 일치 | 「빈 상태」 프레임 안내 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `새 알림` | 일치 | 헤더 미확인 수 배지 라벨·미확인 행 칩 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `알림 기록` | 일치 | 헤더 제목 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `알림 기록을 불러오지 못했습니다` | 일치 | 「오류」 프레임 오류 배너 제목 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `이전 기록 불러오는 중…` | 일치 | 「목록」 프레임 끝 이어 불러오기 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | 헤더 설명 줄 |
-| `ios/PocketAide/Notifications/ExternalNotificationsView.swift` | `최근 알림` | 일치 | 「목록」 프레임 섹션 머리 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `방금 진입` | 일치 | 푸시로 진입한 그룹의 헤더 상태 라벨(`isGroupHighlighted` 일 때만) |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR 없음 · \(group.headBranch) 직접 푸시` | 일치 | PR 없는 그룹의 헤더 상태 라벨 「PR 없음 · main 직접 푸시」(브랜치가 비면 그리지 않는다 — 「—」 커밋 그룹) |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` · ` | 일치 | 제목 줄 구분자 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `#\(number)` | 일치 | PR 번호 「#42」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `—` | 일치 | PR 없는 그룹의 브랜치가 비었을 때 대체 문자 — 「CI 상태 변형」 커밋 그룹 제목 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `통과 \(group.successCount)` | 일치 | 종합 상태 「통과 1」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `실패 \(group.failureCount)` | 일치 | 종합 상태 「실패 1」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `진행 \(group.inProgressCount)` | 일치 | 진행 중 카운트 — 「CI 상태 변형」 커밋 그룹 종합 상태(--tan) |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `CI \(group.items.count)건` | 일치 | 항목 수 「CI 3건」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `최근 \(relativeRecent)` | 일치 | 헤더 시각 「최근 9:41:02」(시각 서식 `HH:mm` ↔ `H:mm:ss` 은 범위 밖 — 기준 4 수치) |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `미확인 \(group.unacknowledgedCount)` | 일치 | 미확인 배지 「미확인 2」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` \(title)` | 데이터 | PR 제목 접미사(보간만) |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | ` @\(short)` | 일치 | PR 없는 그룹의 「@f77e024」 |
-| `ios/PocketAide/PRMonitor/PRMonitorGroupCard.swift` | `PR` | 기준 4 | 그룹 헤더 외부 링크 칩 라벨 — 목업 「↗ PR」 과 낱말은 같고 `↗` 글리프 ↔ SF Symbol 아이콘 차이 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(verdictLabel) · 확인됨` | 일치 | 확인된 row 라벨 「CI 통과 · 확인됨」 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `commit \(String(item.headSHA.prefix(7)))` | 일치 | 메타 줄 「commit a3f9c27」 — 접두 + 짧은 SHA(`head_sha` 가 빈 옛 행은 그리지 않는다) |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `workflow` | 일치 | 워크플로 이름이 빈 경우의 대체 문자 — 「CI 상태 변형」 neutral row 의 run 메타 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `·` | 일치 | 메타 줄 구분자 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `확인 \(relativeAck(ackedAt))` | 일치 | 확인 시각 「확인 · 오늘 09:15:04」(상대 서식 ↔ 절대 시각은 범위 밖 — 기준 4 수치) |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `커밋` | 기준 4 | 외부 링크 칩 라벨 — 목업 「↗ 커밋」, 글리프 ↔ 아이콘 차이 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `런` | 기준 4 | 외부 링크 칩 라벨 — 목업 「↗ 런」, 글리프 ↔ 아이콘 차이 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `확인` | 일치 | row 「확인」 버튼 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `checkmark` | 비표시 | 상태 배지 SF Symbol 이름 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `clock` | 비표시 | 상태 배지 SF Symbol 이름 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `xmark` | 비표시 | 상태 배지 SF Symbol 이름 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 통과` | 일치 | row 판정 라벨 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 실패` | 일치 | row 판정 라벨 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 취소` | 일치 | 취소된 run 라벨 — 「CI 상태 변형」 row |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 타임아웃` | 일치 | 타임아웃 run 라벨 — 「CI 상태 변형」 row |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI 시작` | 일치 | 진행 중 run 라벨 — 「CI 상태 변형」 커밋 그룹 row(--tan · 시계) |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `CI \(item.conclusion)` | 일치 | 알 수 없는 conclusion 의 대체 라벨 — 「CI 상태 변형」 「CI neutral」 row |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · #\(number) \(title)` | 구현 대기 | row 제목 줄 — 목업 row 는 그룹 카드 안에서 제목 없이 판정 라벨·시각·메타만 그린다(제목은 그룹 헤더). 검산의 문자열 일치는 그룹 헤더 노드에 걸리지만 자리가 다르다 |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · #\(number)` | 구현 대기 | 위와 같음(제목 없는 PR) |
-| `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift` | `\(item.repoFullName) · \(item.headBranch)` | 구현 대기 | 위와 같음(PR 없는 커밋) |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `PR 모니터` | 일치 | `ScreenHeader` 제목 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `arrow.triangle.pull` | 비표시 | 열린 PR 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `열린 PR` | 일치 | 열린 PR 버튼 접근성 라벨 — 목업 버튼 `title` |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `bell` | 비표시 | 알림 설정 버튼 SF Symbol 이름 — `headerIcon(_:)` 인자라 `systemName:` 제외 규칙에 걸리지 않는다 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `알림 설정` | 일치 | 알림 설정 버튼 접근성 라벨 — 목업 버튼 `title` |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `line.3.horizontal.decrease` | 비표시 | 제외 레포 버튼 SF Symbol 이름 — 위와 같음 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `제외 레포 관리` | 일치 | 제외 레포 버튼 접근성 라벨 — 목업 버튼 `title` |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `이력을 불러오지 못했습니다` | 일치 | 오류 상태 제목 — 「오류」 프레임 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `다시 시도` | 일치 | 오류 상태 재시도 버튼 — 「오류」 프레임 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 — 「빈 상태」 프레임 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `CI가 완료되면 여기에 표시됩니다.` | 일치 | 빈 상태 본문 — 「빈 상태」 프레임 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `미확인 · \(unread.count)개 그룹` | 일치 | 섹션 헤더 「미확인 · 3개 그룹」 |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `확인 완료` | 구현 대기 | 섹션 헤더 — 목업 「확인 완료 · 어제」 는 날짜 구분이 붙는다(표 B 같은 행) |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `\(viewModel.totalUnacknowledgedCount)` | 데이터 | 헤더 미확인 총 개수 배지 숫자(보간만) |
-| `ios/PocketAide/PRMonitor/PRMonitorView.swift` | `미확인` | 일치 | 헤더 배지 라벨 |
-| `ios/PocketAide/RootView.swift` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` — `screen-pr-monitor-history` 「알림 권한 꺼짐」 프레임 |
-| `ios/PocketAide/RootView.swift` | `다짐` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `PR 모니터` | 일치 | 탭 바 항목 |
-| `ios/PocketAide/RootView.swift` | `승인` | 일치 | 탭 바 항목(셋째 칸, #244) |
-| `ios/PocketAide/RootView.swift` | `세션` | 일치 | 탭 바 항목(넷째 칸, PRD-11 — tokens.md §7 하단 노출 개정 2026-10-23) |
-| `ios/PocketAide/RootView.swift` | `채팅` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 첫 항목(`screen-scratchpad` 「더 보기 — 미분류 배지」 프레임). 세션 탭 뒤 다섯째라 구현도 시스템 More 목록 안 |
-| `ios/PocketAide/RootView.swift` | `임시공간` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). #244 부터 다섯째 탭이라 구현도 시스템 More 목록 안 |
-| `ios/PocketAide/RootView.swift` | `개인` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
-| `ios/PocketAide/RootView.swift` | `회사` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
-| `ios/PocketAide/RootView.swift` | `루틴` | 일치 | 탭 라벨 — 목업 「더 보기」 목록 항목(`screen-scratchpad` 셋째 프레임). 구현도 시스템 More 목록 안 |
-| `ios/PocketAide/RootView.swift` | `알림 기록` | 일치 | 「더 보기」 목록의 알림 기록 탭 항목(`screen-external-notifications` 「「더 보기」 진입」 프레임) |
-| `ios/PocketAide/Routines/RoutineErrorRow.swift` | `다시 시도` | 일치 | 오류 행 재시도 버튼 — 「상태 변형」 프레임 오류 행(실패 문구는 `RoutineFailureCopy` 가 만든 문자열을 받아 그린다 — 표 B 외부 행) |
-| `ios/PocketAide/Routines/RoutineHistoryRange.swift` | `오늘 · \(today.progressPercent)%` | 일치 | 이력 시트 히트맵 아래 끝 라벨 — 목업 history strip 「오늘 · 60%」(오늘 체크 단계 비율, 오늘이 예정일일 때만) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 루틴` | 일치 | 루틴 추가 프레임 시트 제목(같은 낱말의 목업 헤더 버튼은 `RoutinesView.swift` 행) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `매월 \(monthDay)일` | 일치 | 루틴 추가 프레임 매월 날짜 스테퍼 「매월 1일」(프레임은 주기 「매월」 선택 상태) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계` | 일치 | 루틴 추가 프레임 섹션 라벨 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(index + 1)` | 데이터 | 루틴 추가 시트 단계 번호 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 이름` | 일치 | 루틴 추가 프레임 단계 필드 placeholder |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `저장` | 일치 | 루틴 추가 프레임 1차 액션 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `취소` | 일치 | 루틴 추가 프레임 2차 액션 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · 단계` | 일치 | 단계 추가 프레임 시트 제목 「아침 루틴 · 단계」 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `닫기` | 일치 | 단계 추가 프레임 2차 액션. 이력 시트의 같은 「닫기」 는 목업 history strip 이 화면 안 인라인이라 대응 자리가 없다(자리 차이는 기준 4) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.name) · \(days.count)일` | 일치 | 이력 시트 제목 — 목업 history strip 제목 「아침 루틴 · 30일」(구현은 strip 대신 시트 — 자리는 기준 4) |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `\(routine.scheduleSummary) · 예정 \(summary.scheduledDays)일 중 \(summary.completedDays)일 완료` | 일치 | 이력 시트 요약 줄 — 「상태 변형」 history strip 「매일 · 예정 30일 중 19일 완료」 |
-| `ios/PocketAide/Routines/RoutineSheets.swift` | `지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.` | 일치 | 이력 시트 분모 안내 줄 — 「상태 변형」 history strip 요약 줄 아래 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `루틴` | 일치 | `ScreenHeader` 제목 — 목업 헤더 영역 라벨 「루틴」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `새 루틴` | 일치 | 헤더 추가 버튼 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 · \(viewModel.today.count)` | 일치 | 오늘 루틴 섹션 제목 — 「상태 변형」 「오늘 · 1」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `오늘 쉬는 루틴` | 일치 | 오늘 예정 없는 루틴 섹션 제목 — 「상태 변형」 주간 카드 위 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · 단계 \(routine.steps.count)개` | 일치 | 쉬는 루틴 행 메타 — 「상태 변형」 주간 카드 메타 「매주 일요일 · 단계 3개」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `D-\(days)` | 일치 | 쉬는 루틴 행 오른쪽 배지 — 「상태 변형」 주간 카드 「D-4」(다음 예정일까지 남은 날, `RoutineSchedule.daysUntilNext`) |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 주간 카드의 스와이프된 행 패널 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.scheduleSummary) · \(routine.done) / \(routine.total) 완료` | 일치 | 카드 메타 「매일 · 3 / 5 완료」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `완료` | 일치 | 다 끝낸 루틴의 진행률 자리 — 「상태 변형」 완료 카드 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `대기` | 일치 | 시작 전(완료 단계 0) 루틴의 진행률 자리 — 목업 「저녁 정리」 카드 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `\(routine.progressPercent)%` | 일치 | 카드 진행률 「60%」 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `단계` | 일치 | 카드 하단 단계 추가 버튼 — 「상태 변형」 완료 카드 하단 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `이력` | 구현 대기 | 카드 하단 이력 시트 버튼 — 목업의 이력 진입은 history strip 의 「전체 이력」(표 B 같은 행) |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `checked` | 비표시 | 단계 행 `accessibilityValue` — 글자로 그려지지 않는다 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `unchecked` | 비표시 | 위와 같음 |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `checkmark.circle.fill` | 비표시 | 체크된 단계 SF Symbol 이름(삼항이라 제외 규칙 밖) |
-| `ios/PocketAide/Routines/RoutinesView.swift` | `circle` | 비표시 | 미체크 단계 SF Symbol 이름(위와 같음) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(viewModel.unclassifiedCount)` | 데이터 | 미분류 개수 배지 「12」 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류되지 않은 메모` | 일치 | 헤더 제목(`ScreenHeader` 26 bold) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `새 메모` | 일치 | 헤더 오른쪽 추가 캡슐 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(section.items.count) ITEMS` | 일치 | 일자 그룹 헤더 개수 「5 ITEMS」 — 목업처럼 제목(`ScratchpadSections.title` 데이터) · 구분선 · 개수 세 요소로 그린다(글꼴 SF Mono·대문자화는 기준 4) |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 — 「빈 상태」 프레임 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 목업 어제 그룹의 스와이프된 행 패널 |
-| `ios/PocketAide/Scratchpad/ScratchpadView.swift` | `\(item.source.displayName) · \(time)` | 비표시 | 항목 메타 줄의 접근성 라벨(`accessibilityLabel`) — 화면에는 목업처럼 입력 방식(「숏컷 · 음성」)을 왼쪽, 시각(「14:08」)을 오른쪽 끝에 따로 그린다(`Text(item.source.displayName)` · `Text(time)` — 보간 아닌 데이터) |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `새 세션` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `이름` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `예: 테스트 실패 원인 찾기` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `모델` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `다시 시도` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `largecircle.fill.circle` | 비표시 | SF Symbol 이름 — 선택된 타입 라디오 아이콘(삼항이라 `systemName:` 바로 뒤가 아님) |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `circle` | 비표시 | SF Symbol 이름 — 고르지 않은 타입 라디오 아이콘 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `platform-default` | 목업 대기 | 모델 자유 입력 칸 자리표시(카탈로그 `defaultModel` 이 비었을 때) — 목업은 모델 선택 메뉴 상태만 그린다 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션 띄우는 중…` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `만들기` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `취소` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `타입 목록을 불러오는 중…` | 목업 대기 | 타입 카탈로그 로딩 상태 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션 플랫폼이 제공하는 타입이 없어요.` | 목업 대기 | 카탈로그가 빈 배열일 때 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `선택한` | 목업 대기 | 생성 실패 문구의 타입 이름 대체어 — 아래 실패 문구 행과 같은 상태 |
-| `ios/PocketAide/Sessions/SessionCreateSheet.swift` | `세션을 띄우지 못했어요. 세션 플랫폼에 「\(name)」 타입 설정(이미지·자격증명)이 있는지 확인해 주세요.` | 목업 대기 | 생성 실패(플랫폼 500 등) 안내 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `sessions.detail.output.bottom` | 비표시 | 출력 패널 스크롤 앵커 id |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `세션을 삭제할까요?` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `취소` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `삭제` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아카이브하는 중… 환경을 반납하고 작업 내용을 보관해요` | 목업 대기 | 아카이브 진행 중 상태 줄 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `앞부분 출력은 생략했어요.` | 목업 대기 | 출력이 표시 한도(12만 자)를 넘었을 때 머리 안내 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아직 출력이 없어요. 아래에 명령을 입력해 보세요.` | 목업 대기 | terminal 타입 세션의 빈 출력 — 목업은 에이전트 빈 출력만 그린다 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `1 MiB를 넘는 프롬프트는 보낼 수 없어요.` | 목업 대기 | 프롬프트 1 MiB 초과 사전 안내 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `명령 입력` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `에이전트에게 맡길 일` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `보내기` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `지금 아카이브` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `세션 삭제` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `세션 동작` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `아카이브된 세션이에요` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `복원하는 중…` | 목업 대기 | 복원 진행 중 버튼 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionDetailView.swift` | `복원` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `sessions.detail.turn.\(turn.seq)` | 비표시 | turn 행 접근성 id |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `#\(turn.seq)` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `입력` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `빈 프롬프트` | 목업 대기 | 입력이 빈 turn 의 접기 줄 자리표시 — 목업은 입력이 있는 turn 만 그린다 |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `앞부분이 생략돼 입력을 볼 수 없어요` | 목업 대기 | 입력 앞부분이 표시 한도에서 잘린 turn 의 자리표시 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `\(key).input` | 비표시 | 입력 구역 접근성 id |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `출력` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `출력이 없어요` | 목업 대기 | 끝난 turn 인데 출력이 빈 경우의 자리표시 — 목업 없음 |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `응답을 기다리는 중…` | 목업 대기 | 진행 중 turn 의 출력이 아직 빈 경우의 자리표시 — 목업의 진행 중 turn 은 출력이 이미 흐르는 모습만 그린다 |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `\(key).output` | 비표시 | 출력 구역 접근성 id |
-| `ios/PocketAide/Sessions/SessionTranscriptView.swift` | `\(title) \(isExpanded ? "접기" : "펼치기")` | 데이터 | 접기·펼치기 버튼의 접근성 라벨(구역 제목 + 상태) — 보간만 있다 |
-| `ios/PocketAide/Sessions/SessionsView.swift` | `AGENT · SESSIONS` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionsView.swift` | `에이전트 세션` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionsView.swift` | `새 세션` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionsView.swift` | `아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionsView.swift` | `생성 \(AgentSessionFormatting.relative(session.createdAt))` | 일치 | `screen-sessions` |
-| `ios/PocketAide/Sessions/SessionsView.swift` | `다시 시도` | 일치 | `screen-sessions` |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `PocketAide` | 시스템 UI | `configurationDisplayName` — iOS 위젯 갤러리가 그린다 |
-| `ios/PocketAideWidget/PocketAideWidget.swift` | `하루를 한눈에 — 다짐과 일상 정보를 모아 봅니다.` | 시스템 UI | `description` — iOS 위젯 갤러리가 그린다 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `다짐을 앱에 등록해보세요.` | 일치 | 다짐 0건 상태 — 「다짐 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「다짐 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/AffirmationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「다짐 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `다음 일정` | 일치 | 일정 슬라이스 라벨(`AreaLabel` — #102 에서 `PocketAideWidget.swift` 의 자리표시자 라벨이 이 파일로 옮겨 왔다) |
-| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `앱에서 캘린더 접근을 허용해 주세요.` | 일치 | 캘린더 권한 없음 상태 — 「일정 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `\(UpcomingEvents.startLabel(event, now: now, calendar: calendar)) \(event.title)` | 데이터 | 둘째·셋째 일정 줄(시작 시각 + 제목) — 목업은 첫 일정만 그리고 나머지를 「+ 2 더」 로 접는다(줄 구성 차이는 기준 4 구조 대조의 몫) |
-| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `+ \(summary.moreCount) 더` | 일치 | 남은 일정 수 「+ 2 더」 |
-| `ios/PocketAideWidget/Sections/CalendarSection.swift` | `다가오는 일정이 없어요.` | 일치 | 일정 0건 상태 — 「일정 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`AreaLabel` — #106 에서 `PocketAideWidget.swift` 의 자리표시자 라벨 「알림」 을 대체했다) |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `+ \(moreCount) 더` | 일치 | 남은 알림 수 — 문구는 일정 슬라이스 「+ 2 더」 와 같은 서식(목업 알림 슬라이스는 예시가 1건이라 이 줄을 그리지 않는다 — 줄 유무는 기준 4 구조 대조의 몫) |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `확인할 알림이 없어요.` | 일치 | 알림 0건 상태 — 「알림 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「알림 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/NotificationSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「알림 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | `임시 공간` | 일치 | 임시 공간 슬라이스 라벨(`AreaLabel`). 「미분류 N개」·「정리할 항목 없음」 은 `PocketAideAPI/Scratchpad.swift` 의 `WidgetScratchpad.countText` 리터럴이라 이 파일 행이 없다(표 B 에서 `외부`) |
-| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 상태 — 「임시 공간 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/ScratchpadCountSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「임시 공간 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/WeatherSection.swift` | `날씨` | 일치 | 날씨 슬라이스 라벨의 지명 없음 대체값(#111 에서 `PocketAideWidget.swift` 의 자리표시자 라벨 「날씨」 를 대체했다) — 「날씨 슬라이스 상태」 변형. 지명이 있으면 지명(목업 「서울」 — 예시 데이터) |
-| `ios/PocketAideWidget/Sections/WeatherSection.swift` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 상태 — 「날씨 슬라이스 상태」 변형 |
-| `ios/PocketAideWidget/Sections/WeatherSection.swift` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 상태 — 「날씨 슬라이스 상태」 변형 |
-| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `전체 · \(total)` | 일치 | 기한 필터 첫 칩 「전체 · 11」 — 개수는 영역 전체 항목 수(목업 남음 7 + 완료 4) |
-| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `오늘` | 일치 | 기한 필터 칩 「오늘」 — 마감이 오늘이거나 지난 항목 |
-| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `이번 주` | 일치 | 기한 필터 칩 「이번 주」 — 마감이 이번 주 마지막 날까지인 항목 |
-| `ios/PocketAide/Todos/TodoDueFilterChips.swift` | `날짜 없음` | 일치 | 기한 필터 칩 「날짜 없음」 — 마감이 없는 항목 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `내 일` | 일치 | 개인 탭 헤더 제목 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `회사` | 일치 | 회사 탭 헤더 제목 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `개인 영역만 검색…` | 일치 | 개인 탭 검색 필드 placeholder |
-| `ios/PocketAide/Todos/TodoListView.swift` | `회사 영역만 검색…` | 일치 | 회사 탭 검색 필드 placeholder |
-| `ios/PocketAide/Todos/TodoListView.swift` | `\(open)개 남음 · \(done)개 완료` | 일치 | 개인 요약 줄 「7개 남음 · 4개 완료」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE · DEADLINE \(deadline)` | 일치 | 회사 요약 줄 「12 OPEN · 8 DONE · DEADLINE 3」 — 마감일 있는 미완료(`TodoDeadline.openCount`)가 1개 이상일 때 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `\(open) OPEN · \(done) DONE` | 일치 | 회사 요약 줄 — 마감일 있는 미완료가 0개일 때(빈 상태·불러오는 중·오류 프레임 「0 OPEN · 0 DONE」) |
-| `ios/PocketAide/Todos/TodoListView.swift` | `todos.\(area.rawValue)` | 비표시 | 접근성 식별자 접두어(`idPrefix`) |
-| `ios/PocketAide/Todos/TodoListView.swift` | `\(idPrefix).summary` | 비표시 | 요약 줄 접근성 식별자 — `ScreenHeader` 의 `subtitleIdentifier:` 인자로 넘겨 `accessibilityIdentifier(` 제외 규칙에 걸리지 않는다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `OPEN` | 구현 대기 | 회사 미완료 섹션 제목 — 목업은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG)으로 나눈다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `할 일` | 구현 대기 | 개인 미완료 섹션 제목 — 목업은 날짜 기준 섹션(오늘·이번 주·날짜 없음)으로 나눈다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `DONE` | 기준 4 | 회사 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「DONE · 8」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `완료` | 기준 4 | 개인 완료 섹션 제목 — `\(title) · \(items.count)` 로 합쳐 「완료 · 4」 로 그려져 목업과 같지만 노드 단위로는 나뉘지 않는다 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 — 개인 목업 「빈 상태」 프레임 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `삭제` | 일치 | 행 스와이프 삭제 액션 — 개인 목업 「날짜 없음」 행의 스와이프 패널 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `\(title) · \(items.count)` | 일치 | 섹션 헤더 「완료 · 4」 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `펼치기` | 일치 | 개인 완료 섹션을 접은 뒤의 버튼 문구 — 「목록 — 완료 접힘」 프레임 완료 섹션 머리 |
-| `ios/PocketAide/Todos/TodoListView.swift` | `접기` | 일치 | 개인 완료 섹션 머리 오른쪽 「접기」 버튼 |
-| `ios/PocketAide/Todos/TodoRowMeta.swift` | `P\(workRank(priority))` | 일치 | 회사 행 메타의 우선순위 표기 「P1」 — 접두 + 순위(순위는 데이터) |
-| `ios/PocketAide/Todos/TodoRowMeta.swift` | `메모: \(item.memo)` | 일치 | 행 메타 「메모: 임시공간에서 이동됨」 |
-| `ios/PocketAide/Todos/TodoRowMeta.swift` | ` · ` | 일치 | 행 메타 접근성 라벨 「기한 · 우선순위 · 메모」 구분자 — 화면에는 항목 간격(개인)·「·」 글자(회사)로 그린다 |
-| `ios/PocketAide/Todos/TodoRowMeta.swift` | `·` | 일치 | 회사 행 메타 항목 사이 구분점 「·」 — 목업 `<span class="text-stone-300">·</span>`(` · ` 는 접근성 라벨 한 줄의 구분자) |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `자주 읽어줘야 할 것` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `새 다짐` | 비표시 | 추가 버튼 아이콘의 `contentDescription` — TalkBack 낭독 라벨이라 글자로 그려지지 않는다(목업 추가 버튼에는 `aria-label` 이 없다) |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `오늘 회전` | 구현 대기 | 히어로 라벨(`.uppercase()`) — 목업은 「오늘 회전 · 1/14」, 회전 위치(n/전체)가 없다(표 B 같은 행) |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `우선순위 ` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `다른 다짐 보기` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `\"` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `첫 다짐을 추가해 보세요` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `affirmations.pulse` | 비표시 | `rememberInfiniteTransition`·`animateFloat` 의 `label` — 애니메이션 도구용 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `affirmations.pulse.opacity` | 비표시 | `rememberInfiniteTransition`·`animateFloat` 의 `label` — 애니메이션 도구용 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `전체 ${count}개` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `자주 노출` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `보통` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `가끔` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `새 다짐` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `우선순위 설정` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `저장` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `삭제` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `\"` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `다짐 문장을 입력하세요` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `노출 빈도` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 일치 | `screen-affirmations-priority-edit` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | `자동 응답` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | ` ` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | `끄기` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | `대기 중인 승인 요청이 없습니다` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | `자동 응답 모드 ` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalAutoResponseViews.kt` | ` — ` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `승인` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `거절` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `최신 상태를 불러오지 못했습니다` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `에이전트 설명` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `에이전트가 작성 · 검증되지 않음` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `남은 시간` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `보낸 키` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `key` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `요청자` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `—` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `requester` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `세션` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `session` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `요청 ID` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `externalId` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `요청 시각` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `createdAt` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `상태` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `status` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `처리 방식` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `mode` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `처리 시각` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalDetailScreen.kt` | `processedAt` | 비표시 | `Triple(라벨, 값, 태그)` 의 세 번째 값 — `testTag("approval.detail.$id")` 접미사, 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalHistoryScreen.kt` | `처리 이력` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalHistoryScreen.kt` | `이전 이력 불러오는 중…` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `호출자 키 발급` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `호출자 이름` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `infra-ci` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `approval.keys.issue.notice` | 비표시 | `FailureNotice`·`SheetTitle` 의 태그 인자 — 테스트 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `취소` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `발급` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `approval.keys.issued.title` | 비표시 | `FailureNotice`·`SheetTitle` 의 태그 인자 — 테스트 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `키 원문` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `복사됨` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `복사` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `완료` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `k8s 서비스 어카운트 등록` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `homelab-k3s-mcp` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `네임스페이스` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `서비스 어카운트` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `approval.keys.sa.notice` | 비표시 | `FailureNotice`·`SheetTitle` 의 태그 인자 — 테스트 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `등록` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | `pocketaide-approval-key` | 비표시 | `ClipData.newPlainText` 의 클립 라벨 — 사용자에게 보이지 않는 시스템 메타 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `승인 게이트 설정` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `자동 응답 모드` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `호출자 키` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `호출자 키를 불러오지 못했습니다` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `+ 호출자 키 발급` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `+ k8s 서비스 어카운트 등록` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `폐기` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` | `발급한 호출자 키가 없습니다` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalParts.kt` | `다시 시도` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalParts.kt` | `뒤로` | 비표시 | 뒤로 막대 아이콘의 `contentDescription` — TalkBack 낭독 라벨(목업에 `aria-label` 없음) |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalParts.kt` | `취소` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `승인 요청을 불러오지 못했습니다` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `APPROVAL · GATE` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `승인` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `대기` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `처리 이력` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `approvals.history.button` | 비표시 | `HeaderIconButton` 의 태그 인자 — 테스트 식별자(버튼 라벨 「처리 이력」·「승인 게이트 설정」 은 표 A 일치) |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `승인 게이트 설정` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `approvals.settings.button` | 비표시 | `HeaderIconButton` 의 태그 인자 — 테스트 식별자(버튼 라벨 「처리 이력」·「승인 게이트 설정」 은 표 A 일치) |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `$count` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `${item.requesterName} · $created` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `닫기` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `보낸 호출자` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `caller` | 비표시 | `MetaRow`·`CallerChip` 의 태그 인자 — 테스트 식별자 접미사 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `요청 주체` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `requester` | 비표시 | `MetaRow`·`CallerChip` 의 태그 인자 — 테스트 식별자 접미사 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `받은 시각` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `time` | 비표시 | `MetaRow`·`CallerChip` 의 태그 인자 — 테스트 식별자 접미사 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `도달` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `delivery` | 비표시 | `MetaRow`·`CallerChip` 의 태그 인자 — 테스트 식별자 접미사 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `알림 기록을 불러오지 못했습니다` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `최근 알림` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `이전 기록 불러오는 중…` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `NOTIFY · LOG` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `알림 기록` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `새 알림` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `받은 알림이 없어요.` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationsScreen.kt` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `방금 진입` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `PR 없음 · ${group.headBranch} 직접 푸시` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `PR` | 기준 4 | 링크 칩 라벨 — 낱말 「PR」 은 목업 「↗ PR」 과 같고 `↗` 글리프 ↔ 벡터 아이콘 차이는 구조 대조의 몫 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `prmonitor.group.${group.id}.link.pr` | 비표시 | `PrLinkChip` 의 태그 인자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | ` · ` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `#$number` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `—` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `통과 ${group.successCount}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `실패 ${group.failureCount}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `진행 ${group.inProgressCount}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `CI ${group.items.size}건` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `최근 ${PrMonitorStyle.clock(group.latestCreatedAt)}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `모두 확인` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorGroupCard.kt` | `미확인 ${group.unacknowledgedCount}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `$verdict · 확인됨` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `commit ${PrMonitorText.shortSha(item.headSha)}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `·` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `workflow` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `확인 ${relativeAck(ackedAt)}` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `커밋` | 기준 4 | 링크 칩 라벨 — 낱말 「커밋」 은 목업 「↗ 커밋」 과 같고 `↗` 글리프 ↔ 벡터 아이콘 차이는 구조 대조의 몫 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `prmonitor.row.${item.id}.link.commit` | 비표시 | `PrLinkChip` 의 태그 인자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `런` | 기준 4 | 링크 칩 라벨 — 낱말 「런」 은 목업 「↗ 런」 과 같고 `↗` 글리프 ↔ 벡터 아이콘 차이는 구조 대조의 몫 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `prmonitor.row.${item.id}.link.run` | 비표시 | `PrLinkChip` 의 태그 인자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorHistoryRow.kt` | `확인` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `PR 모니터` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `열린 PR` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `prmonitor.openprs.button` | 비표시 | `HeaderIcon` 의 태그 인자(버튼 라벨 「열린 PR」·「알림 설정」·「제외 레포 관리」 는 별도 리터럴) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `알림 설정` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `prmonitor.settings.button` | 비표시 | `HeaderIcon` 의 태그 인자(버튼 라벨 「열린 PR」·「알림 설정」·「제외 레포 관리」 는 별도 리터럴) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `제외 레포 관리` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `prmonitor.excluded.button` | 비표시 | `HeaderIcon` 의 태그 인자(버튼 라벨 「열린 PR」·「알림 설정」·「제외 레포 관리」 는 별도 리터럴) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `이력을 불러오지 못했습니다` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `다시 시도` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `아직 도착한 알림이 없습니다` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `CI가 완료되면 여기에 표시됩니다.` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `미확인 · ${unread.size}개 그룹` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `확인 완료` | 구현 대기 | 확인 섹션 머리 — 목업은 「확인 완료 · 어제」(날짜 구분)이고 구현은 「확인 완료」 만(표 B 같은 행) |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `group.${it.id}` | 비표시 | `LazyColumn` 항목 `key` — 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `$count` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorScreen.kt` | `미확인` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorStyle.kt` | `prmonitor.arrival` | 비표시 | `rememberInfiniteTransition`·`animateFloat` 의 `label` — 애니메이션 도구용 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitorStyle.kt` | `prmonitor.arrival.progress` | 비표시 | `rememberInfiniteTransition`·`animateFloat` 의 `label` — 애니메이션 도구용 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineErrorRow.kt` | `다시 시도` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineHistoryRange.kt` | `오늘 · ${today.progressPercent}%` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `새 루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `루틴 이름 — 예: 아침 루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `반복 주기` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `단계` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `${index + 1}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `단계 이름` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `단계 추가` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `저장` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `매월 ${monthDay}일` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `${routine.name} · 단계` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `삭제` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `새 단계` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `닫기` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `${routine.scheduleSummary} · 예정 ${summary.scheduledDays}일 중 ${summary.completedDays}일 완료` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `${routine.name} · ${days.size}일` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutineSheets.kt` | `$title, ${day.statusLabel}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `완료` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `대기` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `${routine.progressPercent}%` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `${routine.scheduleSummary} · ${routine.done} / ${routine.total} 완료` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `${routine.scheduleSummary} · 단계 ${routine.steps.size}개` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `오늘 · ${state.today.size}` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `today.${it.id}` | 비표시 | `LazyColumn` 항목 `key` — 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `오늘 쉬는 루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `resting.${it.id}` | 비표시 | `LazyColumn` 항목 `key` — 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `새 루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `단계` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `이력` | 구현 대기 | 카드 하단 이력 버튼 라벨 — 목업은 history strip 의 「전체 이력」(표 B 같은 행) |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `checked` | 비표시 | 체크 단계의 `stateDescription` — TalkBack 상태 낭독용 값, 글자로 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `unchecked` | 비표시 | 체크 단계의 `stateDescription` — TalkBack 상태 낭독용 값, 글자로 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/routines/RoutinesScreen.kt` | `D-$daysUntilNext` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `tnum` | 비표시 | `fontFeatureSettings` 값(OpenType 고정폭 숫자) — 글자가 아니다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `분류되지 않은 메모` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `$unclassified` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `새 메모` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `${section.items.size} ITEMS` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `${item.source.displayName} · $time` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionComponents.kt` | `생성 ${AgentSessionFormatting.relative(session.createdAt)}` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionComponents.kt` | `다시 시도` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `새 세션` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `이름` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `예: 테스트 실패 원인 찾기` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `모델` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `취소` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `타입` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `타입 목록을 불러오는 중…` | 목업 대기 | 타입 영역의 로딩·빈 목록 문구 — 목업의 「새 세션」 프레임들은 목록·오류·띄우는 중 상태만 그린다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `세션 플랫폼이 제공하는 타입이 없어요.` | 목업 대기 | 타입 영역의 로딩·빈 목록 문구 — 목업의 「새 세션」 프레임들은 목록·오류·띄우는 중 상태만 그린다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `다시 시도` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `platform-default` | 목업 대기 | 모델 입력칸 placeholder(카탈로그 기본 모델이 비었을 때의 대체) — 목업 시트의 모델 입력칸은 이 대체 문구를 그리지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `세션 띄우는 중…` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `만들기` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `선택한` | 목업 대기 | 띄우기 실패 안내의 타입 이름 대체(`workload?.displayName ?: "선택한"`) — 목업이 그리지 않는 상태의 보조 문구 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionCreateSheet.kt` | `세션을 띄우지 못했어요. 세션 플랫폼에 「$name」 타입 설정(이미지·자격증명)이 있는지 확인해 주세요.` | 목업 대기 | 띄우기 실패 안내 — 목업의 「새 세션 — 띄우는 중」 프레임 이후 실패 상태 프레임이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `세션을 삭제할까요?` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `삭제` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `취소` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `뒤로` | 비표시 | 뒤로 버튼의 `contentDescription` — TalkBack 낭독 라벨(목업에 `aria-label` 없음) |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `세션 동작` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `지금 아카이브` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `세션 삭제` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `아카이브하는 중… 환경을 반납하고 작업 내용을 보관해요` | 목업 대기 | 아카이브 진행 중 안내 — 목업은 「상세 — 아카이브됨」·「아카이브 꺼짐」 만 그리고 진행 중 상태가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `앞부분 출력은 생략했어요.` | 목업 대기 | 긴 출력 앞부분 생략 안내 — 목업에 해당 상태 프레임이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `아직 출력이 없어요. 아래에 명령을 입력해 보세요.` | 구현 대기 | 출력 빈 상태 — 목업은 「아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.」(문구가 다르다, 표 B 같은 행) |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `아카이브된 세션이에요` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `복원하는 중…` | 목업 대기 | 복원 진행 중 버튼 문구 — 목업은 「복원」 만 그리고 진행 중 상태가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `복원` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `1 MiB를 넘는 프롬프트는 보낼 수 없어요.` | 목업 대기 | 프롬프트 길이 초과 안내 — 목업에 해당 상태 프레임이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `명령 입력` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `에이전트에게 맡길 일` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionDetailScreen.kt` | `보내기` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `#${turn.seq}` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `입력` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `빈 프롬프트` | 목업 대기 | 대화 턴의 입력·출력 자리 대체 문구 — 목업은 채워진 턴만 그린다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `앞부분이 생략돼 입력을 볼 수 없어요` | 목업 대기 | 대화 턴의 입력·출력 자리 대체 문구 — 목업은 채워진 턴만 그린다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `$key.input` | 비표시 | 턴 펼침 상태 키(`isExpanded("…")`) — 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `출력` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `출력이 없어요` | 목업 대기 | 대화 턴의 입력·출력 자리 대체 문구 — 목업은 채워진 턴만 그린다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `응답을 기다리는 중…` | 목업 대기 | 대화 턴의 입력·출력 자리 대체 문구 — 목업은 채워진 턴만 그린다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `$key.output` | 비표시 | 턴 펼침 상태 키(`isExpanded("…")`) — 화면에 그려지지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscriptView.kt` | `$title ${if (isExpanded) "접기" else "펼치기"}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionsScreen.kt` | `AGENT · SESSIONS` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionsScreen.kt` | `에이전트 세션` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionsScreen.kt` | `새 세션` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionsScreen.kt` | `아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.` | 일치 | `screen-sessions` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `$idPrefix.summary` | 비표시 | `subtitleTag` — 테스트 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `추가` | 비표시 | 추가 버튼 아이콘의 `contentDescription` — TalkBack 낭독 라벨(목업에 `aria-label` 없음) |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | `screen-todo-personal` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `OPEN` | 구현 대기 | 회사 목록 열린 섹션 제목 — 목업 회사 목록은 마감 기준 섹션(DUE TODAY·THIS WEEK·BACKLOG · 5)이다(표 B 같은 행) |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `할 일` | 목업 대기 | 개인 목록 열린 섹션 제목 — 목업 개인 목록은 날짜 섹션(오늘·이번 주·날짜 없음)이고 이 제목을 그리지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `DONE` | 기준 4 | 회사 완료 섹션 제목 낱말 — 목업은 「DONE · 8」(제목과 개수를 한 헤더로 잇는 서식 차이는 구조 대조의 몫) |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `완료` | 기준 4 | 개인 완료 섹션 제목 낱말 — 목업은 「완료 · 4」(제목과 개수를 한 헤더로 잇는 서식 차이는 구조 대조의 몫) |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `$title · $count` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `펼치기` | 일치 | `screen-todo-personal` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `접기` | 일치 | `screen-todo-personal` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | ` · ` | 일치 | `screen-todo-work` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `·` | 일치 | `screen-todo-work` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `다짐` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `PR 모니터` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `승인` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `세션` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `더 보기` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `채팅` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `임시공간` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `개인` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `회사` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `알림 기록` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `AI 채팅` | 목업 대기 | AI 채팅 탭 자리표시자(`PlaceholderScreen`) 제목 — 이 파일 목업 범위(`_impl-map.md`)에 대응 화면이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `$approvalBadge` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `$scratchpadBadge` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | `${UpcomingEvents.startLabel(event, entry.date)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | `${UpcomingEvents.startLabel(event, now)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 
 ## 표 B — 역방향 (목업 텍스트 → 구현) · 766행
 
@@ -408,284 +348,345 @@ last_updated: 2026-10-28
 | `screen-affirmations` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations` | `07 · 자주 읽는 문장` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-affirmations` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-affirmations` | `다짐` | 일치 | 헤더 영역 라벨(`AreaLabel` 기본 문구) · 탭 바 항목 |
-| `screen-affirmations` | `자주 읽어줘야 할 것` | 일치 | `ScreenHeader` 제목 |
-| `screen-affirmations` | `"` | 일치 | 히어로 카드 장식 인용부호 — 히어로 카드 좌상단 serif 120 글리프(`AffirmationsView.swift`) |
-| `screen-affirmations` | `오늘 회전 · 1/14` | 구현 대기 | 구현은 「오늘 회전」 — 회전 위치 `n/전체` 가 없다 |
+| `screen-affirmations` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-affirmations` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `자주 읽어줘야 할 것` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `"` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `오늘 회전 · 1/14` | 구현 대기 | 히어로 라벨 — 구현은 「오늘 회전」, 회전 위치 `n/전체` 가 없다(표 A 같은 행) |
 | `screen-affirmations` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations` | `우선순위` | 일치 | 「우선순위 \(…)」 의 정적 조각 |
-| `screen-affirmations` | `높음` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | `AffirmationPriority.displayName` |
-| `screen-affirmations` | `· 13회 노출` | 구현 대기 | 노출 횟수 — 구현 히어로 메타에 없다 |
-| `screen-affirmations` | `다른 다짐 보기` | 일치 | 히어로 회전 버튼 라벨(`AffirmationsView.swift`) |
-| `screen-affirmations` | `전체 14개` | 일치 | 목록 헤더 |
-| `screen-affirmations` | `우선순위 순` | 일치 | 목록 머리 정렬 칩(`sortLabel`) |
-| `screen-affirmations` | `최신순` | 일치 | 목록 머리 정렬 칩(`sortLabel`) |
+| `screen-affirmations` | `우선순위` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `높음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 대응 파일이 아닌 Kotlin 파일 `Affirmations.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-affirmations` | `· 13회 노출` | 구현 대기 | 노출 횟수 — 구현 히어로 메타(「우선순위 <값>」)에 없다 |
+| `screen-affirmations` | `다른 다짐 보기` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `전체 14개` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `우선순위 순` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 대응 파일이 아닌 Kotlin 파일 `Affirmations.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-affirmations` | `최신순` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 대응 파일이 아닌 Kotlin 파일 `Affirmations.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-affirmations` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `속도보다 방향. 잘못 가는 길은 빨리 갈수록 손해다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
 | `screen-affirmations` | `"compounding은 매일 1%면 1년에 37배" — 어디서 들었는지 까먹기 전에` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations` | `임시공간에서 이동 · 어제 22:51` | 미구현 영역 | 임시공간 → 다짐 이동 출처 줄 — 임시공간 탭이 `미구현`(`PlaceholderTab.swift`) |
+| `screen-affirmations` | `임시공간에서 이동 · 어제 22:51` | 구현 대기 | 임시공간 → 다짐 이동 출처 줄 — 구현 목록 행에 이 줄이 없다(`AffirmationsScreen.kt` 에 해당 리터럴 없음) |
 | `screen-affirmations` | `불필요한 회의는 거절해도 괜찮다. 팀의 시간은 내 시간이기도 하다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
+| `screen-affirmations` | `삭제` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `PriorityEditSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-affirmations` | `엄마한테 일주일에 한 번은 전화하기.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations` | `자주 노출` | 일치 | 우선순위 점 범례(`AffirmationsView.swift` `priorityLegend`) |
-| `screen-affirmations` | `보통` | 일치 | 범례 항목 — 위와 같음 |
-| `screen-affirmations` | `가끔` | 일치 | 범례 항목 — 위와 같음 |
-| `screen-affirmations` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-affirmations` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-affirmations` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
+| `screen-affirmations` | `자주 노출` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `보통` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `가끔` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | 빈 상태 카드 제목 |
-| `screen-affirmations` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | 빈 상태 카드 본문 |
+| `screen-affirmations` | `첫 다짐을 추가해 보세요` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `우상단 + 버튼으로 새 다짐을 입력하면 여기에 회전 노출됩니다.` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-affirmations` | `PRD-5 · AC2 우선순위(점 3개), AC3 탭 진입 시 회전 노출(상단 히어로)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-affirmations-priority-edit` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `11 · 다짐 우선순위 편집` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-affirmations-priority-edit` | `생성 — 헤더 +` | 목업 전용 | 프레임 위 캡션(생성 모드 프레임 이름) |
-| `screen-affirmations-priority-edit` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-affirmations-priority-edit` | `다짐` | 일치 | 시트 아래 다짐 화면 헤더·탭 바 |
-| `screen-affirmations-priority-edit` | `자주 읽어줘야 할 것` | 외부 `ios/PocketAide/Affirmations/AffirmationsView.swift` | 시트 아래 다짐 화면 헤더 — `_impl-map.md` 가 그 영역을 `AffirmationsView.swift` 행으로 넘긴다 |
-| `screen-affirmations-priority-edit` | `결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
+| `screen-affirmations-priority-edit` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-affirmations-priority-edit` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `자주 읽어줘야 할 것` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | 대응 파일이 아닌 Kotlin 파일 `AffirmationsScreen.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-affirmations-priority-edit` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-affirmations-priority-edit` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-affirmations-priority-edit` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-affirmations-priority-edit` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
-| `screen-affirmations-priority-edit` | `새 다짐` | 일치 | 시트 제목(생성 모드) |
-| `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | 생성 모드 입력 필드 placeholder |
+| `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `새 다짐` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `다짐 문장을 입력하세요` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `결과보다 과정. 오늘 한 걸음이 1년 뒤 풍경을 만든다.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
+| `screen-affirmations-priority-edit` | `노출 빈도` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `높음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 대응 파일이 아닌 Kotlin 파일 `Affirmations.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-affirmations-priority-edit` | `보통` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 대응 파일이 아닌 Kotlin 파일 `Affirmations.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-affirmations-priority-edit` | `가끔` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/Affirmations.kt` | 대응 파일이 아닌 Kotlin 파일 `Affirmations.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-affirmations-priority-edit` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `저장` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `취소` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeySheets.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-affirmations-priority-edit` | `생성 — 문장이 비어 있을 때` | 목업 전용 | 프레임 위 캡션(생성 모드 빈 문장 상태 프레임 이름) |
 | `screen-affirmations-priority-edit` | `편집 — 카드 길게 누르기` | 목업 전용 | 프레임 위 캡션(편집 모드 프레임 이름) |
-| `screen-affirmations-priority-edit` | `우선순위 설정` | 일치 | 시트 제목(편집 모드) |
-| `screen-affirmations-priority-edit` | `"` | 일치 | 장식 인용부호 — 입력 카드 좌상단 글리프 |
-| `screen-affirmations-priority-edit` | `삭제` | 일치 | 편집 모드 destructive 버튼 |
-| `screen-affirmations-priority-edit` | `노출 빈도` | 일치 | 섹션 라벨 |
-| `screen-affirmations-priority-edit` | `높음` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | `AffirmationPriority.displayName` — 시트 3-tier 선택지 |
-| `screen-affirmations-priority-edit` | `보통` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | 위와 같음 |
-| `screen-affirmations-priority-edit` | `가끔` | 외부 `ios/Shared/Sources/PocketAideAPI/Affirmations.swift` | 위와 같음 |
-| `screen-affirmations-priority-edit` | `위젯과 다짐 회전 노출에 얼마나 자주 등장할지 정합니다. 나중에 카드를 길게 눌러 변경할 수 있습니다.` | 일치 | 노출 빈도 도움말 |
-| `screen-affirmations-priority-edit` | `저장` | 일치 | 1차 액션 |
-| `screen-affirmations-priority-edit` | `취소` | 일치 | 2차 액션 |
+| `screen-affirmations-priority-edit` | `우선순위 설정` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `"` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `삭제` | 일치 | `PriorityEditSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations-priority-edit` | `PRD-5 · AC1·AC2 — 생성: 헤더 + 로 연 시트 한 장에서 문장 입력과 노출 빈도를 함께 저장(취소하면 저장 안 함). 편집: 카드를 길게 눌러 같은 시트의 편집 모드. 3-tier 단일 선택으로 노출 빈도 결정. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + §4 FilterPills 단일 선택형, patterns §9 편집 시트 패턴.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-approval` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-approval` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-approval` | `14 · 승인 게이트` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-approval` | `대기 목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-approval` | `APPROVAL · GATE` | 일치 | 헤더 영역 라벨(`ApprovalsView.swift`) |
-| `screen-approval` | `승인` | 일치 | 헤더 제목·상세 백버튼(`ApprovalsView.swift` — 숨긴 내비게이션 바의 `navigationTitle`) · 탭 바 셋째 칸(`RootView.swift`) · 상세 결정 버튼(`ApprovalDetailView.swift`) |
-| `screen-approval` | `자동 응답` | 일치 | 헤더 아래 「자동 응답 <모드>」 줄의 머리(`ApprovalAutoResponseViews.swift` 의 `ApprovalAutoResponseHeader`, #278) |
-| `screen-approval` | `없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 헤더 「자동 응답」 줄·빈 상태 모드 줄의 모드 값 — `ApprovalAutoResponse.label` |
+| `screen-approval` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-approval` | `APPROVAL · GATE` | 일치 | `ApprovalsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `승인` | 일치 | `ApprovalDetailScreen.kt`·`ApprovalsScreen.kt`·`RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `자동 응답` | 일치 | `ApprovalAutoResponseViews.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `없음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `3` | 예시 데이터 | 대기 수(헤더 배지·탭 배지) |
-| `screen-approval` | `대기` | 일치 | 헤더 대기 수 배지 라벨(`ApprovalsView.swift`) |
-| `screen-approval` | `처리 이력` | 일치 | 처리 이력 섹션 머리(`ApprovalHistoryView.swift`)·헤더 이력 버튼 `title`(`ApprovalsView.swift` `accessibilityLabel`)(그리고 프레임 캡션) |
-| `screen-approval` | `승인 게이트 설정` | 일치 | 헤더 설정 버튼 `title`(`ApprovalsView.swift` `accessibilityLabel`) · 설정 화면 제목(`ApprovalKeysView.swift`) |
-| `screen-approval` | `대기 · 3건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
+| `screen-approval` | `대기` | 일치 | `ApprovalsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `처리 이력` | 일치 | `ApprovalHistoryScreen.kt`·`ApprovalsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `승인 게이트 설정` | 일치 | `ApprovalKeysScreen.kt`·`ApprovalsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `대기 · 3건` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `k3s-mcp` | 예시 데이터 | 보낸 키 이름 칩 |
 | `screen-approval` | `04:12 남음` | 예시 데이터 | 남은 시간 — 서식은 `ApprovalFormatting.remaining` |
 | `screen-approval` | `deployment/dear-baby-api 삭제` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `Claude Code · homelab 정리 세션 · 09:41` | 예시 데이터 | 요청자 · 시각 |
-| `screen-approval` | `infra-ci` | 예시 데이터 | 보낸 키 이름 칩 |
+| `screen-approval` | `infra-ci` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `27:40 남음` | 예시 데이터 | 남은 시간 |
 | `screen-approval` | `prod 배포 v1.42` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `Deploy Bot · 09:20` | 예시 데이터 | 요청자 · 시각 |
 | `screen-approval` | `session-agent` | 예시 데이터 | 보낸 키 이름 칩 |
-| `screen-approval` | `기한 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 기한 없는 요청의 남은 시간 자리 — `ApprovalFormatting.noDeadline` |
+| `screen-approval` | `기한 없음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `세션 sp-7 의 git push --force 허용` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `session-platform agent · 어제 18:02` | 예시 데이터 | 요청자 · 시각 — 서식은 `ApprovalFormatting.requestTime`(오늘 `HH:mm` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
-| `screen-approval` | `다짐` | 일치 | `RootView.swift` 탭 바 |
-| `screen-approval` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-approval` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) · 요청 상세 메타 라벨(`ApprovalDetailView.swift`, 2026-10-25) |
-| `screen-approval` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
+| `screen-approval` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `세션` | 일치 | `ApprovalDetailScreen.kt`·`RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `남은 시간` | 일치 | 요청 상세 카운트다운 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `남은 시간` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `03:48` | 예시 데이터 | 상세 카운트다운 값 |
-| `screen-approval` | `에이전트 설명` | 일치 | 요청 상세 에이전트 설명 섹션 라벨(`ApprovalDetailView.swift`) |
-| `screen-approval` | `에이전트가 작성 · 검증되지 않음` | 일치 | 요청 상세 에이전트 설명 섹션 캡션(`ApprovalDetailView.swift`) |
+| `screen-approval` | `에이전트 설명` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `에이전트가 작성 · 검증되지 않음` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `v2 롤아웃이 끝나 트래픽이 0인 구버전 deployment 를 지웁니다. 남은 service·configmap 도 이어서 지울 예정입니다.` | 예시 데이터 | 에이전트 설명 본문(호출자가 보낸 `reason`) |
 | `screen-approval` | `작업: dear-baby 구버전 리소스 정리 (3/5) 대상: deployment/dear-baby-api 네임스페이스: prod 동작: delete (propagationPolicy=Foreground) 사유: v2 롤아웃(dear-baby-api-v2) 완료 후 트래픽 0 확인 — 최근 24시간 요청 0건 남은 단계: 4/5 service/dear-baby-api 삭제 5/5 configmap/dear-baby-api-env 삭제` | 예시 데이터 | 요청 내용 전문(호출자가 보낸 텍스트) |
-| `screen-approval` | `보낸 키` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
-| `screen-approval` | `요청자` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `보낸 키` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `요청자` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `Claude Code · homelab 정리 세션` | 예시 데이터 | 요청자 이름 |
 | `screen-approval` | `dear-baby 구버전 정리` | 예시 데이터 | 세션 제목(생성 시점에 session-platform 에서 조회해 저장한 `session_name`) |
-| `screen-approval` | `요청 ID` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `요청 ID` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `cleanup-20261005-3` | 예시 데이터 | 요청 ID |
-| `screen-approval` | `요청 시각` | 일치 | 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `요청 시각` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `09:41:02` | 예시 데이터 | 요청 시각 |
-| `screen-approval` | `거절` | 일치 | 요청 상세 결정 버튼(`ApprovalDetailView.swift`) |
+| `screen-approval` | `거절` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `결정 확인` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `03:31` | 예시 데이터 | 상세 카운트다운 값 |
-| `screen-approval` | `승인할까요?` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 결정 확인 다이얼로그 제목 — `ApprovalFormatting.confirmTitle` |
-| `screen-approval` | `deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 결정 확인 다이얼로그 본문 — `ApprovalFormatting.confirmMessage`(요약 + 목적격 조사 + 고정 문구) |
-| `screen-approval` | `취소` | 일치 | 결정 확인 다이얼로그 취소 버튼(`ApprovalDetailView.swift`) |
+| `screen-approval` | `승인할까요?` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `deployment/dear-baby-api 삭제를 허락합니다. 확정하면 되돌릴 수 없습니다.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `취소` | 일치 | `ApprovalKeySheets.kt`·`ApprovalParts.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `2` | 예시 데이터 | 대기 수(처리 이력 프레임 헤더 배지·탭 배지) |
-| `screen-approval` | `승인됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력 결과 — `ApprovalFormatting.statusLabel`(`ApprovalHistoryView.swift` 이력 행) |
+| `screen-approval` | `승인됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `09:44:20` | 예시 데이터 | 처리 시각 |
-| `screen-approval` | `수동 결정` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 방식 — `ApprovalFormatting.decisionModeLabel`(`historyMeta` 경유) |
-| `screen-approval` | `만료` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력 결과 — `ApprovalFormatting.statusLabel` |
+| `screen-approval` | `수동 결정` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `만료` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `08:55:00` | 예시 데이터 | 처리 시각 |
 | `screen-approval` | `prod 배포 v1.41 (재시도)` | 예시 데이터 | 요청 요약 |
-| `screen-approval` | `만료 — 결정 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 방식 — `ApprovalFormatting.decisionModeLabel` |
-| `screen-approval` | `거절됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력 결과 — `ApprovalFormatting.statusLabel` |
+| `screen-approval` | `만료 — 결정 없음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `거절됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `어제 22:10` | 예시 데이터 | 처리 시각 — 서식은 `ApprovalFormatting.historyTime`(오늘 `HH:mm:ss` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `staging DB 마이그레이션 0042` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `staging-ci` | 예시 데이터 | 보낸 키 이름 |
-| `screen-approval` | `자동 거절` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 방식 · 자동 응답 모드 값 — 처리 방식은 `ApprovalFormatting.decisionModeLabel`(#264), 배너 헤더 모드 값은 `ApprovalAutoResponse.label`(#278) |
+| `screen-approval` | `자동 거절` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `10/03 19:02` | 예시 데이터 | 처리 시각 |
 | `screen-approval` | `cluster-admin 바인딩 추가` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `old-ci` | 예시 데이터 | 보낸 키 이름(폐기된 키) |
-| `screen-approval` | `수동 결정 · 폐기된 키로 생성됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 처리 이력의 처리 방식 + 폐기된 키 표시 — `ApprovalFormatting.historyMeta`(「\(mode) · 폐기된 키로 생성됨」) |
-| `screen-approval` | `이전 이력 불러오는 중…` | 일치 | 처리 이력 커서 이어 불러오기(`ApprovalHistoryView.swift`) |
+| `screen-approval` | `수동 결정 · 폐기된 키로 생성됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `이전 이력 불러오는 중…` | 일치 | `ApprovalHistoryScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `0` | 예시 데이터 | 대기 수(빈 상태 헤더 배지) |
-| `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | 빈 상태 안내(`ApprovalAutoResponseViews.swift` 의 `ApprovalEmptyState`) |
-| `screen-approval` | `자동 응답 모드` | 일치 | 빈 상태의 현재 모드 줄(`ApprovalAutoResponseViews.swift`) · 설정 섹션 머리(`ApprovalKeysView.swift`) — #278 |
-| `screen-approval` | `— 새 요청은 알림으로 받습니다.` | 기준 4 | 빈 상태의 현재 모드 설명 — 구현은 `자동 응답 모드 \(…) — \(mode.outcomeNotice)`(`ApprovalAutoResponseViews.swift`)로 「자동 응답 모드 없음 — 새 요청은 알림으로 받습니다.」 를 그려 목업과 같지만, 「—」 는 그 리터럴의 정적 조각이고 문장은 `ApprovalAutoResponse.outcomeNotice` 라 노드 단위로는 나뉘지 않는다 |
+| `screen-approval` | `대기 중인 승인 요청이 없습니다` | 일치 | `ApprovalAutoResponseViews.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `자동 응답 모드` | 일치 | `ApprovalAutoResponseViews.kt`·`ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `— 새 요청은 알림으로 받습니다.` | 기준 4 | 빈 상태의 현재 모드 설명 — 구현은 `자동 응답 모드 ${…} — ${…}`(`ApprovalAutoResponseViews.kt`)로 「자동 응답 모드 없음 — 새 요청은 알림으로 받습니다.」 를 그려 목업과 같지만, 「—」 는 그 리터럴의 정적 조각이고 문장은 모드 상수(`ApprovalAutoResponse.outcomeNotice`)에서 오므로 낱말 일치는 구조 대조의 몫 |
 | `screen-approval` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `승인 요청을 불러오지 못했습니다` | 일치 | 「오류」 프레임 오류 배너 제목(`ApprovalsView.swift`) |
+| `screen-approval` | `승인 요청을 불러오지 못했습니다` | 일치 | `ApprovalsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `ApprovalsViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
-| `screen-approval` | `다시 시도` | 일치 | 「오류」 프레임 오류 배너 재시도 버튼(`ApprovalsView.swift`) |
+| `screen-approval` | `다시 시도` | 일치 | `ApprovalParts.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `자동 응답 모드 켜짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `1` | 예시 데이터 | 대기 수(자동 응답 모드 프레임 헤더 배지·탭 배지) |
-| `screen-approval` | `자동 거절 모드가 켜져 있습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 자동 응답 모드 배너 제목 — `ApprovalAutoResponse.bannerTitle`(「\(label) 모드가 켜져 있습니다.」, #278) |
-| `screen-approval` | `새 요청은 알림 없이 바로 거절됩니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 자동 응답 모드 배너 결과 안내 — `ApprovalAutoResponse.outcomeNotice`(#278) |
-| `screen-approval` | `끄기` | 일치 | 자동 응답 모드 배너 버튼(`ApprovalAutoResponseViews.swift`, #278) |
-| `screen-approval` | `대기 · 1건` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 대기 섹션 머리 — `ApprovalFormatting.pendingHeader` |
+| `screen-approval` | `자동 거절 모드가 켜져 있습니다.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `새 요청은 알림 없이 바로 거절됩니다.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `끄기` | 일치 | `ApprovalAutoResponseViews.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `대기 · 1건` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `12:03 남음` | 예시 데이터 | 남은 시간 |
 | `screen-approval` | `k3s-mcp · 09:30` | 예시 데이터 | 요청자 자리(요청자 이름 대신 키 이름) · 시각 |
-| `screen-approval` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | 요청 카드 폐기된 키 경고(`ApprovalsView.swift`) |
+| `screen-approval` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | `ApprovalDetailScreen.kt`·`ApprovalsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `설정 — 자동 응답·호출자 키` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `없음 — 알림으로 받기` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 설정 자동 응답 선택지 — `ApprovalAutoResponse.optionLabel`(#278) |
-| `screen-approval` | `자동 승인` | 외부 `ios/Shared/Sources/PocketAideAPI/Approvals.swift` | 설정 자동 응답 선택지 — `ApprovalAutoResponse.label`(#278) |
-| `screen-approval` | `호출자 키` | 일치 | 설정 섹션 머리(`ApprovalKeysView.swift`) |
-| `screen-approval` | `폐기` | 일치 | 호출자 키 폐기 버튼(`ApprovalKeysView.swift`) |
-| `screen-approval` | `pak_7Hq2… · 발급 09/29 · 마지막 사용 09:41` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(접두 + 「…」 · 「발급 MM/dd」 · 「마지막 사용 HH:mm」(오늘)/「MM/dd」), 값은 예시 |
-| `screen-approval` | `pak_Xm91… · 발급 09/30 · 마지막 사용 09:20` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(위와 같음) |
-| `screen-approval` | `폐기됨 10/03` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 폐기된 키 표시 — `ApprovalKeyFormatting.revokedLabel`(「폐기됨 MM/dd」) |
-| `screen-approval` | `pak_b3Kd… · 발급 09/12 · 마지막 사용 10/03` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 호출자 키 메타 줄 — `ApprovalKeyFormatting.meta`(마지막 사용이 오늘이 아니면 날짜) |
-| `screen-approval` | `+ 호출자 키 발급` | 일치 | 호출자 키 발급 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `없음 — 알림으로 받기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `자동 승인` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 대응 파일이 아닌 Kotlin 파일 `Approvals.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `호출자 키` | 일치 | `ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `폐기` | 일치 | `ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `pak_7Hq2… · 발급 09/29 · 마지막 사용 09:41` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `pak_Xm91… · 발급 09/30 · 마지막 사용 09:20` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `폐기됨 10/03` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `pak_b3Kd… · 발급 09/12 · 마지막 사용 10/03` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `+ 호출자 키 발급` | 일치 | `ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `키 발급 — 원문 1회 표시` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `pak_7Hq2… · 발급 09/29` | 예시 데이터 | 키 발급 시트 뒤 목록의 키 메타 줄 — 「설정」 프레임 첫 행과 같은 키(`k3s-mcp`)를 「마지막 사용」 없이 줄여 그린 배경. 구현은 같은 자리를 `ApprovalKeyFormatting.meta` 로 그리고 「마지막 사용 …」(값이 없으면 「없음」)을 늘 붙인다 |
-| `screen-approval` | `호출자 키를 발급했습니다` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 키 발급 시트 제목 — `ApprovalKeyFormatting.issuedTitle` |
-| `screen-approval` | `호출자 이름` | 일치 | 키 발급 시트 필드 라벨(`ApprovalKeysView.swift`) |
-| `screen-approval` | `키 원문` | 일치 | 키 발급 시트 필드 라벨(`ApprovalKeysView.swift`) |
+| `screen-approval` | `호출자 키를 발급했습니다` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `호출자 이름` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `키 원문` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `pak_Rk4vN8sQ2mTzW6yLp0eHc9JdXb7AuF3G` | 예시 데이터 | 발급된 키 원문 |
-| `screen-approval` | `이 화면을 닫으면 원문을 다시 볼 수 없습니다. 지금 복사해 호출자의 시크릿에 넣으세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 키 발급 시트 경고 — `ApprovalKeyFormatting.secretWarning` |
-| `screen-approval` | `복사` | 일치 | 키 발급 시트 버튼(`ApprovalKeysView.swift`) |
-| `screen-approval` | `완료` | 일치 | 키 발급 시트 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `이 화면을 닫으면 원문을 다시 볼 수 없습니다. 지금 복사해 호출자의 시크릿에 넣으세요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `복사` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `완료` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `요청 상세 — 만료 · 재조회 실패` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `최신 상태를 불러오지 못했습니다` | 일치 | 「요청 상세 — 만료 · 재조회 실패」 프레임 재조회 실패 배너 제목(`ApprovalDetailView.swift`) |
+| `screen-approval` | `최신 상태를 불러오지 못했습니다` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `작업: prod 배포 v1.41 (1차 실패 후 재시도) 대상: deployment/pocket-aide-api 네임스페이스: prod 이미지: ghcr.io/dlddu/pocket-aide-api:v1.41` | 예시 데이터 | 요청 내용 전문 — 구현은 `Text(item.context)` |
-| `screen-approval` | `—` | 일치 | 요청자 이름이 빈 요청의 대체 문자(`ApprovalDetailView.swift`) |
+| `screen-approval` | `—` | 일치 | `ApprovalAutoResponseViews.kt`·`ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `deploy-v1.41-r2` | 예시 데이터 | 요청 ID — 구현은 `item.externalId` |
 | `screen-approval` | `08:50:00` | 예시 데이터 | 요청 시각 — 구현은 `HH:mm:ss` 서식 |
-| `screen-approval` | `상태` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
-| `screen-approval` | `처리 방식` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
-| `screen-approval` | `처리 시각` | 일치 | 처리된 요청 상세 메타 라벨(`ApprovalDetailView.swift`) |
+| `screen-approval` | `상태` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `처리 방식` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `처리 시각` | 일치 | `ApprovalDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `설정 — 키 없음 · 조회 실패` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `호출자 키를 불러오지 못했습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 조회 실패 배너 제목(`ApprovalKeysView.swift`) |
-| `screen-approval` | `발급한 호출자 키가 없습니다` | 일치 | 「설정 — 키 없음 · 조회 실패」 프레임 키 0건 안내(`ApprovalKeysView.swift`) |
+| `screen-approval` | `호출자 키를 불러오지 못했습니다` | 일치 | `ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `발급한 호출자 키가 없습니다` | 일치 | `ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `키 발급 — 이름 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `호출자 키 발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 제목(`ApprovalKeysView.swift`) |
-| `screen-approval` | `발급` | 일치 | 「키 발급 — 이름 입력」 프레임 입력 시트 확정 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `호출자 키 발급` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `발급` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `키 발급 — 복사됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `복사됨` | 일치 | 「키 발급 — 복사됨」 프레임 주 버튼(`ApprovalKeysView.swift`) |
+| `screen-approval` | `복사됨` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `설정 — SA 호출자` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `homelab-k3s-mcp` | 일치 | 「SA 등록」 두 프레임의 세 입력 칸 `placeholder`(`ApprovalServiceAccountSheet.swift`) · 「설정 — SA 호출자」 프레임 SA 호출자 이름 칩(이름은 데이터) |
-| `screen-approval` | `SA homelab-k3s-mcp/homelab-k3s-mcp · 등록 10/16 · 마지막 사용 09:41` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | SA 호출자 메타 줄 — `ApprovalKeyFormatting.meta` 의 SA 분기(「SA 네임스페이스/이름 · 등록 MM/dd · 마지막 사용」, PRD-12 AC15) |
-| `screen-approval` | `+ k8s 서비스 어카운트 등록` | 일치 | 「설정 — SA 호출자」 프레임 둘째 점선 버튼(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `homelab-k3s-mcp` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `SA homelab-k3s-mcp/homelab-k3s-mcp · 등록 10/16 · 마지막 사용 09:41` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-approval` | `+ k8s 서비스 어카운트 등록` | 일치 | `ApprovalKeysScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `SA 등록 — 입력` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-approval` | `pak_Xm91… · 발급 09/30` | 예시 데이터 | 「SA 등록」 시트 뒤 목록의 키 메타 줄 — 「설정 — SA 호출자」 프레임 둘째 행과 같은 키(`infra-ci`)를 「마지막 사용」 없이 줄여 그린 배경. 구현은 같은 자리를 `ApprovalKeyFormatting.meta` 로 그린다 |
-| `screen-approval` | `k8s 서비스 어카운트 등록` | 일치 | 「SA 등록」 시트 제목(`ApprovalServiceAccountSheet.swift`) |
-| `screen-approval` | `네임스페이스` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalServiceAccountSheet.swift`) |
-| `screen-approval` | `서비스 어카운트` | 일치 | 「SA 등록」 시트 입력 라벨(`ApprovalServiceAccountSheet.swift`) |
-| `screen-approval` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | 「SA 등록」 시트 안내(`ApprovalServiceAccountSheet.swift`) |
-| `screen-approval` | `등록` | 일치 | 「SA 등록」 시트 확정 버튼(`ApprovalServiceAccountSheet.swift`) |
+| `screen-approval` | `k8s 서비스 어카운트 등록` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `네임스페이스` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `서비스 어카운트` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `이 서비스 어카운트로 도는 파드가 audience pocket-aide 토큰으로 요청합니다. 발급할 키 원문은 없습니다.` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `등록` | 일치 | `ApprovalKeySheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `SA 등록 — 이미 등록됨` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-approval` | `이미 등록된 서비스 어카운트입니다` | 외부 `ios/Shared/Sources/PocketAideAPI/ApprovalKeys.swift` | 「SA 등록 — 이미 등록됨」 프레임 서버 409 안내 — `ApprovalKeyFormatting.duplicateServiceAccountNotice`(서비스 어카운트 칸 destructive 테두리와 함께) |
+| `screen-approval` | `이미 등록된 서비스 어카운트입니다` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeys.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeys.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고, AC15 k8s 서비스 어카운트 호출자 등록. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
+| `screen-external-notifications` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `16 · 알림 기록` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-external-notifications` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-external-notifications` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `NOTIFY · LOG` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `알림 기록` | 일치 | `ExternalNotificationsScreen.kt`·`RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `2` | 예시 데이터 | 미확인 수(헤더 배지) |
+| `screen-external-notifications` | `새 알림` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `최근 알림` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `homelab-k3s-mcp · SA` | 예시 데이터 | 호출자 칩 — 구현은 `ExternalNotificationFormatting.callerLabel`(「<등록 이름> · 키/SA」) |
+| `screen-external-notifications` | `09:41` | 예시 데이터 | 받은 시각 — `ExternalNotificationFormatting.time`(오늘 「HH:mm」) |
+| `screen-external-notifications` | `dear-baby 구버전 정리 완료` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음.` | 예시 데이터 | 알림 본문 |
+| `screen-external-notifications` | `요청 Claude Code 세션 — dear-baby 정리` | 예시 데이터 | 요청 주체 — `ExternalNotificationFormatting.requesterLabel`(「요청 <requester>」) |
+| `screen-external-notifications` | `1/1 기기` | 예시 데이터 | 도달 — `ExternalNotificationFormatting.deliveryLabel`(「<sent>/<devices> 기기」) |
+| `screen-external-notifications` | `infra-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
+| `screen-external-notifications` | `09:20` | 예시 데이터 | 받은 시각 |
+| `screen-external-notifications` | `nightly 백업 완료` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 알림 본문 |
+| `screen-external-notifications` | `요청 nightly 백업 크론잡` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `어제 22:10` | 예시 데이터 | 받은 시각(어제) |
+| `screen-external-notifications` | `배포 롤백됨` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `요청 reconciler 정합성 루프` | 예시 데이터 | 요청 주체 |
+| `screen-external-notifications` | `등록된 기기 없음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotifications.kt` | 대응 파일이 아닌 Kotlin 파일 `ExternalNotifications.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-external-notifications` | `old-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
+| `screen-external-notifications` | `10/24 18:02` | 예시 데이터 | 받은 시각(그 전) |
+| `screen-external-notifications` | `ping` | 예시 데이터 | 알림 제목 |
+| `screen-external-notifications` | `요청 주체 미상` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotifications.kt` | 대응 파일이 아닌 Kotlin 파일 `ExternalNotifications.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-external-notifications` | `2/2 기기` | 예시 데이터 | 도달 |
+| `screen-external-notifications` | `이전 기록 불러오는 중…` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `3` | 예시 데이터 | 승인 탭 배지(대기 수) |
+| `screen-external-notifications` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `닫기` | 일치 | `ExternalNotificationDetailSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음. v1 트래픽이 일주일째 0이라 v2 롤아웃이 끝난 것으로 보고 정리했습니다. 되돌리려면 이전 매니페스트를 다시 적용하세요.` | 예시 데이터 | 상세 본문 전체 — 구현은 `item.body` 를 줄임 없이 |
+| `screen-external-notifications` | `보낸 호출자` | 일치 | `ExternalNotificationDetailSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `요청 주체` | 일치 | `ExternalNotificationDetailSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `Claude Code 세션 — dear-baby 구버전 정리 (k8s 리소스 정리 · v1 트래픽 0 확인 후)` | 예시 데이터 | 상세 요청 주체 전체 — `ExternalNotificationFormatting.requesterValue` |
+| `screen-external-notifications` | `받은 시각` | 일치 | `ExternalNotificationDetailSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `2026-10-27 09:41:12` | 예시 데이터 | 상세 받은 시각 — `ExternalNotificationFormatting.fullTime`(「yyyy-MM-dd HH:mm:ss」) |
+| `screen-external-notifications` | `도달` | 일치 | `ExternalNotificationDetailSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `받은 알림이 없어요.` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `알림 기록을 불러오지 못했습니다` | 일치 | `ExternalNotificationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `errorMessage`(`String(describing:)`)를 그린다 |
+| `screen-external-notifications` | `다시 시도` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalParts.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalParts.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-external-notifications` | `「더 보기」 진입` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
+| `screen-external-notifications` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `임시공간` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `4` | 예시 데이터 | 오버플로 목록 임시공간 배지(미분류 수) |
+| `screen-external-notifications` | `개인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `회사` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `루틴` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `13 · PR 모니터링 이력` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-pr-monitor-history` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-pr-monitor-history` | `PR · MONITOR` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | `ScreenHeader` 영역 라벨 `Area.prMonitor` 기본 문구(대문자화는 `.textCase(.uppercase)`) |
-| `screen-pr-monitor-history` | `PR 모니터` | 일치 | `ScreenHeader` 제목 · 탭 바 항목 |
-| `screen-pr-monitor-history` | `@dlddu` | 구현 대기 | 헤더 부제(GitHub 계정) — 구현 헤더에 부제가 없다 |
-| `screen-pr-monitor-history` | `·` | 일치 | 구분자 |
+| `screen-pr-monitor-history` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-pr-monitor-history` | `PR · MONITOR` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | 대응 파일이 아닌 Kotlin 파일 `DesignTokens.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-pr-monitor-history` | `PR 모니터` | 일치 | `PrMonitorScreen.kt`·`RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `@dlddu` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/OpenPullRequestsSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `OpenPullRequestsSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-pr-monitor-history` | `·` | 일치 | `PrMonitorGroupCard.kt`·`PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `웹훅 연결` | 구현 대기 | 헤더 부제(웹훅 연결 상태) — 구현에 없다 |
 | `screen-pr-monitor-history` | `5` | 예시 데이터 | 미확인 총 개수 |
-| `screen-pr-monitor-history` | `미확인` | 일치 | 헤더 배지 라벨 |
-| `screen-pr-monitor-history` | `열린 PR` | 일치 | 열린 PR 버튼 `title` — 구현 버튼 `accessibilityLabel` |
-| `screen-pr-monitor-history` | `알림 설정` | 일치 | 알림 설정 버튼 `title` — 구현 버튼 `accessibilityLabel` |
-| `screen-pr-monitor-history` | `제외 레포 관리` | 일치 | 제외 레포 버튼 `title` — 구현 버튼 `accessibilityLabel` |
-| `screen-pr-monitor-history` | `미확인 · 3개 그룹` | 일치 | 섹션 헤더 |
-| `screen-pr-monitor-history` | `방금 진입` | 일치 | 푸시 진입 그룹의 상태 라벨 — `PRMonitorGroupCard.swift` 헤더 |
-| `screen-pr-monitor-history` | `최근 9:41:02` | 일치 | 그룹 헤더 시각 |
+| `screen-pr-monitor-history` | `미확인` | 일치 | `PrMonitorGroupCard.kt`·`PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `열린 PR` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `알림 설정` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `제외 레포 관리` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `미확인 · 3개 그룹` | 일치 | `PrMonitorGroupCard.kt`·`PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `방금 진입` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `최근 9:41:02` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `pocket-aide` | 예시 데이터 | 레포 이름 |
-| `screen-pr-monitor-history` | `#42` | 일치 | 「#\(number)」 |
+| `screen-pr-monitor-history` | `#42` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `feat(widget): Large 5영역 골격 + 다짐 회전 노출` | 예시 데이터 | PR 제목 |
-| `screen-pr-monitor-history` | `통과 1` | 일치 | 종합 상태 |
-| `screen-pr-monitor-history` | `실패 1` | 일치 | 종합 상태 |
-| `screen-pr-monitor-history` | `CI 3건` | 일치 | 항목 수 |
-| `screen-pr-monitor-history` | `미확인 2` | 일치 | 미확인 배지 |
-| `screen-pr-monitor-history` | `CI 실패` | 일치 | row 판정 라벨 |
+| `screen-pr-monitor-history` | `통과 1` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `실패 1` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 3건` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `↗ PR` | 기준 4 | 링크 칩 — 낱말 「PR」 은 구현과 같고 `↗` 글리프 ↔ SF Symbol 차이 |
+| `screen-pr-monitor-history` | `미확인 2` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `모두 확인` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 실패` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 대응 파일이 아닌 Kotlin 파일 `PrMonitor.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-pr-monitor-history` | `9:41:02` | 예시 데이터 | 이벤트 시각 |
-| `screen-pr-monitor-history` | `commit` | 일치 | 메타 줄 「commit <sha>」 접두 — `PRMonitorHistoryRow.swift` 메타 줄 리터럴의 정적 조각 |
+| `screen-pr-monitor-history` | `commit` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `a3f9c27` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `run` | 구현 대기 | 메타 줄 「run <워크플로> #<번호>」 접두 — 구현에 없다 |
 | `screen-pr-monitor-history` | `ci #319` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `↗ PR` | 기준 4 | 링크 칩 — 낱말 「PR」 은 구현과 같고 `↗` 글리프 ↔ SF Symbol 차이 |
 | `screen-pr-monitor-history` | `↗ 커밋` | 기준 4 | 링크 칩 — 낱말 「커밋」 은 구현과 같고 글리프 ↔ 아이콘 차이 |
 | `screen-pr-monitor-history` | `↗ 런` | 기준 4 | 링크 칩 — 낱말 「런」 은 구현과 같고 글리프 ↔ 아이콘 차이 |
-| `screen-pr-monitor-history` | `확인` | 일치 | row 「확인」 버튼 |
-| `screen-pr-monitor-history` | `CI 통과` | 일치 | row 판정 라벨 |
+| `screen-pr-monitor-history` | `확인` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 통과` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 대응 파일이 아닌 Kotlin 파일 `PrMonitor.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-pr-monitor-history` | `9:38:40` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `ios-tests #318` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `CI 통과 · 확인됨` | 일치 | 확인된 row 라벨 |
+| `screen-pr-monitor-history` | `CI 통과 · 확인됨` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `9:12:30` | 예시 데이터 | 이벤트 시각 |
-| `screen-pr-monitor-history` | `commit b1e07d4` | 일치 | 확인된 row 메타 「commit <sha>」 — `PRMonitorHistoryRow.swift` 메타 줄(SHA 는 데이터) |
+| `screen-pr-monitor-history` | `commit b1e07d4` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `run ios-tests #312` | 구현 대기 | 확인된 row 메타 「run <워크플로> #<번호>」 — 구현은 워크플로 이름만 |
-| `screen-pr-monitor-history` | `확인 · 오늘 09:15:04` | 일치 | 「확인 \(…)」(시각 서식은 범위 밖) |
+| `screen-pr-monitor-history` | `확인 · 오늘 09:15:04` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `한 PR(없으면 커밋)에 도착한 CI 완료 이벤트는 하나의 그룹으로 묶입니다. 푸시 탭으로 진입해도 항목은` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
-| `screen-pr-monitor-history` | `미확인 상태` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
+| `screen-pr-monitor-history` | `미확인 상태` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `로 유지되며, 각 항목의` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `"확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `버튼만이 처리 트리거입니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
-| `screen-pr-monitor-history` | `#41` | 일치 | 「#\(number)」 |
+| `screen-pr-monitor-history` | `#41` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `fix(ios-tests): xcodebuild retry safety net` | 예시 데이터 | PR 제목 |
-| `screen-pr-monitor-history` | `통과 2` | 일치 | 종합 상태 |
-| `screen-pr-monitor-history` | `CI 2건` | 일치 | 항목 수 |
-| `screen-pr-monitor-history` | `최근 08:12` | 일치 | 그룹 헤더 시각 |
+| `screen-pr-monitor-history` | `통과 2` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 2건` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `최근 08:12` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `08:12` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `dfd5de7` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `ios-tests #317` | 예시 데이터 | 워크플로 이름 + run 번호 |
 | `screen-pr-monitor-history` | `07:46` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `build #316` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `PR 없음 · main 직접 푸시` | 일치 | PR 없는 그룹의 상태 라벨 「PR 없음 · \(group.headBranch) 직접 푸시」 — `PRMonitorGroupCard.swift` 헤더 |
-| `screen-pr-monitor-history` | `최근 07:01` | 일치 | 그룹 헤더 시각 |
+| `screen-pr-monitor-history` | `PR 없음 · main 직접 푸시` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `최근 07:01` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `main` | 예시 데이터 | 브랜치 이름 |
-| `screen-pr-monitor-history` | `@f77e024` | 일치 | 「 @\(short)」 |
-| `screen-pr-monitor-history` | `미확인 1` | 일치 | 미확인 배지 |
+| `screen-pr-monitor-history` | `@f77e024` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/OpenPullRequestsSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `OpenPullRequestsSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-pr-monitor-history` | `미확인 1` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `07:01` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `f77e024` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `ci #310` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `CI 실패 · 확인됨` | 일치 | 확인된 row 라벨 |
+| `screen-pr-monitor-history` | `CI 실패 · 확인됨` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `06:48` | 예시 데이터 | 이벤트 시각 |
-| `screen-pr-monitor-history` | `commit f77e024` | 일치 | 확인된 row 메타 「commit <sha>」 — 위와 같음 |
-| `screen-pr-monitor-history` | `run lint #309` | 구현 대기 | 확인된 row 메타 — 위와 같음 |
-| `screen-pr-monitor-history` | `확인 · 오늘 07:02:19` | 일치 | 「확인 \(…)」 |
-| `screen-pr-monitor-history` | `확인 완료 · 어제` | 구현 대기 | 섹션 헤더 날짜 구분 — 구현은 「확인 완료」 만 |
-| `screen-pr-monitor-history` | `#38` | 일치 | 「#\(number)」 |
+| `screen-pr-monitor-history` | `commit f77e024` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `run lint #309` | 구현 대기 | 확인된 row 메타 「run <워크플로> #<번호>」 — 구현은 워크플로 이름만 |
+| `screen-pr-monitor-history` | `확인 · 오늘 07:02:19` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `확인 완료 · 어제` | 구현 대기 | 섹션 헤더 날짜 구분 — 구현은 「확인 완료」 만(표 A 같은 행) |
+| `screen-pr-monitor-history` | `#38` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `docs(prd-10): AC10·11·12` | 예시 데이터 | PR 제목 |
-| `screen-pr-monitor-history` | `통과 3` | 일치 | 종합 상태 |
+| `screen-pr-monitor-history` | `통과 3` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `어제 14:32` | 예시 데이터 | 확인 완료 그룹의 시각(구현은 「최근 \(…)」 접두 — 기준 4 수치와 함께 대조) |
-| `screen-pr-monitor-history` | `모두 확인` | 일치 | 미확인 그룹 헤더 버튼 · 확인 완료 그룹 상태 라벨 |
-| `screen-pr-monitor-history` | `#37` | 일치 | 「#\(number)」 |
+| `screen-pr-monitor-history` | `#37` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `feat(stt): 한·영 혼용 임시 어휘` | 예시 데이터 | PR 제목 |
 | `screen-pr-monitor-history` | `어제 11:08` | 예시 데이터 | 위와 같음 |
 | `screen-pr-monitor-history` | `AC11 · AC12 · AC13.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
@@ -697,277 +698,212 @@ last_updated: 2026-10-28
 | `screen-pr-monitor-history` | `버튼 또는 그룹의` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `"모두 확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
-| `screen-pr-monitor-history` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-pr-monitor-history` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-pr-monitor-history` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
-| `screen-pr-monitor-history` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-pr-monitor-history` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-pr-monitor-history` | `아직 도착한 알림이 없습니다` | 일치 | 빈 상태 제목 |
-| `screen-pr-monitor-history` | `CI가 완료되면 여기에 표시됩니다.` | 일치 | 빈 상태 본문 |
+| `screen-pr-monitor-history` | `아직 도착한 알림이 없습니다` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI가 완료되면 여기에 표시됩니다.` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-pr-monitor-history` | `이력을 불러오지 못했습니다` | 일치 | 오류 상태 제목 |
+| `screen-pr-monitor-history` | `이력을 불러오지 못했습니다` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 설명 — 구현은 `Text(error)` 로 `PRMonitorViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
-| `screen-pr-monitor-history` | `다시 시도` | 일치 | 오류 상태 재시도 버튼 |
+| `screen-pr-monitor-history` | `다시 시도` | 일치 | `PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `CI 상태 변형` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-pr-monitor-history` | `4` | 예시 데이터 | 미확인 총 개수 |
-| `screen-pr-monitor-history` | `미확인 · 2개 그룹` | 일치 | 섹션 헤더 |
-| `screen-pr-monitor-history` | `최근 10:05` | 일치 | 그룹 헤더 시각 |
-| `screen-pr-monitor-history` | `#43` | 일치 | 「#\(number)」 |
+| `screen-pr-monitor-history` | `미확인 · 2개 그룹` | 일치 | `PrMonitorGroupCard.kt`·`PrMonitorScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `최근 10:05` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `#43` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `chore(ci): 워크플로 타임아웃 재조정` | 예시 데이터 | PR 제목 |
-| `screen-pr-monitor-history` | `실패 2` | 일치 | 종합 상태 |
-| `screen-pr-monitor-history` | `미확인 3` | 일치 | 미확인 배지 |
-| `screen-pr-monitor-history` | `CI 취소` | 일치 | row 판정 라벨(cancelled) |
+| `screen-pr-monitor-history` | `실패 2` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `미확인 3` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 취소` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 대응 파일이 아닌 Kotlin 파일 `PrMonitor.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-pr-monitor-history` | `10:05` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `5e8b1d0` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `ci #324` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `CI 타임아웃` | 일치 | row 판정 라벨(timed_out) |
+| `screen-pr-monitor-history` | `CI 타임아웃` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 대응 파일이 아닌 Kotlin 파일 `PrMonitor.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-pr-monitor-history` | `09:58` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `ios-tests #323` | 예시 데이터 | 워크플로 이름 + run 번호 |
-| `screen-pr-monitor-history` | `CI neutral` | 일치 | 「CI \(item.conclusion)」 — 알 수 없는 conclusion 의 대체 라벨 |
+| `screen-pr-monitor-history` | `CI neutral` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 대응 파일이 아닌 Kotlin 파일 `PrMonitor.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-pr-monitor-history` | `09:52` | 예시 데이터 | 이벤트 시각 |
-| `screen-pr-monitor-history` | `workflow` | 일치 | 워크플로 이름이 빈 경우의 대체 문자 |
-| `screen-pr-monitor-history` | `#322` | 예시 데이터 | run 번호 |
-| `screen-pr-monitor-history` | `최근 09:47` | 일치 | 그룹 헤더 시각 |
-| `screen-pr-monitor-history` | `—` | 일치 | PR 없는 그룹의 빈 브랜치 대체 문자 |
-| `screen-pr-monitor-history` | `@9d2c4e1` | 일치 | 「 @\(short)」 |
-| `screen-pr-monitor-history` | `진행 1` | 일치 | 종합 상태(진행 중) |
-| `screen-pr-monitor-history` | `CI 1건` | 일치 | 항목 수 |
-| `screen-pr-monitor-history` | `CI 시작` | 일치 | row 판정 라벨(진행 중) |
+| `screen-pr-monitor-history` | `workflow` | 일치 | `PrMonitorHistoryRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `#322` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `최근 09:47` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `—` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `@9d2c4e1` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/OpenPullRequestsSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `OpenPullRequestsSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-pr-monitor-history` | `진행 1` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 1건` | 일치 | `PrMonitorGroupCard.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `CI 시작` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/prmonitor/PrMonitor.kt` | 대응 파일이 아닌 Kotlin 파일 `PrMonitor.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-pr-monitor-history` | `09:47` | 예시 데이터 | 이벤트 시각 |
 | `screen-pr-monitor-history` | `9d2c4e1` | 예시 데이터 | 커밋 SHA |
 | `screen-pr-monitor-history` | `ci #321` | 예시 데이터 | 워크플로 이름 + run 번호 |
 | `screen-pr-monitor-history` | `알림 권한 꺼짐` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-pr-monitor-history` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `PushDeniedBanner` 문구(`RootView.swift`) |
+| `screen-pr-monitor-history` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `RootScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `PRD-10 · AC7 푸시 진입 시 해당 항목이 강조(인디고 글로우, 5초 후 자동 해제)되지만 미확인 상태로 유지 · AC11 서버에 영속화된 이력 조회, 미확인/확인 시각 구분 + 미확인 우선 정렬 + 상단 미확인 개수 배지 · AC12 외부 링크 탭은 확인 미트리거, 항목 "확인" 버튼이 처리 트리거 · AC13 같은 PR(없으면 커밋 head_sha)에 도착한 CI 이벤트를 그룹 카드로 묶고 헤더에 항목 수·미확인 수·종합 상태·PR 링크 표시 · AC14 그룹 헤더 "모두 확인"으로 그룹 내 미확인 일괄 확인.` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
-| `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-widget` | `홈 스크린 · 큰 위젯 (4×4)` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `홈 스크린 · 초대형 위젯 (4×6 · iOS 27)` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-widget` | `서울` | 예시 데이터 | 날씨 슬라이스 지명 라벨(`WeatherSection` 이 앱이 저장한 위치의 역지오코딩 `placeName` 으로 그린다) |
-| `screen-widget` | `18°` | 외부 `ios/Shared/Sources/PocketAideAPI/Weather.swift` | 현재 기온 — 값은 데이터, 「°」 서식은 `Weather.temperatureLabel` |
-| `screen-widget` | `한때 비` | 예시 데이터 | 현재 날씨 상태(`WeatherSection` 이 `summary.condition` 으로 그린다 — WMO 코드 → `Weather.swift` 고정 어휘(맑음·흐림·비·소나기 등). 목업 예시 「한때 비」 는 그 어휘 밖이다 — 어휘 차이는 범위 밖 후속) |
-| `screen-widget` | `최고 22 · 최저 14` | 외부 `ios/Shared/Sources/PocketAideAPI/Weather.swift` | 최고·최저 기온 — 값은 데이터, 「최고 N · 최저 N」 서식은 `Weather.detailLabel`(강수 확률이 있으면 「 · 강수 N%」 가 붙는다 — 꼬리 유무는 기준 4 구조 대조의 몫) |
-| `screen-widget` | `다음 일정` | 일치 | 일정 슬라이스 라벨(`CalendarSection`) |
-| `screen-widget` | `분기 리뷰 · 회의실 4` | 예시 데이터 | 첫 일정 제목(사용자 캘린더 데이터 — `CalendarSection` 이 `first.title` 로 그린다) |
-| `screen-widget` | `14:00 — 15:30` | 외부 `ios/Shared/Sources/PocketAideAPI/UpcomingEvents.swift` | 첫 일정 시간 범위 — 시각은 데이터, 「 — 」 서식은 `UpcomingEvents.rangeLabel` |
-| `screen-widget` | `+ 2 더` | 일치 | 남은 일정 수(`CalendarSection` `+ \(summary.moreCount) 더`) |
-| `screen-widget` | `오늘의 다짐` | 일치 | 다짐 슬라이스 라벨 |
-| `screen-widget` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
-| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
-| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `PocketAideWidget.swift` 행) |
-| `screen-widget` | `PocketAide 알림` | 일치 | 알림 슬라이스 라벨(`NotificationSection`) |
-| `screen-widget` | `nightly 백업 완료` | 예시 데이터 | 최신 미확인 호출자 알림 제목(`NotificationSection` 이 `ExternalNotification.title` 을 그대로 그린다 — PRD-8 결정 「알림 영역 — 호출자 알림으로 대체」, 2026-10-27) |
-| `screen-widget` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 최신 미확인 호출자 알림 본문(`ExternalNotification.body`, 비어 있으면 줄 없음) |
-| `screen-widget` | `임시 공간` | 일치 | 임시 공간 슬라이스 라벨(`ScratchpadCountSection`) |
-| `screen-widget` | `미분류` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 미분류 수 앞 낱말 — 「미분류 N개」 서식은 `WidgetScratchpad.countText`(`ScratchpadCountSection` 이 그린다) |
-| `screen-widget` | `12` | 예시 데이터 | 미분류 수(`ScratchpadCountSection` 이 `.loaded(n)` 의 n 으로 그린다) |
-| `screen-widget` | `개` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 개수 단위 — 같은 `WidgetScratchpad.countText` 서식 |
-| `screen-widget` | `전화` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `메시지` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `사진` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `캘린더` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `PA` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `메일` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `사파리` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `음악` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — iOS 가 그린다 |
-| `screen-widget` | `중간 크기 (4×2 축약)` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `14:00` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
-| `screen-widget` | `분기 리뷰` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
-| `screen-widget` | `회의실 4` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
-| `screen-widget` | `메일 3` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
-| `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
-| `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 `supportedFamilies` 에 `.systemMedium` 이 없다(iOS 27 SDK 빌드는 `.systemExtraLargePortrait`, 그 밖은 `.systemLarge`) |
-| `screen-widget` | `크기에 따라 영역의 표현 방식 축약 — AC1` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
-| `screen-widget` | `다짐 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `다짐 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `다짐을 앱에 등록해보세요.` | 일치 | 다짐 0건 안내(`AffirmationSection` `.empty`) |
-| `screen-widget` | `미로그인` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `앱에서 로그인이 필요해요.` | 일치 | 미로그인 안내(`AffirmationSection` `.needsLogin`) |
-| `screen-widget` | `조회 오류` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `잠시 후 다시 시도할게요.` | 일치 | 조회 오류 안내(`AffirmationSection` `.error`) |
-| `screen-widget` | `일정 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `캘린더 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `앱에서 캘린더 접근을 허용해 주세요.` | 일치 | 캘린더 권한 없음 안내(`CalendarSection` `.needsPermission`) |
-| `screen-widget` | `일정 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `다가오는 일정이 없어요.` | 일치 | 일정 0건 안내(`CalendarSection` 빈 요약) |
-| `screen-widget` | `알림 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `알림 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `확인할 알림이 없어요.` | 일치 | 알림 0건 안내(`NotificationSection` 빈 요약) |
-| `screen-widget` | `날씨 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `위치 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `날씨` | 일치 | 날씨 슬라이스 라벨 — 지명 없음(`WeatherSection` 대체값) |
-| `screen-widget` | `앱에서 위치 접근을 허용해 주세요.` | 일치 | 위치 권한 없음 안내(`WeatherSection` `.needsLocation`) |
-| `screen-widget` | `임시 공간 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
-| `screen-widget` | `미분류 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
-| `screen-widget` | `정리할 항목 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 미분류 0건 안내(`WidgetScratchpad.countText(0)` — `ScratchpadCountSection` 이 안내 스타일로 그린다) |
-| `screen-widget` | `PRD-8 · AC1 단일 위젯 6영역 (날씨·캘린더·다짐·메일·알림·임시 공간 미분류 수), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입, AC9 임시 공간 미분류 수` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-routines` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-routines` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-routines` | `/` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `06 · 루틴` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-routines` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-routines` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-routines` | `루틴` | 일치 | 헤더 영역 라벨(`RoutinesView.swift` `ScreenHeader` 제목) · 탭 바 |
-| `screen-routines` | `5월 6일 · 수요일` | 예시 데이터 | 오늘 날짜 — 구현은 `dateFormat` 「M월 d일 · EEEE」 로 그린다(목업 큰 제목, 구현 헤더 우측 캡션 — 위계는 기준 4) |
-| `screen-routines` | `새 루틴` | 일치 | 헤더 추가 버튼 |
+| `screen-routines` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-routines` | `루틴` | 일치 | `RoutinesScreen.kt`·`RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `5월 6일 · 수요일` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `새 루틴` | 일치 | `RoutineSheets.kt`·`RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `아침 루틴` | 예시 데이터 | 루틴 이름(사용자 데이터) |
-| `screen-routines` | `매일 · 3 / 5 완료` | 일치 | 카드 메타 「\(scheduleSummary) · \(done) / \(total) 완료」 |
-| `screen-routines` | `60%` | 일치 | 카드 진행률 「\(progressPercent)%」 |
+| `screen-routines` | `매일 · 3 / 5 완료` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `60%` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `기상 후 물 한 컵` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `스트레칭 5분` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `아침 산책 (블루보틀까지)` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `샤워 후 일기 한 줄` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `다짐 한 문장 듣기` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `저녁 정리` | 예시 데이터 | 루틴 이름(사용자 데이터) |
-| `screen-routines` | `매일 · 0 / 4 · 22:00 시작 알림` | 구현 대기 | 시작 알림 시각 메타 — 구현 카드 메타는 「매일 · 0 / 4 완료」 이고 루틴 시작 알림이 없다 |
-| `screen-routines` | `대기` | 일치 | 시작 전 루틴의 상태 배지 — `RoutinesView.swift` 카드 진행률 자리(완료 단계 0 일 때) |
+| `screen-routines` | `매일 · 0 / 4 · 22:00 시작 알림` | 구현 대기 | 시작 알림 시각 메타 — 구현 카드 메타에 루틴 시작 알림이 없다 |
+| `screen-routines` | `대기` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `책상 정리` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `내일 옷` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `임시공간 분류` | 예시 데이터 | 단계 이름(사용자 데이터) |
 | `screen-routines` | `책 10페이지` | 예시 데이터 | 단계 이름(사용자 데이터) |
-| `screen-routines` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
+| `screen-routines` | `삭제` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `주간 회고` | 예시 데이터 | 루틴 이름(사용자 데이터) |
-| `screen-routines` | `매주 일요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주기 요약 `RoutineWeekdays.summary` 「매주 \(symbols[day])요일」 — 구현은 쉬는 루틴 행 메타에 그린다 |
-| `screen-routines` | `D-4` | 일치 | 다음 예정일까지 남은 날 — `RoutinesView.swift` 쉬는 루틴 행 오른쪽 배지 「D-\(days)」(`RoutineSchedule.daysUntilNext`, 서버 `ScheduledOn` 과 같은 규칙) |
-| `screen-routines` | `월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `화` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `수` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `목` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `금` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `토` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 주간 루틴 카드의 7일 막대 요일 — `RoutinesView.swift` 쉬는 루틴 행의 요일 막대(특정 요일·매주 루틴만, 글자는 `RoutineWeekdays.symbols`) · 「루틴 추가 — 특정 요일」 프레임의 요일 원형 버튼(`RoutineSheets.swift` `weekdayPicker`, 같은 `symbols`) |
-| `screen-routines` | `아침 루틴 · 30일` | 일치 | history strip 제목 — 구현 이력 시트 제목 「\(routine.name) · \(days.count)일」(표 A 같은 행) |
+| `screen-routines` | `매주 일요일` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `D-4` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `월` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `화` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `수` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `목` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `금` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `토` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `일` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `아침 루틴 · 30일` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `전체 이력` | 구현 대기 | history strip 이력 진입 버튼 — 구현은 카드 하단 「이력」 버튼(표 A 같은 행) |
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
-| `screen-routines` | `오늘 · 60%` | 일치 | 30일 히트맵 끝 라벨 — `RoutineHistoryRange.swift` 「오늘 · \(today.progressPercent)%」(이력 시트 히트맵 아래, 오늘이 예정일일 때) |
-| `screen-routines` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-routines` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-routines` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-routines` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
-| `screen-routines` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-routines` | `오늘 · 60%` | 일치 | `RoutineHistoryRange.kt`·`RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-routines` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | 빈 상태 안내 |
+| `screen-routines` | `아직 루틴이 없습니다. 새 루틴으로 반복되는 하루의 흐름을 적어 보세요.` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `루틴 추가 — 헤더 새 루틴` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-routines` | `루틴 이름 — 예: 아침 루틴` | 일치 | 루틴 추가 프레임 이름 필드 placeholder(`RoutineSheets.swift`) |
-| `screen-routines` | `반복 주기` | 일치 | 루틴 추가 프레임 섹션 라벨(`RoutineSheets.swift`) |
-| `screen-routines` | `매일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
-| `screen-routines` | `특정 요일` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
-| `screen-routines` | `매주` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
-| `screen-routines` | `매월` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 반복 주기 세그먼트 — `RoutineCadence.displayName` |
-| `screen-routines` | `매월 1일` | 일치 | 매월 날짜 스테퍼 「매월 \(monthDay)일」(`RoutineSheets.swift`) |
-| `screen-routines` | `단계` | 일치 | 루틴 추가 프레임 섹션 라벨(`RoutineSheets.swift`) |
+| `screen-routines` | `루틴 이름 — 예: 아침 루틴` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `반복 주기` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `매일` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `특정 요일` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `매주` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `매월` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `매월 1일` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `단계` | 일치 | `RoutineSheets.kt`·`RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `1` | 예시 데이터 | 단계 번호 「\(index + 1)」(런타임 값) |
-| `screen-routines` | `단계 이름` | 일치 | 루틴 추가 프레임 단계 필드 placeholder(`RoutineSheets.swift`) |
-| `screen-routines` | `단계 추가` | 일치 | 루틴 추가 프레임 단계 추가 버튼 · 단계 추가 프레임 1차 액션(`RoutineSheets.swift`) |
-| `screen-routines` | `저장` | 일치 | 루틴 추가 프레임 1차 액션(`RoutineSheets.swift`) |
-| `screen-routines` | `취소` | 일치 | 루틴 추가 프레임 2차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `단계 이름` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `단계 추가` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `저장` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `취소` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeySheets.kt` | 대응 파일이 아닌 Kotlin 파일 `ApprovalKeySheets.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-routines` | `루틴 추가 — 특정 요일` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-routines` | `단계 추가 — 루틴 카드에서` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-routines` | `아침 루틴 · 단계` | 일치 | 단계 추가 프레임 시트 제목 「\(routine.name) · 단계」(`RoutineSheets.swift`) |
-| `screen-routines` | `새 단계` | 일치 | 단계 추가 프레임 입력 필드 placeholder(`RoutineSheets.swift`) |
-| `screen-routines` | `닫기` | 일치 | 단계 추가 프레임 2차 액션(`RoutineSheets.swift`) |
+| `screen-routines` | `아침 루틴 · 단계` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `새 단계` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `닫기` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `상태 변형` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-routines` | `단계 체크를 저장하지 못했습니다.` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 「상태 변형」 오류 행 문구 앞 문장 — `RoutineFailureCopy.Action.check` 의 실패 문구(`RoutineErrorRow.swift` 가 그린다. 동작별 7종 중 하나) |
-| `screen-routines` | `네트워크 연결을 확인해 주세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/Routines.swift` | 「상태 변형」 오류 행 문구 뒤 문장 — `RoutineFailureCopy` 의 연결 실패 안내(원인 안내 3종 중 하나) |
-| `screen-routines` | `다시 시도` | 일치 | 「상태 변형」 오류 행 재시도 버튼(`RoutineErrorRow.swift`) |
-| `screen-routines` | `오늘 · 1` | 일치 | 오늘 루틴 섹션 제목 「오늘 · \(viewModel.today.count)」 |
-| `screen-routines` | `매일 · 5 / 5 완료` | 일치 | 카드 메타 「\(scheduleSummary) · \(done) / \(total) 완료」(다 끝낸 루틴) |
-| `screen-routines` | `완료` | 일치 | 다 끝낸 루틴의 진행률 자리 |
-| `screen-routines` | `오늘 쉬는 루틴` | 일치 | 오늘 예정 없는 루틴 섹션 제목 |
-| `screen-routines` | `매주 일요일 · 단계 3개` | 일치 | 쉬는 루틴 행 메타 「\(scheduleSummary) · 단계 \(steps.count)개」 |
-| `screen-routines` | `매일 · 예정 30일 중 19일 완료` | 일치 | 이력 요약 줄(`RoutineSheets.swift`) |
-| `screen-routines` | `지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.` | 일치 | 이력 분모 안내 줄(`RoutineSheets.swift`) |
+| `screen-routines` | `단계 체크를 저장하지 못했습니다.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `네트워크 연결을 확인해 주세요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/routines/Routines.kt` | 대응 파일이 아닌 Kotlin 파일 `Routines.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-routines` | `다시 시도` | 일치 | `RoutineErrorRow.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `오늘 · 1` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `매일 · 5 / 5 완료` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `완료` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `오늘 쉬는 루틴` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `매주 일요일 · 단계 3개` | 일치 | `RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `매일 · 예정 30일 중 19일 완료` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `지난날의 n/m도 지금의 단계 수를 기준으로 셉니다.` | 일치 | `RoutineSheets.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `PRD-2 · AC1 단계 정의(아침 루틴 5단계), AC2 반복 주기(매일/매주), AC3 단계 체크 → 진행률, AC4 30일 이력 히트맵` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-scratchpad` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `03 · 임시 공간` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-scratchpad` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-scratchpad` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-scratchpad` | `임시 공간` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구(배지 옆 작은 라벨) |
+| `screen-scratchpad` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-scratchpad` | `임시 공간` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | 대응 파일이 아닌 Kotlin 파일 `AreaLabel.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-scratchpad` | `12` | 예시 데이터 | 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
-| `screen-scratchpad` | `분류되지 않은 메모` | 일치 | 헤더 제목 |
-| `screen-scratchpad` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | 헤더 부제(`ScreenHeader` `subtitle`) |
-| `screen-scratchpad` | `새 메모` | 일치 | 추가 버튼 |
-| `screen-scratchpad` | `오늘` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 일자 그룹 제목 `ScratchpadSections.title` |
-| `screen-scratchpad` | `5 ITEMS` | 일치 | 일자 그룹 개수 — 구현 「\(section.items.count) ITEMS」(표 A 같은 행) |
-| `screen-scratchpad` | `숏컷 · 음성` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 입력 방식 표시 `ScratchpadSource.displayName` |
+| `screen-scratchpad` | `분류되지 않은 메모` | 일치 | `ScratchpadScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `캡처 부담 없이 일단 던져두는 곳` | 일치 | `ScratchpadScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `새 메모` | 일치 | `ScratchpadScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `오늘` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-scratchpad` | `5 ITEMS` | 일치 | `ScratchpadScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `숏컷 · 음성` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-scratchpad` | `14:08` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `윤정한테 다음 주 화요일 미팅 가능한지 메일 보내고, retention 데이터 fact-check 한 번 더 돌리기` | 예시 데이터 | 메모 본문(사용자 데이터) |
 | `screen-scratchpad` | `"한·영 혼용 자동 인식"` | 구현 대기 | 음성 항목의 STT 결과 메타(PRD-4 AC3) — 구현 카드에 없다 |
 | `screen-scratchpad` | `분류 →` | 구현 대기 | 접힌 분류 버튼 — 구현은 이동 칩 넷(→ 개인·→ 회사·→ 다짐·→ 루틴)을 늘 펼쳐 그린다 |
-| `screen-scratchpad` | `탭 내 입력` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 입력 방식 표시 `ScratchpadSource.displayName` |
+| `screen-scratchpad` | `탭 내 입력` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-scratchpad` | `11:42` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `엄마 생신 선물 — 책장 정리 도와드리는 거 어때` | 예시 데이터 | 메모 본문(사용자 데이터) |
 | `screen-scratchpad` | `09:13` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `아침 산책 7분만 더 길게 — 다음 주부터는 카페 한 정거장 더 가서 블루보틀로` | 예시 데이터 | 메모 본문(사용자 데이터) |
-| `screen-scratchpad` | `→ 개인` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 이동 칩 `ScratchpadMoveTarget.chipLabel` |
-| `screen-scratchpad` | `→ 루틴` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 위와 같음 |
-| `screen-scratchpad` | `→ 다짐` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 위와 같음 |
-| `screen-scratchpad` | `어제` | 외부 `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 일자 그룹 제목 `ScratchpadSections.title` |
-| `screen-scratchpad` | `7 ITEMS` | 일치 | 일자 그룹 개수 — 위와 같음 |
+| `screen-scratchpad` | `→ 개인` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-scratchpad` | `→ 루틴` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-scratchpad` | `→ 다짐` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-scratchpad` | `어제` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-scratchpad` | `7 ITEMS` | 일치 | `ScratchpadScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-scratchpad` | `22:51` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `"compounding은 매일 1%면 1년에 37배" — 어디서 들었는지 까먹기 전에` | 예시 데이터 | 메모 본문(사용자 데이터) |
-| `screen-scratchpad` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
+| `screen-scratchpad` | `삭제` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `PriorityEditSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-scratchpad` | `19:30` | 예시 데이터 | 수집 시각(데이터) |
 | `screen-scratchpad` | `이번 주말 — 캠핑 의자 새로 살지, 빈티지로 갈지 결정` | 예시 데이터 | 메모 본문(사용자 데이터) |
-| `screen-scratchpad` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-scratchpad` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-scratchpad` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-scratchpad` | `채팅` | 일치 | `RootView.swift` 탭 라벨 — 「더 보기 — 미분류 배지」 프레임의 목록 첫 항목 |
-| `screen-scratchpad` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
-| `screen-scratchpad` | `임시공간` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(#244 부터 구현도 시스템 More 목록 안. 미분류 수는 `.badge`) |
-| `screen-scratchpad` | `개인` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
-| `screen-scratchpad` | `회사` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
-| `screen-scratchpad` | `루틴` | 일치 | 「더 보기」 목록 항목 — `RootView.swift` 탭 라벨(구현도 시스템 More 목록 안에 그려진다) |
-| `screen-scratchpad` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-scratchpad` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-scratchpad` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `0` | 예시 데이터 | 빈 상태 프레임의 미분류 개수 배지 — 구현 「\(viewModel.unclassifiedCount)」 |
-| `screen-scratchpad` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | 빈 상태 안내 |
+| `screen-scratchpad` | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.` | 일치 | `ScratchpadScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-scratchpad` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-scratchpad` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `ScratchpadViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-scratchpad` | `더 보기 — 미분류 배지` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-scratchpad` | `편집` | 시스템 UI | 「더 보기」 목록 내비게이션 바 버튼 — 시스템 More 목록이 그리는 자리라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「편집」으로 그린다 |
-| `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현에 없다(시스템 More 목록에는 꼬리말 자리가 없다) |
+| `screen-scratchpad` | `편집` | 구현 대기 | 「더 보기」 목록 내비게이션 바의 탭 편집 버튼 — 구현 「더 보기」 목록(앱이 직접 그린다)에 탭 편집이 없다. 플랫폼 차이면 허용목록 항목 후보 |
+| `screen-scratchpad` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `임시공간` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `개인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `회사` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `루틴` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현의 앱 안 「더 보기」 목록(`RootScreen.kt`)에 꼬리말이 없다 |
 | `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12 — 임시공간이 「더 보기」로 옮겨져 「더 보기」 목록의 임시공간 항목에 표시, 위젯 PRD-8 AC9로 보완)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-sessions` | `← 모든 목업` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `/` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `15 · 에이전트 세션` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `목록` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `9:41` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `AGENT · SESSIONS` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `에이전트 세션` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `새 세션` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `실행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `생성 2시간 전` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `AGENT · SESSIONS` | 일치 | `SessionsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `에이전트 세션` | 일치 | `SessionsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `새 세션` | 일치 | `SessionCreateSheet.kt`·`SessionsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `실행 중` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `생성 2시간 전` | 일치 | `SessionComponents.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `테스트 실패 원인 찾기` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `Claude Code · sonnet` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `환경이 떠 있어요 · 마지막 사용 3분 전` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `대기` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `생성 어제` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `Claude Code · sonnet` | 예시 데이터 | 타입 줄 `$name · $model`(`Sessions.kt`)의 서식 + 예시 값 |
+| `screen-sessions` | `환경이 떠 있어요 · 마지막 사용 3분 전` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `대기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `생성 어제` | 일치 | `SessionComponents.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `homelab 디스크 정리` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `Shell` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `아카이브됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `생성 3일 전` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `환경은 떠 있지만 쉬는 중 · 마지막 사용 42분 전` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `아카이브됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `생성 3일 전` | 일치 | `SessionComponents.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `릴리스 노트 초안` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `MiniMax Code · platform-default` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `아카이브 2일 전 · 3.1 MB · 환경 반납됨` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `다짐` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `PR 모니터` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `승인` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `세션` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `더 보기` | 시스템 UI | 시스템 `TabView` 오버플로 탭 |
+| `screen-sessions` | `MiniMax Code · platform-default` | 예시 데이터 | 타입 줄 `$name · $model`(`Sessions.kt`)의 서식 + 예시 값 |
+| `screen-sessions` | `아카이브 2일 전 · 3.1 MB · 환경 반납됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `빈 상태` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `아직 세션이 없어요. 「새 세션」으로 에이전트에게 일을 맡겨 보세요.` | 일치 | `SessionsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `오류 — 연결 불가` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `다시 시도` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `이름` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `예: 테스트 실패 원인 찾기` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `타입` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `다시 시도` | 일치 | `SessionComponents.kt`·`SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `이름` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `예: 테스트 실패 원인 찾기` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `타입` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `Interactive bash. You type the commands.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `Claude Code` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `Agent CLI. You send prompts, it does the work.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
@@ -975,201 +911,205 @@ last_updated: 2026-10-28
 | `screen-sessions` | `MiniMax Code CLI on the same prompt loop.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `Approval-gated` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `Same agent, but every outbound call waits for your approval.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `모델` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `모델` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `sonnet` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `만들기` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `취소` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `타입과 모델은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `만들기` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `취소` | 일치 | `SessionCreateSheet.kt`·`SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `새 세션 — 띄우는 중` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `세션 띄우는 중…` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션 띄우는 중…` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `새 세션 — 타입 목록 실패` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `타입은 만든 뒤에 바꿀 수 없어요. 세션마다 전용 환경이 하나씩 뜨고, 처음 뜨는 데 몇 초 걸릴 수 있어요.` | 일치 | `SessionCreateSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `상세 — 전송 직후` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `세션 동작` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `전송됨 · 응답 대기 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `환경이 떠 있어요 · 마지막 사용 방금` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `에이전트에게 맡길 일` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `보내기` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션 동작` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `전송됨 · 응답 대기 중` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `환경이 떠 있어요 · 마지막 사용 방금` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `아직 출력이 없어요. 아래에 프롬프트를 적어 에이전트에게 일을 맡겨 보세요.` | 구현 대기 | 출력 빈 상태 — 구현은 「아직 출력이 없어요. 아래에 명령을 입력해 보세요.」(표 A 같은 행) |
+| `screen-sessions` | `에이전트에게 맡길 일` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `보내기` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `상세 — 에이전트 응답 중` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `응답 진행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
-| `screen-sessions` | `#1` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `응답 진행 중` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `#1` | 일치 | `SessionTranscriptView.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `21:02 · 48초` | 예시 데이터 | turn 시각·소요 값(서식은 `AgentSessionFormatting.turnTiming`) |
-| `screen-sessions` | `완료` | 외부 `ios/Shared/Sources/PocketAideAPI/SessionTranscript.swift` | 공유 API 모델의 표시 문구(turn 상태 라벨) |
-| `screen-sessions` | `입력` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `완료` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscript.kt` | 대응 파일이 아닌 Kotlin 파일 `SessionTranscript.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-sessions` | `입력` | 일치 | `SessionTranscriptView.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `이 레포 테스트 실패 원인 찾아줘` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `출력` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `출력` | 일치 | `SessionTranscriptView.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `원인은 sort.SliceStable 비교 함수가 createdAt 을 보고 있는 것이에요. lastAccess 로 바꾸고 테스트를 추가할게요.` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `#2` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `#2` | 일치 | `SessionTranscriptView.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `21:04` | 예시 데이터 | turn 시각·소요 값(서식은 `AgentSessionFormatting.turnTiming`) |
-| `screen-sessions` | `진행 중` | 외부 `ios/Shared/Sources/PocketAideAPI/SessionTranscript.swift` | 공유 API 모델의 표시 문구(turn 상태 라벨) |
+| `screen-sessions` | `진행 중` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/SessionTranscript.kt` | 대응 파일이 아닌 Kotlin 파일 `SessionTranscript.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-sessions` | `lastAccess 로 바꾸고 테스트도 추가해줘` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `네, 비교 함수를 lastAccess 기준으로 바꿀게요. go test ./internal/handlers/ -run TestSessionList ok pocket-aide/backend/internal/handlers 0.41s 정렬 테스트를 하나 더 추가하는 중이에요…` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
 | `screen-sessions` | `상세 — 쉘` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-sessions` | `user@sess:~$ df -h /var/lib Filesystem Size Used Avail Use% Mounted on /dev/nvme0n1p1 80G 71G 9.0G 89% / user@sess:~$ du -sh /var/lib/containerd 38G /var/lib/containerd user@sess:~$` | 예시 데이터 | 세션 이름·출력·모델 값·플랫폼 카탈로그 문구(라벨·설명은 플랫폼이 준다) |
-| `screen-sessions` | `명령 입력` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `명령 입력` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `상세 — 아카이브됨` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `아카이브된 세션이에요` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `복원` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `아카이브된 세션이에요` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `오래 쓰지 않아 환경을 반납한 상태예요. 복원하면 새 환경이 뜨고 이전 출력이 그대로 이어져요. 수십 초 걸릴 수 있어요.` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `복원` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `상세 — 세션 동작` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `지금 아카이브` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `세션 삭제` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `지금 아카이브` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `세션 삭제` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `상세 — 삭제 확인` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `세션을 삭제할까요?` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.` | 일치 | `Sessions/` 화면 파일 |
-| `screen-sessions` | `삭제` | 일치 | `Sessions/` 화면 파일 |
+| `screen-sessions` | `세션을 삭제할까요?` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `되돌릴 수 없어요. 환경과 세션 기록이 지워져요. 이미 보관된 아카이브는 보존 정책에 따라 바로 지워지지 않을 수 있어요.` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `삭제` | 일치 | `SessionDetailScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `상세 — 아카이브 꺼짐` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
-| `screen-sessions` | `이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요.` | 외부 `ios/Shared/Sources/PocketAideAPI/Sessions.swift` | 공유 API 모델의 표시 문구(상태 라벨·상태 설명·타입 줄·오류 안내·응답 단계) |
+| `screen-sessions` | `이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-personal` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `04 · 개인 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-personal` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-todo-personal` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-todo-personal` | `PERSONAL` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
-| `screen-todo-personal` | `내 일` | 일치 | 헤더 제목 |
-| `screen-todo-personal` | `7개 남음 · 4개 완료` | 일치 | 요약 줄 |
-| `screen-todo-personal` | `개인 영역만 검색…` | 일치 | 검색 필드 placeholder |
-| `screen-todo-personal` | `전체 · 11` | 일치 | 기한 필터 칩 「전체 · \(total)」(`TodoDueFilterChips.swift`) |
-| `screen-todo-personal` | `오늘` | 일치 | 기한 필터 칩 「오늘」(`TodoDueFilterChips.swift`) — 같은 글자의 날짜 섹션 제목(기한별 섹션)은 구조 축 `_structure-map` 표 S #8 이 맡는다 |
-| `screen-todo-personal` | `이번 주` | 일치 | 기한 필터 칩 「이번 주」(`TodoDueFilterChips.swift`) |
-| `screen-todo-personal` | `날짜 없음` | 일치 | 기한 필터 칩 「날짜 없음」(`TodoDueFilterChips.swift`) — 같은 글자의 날짜 섹션 제목은 구조 축 `_structure-map` 표 S #8 이 맡는다 |
-| `screen-todo-personal` | `5월 6일 수` | 구현 대기 | 날짜 섹션 부제(날짜) — 날짜 섹션이 구현에 없다 |
-| `screen-todo-personal` | `우선` | 외부 `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 우선순위 라벨 — `TodoPriority.displayName` |
+| `screen-todo-personal` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-todo-personal` | `PERSONAL` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `내 일` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `7개 남음 · 4개 완료` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `개인 영역만 검색…` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `전체 · 11` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `오늘` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `이번 주` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `날짜 없음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `5월 6일 수` | 구현 대기 | 날짜 섹션 부제(날짜)·항목 수 — 구현 개인 목록에 날짜 섹션이 없다(섹션은 「할 일」·「완료」) |
+| `screen-todo-personal` | `우선` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/Todos.kt` | 대응 파일이 아닌 Kotlin 파일 `Todos.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-personal` | `엄마 생신 케이크 예약 — 후암동 어니언` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `캠핑 의자 결정 — 빈티지 vs 새 거` | 예시 데이터 | 할 일 제목(사용자 데이터) |
-| `screen-todo-personal` | `메모: 임시공간에서 이동됨` | 일치 | 행 메타 「메모: \(item.memo)」 |
+| `screen-todo-personal` | `메모: 임시공간에서 이동됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-personal` | `치과 예약 잡기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `금요일` | 예시 데이터 | 마감일(사용자 데이터) |
-| `screen-todo-personal` | `2개` | 구현 대기 | 날짜 섹션 항목 수 — 날짜 섹션이 구현에 없다 |
+| `screen-todo-personal` | `2개` | 구현 대기 | 날짜 섹션 부제(날짜)·항목 수 — 구현 개인 목록에 날짜 섹션이 없다(섹션은 「할 일」·「완료」) |
 | `screen-todo-personal` | `아침 산책 코스 — 한 정거장 더 가서 블루보틀` | 예시 데이터 | 할 일 제목(사용자 데이터) |
-| `screen-todo-personal` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
+| `screen-todo-personal` | `삭제` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoEditSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoEditSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-personal` | `책장 정리 — 안 읽은 책 5권 추리기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
-| `screen-todo-personal` | `완료 · 4` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
-| `screen-todo-personal` | `접기` | 일치 | 완료 섹션 접기 버튼 — `TodoListView.swift` 개인 완료 섹션 머리 `doneCollapseButton` |
+| `screen-todo-personal` | `완료 · 4` | 예시 데이터 | 완료 섹션 헤더 서식 「$title · $count」 + 개수 데이터(제목은 표 A 기준 4) |
+| `screen-todo-personal` | `접기` | 일치 | `TodoListScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `세탁기 세제 주문` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
-| `screen-todo-personal` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-personal` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-todo-personal` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-todo-personal` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
-| `screen-todo-personal` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-personal` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-personal` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-personal` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-personal` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-personal` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-todo-personal` | `0개 남음 · 0개 완료` | 일치 | 빈 상태 프레임 요약 줄 |
-| `screen-todo-personal` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 |
+| `screen-todo-personal` | `0개 남음 · 0개 완료` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-personal` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | `TodoListScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-personal` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-todo-personal` | `목록 — 완료 접힘` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-todo-personal` | `펼치기` | 일치 | 「목록 — 완료 접힘」 프레임 완료 섹션 머리 오른쪽 버튼 — `TodoListView.swift` 개인 완료 섹션 `doneCollapseButton`(접힌 뒤 문구) |
+| `screen-todo-personal` | `펼치기` | 일치 | `TodoListScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `PRD-3 · AC3 시각적 영역 구분(테라코타 톤·상단 스트립·"PERSONAL" 라벨) — 회사 탭과 한눈에 구분되도록 설계` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-todo-work` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `05 · 회사 투두` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-todo-work` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-todo-work` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-todo-work` | `WORK` | 외부 `ios/Shared/Sources/DesignSystem/Components/AreaLabel.swift` | 헤더 영역 라벨 — `AreaLabel` 기본 문구 |
-| `screen-todo-work` | `회사` | 일치 | 헤더 제목 · 탭 바 |
-| `screen-todo-work` | `12 OPEN · 8 DONE · DEADLINE 3` | 일치 | 요약 줄 「\(open) OPEN · \(done) DONE · DEADLINE \(deadline)」(마감일 있는 미완료 수) |
-| `screen-todo-work` | `회사 영역만 검색…` | 일치 | 검색 필드 placeholder |
-| `screen-todo-work` | `DUE TODAY` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 OPEN/DONE 두 섹션뿐 |
+| `screen-todo-work` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-todo-work` | `WORK` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/Todos.kt` | 대응 파일이 아닌 Kotlin 파일 `Todos.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-work` | `회사` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `12 OPEN · 8 DONE · DEADLINE 3` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-work` | `회사 영역만 검색…` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-work` | `DUE TODAY` | 구현 대기 | 마감 기준 섹션 제목 — 구현 회사 목록은 OPEN/DONE 두 섹션뿐(표 A 같은 행) |
 | `screen-todo-work` | `분기 리뷰 deck — KPI 슬라이드 4장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `오늘 17:00` | 예시 데이터 | 마감 시각(사용자 데이터) |
-| `screen-todo-work` | `·` | 일치 | 행 메타 구분자 「 · 」 |
-| `screen-todo-work` | `P1` | 일치 | 우선순위 표기 — `TodoListView.swift` 회사 행 메타(우선 = P1 · 보통 = P2 · 낮음 = P3) |
+| `screen-todo-work` | `·` | 일치 | `TodoListScreen.kt`·`TodoRowMeta.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `P1` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-work` | `고객 케이스 A 리뷰 회신` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `오늘 18:00` | 예시 데이터 | 마감 시각(사용자 데이터) |
 | `screen-todo-work` | `윤정님 대기` | 구현 대기 | 대기 상태 메타 — 구현 행 메타에 없다 |
-| `screen-todo-work` | `THIS WEEK` | 구현 대기 | 마감 기준 섹션 제목 — 위와 같음 |
+| `screen-todo-work` | `THIS WEEK` | 구현 대기 | 마감 기준 섹션 제목 — 구현 회사 목록은 OPEN/DONE 두 섹션뿐(표 A 같은 행) |
 | `screen-todo-work` | `retention 데이터 fact-check 한 번 더` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `금요일` | 예시 데이터 | 마감일(사용자 데이터) |
-| `screen-todo-work` | `메모: 임시공간` | 일치 | 행 메타 「메모: \(item.memo)」 |
+| `screen-todo-work` | `메모: 임시공간` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-work` | `다음 분기 우선순위 3개 안 정리` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `윤정 1:1 — 다음 주 화요일 일정 확정` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `onboarding 개선 결과 한 페이지로` | 예시 데이터 | 할 일 제목(사용자 데이터) |
-| `screen-todo-work` | `BACKLOG · 5` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 「OPEN · n」 |
+| `screen-todo-work` | `BACKLOG · 5` | 구현 대기 | 마감 기준 섹션 제목 — 구현은 「OPEN · n」(표 A 같은 행) |
 | `screen-todo-work` | `결제 이슈 timeline 정리 — Slack 자료 모으기` | 예시 데이터 | 할 일 제목(사용자 데이터) |
-| `screen-todo-work` | `삭제` | 일치 | 행 스와이프 삭제 액션 라벨 |
+| `screen-todo-work` | `삭제` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoEditSheet.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoEditSheet.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-todo-work` | `지난 분기 회고 메모 — 액션 아이템만 남기기` | 예시 데이터 | 할 일 제목(사용자 데이터 — 스와이프된 행) |
-| `screen-todo-work` | `DONE · 8` | 일치 | 완료 섹션 헤더 「\(title) · \(items.count)」 |
+| `screen-todo-work` | `DONE · 8` | 예시 데이터 | 완료 섹션 헤더 서식 「$title · $count」 + 개수 데이터(제목은 표 A 기준 4) |
 | `screen-todo-work` | `주간 지표 리포트 공유` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `채용 인터뷰 피드백 제출` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-work` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다 |
 | `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
-| `screen-todo-work` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-todo-work` | `승인` | 일치 | `RootView.swift` 탭 바 셋째 칸(#244) |
-| `screen-todo-work` | `세션` | 일치 | `RootView.swift` 탭 바 넷째 칸(2026-10-23) |
-| `screen-todo-work` | `더 보기` | 시스템 UI | 하단 탭 바 다섯째 칸(tokens.md §7 하단 노출) — 구현은 시스템 `TabView` 가 탭 5개 초과분을 접어 그리는 오버플로 탭이라 앱 리터럴이 없고, UIKit 이 앱 개발 지역(`ios/project.yml` `developmentLanguage: ko`) 문구 「더 보기」로 그린다(UI 테스트도 `buttons["더 보기"]`) |
-| `screen-todo-work` | `다짐` | 일치 | `RootView.swift` 탭 바 |
+| `screen-todo-work` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-work` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-todo-work` | `0 OPEN · 0 DONE` | 일치 | 빈 상태·불러오는 중·오류 프레임 요약 줄 「\(open) OPEN · \(done) DONE」 |
-| `screen-todo-work` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | 빈 상태 안내 |
+| `screen-todo-work` | `0 OPEN · 0 DONE` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `TodoCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-todo-work` | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.` | 일치 | `TodoListScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-work` | `불러오는 중` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-work` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
 | `screen-todo-work` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 줄 — 구현은 `Text(message)` 로 `TodoListViewModel.errorMessage`(`String(describing:)` — `APIError.badStatus` 서식 「HTTP \(s): \(body)」)를 그린다 |
 | `screen-todo-work` | `PRD-3 · AC1 별도 데이터·검색 분리(검색바에 "회사 영역만"), AC3 시각 차이(슬레이트·각진 카드·모노스페이스), AC4 영역 간 이동 UI 없음` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
-| `screen-external-notifications` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-external-notifications` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-external-notifications` | `16 · 알림 기록` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
-| `screen-external-notifications` | `목록` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-external-notifications` | `빈 상태` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-external-notifications` | `오류` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-external-notifications` | `「더 보기」 진입` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-external-notifications` | `9:41` | 목업 전용 | 상태바 시각 — iOS 가 그린다 |
-| `screen-external-notifications` | `NOTIFY · LOG` | 일치 | 헤더 `AreaLabel`(`ExternalNotificationsView.swift`) |
-| `screen-external-notifications` | `알림 기록` | 일치 | 헤더 제목·「더 보기」 목록 항목(`ExternalNotificationsView.swift`·`RootView.swift`) |
-| `screen-external-notifications` | `자동화가 보낸 알림 · 보낸 호출자와 요청 주체` | 일치 | 헤더 설명 줄 |
-| `screen-external-notifications` | `2` | 예시 데이터 | 미확인 수(헤더 배지) |
-| `screen-external-notifications` | `새 알림` | 일치 | 헤더 배지 라벨·미확인 행 칩 |
-| `screen-external-notifications` | `최근 알림` | 일치 | 섹션 머리 |
-| `screen-external-notifications` | `homelab-k3s-mcp · SA` | 예시 데이터 | 호출자 칩 — 구현은 `ExternalNotificationFormatting.callerLabel`(「<등록 이름> · 키/SA」) |
-| `screen-external-notifications` | `infra-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
-| `screen-external-notifications` | `old-ci · 키` | 예시 데이터 | 호출자 칩 — 같은 서식 |
-| `screen-external-notifications` | `09:41` | 예시 데이터 | 받은 시각 — `ExternalNotificationFormatting.time`(오늘 「HH:mm」) |
-| `screen-external-notifications` | `09:20` | 예시 데이터 | 받은 시각 |
-| `screen-external-notifications` | `어제 22:10` | 예시 데이터 | 받은 시각(어제) |
-| `screen-external-notifications` | `10/24 18:02` | 예시 데이터 | 받은 시각(그 전) |
-| `screen-external-notifications` | `dear-baby 구버전 정리 완료` | 예시 데이터 | 알림 제목 |
-| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음.` | 예시 데이터 | 알림 본문 |
-| `screen-external-notifications` | `nightly 백업 완료` | 예시 데이터 | 알림 제목 |
-| `screen-external-notifications` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 알림 본문 |
-| `screen-external-notifications` | `배포 롤백됨` | 예시 데이터 | 알림 제목 |
-| `screen-external-notifications` | `ping` | 예시 데이터 | 알림 제목 |
-| `screen-external-notifications` | `요청 Claude Code 세션 — dear-baby 정리` | 예시 데이터 | 요청 주체 — `ExternalNotificationFormatting.requesterLabel`(「요청 <requester>」) |
-| `screen-external-notifications` | `요청 nightly 백업 크론잡` | 예시 데이터 | 요청 주체 |
-| `screen-external-notifications` | `요청 reconciler 정합성 루프` | 예시 데이터 | 요청 주체 |
-| `screen-external-notifications` | `요청 주체 미상` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 요청 주체가 빈 기록(`ExternalNotificationFormatting.requesterLabel`) |
-| `screen-external-notifications` | `1/1 기기` | 예시 데이터 | 도달 — `ExternalNotificationFormatting.deliveryLabel`(「<sent>/<devices> 기기」) |
-| `screen-external-notifications` | `2/2 기기` | 예시 데이터 | 도달 |
-| `screen-external-notifications` | `등록된 기기 없음` | 외부 `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 기기 0개인 기록의 도달(`ExternalNotificationFormatting.deliveryLabel`) |
-| `screen-external-notifications` | `이전 기록 불러오는 중…` | 일치 | 목록 끝 이어 불러오기 |
-| `screen-external-notifications` | `받은 알림이 없어요.` | 일치 | 「빈 상태」 안내 |
-| `screen-external-notifications` | `등록한 호출자가 보낸 알림이 여기에 남습니다.` | 일치 | 「빈 상태」 안내 둘째 줄 |
-| `screen-external-notifications` | `알림 기록을 불러오지 못했습니다` | 일치 | 「오류」 배너 제목 |
-| `screen-external-notifications` | `HTTP 503: service unavailable` | 예시 데이터 | 오류 배너 설명 — 구현은 `Text(message)` 로 `errorMessage`(`String(describing:)`)를 그린다 |
-| `screen-external-notifications` | `다시 시도` | 일치 | 「오류」 배너 재시도 버튼 |
-| `screen-external-notifications` | `다짐` | 일치 | `RootView.swift` 탭 바 |
-| `screen-external-notifications` | `PR 모니터` | 일치 | `RootView.swift` 탭 바 |
-| `screen-external-notifications` | `3` | 예시 데이터 | 승인 탭 배지(대기 수) |
-| `screen-external-notifications` | `승인` | 일치 | `RootView.swift` 탭 바 |
-| `screen-external-notifications` | `세션` | 일치 | `RootView.swift` 탭 바 |
-| `screen-external-notifications` | `더 보기` | 시스템 UI | 시스템 `TabView` 오버플로 탭·목록 제목 |
-| `screen-external-notifications` | `채팅` | 일치 | `RootView.swift` 오버플로 목록 |
-| `screen-external-notifications` | `임시공간` | 일치 | `RootView.swift` 오버플로 목록 |
-| `screen-external-notifications` | `4` | 예시 데이터 | 오버플로 목록 임시공간 배지(미분류 수) |
-| `screen-external-notifications` | `개인` | 일치 | `RootView.swift` 오버플로 목록 |
-| `screen-external-notifications` | `회사` | 일치 | `RootView.swift` 오버플로 목록 |
-| `screen-external-notifications` | `루틴` | 일치 | `RootView.swift` 오버플로 목록 |
-| `screen-external-notifications` | `상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
-| `screen-external-notifications` | `닫기` | 일치 | 상세 시트 닫기(`ExternalNotificationDetailSheet.swift`) |
-| `screen-external-notifications` | `deployment 3개와 service 2개를 지웠습니다. 남은 리소스 없음. v1 트래픽이 일주일째 0이라 v2 롤아웃이 끝난 것으로 보고 정리했습니다. 되돌리려면 이전 매니페스트를 다시 적용하세요.` | 예시 데이터 | 상세 본문 전체 — 구현은 `item.body` 를 줄임 없이 |
-| `screen-external-notifications` | `보낸 호출자` | 일치 | 상세 메타 라벨 |
-| `screen-external-notifications` | `요청 주체` | 일치 | 상세 메타 라벨 |
-| `screen-external-notifications` | `Claude Code 세션 — dear-baby 구버전 정리 (k8s 리소스 정리 · v1 트래픽 0 확인 후)` | 예시 데이터 | 상세 요청 주체 전체 — `ExternalNotificationFormatting.requesterValue` |
-| `screen-external-notifications` | `받은 시각` | 일치 | 상세 메타 라벨 |
-| `screen-external-notifications` | `2026-10-27 09:41:12` | 예시 데이터 | 상세 받은 시각 — `ExternalNotificationFormatting.fullTime`(「yyyy-MM-dd HH:mm:ss」) |
-| `screen-external-notifications` | `도달` | 일치 | 상세 메타 라벨 |
+| `screen-widget` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-widget` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-widget` | `09 · 통합 위젯` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-widget` | `홈 스크린 · 큰 위젯 (4×4)` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-widget` | `서울` | 예시 데이터 | 날씨 슬라이스 지명 라벨(`WeatherSection` 이 앱이 저장한 위치의 역지오코딩 `placeName` 으로 그린다) |
+| `screen-widget` | `18°` | 예시 데이터 | 서식(`${temperature}°`·`$start — $end`, `Weather.kt`·`UpcomingEvents.kt`)은 구분 기호뿐이고 값은 데이터 |
+| `screen-widget` | `한때 비` | 예시 데이터 | 현재 날씨 상태(`WeatherSection` 이 `summary.condition` 으로 그린다 — WMO 코드 → `Weather.kt` 고정 어휘(맑음·대체로 맑음·흐림 등)). 목업 예시 「한때 비」 는 그 어휘 밖이다 — 어휘 차이는 범위 밖 후속 |
+| `screen-widget` | `최고 22 · 최저 14` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/weather/Weather.kt` | 대응 파일이 아닌 Kotlin 파일 `Weather.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `다음 일정` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `분기 리뷰 · 회의실 4` | 예시 데이터 | 첫 일정 제목(사용자 캘린더 데이터 — `CalendarSection` 이 `first.title` 로 그린다) |
+| `screen-widget` | `14:00 — 15:30` | 예시 데이터 | 서식(`${temperature}°`·`$start — $end`, `Weather.kt`·`UpcomingEvents.kt`)은 구분 기호뿐이고 값은 데이터 |
+| `screen-widget` | `+ 2 더` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `오늘의 다짐` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `작게 시작해서 매일 1%씩. 1년에 37배.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
+| `screen-widget` | `메일 · 3 미확인` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `widget/PocketAideWidget.kt` 행) |
+| `screen-widget` | `윤정 · 분기 리뷰 자료` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `widget/PocketAideWidget.kt` 행) |
+| `screen-widget` | `미리 받아보내드립니다 ─` | 미구현 영역 | 메일 슬라이스 — 위젯이 아직 그리지 않는다(`_impl-map.md` `widget/PocketAideWidget.kt` 행) |
+| `screen-widget` | `PocketAide 알림` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `nightly 백업 완료` | 예시 데이터 | 최신 미확인 호출자 알림 제목(`NotificationSection` 이 `ExternalNotification.title` 을 그대로 그린다 — PRD-8 결정 「알림 영역 — 호출자 알림으로 대체」, 2026-10-27) |
+| `screen-widget` | `스냅샷 3개 생성 · 42.1 GB` | 예시 데이터 | 최신 미확인 호출자 알림 본문(`ExternalNotification.body`, 비어 있으면 줄 없음) |
+| `screen-widget` | `임시 공간` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `미분류` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `12` | 예시 데이터 | 미분류 수(`ScratchpadCountSection` 이 `.loaded(n)` 의 n 으로 그린다) |
+| `screen-widget` | `개` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | 대응 파일이 아닌 Kotlin 파일 `AffirmationsScreen.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `전화` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `메시지` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `사진` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `캘린더` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `PA` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `메일` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `사파리` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `음악` | 목업 전용 | 홈 화면 크롬(독·앱 아이콘 라벨) — 런처가 그린다 |
+| `screen-widget` | `홈 스크린 · 초대형 위젯 (4×6 · iOS 27)` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `중간 크기 (4×2 축약)` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `14:00` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 위젯 `pocket_aide_widget_info.xml` 은 기본 4×4(가변)이고 `PocketAideWidget.kt` 는 단일 레이아웃뿐이라 중간 크기 전용 구성이 없다 |
+| `screen-widget` | `분기 리뷰` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 위젯 `pocket_aide_widget_info.xml` 은 기본 4×4(가변)이고 `PocketAideWidget.kt` 는 단일 레이아웃뿐이라 중간 크기 전용 구성이 없다 |
+| `screen-widget` | `회의실 4` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 위젯 `pocket_aide_widget_info.xml` 은 기본 4×4(가변)이고 `PocketAideWidget.kt` 는 단일 레이아웃뿐이라 중간 크기 전용 구성이 없다 |
+| `screen-widget` | `메일 3` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 위젯 `pocket_aide_widget_info.xml` 은 기본 4×4(가변)이고 `PocketAideWidget.kt` 는 단일 레이아웃뿐이라 중간 크기 전용 구성이 없다 |
+| `screen-widget` | `윤정` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 위젯 `pocket_aide_widget_info.xml` 은 기본 4×4(가변)이고 `PocketAideWidget.kt` 는 단일 레이아웃뿐이라 중간 크기 전용 구성이 없다 |
+| `screen-widget` | `분기 리뷰 자료` | 미구현 영역 | 중간 크기(4×2) 위젯 — 구현 위젯 `pocket_aide_widget_info.xml` 은 기본 4×4(가변)이고 `PocketAideWidget.kt` 는 단일 레이아웃뿐이라 중간 크기 전용 구성이 없다 |
+| `screen-widget` | `크기에 따라 영역의 표현 방식 축약 — AC1` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
+| `screen-widget` | `다짐 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `다짐 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `다짐을 앱에 등록해보세요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `미로그인` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `앱에서 로그인이 필요해요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `조회 오류` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `잠시 후 다시 시도할게요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `일정 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `캘린더 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `앱에서 캘린더 접근을 허용해 주세요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `일정 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `다가오는 일정이 없어요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `알림 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `알림 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `확인할 알림이 없어요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `날씨 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `위치 권한 없음` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `날씨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `앱에서 위치 접근을 허용해 주세요.` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetCopy.kt` | 대응 파일이 아닌 Kotlin 파일 `WidgetCopy.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `임시 공간 슬라이스 상태` | 목업 전용 | 갤러리 변형 제목 |
+| `screen-widget` | `미분류 0건` | 목업 전용 | 프레임 밖 캡션(상태 이름) |
+| `screen-widget` | `정리할 항목 없음` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/Scratchpad.kt` | 대응 파일이 아닌 Kotlin 파일 `Scratchpad.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
+| `screen-widget` | `PRD-8 · AC1 단일 위젯 6영역 (날씨·캘린더·다짐·메일·알림·임시 공간 미분류 수), AC5 다짐 회전 노출 (펄스 점), AC8 영역별 탭 → 앱 진입, AC9 임시 공간 미분류 수` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 
 ## 검산
 
@@ -1177,47 +1117,66 @@ last_updated: 2026-10-28
 
 ```bash
 python3 - <<'EOF'
-import re, subprocess, pathlib
+import re, pathlib
 from html.parser import HTMLParser
-EXCL = re.compile(r"(accessibilityIdentifier\(|systemName:\s*|systemImage:\s*|identifier:\s*|dateFormat\s*=\s*|URL\(string:\s*|kind\s*=\s*|initialValue:\s*)$")
+# 기계 식별자 자리 — 테스트 태그·키·포맷 패턴 인자 바로 뒤의 리터럴은 뺀다.
+EXCL = re.compile(r"(testTag\(|\bkey\s*=|\btag\s*=|retryTag\s*=|semanticsTestTag\s*=|bannerTag\s*=|countTag\s*=|idPrefix\s*=|identifier\s*=|DateTimeFormatter\.ofPattern\(|fontFeatureSettings\s*=)\s*$")
+CHAR = re.compile(r"'(?:\\.|[^'\\\n]){1,6}'")
 def literals(path, excl=True):
     src = pathlib.Path(path).read_text(); out = []; i = 0; n = len(src); ls = 0
     while i < n:
         c = src[i]
         if c == "\n": ls = i + 1; i += 1; continue
         if src.startswith("//", i): j = src.find("\n", i); i = n if j < 0 else j; continue
-        if src.startswith("/*", i): i = src.find("*/", i) + 2; continue
+        if src.startswith("/*", i):  # 중첩 주석
+            d = 1; i += 2
+            while i < n and d:
+                if src.startswith("/*", i): d += 1; i += 2
+                elif src.startswith("*/", i): d -= 1; i += 2
+                else: i += 1
+            continue
+        if c == "'":
+            m = CHAR.match(src, i); i = m.end() if m else i + 1; continue
         if c != '"': i += 1; continue
-        start = i; i += 1; depth = 0; buf = []
-        while True:
+        start = i; raw = src.startswith('"""', i); i += 3 if raw else 1; depth = 0; buf = []
+        while i < n:
             ch = src[i]
             if depth == 0:
-                if src.startswith("\\(", i): depth = 1; buf.append("\\("); i += 2; continue
-                if ch == "\\": buf.append(src[i:i + 2]); i += 2; continue
-                if ch == '"': i += 1; break
+                if raw and src.startswith('"""', i): i += 3; break
+                if not raw and ch == '"': i += 1; break
+                if ch == "$" and src.startswith("${", i): depth = 1; buf.append("${"); i += 2; continue
+                if ch == "\\" and not raw: buf.append(src[i:i + 2]); i += 2; continue
             else:
-                if ch == '"': k = src.index('"', i + 1); buf.append(src[i:k + 1]); i = k + 1; continue
-                depth += {"(": 1, ")": -1}.get(ch, 0)
+                if ch == '"':
+                    k = i + 1
+                    while src[k] != '"': k += 2 if src[k] == "\\" else 1
+                    buf.append(src[i:k + 1]); i = k + 1; continue
+                if ch == "{": depth += 1
+                elif ch == "}": depth -= 1
             buf.append(ch); i += 1
-        lit, prefix = "".join(buf), src[ls:start]
-        if lit and not (excl and (EXCL.search(prefix) or re.fullmatch(r'\s*case\s+("[^"]*",\s*)*', prefix))) and lit not in out:
+        lit = "".join(buf)
+        if lit and not (excl and EXCL.search(src[ls:start])) and lit not in out:
             out.append(lit)
     return out
-def segments(lit):  # 정적 조각(보간 \(...) 기준 분할, 이스케이프 해제)
+def segments(lit):  # 정적 조각(보간 $x·${…} 기준 분할, 이스케이프 해제)
     parts, cur, i = [], "", 0
     while i < len(lit):
-        if lit.startswith("\\(", i):
+        if lit.startswith("${", i):
             d, i = 1, i + 2
-            while d: d += {"(": 1, ")": -1}.get(lit[i], 0); i += 1
+            while d: d += {"{": 1, "}": -1}.get(lit[i], 0); i += 1
             parts.append(cur); cur = ""; continue
+        m = re.match(r"\$[A-Za-z_]\w*", lit[i:])
+        if m: i += m.end(); parts.append(cur); cur = ""; continue
         if lit[i] == "\\":
-            m = re.match(r"\\u\{([0-9A-Fa-f]+)\}", lit[i:])
+            m = re.match(r"\\u([0-9A-Fa-f]{4})", lit[i:])
             if m: cur += chr(int(m.group(1), 16)); i += m.end(); continue
             cur += {"n": "\n", "t": "\t"}.get(lit[i + 1], lit[i + 1]); i += 2; continue
         cur += lit[i]; i += 1
     return parts + [cur]
 norm = lambda s: " ".join(s.split()).casefold()
-data_only = lambda lit: not "".join(segments(lit)).strip()  # 보간만 — 런타임 데이터 서식
+def data_only(lit):  # 보간만 있거나, 정적 조각이 구분 기호뿐인 서식 — 런타임 값의 서식
+    segs = segments(lit); st = "".join(segs)
+    return not st.strip() or (len(segs) > 1 and not re.search(r"[\w#@%+]", st))
 def pattern(lit):
     return re.compile(r"\s*" + r".+?".join(re.escape(norm(p)) for p in segments(lit)) + r"\s*", re.S)
 class Nodes(HTMLParser):
@@ -1256,10 +1215,8 @@ def cover(name, got, want):
     errs.extend(f"{name} 잉여 {k}" for k in sorted(set(keys) - set(want)))
 cover("A", A, [(f, l) for f in mapped for l in literals(f)])
 cover("B", B, [(m, x) for m in mocks for x in dict.fromkeys(seqs[m])])
-VA = {"일치", "데이터", "비표시", "시스템 UI", "미구현 영역", "기준 4", "구현 대기", "목업 대기"}
-VB = {"일치", "예시 데이터", "목업 전용", "미구현 영역", "기준 4", "구현 대기", "시스템 UI"}
-UIKIT = {"더 보기", "편집"}
-ko_region = re.search(r"^\s*developmentLanguage:\s*ko\s*$", pathlib.Path("ios/project.yml").read_text(), re.M)
+VA = {"일치", "데이터", "비표시", "기준 4", "구현 대기", "목업 대기"}
+VB = {"일치", "예시 데이터", "목업 전용", "미구현 영역", "기준 4", "구현 대기"}
 tally = {}
 for f, lit, v in A:
     tally[("A", v)] = tally.get(("A", v), 0) + 1
@@ -1268,14 +1225,12 @@ for f, lit, v in A:
     elif v == "일치" and not any(fwd_hit(lit, seqs[m]) for m in mapped.get(f, [])):
         errs.append(f"A 일치 거짓 {f} `{lit}`")
 for m, x, v in B:
-    ext = re.fullmatch(r"외부 `([^`]+\.swift)`", v)
+    ext = re.fullmatch(r"외부 `([^`]+\.kt)`", v)
     tally[("B", "외부" if ext else v)] = tally.get(("B", "외부" if ext else v), 0) + 1
     if ext:
         if not pathlib.Path(ext.group(1)).is_file() or not rev_hit(x, literals(ext.group(1), excl=False)):
             errs.append(f"B 외부 거짓 {m} `{x}`: {ext.group(1)}")
     elif v not in VB: errs.append(f"B 판정 {m} `{x}`: {v}")
-    elif v == "시스템 UI" and not (x in UIKIT and ko_region):
-        errs.append(f"B 시스템 UI 거짓 {m} `{x}`")
     elif v == "일치" and not rev_hit(x, [l for f, ms in mapped.items() if m in ms for l in literals(f)]):
         errs.append(f"B 일치 거짓 {m} `{x}`")
 for t, v, n in re.findall(r"^\| (A|B) \| (.+?) \| (\d+) \|$", text, re.M):

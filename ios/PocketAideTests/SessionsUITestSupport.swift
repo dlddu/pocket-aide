@@ -38,6 +38,19 @@ enum SessionPlatformStub {
         return json["id"] as? String
     }
 
+    static func write(_ id: String, _ payload: String) {
+        let body = try? JSONSerialization.data(withJSONObject: ["payload": payload])
+        _ = send("POST", "/api/v1/sessions/\(id)/write", body: body)
+    }
+
+    static func snapshot(_ id: String) { _ = send("POST", "/api/v1/sessions/\(id)/snapshot") }
+
+    static func sessionState(_ id: String) -> String? {
+        guard let data = send("GET", "/api/v1/sessions/\(id)"),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return json["state"] as? String
+    }
+
     static func sessionExists(_ id: String) -> Bool {
         guard let url = URL(string: base + "/api/v1/sessions/\(id)") else { return false }
         let done = DispatchSemaphore(value: 0)
