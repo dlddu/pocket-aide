@@ -19,7 +19,6 @@ final class SessionsOversizePromptUITests: XCTestCase {
         let field = app.textFields["sessions.detail.prompt.field"]
         XCTAssertTrue(field.waitForExistence(timeout: 15))
 
-        // 1 MiB 를 넘기는 텍스트는 타이핑할 수 없어 시뮬레이터 클립보드로 붙여 넣는다 (UTF-8 바이트 기준 1 MiB + 1).
         UIPasteboard.general.string = String(repeating: "a", count: 1_048_576 + 1)
         field.tap()
         field.press(forDuration: 1.0)
