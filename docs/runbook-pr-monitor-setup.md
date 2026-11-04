@@ -162,6 +162,8 @@ test environments run without any of this set up.
 | `APNS_HOST`             | env        | never in production; sends pushes to this APNs-compatible host instead of Apple's (`http://` = plain HTTP). E2E CI points it at the fake receiver, see `docs/e2e-mocking-policy.md` |
 | `FCM_SERVICE_ACCOUNT_JSON` | Secret  | Android pushes; empty disables FCM (Android devices are then skipped). Independent of `SQS_QUEUE_URL` / `APNS_DISABLED`. The service-account key JSON (see below) |
 | `FCM_HOST`              | env        | never in production; sends FCM HTTP v1 requests to this host instead of Google's (`http://` = plain HTTP). The Android E2E job points it at the fake FCM receiver, see `docs/engineering/android-app.md` §5 |
+| `OPENROUTER_API_KEY`    | Secret     | optional; enables AI chat replies (`POST /api/chat/sessions/{id}/messages`). Without it that route answers 503 and the rest of the server runs normally |
+| `CHAT_MODEL`            | env        | optional; OpenRouter model id for AI chat, default `anthropic/claude-sonnet-4.5` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Deployment env (`k8s/deployment.yaml`) | optional; empty (and no `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`) disables tracing. Production sets `http://alloy.alloy.svc.cluster.local:4318` (OTLP/HTTP), see "Tracing" below |
 | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | env | optional; traces-only OTLP/HTTP endpoint, also enables tracing. Not set in production |
 | `OTEL_SERVICE_NAME` | env | optional; overrides the compiled-in service name `pocket-aide`. Not set in production |

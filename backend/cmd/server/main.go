@@ -20,6 +20,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/approvalpush"
 	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
+	"github.com/dlddu/pocket-aide/backend/internal/chat"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
@@ -28,6 +29,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
+	"github.com/dlddu/pocket-aide/backend/internal/llm"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
 	"github.com/dlddu/pocket-aide/backend/internal/push"
@@ -89,6 +91,11 @@ func main() {
 	routineStore := routines.New(conn)
 	platform := sessions.NewClient(cfg.SessionPlatformURL)
 	approvalStore := approvals.New(conn)
+	chatStore := chat.New(conn)
+	var chatLLM handlers.ChatStreamer
+	if cfg.OpenRouterAPIKey != "" {
+		chatLLM = llm.New(cfg.OpenRouterAPIKey)
+	}
 
 	var apnsClient *apns.Client
 	if cfg.PRMonitorEnabled && !cfg.APNSDisabled {
@@ -160,6 +167,10 @@ func main() {
 		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
+		p.Get("/api/chat/sessions", handlers.ListChatSessions(chatStore))
+		p.Post("/api/chat/sessions", handlers.CreateChatSession(chatStore))
+		p.Get("/api/chat/sessions/{id}", handlers.GetChatSession(chatStore))
+		p.Post("/api/chat/sessions/{id}/messages", handlers.SendChatMessage(chatStore, chatLLM, cfg.ChatModel))
 		p.Get("/api/sessions/config", handlers.SessionConfig(platform))
 		p.Get("/api/sessions", handlers.ListSessions(platform))
 		p.Post("/api/sessions", handlers.CreateSession(platform))
@@ -313,6 +324,9 @@ type config struct {
 
 	SessionPlatformURL string
 
+	OpenRouterAPIKey string
+	ChatModel        string
+
 	PRMonitorEnabled  bool
 	SQSQueueURL       string
 	AWSRoleARN        string
@@ -346,6 +360,9 @@ func loadConfig() config {
 		SQSQueueURL:     os.Getenv("SQS_QUEUE_URL"),
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
+
+		OpenRouterAPIKey: os.Getenv("OPENROUTER_API_KEY"),
+		ChatModel:        envOr("CHAT_MODEL", "anthropic/claude-sonnet-4.5"),
 
 		FCMServiceAccountJSON: os.Getenv("FCM_SERVICE_ACCOUNT_JSON"),
 		FCMHost:               os.Getenv("FCM_HOST"),

@@ -6,11 +6,13 @@
 erDiagram
     approval_caller_keys ||--o{ approval_requests : caller_key_id
     approval_caller_keys ||--o{ external_notifications : caller_key_id
+    chat_sessions ||--o{ chat_messages : session_id
     routine_steps ||--o{ routine_step_checks : step_id
     routines ||--o{ routine_steps : routine_id
     users ||--o{ affirmations : user_id
     users ||--o{ approval_caller_keys : user_id
     users ||--o{ approval_requests : user_id
+    users ||--o{ chat_sessions : user_id
     users ||--o{ device_tokens : user_id
     users ||--o{ external_notifications : user_id
     users ||--o{ notification_history : user_id
@@ -91,6 +93,38 @@ erDiagram
 | --- | --- | --- | --- |
 | `UNIQUE(approval_requests.caller_key_id,approval_requests.external_id)` | `caller_key_id`, `external_id` | YES | - |
 | `idx_approval_requests_user_status_created` | `user_id`, `status`, `created_at` | NO | - |
+
+### `chat_messages`
+
+의미: [`chat.Message`](../../backend/internal/chat/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | INTEGER | NO | PK |
+| `session_id` | INTEGER | NO | FK → chat_sessions.id |
+| `role` | TEXT | NO |  |
+| `content` | TEXT | NO |  |
+| `created_at` | INTEGER | NO |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `idx_chat_messages_session` | `session_id`, `id` | NO | - |
+
+### `chat_sessions`
+
+의미: [`chat.Session`](../../backend/internal/chat/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | INTEGER | NO | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `title` | TEXT | NO |  |
+| `created_at` | INTEGER | NO |  |
+| `updated_at` | INTEGER | NO |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `idx_chat_sessions_user_updated` | `user_id`, `updated_at DESC`, `id DESC` | NO | - |
 
 ### `device_tokens`
 
