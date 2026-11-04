@@ -1,4 +1,5 @@
 import argparse
+import fnmatch
 import re
 import sys
 
@@ -10,6 +11,7 @@ CASES = (
     ("MA3", ("k8s/",)),
     ("MA4", ("docs/review-policy.md", "scripts/review-policy/", ".github/workflows/review-policy.yml")),
     ("MA5", ("docs/data-model/fullscan-criteria.md",)),
+    ("MA6", ("docs/product/values.md", "docs/product/prd-*.md", "docs/product/test-*.md", "docs/user-journeys/")),
 )
 
 
@@ -22,7 +24,8 @@ def touched(paths):
     hits = {}
     for p in paths:
         for case_id, targets in CASES:
-            if any(p == t or (t.endswith("/") and p.startswith(t)) for t in targets):
+            if any(p == t or (t.endswith("/") and p.startswith(t)) or ("*" in t and fnmatch.fnmatchcase(p, t))
+                   for t in targets):
                 hits.setdefault(case_id, []).append(p)
     return hits
 
