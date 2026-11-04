@@ -90,7 +90,7 @@
   2. 같은 시각 iOS 날씨 앱(같은 위치)과 비교한다.
   3. 위치 권한을 거부한 상태에서 날씨 영역을 본다.
 - **기대 결과**:
-  - 1단계: 현재 기온, 날씨 상태, 강수 가능성이 보인다.
+  - 1단계: 현재 기온, 날씨 상태, 강수 가능성이 보인다. 「항상 허용」 백그라운드 위치를 준 기기에서는 앱을 열지 않은 뒤에도 마지막으로 갱신된 위치(약 1km 반올림)의 값이 보인다.
   - 2단계: 기온·상태가 날씨 앱과 크게 다르지 않다(같은 갱신 주기 안).
   - 3단계: 설정된 위치의 날씨가 보이거나, 위치 설정이 필요하다는 안내가 보인다.
 - **검증 AC**: AC4
@@ -98,6 +98,7 @@
   30분마다 Open-Meteo 예보를 가져와 동네 이름 라벨 아래 현재 기온·날씨 상태와 「최고 N · 최저 N · 강수 N%」를 보인다.
   위치 권한이 없거나 거부되면 「앱에서 위치 접근을 허용해 주세요.」를 보인다(3단계의 「위치 설정이 필요하다는 안내」).
   (2026-10-04 — 이전에는 미구현: 자리표시 「곧 추가」)
+  (2026-11-04 개정 — 안드로이드: 「항상 허용」(`ACCESS_BACKGROUND_LOCATION`)을 준 경우에만 앱이 닫힌 상태에서도 3시간 주기(`WeatherLocationWorker`)로 위치를 새로 받아 위젯을 갱신한다. 「항상 허용」이 없으면 위치는 앱을 열 때 갱신된 값으로 남는다)
 - **관련 코드 테스트**: `ios/PocketAideUnitTests/WeatherTests.swift` — `testDecodesCurrentTemperatureConditionAndDailyRange`, `testMissingPrecipitationLeavesChanceOut`, `testNegativeTemperatureRoundsToNearest`, `testMissingDailyValuesFail`, `testConditionCodesMapToKoreanLabels`, `testRequestUsesRoundedCoordinates`, `testLocationStoreRoundTripsAndClears`
 - **비고**: 위치는 앱이 앞으로 나올 때마다 갱신되므로, 앱을 열지 않고 멀리 이동하면 날씨 영역은 마지막으로 앱을 연 곳의
   날씨를 보인다. 제공자·위치 취득 방식은 `prd-widget.md` 결정 사항에 있다.
