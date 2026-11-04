@@ -22,16 +22,16 @@ class RotatingAffirmationTest : E2eTest() {
             val scenario = launchSignedIn()
             compose.openTab("Affirmations")
             assertEmptyState()
-            reenter()
+            reenter("affirmations.empty.state")
             assertEmptyState()
 
             sentences.forEach { ids += seed(api, it) }
-            reenter()
+            reenter("affirmations.list.header")
             val shown = mutableSetOf(settledHero(sentences))
             assertFalse("The empty state gives way to the hero card", compose.exists("affirmations.empty.state"))
             repeat(ROTATION_ATTEMPTS) {
                 if (shown.size < 2) {
-                    reenter()
+                    reenter("affirmations.list.header")
                     shown += settledHero(sentences)
                 }
             }
@@ -52,10 +52,10 @@ class RotatingAffirmationTest : E2eTest() {
         }
     }
 
-    private fun reenter() {
+    private fun reenter(settledTag: String) {
         compose.openTab("PrMonitor")
         compose.openTab("Affirmations")
-        compose.waitForTag("affirmations.list.header")
+        compose.waitForTag(settledTag)
     }
 
     private fun assertEmptyState() {
