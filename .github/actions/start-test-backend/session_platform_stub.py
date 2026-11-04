@@ -26,9 +26,6 @@ SESSIONS = {}
 OUTPUTS = {}
 TURNS = {}
 UNREACHABLE = False
-# 실 플랫폼처럼 write 가 큐 등록이고 응답은 나중에 자란다. /e2e/reply 로 켜면 write 마다 첫 조각이 delay 초 뒤,
-# 이후 조각이 interval 초 간격으로 붙는다(끄면 쓴 것을 즉시 되돌리는 기본 모양). markers 가 참이면 turn 마커를 남기는
-# 플랫폼(dlddu/session-platform#172 이후)처럼 입력·출력·끝 마커로 감싼다.
 REPLY = None
 ARCHIVE_ENABLED = True
 GENERATION = 0
@@ -53,7 +50,6 @@ def marker(kind, seq, **fields):
 
 
 def stream_reply(sid, seq, generation, reply):
-    """write 한 뒤 백그라운드로 응답 조각을 붙인다. reset 이 GENERATION 을 올리면 남은 조각을 버린다."""
     time.sleep(reply["delay"])
     chunks = reply["chunks"]
     for i, chunk in enumerate(chunks):
