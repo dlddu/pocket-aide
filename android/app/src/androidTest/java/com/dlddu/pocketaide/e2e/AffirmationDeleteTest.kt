@@ -1,7 +1,8 @@
 // 검증 시나리오: test-affirmations.md#시나리오 3
 package com.dlddu.pocketaide.e2e
 
-import androidx.compose.ui.test.longClick
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,7 +32,7 @@ class AffirmationDeleteTest : E2eTest() {
             val viaSheetTag = "affirmations.row.$viaSheetId"
             compose.scrollTo(viaSheetTag)
             compose.waitForTag(viaSheetTag)
-            compose.node(viaSheetTag).performTouchInput { longClick() }
+            compose.node(viaSheetTag).performSemanticsAction(SemanticsActions.OnLongClick)
             compose.tap("sheet.delete.button")
             compose.waitForTagGone(viaSheetTag)
             assertTrue("Sheet-deleting should reach the backend", E2e.eventually { !stored(api, viaSheetId) })

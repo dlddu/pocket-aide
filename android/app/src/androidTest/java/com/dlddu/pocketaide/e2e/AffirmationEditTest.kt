@@ -1,9 +1,9 @@
 // 검증 시나리오: test-affirmations.md#시나리오 2
 package com.dlddu.pocketaide.e2e
 
-import androidx.compose.ui.test.longClick
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
-import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -68,7 +68,7 @@ class AffirmationEditTest : E2eTest() {
         val rowTag = "affirmations.row.$id"
         compose.scrollTo(rowTag)
         compose.waitForTag(rowTag)
-        compose.node(rowTag).performTouchInput { longClick() }
+        compose.node(rowTag).performSemanticsAction(SemanticsActions.OnLongClick)
         compose.waitForTag("sheet.text.field")
     }
 
