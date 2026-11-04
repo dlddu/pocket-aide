@@ -132,7 +132,7 @@ func TestStore_PasswordSealedAtRestAndScopedToUser(t *testing.T) {
 
 type literal struct{ *bytes.Reader }
 
-func (l literal) Size() int64 { return int64(l.Reader.Len()) }
+func (l literal) Size() int64 { return int64(l.Len()) }
 
 type imapFixture struct {
 	user *imapmemserver.User

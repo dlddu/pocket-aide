@@ -237,7 +237,7 @@ func textOf(contentType, cte string, body io.Reader, depth int) string {
 // decodeBody reads as much as it can: the fetch is truncated, so a decoding
 // error near the end is expected and the text read so far is kept.
 func decodeBody(cte string, body io.Reader) string {
-	var r io.Reader = body
+	r := body
 	switch strings.ToLower(strings.TrimSpace(cte)) {
 	case "quoted-printable":
 		r = quotedprintable.NewReader(body)
