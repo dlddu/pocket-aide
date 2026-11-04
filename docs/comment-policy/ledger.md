@@ -38,17 +38,16 @@
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
-| 2026-11-04 | `backend/internal/handlers/mail.go` | 11 | `975a54ccca64` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
-| 2026-11-04 | `backend/internal/handlers/mail_test.go` | 1 | `a2a7401b58bf` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/handlers/mail.go` | 7 | `f9ccc4202240` | 완료 | 필요성 판정 — 제거 4줄 · 유지 7줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-09-29 | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 11 | `e12b892a3613` | 완료 | 필요성 판정 — 제거 1줄 · 유지 11줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-28 | `backend/internal/k8sauth/tokenreview.go` | 5 | `1dae868df4d3` | 완료 | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/llm/openrouter.go` | 11 | `9dcd360cbdb0` | 완료 | 필요성 판정 — 제거 2줄 · 유지 11줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-04 | `backend/internal/mail/cipher.go` | 12 | `a7ba97d0dcdd` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
-| 2026-11-04 | `backend/internal/mail/imap.go` | 24 | `f4ad893f4401` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
-| 2026-11-04 | `backend/internal/mail/mail_test.go` | 10 | `76d57ef6e07c` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
-| 2026-11-04 | `backend/internal/mail/service.go` | 18 | `4a22afe50a77` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
-| 2026-11-04 | `backend/internal/mail/store.go` | 19 | `f3e41b83e211` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/mail/cipher.go` | 12 | `a7ba97d0dcdd` | 완료 | 필요성 판정 — 제거 0줄 · 유지 12줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
+| 2026-11-04 | `backend/internal/mail/imap.go` | 20 | `a41507295660` | 완료 | 필요성 판정 — 제거 4줄 · 유지 20줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
+| 2026-11-04 | `backend/internal/mail/mail_test.go` | 2 | `89fdc5a4bfd3` | 완료 | 필요성 판정 — 제거 8줄 · 유지 2줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
+| 2026-11-04 | `backend/internal/mail/service.go` | 17 | `e775342d3f54` | 완료 | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
+| 2026-11-04 | `backend/internal/mail/store.go` | 19 | `f3e41b83e211` | 완료 | 필요성 판정 — 제거 0줄 · 유지 19줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 26 | `ebe1e7cd5f5e` | 완료 | 필요성 판정 — 제거 10줄 · 유지 26줄(개작 4블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-04 | `backend/internal/notificationsettings/store.go` | 1 | `2922bc9b4d31` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-09-29 | `backend/internal/oidcmock/oidcmock.go` | 17 | `dc59f9ab7528` | 완료 | 필요성 판정 — 제거 4줄 · 유지 17줄(개작 4블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
@@ -63,11 +62,11 @@
 | 2026-09-29 | `ios/PocketAide/AppAuthCoordinator.swift`, `ios/PocketAide/AppDelegate.swift`, `ios/PocketAide/DeepLinkRouter.swift`, `ios/PocketAide/PocketAideApp.swift`, `ios/PocketAide/PushRegistrar.swift`, `ios/PocketAide/RootView.swift` | 39 | `cca91708a5a4` | 완료 | 필요성 판정 — 제거 35줄 · 유지 39줄(개작 6블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-28 | `ios/PocketAide/Notifications/ExternalNotificationsViewModel.swift` | 2 | `39a616ac5a2e` | 완료 | 필요성 판정 — 제거 0줄 · 유지 2줄(개작 1블록 포함) — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift`, `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 12 | `7f66d46d2454` | 완료 | 필요성 판정 — 제거 58줄 · 유지 12줄(개작 2블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| — | `ios/PocketAide/Sessions/SessionDetailView.swift` | 3 | `9e0793f3dfec` | — | 2026-11-01 세션 상세 화면의 iOS 26 컨테이너 식별자 캐스케이드 수정(BF-5, rct_20261026-0001) 기능 PR 이 들임 — 바깥 식별자가 잎을 덮어써서 UI 테스트가 못 찾는다는 사유 3줄, 미판정 |
+| 2026-11-04 | `ios/PocketAide/Sessions/SessionDetailView.swift` | 3 | `9e0793f3dfec` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-09-29 | `ios/PocketAide/Todos/TodoEditSheet.swift`, `ios/PocketAide/Todos/TodoListView.swift` | 6 | `1413f9b4c157` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 33 | `66ff5e1c3e54` | 완료 | 필요성 판정 — 제거 48줄 · 유지 33줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-10 | `ios/PocketAideTests/PRMonitorUITests.swift` | 24 | `c90c4afdfcc1` | 완료 | 필요성 판정 — 제거 10줄 · 유지 21줄(개작 1블록 포함) · 2026-10-10 증분 유지 1줄 · 개작 2블록(푸시 준비 신호) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
-| — | `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `ios/PocketAideTests/SessionsTabUITests.swift`, `ios/PocketAideTests/SessionsUITestSupport.swift` | 4 | `c0b6353f8af0` | — | 2026-10-28 세션 플랫폼 스텁 E2E(BF-5, rct_20261026-0001) 기능 PR 이 들임 — 시나리오 설명 1줄 · 스텁 동작 1줄 · 헬퍼 doc 2줄, 미판정 |
+| 2026-11-04 | `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `ios/PocketAideTests/SessionsUITestSupport.swift` | 3 | `4007169aa7bd` | 완료 | 필요성 판정 — 제거 1줄 · 유지 3줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-09-29 | `ios/PocketAideUnitTests/PRMonitorGroupingTests.swift`, `ios/PocketAideUnitTests/PRMonitorPushPayloadTests.swift`, `ios/PocketAideUnitTests/RotationSelectorTests.swift` | 9 | `2e4882fe089c` | 완료 | 필요성 판정 — 제거 16줄 · 유지 9줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-15 | `ios/PocketAideWidget/AffirmationProvider.swift`, `ios/PocketAideWidget/PocketAideWidget.swift` | 7 | `7c48346b281e` | 완료 | 필요성 판정 — 제거 1줄 · 유지 7줄(개작 1블록 포함) · 2026-10-13 증분 유지 1줄(초대형 위젯 컴파일러 가드) · 2026-10-14 증분 개작 1블록(3줄→2줄, 폴백 탭 대상) · 2026-10-15 증분 유지 2줄(위젯 토큰 갱신) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Package.swift` | 1 | `9ea7cb80805c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
@@ -87,6 +86,6 @@
 | 판정일 | 범위 | 주석 줄 | 지문 | 판정 | 결과 |
 | --- | --- | ---: | --- | :-: | --- |
 | 2026-09-29 | `backend/internal/githubwebhook/consumer.go` | 2 | `fc7742939d4d` | 완료 | 필요성 판정 — 제거 10줄 · 유지 2줄 — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-04 | `backend/internal/mail/mail_test.go` | 1 | `c8b6f0684d97` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/mail/mail_test.go` | 1 | `c8b6f0684d97` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 1 | `85e7bd879f18` | 완료 | 필요성 판정 — 제거 3줄 · 유지 1줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 1 | `c427a06bd747` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |

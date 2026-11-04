@@ -31,9 +31,7 @@ var ErrAuth = errors.New("mail: IMAP authentication failed")
 
 const (
 	previewRunes = 120
-	// peekBytes is how much of each message is fetched to build the preview:
-	// headers plus the first bytes of the body.
-	peekBytes = 16 * 1024
+	peekBytes    = 16 * 1024
 )
 
 // Message is one unseen inbox message as shown in the mail list (PRD-8 AC11).
@@ -181,10 +179,8 @@ var (
 	spaceRe = regexp.MustCompile(`\s+`)
 )
 
-// previewOf returns a one-line preview from the leading bytes of a raw
-// message: the first text/plain part (or tag-stripped text/html), decoded as
-// UTF-8 and collapsed to one line. It returns "" when nothing readable is
-// found — the list shows the row without a preview rather than failing.
+// previewOf returns "" when nothing readable is found — the list shows the row
+// without a preview rather than failing.
 func previewOf(raw []byte) string {
 	msg, err := stdmail.ReadMessage(bytes.NewReader(raw))
 	if err != nil {

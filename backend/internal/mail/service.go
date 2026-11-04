@@ -20,7 +20,6 @@ var ErrInvalidAccount = errors.New("email and app password are required")
 // server and none was supplied.
 var ErrHostRequired = errors.New("imap_host is required for this mail service")
 
-// presets auto-fill the IMAP server for the major services (AC11).
 var presets = map[string]string{
 	"gmail.com":      "imap.gmail.com",
 	"googlemail.com": "imap.gmail.com",

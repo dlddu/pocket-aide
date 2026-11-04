@@ -107,7 +107,6 @@ func TestStore_PasswordSealedAtRestAndScopedToUser(t *testing.T) {
 	if err := store.SetNeedsReconnect(ctx, 1, acct.ID, true); err != nil {
 		t.Fatal(err)
 	}
-	// A revoked password keeps its row and ciphertext; only the flag moves.
 	if got, _ := store.Account(ctx, 1, acct.ID); !got.NeedsReconnect {
 		t.Error("expected needs_reconnect")
 	}
@@ -127,8 +126,6 @@ func TestStore_PasswordSealedAtRestAndScopedToUser(t *testing.T) {
 		t.Errorf("deleted account must take its password with it, got %v", err)
 	}
 }
-
-// --- against a real (in-memory) IMAP server ---------------------------------
 
 type literal struct{ *bytes.Reader }
 
@@ -224,7 +221,6 @@ func TestClient_UnseenIsReadOnlyNewestFirstAndCapped(t *testing.T) {
 		t.Errorf("preview = %q", msgs[0].Preview)
 	}
 
-	// Reading the list must not mark anything read: a second fetch sees the same set.
 	again, err := c.Unseen(ctx, f.creds("pw"), 2)
 	if err != nil {
 		t.Fatal(err)
@@ -280,8 +276,6 @@ func TestService_ConnectMessagesReconnectDisconnect(t *testing.T) {
 		t.Errorf("another user's account filter: want ErrNotFound, got %v", err)
 	}
 
-	// Password revoked on the server: the account is flagged, kept, and the
-	// other account still lists.
 	if err := store.ReplacePassword(ctx, 1, a1.ID, "revoked"); err != nil {
 		t.Fatal(err)
 	}
@@ -300,7 +294,6 @@ func TestService_ConnectMessagesReconnectDisconnect(t *testing.T) {
 		t.Error("revoked account should be flagged needs_reconnect, not deleted")
 	}
 
-	// Reconnect: a wrong password is rejected and changes nothing; the right one clears the flag.
 	if err := svc.Reconnect(ctx, 1, a1.ID, "still-wrong"); !errors.Is(err, mail.ErrAuth) {
 		t.Errorf("reconnect with wrong password: want ErrAuth, got %v", err)
 	}
@@ -314,7 +307,6 @@ func TestService_ConnectMessagesReconnectDisconnect(t *testing.T) {
 		t.Errorf("after reconnect = %+v", msgs)
 	}
 
-	// Disconnect removes the account's mail from the list.
 	if err := store.Delete(ctx, 1, a2.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +350,6 @@ func TestService_Connect(t *testing.T) {
 		}
 	}
 
-	// A failed test login must store nothing.
 	fake.probeErr = mail.ErrAuth
 	before, _ := store.List(ctx, 1)
 	if _, err := svc.Connect(ctx, 1, "other@gmail.com", "bad", ""); !errors.Is(err, mail.ErrAuth) {
