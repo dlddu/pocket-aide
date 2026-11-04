@@ -48,7 +48,7 @@ open docs/mockups/index.html
 - `mockups-dark.html` — 다크 변형 통합 갤러리 (15화면)
 - `_index.md` — mockup 인덱스 (SSOT)
 - `_impl-map.md` — 구현 파일(`android/`) ↔ 화면 목업 ID 매핑 (기계 판독용 — 2026-11-03 안드로이드 기준 재작성)
-- `_token-map.md` — `tokens.md` ↔ 구현 토큰(`Colors.xcassets`·`Tokens.swift`) 값 대응표 (기계 판독용, 검산 포함)
+- `_token-map.md` — `tokens.md` ↔ 구현 토큰(`GeneratedPalettes.kt`·`DesignTokens.kt`·`colors.xml`) 값 대응표 (기계 판독용, 검산 포함)
 - `_deviations.md` — 허용목록: 사유가 문서화된 목업 이탈
 - `_copy-map.md` — 목업 텍스트 ↔ 구현 문자열 리터럴 양방향 카피 대응표 (기계 판독용, 검산 포함)
 - `_structure-map.md` — 목업 요소별 수치·순서 ↔ 구현 레이아웃 수식 구조 대응표 (기계 판독용, 검산 포함 — 화면 단위로 확장 중)

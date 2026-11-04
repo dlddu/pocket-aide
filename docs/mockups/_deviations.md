@@ -1,6 +1,6 @@
 ---
 type: mockup-deviations
-last_updated: 2026-11-03
+last_updated: 2026-11-04
 ---
 
 # 허용목록 (문서화된 목업 이탈)
@@ -40,13 +40,14 @@ last_updated: 2026-11-03
   (iOS 구현 기준의 근거 파일 `ios/PocketAide/HelloWorldView.swift` 는 2026-11-02 전환 뒤 이 모델의 구현이 아니다 — 2026-11-03 갱신.)
 - **해제 조건**: `tokens.md` 가 해당 슬롯을 정의하거나, 그 슬롯을 쓰는 화면이 구현되면(그때는 목업 값에 맞춘 뒤) 지운다.
 
-### T3 — 폰트 패밀리는 iOS 시스템 서체
+### T3 — 폰트 패밀리는 안드로이드 시스템 서체
 
-- **대상**: `tokens.md` §3.1 `sans`(1순위 `'Apple SD Gothic Neo'`)·`serif`(1순위 `'Iowan Old Style'`) ↔ `Typography.font` 의 `.system(size:weight:)`(SF Pro)·
-  `.system(size:weight:design: .serif)`(New York).
-- **사유**: §3.1 의 폴백 체인은 웹 목업용 CSS `font-family` 다. SwiftUI 에서 `.system` 은 SF Pro 를 쓰고 한글 글리프는 OS 가 Apple SD Gothic Neo 로 폴백하며,
-  `.serif` 디자인은 체인 안의 New York 이다. 1순위 서체를 번들·지정하지 않고 시스템 서체를 쓰는 것은 Dynamic Type·굵기 축을 그대로 받기 위한 플랫폼 선택이다.
-- **렌더 영향**: 있음(라틴 글리프 모양). 한글 본문은 같은 서체로 그려진다.
+- **대상**: `tokens.md` §3.1 `sans`(1순위 `'Apple SD Gothic Neo'`)·`serif`(1순위 `'Iowan Old Style'`) ↔ `DesignTokens.Typography.style` 의
+  `FontFamily.Default`(시스템 산세리프)·`FontFamily.Serif`(시스템 세리프).
+- **사유**: §3.1 의 폴백 체인은 웹 목업용 CSS `font-family` 다. 안드로이드에서 `FontFamily.Default` 는 기기의 시스템 산세리프(Roboto, 한글 글리프는 OS 가
+  Noto Sans CJK 로 폴백)이고 `FontFamily.Serif` 는 시스템 세리프(Noto Serif)다. 1순위 서체를 번들·지정하지 않고 시스템 서체를 쓰는 것은 글자 크기(sp)·굵기 축을
+  OS 설정에 그대로 맡기기 위한 플랫폼 선택이다. (2026-11-02 iOS→안드로이드 전환 전에는 SF Pro·New York 이 대응 서체였다 — 2026-11-04 갱신.)
+- **렌더 영향**: 있음(라틴 글리프 모양). 한글 본문은 같은 계열 서체로 그려진다.
 - **해제 조건**: 목업이 서체 지정을 바꾸거나 구현이 커스텀 서체를 번들하면 다시 판정한다.
 
 ### T4 — `tokens.md` §4 가 열거하지 않은 간격 상수
