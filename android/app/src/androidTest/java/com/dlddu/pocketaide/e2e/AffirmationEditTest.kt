@@ -2,6 +2,7 @@
 package com.dlddu.pocketaide.e2e
 
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
@@ -31,7 +32,7 @@ class AffirmationEditTest : E2eTest() {
 
             openEditSheet(originalId)
             compose.tap("filter.pill.low")
-            compose.type("sheet.text.field", edited)
+            compose.waitForTag("sheet.text.field").performTextReplacement(edited)
             compose.tap("sheet.save.button")
             compose.waitForTagGone("sheet.text.field")
             assertTrue("The edit should reach the backend", E2e.eventually { stored(api, originalId).optString("text") == edited })
@@ -39,7 +40,7 @@ class AffirmationEditTest : E2eTest() {
 
             openEditSheet(untouchedId)
             compose.tap("filter.pill.high")
-            compose.type("sheet.text.field", discarded)
+            compose.waitForTag("sheet.text.field").performTextReplacement(discarded)
             compose.tap("sheet.cancel.button")
             compose.waitForTagGone("sheet.text.field")
             assertEquals("A cancelled edit must keep the sentence", untouched, stored(api, untouchedId).optString("text"))
