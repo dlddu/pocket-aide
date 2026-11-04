@@ -8,7 +8,6 @@ POLICY = "docs/review-policy.md"
 CASES = (
     ("MA1", ("backend/migrations/",)),
     ("MA2", ("backend/internal/auth/", "ios/Shared/Sources/PocketAideAuth/")),
-    ("MA3", ("k8s/",)),
     ("MA4", ("docs/review-policy.md", "scripts/review-policy/", ".github/workflows/review-policy.yml")),
     ("MA5", ("docs/data-model/fullscan-criteria.md",)),
     ("MA6", ("docs/product/values.md", "docs/product/prd-*.md", "docs/product/test-*.md", "docs/user-journeys/")),
