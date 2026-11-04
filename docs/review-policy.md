@@ -28,6 +28,7 @@
 | MA3 | 배포 매니페스트 — `k8s/` 아래 모든 변경 | main 의 매니페스트는 `pin` 잡이 deploy 브랜치로 옮겨 그대로 운영에 반영된다(`.github/workflows/ci.yml` paths-filter `backend`). SQLite 단일 writer 전제(PVC 하나 · `replicas: 1` · `Recreate`)와 비밀 참조가 여기에 있다 |
 | MA4 | 판정기·워크플로·정책 자신 — `scripts/review-policy/` · `.github/workflows/review-policy.yml` · `docs/review-policy.md` | 워크플로가 `pull_request_target` 이라 PR 은 **base 쪽 판정기**로 판정된다 — PR 이 규칙을 고쳐 자기를 통과시킬 수는 없지만, 그 변경 자체(케이스를 줄이거나 자기 경로를 빼는 편집)는 옛 판정기가 보지 못한 채 다음 PR 부터 효력을 가진다. 그래서 이 경로의 변경은 사람 눈에 올린다 |
 | MA5 | 사람이 소유한 풀스캔 허용 기준표 — `docs/data-model/fullscan-criteria.md` 의 **모든** 변경 | 기준을 새로 만들거나 넓히는 것은 사람의 결정이다(그 파일 머리 · `docs/data-model/README.md` §2). 체커(`backend/cmd/datamodelcheck`)는 이 표의 기준 ID 로 불변식 3 의 `no-support` 를 「풀스캔 허용」으로 바꾸므로, 행 하나가 곧 위반을 없애는 결정이다. 자동 리뷰만 거친 PR 이 이 표를 바꾸면 사람의 채택 없이 기준이 착지한다 |
+| MA6 | 제품 문서 — 가치·PRD·테스트·여정: `docs/product/values.md` · `docs/product/prd-*.md` · `docs/product/test-*.md` · `docs/user-journeys/` 아래 **모든** 변경(개명은 옛 경로와 새 경로 둘 다 판정 입력이 된다). 집계(`docs/product/doc-tracker/`)·여정 목업(`docs/journeys/`)은 대상이 아니다 | 제품이 무엇을 왜 하는가의 결정이고, 소유자는 사용자다(`docs/product/values.md` 「제품 소유자」). 정합성 루프(reconciler docs-impl·scenario-e2e 등)가 어긋남을 「문서를 구현에 맞추는」 방향으로 닫으면 제품 결정이 사람 눈 없이 바뀐다 — 문서 변경이라 다른 케이스에 걸리지 않아 판정기가 자동 success 를 붙여 왔다(2026-11-04 점검: pocket-aide #364 PRD-8 AC4 결정 개정에 자동 success). 테스트 문서는 AC 의 검증 기준을 정하므로 함께 건다. 집계 문서(doc-tracker)는 결정을 담지 않아 대상이 아니다 |
 
 ## 위험 표면
 
@@ -56,6 +57,10 @@ scripts/review-policy/judge.py
 .github/workflows/review-policy.yml
 docs/review-policy.md
 docs/data-model/fullscan-criteria.md
+docs/product/values.md
+docs/product/prd-*.md
+docs/product/test-*.md
+docs/user-journeys/*.md
 ```
 
 ## 의도적 제외
