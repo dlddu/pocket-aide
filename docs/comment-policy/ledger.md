@@ -38,10 +38,17 @@
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
+| 2026-11-04 | `backend/internal/handlers/mail.go` | 11 | `975a54ccca64` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/handlers/mail_test.go` | 1 | `a2a7401b58bf` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-09-29 | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 11 | `e12b892a3613` | 완료 | 필요성 판정 — 제거 1줄 · 유지 11줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-28 | `backend/internal/k8sauth/tokenreview.go` | 5 | `1dae868df4d3` | 완료 | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/llm/openrouter.go` | 11 | `9dcd360cbdb0` | 완료 | 필요성 판정 — 제거 2줄 · 유지 11줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
+| 2026-11-04 | `backend/internal/mail/cipher.go` | 12 | `a7ba97d0dcdd` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/mail/imap.go` | 24 | `f4ad893f4401` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/mail/mail_test.go` | 10 | `76d57ef6e07c` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/mail/service.go` | 18 | `4a22afe50a77` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
+| 2026-11-04 | `backend/internal/mail/store.go` | 19 | `f3e41b83e211` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 26 | `ebe1e7cd5f5e` | 완료 | 필요성 판정 — 제거 10줄 · 유지 26줄(개작 4블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-04 | `backend/internal/notificationsettings/store.go` | 1 | `2922bc9b4d31` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-09-29 | `backend/internal/oidcmock/oidcmock.go` | 17 | `dc59f9ab7528` | 완료 | 필요성 판정 — 제거 4줄 · 유지 17줄(개작 4블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
@@ -78,5 +85,6 @@
 | 판정일 | 범위 | 주석 줄 | 지문 | 판정 | 결과 |
 | --- | --- | ---: | --- | :-: | --- |
 | 2026-09-29 | `backend/internal/githubwebhook/consumer.go` | 2 | `fc7742939d4d` | 완료 | 필요성 판정 — 제거 10줄 · 유지 2줄 — [상세](passes/2026-09-29-backend.md) |
+| 2026-11-04 | `backend/internal/mail/mail_test.go` | 1 | `c8b6f0684d97` | — | 미판정 — pocket-aide-docs-impl rct_20261028-0002 가 들인 신규 파일 |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 1 | `85e7bd879f18` | 완료 | 필요성 판정 — 제거 3줄 · 유지 1줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 1 | `c427a06bd747` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
