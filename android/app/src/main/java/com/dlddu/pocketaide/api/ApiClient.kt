@@ -70,6 +70,16 @@ class ApiClient(
         authenticated: Boolean = true,
     ): O = decode(response, send("PATCH", path, encode(request, body), authenticated))
 
+    suspend fun <I> postStream(
+        path: String,
+        body: I,
+        request: KSerializer<I>,
+        onEvent: (SseEvent) -> Unit,
+    ) {
+        refreshIfExpired()
+        stream(path, encode(request, body), onEvent, retriedAfterRefresh = false)
+    }
+
     suspend fun delete(path: String, authenticated: Boolean = true) {
         send("DELETE", path, null, authenticated)
     }
@@ -144,6 +154,49 @@ class ApiClient(
         }
         if (status !in 200..299) throw ApiException.BadStatus(status, text)
         return text
+    }
+
+    private suspend fun stream(
+        path: String,
+        body: RequestBody,
+        onEvent: (SseEvent) -> Unit,
+        retriedAfterRefresh: Boolean,
+    ) {
+        val builder = Request.Builder().url(url(path)).post(body).header("Accept", "text/event-stream")
+        tokenStore.load()?.accessToken?.let { builder.header("Authorization", "Bearer $it") }
+        val status = withContext(Dispatchers.IO) {
+            try {
+                http.newCall(builder.build()).execute().use { response ->
+                    if (response.code in 200..299) {
+                        val parser = SseParser()
+                        val source = response.body?.source()
+                        while (source != null) {
+                            val line = source.readUtf8Line() ?: break
+                            parser.feed(line)?.let(onEvent)
+                        }
+                        response.code
+                    } else {
+                        throw ApiException.BadStatus(response.code, response.body?.string() ?: "")
+                    }
+                }
+            } catch (e: ApiException.BadStatus) {
+                if (e.status == 401) 401 else throw e
+            } catch (e: IOException) {
+                throw ApiException.Transport(e)
+            }
+        }
+        val refresher = tokenRefresher
+        if (status == 401) {
+            if (retriedAfterRefresh || refresher == null || tokenStore.load()?.refreshToken == null) {
+                throw ApiException.BadStatus(status, "")
+            }
+            try {
+                refresher.refresh()
+            } catch (e: Exception) {
+                throw ApiException.BadStatus(status, "")
+            }
+            stream(path, body, onEvent, retriedAfterRefresh = true)
+        }
     }
 
     private suspend fun refreshIfExpired() {
