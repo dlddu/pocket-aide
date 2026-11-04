@@ -2,6 +2,7 @@
 import json
 import sys
 import threading
+import time
 import uuid
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,7 +24,12 @@ CONFIG = {
 LOCK = threading.Lock()
 SESSIONS = {}
 OUTPUTS = {}
+TURNS = {}
 UNREACHABLE = False
+REPLY = None
+ARCHIVE_ENABLED = True
+GENERATION = 0
+SENTINEL = "\x1e"
 
 
 def now():
@@ -32,6 +38,32 @@ def now():
 
 def public(s):
     return dict(s)
+
+
+def stamp():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def marker(kind, seq, **fields):
+    extra = "".join(" %s=%s" % (k, v) for k, v in fields.items())
+    return "%ssession-platform %s seq=%d%s\n" % (SENTINEL, kind, seq, extra)
+
+
+def stream_reply(sid, seq, generation, reply):
+    time.sleep(reply["delay"])
+    chunks = reply["chunks"]
+    for i, chunk in enumerate(chunks):
+        with LOCK:
+            if generation != GENERATION or sid not in OUTPUTS:
+                return
+            if i == 0 and reply["markers"]:
+                OUTPUTS[sid] += marker("output", seq, at=stamp())
+            OUTPUTS[sid] += chunk + "\n"
+        if i < len(chunks) - 1:
+            time.sleep(reply["interval"])
+    with LOCK:
+        if generation == GENERATION and sid in OUTPUTS and reply["markers"]:
+            OUTPUTS[sid] += marker("end", seq, status="ok", at=stamp())
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -61,16 +93,31 @@ class Handler(BaseHTTPRequestHandler):
         self.connection.close()
 
     def route(self, method):
-        global UNREACHABLE
+        global UNREACHABLE, REPLY, ARCHIVE_ENABLED, GENERATION
         path = self.path.split("?", 1)[0]
         if path == "/healthz":
             return self.send_json(200, {"ok": True})
         if path.startswith("/e2e/") and method == "POST":
+            try:
+                ctl = self.read_body()
+            except ValueError:
+                return self.send_json(400, {"error": "invalid json"})
             with LOCK:
                 if path == "/e2e/reset":
                     SESSIONS.clear()
                     OUTPUTS.clear()
+                    TURNS.clear()
                     UNREACHABLE = False
+                    REPLY = None
+                    ARCHIVE_ENABLED = True
+                    GENERATION += 1
+                elif path == "/e2e/reply":
+                    REPLY = {"delay": float(ctl.get("delay", 0)), "interval": float(ctl.get("interval", 1)),
+                             "chunks": [str(c) for c in ctl.get("chunks", [])], "markers": bool(ctl.get("markers", False))}
+                elif path == "/e2e/archive-disabled":
+                    ARCHIVE_ENABLED = False
+                elif path == "/e2e/archive-enabled":
+                    ARCHIVE_ENABLED = True
                 elif path == "/e2e/unreachable":
                     UNREACHABLE = True
                 elif path == "/e2e/reachable":
@@ -141,14 +188,21 @@ class Handler(BaseHTTPRequestHandler):
             if s["state"] == "snapshot":
                 return self.send_json(422, {"error": "session is snapshotted"})
             data = str(body.get("payload", ""))
-            OUTPUTS[sid] += data + "\n"
             s["lastAccess"] = now()
+            if REPLY is not None and REPLY["chunks"]:
+                seq = TURNS[sid] = TURNS.get(sid, 0) + 1
+                OUTPUTS[sid] += (marker("input", seq, at=stamp()) if REPLY["markers"] else "") + data + "\n"
+                threading.Thread(target=stream_reply, args=(sid, seq, GENERATION, dict(REPLY)), daemon=True).start()
+                return self.send_json(200, {"session": public(s), "path": "/sessions/%s/input" % sid})
+            OUTPUTS[sid] += data + "\n"
             return self.send_json(200, {"session": public(s), "path": "/sessions/%s/input" % sid})
         if action == "switch":
             s["state"] = "active"
             s["lastAccess"] = now()
             return self.send_json(200, public(s))
         if action == "snapshot":
+            if not ARCHIVE_ENABLED:
+                return self.send_json(503, {"error": "snapshot is disabled"})
             s["state"] = "snapshot"
             s["checkpoint"] = {"sizeBytes": 2048, "createdAt": now()}
             return self.send_json(200, public(s))

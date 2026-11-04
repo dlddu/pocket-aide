@@ -127,7 +127,7 @@ E2E 잡이 로컬 SQS(moto server)에 쓰는 `AWS_ACCESS_KEY_ID`·`AWS_SECRET_AC
 
 | ID | 차단 요인 | 해소 방향 | 선행 | 재검토 시점 | 등재일 |
 |----|-----------|-----------|------|-------------|--------|
-| BF-6 | 세션 플랫폼 스텁 위 남은 경로: 응답 진행 단계(시나리오 7 의 「전송됨 · 응답 대기 중」→「응답 진행 중」→「새 출력이 멈췄어요」)와 1 MiB 초과 붙여넣기, 백그라운드 왕복 중 출력 이음(시나리오 8 의 1·2단계), 아카이브 게이트 오프(503, 시나리오 9 의 (나)), turn 마커 접기·펼치기(시나리오 14)를 E2E 가 밟지 못한다 — 스텁의 출력은 쓴 것을 그대로 되돌리는 단순 모양이라 출력이 늦게 자라는 응답·turn 마커·게이트 오프 응답을 흉내 내지 못한다. 프롬프트 전송 · 출력 이어보기(재진입) · 아카이브 · 복원 · 터미널 입력(시나리오 7 의 1·2단계 · 8 의 3단계 · 9 의 (가) · 10 · 13)을 단정하는 `SessionsPromptUITests` · `SessionsArchiveRestoreUITests` · `SessionsTerminalUITests` 를 작성했다 — 다만 `ci.yml` 의 `ios_tests` 가 비활성(`false &&`)이라 CI 에서 실행되지 않으므로, 실행 검증은 로컬 시뮬레이터 실행 또는 `ios_tests` 재활성 전까지 미뤄진다. | 등재(EXT) — 새 모킹 지점 없이 BF-5 의 스텁에 같은 갈래로 얹는다: 스텁에 지연 출력 · turn 마커 · 게이트 오프 모드(`/e2e/*` 제어)를 같은 카테고리로 더하고, 남은 시나리오를 단정하는 `Sessions*UITests` 를 더한다. | 없음 | 2027-01-20 | 2026-10-28 |
+| BF-6 | 세션 플랫폼 스텁 위 남은 경로: 1 MiB 초과 붙여넣기(시나리오 7 의 4단계)를 E2E 가 밟지 못하고, 작성한 `Sessions*UITests` 는 `ci.yml` 의 `ios_tests` 가 비활성(`false &&`)이라 CI 에서 실행 검증되지 않았다 — 스텁에 응답 지연 · turn 마커 · 아카이브 게이트 오프 모드(`/e2e/reply` · `/e2e/archive-disabled`)를 더했고, 응답 진행 단계(시나리오 7 의 2·3단계) · 백그라운드 왕복 출력 이음(8 의 1·2단계) · 아카이브 게이트 오프(9 의 (나)) · turn 마커 접기·펼치기(14)를 단정하는 `SessionsResponsePhaseUITests` · `SessionsArchiveDisabledUITests` · `SessionsTurnMarkersUITests` 를 작성했다. 앞서 프롬프트 전송 · 출력 이어보기 · 아카이브 · 복원 · 터미널 입력은 `SessionsPromptUITests` · `SessionsArchiveRestoreUITests` · `SessionsTerminalUITests` 가 단정한다. | 등재(EXT) — 새 모킹 지점 없이 BF-5 의 스텁에 같은 갈래로 얹었다. 남은 것: 1 MiB 초과 붙여넣기 단정을 더하고, 로컬 시뮬레이터 실행 또는 `ios_tests` 재활성으로 `Sessions*UITests` 전체의 실행 검증을 마친다. | 없음 | 2027-01-20 | 2026-10-28 |
 
 ### 해소된 차단 요인
 
