@@ -30,6 +30,13 @@ enum SessionPlatformStub {
     static func reset() { _ = send("POST", "/e2e/reset") }
     static func makeUnreachable() { _ = send("POST", "/e2e/unreachable") }
     static func makeReachable() { _ = send("POST", "/e2e/reachable") }
+    static func disableArchive() { _ = send("POST", "/e2e/archive-disabled") }
+
+    /// write 마다 응답 조각이 `delay` 초 뒤부터 `interval` 초 간격으로 자라게 한다. `markers` 면 turn 마커를 남기는 플랫폼처럼 감싼다.
+    static func streamReplies(_ chunks: [String], delay: Double, interval: Double, markers: Bool = false) {
+        let body = try? JSONSerialization.data(withJSONObject: ["chunks": chunks, "delay": delay, "interval": interval, "markers": markers])
+        _ = send("POST", "/e2e/reply", body: body)
+    }
 
     static func seedSession(name: String, workloadType: String = "claude-code") -> String? {
         let body = try? JSONSerialization.data(withJSONObject: ["name": name, "workloadType": workloadType])
