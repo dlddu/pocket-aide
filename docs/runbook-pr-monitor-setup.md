@@ -160,6 +160,68 @@ test environments run without any of this set up.
 | `APNS_AUTH_KEY_P8`      | Secret     | PR monitor enabled (unless `APNS_DISABLED`) |
 | `APNS_DISABLED`         | env        | never in production; `true` keeps the consumer + history but skips pushes (local runs without Apple credentials) |
 | `APNS_HOST`             | env        | never in production; sends pushes to this APNs-compatible host instead of Apple's (`http://` = plain HTTP). E2E CI points it at the fake receiver, see `docs/e2e-mocking-policy.md` |
+| `FCM_SERVICE_ACCOUNT_JSON` | Secret  | Android pushes; empty disables FCM (Android devices are then skipped). Independent of `SQS_QUEUE_URL` / `APNS_DISABLED`. The service-account key JSON (see below) |
+| `FCM_HOST`              | env        | never in production; sends FCM HTTP v1 requests to this host instead of Google's (`http://` = plain HTTP). The Android E2E job points it at the fake FCM receiver, see `docs/engineering/android-app.md` §5 |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Deployment env (`k8s/deployment.yaml`) | optional; empty (and no `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`) disables tracing. Production sets `http://alloy.alloy.svc.cluster.local:4318` (OTLP/HTTP), see "Tracing" below |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | env | optional; traces-only OTLP/HTTP endpoint, also enables tracing. Not set in production |
+| `OTEL_SERVICE_NAME` | env | optional; overrides the compiled-in service name `pocket-aide`. Not set in production |
+| `OTEL_RESOURCE_ATTRIBUTES` | Deployment env | optional; extra resource attributes. Production sets `k8s.namespace.name=$(POD_NAMESPACE)` |
+| `POD_NAMESPACE`         | Deployment env (downward API `metadata.namespace`) | only referenced by `OTEL_RESOURCE_ATTRIBUTES`; not read by the backend itself |
+
+### Tracing (OpenTelemetry)
+
+Tracing is **opt-in** and independent of the PR monitor and push providers.
+With neither `OTEL_EXPORTER_OTLP_ENDPOINT` nor
+`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` set, `telemetry.Setup`
+(`backend/internal/telemetry/telemetry.go`) leaves the no-op tracer in place:
+tests, e2e stacks and local runs export nothing. When one is set the backend
+logs `tracing enabled` at startup.
+
+- **What is traced**: a server span per request (named `METHOD <route pattern>`,
+  e.g. `GET /api/approvals/{id}`; `/healthz` gets no span), client spans for
+  outgoing requests that use `http.DefaultTransport`, and a span per SQLite
+  query. W3C trace-context (`traceparent`) is propagated, so the edge
+  (Traefik) → app link holds even with the long OIDC `Authorization` header.
+- **Where it goes**: OTLP/HTTP to the in-cluster Alloy collector
+  (`http://alloy.alloy.svc.cluster.local:4318`), set directly in
+  `k8s/deployment.yaml` — not through the ConfigMap/Secret. The exporter,
+  service name and resource attributes also honour the standard `OTEL_*`
+  variables (`OTEL_SERVICE_NAME` / `OTEL_RESOURCE_ATTRIBUTES` override the
+  default name `pocket-aide`).
+- **Failure mode**: an exporter that cannot be created logs
+  `tracing setup failed; continuing without traces` and the backend keeps
+  running without traces — it never blocks startup.
+- **No overlap with OBI**: eBPF auto-instrumentation skips processes that
+  export OTLP themselves, so enabling the endpoint switches this process from
+  OBI spans to SDK spans.
+
+### Push providers by platform
+
+Pushes go through a router (`backend/internal/push`) that picks the
+provider from `device_tokens.platform` (column from migration `0003`,
+default `ios`): `ios` → APNs, `android` → FCM. Each provider is optional
+and enabled on its own — APNs by the PR-monitor vars above, FCM by
+`FCM_SERVICE_ACCOUNT_JSON` alone. A device whose platform has no
+configured provider is skipped, not an error.
+
+- **`POST /api/device-tokens`** body is `{"token": …, "platform": "ios"|"android"}`.
+  `platform` may be omitted and then means `ios`. iOS tokens must be 64 hex
+  characters; Android (FCM registration) tokens must be at most 4096
+  characters without whitespace; any other `platform` is rejected (400).
+- **FCM service account**: the backend sends through the FCM HTTP v1 API
+  with a service-account key. The key JSON is provisioned by
+  `dlddu/infrastructure` (`terraform/dlddu/google/pocket-aide-firebase.tf`),
+  stored in SSM `/flux-cd/pocket-aide/fcm`, and injected as
+  `FCM_SERVICE_ACCOUNT_JSON` through the `pocket-aide-secrets` Secret
+  (ExternalSecret with `refreshPolicy: CreatedOnce` — after rotating the
+  key, delete the Secret so it is recreated, then restart the pod). An
+  invalid JSON makes the backend exit at startup (`fcm: ...`); on success
+  it logs `fcm: enabled for project <id>`.
+- **Message shape**: the data payload keys (`approval_id`, `event_id`,
+  `kind`, `notification_id`) are the same as for APNs. Approval requests
+  are sent as data-only messages (title/body inside data) so the app can
+  attach its approve/reject actions; all other pushes are notification
+  messages.
 
 Message authenticity is enforced by IAM/queue-policy on the SQS queue —
 there is no GitHub webhook secret in the backend.
@@ -222,6 +284,11 @@ Both rows must be exercised before declaring the feature shipped.
 | iOS never POSTs to `/api/device-tokens`  | Notification permission denied → check banner; or `aps-environment` entitlement missing |
 | `apns rejected (status=400 reason="BadDeviceToken")` | Token from sandbox device sent to production APNs (env mismatch)    |
 | `apns rejected (status=403 reason="ExpiredProviderToken")` | .p8 PEM truncated in the secret, or wrong Key ID / Team ID          |
+| Android never POSTs to `/api/device-tokens` or the row stays `ios` | App has no Firebase API key (build property `pocketaide.firebaseApiKey` / CI secret `FIREBASE_API_KEY`) so it gets no FCM token; or the request omitted `"platform": "android"` and was stored with the default `ios` |
+| Android devices get no push, no `fcm: enabled` line at startup | `FCM_SERVICE_ACCOUNT_JSON` empty or the `pocket-aide-secrets` Secret not recreated after a key rotation — the router skips Android devices (`push: platform has no configured client`) |
+| `fcm rejected` for a token | Registration token is stale/unregistered, or the service account's project differs from the app's Firebase project |
+| No `tracing enabled` line at startup, no traces exported | `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` unset (tracing is opt-in), or `tracing setup failed; continuing without traces` was logged — check the endpoint value and that the Alloy collector is reachable |
+| Requests start a new trace instead of continuing Traefik's | Tracing is off in the backend, so only OBI is tracing this process and it can miss `traceparent` behind a long `Authorization` header — enable the OTLP endpoint |
 | Push appears on device only when app is foreground | `UNUserNotificationCenter` delegate missing — `AppDelegate.application(_:didFinishLaunchingWithOptions:)` not running |
 | `skipping x-github-event="..." (not workflow_run)` repeating | The GitHub webhook subscribes to more events than the consumer acts on, or a non-integration producer is publishing to the queue. Use the debug toggles below to identify the source. |
 | `skipping x-github-event=""` repeating   | No `x-github-event` message attribute — not from the API Gateway integration. Likely a direct SendMessage from outside (AWS Console test, ad-hoc script), or the integration's `MessageAttributes` mapping is missing / misnamed. |
@@ -314,10 +381,11 @@ Backend changes that landed with PRD-10 AC6/7/11/12:
 - Dispatch (`cmd/server/main.go`) now:
   1. Resolves matched users (`ListUserIDsExcluding`).
   2. Writes one history row per matched user in a single transaction.
-  3. Sends APNs per token, with custom data `{ "event_id": <id> }`.
+  3. Sends a push per device token through the platform router (APNs for
+     `ios`, FCM for `android`), with custom data `{ "event_id": <id> }`.
   - History persistence failure aborts the dispatch and leaves the SQS
     message for retry (§2 visibility-timeout note).
-  - APNs failures are logged and skipped per-token; the history row
+  - Push failures (APNs or FCM) are logged and skipped per-token; the history row
     remains so the user still sees the unacked card on next app open.
 - iOS: PR monitor is the 7th tab (`RootTab.prMonitor`). Push tap →
   deep-link `pocketaide://pr-monitor?eventId=<id>` → tab switch with the
