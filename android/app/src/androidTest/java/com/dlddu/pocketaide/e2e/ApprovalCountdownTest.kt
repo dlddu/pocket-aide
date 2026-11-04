@@ -26,10 +26,7 @@ class ApprovalCountdownTest : E2eTest() {
 
             compose.waitForTag("approval.detail.countdown", timeoutMillis = 5_000)
             val first = compose.textOf("approval.detail.countdown")
-            assertTrue(
-                "The time left should go down second by second (from $first)",
-                E2e.eventually(10_000) { compose.textOf("approval.detail.countdown") < first },
-            )
+            compose.waitUntil(10_000) { compose.textOf("approval.detail.countdown") < first }
             assertTrue("Before the deadline the 승인 button should be enabled", compose.isEnabled("approval.detail.approve"))
 
             compose.waitForText("approval.detail.status", "만료", timeoutMillis = 60_000)
