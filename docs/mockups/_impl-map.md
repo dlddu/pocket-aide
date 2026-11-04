@@ -15,9 +15,9 @@ last_updated: 2026-11-03
 > 레포에 남아 있으나 이 모델의 구현이 아니다. 이 표는 2026-11-03 에 안드로이드 기준으로 다시 세웠다
 > (reconciler `rct_20261102-0001` · 모델 `tbm_pocket-aide-mockup-render`).
 >
-> **아직 iOS 기준인 표** — [`_copy-map.md`](./_copy-map.md) · [`_structure-map.md`](./_structure-map.md) ·
-> [`_token-map.md`](./_token-map.md) 은 아직 `ios/**/*.swift` 를 가리킨다. 이 표가 정한 안드로이드 행을
-> 기준으로 세 표를 다시 세우는 일은 남은 작업이다 — 그 전까지 이 표와 세 표 사이의 교차 참조는 옛 경로를 가리킨다.
+> **아직 iOS 기준인 표** — [`_structure-map.md`](./_structure-map.md) 만 아직 `ios/**/*.swift` 를 가리킨다. 이 표가 정한
+> 안드로이드 행을 기준으로 다시 세우는 일은 남은 작업이다 — 그 전까지 이 표와 그 표 사이의 교차 참조는 옛 경로를 가리킨다.
+> [`_token-map.md`](./_token-map.md)(2026-11-04 #374)·[`_copy-map.md`](./_copy-map.md)(2026-11-04 `rct_20261104-0002`)는 안드로이드 기준으로 다시 세웠다.
 
 ## 판독 규약
 
