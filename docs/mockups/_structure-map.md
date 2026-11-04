@@ -3,9 +3,9 @@ type: mockup-structure-map
 last_updated: 2026-11-04
 ---
 
-> **2026-11-04 — 안드로이드(Compose) 기준 재작성의 두 번째 슬라이스.** 렌더링 소스가 `android/` 로 옮겨간 뒤에도 이 표는 `ios/**/*.swift` 를 가리켰다.
-> 첫 슬라이스(`rct_20261104-0003`)가 `screen-affirmations-priority-edit` 한 화면을, 이번 슬라이스(`rct_20261104-0004`)가 `screen-affirmations`(다짐 탭 — 목록·빈 상태·불러오는 중 세 프레임)를 안드로이드 기준으로 다시 세웠다.
-> 나머지 다섯 화면(`screen-routines`·`screen-scratchpad`·`screen-todo-personal`·`screen-todo-work`·`screen-approval`)의 iOS 표는 안드로이드 구현을 판정하지 못하므로 이 파일에서 걷어냈다(옛 판은 git 이력 — `a0381a8` 시점). 화면별로 같은 방식으로 다시 세우는 일이 남은 작업이다.
+> **2026-11-04 — 안드로이드(Compose) 기준 재작성의 세 번째 슬라이스.** 렌더링 소스가 `android/` 로 옮겨간 뒤에도 이 표는 `ios/**/*.swift` 를 가리켰다.
+> 첫 슬라이스(`rct_20261104-0003`)가 `screen-affirmations-priority-edit` 한 화면을, 둘째(`rct_20261104-0004`)가 `screen-affirmations`(다짐 탭 — 목록·빈 상태·불러오는 중 세 프레임)를, 이번 슬라이스(`rct_20261104-0005`)가 `screen-scratchpad`(임시공간 탭 — 목록·빈 상태·불러오는 중·오류 네 프레임)를 안드로이드 기준으로 다시 세웠다.
+> 나머지 네 화면(`screen-routines`·`screen-todo-personal`·`screen-todo-work`·`screen-approval`)의 iOS 표는 안드로이드 구현을 판정하지 못하므로 이 파일에서 걷어냈다(옛 판은 git 이력 — `a0381a8` 시점). 화면별로 같은 방식으로 다시 세우는 일이 남은 작업이다.
 
 # 구조·수치 ↔ 구현 대응표
 
@@ -18,20 +18,21 @@ last_updated: 2026-11-04
 
 ## 대조 범위
 
-화면 단위로 늘려 간다. 지금 표에 있는 화면은 **2개**다 — 나머지 `화면`·`부분` 행(`_impl-map.md`)은 아직 구조·수치 대조표가 없다(남은 기준 4 drift).
+화면 단위로 늘려 간다. 지금 표에 있는 화면은 **3개**다 — 나머지 `화면`·`부분` 행(`_impl-map.md`)은 아직 구조·수치 대조표가 없다(남은 기준 4 drift).
 화면마다 표 E·M·S 한 벌을 두고, 아래 검산의 `SCREENS` 목록이 화면별 목업 파일·영역·요소 하위 트리의 루트(`roots`)·정방향 대상 파일을 정한다.
 
 | 목업 | 구현 파일 | 범위 |
 |---|---|---|
 | `screen-affirmations-priority-edit` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` (+ 그 화면이 쓰는 `designsystem/components/Sheet.kt`·`Card.kt`·`FilterPills.kt`·`AreaLabel.kt`) | 시트 본체 — 스크림·`Sheet`·`Handle`·제목·문장 카드·3-tier pill·도움말·액션(생성 · 생성 빈 문장 · 편집 세 프레임). 시트 아래 다짐 화면·탭 바·상태바는 범위 밖 |
 | `screen-affirmations` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` (+ 그 화면이 쓰는 `designsystem/components/ScreenHeader.kt`·`Card.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 다짐 탭 본체 — 헤더(영역 라벨·제목·추가 버튼)·스크롤 본문(히어로 카드·목록 헤더·정렬 칩·목록 행·스와이프 삭제 패널·범례)과 빈 상태·불러오는 중 두 프레임의 안내·진행 카드. 상태바·하단 탭 바와 시트(`PriorityEditSheet.kt` — 위 행)는 범위 밖 |
+| `screen-scratchpad` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` (+ 그 화면이 쓰는 `designsystem/components/ScreenHeader.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 임시공간 탭 본체 — 헤더(영역 라벨·미분류 배지·제목·부제·새 메모 버튼)·스크롤 본문(일자 머리·메모 카드·분류 이동 칩·스와이프 삭제 패널)과 빈 상태·불러오는 중·오류 세 프레임의 안내·진행 표시·오류 줄. 상태바·하단 탭 바, 「더 보기」 목록 프레임(`ui/RootScreen.kt` 의 `MoreList`), 추가 시트(`ScratchpadAddSheet.kt` — 목업 없음)와 우선순위 시트(`PriorityEditSheet.kt` — 첫 슬라이스)는 범위 밖 |
 
 ## 판독 규약
 
 - **요소**(표 E): 그 화면 목업의 요소 하위 트리 — 시트 화면은 스크림과 시트(`border-radius:24px 24px 0 0`) 하위 트리 — 에서, 측정 대상 토큰을 하나라도 가진 요소를 `class` 문자열(없으면 `style=…`)로 식별해 이름을 붙인다.
   여러 프레임에 같은 문자열로 나오는 요소는 한 요소다.
 - **측정 대상 토큰**: 여백·간격·크기·자리(`p*`·`m*`·`gap`·`space-x`·`space-y`·`w`·`h`·`top`·`left` 의 숫자 스케일, `w-[Npx]`·`h-[Npx]`), `opacity-N`, `text-[Npx]`, `font-*` 굵기, `rounded*`, `border*`, `ring-*`, `divide-*`,
-  `bg-*`·`text-*` 색(`/N` 불투명도 포함), `leading-*`, `tracking-*`, `serif`, `uppercase`, `animate-pulse`(값은 최소 불투명도 `0.5` 하나), 그리고 `style` 선언 전부. 화면이 `svg` 옵션을 켜면 인라인 `<svg>` 의 `width`·`height` 도 `style` 선언처럼 잰다. 배치 클래스(`flex`·`grid`·`absolute`·`w-full`·`z-*` 등)와
+  `bg-*`·`text-*` 색(`/N` 불투명도 포함), `leading-*`, `tracking-*`, `serif`, `uppercase`, `animate-pulse`(값은 최소 불투명도 `0.5` 하나), `h-px`(1), 그리고 `style` 선언 전부. 화면이 `css` 옵션으로 지정한 클래스(`screen-scratchpad` 는 `.card`·`.stamp`)는 목업 `<style>` 규칙의 선언 전부도 `style` 선언처럼 잰다. 화면이 `svg` 옵션을 켜면 인라인 `<svg>` 의 `width`·`height` 도 `style` 선언처럼 잰다. 배치 클래스(`flex`·`grid`·`absolute`·`w-full`·`z-*` 등)와
   상호작용 클래스(`active:*`·`transition`)는 표 M 의 대상이 아니다 — 요소 순서·유무는 표 S 가 적는다.
 - **역방향**(목업 → 구현): 표 E 의 요소마다 측정 대상 토큰이 표 M 에 한 행씩 나온다. `목업 값` 은 토큰을 px(색은 `#RRGGBB[/불투명도]`)로 환산한 값이다.
 - **정방향**(구현 → 목업): 화면별 정방향 대상 — 위 「대조 범위」 표의 구현 파일(검산 `SCREENS` 의 `fwd`) 전체 — 의 수치 상수(`private val NAME = N.dp`·`N.sp`·`N.em`·`Nf`)와
@@ -54,6 +55,7 @@ last_updated: 2026-11-04
 
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 1행 · `목업 대기` 0행, 표 S `불일치` 1행.
 남은 구조·수치 drift(`screen-affirmations`): 표 M `불일치` 11행 · `목업 대기` 3행, 표 S `불일치` 1행.
+남은 구조·수치 drift(`screen-scratchpad`): 표 M `불일치` 24행 · `목업 대기` 1행, 표 S `불일치` 2행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -73,6 +75,14 @@ last_updated: 2026-11-04
 | `screen-affirmations` | S | 일치 | 15 |
 | `screen-affirmations` | S | 불일치 | 1 |
 | `screen-affirmations` | S | 목업 대기 | 0 |
+| `screen-scratchpad` | M | 일치 | 103 |
+| `screen-scratchpad` | M | 기본값 일치 | 0 |
+| `screen-scratchpad` | M | 불일치 | 24 |
+| `screen-scratchpad` | M | 허용 | 5 |
+| `screen-scratchpad` | M | 목업 대기 | 1 |
+| `screen-scratchpad` | S | 일치 | 12 |
+| `screen-scratchpad` | S | 불일치 | 2 |
+| `screen-scratchpad` | S | 목업 대기 | 1 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -471,6 +481,208 @@ last_updated: 2026-11-04
 | 15 | 불러오는 중 카드 | `<!-- 불러오는 중: 히어로 자리의 진행 표시 카드` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `isLoading -> Card(area = AREA, modifier = Modifier.fillMaxWidth()) {` | 일치 | 히어로 자리에 진행 표시 카드. 처음 불러올 때는 목록이 비어 있어 목록·범례도 없다 |
 | 16 | 진행 표시 | `<span class="spinner animate-spin"></span>` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | `CircularProgressIndicator(color = DesignTokens.Colors.accent(AREA))` | 일치 | 카드 안 가운데 진행 표시 하나 — 크기·두께는 시스템(`CircularProgressIndicator`)이 정하며 목업 주석도 「시스템이 정한다」고 적는다(`.spinner` 의 20×20 은 측정 대상이 아니다) |
 
+## 표 E — 요소 (`screen-scratchpad`) · 37행
+
+| 요소 | 목업 선택 인용 |
+|---|---|
+| 헤더 행 | `absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20` |
+| 라벨 줄 | `flex items-center gap-2` |
+| 영역 라벨 | `text-[11px] uppercase tracking-[0.2em] text-[var(--warm)] font-bold` |
+| 미분류 배지 | `bg-[var(--warm)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md stamp` |
+| 제목 | `text-[26px] font-bold tracking-tight mt-0.5` |
+| 부제 | `text-[12px] text-stone-500 mt-0.5` |
+| 새 메모 버튼 | `px-3 py-1.5 rounded-full bg-[var(--ink)] text-[var(--paper)] text-[12px] font-semibold flex items-center gap-1` |
+| 더하기 글리프 | `style=width:13px;height:13px` |
+| 스크롤 본문 | `absolute top-[180px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-1 pb-6 space-y-2.5` |
+| 첫 일자 머리 | `flex items-center gap-2 pt-1` |
+| 일자 라벨 | `text-[10.5px] tracking-[0.2em] text-stone-500 font-semibold uppercase` |
+| 일자 구분선 | `flex-1 h-px bg-[var(--rule)]` |
+| 일자 개수 | `text-[10.5px] text-stone-400 stamp` |
+| 음성 카드 | `card rounded-2xl p-4 relative` |
+| 카드 메타 줄 | `flex items-start justify-between gap-3 mb-1.5` |
+| 출처 묶음 | `flex items-center gap-1.5` |
+| 숏컷 출처 점 | `w-1.5 h-1.5 rounded-full bg-[var(--warm)]` |
+| 숏컷 출처 라벨 | `text-[10.5px] uppercase tracking-wider font-semibold text-[var(--warm)]` |
+| 카드 시각 | `text-[11px] text-stone-400 stamp` |
+| 카드 본문 | `text-[15px] leading-relaxed` |
+| 음성 부가 줄 | `mt-2.5 pt-2.5 border-t border-[var(--rule)] flex items-center justify-between` |
+| 음성 인식 메모 | `text-[11px] text-stone-500 italic` |
+| 분류 링크 | `text-[11px] font-semibold text-[var(--ink)]/70 underline underline-offset-2` |
+| 메모 카드 | `card rounded-2xl p-4` |
+| 탭 입력 출처 점 | `w-1.5 h-1.5 rounded-full bg-stone-500` |
+| 탭 입력 출처 라벨 | `text-[10.5px] uppercase tracking-wider font-semibold text-stone-600` |
+| 분류 칩 줄 | `mt-3 flex gap-1.5 flex-wrap` |
+| 분류 칩 | `px-2.5 py-1 rounded-full bg-white/60 border border-[var(--rule)] text-[11px] font-medium` |
+| 이후 일자 머리 | `flex items-center gap-2 pt-3` |
+| 스와이프 행 틀 | `relative overflow-hidden rounded-2xl` |
+| 삭제 패널 | `absolute inset-y-0 right-0 w-[74px] bg-[#9C3F2D] flex flex-col items-center justify-center gap-1 text-white` |
+| 삭제 글리프 | `style=width:18px;height:18px` |
+| 삭제 라벨 | `text-[12px] font-semibold` |
+| 스와이프된 카드 | `relative -translate-x-[74px] card rounded-2xl p-4` |
+| 빈 상태 안내 | `py-5 text-[14px] text-stone-500 leading-relaxed` |
+| 로딩 안쪽 | `py-5 flex justify-center` |
+| 오류 줄 | `text-[11px] text-[#9C3F2D]` |
+
+## 표 M — 수치 (`screen-scratchpad`) · 133행
+
+| 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
+|---|---|---|---|---|---|---|---|
+| 헤더 행 | `px-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `start = DesignTokens.Spacing.xl` · `end = DesignTokens.Spacing.xl` | 20 | 일치 | 헤더 좌우 여백 = `Spacing.xl` |
+| 헤더 행 | `pt-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `top = DesignTokens.Spacing.md` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
+| 헤더 행 | `pb-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `bottomPadding = DesignTokens.Spacing.md,` · `bottomPadding: Dp = DesignTokens.Spacing.sm` · `bottom = bottomPadding` | 12 | 일치 | 헤더 아래 여백 — 이 화면은 `bottomPadding` 에 `Spacing.md` 를 넘긴다(기본값 `Spacing.sm` 8 을 덮는다) |
+| 라벨 줄 | `gap-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(start = DesignTokens.Spacing.sm)` | 8 | 일치 | 영역 라벨 ↔ 미분류 배지 간격 — 배지 왼쪽 여백 `Spacing.sm`(`ScreenHeader` 의 라벨 `Row` 자체는 간격 인자가 없다) |
+| 영역 라벨 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Bold)` · `val captionXs = 11.sp` | 11 | 일치 | 영역 라벨 글자 크기 = `captionXs` |
+| 영역 라벨 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `(text ?: AreaLabelDefaults.text(area)).uppercase()` | uppercase | 일치 | 대문자 변환 |
+| 영역 라벨 | `tracking-[0.2em]` | 0.2em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `.copy(letterSpacing = tracking)` · `val tracking: TextUnit = 2.4.sp` · `labelTracking = LABEL_TRACKING,` · `private val LABEL_TRACKING = 2.2.sp` | 2.2 | 일치 | 자간 — 0.2em × 11 = 2.2. 이 화면은 `labelTracking` 에 2.2sp 를 넘긴다(`AreaLabel` 기본 2.4 를 덮는다) |
+| 영역 라벨 | `text-[var(--warm)]` | #B6855E | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `val accent = DesignTokens.Colors.accent(area)` · `color = accent,` | #B6855E | 일치 | 라벨 색 = 영역 accent |
+| 영역 라벨 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Bold)` | bold | 일치 | 라벨 굵기 |
+| 미분류 배지 | `bg-[var(--warm)]` | #B6855E | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(DesignTokens.Colors.accent(AREA))` | #B6855E | 일치 | 배지 배경 = 영역 accent |
+| 미분류 배지 | `text-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = Color.White,` | #FFFFFF | 일치 | 배지 글자 색 = 흰색 |
+| 미분류 배지 | `text-[10px]` | 10 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.caption2xs, FontWeight.Bold)` · `val caption2xs = 10.sp` | 10 | 일치 | 배지 글자 크기 = `caption2xs` |
+| 미분류 배지 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.caption2xs, FontWeight.Bold)` | bold | 일치 | 배지 글자 굵기 |
+| 미분류 배지 | `px-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = BADGE_HORIZONTAL, vertical = BADGE_VERTICAL)` · `private val BADGE_HORIZONTAL = 6.dp` | 6 | 일치 | 배지 좌우 안쪽 여백 |
+| 미분류 배지 | `py-0.5` | 2 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = BADGE_HORIZONTAL, vertical = BADGE_VERTICAL)` · `private val BADGE_VERTICAL = 2.dp` | 2 | 일치 | 배지 상하 안쪽 여백 |
+| 미분류 배지 | `rounded-md` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.clip(RoundedCornerShape(BADGE_RADIUS))` · `private val BADGE_RADIUS = 6.dp` | 6 | 일치 | 배지 라운드 |
+| 미분류 배지 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs, FontWeight.Bold)` · `family: Family = Family.Sans,` | sans | 불일치 | 목업 `.stamp` 클래스는 고정폭 서체(`SF Mono`·`Menlo`)로 숫자를 그리는데 구현 배지는 산세리프(`Family.Sans`)에 `fontFeatureSettings = "tnum"`(숫자 폭 맞춤)만 줘 고정폭 서체가 아니다 — 구현을 `FontFamily.Monospace` 로 맞추거나 목업을 고쳐야 닫힌다 |
+| 미분류 배지 | `letter-spacing:.05em` | 0.05em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `letterSpacing = (-0.01).em` | -0.01em | 불일치 | 목업 `.stamp` 는 자간 +0.05em 인데 구현 배지는 `Typography.style` 기본 자간 −0.01em 을 그대로 쓴다(`letterSpacing` 을 덮지 않는다) |
+| 제목 | `text-[26px]` | 26 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `titleSize = TITLE_SIZE,` · `private val TITLE_SIZE = 26.sp` · `titleSize: TextUnit = DEFAULT_TITLE_SIZE` · `private val DEFAULT_TITLE_SIZE = 24.sp` | 26 | 일치 | 제목 크기 — 이 화면은 `titleSize` 에 26sp 를 넘긴다(`ScreenHeader` 기본 24 를 덮는다) |
+| 제목 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `DesignTokens.Typography.style(titleSize, FontWeight.Bold, titleFamily)` | bold | 일치 | 제목 굵기 |
+| 제목 | `tracking-tight` | -0.025em | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `.copy(letterSpacing = TITLE_TRACKING)` · `private val TITLE_TRACKING = (-0.025).em` | -0.025em | 일치 | 제목 자간 — `em` 계수끼리 비교 |
+| 제목 | `mt-0.5` | 2 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `Column(verticalArrangement = Arrangement.spacedBy(labelSpacing))` · `labelSpacing: Dp = DEFAULT_LABEL_SPACING` · `private val DEFAULT_LABEL_SPACING = 2.dp` | 2 | 일치 | 라벨 줄 ↔ 제목 간격 |
+| 제목 | `font-family:'SF Pro Display',serif` | sans | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `titleFamily: DesignTokens.Typography.Family = DesignTokens.Typography.Family.Sans` | sans | 일치 | 제목 서체 — 목업 `font-family` 는 1순위 `SF Pro Display`(산세리프 디스플레이 서체)이고 `serif` 는 폴백이다. 구현은 `titleFamily` 를 넘기지 않아 기본 `Family.Sans`(시스템 서체는 `_deviations.md` T3) |
+| 부제 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val base = DesignTokens.Typography.style(DesignTokens.Typography.captionSm)` · `val captionSm = 12.sp` | 12 | 일치 | 부제 글자 크기 = `captionSm` |
+| 부제 | `text-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `color = ink.copy(alpha = 0.55f),` · `val ink = DesignTokens.Colors.ink(area)` | #2A2723/0.55 | 허용 S5 | 부제 색 — 목업 stone-500, 구현 영역 ink 55% |
+| 부제 | `mt-0.5` | 2 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `Column(verticalArrangement = Arrangement.spacedBy(TITLE_SUBTITLE_SPACING))` · `private val TITLE_SUBTITLE_SPACING = 2.dp` | 2 | 일치 | 제목 ↔ 부제 간격 |
+| 새 메모 버튼 | `px-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.md, vertical = ADD_VERTICAL)` | 12 | 일치 | 버튼 좌우 안쪽 여백 |
+| 새 메모 버튼 | `py-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.md, vertical = ADD_VERTICAL)` · `private val ADD_VERTICAL = 6.dp` | 6 | 일치 | 버튼 상하 안쪽 여백 |
+| 새 메모 버튼 | `rounded-full` | full | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.clip(CircleShape)` | full | 일치 | 버튼 모양 |
+| 새 메모 버튼 | `bg-[var(--ink)]` | #2A2723 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(DesignTokens.Colors.ink(AREA))` | #2A2723 | 일치 | 버튼 배경 = 영역 ink |
+| 새 메모 버튼 | `text-[var(--paper)]` | #F5EFE0 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `val surface = DesignTokens.Colors.surface(AREA)` · `color = surface,` | #F5EFE0 | 일치 | 버튼 글자·글리프 색 = 영역 surface(`--paper`) |
+| 새 메모 버튼 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold)` · `val captionSm = 12.sp` | 12 | 일치 | 버튼 글자 크기 = `captionSm` |
+| 새 메모 버튼 | `font-semibold` | semibold | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold)` | semibold | 일치 | 버튼 글자 굵기 |
+| 새 메모 버튼 | `gap-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),` | 4 | 일치 | 글리프 ↔ 글자 간격 |
+| 더하기 글리프 | `width:13px` | 13 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `modifier = Modifier.size(ADD_ICON_SIZE)` · `private val ADD_ICON_SIZE = 13.dp` | 13 | 일치 | 글리프 너비 |
+| 더하기 글리프 | `height:13px` | 13 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `modifier = Modifier.size(ADD_ICON_SIZE)` · `private val ADD_ICON_SIZE = 13.dp` | 13 | 일치 | 글리프 높이 |
+| 스크롤 본문 | `px-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `start = DesignTokens.Spacing.xl, end = DesignTokens.Spacing.xl,` · `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.xl),` · `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.sm)` | 20 | 일치 | 본문 좌우 여백 = `Spacing.xl`(일자 머리·카드·오류 줄·안내 줄이 같은 값을 각자 준다) |
+| 스크롤 본문 | `pt-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `top = if (isFirst) DesignTokens.Spacing.xs + DesignTokens.Spacing.xs else CARD_GAP / 2 + DesignTokens.Spacing.md,` | 4+4 | 불일치 | 목록 프레임 — 본문 위 4 가 첫 일자 머리 자신의 `pt-1` 4 와 합쳐져 첫 머리 위 실효 8 이다. 구현은 `isFirst` 일 때 위 여백 `Spacing.xs + Spacing.xs`(4+4)로 한 번에 주어 실효 값(8)은 같지만 단일 수식의 값이 아니라 합이다 |
+| 스크롤 본문 | `pt-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.xl),` | 0 | 불일치 | 빈 상태·불러오는 중·오류 프레임 — 목업은 본문 위 4 에 안내 줄 `py-5` 20 이 더해져 첫 글자 위 24, 구현 `LazyColumn` 은 본문 위 여백이 없어(`contentPadding` 없음) 안내 줄 `Spacing.xl` 20 뿐이다(4 차이). 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 스크롤 본문 | `pb-6` | 24 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `bottom = if (item.id == lastId) DesignTokens.Spacing.xxl else CARD_GAP / 2,` | 24 | 일치 | 목록 프레임의 본문 아래 여백 = 마지막 카드 아래 `Spacing.xxl` |
+| 스크롤 본문 | `pb-6` | 24 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.xl),` | 20 | 불일치 | 빈 상태·불러오는 중·오류 프레임은 카드가 없어 안내 줄이 본문 끝이다 — 목업은 아래 24 가 안내 줄 `py-5` 20 뒤에 더해져 44, 구현은 안내 줄 아래 `Spacing.xl` 20 뿐이다(24 차이, 스크롤이 생길 때만 보인다). 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 스크롤 본문 | `space-y-2.5` | 10 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `top = CARD_GAP / 2,` · `bottom = if (item.id == lastId) DesignTokens.Spacing.xxl else CARD_GAP / 2,` · `private val CARD_GAP = 10.dp` | 10/2+10/2 | 불일치 | 카드 사이 간격이 간격 인자가 아니라 카드마다 위·아래 `CARD_GAP / 2` 5 씩이라 인접 카드 사이 실효 10(5+5) — 값은 목업과 같지만 단일 수식이 아닌 합이다. 오류 줄 ↔ 안내 줄 사이는 구현에 이 간격이 없고 오류 줄 아래 `Spacing.sm` 8 뿐이다(아래 `오류 줄` 행) |
+| 첫 일자 머리 | `gap-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),` | 8 | 일치 | 일자 라벨 ↔ 구분선 ↔ 개수 간격 = `Spacing.sm` |
+| 첫 일자 머리 | `pt-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `top = if (isFirst) DesignTokens.Spacing.xs + DesignTokens.Spacing.xs else CARD_GAP / 2 + DesignTokens.Spacing.md,` | 4+4 | 불일치 | 머리 자신의 위 여백 4 는 본문 `pt-1` 4 와 합쳐 실효 8 이다(위 `스크롤 본문 pt-1` 행). 구현은 첫 머리 위 여백을 `Spacing.xs + Spacing.xs`(4+4) 한 수식으로 주어 어느 쪽이 어느 몫인지 나뉘지 않는다 |
+| 일자 라벨 | `text-[10.5px]` | 10.5 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style(DAY_HEADER_SIZE, FontWeight.SemiBold)` · `private val DAY_HEADER_SIZE = 10.5.sp` | 10.5 | 일치 | 일자 라벨 글자 크기 |
+| 일자 라벨 | `tracking-[0.2em]` | 0.2em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.copy(letterSpacing = DAY_HEADER_TRACKING)` · `private val DAY_HEADER_TRACKING = 2.1.sp` | 2.1 | 일치 | 자간 — 0.2em × 10.5 = 2.1 |
+| 일자 라벨 | `text-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = ink.copy(alpha = 0.7f),` · `val ink = DesignTokens.Colors.ink(AREA)` | #2A2723/0.7 | 허용 S5 | 일자 라벨 색 — 목업 stone-500, 구현 영역 ink 70% |
+| 일자 라벨 | `font-semibold` | semibold | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style(DAY_HEADER_SIZE, FontWeight.SemiBold)` | semibold | 일치 | 일자 라벨 굵기 |
+| 일자 라벨 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `section.title.uppercase(),` | uppercase | 일치 | 대문자 변환 |
+| 일자 구분선 | `h-px` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `Box(Modifier.weight(1f).height(RULE_HEIGHT).background(DesignTokens.Colors.rule(AREA)))` · `private val RULE_HEIGHT = 1.dp` | 1 | 일치 | 구분선 두께 — 남는 폭을 채우는 1dp `Box` |
+| 일자 구분선 | `bg-[var(--rule)]` | #E0D8C2 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `Box(Modifier.weight(1f).height(RULE_HEIGHT).background(DesignTokens.Colors.rule(AREA)))` | #E0D8C2 | 일치 | 구분선 색 = 영역 rule |
+| 일자 개수 | `text-[10.5px]` | 10.5 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style = DesignTokens.Typography.style(DAY_HEADER_SIZE),` | 10.5 | 일치 | 개수 글자 크기(굵기 없음) |
+| 일자 개수 | `text-stone-400` | #A8A29E | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = ink.copy(alpha = 0.5f),` · `val ink = DesignTokens.Colors.ink(AREA)` | #2A2723/0.5 | 허용 S5 | 일자 개수 색 — 목업 stone-400, 구현 영역 ink 50% |
+| 일자 개수 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DAY_HEADER_SIZE),` · `family: Family = Family.Sans,` | sans | 불일치 | 목업 `.stamp` 는 고정폭 서체로 「5 ITEMS」를 그리는데 구현은 기본 산세리프 `Typography.style` 이다 — 구현을 `FontFamily.Monospace` 로 맞추거나 목업을 고쳐야 닫힌다 |
+| 일자 개수 | `letter-spacing:.05em` | 0.05em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DAY_HEADER_SIZE),` · `letterSpacing = (-0.01).em` | -0.01em | 불일치 | 목업 `.stamp` 자간 +0.05em, 구현은 `Typography.style` 기본 −0.01em |
+| 음성 카드 | `rounded-2xl` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val shape = RoundedCornerShape(DesignTokens.Radius.card)` · `val card = 16.dp` | 16 | 일치 | 카드 라운드 = `Radius.card` |
+| 음성 카드 | `p-4` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(DesignTokens.Spacing.lg)` | 16 | 일치 | 카드 안쪽 여백 = `Spacing.lg`(`Card` 컴포넌트를 쓰지 않고 `Column` 에 직접 준다) |
+| 음성 카드 | `background:#FBF7EC` | #FBF7EC | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(DesignTokens.Colors.card(AREA))` | #FBF7EC | 일치 | 카드 배경 = 영역 card(목업 `.card` 클래스의 `background`) |
+| 음성 카드 | `border:1px solid var(--rule)` | 1 #E0D8C2 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.border(CARD_BORDER, rule, shape)` · `private val CARD_BORDER = 1.dp` · `val rule = DesignTokens.Colors.rule(AREA)` | 1 #E0D8C2 | 일치 | 카드 보더 — 두께 1 · 색 영역 rule(목업 `.card` 클래스의 `border`) |
+| 카드 메타 줄 | `gap-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `Arrangement.spacedBy(DesignTokens.Spacing.md), verticalAlignment = Alignment.Top,` | 12 | 일치 | 출처 묶음 ↔ 시각 간격 — `Spacer(weight 1f)` 가 사이에 끼어 간격이 양쪽에 걸리므로 폭이 모자랄 때의 최소 간격은 24 이지만 이 내용에서는 닿지 않는다 |
+| 카드 메타 줄 | `mb-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(bottom = META_BOTTOM)` · `private val META_BOTTOM = 6.dp` | 6 | 일치 | 메타 줄 ↔ 본문 간격 |
+| 출처 묶음 | `gap-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `Row(horizontalArrangement = Arrangement.spacedBy(SOURCE_GAP), verticalAlignment = Alignment.CenterVertically)` · `private val SOURCE_GAP = 6.dp` | 6 | 일치 | 출처 점 ↔ 출처 라벨 간격 |
+| 숏컷 출처 점 | `w-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.size(SOURCE_DOT_SIZE)` · `private val SOURCE_DOT_SIZE = 6.dp` | 6 | 일치 | 점 너비 |
+| 숏컷 출처 점 | `h-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.size(SOURCE_DOT_SIZE)` · `private val SOURCE_DOT_SIZE = 6.dp` | 6 | 일치 | 점 높이 |
+| 숏컷 출처 점 | `rounded-full` | full | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(if (isShortcut) accent else ink.copy(alpha = 0.55f), CircleShape)` | full | 일치 | 점 원형 |
+| 숏컷 출처 점 | `bg-[var(--warm)]` | #B6855E | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(if (isShortcut) accent else ink.copy(alpha = 0.55f), CircleShape)` · `val accent = DesignTokens.Colors.accent(AREA)` | #B6855E | 일치 | 숏컷 출처 점 색 = 영역 accent |
+| 숏컷 출처 라벨 | `text-[10.5px]` | 10.5 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style(DAY_HEADER_SIZE, FontWeight.SemiBold)` · `private val DAY_HEADER_SIZE = 10.5.sp` | 10.5 | 일치 | 출처 라벨 글자 크기(일자 머리와 같은 상수) |
+| 숏컷 출처 라벨 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `item.source.displayName.uppercase(),` | uppercase | 일치 | 대문자 변환 |
+| 숏컷 출처 라벨 | `tracking-wider` | 0.05em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.copy(letterSpacing = SOURCE_TRACKING)` · `private val SOURCE_TRACKING = 0.5.sp` | 0.5 | 일치 | 자간 — Tailwind `tracking-wider` 0.05em × 10.5 = 0.525 → 0.1sp 단위로 0.5 |
+| 숏컷 출처 라벨 | `font-semibold` | semibold | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style(DAY_HEADER_SIZE, FontWeight.SemiBold)` | semibold | 일치 | 출처 라벨 굵기 |
+| 숏컷 출처 라벨 | `text-[var(--warm)]` | #B6855E | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = if (isShortcut) accent else ink.copy(alpha = 0.7f),` · `val accent = DesignTokens.Colors.accent(AREA)` | #B6855E | 일치 | 숏컷 출처 라벨 색 = 영역 accent |
+| 카드 시각 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs), color = ink.copy(alpha = 0.55f),` · `val captionXs = 11.sp` | 11 | 일치 | 시각 글자 크기 = `captionXs` |
+| 카드 시각 | `text-stone-400` | #A8A29E | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs), color = ink.copy(alpha = 0.55f),` · `val ink = DesignTokens.Colors.ink(AREA)` | #2A2723/0.55 | 허용 S5 | 시각 색 — 목업 stone-400, 구현 영역 ink 55% |
+| 카드 시각 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs), color = ink.copy(alpha = 0.55f),` · `family: Family = Family.Sans,` | sans | 불일치 | 목업 `.stamp` 는 고정폭 서체로 「14:08」을 그리는데 구현은 기본 산세리프다 — 구현을 `FontFamily.Monospace` 로 맞추거나 목업을 고쳐야 닫힌다 |
+| 카드 시각 | `letter-spacing:.05em` | 0.05em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs), color = ink.copy(alpha = 0.55f),` · `letterSpacing = (-0.01).em` | -0.01em | 불일치 | 목업 `.stamp` 자간 +0.05em, 구현은 `Typography.style` 기본 −0.01em |
+| 카드 본문 | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg).copy(lineHeight = BODY_LINE_HEIGHT),` · `val bodyLg = 15.sp` | 15 | 일치 | 본문 글자 크기 = `bodyLg` |
+| 카드 본문 | `leading-relaxed` | 1.625 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.copy(lineHeight = BODY_LINE_HEIGHT)` · `private val BODY_LINE_HEIGHT = 1.625.em` | 1.625 | 일치 | 본문 줄 높이 = 글자 크기의 1.625배 |
+| 음성 부가 줄 | `mt-2.5` | 10 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다 — 구현 모델 `ScratchpadItem` 은 `text`·`source`·`capturedAt` 뿐이라 음성 인식 결과(PRD-4 AC3 의 STT 결과)도 「분류 →」 링크도 그리지 않는다(분류는 모든 카드의 이동 칩 줄이 맡는다). 줄을 구현하거나 목업에서 빼야 닫힌다 |
+| 음성 부가 줄 | `pt-2.5` | 10 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 음성 부가 줄 | `border-t` | top 1 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 음성 부가 줄 | `border-[var(--rule)]` | #E0D8C2 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 음성 인식 메모 | `text-[11px]` | 11 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 음성 인식 메모 | `text-stone-500` | #78716C | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 분류 링크 | `text-[11px]` | 11 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 분류 링크 | `font-semibold` | semibold | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 분류 링크 | `text-[var(--ink)]/70` | #2A2723/0.7 | — | — | — | 불일치 | 구현 `ScratchpadCard` 에 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없고 분류는 이동 칩 줄이 맡는다) |
+| 메모 카드 | `rounded-2xl` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val shape = RoundedCornerShape(DesignTokens.Radius.card)` · `val card = 16.dp` | 16 | 일치 | 카드 라운드 = `Radius.card` |
+| 메모 카드 | `p-4` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(DesignTokens.Spacing.lg)` | 16 | 일치 | 카드 안쪽 여백 = `Spacing.lg`(`Card` 컴포넌트를 쓰지 않고 `Column` 에 직접 준다) |
+| 메모 카드 | `background:#FBF7EC` | #FBF7EC | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(DesignTokens.Colors.card(AREA))` | #FBF7EC | 일치 | 카드 배경 = 영역 card(목업 `.card` 클래스의 `background`) |
+| 메모 카드 | `border:1px solid var(--rule)` | 1 #E0D8C2 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.border(CARD_BORDER, rule, shape)` · `private val CARD_BORDER = 1.dp` · `val rule = DesignTokens.Colors.rule(AREA)` | 1 #E0D8C2 | 일치 | 카드 보더 — 두께 1 · 색 영역 rule(목업 `.card` 클래스의 `border`) |
+| 탭 입력 출처 점 | `w-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.size(SOURCE_DOT_SIZE)` · `private val SOURCE_DOT_SIZE = 6.dp` | 6 | 일치 | 점 너비 |
+| 탭 입력 출처 점 | `h-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.size(SOURCE_DOT_SIZE)` · `private val SOURCE_DOT_SIZE = 6.dp` | 6 | 일치 | 점 높이 |
+| 탭 입력 출처 점 | `rounded-full` | full | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(if (isShortcut) accent else ink.copy(alpha = 0.55f), CircleShape)` | full | 일치 | 점 원형 |
+| 탭 입력 출처 점 | `bg-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(if (isShortcut) accent else ink.copy(alpha = 0.55f), CircleShape)` · `val ink = DesignTokens.Colors.ink(AREA)` | #2A2723/0.55 | 불일치 | 탭 내 입력 점 색 — 목업 stone-500 `#78716C`, 구현 영역 ink 55%. `_deviations.md` S5 의 대상 자리 목록에 이 점이 없어 허용되지 않는다(S5 는 부제·일자 라벨·일자 개수·시각·빈 상태 안내 다섯 자리만 덮는다) |
+| 탭 입력 출처 라벨 | `text-[10.5px]` | 10.5 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style(DAY_HEADER_SIZE, FontWeight.SemiBold)` · `private val DAY_HEADER_SIZE = 10.5.sp` | 10.5 | 일치 | 출처 라벨 글자 크기 |
+| 탭 입력 출처 라벨 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `item.source.displayName.uppercase(),` | uppercase | 일치 | 대문자 변환 |
+| 탭 입력 출처 라벨 | `tracking-wider` | 0.05em | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.copy(letterSpacing = SOURCE_TRACKING)` · `private val SOURCE_TRACKING = 0.5.sp` | 0.5 | 일치 | 자간 — 0.05em × 10.5 = 0.525 → 0.5 |
+| 탭 입력 출처 라벨 | `font-semibold` | semibold | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `style(DAY_HEADER_SIZE, FontWeight.SemiBold)` | semibold | 일치 | 출처 라벨 굵기 |
+| 탭 입력 출처 라벨 | `text-stone-600` | #57534E | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = if (isShortcut) accent else ink.copy(alpha = 0.7f),` · `val ink = DesignTokens.Colors.ink(AREA)` | #2A2723/0.7 | 불일치 | 탭 내 입력 라벨 색 — 목업 stone-600 `#57534E`, 구현 영역 ink 70%. `_deviations.md` S5 가 이 자리를 대상이 아니라고 명시한다(다크 목업도 stone 으로 그려 사유가 서지 않는다) — 구현을 `#57534E` 로 맞추거나 목업을 영역 ink 투명도로 바꿔야 닫힌다 |
+| 분류 칩 줄 | `mt-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `Modifier.padding(top = DesignTokens.Spacing.md),` | 12 | 일치 | 본문 ↔ 칩 줄 간격 |
+| 분류 칩 줄 | `gap-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(CHIP_GAP),` · `private val CHIP_GAP = 6.dp` | 6 | 일치 | 칩 사이 간격 |
+| 분류 칩 | `px-2.5` | 10 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = CHIP_HORIZONTAL, vertical = DesignTokens.Spacing.xs)` · `private val CHIP_HORIZONTAL = 10.dp` | 10 | 일치 | 칩 좌우 안쪽 여백 |
+| 분류 칩 | `py-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = CHIP_HORIZONTAL, vertical = DesignTokens.Spacing.xs)` | 4 | 일치 | 칩 상하 안쪽 여백 = `Spacing.xs` |
+| 분류 칩 | `rounded-full` | full | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.clip(CircleShape)` | full | 일치 | 칩 모양 |
+| 분류 칩 | `bg-white/60` | #FFFFFF/0.6 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `val chipFill = (if (isSystemInDarkTheme()) DesignTokens.Colors.card(AREA) else Color.White)` · `.copy(alpha = CHIP_FILL_OPACITY)` · `private const val CHIP_FILL_OPACITY = 0.6f` | #FFFFFF/0.6 | 일치 | 칩 배경 — 라이트 흰색 60%(다크는 영역 card 60%) |
+| 분류 칩 | `border` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.border(CHIP_BORDER, rule, CircleShape)` · `private val CHIP_BORDER = 1.dp` | 1 | 일치 | 칩 보더 두께 |
+| 분류 칩 | `border-[var(--rule)]` | #E0D8C2 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.border(CHIP_BORDER, rule, CircleShape)` · `val rule = DesignTokens.Colors.rule(AREA)` | #E0D8C2 | 일치 | 칩 보더 색 = 영역 rule |
+| 분류 칩 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Medium)` · `val captionXs = 11.sp` | 11 | 일치 | 칩 글자 크기 = `captionXs` |
+| 분류 칩 | `font-medium` | medium | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Medium)` | medium | 일치 | 칩 글자 굵기 |
+| 이후 일자 머리 | `gap-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),` | 8 | 일치 | 일자 라벨 ↔ 구분선 ↔ 개수 간격 = `Spacing.sm` |
+| 이후 일자 머리 | `pt-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `top = if (isFirst) DesignTokens.Spacing.xs + DesignTokens.Spacing.xs else CARD_GAP / 2 + DesignTokens.Spacing.md,` · `private val CARD_GAP = 10.dp` | 10/2+12 | 불일치 | 둘째 이후 일자 머리 위 여백이 `CARD_GAP / 2 + Spacing.md`(5+12) 한 수식이다 — 앞 카드 아래 5 와 합쳐 앞 카드 ↔ 머리 실효 22 로 목업(`space-y-2.5` 10 + `pt-3` 12)과 같지만 단일 수식의 값이 아니라 합이다 |
+| 스와이프 행 틀 | `rounded-2xl` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` · `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `modifier = modifier.clip(shape)` · `val shape = RoundedCornerShape(DesignTokens.Radius.card)` · `val card = 16.dp` | 16 | 일치 | 스와이프 행 틀 라운드 — 호출부가 카드와 같은 `Radius.card` 모양을 넘겨 `clip` |
+| 삭제 패널 | `w-[74px]` | 74 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `Modifier.width(ACTION_WIDTH).fillMaxHeight(),` · `private val ACTION_WIDTH = 74.dp` | 74 | 일치 | 삭제 패널 너비 |
+| 삭제 패널 | `bg-[#9C3F2D]` | #9C3F2D | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `Modifier.fillMaxSize().background(DesignTokens.Colors.destructive(area)),` | #9C3F2D | 일치 | 패널 채움 = 영역 destructive(임시공간 라이트 `#9C3F2D`) |
+| 삭제 패널 | `gap-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `Arrangement.spacedBy(DesignTokens.Spacing.xs, Alignment.CenterVertically)` | 4 | 일치 | 글리프 ↔ 라벨 간격 |
+| 삭제 패널 | `text-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `tint = Color.White,` · `color = Color.White,` | #FFFFFF | 일치 | 글리프·라벨 색 = 흰색 |
+| 삭제 글리프 | `width:18px` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `modifier = Modifier.size(TRASH_ICON_SIZE),` · `private val TRASH_ICON_SIZE = 18.dp` | 18 | 일치 | 휴지통 글리프 너비 |
+| 삭제 글리프 | `height:18px` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `modifier = Modifier.size(TRASH_ICON_SIZE),` · `private val TRASH_ICON_SIZE = 18.dp` | 18 | 일치 | 휴지통 글리프 높이 |
+| 삭제 라벨 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold)` · `val captionSm = 12.sp` | 12 | 일치 | 삭제 라벨 크기 = `captionSm` |
+| 삭제 라벨 | `font-semibold` | semibold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold)` | semibold | 일치 | 삭제 라벨 굵기 |
+| 스와이프된 카드 | `rounded-2xl` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val shape = RoundedCornerShape(DesignTokens.Radius.card)` · `val card = 16.dp` | 16 | 일치 | 카드 라운드 = `Radius.card` |
+| 스와이프된 카드 | `p-4` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(DesignTokens.Spacing.lg)` | 16 | 일치 | 카드 안쪽 여백 = `Spacing.lg`(`Card` 컴포넌트를 쓰지 않고 `Column` 에 직접 준다) |
+| 스와이프된 카드 | `background:#FBF7EC` | #FBF7EC | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.background(DesignTokens.Colors.card(AREA))` | #FBF7EC | 일치 | 카드 배경 = 영역 card(목업 `.card` 클래스의 `background`) |
+| 스와이프된 카드 | `border:1px solid var(--rule)` | 1 #E0D8C2 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.border(CARD_BORDER, rule, shape)` · `private val CARD_BORDER = 1.dp` · `val rule = DesignTokens.Colors.rule(AREA)` | 1 #E0D8C2 | 일치 | 카드 보더 — 두께 1 · 색 영역 rule(목업 `.card` 클래스의 `border`) |
+| 빈 상태 안내 | `py-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.xl),` | 20 | 일치 | 안내 줄 상하 여백 = `Spacing.xl` |
+| 빈 상태 안내 | `text-[14px]` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.body)` · `val body = 14.sp` | 14 | 일치 | 안내 글자 크기 = `body` |
+| 빈 상태 안내 | `text-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = ink.copy(alpha = 0.55f),` · `val ink = DesignTokens.Colors.ink(AREA)` | #2A2723/0.55 | 허용 S5 | 안내 색 — 목업 stone-500, 구현 영역 ink 55% |
+| 빈 상태 안내 | `leading-relaxed` | 1.625 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.copy(lineHeight = BODY_LINE_HEIGHT)` · `private val BODY_LINE_HEIGHT = 1.625.em` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배 |
+| 로딩 안쪽 | `py-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.xl),` | 20 | 일치 | 진행 표시 상하 여백 — 안내 줄과 같은 `Box`(`Alignment.Center`) |
+| 오류 줄 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs), color = DesignTokens.Colors.destructive(AREA),` · `val captionXs = 11.sp` | 11 | 일치 | 오류 글자 크기 = `captionXs` |
+| 오류 줄 | `text-[#9C3F2D]` | #9C3F2D | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `color = DesignTokens.Colors.destructive(AREA),` | #9C3F2D | 일치 | 오류 글자 색 = 영역 destructive |
+| 오류 줄 | — | 0 | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.sm)` | 8 | 불일치 | 구현은 오류 줄 위·아래에 `Spacing.sm` 8 을 두는데 목업 오류 줄에는 여백 클래스가 없고 앞뒤 간격은 본문 `space-y-2.5` 10 뿐이다 — 오류 줄 ↔ 안내 줄 실효 간격이 구현 8+(안내 `py-5` 20), 목업 10+20. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| — | — | — | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `Box(Modifier.size(dotSize).background(accent, shape))` · `val dotSize: Dp = 6.dp` · `internal val dotGap: Dp = 6.dp` | 6 | 목업 대기 | 영역 라벨의 점 옵션 — 이 화면은 `ScreenHeader` 의 `labelShowsDot` 를 켜지 않고 목업 라벨도 점이 없다 |
+
+## 표 S — 요소 순서·유무 (`screen-scratchpad`) · 15행
+
+행 순서가 목업 화면의 위 → 아래 순서다(목록 프레임 → 빈 상태 → 불러오는 중 → 오류, 마지막은 구현만 그리는 자리).
+
+| # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
+|---|---|---|---|---|---|---|
+| 1 | 헤더(영역 라벨 → 미분류 배지, 제목, 부제; 우측 끝 새 메모 버튼) | `<!-- header -->` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `ScreenHeader( area = AREA,` | 일치 | `ScreenHeader` 가 왼쪽에 영역 라벨 줄(라벨 → `labelAccessory` 배지) 위 · 제목 · 부제 아래, `trailing` 이 오른쪽 끝(`Spacer(weight 1f)` 뒤) |
+| 2 | 미분류 배지 | `stamp">12</span>` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `labelAccessory = {` | 일치 | 영역 라벨 바로 뒤. 구현은 개수가 0 이어도 배지를 그린다(목업 빈 상태 프레임도 배지 `0`) |
+| 3 | 새 메모 버튼 | `<path d="M12 5v14M5 12h14"/>` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `trailing = { AddButton(onClick = { showsAddSheet = true }) },` | 일치 | 헤더 오른쪽의 알약 버튼(더하기 글리프 → 「새 메모」) — 누르면 추가 시트(`ScratchpadAddSheet.kt` — 목업 없음) |
+| 4 | 일자 머리(오늘) | `<!-- group: today -->` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `DayHeader(section = section, isFirst = index == 0)` | 일치 | 목록 맨 위(오류 줄 다음) — 일자 라벨 → 구분선(`weight(1f)`) → 「N ITEMS」. 항목이 있을 때만 |
+| 5 | 카드 메타 줄(출처 점 → 출처 라벨, 우측 시각) | `<!-- voice item -->` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `Spacer(Modifier.weight(1f))` | 일치 | 카드 맨 위 — 출처 점 → 라벨 왼쪽, 시각 오른쪽 끝 |
+| 6 | 카드 본문 | `윤정한테 다음 주 화요일 미팅 가능한지` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `item.text,` | 일치 | 메타 줄 아래 |
+| 7 | 음성 부가 줄(인식 메모 · 분류 링크) | `한·영 혼용 자동 인식` | — | — | 불일치 | 목업은 음성 항목 본문 아래 구분선과 함께 인식 메모(「한·영 혼용 자동 인식」)와 「분류 →」 링크를 그리지만 구현 `ScratchpadCard` 에는 이 줄이 없다(`ScratchpadItem` 에 음성 인식 결과 필드가 없다) |
+| 8 | 분류 이동 칩 줄 | `→ 개인</button>` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `ScratchpadMoveTarget.entries.forEach { target ->` | 불일치 | 목업은 한 카드 아래에만 칩 세 개(개인 → 루틴 → 다짐)를 그리지만 구현은 모든 카드 아래에 네 개를 열거형 선언 순(개인 · 회사 · 다짐 · 루틴)으로 그린다 — 칩 구성(회사 유무)·순서(루틴 ↔ 다짐)가 다르다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 9 | 탭 내 입력 카드 | `<!-- text quick add -->` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `ScratchpadCard(item = item, onMove = { target -> onMove(item, target) })` | 일치 | 출처만 다른 같은 카드 — 메타 줄 → 본문. 일자 그룹 안 카드는 시각 내림차순(`ScratchpadSections.group`) |
+| 10 | 일자 머리(어제) | `<!-- group: yesterday -->` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `sections.forEachIndexed { index, section ->` | 일치 | 일자마다 머리 → 카드들, 최신 일자가 먼저 |
+| 11 | 스와이프된 행 | `<!-- 스와이프된 행` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `SwipeToDelete( area = AREA,` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 destructive 패널(휴지통 → 「삭제」)이 드러난다(`dismissDirection == EndToStart` 일 때만 그린다) |
+| 12 | 빈 상태 안내 | `분류할 메모가 없습니다. 떠오르는 대로 새 메모에 던져두세요.</p>` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `if (state.items.isEmpty()) {` | 일치 | 항목이 없으면 일자 그룹·카드 대신 안내 한 줄(`else` 가지가 일자 그룹·카드를 그린다) |
+| 13 | 불러오는 중 진행 표시 | `<span class="spinner animate-spin"></span>` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `CircularProgressIndicator(color = DesignTokens.Colors.accent(AREA))` | 일치 | 안내 자리에 진행 표시 하나(가운데 정렬) — 크기·두께는 시스템이 정하며 목업 주석도 「시스템이 정한다」고 적는다(`.spinner` 의 20×20 은 측정 대상이 아니다) |
+| 14 | 오류 줄 | `<!-- 오류 줄` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `state.errorMessage?.let { message ->` | 일치 | 목록 맨 위(일자 그룹·안내 줄 앞)에 오류 한 줄 — 오류 문자열이 있을 때만 |
+| 15 | 당겨서 새로고침 | — | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `PullToRefreshBox(` | 목업 대기 | 목록을 아래로 당겨 새로고침하는 표시(`PullToRefreshBox`)는 구현만 그리고 목업 어느 프레임에도 없다 |
+
 ## 검산
 
 레포 루트에서 실행한다. 출력이 `ok` 한 줄이면 표가 현재 목업·구현·허용목록과 맞다.
@@ -494,6 +706,12 @@ SCREENS = [
              (D + "designsystem/components/Card.kt", None, None),
              (D + "designsystem/components/SwipeToDelete.kt", None, None),
              (D + "designsystem/components/AreaLabel.kt", None, None)]},
+    {"slug": "screen-scratchpad", "area": "Scratchpad", "svg": True, "css": ["card", "stamp"],
+     "roots": ["px-5 pt-3 pb-3", "overflow-y-auto scroll px-5 pt-1 pb-6"],
+     "fwd": [(D + "scratchpad/ScratchpadScreen.kt", None, None),
+             (D + "designsystem/components/ScreenHeader.kt", None, None),
+             (D + "designsystem/components/SwipeToDelete.kt", None, None),
+             (D + "designsystem/components/AreaLabel.kt", None, None)]},
 ]
 part = lambda h: text.split(f"## {h}", 1)[1].split("\n## ", 1)[0]
 cells = lambda body: [[c.strip() for c in r.strip("|").split(" | ")] for r in re.findall(r"^\| .*\|$", body, re.M)[1:]]
@@ -508,7 +726,7 @@ def code(path):
     return src[path]
 errs = []
 VOID = {"br", "img", "input", "meta", "link", "hr", "path", "rect", "circle"}
-MEAS = re.compile(r"-?(p[xytblr]?|m[xytblr]?|gap|w|h|top|left|space-[xy])-\d+(\.\d+)?|[wh]-\[[\d.]+px\]|opacity-\d+|text-\[[\d.]+px\]"
+MEAS = re.compile(r"-?(p[xytblr]?|m[xytblr]?|gap|w|h|top|left|space-[xy])-\d+(\.\d+)?|h-px|[wh]-\[[\d.]+px\]|opacity-\d+|text-\[[\d.]+px\]"
                   r"|font-(bold|semibold|medium)|rounded(-.+)?|border(-.+)?|ring-.+|divide-[xy]|(bg|text|divide)-(\[.+\]|white|stone-\d+)(/\d+)?"
                   r"|leading-.+|tracking-.+|serif|uppercase|animate-pulse")
 num = lambda x: ("%g" % float(x))
@@ -540,10 +758,12 @@ for chunk in light.split("Area.")[1:]:
 VER = r"일치|불일치|기본값 일치|목업 대기|허용 S\d+"
 dev = set(re.findall(r"^### (S\d+) ", P("docs/mockups/_deviations.md").read_text(), re.M))
 KEYS = {"bold": "FontWeight.Bold", "semibold": "FontWeight.SemiBold", "medium": "FontWeight.Medium", "regular": "FontWeight.Normal",
-        "serif": "Family.Serif", "uppercase": ".uppercase()"}
+        "serif": "Family.Serif", "sans": "Family.Sans", "monospace": "FontFamily.Monospace", "uppercase": ".uppercase()"}
 def measure(sc):
     html = P(f"docs/mockups/{sc['slug']}.html").read_text()
     root = dict(re.findall(r"--([\w-]+):(#[0-9A-Fa-f]{6})", html))
+    # 화면이 `css` 로 지정한 클래스(`.card`·`.stamp`)는 목업 <style> 규칙의 선언 전부를 `style` 선언처럼 잰다
+    rules = {k: [d.strip() for d in v.split(";") if d.strip()] for k, v in re.findall(r"\.(\w+)\{([^}]*)\}", html.split("</style>")[0])}
     class Sub(HTMLParser):
         def __init__(self):
             super().__init__(); self.stack = []; self.depth = None; self.out = []; self.frame = -1
@@ -573,7 +793,8 @@ def measure(sc):
     sub = Sub(); sub.feed(html)
     want = {}
     for cls, st in sub.out:
-        toks = {t for t in cls.split() if MEAS.fullmatch(t)} | {d.strip() for d in st.split(";") if d.strip()}
+        toks = {t for t in cls.split() if MEAS.fullmatch(t)} | {d.strip() for d in st.split(";") if d.strip()} \
+            | {d for c in cls.split() if c in sc.get("css", ()) for d in rules[c]}
         if toks:
             want.setdefault(cls or "style=" + st, set()).update(toks)
     def color(c):
@@ -593,12 +814,19 @@ def measure(sc):
         if m:
             return num(int(m.group(1)) / 100)
         fixed = {"rounded-md": "6", "rounded-xl": "12", "rounded-2xl": "16", "rounded-full": "full", "border": "1", "border-t": "top 1", "divide-x": "left 1", "ring-1": "1",
-                 "serif": "serif", "uppercase": "uppercase", "animate-pulse": "0.5", "border-dashed": "dashed", "leading-none": "1", "leading-snug": "1.375", "leading-relaxed": "1.625", "tracking-tight": "-0.025em",
+                 "serif": "serif", "h-px": "1", "tracking-wider": "0.05em", "uppercase": "uppercase", "animate-pulse": "0.5", "border-dashed": "dashed", "leading-none": "1", "leading-snug": "1.375", "leading-relaxed": "1.625", "tracking-tight": "-0.025em",
                  "width:36px": "36", "height:4px": "4", "border-radius:9999px": "9999", "border-radius:24px 24px 0 0": "24 24 0 0",
                  "background:var(--rule)": root["rule"].upper(), "opacity:.5": "0.5",
+                 "font-family:'SF Pro Display',serif": "sans", "font-family:'SF Mono','Menlo',monospace": "monospace", "letter-spacing:.05em": "0.05em",
                  "box-shadow:0 -8px 24px -4px rgba(28,38,36,.18)": "0 -8 24 -4 rgba(28,38,36,.18)"}
         if t in fixed:
             return fixed[t]
+        m = re.fullmatch(r"background:(#[0-9A-Fa-f]{6})", t)
+        if m:
+            return m.group(1).upper()
+        m = re.fullmatch(r"border:(\d+)px solid var\(--([\w-]+)\)", t)
+        if m:
+            return m.group(1) + " " + root[m.group(2)].upper()
         m = re.fullmatch(r"(?:width|height):([\d.]+)px", t)
         if m:
             return num(m.group(1))
