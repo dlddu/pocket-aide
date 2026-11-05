@@ -12,10 +12,8 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/llm"
 )
 
-// chatHistoryLimit caps how many past messages go into one LLM request.
 const chatHistoryLimit = 50
 
-// maxChatMessageBytes caps one user message.
 const maxChatMessageBytes = 16 * 1024
 
 // ChatStreamer is the slice of *llm.Client the chat handler needs.
