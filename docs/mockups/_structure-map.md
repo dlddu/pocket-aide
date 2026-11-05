@@ -18,7 +18,7 @@ last_updated: 2026-11-04
 
 ## 대조 범위
 
-화면 단위로 늘려 간다. 지금 표에 있는 화면은 **3개**다 — 나머지 `화면`·`부분` 행(`_impl-map.md`)은 아직 구조·수치 대조표가 없다(남은 기준 4 drift).
+화면 단위로 늘려 간다. 지금 표에 있는 화면은 **4개**다 — 나머지 `화면`·`부분` 행(`_impl-map.md`)은 아직 구조·수치 대조표가 없다(남은 기준 4 drift).
 화면마다 표 E·M·S 한 벌을 두고, 아래 검산의 `SCREENS` 목록이 화면별 목업 파일·영역·요소 하위 트리의 루트(`roots`)·정방향 대상 파일을 정한다.
 
 | 목업 | 구현 파일 | 범위 |
@@ -26,18 +26,20 @@ last_updated: 2026-11-04
 | `screen-affirmations-priority-edit` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/PriorityEditSheet.kt` (+ 그 화면이 쓰는 `designsystem/components/Sheet.kt`·`Card.kt`·`FilterPills.kt`·`AreaLabel.kt`) | 시트 본체 — 스크림·`Sheet`·`Handle`·제목·문장 카드·3-tier pill·도움말·액션(생성 · 생성 빈 문장 · 편집 세 프레임). 시트 아래 다짐 화면·탭 바·상태바는 범위 밖 |
 | `screen-affirmations` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` (+ 그 화면이 쓰는 `designsystem/components/ScreenHeader.kt`·`Card.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 다짐 탭 본체 — 헤더(영역 라벨·제목·추가 버튼)·스크롤 본문(히어로 카드·목록 헤더·정렬 칩·목록 행·스와이프 삭제 패널·범례)과 빈 상태·불러오는 중 두 프레임의 안내·진행 카드. 상태바·하단 탭 바와 시트(`PriorityEditSheet.kt` — 위 행)는 범위 밖 |
 | `screen-scratchpad` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` (+ 그 화면이 쓰는 `designsystem/components/ScreenHeader.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 임시공간 탭 본체 — 헤더(영역 라벨·미분류 배지·제목·부제·새 메모 버튼)·스크롤 본문(일자 머리·메모 카드·분류 이동 칩·스와이프 삭제 패널)과 빈 상태·불러오는 중·오류 세 프레임의 안내·진행 표시·오류 줄. 상태바·하단 탭 바, 「더 보기」 목록 프레임(`ui/RootScreen.kt` 의 `MoreList`), 추가 시트(`ScratchpadAddSheet.kt` — 목업 없음)와 우선순위 시트(`PriorityEditSheet.kt` — 첫 슬라이스)는 범위 밖 |
+| `screen-todo-work` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` (+ 그 화면이 쓰는 `todos/TodoRowParts.kt`·`todos/TodoAreaStyle.kt`·`todos/TodoRowMeta.kt` 와 `designsystem/components/ScreenHeader.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 회사 투두 탭 본체 — 영역 띠·헤더(영역 점·라벨·제목·요약 줄·추가 버튼)·검색 필드·스크롤 본문(섹션 머리·행·체크·메타 줄·스와이프 삭제 패널·분리 안내 상자)과 빈 상태·불러오는 중·오류 세 프레임의 안내·진행 표시·오류 줄. 개인 전용 자리(기한 필터 칩·우선순위 태그·달력 글리프)와 `screen-todo-personal`, 상태바·하단 탭 바, 편집 시트(`TodoEditSheet.kt` — 목업 없음)는 범위 밖 |
 
 ## 판독 규약
 
 - **요소**(표 E): 그 화면 목업의 요소 하위 트리 — 시트 화면은 스크림과 시트(`border-radius:24px 24px 0 0`) 하위 트리 — 에서, 측정 대상 토큰을 하나라도 가진 요소를 `class` 문자열(없으면 `style=…`)로 식별해 이름을 붙인다.
   여러 프레임에 같은 문자열로 나오는 요소는 한 요소다.
 - **측정 대상 토큰**: 여백·간격·크기·자리(`p*`·`m*`·`gap`·`space-x`·`space-y`·`w`·`h`·`top`·`left` 의 숫자 스케일, `w-[Npx]`·`h-[Npx]`), `opacity-N`, `text-[Npx]`, `font-*` 굵기, `rounded*`, `border*`, `ring-*`, `divide-*`,
-  `bg-*`·`text-*` 색(`/N` 불투명도 포함), `leading-*`, `tracking-*`, `serif`, `uppercase`, `animate-pulse`(값은 최소 불투명도 `0.5` 하나), `h-px`(1), 그리고 `style` 선언 전부. 화면이 `css` 옵션으로 지정한 클래스(`screen-scratchpad` 는 `.card`·`.stamp`)는 목업 `<style>` 규칙의 선언 전부도 `style` 선언처럼 잰다. 화면이 `svg` 옵션을 켜면 인라인 `<svg>` 의 `width`·`height` 도 `style` 선언처럼 잰다. 배치 클래스(`flex`·`grid`·`absolute`·`w-full`·`z-*` 등)와
+  `bg-*`·`text-*` 색(`/N` 불투명도 포함), `leading-*`, `tracking-*`, `serif`, `uppercase`, `animate-pulse`(값은 최소 불투명도 `0.5` 하나), `h-px`(1), 그리고 `style` 선언 전부. 화면이 `css` 옵션으로 지정한 클래스(`screen-scratchpad` 는 `.card`·`.stamp`, `screen-todo-work` 는 `.stamp`·`.check`·`.done`)는 목업 `<style>` 규칙의 선언 전부도 `style` 선언처럼 잰다. 같은 요소에서 나중 클래스의 규칙이 같은 속성을 다시 선언하면(`.check.done` 의 `background`) 앞 선언은 덮이고, 같은 요소에 `tracking-*` 유틸리티가 있으면 `.stamp` 의 `letter-spacing` 도 덮이므로 — 덮인 선언은 재지 않는다. 화면이 `svg` 옵션을 켜면 인라인 `<svg>` 의 `width`·`height` 도 `style` 선언처럼 잰다. 배치 클래스(`flex`·`grid`·`absolute`·`w-full`·`z-*` 등)와
   상호작용 클래스(`active:*`·`transition`)는 표 M 의 대상이 아니다 — 요소 순서·유무는 표 S 가 적는다.
 - **역방향**(목업 → 구현): 표 E 의 요소마다 측정 대상 토큰이 표 M 에 한 행씩 나온다. `목업 값` 은 토큰을 px(색은 `#RRGGBB[/불투명도]`)로 환산한 값이다.
 - **정방향**(구현 → 목업): 화면별 정방향 대상 — 위 「대조 범위」 표의 구현 파일(검산 `SCREENS` 의 `fwd`) 전체 — 의 수치 상수(`private val NAME = N.dp`·`N.sp`·`N.em`·`Nf`)와
   `DesignTokens.Spacing`/`Radius`/`Typography` 참조, `alpha = N` 는 모두 표 M 어느 행의 `구현 인용` 안에 나온다. 목업 토큰과 짝이 없는 수식은 `요소`·`목업 인용` 이 `—` 인 행이다.
   제외: 입력 필드 자리표시자 색(`placeholderColor` — 목업 텍스트 영역의 placeholder 는 브라우저 기본 스타일이라 측정 토큰이 없다).
+  회사 화면이 쓰지 않는 개인 전용 자리(우선순위 태그·기한 필터 칩·달력 글리프의 크기 상수)도 정방향 대상에서 뺀다(`screen-todo-work` 의 `skip`, `TodoRowParts.kt` 는 `TodoPriorityTag` 앞까지).
 - `구현 인용` 은 소스의 공백을 접은 조각이고, `구현 값` 의 숫자는 그 조각의 숫자(상수 이름·`DesignTokens.Spacing.xl` 같은 토큰 참조는 값으로 풀어서)에서, 색은 조각이 부르는
   `DesignTokens.Colors.<슬롯>(area)` 의 그 영역 라이트 팔레트(`GeneratedPalettes.kt`) 값에서 온다. 값이 공용 컴포넌트로 인자로 넘어가는 자리는 `구현 파일` 칸에 파일을 ` · ` 로 함께 적고, 인용마다 그중 한 파일에 있다.
   구현에 수식이 없는 자리의 `구현 값` 은 `시스템` 이고, 구현에 그 요소·수식 자체가 없으면 구현 열 셋이 `—` 다(`불일치`). 값은 단일 수식의 값만 읽는다 — 합으로만 맞는 값은 `불일치` 이고 근거 열이 실효 값을 적는다.
@@ -56,6 +58,7 @@ last_updated: 2026-11-04
 남은 구조·수치 drift(`screen-affirmations-priority-edit`): 표 M `불일치` 1행 · `목업 대기` 0행, 표 S `불일치` 1행.
 남은 구조·수치 drift(`screen-affirmations`): 표 M `불일치` 11행 · `목업 대기` 3행, 표 S `불일치` 1행.
 남은 구조·수치 drift(`screen-scratchpad`): 표 M `불일치` 24행 · `목업 대기` 1행, 표 S `불일치` 2행.
+남은 구조·수치 drift(`screen-todo-work`): 표 M `불일치` 23행 · `목업 대기` 0행, 표 S `불일치` 2행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -83,6 +86,15 @@ last_updated: 2026-11-04
 | `screen-scratchpad` | S | 일치 | 12 |
 | `screen-scratchpad` | S | 불일치 | 2 |
 | `screen-scratchpad` | S | 목업 대기 | 1 |
+| `screen-todo-work` | M | 일치 | 124 |
+| `screen-todo-work` | M | 기본값 일치 | 0 |
+| `screen-todo-work` | M | 불일치 | 23 |
+| `screen-todo-work` | M | 허용 | 18 |
+| `screen-todo-work` | M | 목업 대기 | 0 |
+| `screen-todo-work` | S | 일치 | 11 |
+| `screen-todo-work` | S | 불일치 | 2 |
+| `screen-todo-work` | S | 목업 대기 | 1 |
+| `screen-todo-work` | S | 허용 | 1 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -683,6 +695,244 @@ last_updated: 2026-11-04
 | 14 | 오류 줄 | `<!-- 오류 줄` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `state.errorMessage?.let { message ->` | 일치 | 목록 맨 위(일자 그룹·안내 줄 앞)에 오류 한 줄 — 오류 문자열이 있을 때만 |
 | 15 | 당겨서 새로고침 | — | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` | `PullToRefreshBox(` | 목업 대기 | 목록을 아래로 당겨 새로고침하는 표시(`PullToRefreshBox`)는 구현만 그리고 목업 어느 프레임에도 없다 |
 
+## 표 E — 요소 (`screen-todo-work`) · 41행
+
+| 요소 | 목업 선택 인용 |
+|---|---|
+| 영역 띠 | `absolute top-0 inset-x-0 h-[3px] bg-[var(--slate)] z-10` |
+| 헤더 행 | `absolute top-[54px] inset-x-0 px-5 pt-3 pb-3 z-20 bg-[var(--bg)]/95` |
+| 라벨 줄 | `flex items-center gap-1.5 mb-1` |
+| 라벨 점 | `w-2 h-2 bg-[var(--slate)]` |
+| 영역 라벨 | `text-[11px] uppercase tracking-[0.22em] text-[var(--slate)] font-bold stamp` |
+| 제목 | `text-[28px] font-bold tracking-tight` |
+| 요약 줄 | `text-[12px] text-stone-500 mt-0.5` |
+| 추가 버튼 | `w-10 h-10 bg-[var(--slate)] text-white grid place-items-center active:scale-95` |
+| 글리프 18 (추가 · 삭제) | `style=width:18px;height:18px` |
+| 검색 필드 | `mt-3 flex items-center gap-2 bg-white border border-[var(--rule)] px-3 py-2 rounded-md` |
+| 검색 돋보기 | `text-stone-400` |
+| 검색 자리표시 | `text-[13px] text-stone-400` |
+| 스크롤 본문 | `absolute top-[210px] bottom-[88px] inset-x-0 overflow-y-auto scroll px-5 pt-2 pb-6 space-y-1.5` |
+| 첫 섹션 머리 | `flex items-center gap-2 pt-1 pb-1.5` |
+| 기한 섹션 막대 | `w-1 h-3 bg-[#C2554F]` |
+| 섹션 제목 | `text-[12px] font-bold tracking-wide stamp uppercase` |
+| 섹션 구분선 | `flex-1 h-px bg-[var(--rule)]` |
+| 급한 행 카드 | `bg-white border-l-[3px] border-l-[#C2554F] border-y border-r border-[var(--rule)] p-3.5 flex items-start gap-3` |
+| 체크 | `check w-5 h-5 grid place-items-center mt-0.5 shrink-0` |
+| 급한 행 제목 | `text-[15px] leading-snug font-medium` |
+| 메타 줄 | `flex items-center gap-3 mt-1.5 text-[11px] text-stone-500 stamp uppercase` |
+| 메타 구분점 | `text-stone-300` |
+| 이후 섹션 머리 | `flex items-center gap-2 pt-3 pb-1.5` |
+| 열린 섹션 막대 | `w-1 h-3 bg-[var(--slate)]` |
+| 행 카드 | `bg-white border border-[var(--rule)] p-3.5 flex items-start gap-3` |
+| 행 제목 | `text-[15px] leading-snug` |
+| 흐린 섹션 막대 | `w-1 h-3 bg-stone-400` |
+| 백로그 섹션 제목 | `text-[12px] font-bold tracking-wide stamp uppercase text-stone-500` |
+| 삭제 패널 | `absolute inset-y-0 right-0 w-[74px] bg-[#9C3F2D] flex flex-col items-center justify-center gap-1 text-white` |
+| 삭제 라벨 | `text-[12px] font-semibold` |
+| 스와이프된 카드 | `relative -translate-x-[74px] bg-white border border-[var(--rule)] p-3.5 flex items-start gap-3` |
+| 완료 섹션 제목 | `text-[12px] font-bold tracking-wide stamp uppercase text-stone-400` |
+| 완료 카드 | `bg-white/50 border border-[var(--rule)] p-3.5 flex items-start gap-3 opacity-60` |
+| 완료 체크 | `check done w-5 h-5 grid place-items-center mt-0.5 shrink-0` |
+| 체크마크 글리프 | `style=width:12px;height:12px` |
+| 완료 행 제목 | `text-[15px] leading-snug line-through decoration-stone-400` |
+| 분리 안내 상자 | `mt-4 p-3 border border-dashed border-[var(--slate)]/40 rounded-md text-[11.5px] text-stone-500 leading-relaxed` |
+| 분리 안내 머리 | `font-bold text-[var(--slate)] stamp` |
+| 빈 상태 안내 | `py-5 text-[14px] text-stone-500 leading-relaxed` |
+| 로딩 안쪽 | `py-5 flex justify-center` |
+| 오류 줄 | `text-[11px] text-[#9C3F2D]` |
+
+## 표 M — 수치 (`screen-todo-work`) · 165행
+
+| 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
+|---|---|---|---|---|---|---|---|
+| 영역 띠 | `top-0` | 0 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `Box(Modifier.fillMaxWidth().height(AREA_STRIP_HEIGHT).background(DesignTokens.Colors.accent(tone)))` | 0 | 일치 | 띠는 헤더 위 `Column` 의 첫 자식이라 화면 맨 위(오프셋 없음)에 붙는다 |
+| 영역 띠 | `h-[3px]` | 3 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.height(AREA_STRIP_HEIGHT)` · `private val AREA_STRIP_HEIGHT = 3.dp` | 3 | 일치 | 띠 두께 |
+| 영역 띠 | `bg-[var(--slate)]` | #355577 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.accent(tone))` | #355577 | 일치 | 띠 색 = 영역 accent |
+| 헤더 행 | `px-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `start = DesignTokens.Spacing.xl, end = DesignTokens.Spacing.xl,` | 20 | 일치 | 좌우 여백 — 제목 줄(`ScreenHeader`)과 검색 필드가 각자 `Spacing.xl` 을 준다 |
+| 헤더 행 | `pt-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `top = DesignTokens.Spacing.md,` | 12 | 일치 | 헤더 위 여백 = `Spacing.md` |
+| 헤더 행 | `pb-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(start = DesignTokens.Spacing.xl, end = DesignTokens.Spacing.xl, bottom = DesignTokens.Spacing.md)` | 12 | 일치 | 목업의 `pb-3` 은 헤더 안쪽 맨 끝(검색 필드 아래)이다 — 구현은 검색 필드의 아래 여백 `Spacing.md` |
+| 헤더 행 | `bg-[var(--bg)]/95` | #EEF2F8/0.95 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `Box(Modifier.fillMaxSize().background(DesignTokens.Colors.surface(tone))) {` | #EEF2F8 | 허용 S9 | 헤더는 스크롤 목록 위의 고정 형제라 가릴 목록이 없어 바탕을 깔지 않는다 — 헤더 자리는 화면 바탕 `surface`(회사 라이트 `#EEF2F8`) |
+| 라벨 줄 | `gap-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `horizontalArrangement = Arrangement.spacedBy(AreaLabelDefaults.dotGap),` · `internal val dotGap: Dp = 6.dp` | 6 | 일치 | 라벨 점 ↔ 라벨 글자 간격 = `AreaLabelDefaults.dotGap` |
+| 라벨 줄 | `mb-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `labelSpacing = DesignTokens.Spacing.xs,` · `Column(verticalArrangement = Arrangement.spacedBy(labelSpacing))` · `labelSpacing: Dp = DEFAULT_LABEL_SPACING` · `private val DEFAULT_LABEL_SPACING = 2.dp` | 4 | 일치 | 라벨 줄 ↔ 제목 간격 — 이 화면은 `labelSpacing` 에 `Spacing.xs` 를 넘긴다(`ScreenHeader` 기본 2 를 덮는다) |
+| 라벨 점 | `w-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `labelDotSize = LABEL_DOT_SIZE,` · `private val LABEL_DOT_SIZE = 8.dp` · `Box(Modifier.size(dotSize).background(accent, shape))` · `val dotSize: Dp = 6.dp` | 8 | 일치 | 점 너비 — 이 화면은 `labelDotSize` 에 8dp 를 넘긴다(`AreaLabelDefaults.dotSize` 기본 6 을 덮는다) |
+| 라벨 점 | `h-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `labelDotSize = LABEL_DOT_SIZE,` · `private val LABEL_DOT_SIZE = 8.dp` · `Box(Modifier.size(dotSize).background(accent, shape))` | 8 | 일치 | 점 높이 |
+| 라벨 점 | `bg-[var(--slate)]` | #355577 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `Box(Modifier.size(dotSize).background(accent, shape))` · `val accent = DesignTokens.Colors.accent(area)` | #355577 | 일치 | 점 색 = 영역 accent(모양 `Square` 는 `labelDotShape = area.headerDotShape`) |
+| 영역 라벨 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Bold)` | bold | 일치 | 라벨 굵기 |
+| 영역 라벨 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Bold)` · `family: Family = Family.Sans,` | sans | 불일치 | 목업 `.stamp` 는 「WORK」를 고정폭 서체로 그리는데 구현 `AreaLabel` 은 `Typography.style` 기본 산세리프(`Family.Sans`)다 — `AreaLabel` 에 서체 인자가 없다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 영역 라벨 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionXs, FontWeight.Bold)` · `val captionXs = 11.sp` | 11 | 일치 | 라벨 글자 크기 = `captionXs` |
+| 영역 라벨 | `text-[var(--slate)]` | #355577 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `color = accent,` · `val accent = DesignTokens.Colors.accent(area)` | #355577 | 일치 | 라벨 색 = 영역 accent |
+| 영역 라벨 | `tracking-[0.22em]` | 0.22em | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `.copy(letterSpacing = tracking)` · `val tracking: TextUnit = 2.4.sp` · `labelTracking: TextUnit = AreaLabelDefaults.tracking` | 2.4 | 일치 | 자간 — 0.22em × 11 = 2.42 → 소수 첫째 자리 2.4. 이 화면은 `labelTracking` 을 넘기지 않아 `AreaLabel` 기본 2.4sp 다(같은 요소의 `.stamp` 자간 선언은 이 유틸리티가 덮어 재지 않는다) |
+| 영역 라벨 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/AreaLabel.kt` | `(text ?: AreaLabelDefaults.text(area)).uppercase()` | uppercase | 일치 | 대문자 변환 |
+| 제목 | `text-[28px]` | 28 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `titleSize = TITLE_SIZE,` · `private val TITLE_SIZE = 28.sp` · `titleSize: TextUnit = DEFAULT_TITLE_SIZE` · `private val DEFAULT_TITLE_SIZE = 24.sp` | 28 | 일치 | 제목 크기 — 이 화면은 `titleSize` 에 28sp 를 넘긴다(`ScreenHeader` 기본 24 를 덮는다) |
+| 제목 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `DesignTokens.Typography.style(titleSize, FontWeight.Bold, titleFamily)` | bold | 일치 | 제목 굵기 |
+| 제목 | `tracking-tight` | -0.025em | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `.copy(letterSpacing = TITLE_TRACKING)` · `private val TITLE_TRACKING = (-0.025).em` | -0.025em | 일치 | 제목 자간 — `em` 계수끼리 비교 |
+| 요약 줄 | `mt-0.5` | 2 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `Column(verticalArrangement = Arrangement.spacedBy(TITLE_SUBTITLE_SPACING))` · `private val TITLE_SUBTITLE_SPACING = 2.dp` | 2 | 일치 | 제목 ↔ 요약 줄 간격 |
+| 요약 줄 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val base = DesignTokens.Typography.style(DesignTokens.Typography.captionSm)` · `val captionSm = 12.sp` | 12 | 일치 | 요약 줄 글자 크기 = `captionSm` |
+| 요약 줄 | `text-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `color = ink.copy(alpha = 0.55f),` · `val ink = DesignTokens.Colors.ink(area)` | #1E2A3A/0.55 | 허용 S5 | 요약 줄 색 — 목업 stone-500, 구현 영역 ink 55% |
+| 요약 줄 | — | sans | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `subtitleMonospaced = area == TodoArea.WORK,` · `style = if (subtitleMonospaced) base.copy(fontFamily = FontFamily.Monospace) else base,` | monospace | 불일치 | 목업 요약 줄(「12 OPEN · 8 DONE · DEADLINE 3」)은 `.stamp` 클래스가 없어 본문 산세리프로 그리는데 구현은 회사 영역일 때 요약 줄을 고정폭(`FontFamily.Monospace`)으로 그린다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 추가 버튼 | `w-10` | 40 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.size(ADD_BUTTON_SIZE)` · `private val ADD_BUTTON_SIZE = 40.dp` | 40 | 일치 | 버튼 너비 |
+| 추가 버튼 | `h-10` | 40 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.size(ADD_BUTTON_SIZE)` · `private val ADD_BUTTON_SIZE = 40.dp` | 40 | 일치 | 버튼 높이 |
+| 추가 버튼 | `bg-[var(--slate)]` | #355577 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.accent(area.designArea))` | #355577 | 일치 | 버튼 배경 = 영역 accent(모양은 `RoundedCornerShape(area.rowRadius)` — 회사는 0dp 라 각진 사각형) |
+| 추가 버튼 | `text-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `tint = Color.White,` | #FFFFFF | 일치 | 더하기 글리프 색 = 흰색 |
+| 글리프 18 (추가 · 삭제) | `width:18px` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `modifier = Modifier.size(ADD_ICON_SIZE)` · `private val ADD_ICON_SIZE = 18.dp` | 18 | 일치 | 더하기 글리프 너비 |
+| 글리프 18 (추가 · 삭제) | `height:18px` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `modifier = Modifier.size(ADD_ICON_SIZE)` · `private val ADD_ICON_SIZE = 18.dp` | 18 | 일치 | 더하기 글리프 높이 |
+| 글리프 18 (추가 · 삭제) | `width:18px` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `modifier = Modifier.size(TRASH_ICON_SIZE),` · `private val TRASH_ICON_SIZE = 18.dp` | 18 | 일치 | 휴지통 글리프 너비 |
+| 글리프 18 (추가 · 삭제) | `height:18px` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `modifier = Modifier.size(TRASH_ICON_SIZE),` · `private val TRASH_ICON_SIZE = 18.dp` | 18 | 일치 | 휴지통 글리프 높이 |
+| 검색 필드 | `mt-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` | `bottomPadding = DesignTokens.Spacing.md,` · `bottomPadding: Dp = DesignTokens.Spacing.sm` · `bottom = bottomPadding` | 12 | 일치 | 제목 줄 ↔ 검색 필드 간격 — 이 화면은 `ScreenHeader` 의 `bottomPadding` 에 `Spacing.md` 를 넘긴다(기본 `Spacing.sm` 8 을 덮는다) |
+| 검색 필드 | `gap-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),` | 8 | 일치 | 돋보기 ↔ 입력 간격 = `Spacing.sm` |
+| 검색 필드 | `bg-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.card(tone))` | #FFFFFF | 일치 | 검색 필드 배경 = 영역 card(회사 라이트 흰색) |
+| 검색 필드 | `border` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` · `private val BORDER_WIDTH = 1.dp` | 1 | 일치 | 검색 필드 보더 두께 |
+| 검색 필드 | `border-[var(--rule)]` | #D6DEE9 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` | #D6DEE9 | 일치 | 보더 색 = 영역 rule |
+| 검색 필드 | `px-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.sm)` | 12 | 일치 | 좌우 안쪽 여백 = `Spacing.md` |
+| 검색 필드 | `py-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.sm)` | 8 | 일치 | 상하 안쪽 여백 = `Spacing.sm` |
+| 검색 필드 | `rounded-md` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val shape = RoundedCornerShape(area.searchRadius)` · `if (this == TodoArea.PERSONAL) DesignTokens.Radius.card else DesignTokens.Radius.key` · `val key = 6.dp` | 6 | 일치 | 검색 필드 라운드 — 회사는 `Radius.key` |
+| 검색 돋보기 | `height:14px` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `modifier = Modifier.size(SEARCH_ICON_SIZE),` · `private val SEARCH_ICON_SIZE = 14.dp` | 14 | 일치 | 돋보기 글리프 높이 |
+| 검색 돋보기 | `width:14px` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `modifier = Modifier.size(SEARCH_ICON_SIZE),` · `private val SEARCH_ICON_SIZE = 14.dp` | 14 | 일치 | 돋보기 글리프 너비 |
+| 검색 돋보기 | `text-stone-400` | #A8A29E | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `tint = ink.copy(alpha = 0.45f),` · `val ink = DesignTokens.Colors.ink(tone)` | #1E2A3A/0.45 | 허용 S5 | 돋보기 색 — 목업 stone-400, 구현 영역 ink 45% |
+| 검색 자리표시 | `text-[13px]` | 13 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `textStyle = DesignTokens.Typography.style(DesignTokens.Typography.bodySm),` · `val bodySm = 13.sp` | 13 | 일치 | 자리표시·입력 글자 크기 = `bodySm` |
+| 검색 자리표시 | `text-stone-400` | #A8A29E | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `placeholderColor = ink.copy(alpha = 0.45f),` · `val ink = DesignTokens.Colors.ink(tone)` | #1E2A3A/0.45 | 허용 S5 | 자리표시 색 — 목업 stone-400, 구현 영역 ink 45% |
+| 스크롤 본문 | `px-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `start = DesignTokens.Spacing.xl, end = DesignTokens.Spacing.xl,` · `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.sm)` | 20 | 일치 | 본문 좌우 여백 = `Spacing.xl`(섹션 머리·행·오류 줄·안내 줄이 같은 값을 각자 준다) |
+| 스크롤 본문 | `pt-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `top = area.listTopInset,` · `TodoArea.WORK -> DesignTokens.Spacing.sm` | 8 | 일치 | 빈 상태·불러오는 중·오류 프레임 — 안내 줄 위 여백 `listTopInset`(회사 `Spacing.sm`) 8. 안내 줄 `py-5` 20 이 더해져 위 28 은 목업(8+20)과 같다 |
+| 스크롤 본문 | `pt-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `top = if (isFirstSection) area.listTopInset + DesignTokens.Spacing.xs else DesignTokens.Spacing.md,` · `TodoArea.WORK -> DesignTokens.Spacing.sm` | 8+4 | 불일치 | 목록 프레임 — 본문 위 8 이 첫 섹션 머리 자신의 `pt-1` 4 와 합쳐져 첫 머리 위 실효 12 다. 구현은 첫 머리 위 여백을 `listTopInset + Spacing.xs`(8+4) 한 수식으로 주어 실효 값(12)은 같지만 단일 수식의 값이 아니라 합이다 |
+| 스크롤 본문 | `pb-6` | 24 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `bottom = if (isLast) DesignTokens.Spacing.xxl else DesignTokens.Spacing.cardGap / 2,` | 24 | 일치 | 목록 프레임의 본문 아래 여백 = 마지막 행 아래 `Spacing.xxl` |
+| 스크롤 본문 | `pb-6` | 24 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `bottom = DesignTokens.Spacing.xxl,` | 24 | 일치 | 빈 상태·불러오는 중·오류 프레임의 본문 아래 여백 = 안내 줄 `Box` 아래 `Spacing.xxl`(안내 줄 `py-5` 20 이 더해져 44 는 목업과 같다) |
+| 스크롤 본문 | `space-y-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `top = DesignTokens.Spacing.cardGap / 2,` · `bottom = if (isLast) DesignTokens.Spacing.xxl else DesignTokens.Spacing.cardGap / 2,` · `val cardGap = 6.dp` | 6/2+6/2 | 불일치 | 행 사이 간격이 간격 인자가 아니라 행마다 위·아래 `cardGap / 2` 3 씩이라 인접 행 사이 실효 6(3+3) — 값은 목업과 같지만 단일 수식이 아닌 합이다. 섹션 머리 ↔ 행(목업 6+`pb-1.5` 6=12, 구현 머리 아래 6+행 위 3=9)·행 ↔ 다음 머리(목업 6+`pt-3` 12=18, 구현 행 아래 3+머리 위 12=15)는 실효 값도 3 씩 모자란다 |
+| 첫 섹션 머리 | `gap-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `horizontalArrangement = Arrangement.spacedBy(area.sectionHeadSpacing),` · `TodoArea.WORK -> DesignTokens.Spacing.sm` | 8 | 일치 | 막대 ↔ 제목 ↔ 구분선 간격 = `sectionHeadSpacing`(회사 `Spacing.sm`) |
+| 첫 섹션 머리 | `pt-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `top = if (isFirstSection) area.listTopInset + DesignTokens.Spacing.xs else DesignTokens.Spacing.md,` · `TodoArea.WORK -> DesignTokens.Spacing.sm` | 8+4 | 불일치 | 첫 머리 위 여백 4 는 본문 `pt-2` 8 과 합쳐 실효 12 다(위 `스크롤 본문 pt-2` 행). 구현은 `listTopInset + Spacing.xs`(8+4) 한 수식이라 어느 쪽이 어느 몫인지 나뉘지 않는다 |
+| 첫 섹션 머리 | `pb-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `bottom = area.sectionHeaderBottom,` · `TodoArea.WORK -> WORK_SECTION_HEADER_BOTTOM` · `private val WORK_SECTION_HEADER_BOTTOM = 6.dp` | 6 | 일치 | 머리 아래 여백 = `sectionHeaderBottom`(회사 6) |
+| 이후 섹션 머리 | `gap-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `horizontalArrangement = Arrangement.spacedBy(area.sectionHeadSpacing),` · `TodoArea.WORK -> DesignTokens.Spacing.sm` | 8 | 일치 | 막대 ↔ 제목 ↔ 구분선 간격 = `sectionHeadSpacing`(회사 `Spacing.sm`) |
+| 이후 섹션 머리 | `pt-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `top = if (isFirstSection) area.listTopInset + DesignTokens.Spacing.xs else DesignTokens.Spacing.md,` | 12 | 일치 | 둘째 이후 머리 위 여백 = `Spacing.md`(앞 행 아래 3 이 더해지는 실효는 `스크롤 본문 space-y-1.5` 행) |
+| 이후 섹션 머리 | `pb-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `bottom = area.sectionHeaderBottom,` · `TodoArea.WORK -> WORK_SECTION_HEADER_BOTTOM` · `private val WORK_SECTION_HEADER_BOTTOM = 6.dp` | 6 | 일치 | 머리 아래 여백 = `sectionHeaderBottom`(회사 6) |
+| 기한 섹션 막대 | `w-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.width(area.sectionBarWidth)` · `TodoArea.WORK -> DesignTokens.Spacing.xs` | 4 | 일치 | 막대 너비 = `sectionBarWidth`(회사 `Spacing.xs`) — 구현의 열린 섹션 막대 기준 |
+| 기한 섹션 막대 | `h-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.height(DesignTokens.Spacing.md)` | 12 | 일치 | 막대 높이 = `Spacing.md` — 구현의 열린 섹션 막대 기준 |
+| 기한 섹션 막대 | `bg-[#C2554F]` | #C2554F | — | — | — | 불일치 | 목업 「DUE TODAY」 머리의 붉은 막대(`#C2554F`)는 구현에 대응이 없다 — 구현에 기한별 섹션이 없다 — 열린 항목은 `OPEN · n` 한 섹션(`TodoList` 의 `section(key = "open")`)에 모이고 `DUE TODAY`·`THIS WEEK`·`BACKLOG` 로 나뉘지 않는다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 섹션 제목 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(area.sectionTitleSize, FontWeight.Bold)` · `TodoArea.WORK -> DesignTokens.Typography.captionSm` · `val captionSm = 12.sp` | 12 | 일치 | 섹션 제목 글자 크기 = `sectionTitleSize`(회사 `captionSm`) |
+| 섹션 제목 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `style = DesignTokens.Typography.style(area.sectionTitleSize, FontWeight.Bold)` | bold | 일치 | 섹션 제목 굵기 |
+| 섹션 제목 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(area.sectionTitleSize, FontWeight.Bold)` · `family: Family = Family.Sans,` | sans | 불일치 | 목업 `.stamp` 는 섹션 제목을 고정폭 서체로 그리는데 구현은 `Typography.style` 기본 산세리프다(`SectionHeader` 가 서체를 덮지 않는다). 구현을 `FontFamily.Monospace` 로 맞추거나 목업을 고쳐야 닫힌다 |
+| 섹션 제목 | `tracking-wide` | 0.025em | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.copy(letterSpacing = area.sectionTitleTracking)` · `TodoArea.WORK -> WORK_SECTION_TITLE_TRACKING` · `private val WORK_SECTION_TITLE_TRACKING = 0.3.sp` | 0.3 | 일치 | 자간 — `tracking-wide` 0.025em × 12 = 0.3(같은 요소의 `.stamp` 자간 선언은 이 유틸리티가 덮는다) |
+| 섹션 제목 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `if (area.sectionTitleUppercase) label.uppercase() else label,` | uppercase | 일치 | 대문자 변환 — 회사 영역만(`sectionTitleUppercase`) |
+| 백로그 섹션 제목 | `text-[12px]` | 12 | — | — | — | 불일치 | 구현에 백로그 섹션이 없다 — 구현에 기한별 섹션이 없다 — 열린 항목은 `OPEN · n` 한 섹션(`TodoList` 의 `section(key = "open")`)에 모이고 `DUE TODAY`·`THIS WEEK`·`BACKLOG` 로 나뉘지 않는다. |
+| 백로그 섹션 제목 | `font-bold` | bold | — | — | — | 불일치 | 구현에 백로그 섹션이 없다 — 구현에 기한별 섹션이 없다 — 열린 항목은 `OPEN · n` 한 섹션(`TodoList` 의 `section(key = "open")`)에 모이고 `DUE TODAY`·`THIS WEEK`·`BACKLOG` 로 나뉘지 않는다. |
+| 백로그 섹션 제목 | `font-family:'SF Mono','Menlo',monospace` | monospace | — | — | — | 불일치 | 구현에 백로그 섹션이 없다 — 구현에 기한별 섹션이 없다 — 열린 항목은 `OPEN · n` 한 섹션(`TodoList` 의 `section(key = "open")`)에 모이고 `DUE TODAY`·`THIS WEEK`·`BACKLOG` 로 나뉘지 않는다. |
+| 백로그 섹션 제목 | `tracking-wide` | 0.025em | — | — | — | 불일치 | 구현에 백로그 섹션이 없다 — 구현에 기한별 섹션이 없다 — 열린 항목은 `OPEN · n` 한 섹션(`TodoList` 의 `section(key = "open")`)에 모이고 `DUE TODAY`·`THIS WEEK`·`BACKLOG` 로 나뉘지 않는다. |
+| 백로그 섹션 제목 | `uppercase` | uppercase | — | — | — | 불일치 | 구현에 백로그 섹션이 없다 — 구현에 기한별 섹션이 없다 — 열린 항목은 `OPEN · n` 한 섹션(`TodoList` 의 `section(key = "open")`)에 모이고 `DUE TODAY`·`THIS WEEK`·`BACKLOG` 로 나뉘지 않는다. |
+| 백로그 섹션 제목 | `text-stone-500` | #78716C | — | — | — | 불일치 | 구현에 백로그 섹션이 없다(백로그 행도 열린 섹션 머리 아래에 그린다) — 색이 아니라 섹션 구성의 차이다 |
+| 완료 섹션 제목 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(area.sectionTitleSize, FontWeight.Bold)` · `TodoArea.WORK -> DesignTokens.Typography.captionSm` · `val captionSm = 12.sp` | 12 | 일치 | 섹션 제목 글자 크기 = `sectionTitleSize`(회사 `captionSm`) |
+| 완료 섹션 제목 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `style = DesignTokens.Typography.style(area.sectionTitleSize, FontWeight.Bold)` | bold | 일치 | 섹션 제목 굵기 |
+| 완료 섹션 제목 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(area.sectionTitleSize, FontWeight.Bold)` · `family: Family = Family.Sans,` | sans | 불일치 | 목업 `.stamp` 는 섹션 제목을 고정폭 서체로 그리는데 구현은 `Typography.style` 기본 산세리프다(`SectionHeader` 가 서체를 덮지 않는다). 구현을 `FontFamily.Monospace` 로 맞추거나 목업을 고쳐야 닫힌다 |
+| 완료 섹션 제목 | `tracking-wide` | 0.025em | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.copy(letterSpacing = area.sectionTitleTracking)` · `TodoArea.WORK -> WORK_SECTION_TITLE_TRACKING` · `private val WORK_SECTION_TITLE_TRACKING = 0.3.sp` | 0.3 | 일치 | 자간 — `tracking-wide` 0.025em × 12 = 0.3(같은 요소의 `.stamp` 자간 선언은 이 유틸리티가 덮는다) |
+| 완료 섹션 제목 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `if (area.sectionTitleUppercase) label.uppercase() else label,` | uppercase | 일치 | 대문자 변환 — 회사 영역만(`sectionTitleUppercase`) |
+| 완료 섹션 제목 | `text-stone-400` | #A8A29E | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `titleOpacity = DONE_TITLE_OPACITY,` · `color = ink.copy(alpha = titleOpacity),` · `private const val DONE_TITLE_OPACITY = 0.45f` · `val ink = DesignTokens.Colors.ink(tone)` | #1E2A3A/0.45 | 허용 S5 | 완료 섹션 제목 색 — 목업 stone-400, 구현 영역 ink 45% |
+| 섹션 구분선 | `h-px` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `Box(Modifier.weight(1f).height(SECTION_RULE_HEIGHT).background(DesignTokens.Colors.rule(tone)))` · `private val SECTION_RULE_HEIGHT = 1.dp` | 1 | 일치 | 구분선 두께 — 남는 폭을 채우는 1dp `Box`(회사만 `showsSectionRule`) |
+| 섹션 구분선 | `bg-[var(--rule)]` | #D6DEE9 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `Box(Modifier.weight(1f).height(SECTION_RULE_HEIGHT).background(DesignTokens.Colors.rule(tone)))` | #D6DEE9 | 일치 | 구분선 색 = 영역 rule |
+| 급한 행 카드 | `bg-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.card(tone).copy(alpha = if (item.isDone) 0.5f else 1f))` | #FFFFFF | 일치 | 행 배경 = 영역 card(미완료 행은 불투명도 1) |
+| 급한 행 카드 | `border-[var(--rule)]` | #D6DEE9 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` | #D6DEE9 | 일치 | 보더 색 = 영역 rule |
+| 급한 행 카드 | `border-l-[3px]` | left 3 | — | — | — | 불일치 | 목업 마감 임박 행은 왼쪽 보더만 3 로 굵게 그리는데 구현 `TodoRow` 는 모든 행에 같은 1dp 보더(`.border(BORDER_WIDTH, …, shape)`)뿐이다 — 급한 행 강조가 구현에 없다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 급한 행 카드 | `border-l-[#C2554F]` | left #C2554F | — | — | — | 불일치 | 왼쪽 보더의 붉은 색(`#C2554F`)도 구현에 없다(위 `border-l-[3px]` 행과 같은 사유) |
+| 급한 행 카드 | `border-y` | y 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` · `private val BORDER_WIDTH = 1.dp` | y 1 | 일치 | 위·아래 보더 두께 1 = `BORDER_WIDTH` |
+| 급한 행 카드 | `border-r` | right 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` · `private val BORDER_WIDTH = 1.dp` | right 1 | 일치 | 오른쪽 보더 두께 1 = `BORDER_WIDTH` |
+| 급한 행 카드 | `p-3.5` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(ROW_PADDING),` · `private val ROW_PADDING = 14.dp` | 14 | 일치 | 행 안쪽 여백 |
+| 급한 행 카드 | `gap-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
+| 체크 | `h-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.size(area.checkSize)` · `TodoArea.WORK -> WORK_CHECK_SIZE` · `private val WORK_CHECK_SIZE = 20.dp` | 20 | 일치 | 체크 높이 = `checkSize`(회사 20) |
+| 체크 | `mt-0.5` | 2 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(top = ROW_CHECK_TOP)` · `private val ROW_CHECK_TOP = 2.dp` | 2 | 일치 | 체크 위 여백 |
+| 체크 | `w-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.size(area.checkSize)` · `TodoArea.WORK -> WORK_CHECK_SIZE` · `private val WORK_CHECK_SIZE = 20.dp` | 20 | 일치 | 체크 너비 |
+| 체크 | `border:1.6px solid var(--slate)` | 1.6 #355577 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | `.border(CHECK_STROKE, accent, shape)` · `private val CHECK_STROKE = 1.6.dp` · `val accent = DesignTokens.Colors.accent(area.designArea)` | 1.6 #355577 | 일치 | 체크 테두리 — 두께 1.6 · 색 영역 accent(모양은 회사 `RectangleShape`) |
+| 체크 | `background:transparent` | transparent | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | `.background(if (isDone) accent else Color.Transparent)` | transparent | 일치 | 미완료 체크 배경 = 투명 |
+| 급한 행 제목 | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, area.rowTitleWeight).copy(` · `val bodyLg = 15.sp` | 15 | 일치 | 행 제목 글자 크기 = `bodyLg` |
+| 급한 행 제목 | `leading-snug` | 1.375 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `lineHeight = ROW_TITLE_LINE_HEIGHT,` · `private val ROW_TITLE_LINE_HEIGHT = 1.375.em` | 1.375 | 일치 | 행 제목 줄 높이 = 글자 크기의 1.375배 |
+| 급한 행 제목 | `font-medium` | medium | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, area.rowTitleWeight)` · `TodoArea.WORK -> FontWeight.Medium` | medium | 일치 | 행 제목 굵기 = `rowTitleWeight`(회사 Medium) |
+| 메타 줄 | `font-family:'SF Mono','Menlo',monospace` | monospace | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `val style: TextStyle = if (area == TodoArea.WORK) base.copy(fontFamily = FontFamily.Monospace) else base` | monospace | 일치 | 회사 메타 줄은 고정폭(`FontFamily.Monospace`) |
+| 메타 줄 | `gap-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),` | 12 | 일치 | 메타 조각 사이 간격 = `Spacing.md`(구분점 `·` 이 조각 사이에 끼므로 점 앞뒤 12 씩) |
+| 메타 줄 | `letter-spacing:.04em` | 0.04em | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val base = DesignTokens.Typography.style(DesignTokens.Typography.captionXs)` · `letterSpacing = (-0.01).em` | -0.01em | 불일치 | 목업 `.stamp` 자간 +0.04em, 구현은 `Typography.style` 기본 −0.01em 을 그대로 쓴다(`letterSpacing` 을 덮지 않는다) |
+| 메타 줄 | `mt-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(ROW_TEXT_SPACING))` · `private val ROW_TEXT_SPACING = 6.dp` | 6 | 일치 | 제목 ↔ 메타 줄 간격 |
+| 메타 줄 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `val base = DesignTokens.Typography.style(DesignTokens.Typography.captionXs)` · `val captionXs = 11.sp` | 11 | 일치 | 메타 글자 크기 = `captionXs` |
+| 메타 줄 | `text-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `val color = DesignTokens.Colors.ink(area.designArea).copy(alpha = 0.55f)` | #1E2A3A/0.55 | 허용 S5 | 메타 줄 색 — 목업 stone-500, 구현 영역 ink 55% |
+| 메타 줄 | `uppercase` | uppercase | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `val text = if (area == TodoArea.WORK) part.uppercase() else part` | uppercase | 일치 | 대문자 변환 — 회사 영역만 |
+| 메타 구분점 | `text-stone-300` | #D6D3D1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `Text("·", style = style, color = color)` · `val color = DesignTokens.Colors.ink(area.designArea).copy(alpha = 0.55f)` | #1E2A3A/0.55 | 불일치 | 구분점 색 — 목업 stone-300 `#D6D3D1`(흐린 점), 구현은 메타 글자와 같은 영역 ink 55%. `_deviations.md` S5 는 이 자리를 대상이 아니라고 명시한다(다크 목업도 stone) — 구현을 맞추거나 목업을 영역 ink 투명도로 바꿔야 닫힌다 |
+| 열린 섹션 막대 | `w-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.width(area.sectionBarWidth)` · `TodoArea.WORK -> DesignTokens.Spacing.xs` | 4 | 일치 | 막대 너비 = `sectionBarWidth` |
+| 열린 섹션 막대 | `h-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.height(DesignTokens.Spacing.md)` | 12 | 일치 | 막대 높이 = `Spacing.md` |
+| 열린 섹션 막대 | `bg-[var(--slate)]` | #355577 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(if (titleOpacity == 1f) DesignTokens.Colors.accent(tone) else ink.copy(alpha = titleOpacity)),` | #355577 | 일치 | 열린 섹션 막대 색 = 영역 accent(`titleOpacity == 1f`) |
+| 행 카드 | `bg-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.card(tone).copy(alpha = if (item.isDone) 0.5f else 1f))` | #FFFFFF | 일치 | 행 배경 = 영역 card(미완료 행은 불투명도 1) |
+| 행 카드 | `border` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` · `private val BORDER_WIDTH = 1.dp` | 1 | 일치 | 행 보더 두께 = `BORDER_WIDTH` |
+| 행 카드 | `border-[var(--rule)]` | #D6DEE9 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` | #D6DEE9 | 일치 | 보더 색 = 영역 rule |
+| 행 카드 | `p-3.5` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(ROW_PADDING),` · `private val ROW_PADDING = 14.dp` | 14 | 일치 | 행 안쪽 여백 |
+| 행 카드 | `gap-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
+| 행 제목 | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, area.rowTitleWeight).copy(` · `val bodyLg = 15.sp` | 15 | 일치 | 행 제목 글자 크기 = `bodyLg` |
+| 행 제목 | `leading-snug` | 1.375 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `lineHeight = ROW_TITLE_LINE_HEIGHT,` · `private val ROW_TITLE_LINE_HEIGHT = 1.375.em` | 1.375 | 일치 | 행 제목 줄 높이 = 글자 크기의 1.375배 |
+| 행 제목 | — | regular | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, area.rowTitleWeight)` · `TodoArea.WORK -> FontWeight.Medium` | medium | 불일치 | 목업은 마감 임박 행의 제목만 `font-medium` 이고 나머지 행(완료 행 포함)은 기본 굵기 400 인데, 구현은 회사의 모든 행 제목을 Medium(`rowTitleWeight`)으로 그린다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 흐린 섹션 막대 | `w-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.width(area.sectionBarWidth)` · `TodoArea.WORK -> DesignTokens.Spacing.xs` | 4 | 일치 | 막대 너비 — 구현의 완료 섹션 막대 기준(백로그 막대는 구현에 없다) |
+| 흐린 섹션 막대 | `h-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.height(DesignTokens.Spacing.md)` | 12 | 일치 | 막대 높이 |
+| 흐린 섹션 막대 | `bg-stone-400` | #A8A29E | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(if (titleOpacity == 1f) DesignTokens.Colors.accent(tone) else ink.copy(alpha = titleOpacity)),` · `titleOpacity = DONE_TITLE_OPACITY,` · `private const val DONE_TITLE_OPACITY = 0.45f` · `val ink = DesignTokens.Colors.ink(tone)` | #1E2A3A/0.45 | 불일치 | 완료 섹션 막대 색 — 목업 stone-400 `#A8A29E`, 구현 영역 ink 45%. `_deviations.md` S5 는 섹션 막대를 대상에 넣지 않는다(제목 글자만 대상) — 구현을 맞추거나 허용목록에 더해야 닫힌다 |
+| 삭제 패널 | `w-[74px]` | 74 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `Modifier.width(ACTION_WIDTH).fillMaxHeight(),` · `private val ACTION_WIDTH = 74.dp` | 74 | 일치 | 삭제 패널 너비 |
+| 삭제 패널 | `bg-[#9C3F2D]` | #9C3F2D | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `Modifier.fillMaxSize().background(DesignTokens.Colors.destructive(area)),` | #9C3F2D | 일치 | 패널 채움 = 영역 destructive(회사 라이트 `#9C3F2D`) |
+| 삭제 패널 | `gap-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `Arrangement.spacedBy(DesignTokens.Spacing.xs, Alignment.CenterVertically)` | 4 | 일치 | 글리프 ↔ 라벨 간격 |
+| 삭제 패널 | `text-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `tint = Color.White,` · `color = Color.White,` | #FFFFFF | 일치 | 글리프·라벨 색 = 흰색 |
+| 삭제 라벨 | `text-[12px]` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold)` · `val captionSm = 12.sp` | 12 | 일치 | 삭제 라벨 크기 = `captionSm` |
+| 삭제 라벨 | `font-semibold` | semibold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold)` | semibold | 일치 | 삭제 라벨 굵기 |
+| 스와이프된 카드 | `bg-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.card(tone).copy(alpha = if (item.isDone) 0.5f else 1f))` | #FFFFFF | 일치 | 행 배경 = 영역 card(미완료 행은 불투명도 1) |
+| 스와이프된 카드 | `border` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` · `private val BORDER_WIDTH = 1.dp` | 1 | 일치 | 행 보더 두께 = `BORDER_WIDTH` |
+| 스와이프된 카드 | `border-[var(--rule)]` | #D6DEE9 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` | #D6DEE9 | 일치 | 보더 색 = 영역 rule |
+| 스와이프된 카드 | `p-3.5` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(ROW_PADDING),` · `private val ROW_PADDING = 14.dp` | 14 | 일치 | 행 안쪽 여백 |
+| 스와이프된 카드 | `gap-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
+| 완료 카드 | `bg-white/50` | #FFFFFF/0.5 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.background(DesignTokens.Colors.card(tone).copy(alpha = if (item.isDone) 0.5f else 1f))` | #FFFFFF/0.5 | 일치 | 완료 행 배경 = 영역 card 50% |
+| 완료 카드 | `border` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` · `private val BORDER_WIDTH = 1.dp` | 1 | 일치 | 행 보더 두께 = `BORDER_WIDTH` |
+| 완료 카드 | `border-[var(--rule)]` | #D6DEE9 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.border(BORDER_WIDTH, DesignTokens.Colors.rule(tone), shape)` | #D6DEE9 | 일치 | 보더 색 = 영역 rule |
+| 완료 카드 | `gap-3` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),` | 12 | 일치 | 체크 ↔ 본문 간격 = `Spacing.md` |
+| 완료 카드 | `opacity-60` | 0.6 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.alpha(if (item.isDone) 0.6f else 1f)` | 0.6 | 일치 | 완료 행 전체 불투명도 0.6 |
+| 완료 카드 | `p-3.5` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(ROW_PADDING),` · `private val ROW_PADDING = 14.dp` | 14 | 일치 | 행 안쪽 여백 |
+| 완료 체크 | `h-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.size(area.checkSize)` · `TodoArea.WORK -> WORK_CHECK_SIZE` · `private val WORK_CHECK_SIZE = 20.dp` | 20 | 일치 | 체크 높이 = `checkSize`(회사 20) |
+| 완료 체크 | `mt-0.5` | 2 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(top = ROW_CHECK_TOP)` · `private val ROW_CHECK_TOP = 2.dp` | 2 | 일치 | 체크 위 여백 |
+| 완료 체크 | `w-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` · `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoAreaStyle.kt` | `.size(area.checkSize)` · `TodoArea.WORK -> WORK_CHECK_SIZE` · `private val WORK_CHECK_SIZE = 20.dp` | 20 | 일치 | 체크 너비 |
+| 완료 체크 | `border:1.6px solid var(--slate)` | 1.6 #355577 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | `.border(CHECK_STROKE, accent, shape)` · `private val CHECK_STROKE = 1.6.dp` · `val accent = DesignTokens.Colors.accent(area.designArea)` | 1.6 #355577 | 일치 | 체크 테두리 — 두께 1.6 · 색 영역 accent(모양은 회사 `RectangleShape`) |
+| 완료 체크 | `background:var(--slate)` | #355577 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | `.background(if (isDone) accent else Color.Transparent)` · `val accent = DesignTokens.Colors.accent(area.designArea)` | #355577 | 일치 | 완료 체크 채움 = 영역 accent(같은 요소의 `.check` 투명 배경 선언은 `.check.done` 이 덮는다) |
+| 체크마크 글리프 | `height:12px` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | `modifier = Modifier.size(CHECKMARK_SIZE),` · `private val CHECKMARK_SIZE = 12.dp` | 12 | 일치 | 체크 표시 글리프 높이 |
+| 체크마크 글리프 | `width:12px` | 12 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | `modifier = Modifier.size(CHECKMARK_SIZE),` · `private val CHECKMARK_SIZE = 12.dp` | 12 | 일치 | 체크 표시 글리프 너비 |
+| 완료 행 제목 | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, area.rowTitleWeight).copy(` · `val bodyLg = 15.sp` | 15 | 일치 | 행 제목 글자 크기 = `bodyLg` |
+| 완료 행 제목 | `leading-snug` | 1.375 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `lineHeight = ROW_TITLE_LINE_HEIGHT,` · `private val ROW_TITLE_LINE_HEIGHT = 1.375.em` | 1.375 | 일치 | 행 제목 줄 높이 = 글자 크기의 1.375배 |
+| 분리 안내 상자 | `border` | 1 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `border-[var(--slate)]/40` | #355577/0.4 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `border-dashed` | dashed | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `leading-relaxed` | 1.625 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `mt-4` | 16 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `p-3` | 12 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `rounded-md` | 6 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `text-[11.5px]` | 11.5 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 상자 | `text-stone-500` | #78716C | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 머리 | `font-bold` | bold | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 분리 안내 머리 | `font-family:'SF Mono','Menlo',monospace` | monospace | — | — | — | 불일치 | 구현에 이 상자가 없다. 다만 `_deviations.md` S8 의 대상 목록은 머리 「N.B.」의 `font-bold`·`text-[var(--slate)]` 두 자리뿐이라 `.stamp` 서체·자간 선언은 열거 밖이다 — 허용 S8 의 대상 목록을 늘리거나 상자를 구현해야 닫힌다 |
+| 분리 안내 머리 | `letter-spacing:.04em` | 0.04em | — | — | — | 불일치 | 위 `font-family` 행과 같은 사유 — `.stamp` 자간 선언이 S8 의 대상 목록 밖이다 |
+| 분리 안내 머리 | `text-[var(--slate)]` | #355577 | — | — | — | 허용 S8 | 구현에 이 상자가 없다(`_deviations.md` S8 — 분리 안내 상자는 목업의 설계 주석이라 앱이 그리지 않는다). |
+| 빈 상태 안내 | `py-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(vertical = DesignTokens.Spacing.xl)` | 20 | 일치 | 안내 줄 상하 여백 = `Spacing.xl` |
+| 빈 상태 안내 | `text-[14px]` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `DesignTokens.Typography.style(DesignTokens.Typography.body)` · `val body = 14.sp` | 14 | 일치 | 안내 글자 크기 = `body` |
+| 빈 상태 안내 | `text-stone-500` | #78716C | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `color = ink.copy(alpha = 0.55f),` · `val ink = DesignTokens.Colors.ink(tone)` | #1E2A3A/0.55 | 허용 S5 | 안내 색 — 목업 stone-500, 구현 영역 ink 55% |
+| 빈 상태 안내 | `leading-relaxed` | 1.625 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.copy(lineHeight = EMPTY_LINE_HEIGHT)` · `private val EMPTY_LINE_HEIGHT = 1.625.em` | 1.625 | 일치 | 안내 줄 높이 = 글자 크기의 1.625배 |
+| 로딩 안쪽 | `py-5` | 20 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(vertical = DesignTokens.Spacing.xl)` | 20 | 일치 | 진행 표시 상하 여백 — 안내 줄과 같은 `Box`(`Alignment.Center`) |
+| 오류 줄 | `text-[11px]` | 11 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.captionXs),` · `val captionXs = 11.sp` | 11 | 일치 | 오류 글자 크기 = `captionXs` |
+| 오류 줄 | `text-[#9C3F2D]` | #9C3F2D | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `color = DesignTokens.Colors.destructive(tone),` | #9C3F2D | 일치 | 오류 글자 색 = 영역 destructive |
+| 오류 줄 | — | 0 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `.padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.sm)` | 8 | 불일치 | 구현은 오류 줄 위·아래에 `Spacing.sm` 8 을 두는데 목업 오류 줄에는 여백 클래스가 없고 앞뒤 간격은 본문 `space-y-1.5` 6 뿐이다 — 오류 줄 ↔ 안내 줄 실효 간격이 구현 8+(안내 줄 위 `listTopInset` 8)+`py-5` 20=36, 목업 6+20=26. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+
+## 표 S — 요소 순서·유무 (`screen-todo-work`) · 15행
+
+행 순서가 목업 화면의 위 → 아래 순서다(목록 프레임 → 빈 상태 → 불러오는 중 → 오류, 마지막은 구현만 그리는 자리).
+
+| # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
+|---|---|---|---|---|---|---|
+| 1 | 영역 띠(헤더 위 3 높이 막대) | `<!-- top slate strip` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `Box(Modifier.fillMaxWidth().height(AREA_STRIP_HEIGHT)` | 일치 | `Column` 의 첫 자식 — 헤더 위, 화면 맨 위 |
+| 2 | 헤더(영역 점 → 라벨, 제목, 요약 줄; 우측 끝 추가 버튼) | `<!-- header` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `ScreenHeader( area = tone,` | 일치 | `ScreenHeader` 가 왼쪽에 영역 라벨 줄(점 → 라벨) 위 · 제목 · 요약 줄 아래, `trailing` 이 오른쪽 끝(`Spacer(weight 1f)` 뒤)에 놓는다 |
+| 3 | 추가 버튼 | `<path d="M12 5v14M5 12h14"/>` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `trailing = { AddButton(area = area,` | 일치 | 헤더 오른쪽 끝의 사각 버튼(더하기 글리프) — 누르면 편집 시트(`TodoEditSheet.kt` — 목업 없음) |
+| 4 | 검색 필드(돋보기 → 자리표시) | `<!-- search -->` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `SearchField(area = area, query = state.query,` | 일치 | 헤더 바로 아래(제목 줄 다음, 목록 위). 목업은 검색 필드가 헤더 상자 안쪽 맨 아래다 |
+| 5 | 기한별 섹션(DUE TODAY → THIS WEEK → BACKLOG) | `<!-- urgent group -->` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `title = if (area == TodoArea.WORK) "OPEN" else "할 일",` | 불일치 | 목업은 열린 항목을 기한별 세 섹션(오늘 마감 · 이번 주 · 백로그)으로 나누고 섹션 머리에 막대 색을 달리 주지만, 구현은 열린 항목을 `OPEN · n` 한 섹션으로 모은다 — 기한 분류 로직이 없다. 구현을 맞추거나 목업을 고쳐야 닫힌다 |
+| 6 | 급한 행 강조(왼쪽 3 붉은 보더) | `border-l-[3px] border-l-[#C2554F]` | — | — | 불일치 | 목업은 마감 임박 행의 왼쪽 보더를 붉고 굵게 그리고 제목을 Medium 으로 두지만 구현 `TodoRow` 에는 마감 임박 구분이 없다(모든 행이 같은 보더·Medium 제목) |
+| 7 | 행(체크 → 제목 → 메타 줄) | `<button class="check w-5 h-5 grid place-items-center mt-0.5 shrink-0"></button>` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `TodoCheckBox( area = area,` | 일치 | `TodoRow` 가 체크를 왼쪽에, 오른쪽 `Column` 에 제목 → 메타 줄(`TodoRowMeta`)을 놓는다. 메타 줄은 마감일 → 우선순위 → 메모 순(목업 「오늘 17:00 · P1」「금요일 · 메모: 임시공간」)이고 조각이 없으면 줄 자체를 그리지 않는다 |
+| 8 | 스와이프된 행(삭제 패널) | `<!-- 스와이프된 행` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `SwipeToDelete( area = area.designArea,` | 일치 | 행을 왼쪽으로 밀면 오른쪽에 destructive 패널(휴지통 → 「삭제」)이 드러난다(`dismissDirection == EndToStart` 일 때만 그린다) |
+| 9 | 완료 섹션(DONE · n) | `<!-- done` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `title = if (area == TodoArea.WORK) "DONE" else "완료",` | 일치 | 열린 섹션 다음에 `DONE · n` 섹션 — 회사는 접기 버튼이 없다(`collapsible = area == TodoArea.PERSONAL`). 항목이 없으면 섹션 자체를 그리지 않는다 |
+| 10 | 완료 행(흐린 카드·취소선·채운 체크) | `line-through decoration-stone-400` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `textDecoration = if (item.isDone) TextDecoration.LineThrough else null,` | 일치 | 완료 행은 불투명도 0.6 · 카드 50% · 제목 취소선 · 채운 체크(`TodoCheckBox(isDone)`) |
+| 11 | 분리 안내 상자(N.B.) | `separation guard rail` | — | — | 허용 S8 | 구현에 이 상자가 없다 — 목업의 설계 주석이라 앱이 그리지 않는다(`_deviations.md` S8) |
+| 12 | 빈 상태 안내 | `아직 할 일이 없습니다. 우상단 + 버튼으로 추가하세요.</p>` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `if (state.items.isEmpty()) {` | 일치 | 항목이 없으면 섹션·행 대신 안내 한 줄(`else` 가지가 섹션을 그린다). 검색 필드는 그대로 남는다 |
+| 13 | 불러오는 중 진행 표시 | `<span class="spinner animate-spin"></span>` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `CircularProgressIndicator(color = DesignTokens.Colors.accent(tone))` | 일치 | 첫 불러오기 동안 안내 줄 자리에 진행 표시 하나(가운데 정렬) — 크기·두께는 시스템이 정하며 목업 주석도 「시스템이 정한다」고 적는다(`.spinner` 의 20×20 은 측정 대상이 아니다) |
+| 14 | 오류 줄 | `<!-- 오류 줄` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `state.errorMessage?.let { message ->` | 일치 | 목록 맨 위(섹션·안내 줄 앞)에 오류 한 줄 — 오류 문자열이 있을 때만 |
+| 15 | 당겨서 새로고침 | — | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `PullToRefreshBox(` | 목업 대기 | 목록을 아래로 당겨 새로고침하는 표시(`PullToRefreshBox`)는 구현만 그리고 목업 어느 프레임에도 없다 |
+
 ## 검산
 
 레포 루트에서 실행한다. 출력이 `ok` 한 줄이면 표가 현재 목업·구현·허용목록과 맞다.
@@ -709,6 +959,18 @@ SCREENS = [
     {"slug": "screen-scratchpad", "area": "Scratchpad", "svg": True, "css": ["card", "stamp"],
      "roots": ["px-5 pt-3 pb-3", "overflow-y-auto scroll px-5 pt-1 pb-6"],
      "fwd": [(D + "scratchpad/ScratchpadScreen.kt", None, None),
+             (D + "designsystem/components/ScreenHeader.kt", None, None),
+             (D + "designsystem/components/SwipeToDelete.kt", None, None),
+             (D + "designsystem/components/AreaLabel.kt", None, None)]},
+    {"slug": "screen-todo-work", "area": "Work", "svg": True, "css": ["stamp", "check", "done"],
+     "roots": ["h-[3px] bg-[var(--slate)]", "px-5 pt-3 pb-3", "overflow-y-auto scroll px-5 pt-2 pb-6"],
+     "skip": ["private val PERSONAL_CHECK_SIZE = 24.dp", "private val PERSONAL_SECTION_TITLE_SIZE = 14.sp", "private val PRIORITY_TAG_SIZE = 10.sp",
+              "private val PRIORITY_TAG_TRACKING = 0.5.sp", "private val PRIORITY_TAG_BOTTOM = 2.dp", "private val CHIP_GAP = 6.dp",
+              "private val CHIP_BORDER = 1.dp", "private val CALENDAR_ICON_SIZE = 11.dp"],
+     "fwd": [(D + "todos/TodoListScreen.kt", None, None),
+             (D + "todos/TodoRowParts.kt", None, "@Composable internal fun TodoPriorityTag"),
+             (D + "todos/TodoAreaStyle.kt", None, None),
+             (D + "todos/TodoRowMeta.kt", None, None),
              (D + "designsystem/components/ScreenHeader.kt", None, None),
              (D + "designsystem/components/SwipeToDelete.kt", None, None),
              (D + "designsystem/components/AreaLabel.kt", None, None)]},
@@ -793,8 +1055,14 @@ def measure(sc):
     sub = Sub(); sub.feed(html)
     want = {}
     for cls, st in sub.out:
-        toks = {t for t in cls.split() if MEAS.fullmatch(t)} | {d.strip() for d in st.split(";") if d.strip()} \
-            | {d for c in cls.split() if c in sc.get("css", ()) for d in rules[c]}
+        cdecl = {}
+        for c in cls.split():
+            if c in sc.get("css", ()):
+                for d in rules[c]:
+                    cdecl[d.split(":")[0]] = d
+        if any(c.startswith("tracking-") for c in cls.split()):
+            cdecl.pop("letter-spacing", None)
+        toks = {t for t in cls.split() if MEAS.fullmatch(t)} | {d.strip() for d in st.split(";") if d.strip()} | set(cdecl.values())
         if toks:
             want.setdefault(cls or "style=" + st, set()).update(toks)
     def color(c):
@@ -815,6 +1083,8 @@ def measure(sc):
             return num(int(m.group(1)) / 100)
         fixed = {"rounded-md": "6", "rounded-xl": "12", "rounded-2xl": "16", "rounded-full": "full", "border": "1", "border-t": "top 1", "divide-x": "left 1", "ring-1": "1",
                  "serif": "serif", "h-px": "1", "tracking-wider": "0.05em", "uppercase": "uppercase", "animate-pulse": "0.5", "border-dashed": "dashed", "leading-none": "1", "leading-snug": "1.375", "leading-relaxed": "1.625", "tracking-tight": "-0.025em",
+                 "letter-spacing:.04em": "0.04em", "tracking-wide": "0.025em", "border-l-[3px]": "left 3", "border-l-[#C2554F]": "left #C2554F",
+                 "border-y": "y 1", "border-r": "right 1", "background:transparent": "transparent",
                  "width:36px": "36", "height:4px": "4", "border-radius:9999px": "9999", "border-radius:24px 24px 0 0": "24 24 0 0",
                  "background:var(--rule)": root["rule"].upper(), "opacity:.5": "0.5",
                  "font-family:'SF Pro Display',serif": "sans", "font-family:'SF Mono','Menlo',monospace": "monospace", "letter-spacing:.05em": "0.05em",
@@ -824,7 +1094,10 @@ def measure(sc):
         m = re.fullmatch(r"background:(#[0-9A-Fa-f]{6})", t)
         if m:
             return m.group(1).upper()
-        m = re.fullmatch(r"border:(\d+)px solid var\(--([\w-]+)\)", t)
+        m = re.fullmatch(r"background:var\(--([\w-]+)\)", t)
+        if m:
+            return root[m.group(1)].upper()
+        m = re.fullmatch(r"border:([\d.]+)px solid var\(--([\w-]+)\)", t)
         if m:
             return m.group(1) + " " + root[m.group(2)].upper()
         m = re.fullmatch(r"(?:width|height):([\d.]+)px", t)
@@ -920,6 +1193,10 @@ for sc in SCREENS:
     allq = " ".join(quoted)
     for f, start, end in sc["fwd"]:
         body = code(f)
+        if end:
+            body = body.split(end)[0]
+        for sk in sc.get("skip", ()):
+            body = body.replace(ws(sk), "")
         body = re.sub(r"placeholderColor = ink\.copy\(alpha = 0\.45f\),", "", body)
         snips = set(re.findall(r"\bval (\w+)(?:: \w+)? = (?:\d|\(-?\d)", body)) | set(re.findall(r"DesignTokens\.(?:Spacing|Radius)\.\w+", body)) \
             | set(re.findall(r"DesignTokens\.Typography\.(?:caption\w+|body\w*|title\w+|h\d)\b", body)) | set(re.findall(r"alpha = [\d.]+f", body))

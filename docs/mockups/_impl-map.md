@@ -16,7 +16,7 @@ last_updated: 2026-11-04
 > (reconciler `rct_20261102-0001` · 모델 `tbm_pocket-aide-mockup-render`).
 >
 > **안드로이드 기준 재작성 상태** — [`_token-map.md`](./_token-map.md)(2026-11-04 #374)·[`_copy-map.md`](./_copy-map.md)(2026-11-04 `rct_20261104-0002`)는 안드로이드 기준으로 다시 세웠다.
-> [`_structure-map.md`](./_structure-map.md) 는 `screen-affirmations-priority-edit`(2026-11-04 `rct_20261104-0003`)·`screen-affirmations`(2026-11-04 `rct_20261104-0004`)·`screen-scratchpad`(2026-11-04 `rct_20261104-0005`) 세 화면만 안드로이드 기준으로 다시 세웠고,
+> [`_structure-map.md`](./_structure-map.md) 는 `screen-affirmations-priority-edit`(2026-11-04 `rct_20261104-0003`)·`screen-affirmations`(2026-11-04 `rct_20261104-0004`)·`screen-scratchpad`(2026-11-04 `rct_20261104-0005`)·`screen-todo-work`(2026-11-04 `rct_20261104-0006`) 네 화면만 안드로이드 기준으로 다시 세웠고,
 > 나머지 화면은 아직 구조·수치 대조표가 없다.
 
 ## 판독 규약
