@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.affirmations.AffirmationsScreen
+import com.dlddu.pocketaide.chat.ChatScreen
 import com.dlddu.pocketaide.approvals.ApprovalsScreen
 import com.dlddu.pocketaide.approvals.ApprovalsViewModel
 import com.dlddu.pocketaide.notifications.ExternalNotificationsScreen
@@ -179,7 +180,7 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
                         onSignOut = auth::signOut,
                     )
                     RootTab.Sessions -> SessionsScreen(api = auth.api)
-                    RootTab.Chat -> PlaceholderScreen(Area.AiChat, "AI 채팅")
+                    RootTab.Chat -> ChatScreen(api = auth.api)
                 }
             }
         }

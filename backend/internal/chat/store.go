@@ -1,5 +1,5 @@
-// Package chat is the storage layer for PRD-1 (AI 채팅 탭) — conversation
-// sessions and their messages, so a conversation survives re-entry (AC1, AC4).
+// Package chat is PRD-1 (AI 채팅 탭): each user's one conversation, its
+// messages, and the codex session on session-platform that answers it.
 package chat
 
 import (
@@ -30,6 +30,9 @@ type Session struct {
 	Title     string `json:"title"`
 	CreatedAt int64  `json:"created_at"`
 	UpdatedAt int64  `json:"updated_at"`
+
+	platformSessionID string
+	transcriptOffset  int64
 }
 
 // Message is one row of chat_messages.
@@ -48,9 +51,45 @@ type Store struct {
 // New wires a Store onto an open *sql.DB.
 func New(db *sql.DB) *Store { return &Store{db: db} }
 
-const sessionColumns = `id, title, created_at, updated_at`
+const sessionColumns = `id, title, created_at, updated_at, platform_session_id, transcript_offset`
 
-// CreateSession starts an empty conversation (PRD-1 AC4 「새 대화 시작」).
+func scanSession(row interface{ Scan(...any) error }) (Session, error) {
+	var out Session
+	err := row.Scan(&out.ID, &out.Title, &out.CreatedAt, &out.UpdatedAt, &out.platformSessionID, &out.transcriptOffset)
+	return out, err
+}
+
+// Conversation returns the user's conversation — the most recently active
+// one, from before the chat tab became a single conversation — creating it
+// on first use.
+func (s *Store) Conversation(ctx context.Context, userID int64) (Session, error) {
+	out, err := scanSession(s.db.QueryRowContext(ctx,
+		`SELECT `+sessionColumns+` FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC, id DESC LIMIT 1`, userID))
+	if errors.Is(err, sql.ErrNoRows) {
+		return s.CreateSession(ctx, userID)
+	}
+	if err != nil {
+		return Session{}, fmt.Errorf("get chat conversation: %w", err)
+	}
+	return out, nil
+}
+
+// SetPlatform records the codex session answering a conversation and how far
+// its transcript has been read.
+func (s *Store) SetPlatform(ctx context.Context, userID, id int64, platformSessionID string, offset int64) error {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE chat_sessions SET platform_session_id = ?, transcript_offset = ? WHERE id = ? AND user_id = ?`,
+		platformSessionID, offset, id, userID)
+	if err != nil {
+		return fmt.Errorf("update chat platform session: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// CreateSession starts an empty conversation.
 func (s *Store) CreateSession(ctx context.Context, userID int64) (Session, error) {
 	res, err := s.db.ExecContext(ctx, `INSERT INTO chat_sessions (user_id) VALUES (?)`, userID)
 	if err != nil {
@@ -65,10 +104,8 @@ func (s *Store) CreateSession(ctx context.Context, userID int64) (Session, error
 
 // GetSession returns one session owned by userID.
 func (s *Store) GetSession(ctx context.Context, userID, id int64) (Session, error) {
-	var out Session
-	err := s.db.QueryRowContext(ctx,
-		`SELECT `+sessionColumns+` FROM chat_sessions WHERE id = ? AND user_id = ?`, id, userID,
-	).Scan(&out.ID, &out.Title, &out.CreatedAt, &out.UpdatedAt)
+	out, err := scanSession(s.db.QueryRowContext(ctx,
+		`SELECT `+sessionColumns+` FROM chat_sessions WHERE id = ? AND user_id = ?`, id, userID))
 	if errors.Is(err, sql.ErrNoRows) {
 		return Session{}, ErrNotFound
 	}
@@ -76,26 +113,6 @@ func (s *Store) GetSession(ctx context.Context, userID, id int64) (Session, erro
 		return Session{}, fmt.Errorf("get chat session: %w", err)
 	}
 	return out, nil
-}
-
-// ListSessions returns the caller's sessions, most recently active first
-// (PRD-1 AC4 「과거 대화 목록 조회」).
-func (s *Store) ListSessions(ctx context.Context, userID int64) ([]Session, error) {
-	rows, err := s.db.QueryContext(ctx,
-		`SELECT `+sessionColumns+` FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC, id DESC`, userID)
-	if err != nil {
-		return nil, fmt.Errorf("list chat sessions: %w", err)
-	}
-	defer func() { _ = rows.Close() }()
-	out := []Session{}
-	for rows.Next() {
-		var it Session
-		if err := rows.Scan(&it.ID, &it.Title, &it.CreatedAt, &it.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("scan chat session: %w", err)
-		}
-		out = append(out, it)
-	}
-	return out, rows.Err()
 }
 
 // Messages returns a session's messages oldest first. A limit > 0 keeps only

@@ -88,11 +88,12 @@
 | Q-81 | `delete mail_accounts \| eq(id, user_id) \| - \| -` | PK(mail_accounts) | `backend/internal/mail/store.go::Store::Delete` |
 | Q-90 | `insert chat_sessions \| - \| - \| -` | — | `backend/internal/chat/store.go::Store::CreateSession` |
 | Q-91 | `select chat_sessions \| eq(id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::AppendMessage`, `backend/internal/chat/store.go::Store::GetSession` |
-| Q-92 | `select chat_sessions \| eq(user_id) \| - \| order(updated_at desc, id desc)` | idx_chat_sessions_user_updated | `backend/internal/chat/store.go::Store::ListSessions` |
+| Q-92 | `select chat_sessions \| eq(user_id) \| - \| order(updated_at desc, id desc)` | idx_chat_sessions_user_updated | `backend/internal/chat/store.go::Store::Conversation` |
 | Q-93 | `update chat_sessions \| eq(id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::AppendMessage` |
 | Q-94 | `insert chat_messages \| - \| - \| -` | — | `backend/internal/chat/store.go::Store::AppendMessage` |
 | Q-95 | `select chat_messages \| eq(id) \| - \| -` | PK(chat_messages) | `backend/internal/chat/store.go::Store::AppendMessage` |
 | Q-96 | `select chat_messages \| eq(session_id) \| - \| order(id asc)` | idx_chat_messages_session | `backend/internal/chat/store.go::Store::Messages` |
+| Q-97 | `update chat_sessions \| eq(id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::SetPlatform` |
 
 ## 수동 형태
 

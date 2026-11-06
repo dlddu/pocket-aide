@@ -1,13 +1,13 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-11-04
+last_updated: 2026-11-06
 ---
 
 # 카피 ↔ 구현 대응표
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`android/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 33개 ↔ 목업 11장)의 카피 대조 결과다. 토큰 대조는 [`_token-map.md`](./_token-map.md), 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 34개 ↔ 목업 12장)의 카피 대조 결과다. 토큰 대조는 [`_token-map.md`](./_token-map.md), 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 > 2026-11-04 에 안드로이드(Kotlin · Jetpack Compose) 기준으로 다시 세웠다(reconciler `rct_20261104-0002` · 모델 `tbm_pocket-aide-mockup-render`) — 그 전 판은 `ios/**/*.swift` 를 가리켰다.
 
@@ -36,25 +36,25 @@ last_updated: 2026-11-04
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 5행 · `목업 대기` 15행, 표 B `구현 대기` 21행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 5행 · `목업 대기` 19행, 표 B `구현 대기` 23행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 201 |
+| A | 일치 | 206 |
 | A | 데이터 | 14 |
-| A | 비표시 | 41 |
+| A | 비표시 | 43 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 5 |
-| A | 목업 대기 | 15 |
-| B | 일치 | 265 |
-| B | 외부 | 118 |
-| B | 예시 데이터 | 191 |
-| B | 목업 전용 | 158 |
-| B | 미구현 영역 | 9 |
+| A | 목업 대기 | 19 |
+| B | 일치 | 270 |
+| B | 외부 | 123 |
+| B | 예시 데이터 | 200 |
+| B | 목업 전용 | 163 |
+| B | 미구현 영역 | 12 |
 | B | 기준 4 | 4 |
-| B | 구현 대기 | 21 |
+| B | 구현 대기 | 23 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 281행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 292행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -153,6 +153,18 @@ last_updated: 2026-11-04
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `$count` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `${item.requesterName} · $created` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | `폐기된 키로 생성됨 — 자동 처리되지 않음` | 일치 | `screen-approval` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `AI 채팅` | 일치 | `screen-chat-text` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `새 대화` | 목업 대기 | 제목이 아직 없는 첫 대화(목업은 제목이 정해진 「목요일 오후」만 그린다) |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `${state.messages.size}개의 메시지` | 일치 | `screen-chat-text` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `스킬 새로고침` | 비표시 | 헤더 원형 버튼의 `contentDescription` — 목업의 「+」 자리(`_deviations.md` S10) |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `무엇이든 물어보세요. 첫 메시지를 보내면 ChatGPT 로그인 안내가 이 대화에 나와요.` | 목업 대기 | 빈 대화 상태 — 목업이 그리지 않는다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `PA` | 일치 | `screen-chat-text` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `입력 중` | 일치 | `screen-chat-text` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `복사` | 일치 | `screen-chat-text` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `메시지를 입력하세요` | 목업 대기 | 음성 모드가 없어 목업의 「메시지를 입력하거나…」 대신 쓴다(`_deviations.md` S11) |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `보내기` | 비표시 | 보내기 버튼의 `contentDescription` |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `답을 쓰는 중이에요 — 끝나면 이어서 보낼 수 있어요` | 목업 대기 | 답을 기다리는 동안의 안내 줄 — 목업이 그리지 않는 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `ChatGPT 계정의 Codex가 답해요` | 목업 대기 | 입력창 아래 안내 줄 — 목업의 음성 안내 자리(`_deviations.md` S11) |
 | `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `닫기` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `보낸 호출자` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `caller` | 비표시 | `MetaRow`·`CallerChip` 의 태그 인자 — 테스트 식별자 접미사 |
@@ -333,14 +345,13 @@ last_updated: 2026-11-04
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `회사` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `루틴` | 일치 | `screen-routines` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `알림 기록` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
-| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `AI 채팅` | 목업 대기 | AI 채팅 탭 자리표시자(`PlaceholderScreen`) 제목 — 이 파일 목업 범위(`_impl-map.md`)에 대응 화면이 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `$approvalBadge` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `$scratchpadBadge` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | `알림 권한이 꺼져 있어 PR 푸시가 도착하지 않습니다. 설정에서 켜기` | 일치 | `screen-pr-monitor-history` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | `${UpcomingEvents.startLabel(event, entry.date)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | `${UpcomingEvents.startLabel(event, now)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 766행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 795행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -547,6 +558,35 @@ last_updated: 2026-11-04
 | `screen-approval` | `PRD-12 · AC5 대기 목록·배지, AC6 상세·카운트다운, AC7 확인 후 결정, AC8 처리 이력(처리 방식), AC9 자동 응답 모드·배너, AC12 빈 상태, AC13 호출자 키 발급(원문 1회), AC14 폐기·폐기된 키 경고, AC15 k8s 서비스 어카운트 호출자 등록. 잠금 화면·푸시(AC10·AC11)는 여정 mockup` | 목업 전용 | 프레임 밖 설계 주석(대응 AC 목록) |
 | `screen-approval` | `JRN-approval-push-to-decision` | 목업 전용 | 프레임 밖 설계 주석(여정 ID) |
 | `screen-approval` | `.` | 목업 전용 | 프레임 밖 설계 주석(문장 끝 마침표) |
+| `screen-chat-text` | `← 모든 목업` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-chat-text` | `/` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-chat-text` | `01 · AI 채팅 — 텍스트 모드` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-chat-text` | `9:41` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-chat-text` | `AI 채팅` | 일치 | `ChatScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-chat-text` | `목요일 오후` | 예시 데이터 | 대화 제목 — 첫 메시지에서 정해진다 |
+| `screen-chat-text` | `3개의 메시지` | 일치 | `ChatScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-chat-text` | `오늘 · 14:22` | 구현 대기 | 시각 구분선(TimestampDivider)을 아직 그리지 않는다 |
+| `screen-chat-text` | `내일 오전 회의 준비 체크리스트 만들어줘. 분기 리뷰랑 고객 케이스 두 개.` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `PA` | 일치 | `ChatScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-chat-text` | `분기 리뷰 회의 준비` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `·` | 예시 데이터 | 대화 내용(답 안의 목록 기호) |
+| `screen-chat-text` | `지난 분기 KPI 자료 1장으로 요약` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `고객 케이스 A — 결제 이슈 타임라인` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `고객 케이스 B — onboarding 개선 결과` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `다음 분기 우선순위 3개 안` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `회사 투두로` | 구현 대기 | 「회사 투두로」 칩을 아직 그리지 않는다(`_deviations.md` S12) |
+| `screen-chat-text` | `복사` | 일치 | `ChatScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-chat-text` | `좋아. KPI는 retention하고 ARR 두 개로 좁혀줘` | 예시 데이터 | 대화 내용 |
+| `screen-chat-text` | `입력 중` | 일치 | `ChatScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-chat-text` | `메시지를 입력하거나…` | 미구현 영역 | 「…거나」 는 음성 입력을 함께 가리킨다 — 음성 모드(AC2)가 아직 없다(`_deviations.md` S11) |
+| `screen-chat-text` | `음성 모드로 전환` | 미구현 영역 | 음성 모드(AC2)가 아직 없다 — 그 자리는 보내기 버튼(`_deviations.md` S11) |
+| `screen-chat-text` | `음성 버튼을 눌러 핸즈프리 대화 모드로 전환` | 미구현 영역 | 음성 모드(AC2)가 아직 없다(`_deviations.md` S11) |
+| `screen-chat-text` | `다짐` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
+| `screen-chat-text` | `PR 모니터` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
+| `screen-chat-text` | `승인` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
+| `screen-chat-text` | `세션` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
+| `screen-chat-text` | `더 보기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
+| `screen-chat-text` | `PRD-1 · AC1 텍스트 송수신, AC2 음성 모드 진입(우측 하단 버튼), AC4 세션 헤더 — 일자/메시지 수 표시` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
 | `screen-external-notifications` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-external-notifications` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-external-notifications` | `16 · 알림 기록` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

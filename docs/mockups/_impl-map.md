@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-11-04
+last_updated: 2026-11-06
 ---
 
 # 구현 ↔ 목업 매핑
@@ -63,6 +63,9 @@ last_updated: 2026-11-04
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/Approvals.kt` | 비렌더링 | — | 승인 도메인 — 만료 판정·정렬·남은 시간·진행률·요약 |
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsScreen.kt` | 화면 | `screen-approval` | 승인 게이트 대기 목록 화면 전체 — `ApprovalsScreen`·`PendingList`·`PendingHeader`·`CountBadge`·`HeaderIconButton`·`ApprovalRowCard`(목록 헤더·검증자·키 칩·남은 시간·진행 막대·결정 버튼·목록 행). 상세·이력·설정은 각 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsViewModel.kt` | 비렌더링 | — | 대기 목록 상태·자동 응답 끄기·네비게이션·API 호출 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/Chat.kt` | 비렌더링 | — | AI 채팅 도메인 — 대화·메시지·대기 중인 답·스킬 새로고침 결과 모델, `/api/chat` 호출, 오류 분류 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | 화면 | `screen-chat-text` | AI 채팅 화면 — 헤더(영역 라벨·대화 제목·메시지 수·스킬 새로고침 버튼)·말풍선(내 말 ink · AI 카드+PA 아바타·「복사」 칩·「입력 중」)·입력창과 보내기 버튼·안내 줄. 목업과 다른 점은 `_deviations.md` S10~S12(헤더 동작·보내기 버튼·생략한 요소) |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatViewModel.kt` | 비렌더링 | — | AI 채팅 상태 — 대화 조회·답 대기 중 폴링·보내기·스킬 새로고침 |
 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | 토큰 | — | `tokens.md` §1 영역 팔레트 접근자(surface·ink·accent·rule·soft·card)·§3 타이포(9사이즈)·§4 스페이싱·라운드 |
 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/GeneratedPalettes.kt` | 토큰 | — | `tokens.md` §1.1~§1.11 영역 팔레트(light/dark 9종)·파괴적 액션·PR 모니터 상태색·위젯·키보드 보조 토큰의 실측 hex 값 |
 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/PocketAideTheme.kt` | 토큰 | — | 컴포저블 테마 — 영역 팔레트·타이포를 Compose `MaterialTheme` 에 넣는다(`Area.System` 팔레트 참조 포함) |
@@ -123,7 +126,6 @@ last_updated: 2026-11-04
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthViewModel.kt` | 비렌더링 | — | 로그인 상태·푸시 권한·헬스 조회·토큰 갱신 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeepLinkRouter.kt` | 비렌더링 | — | 딥링크 수신 — 날씨·탭·푸시 도착지 진입점 처리 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/LoginScreen.kt` | 목업 없음 | — | 로그인 화면 — 대응 화면 목업이 없다 |
-| `android/app/src/main/java/com/dlddu/pocketaide/ui/PlaceholderScreen.kt` | 미구현 | `screen-chat-text` | AI 채팅 탭 자리표시자 — `RootScreen.kt` 의 채팅 탭이 `PlaceholderScreen(Area.AiChat, "AI 채팅")` 를 그린다. 채팅 화면이 구현되면 `화면`/`부분` 으로 바꾼다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 탭 정의 — `RootTab` 열거형의 탭 라벨(다짐·PR 모니터·승인·세션·더 보기·채팅·임시공간·개인·회사·루틴·알림 기록)·아이콘·영역(`Area`) 매핑과 하단 5칸(`BOTTOM_TABS`)·더 보기 6칸(`MORE_TABS`) 구분. 탭 바를 그리는 쪽은 `ui/RootScreen.kt` 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 하단 탭 바(`RootNavigationBar` — 하단 5칸 다짐·PR 모니터·승인·세션·더 보기, 목업별 활성 탭은 `ui/RootTab.kt` 행)·더 보기 목록(`MoreList`)·푸시 권한 거부 배너. 각 탭 화면 본체는 해당 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/weather/Weather.kt` | 비렌더링 | — | 날씨 도메인 — 예보 파싱·표기 |
@@ -150,8 +152,8 @@ last_updated: 2026-11-04
 `backend/`(FCM 발송)가 정하므로 `android/` 렌더링 소스가 없다. 푸시를 탭한 뒤의 도착지 강조는
 `screen-pr-monitor-history` 행(`prmonitor/PrMonitorHistoryRow.kt`)에 들어 있다.
 
-`screen-chat-voice` · `screen-shortcut-capture` 도 이 표에 없다 — 대응하는 안드로이드 화면이 아직 구현되지 않았다.
-채팅 탭은 자리표시자(`ui/PlaceholderScreen.kt` 행 — `미구현`)다. 목업만 있고 구현이 없는 것은 이 모델의 drift 가 아니다.
+`screen-chat-voice` · `screen-shortcut-capture` 도 이 표에 없다 — 대응하는 안드로이드 화면이 아직 구현되지 않았다
+(채팅 탭은 2026-11-06 텍스트 화면 `chat/ChatScreen.kt` 가 구현됐고 음성 모드는 아직 없다). 목업만 있고 구현이 없는 것은 이 모델의 drift 가 아니다.
 
 ## 검산
 
