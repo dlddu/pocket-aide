@@ -64,6 +64,11 @@ struct RootView: View {
             }
             signedInTabs
         }
+        .overlay {
+            if let suggestion = auth.deviceNamePrompt {
+                DeviceNameSheet(initial: suggestion, onSave: auth.saveDeviceName, onSkip: auth.skipDeviceName)
+            }
+        }
     }
 
     private var pushDeniedBanner: some View {

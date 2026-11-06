@@ -1,6 +1,7 @@
 package com.dlddu.pocketaide.ui
 
 import android.app.Application
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dlddu.pocketaide.PocketAideApplication
@@ -8,6 +9,7 @@ import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.MeResponse
 import com.dlddu.pocketaide.auth.AuthBrowser
 import com.dlddu.pocketaide.auth.OidcException
+import com.dlddu.pocketaide.push.DeviceName
 import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +26,7 @@ data class AuthUiState(
     val me: MeResponse? = null,
     val meError: String? = null,
     val pushDenied: Boolean = false,
+    val deviceNamePrompt: String? = null,
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -74,7 +77,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun signOut() {
         container.oidc.signOut()
         container.pushRegistrar.unregister()
-        _state.update { it.copy(signedIn = false, me = null, meError = null) }
+        _state.update { it.copy(signedIn = false, me = null, meError = null, deviceNamePrompt = null) }
         WidgetRefresher.reloadAll(getApplication<Application>())
     }
 
@@ -105,8 +108,24 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun saveDeviceName(name: String) = finishDeviceName(DeviceName.normalize(name))
+
+    fun skipDeviceName() = finishDeviceName("")
+
+    private fun finishDeviceName(name: String) {
+        if (_state.value.deviceNamePrompt == null) return
+        container.deviceNames.save(name)
+        _state.update { it.copy(deviceNamePrompt = null) }
+        viewModelScope.launch { container.pushRegistrar.register(container.api, DeviceName.forRegistration(name)) }
+    }
+
     private suspend fun registerForPush() {
-        container.pushRegistrar.register(container.api)
+        val stored = container.deviceNames.load()
+        if (container.pushRegistrar.isConfigured && stored == null) {
+            _state.update { it.copy(deviceNamePrompt = DeviceName.normalize(Build.MODEL.orEmpty())) }
+        } else {
+            container.pushRegistrar.register(container.api, DeviceName.forRegistration(stored))
+        }
         refreshPushPermission()
     }
 }

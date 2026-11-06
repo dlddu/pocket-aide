@@ -7,7 +7,7 @@ last_updated: 2026-11-06
 
 > 화면 목업(`screen-<슬러그>`)의 텍스트와 구현(`android/`) 화면 코드의 문자열 리터럴을 **양방향으로** 짝지은 기계 판독용 표다.
 > [`_impl-map.md`](./_impl-map.md) 가 「어느 파일과 어느 목업을 대조하는가」를 정하고, 이 표는 그중 `화면`·`부분` 행
-> (파일 34개 ↔ 목업 12장)의 카피 대조 결과다. 토큰 대조는 [`_token-map.md`](./_token-map.md), 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
+> (파일 35개 ↔ 목업 13장)의 카피 대조 결과다. 토큰 대조는 [`_token-map.md`](./_token-map.md), 구조·수치(요소 순서·간격·상태 스타일·서식)는 이 표의 몫이 아니다.
 > 목업이 시각의 단일 진실 원천(SSOT)이므로 원칙은 **구현을 목업에 맞추는 것**이다. 목업이 그리지 않은 상태의 카피는 목업을 보강해야 닫힌다.
 > 2026-11-04 에 안드로이드(Kotlin · Jetpack Compose) 기준으로 다시 세웠다(reconciler `rct_20261104-0002` · 모델 `tbm_pocket-aide-mockup-render`) — 그 전 판은 `ios/**/*.swift` 를 가리켰다.
 
@@ -40,21 +40,21 @@ last_updated: 2026-11-06
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
-| A | 일치 | 206 |
+| A | 일치 | 211 |
 | A | 데이터 | 14 |
 | A | 비표시 | 43 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 5 |
 | A | 목업 대기 | 19 |
-| B | 일치 | 270 |
-| B | 외부 | 123 |
-| B | 예시 데이터 | 200 |
-| B | 목업 전용 | 163 |
+| B | 일치 | 275 |
+| B | 외부 | 129 |
+| B | 예시 데이터 | 202 |
+| B | 목업 전용 | 170 |
 | B | 미구현 영역 | 12 |
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 23 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 292행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 297행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -334,6 +334,11 @@ last_updated: 2026-11-06
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `접기` | 일치 | `screen-todo-personal` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | ` · ` | 일치 | `screen-todo-work` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | `·` | 일치 | `screen-todo-work` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `이 기기 이름` | 일치 | `screen-device-name` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `푸시를 받는 기기를 구분하는 이름이에요.` | 일치 | `screen-device-name` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `예: 출근용 폰` | 일치 | `screen-device-name` 에 같은 텍스트(입력 placeholder) |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `저장` | 일치 | `screen-device-name` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `건너뛰기` | 일치 | `screen-device-name` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `다짐` | 일치 | `screen-affirmations` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `PR 모니터` | 일치 | `screen-affirmations` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `승인` | 일치 | `screen-affirmations` 에 같은 텍스트 |
@@ -351,7 +356,7 @@ last_updated: 2026-11-06
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | `${UpcomingEvents.startLabel(event, entry.date)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | `${UpcomingEvents.startLabel(event, now)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 795행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 815행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -587,6 +592,26 @@ last_updated: 2026-11-06
 | `screen-chat-text` | `세션` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
 | `screen-chat-text` | `더 보기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
 | `screen-chat-text` | `PRD-1 · AC1 텍스트 송수신, AC2 음성 모드 진입(우측 하단 버튼), AC4 세션 헤더 — 일자/메시지 수 표시` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
+| `screen-device-name` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-device-name` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-device-name` | `17 · 기기 이름 시트` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
+| `screen-device-name` | `첫 등록 — 기기 모델명 기본값` | 목업 전용 | 프레임 위 캡션(첫 등록 프레임 이름) |
+| `screen-device-name` | `9:41` | 목업 전용 | 상태바 시각 — 안드로이드 시스템이 그린다 |
+| `screen-device-name` | `다짐` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `자주 읽어줘야 할 것` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | 대응 파일이 아닌 Kotlin 파일 `AffirmationsScreen.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
+| `screen-device-name` | `PR 모니터` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `승인` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `세션` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `더 보기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `이 기기 이름` | 일치 | `DeviceNameSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-device-name` | `푸시를 받는 기기를 구분하는 이름이에요.` | 일치 | `DeviceNameSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-device-name` | `Pixel 8` | 예시 데이터 | 기본값 — 구현은 `Build.MODEL`(기기 모델명)을 채운다 |
+| `screen-device-name` | `저장` | 일치 | `DeviceNameSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-device-name` | `건너뛰기` | 일치 | `DeviceNameSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-device-name` | `이름을 비웠을 때 — 저장 비활성` | 목업 전용 | 프레임 위 캡션(빈 이름 프레임 이름) |
+| `screen-device-name` | `예: 출근용 폰` | 일치 | `DeviceNameSheet.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-device-name` | `푸시 기기 등록 — 로그인 뒤 이 기기 이름이 아직 정해지지 않았으면 한 번 묻는다. 기본값은 기기 모델명, 최대 40자. 「저장」은 이름과 함께 푸시 토큰을 등록하고, 「건너뛰기」·바깥 탭은 이름 없이 등록한다. 어느 쪽이든 다시 묻지 않으며, 이후 토큰 갱신은 같은 이름으로 다시 등록한다. 디자인 시스템: components §9 오버레이(Sheet/Backdrop/Handle) + Card·PlainTextField, patterns §9 편집 시트. 시트는 푸시 계열이라 PR 모니터 팔레트(tokens §1.11).` | 목업 전용 | 프레임 밖 설명 캡션(설계 주석) |
 | `screen-external-notifications` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-external-notifications` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-external-notifications` | `16 · 알림 기록` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |

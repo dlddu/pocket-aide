@@ -1,6 +1,6 @@
 ---
 type: mockup-index
-last_updated: 2026-10-28
+last_updated: 2026-11-06
 ---
 
 # Mockup 인덱스
@@ -14,7 +14,7 @@ last_updated: 2026-10-28
 ## 메타 도구 (mockup이 아닌 갤러리 페이지)
 
 - `index.html` — 라이트 갤러리. 각 `screen-*.html`로 링크.
-- `mockups-dark.html` — **다크 변형 통합 갤러리**. 16개 `screen-*.html`의 다크 버전을 `tokens.md §1.9`(PR 모니터는 §1.11) 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다. PR 모니터 2화면은 `tokens.md §1.11` 다크 변형으로 변환(2026-09-30 추가). 승인 화면(`screen-approval`)도 같은 §1.11 다크 변형으로 변환(2026-10-05 추가). 세션 화면(`screen-sessions`)도 같은 규칙(승인 라이트↔다크 차분에서 뽑은 치환)으로 변환(2026-10-23 추가). 알림 기록 화면(`screen-external-notifications`)도 같은 치환으로 변환(2026-10-27 추가). 보조 텍스트·흐린 요소의 인디고 톤 중립값(`#A7A1BE`·`#8A84A3`·`#5E5779`)은 다른 영역처럼 토큰 표 밖에서 도출한 값이다.
+- `mockups-dark.html` — **다크 변형 통합 갤러리**. 17개 `screen-*.html`의 다크 버전을 `tokens.md §1.9`(PR 모니터는 §1.11) 다크 토큰 표에 따라 일괄 변환한 결과를 단일 자족 HTML 파일에 인라인으로 통합한다. 카드 클릭 시 풀 화면이 모달로 표시. 별도 `screen-*-dark.html` 파일은 두지 않으며, 다크 변형의 시각적 검증을 단일 페이지에서 수행하기 위한 도구다. 라이트 mockup이 추가/수정되면 동일한 변환 규칙으로 본 파일도 재생성되어야 한다. PR 모니터 2화면은 `tokens.md §1.11` 다크 변형으로 변환(2026-09-30 추가). 승인 화면(`screen-approval`)도 같은 §1.11 다크 변형으로 변환(2026-10-05 추가). 세션 화면(`screen-sessions`)도 같은 규칙(승인 라이트↔다크 차분에서 뽑은 치환)으로 변환(2026-10-23 추가). 알림 기록 화면(`screen-external-notifications`)도 같은 치환으로 변환(2026-10-27 추가). 기기 이름 시트(`screen-device-name`)도 시트는 §1.11 다크, 배경은 §1.9 다짐 다크로 변환(2026-11-06 추가). 보조 텍스트·흐린 요소의 인디고 톤 중립값(`#A7A1BE`·`#8A84A3`·`#5E5779`)은 다른 영역처럼 토큰 표 밖에서 도출한 값이다.
 
 ## 현재 미정의 영역
 
@@ -333,6 +333,19 @@ last_updated: 2026-10-28
 
 ---
 
+## screen-device-name.html
+- **시각화 대상**:
+  - 여정: (미정의)
+  - 가치: V9 (개발 워크플로우 인지 부하 감소 — 푸시 수신 경로)
+  - PRD/AC (보조): PRD-10 / 푸시 기기 등록(PRD 에 AC 미등재 — 사용자 요청 2026-11-06 「푸시 기기 토큰 등록 때 기기 별명 입력」. `POST /api/device-tokens` 의 선택 필드 `name`)
+  - 두 프레임: **첫 등록 — 기기 모델명 기본값**(로그인 직후 첫 탭 위 시트, 한 줄 입력에 기기 모델명이 채워짐), **이름을 비웠을 때**(placeholder 「예: 출근용 폰」, 「저장」 비활성 50%). 「건너뛰기」·바깥 탭은 이름 없이 등록하고 다시 묻지 않는다. 2026-11-06 추가 — 구현과 같은 PR 에서 목업을 먼저 그렸다.
+- **사용 디자인 시스템**:
+  - 패턴: `편집 시트` (patterns.md §9)
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `Sheet`/`Backdrop`/`Handle`, `Card`, `PlainTextField`(한 줄), 시트 1차 버튼(ink 채움)·취소 버튼(라벨 「건너뛰기」), 배경은 다짐 탭(`ScreenHeader`·`Card`·`TabBar`)
+  - 토큰: 시트 §1.11 PR 모니터 팔레트 차용(tokens.md §1.11 제약 개정 2026-11-06) — `--bg #EEEDF5`, `--ink #221F33`, `--accent #5B4DB8`(커서), `--rule #D8D5E4`. 배경 §1.6 다짐. 스크림은 시트 ink 45%(components §9 Backdrop).
+
+---
+
 ## 가치별 mockup 커버리지 (역인덱스)
 
 | 가치 | 시각화하는 mockup |
@@ -345,7 +358,7 @@ last_updated: 2026-10-28
 | V6 일상 정보 통합 시야 | screen-widget |
 | V7 시스템 전역 글쓰기 보조 | screen-keyboard-extension |
 | V8 일상 루틴 구조화 | screen-routines |
-| V9 개발 워크플로우 인지 부하 감소 | screen-pr-monitor-push, screen-pr-monitor-history, screen-approval, screen-sessions, screen-external-notifications |
+| V9 개발 워크플로우 인지 부하 감소 | screen-pr-monitor-push, screen-pr-monitor-history, screen-approval, screen-sessions, screen-external-notifications, screen-device-name |
 
 모든 V1~V9에 1개 이상의 mockup이 매핑됨 — 시각화 없는 가치 위험은 없음. ✅
 
@@ -362,7 +375,7 @@ last_updated: 2026-10-28
 | PRD-7 STT 엔진 | screen-keyboard-extension (AC6 키보드 음성 입력 진입점만) | 메인 앱 진입점들은 백엔드 컴포넌트로 02·08·10에 결과로 노출 |
 | PRD-8 위젯 | screen-widget | AC9 임시 공간 미분류 수 영역 포함 |
 | PRD-9 키보드 확장 | screen-keyboard-extension | |
-| PRD-10 GitHub PR·CI 모니터 | screen-pr-monitor-push, screen-pr-monitor-history | push=AC6·AC7 진입점, history=AC7 도착지·AC11·AC12·AC13(PR/커밋 단위 그룹핑). AC1·AC2·AC3·AC4·AC5·AC8·AC9·AC10은 별도 mockup 필요 (열린 PR 목록·필터·인증 오류 배너·빈/로딩 상태 등) — follow-up. |
+| PRD-10 GitHub PR·CI 모니터 | screen-pr-monitor-push, screen-pr-monitor-history, screen-device-name | push=AC6·AC7 진입점, history=AC7 도착지·AC11·AC12·AC13(PR/커밋 단위 그룹핑). device-name=푸시 기기 등록 시 이름 시트(AC 미등재). AC1·AC2·AC3·AC4·AC5·AC8·AC9·AC10은 별도 mockup 필요 (열린 PR 목록·필터·인증 오류 배너·빈/로딩 상태 등) — follow-up. |
 | PRD-11 세션 플랫폼 | screen-sessions | AC3~AC12 앱 화면. AC1·AC2(인증 경계·소유권)는 백엔드 |
 | PRD-12 승인 게이트 | screen-approval, screen-external-notifications | AC5~AC9·AC12~AC14 화면. AC10·AC11(푸시·잠금화면 액션)은 여정 mockup `JRN-approval-push-to-decision`. AC17(알림 기록)은 screen-external-notifications. 구현 전 |
 
@@ -378,7 +391,7 @@ last_updated: 2026-10-28
 | §6 시스템 통합 | screen-shortcut-capture, screen-widget, screen-keyboard-extension, screen-pr-monitor-push (§6.1 잠금 화면 변형) |
 | §7 다짐 회전 노출 | screen-affirmations |
 | §8 임시공간 분류 흐름 | screen-scratchpad |
-| §9 편집 시트 | screen-affirmations-priority-edit, screen-routines, screen-approval (키 발급 시트), screen-sessions (새 세션 시트) |
+| §9 편집 시트 | screen-affirmations-priority-edit, screen-routines, screen-approval (키 발급 시트), screen-sessions (새 세션 시트), screen-device-name (기기 이름 시트) |
 | §9-1 에이전트 세션 | screen-sessions |
 
 모든 mockup이 1개 이상의 패턴에 매핑됨 — 임의 스타일 mockup 위험은 없음. ✅

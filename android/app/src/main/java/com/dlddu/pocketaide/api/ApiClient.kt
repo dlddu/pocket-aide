@@ -42,10 +42,10 @@ class ApiClient(
 
     suspend fun me(): MeResponse = get("/api/me", MeResponse.serializer())
 
-    suspend fun registerDeviceToken(token: String) {
+    suspend fun registerDeviceToken(token: String, name: String? = null) {
         post(
             "/api/device-tokens",
-            DeviceTokenRegistration(token = token, platform = DeviceTokenRegistration.ANDROID),
+            DeviceTokenRegistration(token = token, platform = DeviceTokenRegistration.ANDROID, name = name),
             DeviceTokenRegistration.serializer(),
             EmptyResponse.serializer(),
         )

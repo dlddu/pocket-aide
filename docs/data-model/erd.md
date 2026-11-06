@@ -141,6 +141,7 @@ erDiagram
 | `platform` | TEXT | NO |  |
 | `created_at` | INTEGER | NO |  |
 | `updated_at` | INTEGER | NO |  |
+| `name` | TEXT | NO |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |

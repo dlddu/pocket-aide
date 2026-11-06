@@ -21,7 +21,7 @@ class PocketAideMessagingService : FirebaseMessagingService() {
         val container = (application as PocketAideApplication).container
         if (container.tokenStore.load() == null) return
         container.appScope.launch {
-            runCatching { container.api.registerDeviceToken(token) }
+            runCatching { container.api.registerDeviceToken(token, DeviceName.forRegistration(container.deviceNames.load())) }
         }
     }
 

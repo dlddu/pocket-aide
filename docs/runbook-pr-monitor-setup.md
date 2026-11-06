@@ -211,6 +211,10 @@ configured provider is skipped, not an error.
   `platform` may be omitted and then means `ios`. iOS tokens must be 64 hex
   characters; Android (FCM registration) tokens must be at most 4096
   characters without whitespace; any other `platform` is rejected (400).
+  An optional `name` (the device nickname the app asks for once, trimmed,
+  at most 40 characters, no control characters) is stored in
+  `device_tokens.name` (migration `0021`). Omitting it keeps the name the
+  same user set earlier; a token rebound to another user loses it.
 - **FCM service account**: the backend sends through the FCM HTTP v1 API
   with a service-account key. The key JSON is provisioned by
   `dlddu/infrastructure` (`terraform/dlddu/google/pocket-aide-firebase.tf`),

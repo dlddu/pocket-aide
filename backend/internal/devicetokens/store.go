@@ -17,6 +17,7 @@ const (
 type Device struct {
 	Token    string
 	Platform string
+	Name     string
 }
 
 // Store is the user-scoped upsert facade.
@@ -30,15 +31,20 @@ func New(db *sql.DB) *Store { return &Store{db: db} }
 // Upsert inserts a new (user, token) row or, when the token already exists,
 // rebinds it to the current user and bumps updated_at. Tokens are globally
 // unique so the same physical device cannot be claimed by multiple accounts.
-func (s *Store) Upsert(ctx context.Context, userID int64, token, platform string) error {
+func (s *Store) Upsert(ctx context.Context, userID int64, token, platform, name string) error {
 	_, err := s.db.ExecContext(ctx, `
-		INSERT INTO device_tokens (user_id, token, platform)
-		VALUES (?, ?, ?)
+		INSERT INTO device_tokens (user_id, token, platform, name)
+		VALUES (?, ?, ?, ?)
 		ON CONFLICT(token) DO UPDATE SET
 			user_id = excluded.user_id,
 			platform = excluded.platform,
+			name = CASE
+				WHEN excluded.name <> '' THEN excluded.name
+				WHEN device_tokens.user_id = excluded.user_id THEN device_tokens.name
+				ELSE ''
+			END,
 			updated_at = unixepoch()
-	`, userID, token, platform)
+	`, userID, token, platform, name)
 	if err != nil {
 		return fmt.Errorf("upsert device token: %w", err)
 	}
@@ -47,7 +53,7 @@ func (s *Store) Upsert(ctx context.Context, userID int64, token, platform string
 
 // ListByUserID returns every device registered for a single user.
 func (s *Store) ListByUserID(ctx context.Context, userID int64) ([]Device, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT token, platform FROM device_tokens WHERE user_id = ?`, userID)
+	rows, err := s.db.QueryContext(ctx, `SELECT token, platform, name FROM device_tokens WHERE user_id = ?`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list device tokens for user: %w", err)
 	}
@@ -56,7 +62,7 @@ func (s *Store) ListByUserID(ctx context.Context, userID int64) ([]Device, error
 	out := make([]Device, 0)
 	for rows.Next() {
 		var d Device
-		if err := rows.Scan(&d.Token, &d.Platform); err != nil {
+		if err := rows.Scan(&d.Token, &d.Platform, &d.Name); err != nil {
 			return nil, fmt.Errorf("scan device token: %w", err)
 		}
 		out = append(out, d)
