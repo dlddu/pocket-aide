@@ -156,4 +156,15 @@ class ApiClientTest {
         assertEquals("/api/device-tokens", request.path)
         assertEquals("""{"token":"fcm:token","platform":"android"}""", request.body.readUtf8())
     }
+
+    @Test
+    fun registerDeviceTokenSendsNameWhenGiven() = runTest {
+        val (_, api) = client()
+        server.enqueue(MockResponse().setResponseCode(201).setBody("""{"ok":true}"""))
+
+        api.registerDeviceToken("fcm:token", "출근용 폰")
+
+        val request = server.takeRequest()
+        assertEquals("""{"token":"fcm:token","platform":"android","name":"출근용 폰"}""", request.body.readUtf8())
+    }
 }

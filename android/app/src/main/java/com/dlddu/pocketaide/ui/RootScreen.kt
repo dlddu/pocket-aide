@@ -78,6 +78,9 @@ fun RootScreen(authBrowser: AuthBrowser, onRequestStartupPermissions: () -> Unit
     }
     LaunchedEffect(Unit) { onRequestStartupPermissions() }
     SignedInRoot(auth = auth, pushDenied = state.pushDenied)
+    state.deviceNamePrompt?.let { suggestion ->
+        DeviceNameSheet(initial = suggestion, onSave = auth::saveDeviceName, onSkip = auth::skipDeviceName)
+    }
 }
 
 @Composable

@@ -123,8 +123,9 @@ last_updated: 2026-11-06
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 메타 줄 — 마감일·우선순위·구분자 표기 |
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 공용 파트 — `TodoCheckBox`·`TodoPriorityTag`·`TodoDueFilterChips`(완료 체크·우선순위 태그·개인 전용 기한 필터 칩 줄) |
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/Todos.kt` | 비렌더링 | — | 투두 도메인 — 항목 변환·마감일·필터·미완료 개수 |
-| `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthViewModel.kt` | 비렌더링 | — | 로그인 상태·푸시 권한·헬스 조회·토큰 갱신 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthViewModel.kt` | 비렌더링 | — | 로그인 상태·푸시 권한·헬스 조회·토큰 갱신·첫 푸시 등록 때 기기 이름 묻기 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeepLinkRouter.kt` | 비렌더링 | — | 딥링크 수신 — 날씨·탭·푸시 도착지 진입점 처리 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | 화면 | `screen-device-name` | 기기 이름 시트 전체 — `DeviceNameSheet`(제목·설명·한 줄 입력·저장/건너뛰기). 시트 아래 탭 화면은 해당 행, 시트를 띄우는 쪽은 `ui/RootScreen.kt` 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/LoginScreen.kt` | 목업 없음 | — | 로그인 화면 — 대응 화면 목업이 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 탭 정의 — `RootTab` 열거형의 탭 라벨(다짐·PR 모니터·승인·세션·더 보기·채팅·임시공간·개인·회사·루틴·알림 기록)·아이콘·영역(`Area`) 매핑과 하단 5칸(`BOTTOM_TABS`)·더 보기 6칸(`MORE_TABS`) 구분. 탭 바를 그리는 쪽은 `ui/RootScreen.kt` 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 하단 탭 바(`RootNavigationBar` — 하단 5칸 다짐·PR 모니터·승인·세션·더 보기, 목업별 활성 탭은 `ui/RootTab.kt` 행)·더 보기 목록(`MoreList`)·푸시 권한 거부 배너. 각 탭 화면 본체는 해당 행 |

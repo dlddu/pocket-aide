@@ -15,7 +15,7 @@ data class AuthConfig(
 data class MeResponse(val id: Int, val sub: String)
 
 @Serializable
-data class DeviceTokenRegistration(val token: String, val platform: String) {
+data class DeviceTokenRegistration(val token: String, val platform: String, val name: String? = null) {
     companion object {
         const val ANDROID = "android"
     }

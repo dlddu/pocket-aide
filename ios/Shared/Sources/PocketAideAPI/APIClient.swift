@@ -22,7 +22,11 @@ public struct MeResponse: Codable, Equatable, Sendable {
 
 public struct DeviceTokenRegistration: Encodable, Sendable {
     public let token: String
-    public init(token: String) { self.token = token }
+    public let name: String?
+    public init(token: String, name: String? = nil) {
+        self.token = token
+        self.name = name
+    }
 }
 
 public enum APIError: Error, CustomStringConvertible {
@@ -87,10 +91,10 @@ public final class APIClient: @unchecked Sendable {
         try await get("/api/me", authenticated: true, decodeAs: MeResponse.self)
     }
 
-    public func registerDeviceToken(_ token: String) async throws {
+    public func registerDeviceToken(_ token: String, name: String? = nil) async throws {
         _ = try await post(
             "/api/device-tokens",
-            body: DeviceTokenRegistration(token: token),
+            body: DeviceTokenRegistration(token: token, name: name),
             authenticated: true,
             decodeAs: EmptyResponse.self
         )

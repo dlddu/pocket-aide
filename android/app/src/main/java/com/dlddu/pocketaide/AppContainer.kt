@@ -6,6 +6,8 @@ import com.dlddu.pocketaide.auth.KeystoreTokenStore
 import com.dlddu.pocketaide.auth.OidcClient
 import com.dlddu.pocketaide.auth.OidcRedirectBus
 import com.dlddu.pocketaide.auth.TokenStore
+import com.dlddu.pocketaide.push.DeviceNameStore
+import com.dlddu.pocketaide.push.PrefsDeviceNameStore
 import com.dlddu.pocketaide.push.PushRegistrar
 import com.dlddu.pocketaide.ui.DeepLinkRouter
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +22,7 @@ class AppContainer(context: Context) {
     val redirectBus = OidcRedirectBus()
     val deepLinks = DeepLinkRouter()
     val pushRegistrar = PushRegistrar(context)
+    val deviceNames: DeviceNameStore = PrefsDeviceNameStore(context)
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
