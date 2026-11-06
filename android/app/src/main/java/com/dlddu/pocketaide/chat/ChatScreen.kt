@@ -38,16 +38,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -57,8 +64,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
-import com.dlddu.pocketaide.designsystem.components.PlainTextField
 import com.dlddu.pocketaide.designsystem.components.AreaLabel
+import com.dlddu.pocketaide.designsystem.components.PlainTextField
 
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
 // action refreshes plugin skills (one conversation, no "new chat"), and the
@@ -180,7 +187,7 @@ private fun RefreshButton(state: ChatUiState, onRefresh: () -> Unit) {
 }
 
 @Composable
-private fun Banner(text: String, color: androidx.compose.ui.graphics.Color, tag: String, onDismiss: (() -> Unit)?) {
+private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Unit)?) {
     Text(
         text,
         style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
@@ -248,7 +255,7 @@ private fun MyBubble(text: String, modifier: Modifier) {
     )
     SelectionContainer {
         Text(
-            text,
+            withLinks(text, DesignTokens.Colors.card(CHAT_AREA)),
             style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg),
             color = DesignTokens.Colors.card(CHAT_AREA),
             modifier = modifier
@@ -284,7 +291,11 @@ private fun AiBubble(text: String, pending: Boolean, modifier: Modifier) {
         ) {
             if (text.isNotBlank()) {
                 SelectionContainer {
-                    Text(text.trim(), style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg), color = ink)
+                    Text(
+                        withLinks(text.trim(), DesignTokens.Colors.accent(CHAT_AREA)),
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg),
+                        color = ink,
+                    )
                 }
             }
             if (pending) {
@@ -294,6 +305,23 @@ private fun AiBubble(text: String, pending: Boolean, modifier: Modifier) {
                 Chip("복사") { clipboard.setText(AnnotatedString(text)) }
             }
         }
+    }
+}
+
+/** Web addresses become links the system opens in the browser. */
+private fun withLinks(text: String, linkColor: Color): AnnotatedString {
+    val ranges = chatLinkRanges(text)
+    if (ranges.isEmpty()) return AnnotatedString(text)
+    val style = TextLinkStyles(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline))
+    return buildAnnotatedString {
+        var at = 0
+        for (range in ranges) {
+            append(text.substring(at, range.first))
+            val url = text.substring(range)
+            withLink(LinkAnnotation.Url(url, style)) { append(url) }
+            at = range.last + 1
+        }
+        append(text.substring(at))
     }
 }
 

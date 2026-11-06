@@ -25,10 +25,15 @@ type fakePlatform struct {
 	hold      chan struct{} // when set, replies wait for it
 	refreshed int
 	refresh   int // status for plugin refresh; 0 = 200
+	// createFails makes a create answer 504 after making the session, as a
+	// gateway timing out on a slow create does.
+	createFails bool
+	writeStatus int // forced status for writes; 0 = normal
 }
 
 type fakeSession struct {
 	name, workload string
+	createdAt      string
 	transcript     []byte
 	turns          int
 	prompts        []string
@@ -52,13 +57,26 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 		_ = json.Unmarshal(body, &req)
 		f.created++
 		id := fmt.Sprintf("cx%d", f.created)
-		f.sessions[id] = &fakeSession{name: req["name"], workload: req["workloadType"]}
+		f.sessions[id] = &fakeSession{name: req["name"], workload: req["workloadType"], createdAt: fmt.Sprintf("2026-11-06T00:00:%02dZ", f.created)}
+		if f.createFails {
+			return http.StatusGatewayTimeout, nil, nil
+		}
 		raw, _ := json.Marshal(map[string]string{"id": id})
 		return http.StatusCreated, raw, nil
+	case method == http.MethodGet && path == "/sessions":
+		var list []map[string]string
+		for id, s := range f.sessions {
+			list = append(list, map[string]string{"id": id, "name": s.name, "workloadType": s.workload, "createdAt": s.createdAt})
+		}
+		raw, _ := json.Marshal(map[string]any{"sessions": list})
+		return http.StatusOK, raw, nil
 	case len(parts) == 3 && parts[2] == "write":
 		s, ok := f.sessions[parts[1]]
 		if !ok {
 			return http.StatusNotFound, nil, nil
+		}
+		if f.writeStatus != 0 {
+			return f.writeStatus, nil, nil
 		}
 		var req map[string]string
 		_ = json.Unmarshal(body, &req)
@@ -286,5 +304,55 @@ func TestEngine_RefreshPlugins(t *testing.T) {
 	var pe *chat.PlatformError
 	if _, err := engine.RefreshPlugins(ctx, 1); !errors.As(err, &pe) || pe.Status != http.StatusBadGateway {
 		t.Fatalf("failed refresh = %v", err)
+	}
+}
+
+// A create the gateway cut off still made the session; the engine adopts it
+// instead of creating another, and a send the platform refused stores nothing.
+func TestEngine_AdoptsASessionWhoseCreateTimedOut(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	platform.createFails = true
+	if _, err := engine.Send(ctx, 1, "hello"); err != nil {
+		t.Fatalf("send with a timed-out create = %v", err)
+	}
+	engine.Wait()
+	if platform.created != 1 {
+		t.Fatalf("created = %d, want the timed-out session adopted", platform.created)
+	}
+	if got := transcriptOf(messages(t, store, 1)); got != "user:hello|assistant:re: hello|" {
+		t.Fatalf("history = %q", got)
+	}
+
+	platform.writeStatus = http.StatusInternalServerError
+	if _, err := engine.Send(ctx, 1, "refused"); err == nil {
+		t.Fatal("a refused write must fail the send")
+	}
+	if got := len(messages(t, store, 1)); got != 2 {
+		t.Fatalf("a refused send left %d messages, want 2", got)
+	}
+}
+
+// An orphan from an earlier failed create is adopted read from its end, so
+// nothing already in it is taken for the new reply.
+func TestEngine_AdoptsAnOrphanFromItsEnd(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	platform.mu.Lock()
+	platform.sessions["old"] = &fakeSession{
+		name: "pocket-aide-chat-1", workload: "codex", createdAt: "2026-11-01T00:00:00Z",
+		transcript: []byte(marker("input", 1, "") + "stale\n" + marker("output", 1, "") + "stale reply\n" + marker("end", 1, " status=ok")),
+		turns:      1,
+	}
+	platform.mu.Unlock()
+	if _, err := engine.Send(ctx, 1, "fresh"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	if platform.created != 0 {
+		t.Fatalf("created = %d, want the orphan adopted", platform.created)
+	}
+	if got := transcriptOf(messages(t, store, 1)); got != "user:fresh|assistant:re: fresh|" {
+		t.Fatalf("history = %q", got)
 	}
 }

@@ -121,8 +121,22 @@ struct ChatTab: View {
         }
     }
 
+    /// Web addresses become links the system opens in the browser.
+    private func linked(_ text: String, color: Color) -> AttributedString {
+        var attributed = AttributedString(text)
+        for range in chatLinkRanges(in: text) {
+            guard let url = URL(string: String(text[range])),
+                  let lower = AttributedString.Index(range.lowerBound, within: attributed),
+                  let upper = AttributedString.Index(range.upperBound, within: attributed) else { continue }
+            attributed[lower..<upper].link = url
+            attributed[lower..<upper].foregroundColor = color
+            attributed[lower..<upper].underlineStyle = .single
+        }
+        return attributed
+    }
+
     private func myBubble(_ text: String) -> some View {
-        Text(text)
+        Text(linked(text, color: DesignTokens.Color.card(area)))
             .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
             .foregroundStyle(DesignTokens.Color.card(area))
             .textSelection(.enabled)
@@ -162,7 +176,7 @@ struct ChatTab: View {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
                 let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
-                    Text(trimmed)
+                    Text(linked(trimmed, color: DesignTokens.Color.accent(area)))
                         .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
                         .foregroundStyle(DesignTokens.Color.ink(area))
                         .textSelection(.enabled)

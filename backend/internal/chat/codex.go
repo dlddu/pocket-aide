@@ -163,23 +163,17 @@ func (e *Engine) Send(ctx context.Context, userID int64, content string) (Messag
 			return Message{}, err
 		}
 	}
-	msg, err := e.store.AppendMessage(ctx, userID, conv.ID, RoleUser, content)
-	if err != nil {
-		return Message{}, err
-	}
 	if sessionID == "" {
-		if sessionID, err = e.createSession(ctx, userID, conv.ID); err != nil {
+		if sessionID, offset, err = e.openSession(ctx, userID, conv.ID); err != nil {
 			return Message{}, err
 		}
-		offset = 0
 	}
 	status, err := e.write(ctx, sessionID, content)
 	if err == nil && status == http.StatusNotFound {
 		// The platform session is gone (deleted or reclaimed): start a new one.
-		if sessionID, err = e.createSession(ctx, userID, conv.ID); err != nil {
+		if sessionID, offset, err = e.openSession(ctx, userID, conv.ID); err != nil {
 			return Message{}, err
 		}
-		offset = 0
 		status, err = e.write(ctx, sessionID, content)
 	}
 	if err != nil {
@@ -187,6 +181,12 @@ func (e *Engine) Send(ctx context.Context, userID int64, content string) (Messag
 	}
 	if status != http.StatusOK && status != http.StatusAccepted {
 		return Message{}, &PlatformError{Op: "write", Status: status}
+	}
+	// Stored only once the platform took it, so a failed send leaves no
+	// message without a reply; and stored even if the client went away.
+	msg, err := e.store.AppendMessage(context.WithoutCancel(ctx), userID, conv.ID, RoleUser, content)
+	if err != nil {
+		e.logger.Error("chat: save sent message", "user", userID, "err", err)
 	}
 	started = true
 	e.running.Add(1)
@@ -326,28 +326,74 @@ func (e *Engine) write(ctx context.Context, sessionID, content string) (int, err
 	return status, err
 }
 
-func (e *Engine) createSession(ctx context.Context, userID, convID int64) (string, error) {
-	body, _ := json.Marshal(map[string]string{
-		"name":         "pocket-aide-chat-" + strconv.FormatInt(userID, 10),
-		"workloadType": workloadCodex,
-	})
-	status, raw, err := e.platform.Do(ctx, http.MethodPost, "/sessions", body)
-	if err != nil {
-		return "", err
+func sessionName(userID int64) string {
+	return "pocket-aide-chat-" + strconv.FormatInt(userID, 10)
+}
+
+// openSession gives the conversation a codex session. Creating one can
+// outlast the gateway in front of the platform (a cold control plane, a pod
+// pulling its image) while the session is still made, so a session already
+// carrying this user's name is adopted — before creating, and again when a
+// create fails — instead of leaving it orphaned. An adopted session is read
+// from its current end.
+func (e *Engine) openSession(ctx context.Context, userID, convID int64) (string, int64, error) {
+	if id, end, ok := e.adoptSession(ctx, userID); ok {
+		return id, end, e.store.SetPlatform(ctx, userID, convID, id, end)
 	}
-	if status != http.StatusCreated && status != http.StatusOK {
-		return "", &PlatformError{Op: "create", Status: status}
+	body, _ := json.Marshal(map[string]string{"name": sessionName(userID), "workloadType": workloadCodex})
+	status, raw, err := e.platform.Do(ctx, http.MethodPost, "/sessions", body)
+	if err == nil && status != http.StatusCreated && status != http.StatusOK {
+		err = &PlatformError{Op: "create", Status: status}
+	}
+	if err != nil {
+		if id, end, ok := e.adoptSession(context.WithoutCancel(ctx), userID); ok {
+			e.logger.Warn("chat: adopted a codex session whose create failed", "user", userID, "session", id, "err", err)
+			return id, end, e.store.SetPlatform(ctx, userID, convID, id, end)
+		}
+		return "", 0, err
 	}
 	var created struct {
 		ID string `json:"id"`
 	}
 	if err := json.Unmarshal(raw, &created); err != nil || created.ID == "" {
-		return "", fmt.Errorf("decode created session: %w", err)
+		return "", 0, fmt.Errorf("decode created session: %w", err)
 	}
-	if err := e.store.SetPlatform(ctx, userID, convID, created.ID, 0); err != nil {
-		return "", err
+	return created.ID, 0, e.store.SetPlatform(ctx, userID, convID, created.ID, 0)
+}
+
+// adoptSession finds the newest codex session named for userID among those
+// the platform shows this caller, and where its transcript ends.
+func (e *Engine) adoptSession(ctx context.Context, userID int64) (string, int64, bool) {
+	status, raw, err := e.platform.Do(ctx, http.MethodGet, "/sessions", nil)
+	if err != nil || status != http.StatusOK {
+		return "", 0, false
 	}
-	return created.ID, nil
+	var list struct {
+		Sessions []struct {
+			ID           string `json:"id"`
+			Name         string `json:"name"`
+			WorkloadType string `json:"workloadType"`
+			CreatedAt    string `json:"createdAt"`
+		} `json:"sessions"`
+	}
+	if json.Unmarshal(raw, &list) != nil {
+		return "", 0, false
+	}
+	id, newest := "", time.Time{}
+	for _, s := range list.Sessions {
+		created, _ := time.Parse(time.RFC3339Nano, s.CreatedAt)
+		if s.Name == sessionName(userID) && s.WorkloadType == workloadCodex && (id == "" || created.After(newest)) {
+			id, newest = s.ID, created
+		}
+	}
+	if id == "" {
+		return "", 0, false
+	}
+	_, end, status, err := e.read(ctx, id, 0)
+	if err != nil || status != http.StatusOK {
+		return "", 0, false
+	}
+	return id, end, true
 }
 
 // RefreshPlugins asks the codex session to fetch its plugin skills again,

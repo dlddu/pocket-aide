@@ -88,6 +88,21 @@ enum class ChatError(val message: String) {
 
 const val CHAT_MAX_MESSAGE_BYTES = 16 * 1024
 
+private val CHAT_URL = Regex("""https?://[^\s<>"'`]+""")
+private const val CHAT_URL_TRAILING = ".,;:!?)]}'\""
+
+/**
+ * Where the web addresses in a message are, so the screen can make them
+ * tappable — the ChatGPT sign-in a codex session asks for arrives as one.
+ * Punctuation that ends a sentence is not part of the address.
+ */
+fun chatLinkRanges(text: String): List<IntRange> =
+    CHAT_URL.findAll(text).map { match ->
+        var end = match.range.last
+        while (end > match.range.first && text[end] in CHAT_URL_TRAILING) end--
+        match.range.first..end
+    }.filter { text.substring(it).length > "https://".length }.toList()
+
 suspend fun ApiClient.chat(): ChatView = get("/api/chat", ChatView.serializer())
 
 suspend fun ApiClient.sendChatMessage(content: String): ChatMessage =

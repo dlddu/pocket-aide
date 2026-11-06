@@ -38,3 +38,22 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(none.notice, "이 대화에는 새로 받을 스킬이 없어요.")
     }
 }
+
+final class ChatLinkTests: XCTestCase {
+    private func links(_ text: String) -> [String] {
+        chatLinkRanges(in: text).map { String(text[$0]) }
+    }
+
+    func testFindsTheCodexSignInAddress() {
+        let text = "1. Open this link in your browser\n   https://auth.openai.com/codex/device\n2. Enter this one-time code\n   2V6W-MKPWJ"
+        XCTAssertEqual(links(text), ["https://auth.openai.com/codex/device"])
+    }
+
+    func testLeavesSentencePunctuationOut() {
+        XCTAssertEqual(links("see https://example.com/a?b=1. and (http://x.io/path), done"), ["https://example.com/a?b=1", "http://x.io/path"])
+    }
+
+    func testIgnoresTextWithoutAddresses() {
+        XCTAssertEqual(links("no links here, just https:// and words"), [])
+    }
+}
