@@ -101,6 +101,26 @@ public enum ChatError: Hashable, Sendable {
     }
 }
 
+/// Where the web addresses in a message are, so the screen can make them
+/// tappable — the ChatGPT sign-in a codex session asks for arrives as one.
+/// Punctuation that ends a sentence is not part of the address.
+public func chatLinkRanges(in text: String) -> [Range<String.Index>] {
+    let trailing: Set<Character> = [".", ",", ";", ":", "!", "?", ")", "]", "}", "'", "\""]
+    var ranges: [Range<String.Index>] = []
+    var searchStart = text.startIndex
+    while let match = text.range(of: #"https?://[^\s<>"'`]+"#, options: .regularExpression, range: searchStart..<text.endIndex) {
+        var end = match.upperBound
+        while end > match.lowerBound, trailing.contains(text[text.index(before: end)]) {
+            end = text.index(before: end)
+        }
+        if text.distance(from: match.lowerBound, to: end) > "https://".count {
+            ranges.append(match.lowerBound..<end)
+        }
+        searchStart = match.upperBound
+    }
+    return ranges
+}
+
 struct ChatSendPayload: Encodable {
     let content: String
 }

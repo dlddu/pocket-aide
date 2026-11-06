@@ -39,6 +39,8 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var body map[string]any
 	_ = json.NewDecoder(r.Body).Decode(&body)
 	switch {
+	case path == "/sessions" && r.Method == http.MethodGet:
+		_, _ = w.Write([]byte(`{"sessions":[]}`))
 	case path == "/sessions":
 		id := fmt.Sprintf("cx%d", len(p.transcript)+1)
 		p.transcript[id] = ""
