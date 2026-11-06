@@ -14,7 +14,6 @@ final class AppAuthCoordinator: ObservableObject {
     @Published var me: MeResponse?
     @Published var meError: String?
     @Published var pushAuthorizationDenied = false
-    /// 기기 이름 시트에 채울 기본값. nil 이 아니면 시트를 띄운다.
     @Published var deviceNamePrompt: String?
 
     let api: APIClient?
@@ -129,7 +128,6 @@ final class AppAuthCoordinator: ObservableObject {
         pushAuthorizationDenied = (state == .denied)
     }
 
-    /// 첫 토큰이면 이름을 한 번 묻고, 이미 답했으면(건너뜀 포함) 저장된 이름으로 바로 등록한다.
     private func handleDeviceToken(_ token: String) {
         if let stored = deviceNames.load() {
             sendDeviceToken(token, name: DeviceName.forRegistration(stored))

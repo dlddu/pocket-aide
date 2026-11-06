@@ -20,7 +20,6 @@ final class PushRegistrar {
         if let failureObserver { NotificationCenter.default.removeObserver(failureObserver) }
     }
 
-    /// 알림 권한을 확인·요청하고 APNs 등록을 건다. 토큰이 오면 `onToken` 이 받아 서버 등록을 맡는다.
     @discardableResult
     func register(onToken: @escaping @MainActor (String) -> Void) async -> AuthorizationState {
         self.onToken = onToken

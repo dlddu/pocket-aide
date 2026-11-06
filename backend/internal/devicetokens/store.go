@@ -31,8 +31,6 @@ func New(db *sql.DB) *Store { return &Store{db: db} }
 // Upsert inserts a new (user, token) row or, when the token already exists,
 // rebinds it to the current user and bumps updated_at. Tokens are globally
 // unique so the same physical device cannot be claimed by multiple accounts.
-// An empty name keeps the name the same user gave earlier, so a token refresh
-// that omits it does not erase it; a rebind to another user drops it.
 func (s *Store) Upsert(ctx context.Context, userID int64, token, platform, name string) error {
 	_, err := s.db.ExecContext(ctx, `
 		INSERT INTO device_tokens (user_id, token, platform, name)
