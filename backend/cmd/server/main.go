@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,7 +30,6 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
-	"github.com/dlddu/pocket-aide/backend/internal/llm"
 	"github.com/dlddu/pocket-aide/backend/internal/mail"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
@@ -93,10 +93,15 @@ func main() {
 	platform := sessions.NewClient(cfg.SessionPlatformURL)
 	approvalStore := approvals.New(conn)
 	chatStore := chat.New(conn)
-	var chatLLM handlers.ChatStreamer
-	if cfg.OpenRouterAPIKey != "" {
-		chatLLM = llm.New(cfg.OpenRouterAPIKey)
+	chatPlatform := sessions.NewClient(cfg.SessionPlatformURL)
+	if cfg.ChatServiceAccount != "" {
+		tokens, err := chatPlatformTokens(cfg.ChatServiceAccount)
+		if err != nil {
+			log.Fatalf("chat session platform tokens: %v", err)
+		}
+		chatPlatform.WithTokens(tokens)
 	}
+	chatEngine := chat.NewEngine(chatStore, chatPlatform, slog.Default())
 
 	var apnsClient *apns.Client
 	if cfg.PRMonitorEnabled && !cfg.APNSDisabled {
@@ -188,10 +193,9 @@ func main() {
 		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
-		p.Get("/api/chat/sessions", handlers.ListChatSessions(chatStore))
-		p.Post("/api/chat/sessions", handlers.CreateChatSession(chatStore))
-		p.Get("/api/chat/sessions/{id}", handlers.GetChatSession(chatStore))
-		p.Post("/api/chat/sessions/{id}/messages", handlers.SendChatMessage(chatStore, chatLLM, cfg.ChatModel))
+		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine))
+		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
+		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
 		p.Get("/api/sessions/config", handlers.SessionConfig(platform))
 		p.Get("/api/sessions", handlers.ListSessions(platform))
 		p.Post("/api/sessions", handlers.CreateSession(platform))
@@ -345,8 +349,11 @@ type config struct {
 
 	SessionPlatformURL string
 
-	OpenRouterAPIKey string
-	ChatModel        string
+	// ChatServiceAccount is the ServiceAccount (in this pod's namespace) whose
+	// TokenRequest token the chat tab presents to session-platform, so its
+	// codex sessions belong to that account's tenant. Empty: no token, and the
+	// platform treats the chat tab as the operator (previews).
+	ChatServiceAccount string
 
 	PRMonitorEnabled  bool
 	SQSQueueURL       string
@@ -385,8 +392,7 @@ func loadConfig() config {
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
 
-		OpenRouterAPIKey: os.Getenv("OPENROUTER_API_KEY"),
-		ChatModel:        envOr("CHAT_MODEL", "anthropic/claude-sonnet-4.5"),
+		ChatServiceAccount: os.Getenv("CHAT_SESSION_PLATFORM_SERVICE_ACCOUNT"),
 
 		FCMServiceAccountJSON: os.Getenv("FCM_SERVICE_ACCOUNT_JSON"),
 		FCMHost:               os.Getenv("FCM_HOST"),
@@ -412,6 +418,18 @@ func loadConfig() config {
 		}
 	}
 	return c
+}
+
+func chatPlatformTokens(account string) (*sessions.ServiceAccountTokens, error) {
+	api, err := k8sauth.InClusterAPIServer()
+	if err != nil {
+		return nil, err
+	}
+	namespace, err := k8sauth.InClusterNamespace()
+	if err != nil {
+		return nil, err
+	}
+	return sessions.NewServiceAccountTokens(api, namespace, account, sessions.PlatformAudience), nil
 }
 
 func envOr(k, def string) string {

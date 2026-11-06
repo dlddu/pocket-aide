@@ -18,18 +18,23 @@
 | 2026-10-04 | `.github/actions/start-test-sqs/action.yml` | 1 | `4a8622eeb479` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-10-04-test-sqs-action.md) |
 | 2026-11-02 | `.github/workflows/android-test.yml` | 1 | `9dac1c010296` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 91 | `631eeb49ad6b` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) · 2026-10-11 증분 유지 2줄(iOS 테스트 백엔드 교차 빌드) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
+| 2026-11-06 | `android/app/src/main/java/com/dlddu/pocketaide/chat/Chat.kt` | 3 | `bafcd20ba6a4` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-06 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | 3 | `5769240e8038` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 1 | `4a77c750667d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 1 | `d805164c7960` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 1 | `241224badd21` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 1 | `74928df54084` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 4 | `22c0305195ad` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| 2026-10-08 | `backend/cmd/server/main.go` | 17 | `9600452f468b` | 완료 | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) |
+| 2026-10-08 | `backend/cmd/server/main.go` | 21 | `c20ad75aa8da` | — | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/apns/client.go`, `backend/internal/apns/client_test.go` | 17 | `a268892ac7fb` | 완료 | 필요성 판정 — 제거 3줄 · 유지 17줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/approvals/store.go` | 4 | `2250bf0d22b9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/auth/middleware.go` | 13 | `2cf46a05430f` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-04 | `backend/internal/chat/store.go` | 17 | `98bcc304c1b2` | 완료 | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-chat-api-sessions.md) |
+| 2026-11-06 | `backend/internal/chat/codex.go` | 30 | `5b33cd6a3c65` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-06 | `backend/internal/chat/codex_test.go` | 10 | `d8f80927ac51` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-06 | `backend/internal/chat/follower_test.go` | 2 | `9a3e3b39feb8` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-04 | `backend/internal/chat/store.go` | 20 | `bc3262d6bc90` | — | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/devicetokens/store.go` | 9 | `b3d186c91592` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) · 2026-11-02 증분 유지 4줄(개작 2블록 포함 · 안드로이드 플랫폼) — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -38,13 +43,13 @@
 | 2026-11-02 | `backend/internal/fcm/client.go` | 13 | `27ab47a96b5b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/githubwebhook/attributes.go`, `backend/internal/githubwebhook/consumer.go`, `backend/internal/githubwebhook/consumer_integration_test.go`, `backend/internal/githubwebhook/consumer_internal_test.go` | 55 | `0eb889dfa6c9` | 완료 | 필요성 판정 — 제거 93줄 · 유지 55줄(개작 6블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-04 | `backend/internal/handlers/chat.go` | 13 | `06e509dec4e2` | 완료 | 필요성 판정 — 제거 2줄 · 유지 13줄 — [상세](passes/2026-11-04-chat-api-sessions.md) |
+| 2026-11-04 | `backend/internal/handlers/chat.go` | 10 | `fdd235e40997` | — | 필요성 판정 — 제거 2줄 · 유지 13줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-06 | `backend/internal/handlers/chat_test.go` | 6 | `9ec94d1a72c9` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-11-04 | `backend/internal/handlers/mail.go` | 7 | `f9ccc4202240` | 완료 | 필요성 판정 — 제거 4줄 · 유지 7줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-09-29 | `backend/internal/handlers/todos.go`, `backend/internal/handlers/todos_test.go` | 11 | `e12b892a3613` | 완료 | 필요성 판정 — 제거 1줄 · 유지 11줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| 2026-10-28 | `backend/internal/k8sauth/tokenreview.go` | 5 | `1dae868df4d3` | 완료 | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
-| 2026-09-29 | `backend/internal/llm/openrouter.go` | 11 | `9dcd360cbdb0` | 완료 | 필요성 판정 — 제거 2줄 · 유지 11줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
+| 2026-10-28 | `backend/internal/k8sauth/tokenreview.go` | 9 | `f8d7e2472697` | — | 필요성 판정 — 제거 0줄 · 유지 5줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-11-04 | `backend/internal/mail/cipher.go` | 12 | `a7ba97d0dcdd` | 완료 | 필요성 판정 — 제거 0줄 · 유지 12줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-11-04 | `backend/internal/mail/imap.go` | 20 | `a41507295660` | 완료 | 필요성 판정 — 제거 4줄 · 유지 20줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-11-04 | `backend/internal/mail/mail_test.go` | 2 | `89fdc5a4bfd3` | 완료 | 필요성 판정 — 제거 8줄 · 유지 2줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
@@ -56,12 +61,16 @@
 | 2026-11-02 | `backend/internal/push/router.go` | 8 | `85ae2e5dfca9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 8줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-04 | `backend/internal/routines/store.go` | 3 | `49861c75fd62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-04-data-model-godoc.md) |
 | 2026-10-01 | `backend/internal/scratchpad/store.go` | 20 | `61dc59d49236` | 완료 | 필요성 판정 — 제거 3줄 · 유지 20줄 — [상세](passes/2026-10-01-scratchpad.md) |
+| 2026-11-06 | `backend/internal/sessions/platform.go` | 3 | `120599a946ac` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-06 | `backend/internal/sessions/token.go` | 7 | `2848193f2079` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-06 | `backend/internal/sessions/token_test.go` | 3 | `0355516e1e04` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-11-02 | `backend/internal/telemetry/telemetry.go`, `backend/internal/telemetry/telemetry_test.go` | 42 | `c80f2d2466c2` | 완료 | 필요성 판정 — 제거 1문장(Setup doc 의 service.name 우선순위 — 인라인 주석과 중복) · 유지 42줄(개작 1블록 포함) — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 24 | `9ded2a6c61e2` | 완료 | 필요성 판정 — 제거 0줄 · 유지 24줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `backend/migrations/0006_notification_history_head_sha.up.sql`, `backend/migrations/migrations.go` | 4 | `e76bb1f9388c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/migrations/0007_todos.up.sql` | 3 | `b37ba16e4205` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/PocketAide/Affirmations/AffirmationsView.swift` | 3 | `9a6585e35c9a` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/PocketAide/AppAuthCoordinator.swift`, `ios/PocketAide/AppDelegate.swift`, `ios/PocketAide/DeepLinkRouter.swift`, `ios/PocketAide/PocketAideApp.swift`, `ios/PocketAide/PushRegistrar.swift`, `ios/PocketAide/RootView.swift` | 39 | `cca91708a5a4` | 완료 | 필요성 판정 — 제거 35줄 · 유지 39줄(개작 6블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
+| 2026-11-06 | `ios/PocketAide/Chat/ChatTab.swift` | 4 | `cc65f7365784` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-10-28 | `ios/PocketAide/Notifications/ExternalNotificationsViewModel.swift` | 2 | `39a616ac5a2e` | 완료 | 필요성 판정 — 제거 0줄 · 유지 2줄(개작 1블록 포함) — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift`, `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 12 | `7f66d46d2454` | 완료 | 필요성 판정 — 제거 58줄 · 유지 12줄(개작 2블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-11-04 | `ios/PocketAide/Sessions/SessionDetailView.swift` | 3 | `9e0793f3dfec` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
@@ -74,6 +83,7 @@
 | 2026-09-29 | `ios/Shared/Package.swift` | 1 | `9ea7cb80805c` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Components/Sheet.swift` | 7 | `7eaa1de510bc` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/Shared/Sources/DesignSystem/Tokens.swift` | 14 | `542a9b308412` | 완료 | 필요성 판정 — 제거 3줄 · 유지 14줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
+| 2026-11-06 | `ios/Shared/Sources/PocketAideAPI/Chat.swift` | 3 | `f645d0ba418c` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-10-28 | `ios/Shared/Sources/PocketAideAPI/ExternalNotifications.swift` | 4 | `29d408263e1c` | 완료 | 필요성 판정 — 제거 1줄 · 유지 4줄(개작 1블록 포함) — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `ios/Shared/Sources/PocketAideAPI/HistoryGroup.swift`, `ios/Shared/Sources/PocketAideAPI/PRMonitor.swift`, `ios/Shared/Sources/PocketAideAPI/RotationSelector.swift`, `ios/Shared/Sources/PocketAideAPI/SeededRNG.swift`, `ios/Shared/Sources/PocketAideAPI/Todos.swift` | 27 | `0e62232c8a8f` | 완료 | 필요성 판정 — 제거 22줄 · 유지 27줄(개작 6블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-10-01 | `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 3 | `7dbfb751ae6b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-01-scratchpad.md) |
@@ -87,7 +97,10 @@
 
 | 판정일 | 범위 | 주석 줄 | 지문 | 판정 | 결과 |
 | --- | --- | ---: | --- | :-: | --- |
+| 2026-11-06 | `backend/internal/chat/codex.go` | 5 | `732487916628` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
+| 2026-11-06 | `backend/internal/chat/codex_test.go` | 2 | `91067e557fc3` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-09-29 | `backend/internal/githubwebhook/consumer.go` | 2 | `fc7742939d4d` | 완료 | 필요성 판정 — 제거 10줄 · 유지 2줄 — [상세](passes/2026-09-29-backend.md) |
+| 2026-11-06 | `backend/internal/handlers/chat_test.go` | 1 | `ad6ea4485848` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-11-04 | `backend/internal/mail/mail_test.go` | 1 | `c8b6f0684d97` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-09-29 | `backend/internal/notificationhistory/store.go` | 1 | `85e7bd879f18` | 완료 | 필요성 판정 — 제거 3줄 · 유지 1줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/todos/store.go` | 1 | `c427a06bd747` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |

@@ -122,6 +122,8 @@ erDiagram
 | `title` | TEXT | NO |  |
 | `created_at` | INTEGER | NO |  |
 | `updated_at` | INTEGER | NO |  |
+| `platform_session_id` | TEXT | NO |  |
+| `transcript_offset` | INTEGER | NO |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
