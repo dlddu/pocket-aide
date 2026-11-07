@@ -22,6 +22,23 @@ class ChatLinksTest {
     }
 
     @Test
+    fun stopsAtAnUnopenedClosingBracketBeforeAParticle() {
+        assertEquals(
+            listOf("https://github.com/dlddu/plugin-marketplace/pull/95"),
+            links("[PR #95](https://github.com/dlddu/plugin-marketplace/pull/95)를 머지했고"),
+        )
+        assertEquals(listOf("https://x.io/pull/96"), links("(https://x.io/pull/96)을 올렸습니다."))
+    }
+
+    @Test
+    fun keepsBracketsTheAddressOpened() {
+        assertEquals(
+            listOf("https://en.wikipedia.org/wiki/Foo_(bar)"),
+            links("see https://en.wikipedia.org/wiki/Foo_(bar)."),
+        )
+    }
+
+    @Test
     fun ignoresTextWithoutAddresses() {
         assertEquals(emptyList<String>(), links("no links here, just https:// and words"))
     }
