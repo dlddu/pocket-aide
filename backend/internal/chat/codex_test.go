@@ -186,7 +186,7 @@ func TestEngine_OneCodexSessionPerUser(t *testing.T) {
 		t.Fatalf("history = %q, want %q", got, want)
 	}
 	s := platform.session("cx1")
-	if platform.created != 1 || s.workload != "codex" || s.name != "pocket-aide-chat-1" || len(s.prompts) != 2 {
+	if platform.created != 1 || s.workload != "codex-chat" || s.name != "pocket-aide-chat-1" || len(s.prompts) != 2 {
 		t.Fatalf("platform = created %d, session %+v", platform.created, s)
 	}
 	if engine.Pending(1) != nil {
@@ -334,25 +334,30 @@ func TestEngine_AdoptsASessionWhoseCreateTimedOut(t *testing.T) {
 }
 
 // An orphan from an earlier failed create is adopted read from its end, so
-// nothing already in it is taken for the new reply.
+// nothing already in it is taken for the new reply. The platform lists it as
+// codex-chat, or as codex for a session made before the rename.
 func TestEngine_AdoptsAnOrphanFromItsEnd(t *testing.T) {
-	store, engine, platform := newEngine(t)
-	ctx := context.Background()
-	platform.mu.Lock()
-	platform.sessions["old"] = &fakeSession{
-		name: "pocket-aide-chat-1", workload: "codex", createdAt: "2026-11-01T00:00:00Z",
-		transcript: []byte(marker("input", 1, "") + "stale\n" + marker("output", 1, "") + "stale reply\n" + marker("end", 1, " status=ok")),
-		turns:      1,
-	}
-	platform.mu.Unlock()
-	if _, err := engine.Send(ctx, 1, "fresh"); err != nil {
-		t.Fatal(err)
-	}
-	engine.Wait()
-	if platform.created != 0 {
-		t.Fatalf("created = %d, want the orphan adopted", platform.created)
-	}
-	if got := transcriptOf(messages(t, store, 1)); got != "user:fresh|assistant:re: fresh|" {
-		t.Fatalf("history = %q", got)
+	for _, workload := range []string{"codex-chat", "codex"} {
+		t.Run(workload, func(t *testing.T) {
+			store, engine, platform := newEngine(t)
+			ctx := context.Background()
+			platform.mu.Lock()
+			platform.sessions["old"] = &fakeSession{
+				name: "pocket-aide-chat-1", workload: workload, createdAt: "2026-11-01T00:00:00Z",
+				transcript: []byte(marker("input", 1, "") + "stale\n" + marker("output", 1, "") + "stale reply\n" + marker("end", 1, " status=ok")),
+				turns:      1,
+			}
+			platform.mu.Unlock()
+			if _, err := engine.Send(ctx, 1, "fresh"); err != nil {
+				t.Fatal(err)
+			}
+			engine.Wait()
+			if platform.created != 0 {
+				t.Fatalf("created = %d, want the orphan adopted", platform.created)
+			}
+			if got := transcriptOf(messages(t, store, 1)); got != "user:fresh|assistant:re: fresh|" {
+				t.Fatalf("history = %q", got)
+			}
+		})
 	}
 }

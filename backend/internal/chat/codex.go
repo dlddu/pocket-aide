@@ -22,12 +22,17 @@ import (
 // whose turns are framed by `\x1esession-platform input|output|end seq=N` lines.
 
 const (
-	workloadCodex  = "codex"
-	turnSentinel   = 0x1e
-	turnLead       = "session-platform "
-	defaultPoll    = 700 * time.Millisecond
-	defaultTimeout = 40 * time.Minute
-	emptyReply     = "(응답이 비어 있습니다)"
+	// workloadCodex is session-platform's chat Codex type. It was "codex"
+	// until the platform split Codex into codex-chat and codex-task
+	// (session-platform AC-J1, 2026-11-07); a session made before the rename
+	// can still be listed under the old name, so adoption accepts both.
+	workloadCodex       = "codex-chat"
+	legacyWorkloadCodex = "codex"
+	turnSentinel        = 0x1e
+	turnLead            = "session-platform "
+	defaultPoll         = 700 * time.Millisecond
+	defaultTimeout      = 40 * time.Minute
+	emptyReply          = "(응답이 비어 있습니다)"
 )
 
 var (
@@ -382,7 +387,7 @@ func (e *Engine) adoptSession(ctx context.Context, userID int64) (string, int64,
 	id, newest := "", time.Time{}
 	for _, s := range list.Sessions {
 		created, _ := time.Parse(time.RFC3339Nano, s.CreatedAt)
-		if s.Name == sessionName(userID) && s.WorkloadType == workloadCodex && (id == "" || created.After(newest)) {
+		if s.Name == sessionName(userID) && (s.WorkloadType == workloadCodex || s.WorkloadType == legacyWorkloadCodex) && (id == "" || created.After(newest)) {
 			id, newest = s.ID, created
 		}
 	}
