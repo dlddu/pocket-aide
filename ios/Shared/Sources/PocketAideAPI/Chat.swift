@@ -103,13 +103,32 @@ public enum ChatError: Hashable, Sendable {
 
 /// Where the web addresses in a message are, so the screen can make them
 /// tappable — the ChatGPT sign-in a codex session asks for arrives as one.
-/// Punctuation that ends a sentence is not part of the address.
+/// Punctuation that ends a sentence is not part of the address, and neither is
+/// a closing bracket the address never opened — so `(https://x.io/a)를` and
+/// `[PR](https://x.io/pull/1)을` stop before the `)`, while
+/// `https://x.io/wiki/A_(b)` keeps its own pair.
 public func chatLinkRanges(in text: String) -> [Range<String.Index>] {
-    let trailing: Set<Character> = [".", ",", ";", ":", "!", "?", ")", "]", "}", "'", "\""]
+    let trailing: Set<Character> = [".", ",", ";", ":", "!", "?", "'", "\""]
+    let closers: [Character: Character] = [")": "(", "]": "[", "}": "{"]
     var ranges: [Range<String.Index>] = []
     var searchStart = text.startIndex
     while let match = text.range(of: #"https?://[^\s<>"'`]+"#, options: .regularExpression, range: searchStart..<text.endIndex) {
         var end = match.upperBound
+        var open: [Character: Int] = [:]
+        var index = match.lowerBound
+        while index < match.upperBound {
+            let c = text[index]
+            if closers.values.contains(c) {
+                open[c, default: 0] += 1
+            } else if let opener = closers[c] {
+                if open[opener, default: 0] == 0 {
+                    end = index
+                    break
+                }
+                open[opener, default: 0] -= 1
+            }
+            index = text.index(after: index)
+        }
         while end > match.lowerBound, trailing.contains(text[text.index(before: end)]) {
             end = text.index(before: end)
         }

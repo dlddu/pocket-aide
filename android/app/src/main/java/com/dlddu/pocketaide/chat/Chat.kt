@@ -89,19 +89,41 @@ enum class ChatError(val message: String) {
 const val CHAT_MAX_MESSAGE_BYTES = 16 * 1024
 
 private val CHAT_URL = Regex("""https?://[^\s<>"'`]+""")
-private const val CHAT_URL_TRAILING = ".,;:!?)]}'\""
+private const val CHAT_URL_TRAILING = ".,;:!?'\""
+private val CHAT_URL_CLOSERS = mapOf(')' to '(', ']' to '[', '}' to '{')
 
 /**
  * Where the web addresses in a message are, so the screen can make them
  * tappable — the ChatGPT sign-in a codex session asks for arrives as one.
- * Punctuation that ends a sentence is not part of the address.
+ * Punctuation that ends a sentence is not part of the address, and neither is
+ * a closing bracket the address never opened — so `(https://x.io/a)를` and
+ * `[PR](https://x.io/pull/1)을` stop before the `)`, while
+ * `https://x.io/wiki/A_(b)` keeps its own pair.
  */
 fun chatLinkRanges(text: String): List<IntRange> =
-    CHAT_URL.findAll(text).map { match ->
-        var end = match.range.last
-        while (end > match.range.first && text[end] in CHAT_URL_TRAILING) end--
-        match.range.first..end
-    }.filter { text.substring(it).length > "https://".length }.toList()
+    CHAT_URL.findAll(text).map { match -> match.range.first..chatLinkEnd(text, match.range) }
+        .filter { it.last - it.first + 1 > "https://".length }.toList()
+
+private fun chatLinkEnd(text: String, match: IntRange): Int {
+    val open = mutableMapOf<Char, Int>()
+    var end = match.last
+    for (i in match) {
+        val c = text[i]
+        val opener = CHAT_URL_CLOSERS[c]
+        if (c in CHAT_URL_CLOSERS.values) {
+            open[c] = (open[c] ?: 0) + 1
+        } else if (opener != null) {
+            val depth = open[opener] ?: 0
+            if (depth == 0) {
+                end = i - 1
+                break
+            }
+            open[opener] = depth - 1
+        }
+    }
+    while (end > match.first && text[end] in CHAT_URL_TRAILING) end--
+    return end
+}
 
 suspend fun ApiClient.chat(): ChatView = get("/api/chat", ChatView.serializer())
 

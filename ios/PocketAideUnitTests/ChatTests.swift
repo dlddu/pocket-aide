@@ -53,6 +53,18 @@ final class ChatLinkTests: XCTestCase {
         XCTAssertEqual(links("see https://example.com/a?b=1. and (http://x.io/path), done"), ["https://example.com/a?b=1", "http://x.io/path"])
     }
 
+    func testStopsAtAnUnopenedClosingBracketBeforeAParticle() {
+        XCTAssertEqual(
+            links("[PR #95](https://github.com/dlddu/plugin-marketplace/pull/95)를 머지했고"),
+            ["https://github.com/dlddu/plugin-marketplace/pull/95"]
+        )
+        XCTAssertEqual(links("(https://x.io/pull/96)을 올렸습니다."), ["https://x.io/pull/96"])
+    }
+
+    func testKeepsBracketsTheAddressOpened() {
+        XCTAssertEqual(links("see https://en.wikipedia.org/wiki/Foo_(bar)."), ["https://en.wikipedia.org/wiki/Foo_(bar)"])
+    }
+
     func testIgnoresTextWithoutAddresses() {
         XCTAssertEqual(links("no links here, just https:// and words"), [])
     }
