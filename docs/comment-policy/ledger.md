@@ -31,8 +31,8 @@
 | 2026-09-29 | `backend/internal/apns/client.go`, `backend/internal/apns/client_test.go` | 17 | `a268892ac7fb` | 완료 | 필요성 판정 — 제거 3줄 · 유지 17줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/approvals/store.go` | 4 | `2250bf0d22b9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-09-29 | `backend/internal/auth/middleware.go` | 13 | `2cf46a05430f` | 완료 | 필요성 판정 — 제거 0줄 · 유지 13줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
-| 2026-11-06 | `backend/internal/chat/codex.go` | 40 | `3df18ba1a30c` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
-| 2026-11-06 | `backend/internal/chat/codex_test.go` | 16 | `cf0d17c11204` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-06 | `backend/internal/chat/codex.go` | 44 | `8c5cb200a3f5` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-07 session-platform codex-chat 이름 변경에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-06 | `backend/internal/chat/codex_test.go` | 17 | `bdc375246c42` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-07 session-platform codex-chat 이름 변경에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-11-06 | `backend/internal/chat/follower_test.go` | 2 | `9a3e3b39feb8` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-11-04 | `backend/internal/chat/store.go` | 20 | `bc3262d6bc90` | — | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |

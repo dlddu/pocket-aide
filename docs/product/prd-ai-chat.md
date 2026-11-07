@@ -10,7 +10,7 @@
 탭 6개 중 첫 번째 탭. 텍스트 입력과 음성 대화 모드를 모두 지원하는 AI 채팅 화면. 일반적인 대화·질문·요약·정리 등에 사용한다.
 
 > **답하는 에이전트 (2026-11-06 사용자 결정)**: 채팅 탭은 [session-platform](https://github.com/dlddu/session-platform)의
-> `codex` 워크로드(Codex SDK, 사용자의 ChatGPT 구독 로그인)가 답한다. 사용자마다 **codex 세션 하나를 오래 이어 쓴다** —
+> `codex-chat` 워크로드(Codex SDK 채팅용, 2026-11-07 전 이름 `codex` — 사용자의 ChatGPT 구독 로그인)가 답한다. 사용자마다 **codex 세션 하나를 오래 이어 쓴다** —
 > 대화는 그 세션의 스레드에 이어지고, pocket-aide 는 읽을 수 있는 이력을 자기 DB(`chat_sessions`·`chat_messages`)에 남긴다.
 > 백엔드는 채팅 탭 전용 ServiceAccount(`pocket-aide-chat`)의 토큰으로 플랫폼을 불러, 채팅 세션이 세션 탭과 다른 테넌트에 속하게 한다
 > (session-platform `docs/prd/multitenancy.md`). 이전의 OpenRouter 직접 호출은 없앴다.
