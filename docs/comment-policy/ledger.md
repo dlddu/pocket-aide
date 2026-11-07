@@ -26,7 +26,7 @@
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 1 | `74928df54084` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 4 | `22c0305195ad` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
-| 2026-10-08 | `backend/cmd/server/main.go` | 21 | `c20ad75aa8da` | — | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-10-08 | `backend/cmd/server/main.go` | 25 | `bd3839c66d3f` | — | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-07 세션 탭 테넌트 클라이언트 분리에서 주석이 늘었다 — 재측정만, 판정하지 않았다 |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/apns/client.go`, `backend/internal/apns/client_test.go` | 17 | `a268892ac7fb` | 완료 | 필요성 판정 — 제거 3줄 · 유지 17줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-10-28 | `backend/internal/approvals/store.go` | 4 | `2250bf0d22b9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |

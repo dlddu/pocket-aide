@@ -90,16 +90,18 @@ func main() {
 	todoStore := todos.New(conn)
 	scratchStore := scratchpad.New(conn)
 	routineStore := routines.New(conn)
-	platform := sessions.NewClient(cfg.SessionPlatformURL)
+	// Approvals arrive from sessions of every tenant, so their session-name
+	// lookup stays on the operator view; a tenant client would 404 them.
+	operatorPlatform := sessions.NewClient(cfg.SessionPlatformURL)
+	sessionsPlatform, err := tenantPlatformClient(cfg.SessionPlatformURL, cfg.SessionsServiceAccount, inClusterPlatformTokens)
+	if err != nil {
+		log.Fatalf("sessions tab session platform tokens: %v", err)
+	}
 	approvalStore := approvals.New(conn)
 	chatStore := chat.New(conn)
-	chatPlatform := sessions.NewClient(cfg.SessionPlatformURL)
-	if cfg.ChatServiceAccount != "" {
-		tokens, err := chatPlatformTokens(cfg.ChatServiceAccount)
-		if err != nil {
-			log.Fatalf("chat session platform tokens: %v", err)
-		}
-		chatPlatform.WithTokens(tokens)
+	chatPlatform, err := tenantPlatformClient(cfg.SessionPlatformURL, cfg.ChatServiceAccount, inClusterPlatformTokens)
+	if err != nil {
+		log.Fatalf("chat session platform tokens: %v", err)
 	}
 	chatEngine := chat.NewEngine(chatStore, chatPlatform, slog.Default())
 
@@ -196,15 +198,15 @@ func main() {
 		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine))
 		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
-		p.Get("/api/sessions/config", handlers.SessionConfig(platform))
-		p.Get("/api/sessions", handlers.ListSessions(platform))
-		p.Post("/api/sessions", handlers.CreateSession(platform))
-		p.Get("/api/sessions/{id}", handlers.GetSession(platform))
-		p.Delete("/api/sessions/{id}", handlers.DeleteSession(platform))
-		p.Post("/api/sessions/{id}/read", handlers.ReadSession(platform))
-		p.Post("/api/sessions/{id}/write", handlers.WriteSession(platform))
-		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(platform))
-		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(platform))
+		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))
+		p.Get("/api/sessions", handlers.ListSessions(sessionsPlatform))
+		p.Post("/api/sessions", handlers.CreateSession(sessionsPlatform))
+		p.Get("/api/sessions/{id}", handlers.GetSession(sessionsPlatform))
+		p.Delete("/api/sessions/{id}", handlers.DeleteSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/read", handlers.ReadSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/write", handlers.WriteSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(sessionsPlatform))
 		p.Get("/api/approval-keys", handlers.ListApprovalKeys(approvalStore))
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(approvalStore))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(approvalStore))
@@ -227,7 +229,7 @@ func main() {
 	}
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, platform))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, operatorPlatform))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender, externalNotificationStore))
 	})
@@ -354,6 +356,9 @@ type config struct {
 	// codex sessions belong to that account's tenant. Empty: no token, and the
 	// platform treats the chat tab as the operator (previews).
 	ChatServiceAccount string
+	// SessionsServiceAccount is the same for the sessions tab, whose tenant it
+	// shares with the K3s MCP session tools.
+	SessionsServiceAccount string
 
 	PRMonitorEnabled  bool
 	SQSQueueURL       string
@@ -392,7 +397,8 @@ func loadConfig() config {
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
 
-		ChatServiceAccount: os.Getenv("CHAT_SESSION_PLATFORM_SERVICE_ACCOUNT"),
+		ChatServiceAccount:     os.Getenv("CHAT_SESSION_PLATFORM_SERVICE_ACCOUNT"),
+		SessionsServiceAccount: os.Getenv("SESSIONS_SESSION_PLATFORM_SERVICE_ACCOUNT"),
 
 		FCMServiceAccountJSON: os.Getenv("FCM_SERVICE_ACCOUNT_JSON"),
 		FCMHost:               os.Getenv("FCM_HOST"),
@@ -420,7 +426,19 @@ func loadConfig() config {
 	return c
 }
 
-func chatPlatformTokens(account string) (*sessions.ServiceAccountTokens, error) {
+func tenantPlatformClient(baseURL, account string, tokensFor func(string) (sessions.TokenSource, error)) (*sessions.Client, error) {
+	client := sessions.NewClient(baseURL)
+	if account == "" {
+		return client, nil
+	}
+	tokens, err := tokensFor(account)
+	if err != nil {
+		return nil, err
+	}
+	return client.WithTokens(tokens), nil
+}
+
+func inClusterPlatformTokens(account string) (sessions.TokenSource, error) {
 	api, err := k8sauth.InClusterAPIServer()
 	if err != nil {
 		return nil, err
