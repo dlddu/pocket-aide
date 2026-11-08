@@ -114,9 +114,7 @@ enum WebhookHistoryUI {
     static func openMonitor() -> XCUIApplication {
         let app = XCUIApplication()
         app.launch()
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         return app
     }
 
@@ -198,5 +196,27 @@ enum WebhookHistoryUI {
         let joined = badge.allElementsBoundByIndex.map(\.label).joined(separator: " ")
         guard let digits = joined.range(of: "[0-9]+", options: .regularExpression) else { return nil }
         return Int(joined[digits])
+    }
+}
+
+
+enum PRMonitorNavigation {
+    static func open(in app: XCUIApplication) -> Bool {
+        let bar = app.tabBars.firstMatch
+        guard bar.waitForExistence(timeout: 15) else { return false }
+        let direct = bar.buttons["PR 모니터"]
+        if direct.exists {
+            direct.tap()
+        } else {
+            let more = bar.buttons["더 보기"]
+            guard more.waitForExistence(timeout: 5) else { return false }
+            more.tap()
+            let back = app.navigationBars.buttons["더 보기"]
+            if back.waitForExistence(timeout: 1) { back.tap() }
+            let row = app.cells.containing(NSPredicate(format: "label == %@", "PR 모니터")).firstMatch
+            guard row.waitForExistence(timeout: 5) else { return false }
+            row.tap()
+        }
+        return app.buttons["prmonitor.openprs.button"].waitForExistence(timeout: 15)
     }
 }

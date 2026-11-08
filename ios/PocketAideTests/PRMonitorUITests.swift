@@ -30,9 +30,7 @@ final class PRMonitorUITests: XCTestCase {
         app.launch()
         let tabsBar = app.tabBars.firstMatch
         XCTAssertTrue(tabsBar.waitForExistence(timeout: 15), "Tab bar should appear after sign-in")
-        let tab = tabsBar.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 5), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         return app
     }
 
@@ -51,9 +49,9 @@ final class PRMonitorUITests: XCTestCase {
         if allow.waitForExistence(timeout: 10) {
             allow.tap()
         }
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        XCTAssertFalse(tab.isSelected, "Launch should land on a different tab than PR 모니터")
+        let tab = app.tabBars.firstMatch.buttons["다짐"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 15), "다짐 should be a direct tab")
+        XCTAssertTrue(tab.isSelected, "Launch should land on 다짐")
 
         XCUIDevice.shared.press(.home)
         // The workflow pushes only after this line; the UUID tells a retry apart.
@@ -64,8 +62,7 @@ final class PRMonitorUITests: XCTestCase {
         banner.tap()
 
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15), "Tapping the push should open the app")
-        let selected = expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: tab)
-        wait(for: [selected], timeout: 10)
+        XCTAssertTrue(app.buttons["prmonitor.openprs.button"].waitForExistence(timeout: 10), "The push should open PR 모니터 without a manual More tap")
         XCTAssertTrue(
             fixtureTitle(in: app).waitForExistence(timeout: 15),
             "The pushed event's row should be listed"
@@ -144,9 +141,7 @@ final class PRMonitorUITests: XCTestCase {
         // mock-exception: EXT — 실 GitHub 은 전용 테스트 계정 PAT 가 CI 시크릿에 없어 E2E 가 부를 수 없다; 앱의 GitHubClient 를 로컬 GitHub API 스텁으로 향하게 한다 (docs/e2e-mocking-policy.md)
         app.launchEnvironment["GITHUB_API_BASE_URL"] = "http://localhost:5557"
         app.launch()
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         let open = app.buttons["prmonitor.openprs.button"]
         XCTAssertTrue(open.waitForExistence(timeout: 10), "PR 모니터 header should offer the open-PR sheet")
         open.tap()

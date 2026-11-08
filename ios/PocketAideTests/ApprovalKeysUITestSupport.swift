@@ -100,9 +100,7 @@ enum ApprovalKeysAPI {
 
 enum ApprovalUserSwitch {
     static func signOut(in app: XCUIApplication) {
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         let settings = app.buttons["prmonitor.settings.button"]
         XCTAssertTrue(settings.waitForExistence(timeout: 10), "The PR monitor header should offer 알림 설정")
         settings.tap()

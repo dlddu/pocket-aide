@@ -20,9 +20,7 @@ struct AffirmationsScreen {
     }
 
     func reenter() -> AffirmationsScreen {
-        let other = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(other.waitForExistence(timeout: 5), "The PR 모니터 tab should be in the tab bar")
-        other.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         XCTAssertTrue(
             app.buttons["prmonitor.openprs.button"].waitForExistence(timeout: 15),
             "Leaving the 다짐 tab should land on PR 모니터"
