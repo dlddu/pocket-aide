@@ -7,9 +7,7 @@ enum AppAccount {
 
     @discardableResult
     static func trySignOut(in app: XCUIApplication, settle: TimeInterval) -> Bool {
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        guard tab.waitForExistence(timeout: 15) else { return false }
-        tab.tap()
+        guard PRMonitorNavigation.open(in: app) else { return false }
         var settings = app.buttons["prmonitor.settings.button"]
         if !settings.waitForExistence(timeout: 10) {
             settings = app.buttons["알림 설정"]

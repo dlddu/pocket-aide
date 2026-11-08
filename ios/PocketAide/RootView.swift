@@ -107,14 +107,12 @@ struct RootView: View {
     }
 
     private var signedInTabs: some View {
-        // PR 모니터 탭은 More 로 밀리지 않는 앞자리에 둔다 — 푸시 탭 deep link 가
-        // selection 을 이 탭으로 바꿔 바로 연다.
         TabView(selection: $selectedTab) {
             Tab("다짐", systemImage: "heart.fill", value: RootTab.affirmations) {
                 AffirmationsView()
             }
-            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
-                PRMonitorView(highlightedEventID: $highlightedEventID)
+            Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
+                ChatTab()
             }
             Tab("승인", systemImage: "checkmark.shield", value: RootTab.approval) {
                 ApprovalsView(viewModel: approvals, openedApprovalID: $openedApprovalID)
@@ -123,8 +121,8 @@ struct RootView: View {
             Tab("세션", systemImage: "terminal", value: RootTab.sessions) {
                 SessionsView()
             }
-            Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
-                ChatTab()
+            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
+                PRMonitorView(highlightedEventID: $highlightedEventID)
             }
             Tab("임시공간", systemImage: "doc.text", value: RootTab.scratchpad) {
                 ScratchpadTab(viewModel: scratchpad)

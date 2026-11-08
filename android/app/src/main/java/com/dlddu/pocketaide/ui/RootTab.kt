@@ -32,8 +32,8 @@ enum class RootTab(val title: String, val icon: ImageVector, val area: Area) {
     val isInMore: Boolean get() = this in MORE_TABS
 
     companion object {
-        val BOTTOM_TABS = listOf(Affirmations, PrMonitor, Approval, Sessions, More)
-        val MORE_TABS = listOf(Chat, Scratchpad, Personal, Work, Routines, Notifications)
+        val BOTTOM_TABS = listOf(Affirmations, Chat, Approval, Sessions, More)
+        val MORE_TABS = listOf(PrMonitor, Scratchpad, Personal, Work, Routines, Notifications)
 
         fun forDeepLink(link: PushDeepLink): RootTab = when (link) {
             is PushDeepLink.Approval -> Approval
