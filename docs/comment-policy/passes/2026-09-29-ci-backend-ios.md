@@ -191,3 +191,8 @@
 | --- | --- | --- |
 | `ios/PocketAideWidget/AffirmationProvider.swift` 151–152 | 「Without a refresher the widget stalls at needsLogin once the access token lapses, until the app is next opened.」 (2줄) | 유지 — 위젯은 로그인 화면을 띄울 수 없어 refresher 가 쓸모없어 보이지만, 빠지면 액세스 토큰 만료 뒤 앱을 열 때까지 위젯이 로그인 필요 상태에 머문다 — 지우면 이 연결을 군더더기로 보고 걷어 그 회귀를 다시 들인다 |
 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` 135–137 | 「The app and widget share this keychain item. If the other process rotated the refresh token while ours was in flight, ours is stale rather than revoked — adopt theirs.」 (3줄) | 유지 — 4xx 에도 오류 대신 저장된 토큰을 돌려주는 이유(앱·위젯 두 프로세스의 동시 갱신 경합)는 코드만으로 드러나지 않는다 — 지우면 바로 위 「4xx 면 지운다」 주석과 어긋나는 예외로 보고 걷어, IdP 가 refresh token 을 회전시킬 때 동시 갱신마다 사용자를 로그아웃시킨다 |
+
+## 2026-11-08 탭 위치 교환
+
+- 제거: `ios/PocketAide/RootView.swift`의 PR 모니터 앞자리 설명 2줄. 채팅과 슬롯을 교환해 현재 배치와 맞지 않으며, 새 위치는 Tab 선언 순서로 드러난다. More 경유 딥링크의 실제 표시 동작은 이 주석으로 단정하지 않는다.
+- 나머지 유지 주석과 사유는 변경하지 않는다.
