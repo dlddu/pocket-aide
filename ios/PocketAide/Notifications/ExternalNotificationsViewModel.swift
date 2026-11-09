@@ -8,6 +8,7 @@ final class ExternalNotificationsViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var hasLoaded = false
     @Published private(set) var hasMore = false
+    @Published private(set) var isMarkingAllRead = false
     @Published var errorMessage: String?
 
     private(set) var api: APIClient?
@@ -80,6 +81,23 @@ final class ExternalNotificationsViewModel: ObservableObject {
             items[index] = items[index].markedRead(at: now)
             unreadCount = max(0, unreadCount - 1)
         }
+        onMarkedRead()
+    }
+
+    func markAllRead() async {
+        guard let api, !isMarkingAllRead, unreadCount > 0 else { return }
+        isMarkingAllRead = true
+        defer { isMarkingAllRead = false }
+        do {
+            _ = try await api.markAllExternalNotificationsRead()
+        } catch {
+            errorMessage = String(describing: error)
+            return
+        }
+        let now = Int64(Date().timeIntervalSince1970)
+        items = items.map { $0.isUnread ? $0.markedRead(at: now) : $0 }
+        unreadCount = 0
+        errorMessage = nil
         onMarkedRead()
     }
 }

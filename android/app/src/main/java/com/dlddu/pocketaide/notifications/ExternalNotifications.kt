@@ -34,6 +34,12 @@ data class ExternalNotificationsPage(
     @SerialName("unread_count") val unreadCount: Int = 0,
 )
 
+@Serializable
+data class MarkAllExternalNotificationsReadResult(
+    @SerialName("marked_count") val markedCount: Long = 0,
+    @SerialName("unread_count") val unreadCount: Int = 0,
+)
+
 object ExternalNotificationFormatting {
     const val PAGE_SIZE = 50
 
@@ -80,3 +86,11 @@ suspend fun ApiClient.markExternalNotificationRead(id: Long) {
         EmptyResponse.serializer(),
     )
 }
+
+suspend fun ApiClient.markAllExternalNotificationsRead(): MarkAllExternalNotificationsReadResult =
+    post(
+        "/api/external-notifications/read-all",
+        ExternalNotificationReadPayload(),
+        ExternalNotificationReadPayload.serializer(),
+        MarkAllExternalNotificationsReadResult.serializer(),
+    )

@@ -176,6 +176,7 @@ func main() {
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
 		p.Get("/api/external-notifications", handlers.ListExternalNotifications(externalNotificationStore))
 		p.Get("/api/external-notifications/{id}", handlers.GetExternalNotification(externalNotificationStore))
+		p.Post("/api/external-notifications/read-all", handlers.MarkAllExternalNotificationsRead(externalNotificationStore))
 		p.Post("/api/external-notifications/{id}/read", handlers.MarkExternalNotificationRead(externalNotificationStore))
 		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
 		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))

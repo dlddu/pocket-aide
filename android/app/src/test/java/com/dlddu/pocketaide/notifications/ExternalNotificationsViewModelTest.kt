@@ -105,6 +105,54 @@ class ExternalNotificationsViewModelTest {
     }
 
     @Test
+    fun markAllReadPostsAndClearsUnread() = runTest {
+        val vm = viewModel()
+        server.enqueue(MockResponse().setBody(page(listOf(3, 2), unread = 2)))
+        vm.reload()
+        server.takeRequest()
+        server.enqueue(MockResponse().setBody("""{"marked_count":2,"unread_count":0}"""))
+
+        vm.performMarkAllRead()
+
+        val post = server.takeRequest()
+        assertEquals("POST", post.method)
+        assertEquals("/api/external-notifications/read-all", post.path)
+        assertEquals(0, vm.state.value.unreadCount)
+        assertFalse(vm.state.value.isMarkingAllRead)
+        assertTrue(vm.state.value.items.all { !it.isUnread })
+        assertEquals(1, markedRead)
+    }
+
+    @Test
+    fun markAllReadSkipsWhenNothingUnread() = runTest {
+        val vm = viewModel()
+        server.enqueue(MockResponse().setBody(page(listOf(3), unread = 0)))
+        vm.reload()
+        server.takeRequest()
+
+        vm.performMarkAllRead()
+
+        assertEquals(0, server.requestCount)
+        assertEquals(0, markedRead)
+    }
+
+    @Test
+    fun markAllReadFailureSetsErrorAndResetsLoadingFlag() = runTest {
+        val vm = viewModel()
+        server.enqueue(MockResponse().setBody(page(listOf(3), unread = 1)))
+        vm.reload()
+        server.takeRequest()
+        server.enqueue(MockResponse().setResponseCode(500).setBody("""{"error":"db locked"}"""))
+
+        vm.performMarkAllRead()
+
+        assertFalse(vm.state.value.isMarkingAllRead)
+        assertEquals(1, vm.state.value.unreadCount)
+        assertEquals("""HTTP 500: {"error":"db locked"}""", vm.state.value.errorMessage)
+        assertEquals(0, markedRead)
+    }
+
+    @Test
     fun notificationFetchesWhenNotLoaded() = runTest {
         val vm = viewModel()
         server.enqueue(MockResponse().setBody(itemJson(42, read = true)))
