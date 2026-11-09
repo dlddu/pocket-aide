@@ -93,6 +93,17 @@ class ChatViewModelTest {
         assertFalse(vm.performSend("질문"))
         assertEquals(ChatError.UNREACHABLE, vm.state.value.error)
         assertTrue(vm.state.value.messages.isEmpty())
+
+        server.enqueue(
+            MockResponse().setResponseCode(503)
+                .setBody("""{"error":"all login slots are in use","code":"auth_pool_exhausted"}"""),
+        )
+        assertFalse(vm.performSend("질문"))
+        assertEquals(ChatError.SLOTS_BUSY, vm.state.value.error)
+
+        server.enqueue(MockResponse().setResponseCode(503).setBody("""{"error":"feature disabled on the session platform"}"""))
+        assertFalse(vm.performSend("질문"))
+        assertEquals(ChatError.UNREACHABLE, vm.state.value.error)
     }
 
     @Test

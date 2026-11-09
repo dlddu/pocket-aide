@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.sessions
 
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
+import com.dlddu.pocketaide.api.isAuthPoolExhausted
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -149,6 +150,7 @@ enum class AgentSessionError(val message: String) {
     DISABLED("이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요."),
     QUOTA_FULL("세션 출력 한도가 찼어요. 기존 출력은 볼 수 있지만 새 프롬프트는 보낼 수 없어요."),
     UNREACHABLE("세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요."),
+    SLOTS_BUSY("로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요."),
     UNKNOWN("세션 플랫폼에서 오류가 났어요. 잠시 후 다시 시도해 주세요.");
 
     companion object {
@@ -167,14 +169,15 @@ enum class AgentSessionError(val message: String) {
 
         fun fromStatus(status: Int): AgentSessionError = byStatus[status] ?: UNKNOWN
 
-        fun from(error: Throwable): AgentSessionError = when (error) {
-            is ApiException.BadStatus -> fromStatus(error.status)
-            is ApiException.Decoding -> UNKNOWN
+        fun from(error: Throwable): AgentSessionError = when {
+            error.isAuthPoolExhausted() -> SLOTS_BUSY
+            error is ApiException.BadStatus -> fromStatus(error.status)
+            error is ApiException.Decoding -> UNKNOWN
             else -> UNREACHABLE
         }
 
         fun forSnapshot(error: Throwable): AgentSessionError =
-            if (error is ApiException.BadStatus && error.status == 503) DISABLED else from(error)
+            if (error is ApiException.BadStatus && error.status == 503 && !error.isAuthPoolExhausted()) DISABLED else from(error)
     }
 }
 

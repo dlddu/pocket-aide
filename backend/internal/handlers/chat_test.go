@@ -24,7 +24,8 @@ import (
 type chatPlatform struct {
 	mu         sync.Mutex
 	transcript map[string]string
-	status     int // forced status for every call when non-zero
+	status     int    // forced status for every call when non-zero
+	statusBody string // body sent with the forced status
 	refresh    int
 }
 
@@ -33,6 +34,7 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer p.mu.Unlock()
 	if p.status != 0 {
 		w.WriteHeader(p.status)
+		_, _ = w.Write([]byte(p.statusBody))
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/v1")
@@ -186,6 +188,27 @@ func TestChat_PlatformErrors(t *testing.T) {
 		if rec := chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "hi"}, 1); rec.Code != tc.want {
 			t.Errorf("platform %d: send = %d %s, want %d", tc.status, rec.Code, rec.Body, tc.want)
 		}
+	}
+}
+
+// Exhausted login slots are a 503 like a disabled platform, but the app gets
+// auth_pool_exhausted so it can say so instead of "unreachable".
+func TestChat_AuthPoolExhausted(t *testing.T) {
+	router, platform, _ := newChatRouter(t)
+	platform.mu.Lock()
+	platform.status = http.StatusServiceUnavailable
+	platform.statusBody = `{"error":"auth pool exhausted: all 1 slots are held"}`
+	platform.mu.Unlock()
+	rec := chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "hi"}, 1)
+	if rec.Code != http.StatusServiceUnavailable || !strings.Contains(rec.Body.String(), `"code":"auth_pool_exhausted"`) {
+		t.Fatalf("send = %d %s, want 503 with auth_pool_exhausted", rec.Code, rec.Body)
+	}
+	platform.mu.Lock()
+	platform.statusBody = `{"error":"feature disabled"}`
+	platform.mu.Unlock()
+	rec = chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "hi"}, 1)
+	if rec.Code != http.StatusServiceUnavailable || strings.Contains(rec.Body.String(), "auth_pool_exhausted") {
+		t.Fatalf("send = %d %s, want a plain 503", rec.Code, rec.Body)
 	}
 }
 

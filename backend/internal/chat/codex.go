@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dlddu/pocket-aide/backend/internal/sessions"
 )
 
 // PRD-1 AC1·AC4 (2026-11-06 결정): the chat tab is one long-lived codex
@@ -41,9 +43,16 @@ var (
 )
 
 // PlatformError is a session-platform answer the caller should relay.
+// AuthPoolExhausted marks the 503 for exhausted login slots, which the app
+// shows differently from an unreachable platform.
 type PlatformError struct {
-	Op     string
-	Status int
+	Op                string
+	Status            int
+	AuthPoolExhausted bool
+}
+
+func platformError(op string, status int, body []byte) *PlatformError {
+	return &PlatformError{Op: op, Status: status, AuthPoolExhausted: sessions.AuthPoolExhausted(status, body)}
 }
 
 func (e *PlatformError) Error() string {
@@ -173,19 +182,19 @@ func (e *Engine) Send(ctx context.Context, userID int64, content string) (Messag
 			return Message{}, err
 		}
 	}
-	status, err := e.write(ctx, sessionID, content)
+	status, body, err := e.write(ctx, sessionID, content)
 	if err == nil && status == http.StatusNotFound {
 		// The platform session is gone (deleted or reclaimed): start a new one.
 		if sessionID, offset, err = e.openSession(ctx, userID, conv.ID); err != nil {
 			return Message{}, err
 		}
-		status, err = e.write(ctx, sessionID, content)
+		status, body, err = e.write(ctx, sessionID, content)
 	}
 	if err != nil {
 		return Message{}, err
 	}
 	if status != http.StatusOK && status != http.StatusAccepted {
-		return Message{}, &PlatformError{Op: "write", Status: status}
+		return Message{}, platformError("write", status, body)
 	}
 	// Stored only once the platform took it, so a failed send leaves no
 	// message without a reply; and stored even if the client went away.
@@ -325,10 +334,9 @@ func (e *Engine) read(ctx context.Context, sessionID string, offset int64) (stri
 	return out.Payload, out.NextOffset, status, nil
 }
 
-func (e *Engine) write(ctx context.Context, sessionID, content string) (int, error) {
+func (e *Engine) write(ctx context.Context, sessionID, content string) (int, []byte, error) {
 	body, _ := json.Marshal(map[string]string{"payload": content})
-	status, _, err := e.platform.Do(ctx, http.MethodPost, "/sessions/"+url.PathEscape(sessionID)+"/write", body)
-	return status, err
+	return e.platform.Do(ctx, http.MethodPost, "/sessions/"+url.PathEscape(sessionID)+"/write", body)
 }
 
 func sessionName(userID int64) string {
@@ -348,7 +356,7 @@ func (e *Engine) openSession(ctx context.Context, userID, convID int64) (string,
 	body, _ := json.Marshal(map[string]string{"name": sessionName(userID), "workloadType": workloadCodex})
 	status, raw, err := e.platform.Do(ctx, http.MethodPost, "/sessions", body)
 	if err == nil && status != http.StatusCreated && status != http.StatusOK {
-		err = &PlatformError{Op: "create", Status: status}
+		err = platformError("create", status, raw)
 	}
 	if err != nil {
 		if id, end, ok := e.adoptSession(context.WithoutCancel(ctx), userID); ok {

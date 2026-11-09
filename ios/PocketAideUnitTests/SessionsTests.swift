@@ -158,7 +158,7 @@ final class SessionsTests: XCTestCase {
         )
         XCTAssertEqual(AgentSessionError(APIError.badStatus(500, upstream)), .unknown)
         XCTAssertEqual(AgentSessionError(APIError.transport(URLError(.notConnectedToInternet))), .unreachable)
-        let all: [AgentSessionError] = [.unauthorized, .notFound, .busy, .tooLarge, .snapshotted, .queueFull, .disabled, .quotaFull, .unreachable, .unknown]
+        let all: [AgentSessionError] = [.unauthorized, .notFound, .busy, .tooLarge, .snapshotted, .queueFull, .disabled, .quotaFull, .unreachable, .slotsBusy, .unknown]
         XCTAssertEqual(Set(all.map(\.message)).count, all.count, "Each category needs its own guidance")
         XCTAssertFalse(all.contains { $0.message.contains("session-platform") })
     }
@@ -169,6 +169,12 @@ final class SessionsTests: XCTestCase {
         XCTAssertEqual(AgentSessionError(gateOff), .unreachable)
         XCTAssertEqual(AgentSessionError.forSnapshot(APIError.badStatus(409, "")), .busy)
         XCTAssertTrue(AgentSessionError.disabled.message.contains("데이터는 사라지지 않아요"), "A disabled archive must not read as data loss")
+    }
+
+    func testExhaustedLoginSlotsAreTheirOwnCategory() {
+        let exhausted = APIError.badStatus(503, #"{"error":"all login slots are in use","code":"auth_pool_exhausted"}"#)
+        XCTAssertEqual(AgentSessionError(exhausted), .slotsBusy)
+        XCTAssertEqual(AgentSessionError.forSnapshot(exhausted), .slotsBusy)
     }
 
     func testParsesNanosecondTimestamps() {

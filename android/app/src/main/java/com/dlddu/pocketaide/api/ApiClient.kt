@@ -23,6 +23,12 @@ sealed class ApiException(message: String, cause: Throwable? = null) : Exception
     class Transport(cause: Throwable) : ApiException("transport: ${cause.message}", cause)
 }
 
+/** The backend's code for a 503 whose cause is exhausted session login slots, not a disabled platform. */
+const val AUTH_POOL_EXHAUSTED = "auth_pool_exhausted"
+
+fun Throwable.isAuthPoolExhausted(): Boolean =
+    this is ApiException.BadStatus && status == 503 && body.contains(AUTH_POOL_EXHAUSTED)
+
 class ApiClient(
     baseUrl: String,
     private val tokenStore: TokenStore,

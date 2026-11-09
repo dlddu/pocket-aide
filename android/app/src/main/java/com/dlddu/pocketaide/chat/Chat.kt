@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.chat
 
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
+import com.dlddu.pocketaide.api.isAuthPoolExhausted
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -69,6 +70,7 @@ enum class ChatError(val message: String) {
     NO_CONVERSATION("먼저 메시지를 한 번 보내 주세요."),
     TOO_LARGE("메시지가 너무 깁니다."),
     UNREACHABLE("세션 플랫폼에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요."),
+    SLOTS_BUSY("로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요."),
     FAILED("요청을 처리하지 못했어요."),
     ;
 
@@ -77,7 +79,8 @@ enum class ChatError(val message: String) {
             is ApiException.BadStatus -> when (e.status) {
                 409 -> if (refreshing && e.body.contains("send a message first")) NO_CONVERSATION else BUSY
                 413 -> TOO_LARGE
-                502, 503, 504 -> UNREACHABLE
+                503 -> if (e.isAuthPoolExhausted()) SLOTS_BUSY else UNREACHABLE
+                502, 504 -> UNREACHABLE
                 else -> FAILED
             }
             is ApiException.Transport -> UNREACHABLE

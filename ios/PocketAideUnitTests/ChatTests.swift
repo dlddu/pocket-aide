@@ -25,6 +25,8 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(ChatError(APIError.badStatus(409, #"{"error":"a reply is still in progress"}"#)), .busy)
         XCTAssertEqual(ChatError(APIError.badStatus(409, #"{"error":"send a message first"}"#), refreshing: true), .noConversation)
         XCTAssertEqual(ChatError(APIError.badStatus(502, "")), .unreachable)
+        XCTAssertEqual(ChatError(APIError.badStatus(503, "")), .unreachable)
+        XCTAssertEqual(ChatError(APIError.badStatus(503, #"{"error":"all login slots are in use","code":"auth_pool_exhausted"}"#)), .slotsBusy)
         XCTAssertEqual(ChatError(APIError.badStatus(413, "")), .tooLarge)
         XCTAssertEqual(ChatError(APIError.transport(URLError(.timedOut))), .unreachable)
     }

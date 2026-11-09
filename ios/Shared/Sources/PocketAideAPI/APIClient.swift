@@ -35,6 +35,15 @@ public enum APIError: Error, CustomStringConvertible {
     case transport(Error)
     case missingBaseURL
 
+    /// The backend's code for a 503 whose cause is exhausted session login
+    /// slots, not a disabled platform.
+    public static let authPoolExhaustedCode = "auth_pool_exhausted"
+
+    public var isAuthPoolExhausted: Bool {
+        if case .badStatus(503, let body) = self { return body.contains(Self.authPoolExhaustedCode) }
+        return false
+    }
+
     public var description: String {
         switch self {
         case .badStatus(let s, let body): return "HTTP \(s): \(body)"
