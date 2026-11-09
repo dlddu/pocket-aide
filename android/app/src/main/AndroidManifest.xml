@@ -59,6 +59,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".notifications.ExternalNotificationActionReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".widget.PocketAideWidgetReceiver"
             android:exported="true"
             android:label="@string/widget_name">

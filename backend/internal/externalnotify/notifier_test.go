@@ -19,8 +19,8 @@ import (
 )
 
 type sent struct {
-	token, platform, title, body string
-	data                         map[string]any
+	token, platform, category, title, body string
+	data                                   map[string]any
 }
 
 type fakeSender struct {
@@ -29,10 +29,10 @@ type fakeSender struct {
 	errFor map[string]error
 }
 
-func (f *fakeSender) SendWithData(_ context.Context, d devicetokens.Device, title, body string, data map[string]any) error {
+func (f *fakeSender) SendWithCategory(_ context.Context, d devicetokens.Device, category, title, body string, data map[string]any) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.sent = append(f.sent, sent{d.Token, d.Platform, title, body, data})
+	f.sent = append(f.sent, sent{d.Token, d.Platform, category, title, body, data})
 	return f.errFor[d.Token]
 }
 
@@ -94,6 +94,9 @@ func TestSendGoesToEveryDeviceOfTheOwnerAsIs(t *testing.T) {
 		tokens = append(tokens, s.token)
 		if s.title != "백업 완료" || s.body != "스냅샷 3개" || !reflect.DeepEqual(s.data, map[string]any{"kind": "external_notification", "notification_id": int64(7)}) {
 			t.Fatalf("alert: title=%q body=%q data=%v, want the caller's text, the kind marker and the notification id", s.title, s.body, s.data)
+		}
+		if s.category != externalnotify.Category {
+			t.Fatalf("category = %q, want %q so Android builds the notification with its mark-read action", s.category, externalnotify.Category)
 		}
 	}
 	sort.Strings(tokens)

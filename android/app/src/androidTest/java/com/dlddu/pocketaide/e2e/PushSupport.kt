@@ -92,6 +92,7 @@ object Shade {
     private val device: UiDevice get() = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
     fun clearAppNotifications() {
+        headsUpOff
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.getSystemService(NotificationManager::class.java)?.cancelAll()
     }
@@ -107,7 +108,12 @@ object Shade {
     fun findContaining(text: String, timeoutMillis: Long = 20_000): UiObject2? =
         find(By.pkg(SYSTEM_UI).textContains(text), timeoutMillis)
 
+    private val headsUpOff by lazy {
+        device.executeShellCommand("settings put global heads_up_notifications_enabled 0")
+    }
+
     private fun find(selector: BySelector, timeoutMillis: Long): UiObject2? {
+        headsUpOff
         if (!device.hasObject(By.res(NOTIFICATION_STACK))) device.openNotification()
         if (device.wait(Until.hasObject(selector), timeoutMillis / 2) == true) return device.findObject(selector)
         device.openNotification()

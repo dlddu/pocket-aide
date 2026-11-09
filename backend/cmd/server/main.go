@@ -125,7 +125,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("fcm: %v", err)
 		}
-		fcmClient = fcmClient.WithChannels(map[string]string{approvalpush.Category: fcm.ChannelApproval}).WithDataOnly(approvalpush.Category)
+		fcmClient = fcmClient.WithChannels(map[string]string{approvalpush.Category: fcm.ChannelApproval}).WithDataOnly(approvalpush.Category, externalnotify.Category)
 		if cfg.FCMHost != "" {
 			log.Printf("fcm: pushes go to %s (FCM_HOST)", cfg.FCMHost)
 			fcmClient = fcmClient.WithEndpoint(cfg.FCMHost)
