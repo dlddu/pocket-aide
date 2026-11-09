@@ -133,7 +133,7 @@ class ApprovalPushTest : E2eTest() {
             Fcm.deliver(rejectPush)
             Shade.tapAction("승인 요청 · $rejectKey", "거절")
             assertTrue("거절 on the notification should reject on the server", E2e.eventually(20_000) { api.approvalStatus(rejected) == "REJECTED" })
-            assertTrue("The notification should report the rejection", Shade.findContaining("거절됨 — $rejectContext") != null)
+            assertTrue("A decided notification should leave the shade", Shade.awaitNoAppNotifications())
             assertEquals("The caller should read REJECTED", "REJECTED", rejectCaller.view(rejected)?.optString("status"))
             assertEquals("Rejecting one request must leave the other pending", "PENDING", api.approvalStatus(approved))
 
@@ -141,7 +141,7 @@ class ApprovalPushTest : E2eTest() {
             Fcm.deliver(approvePush)
             Shade.tapAction("승인 요청 · $approveKey", "승인")
             assertTrue("승인 on the notification should approve on the server", E2e.eventually(20_000) { api.approvalStatus(approved) == "APPROVED" })
-            assertTrue("The notification should report the approval", Shade.findContaining("승인됨 — $approveContext") != null)
+            assertTrue("A decided notification should leave the shade", Shade.awaitNoAppNotifications())
             assertEquals("The caller should read APPROVED", "APPROVED", approveCaller.view(approved)?.optString("status"))
             Shade.close()
         } finally {

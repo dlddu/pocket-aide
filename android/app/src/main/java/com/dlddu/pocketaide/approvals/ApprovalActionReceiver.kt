@@ -34,7 +34,12 @@ class ApprovalActionReceiver : BroadcastReceiver() {
                 } catch (e: Exception) {
                     Result.failure(e)
                 }
-                showResult(app, notificationId, approvalId, title, ApprovalNotificationAction.resultNotice(result))
+                if (result.getOrNull() is ApprovalDecisionOutcome.Decided) {
+                    // The decision went through as asked, so the notification has nothing left to say.
+                    NotificationManagerCompat.from(app).cancel(notificationId)
+                } else {
+                    showResult(app, notificationId, approvalId, title, ApprovalNotificationAction.resultNotice(result))
+                }
             } finally {
                 pending.finish()
             }

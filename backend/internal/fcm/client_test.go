@@ -132,7 +132,7 @@ func TestSendWithDataUsesTheDefaultChannelAndNoCategory(t *testing.T) {
 	if !reflect.DeepEqual(msg["data"], map[string]any{"kind": "external_notification", "notification_id": "7"}) {
 		t.Fatalf("data: %v", msg["data"])
 	}
-	if ch := msg["android"].(map[string]any)["notification"].(map[string]any)["channel_id"]; ch != "default" {
+	if ch := msg["android"].(map[string]any)["notification"].(map[string]any)["channel_id"]; ch != "general" {
 		t.Fatalf("channel: %v", ch)
 	}
 }
