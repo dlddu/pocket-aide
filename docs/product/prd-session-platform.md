@@ -27,7 +27,7 @@ iOS 앱 ──(OIDC Bearer)──► pocket-aide 백엔드 ──(클러스터 �
 |------|-------------|---------------------|
 | session-platform 인증 | OpenAPI 스펙에 인증 정의 없음 | 프록시가 **유일한 인증 경계** (AC1) |
 | 사용자 개념 | 없음. 대신 호출자 축의 테넌트가 있다 — ServiceAccount 토큰(audience `session-platform`)으로 식별, 토큰 없는 호출은 모든 세션을 보는 운영자 (session-platform `docs/prd/multitenancy.md`) | PocketAide는 소유를 따지지 않고, 세션 탭 계정의 테넌트(`homelab-k3s-mcp`, K3s MCP 세션 도구와 공유) 목록을 그대로 보인다 (AC2) |
-| 워크로드 | 타입은 플랫폼이 늘려 간다(`shell`·`claude-code`·`approval-gated`·`minimax-code` …), 생성 시 고정·불변. 모델을 받는지는 타입마다 다르다 | 타입 목록을 플랫폼 `GET /config` 카탈로그에서 받는다 — pocket-aide·앱에 하드코딩하지 않는다 (AC3) |
+| 워크로드 | 타입은 플랫폼이 늘리고 줄인다(`shell`·`claude-code`·`minimax-code`·`codex-chat`·`codex-task` … — `approval-gated`는 2026-11-09 session-platform #202로 제거), 생성 시 고정·불변. 모델을 받는지는 타입마다 다르다 | 타입 목록을 플랫폼 `GET /config` 카탈로그에서 받는다 — pocket-aide·앱에 하드코딩하지 않는다 (AC3) |
 | 모델 | 생성 시 고정·불변. `GET /config`가 기본값+카탈로그 제공 | 생성 화면에서만 선택 (AC4) |
 | 스냅샷 | `CLAUDE_CODE_ARCHIVE_ENABLED` 게이트, 기본 off. off면 503 + pod 유지 | 실패가 아닌 "비활성" 안내 (AC8) |
 | 출력 | append-only 버퍼, 서버 발급 바이트 커서, 누적 256 MiB 상한 | 커서 규약 준수 (AC7) |
