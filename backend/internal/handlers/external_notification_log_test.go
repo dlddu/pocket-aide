@@ -192,6 +192,72 @@ func TestExternalNotificationDetailAndReadArePerItem(t *testing.T) {
 	expectCode(t, env.do(http.MethodGet, "/api/external-notifications/abc", "oidc-alice", nil), http.StatusBadRequest, "bad id")
 }
 
+type markAllReadBody struct {
+	MarkedCount int64 `json:"marked_count"`
+	UnreadCount int   `json:"unread_count"`
+}
+
+func (e *approvalEnv) markAllRead(sub string) markAllReadBody {
+	e.t.Helper()
+	rec := e.do(http.MethodPost, "/api/external-notifications/read-all", "oidc-"+sub, nil)
+	expectCode(e.t, rec, http.StatusOK, "mark all read")
+	return decodeApproval[markAllReadBody](e.t, rec)
+}
+
+func TestExternalNotificationMarkAllRead(t *testing.T) {
+	push := &recordingNotifier{}
+	env := newNotificationEnv(t, push)
+	key := env.issue("alice", "infra-ci")
+	env.issue("bob", "bob-ci")
+	env.notify(key.Key, map[string]any{"title": "one", "requester": "r"})
+	env.notify(key.Key, map[string]any{"title": "two", "requester": "r"})
+	env.notify(key.Key, map[string]any{"title": "three", "requester": "r"})
+
+	first := env.externalNotifications("alice", "").Items[2]
+	expectCode(t, env.do(http.MethodPost, "/api/external-notifications/"+strconv.FormatInt(first.ID, 10)+"/read", "oidc-alice", nil), http.StatusNoContent, "mark first read")
+
+	got := env.markAllRead("alice")
+	if got.MarkedCount != 2 || got.UnreadCount != 0 {
+		t.Fatalf("got = %+v, want only the two still-unread items marked", got)
+	}
+
+	after := env.externalNotifications("alice", "")
+	if after.UnreadCount != 0 {
+		t.Fatalf("unread_count = %d, want 0", after.UnreadCount)
+	}
+	for _, item := range after.Items {
+		if item.ReadAt == nil {
+			t.Fatalf("item = %+v, want every item read", item)
+		}
+	}
+
+	if got := env.markAllRead("alice"); got.MarkedCount != 0 || got.UnreadCount != 0 {
+		t.Fatalf("second call = %+v, want nothing left to mark", got)
+	}
+
+	env.notify(key.Key, map[string]any{"title": "after mark-all", "requester": "r"})
+	if got := env.externalNotifications("alice", ""); got.UnreadCount != 1 {
+		t.Fatalf("unread_count = %d, want the notification sent after mark-all to still count as unread", got.UnreadCount)
+	}
+
+	if got := env.externalNotifications("bob", ""); len(got.Items) != 0 {
+		t.Fatalf("bob = %+v, want mark-all scoped to alice to leave bob untouched", got)
+	}
+}
+
+func TestExternalNotificationMarkAllReadWithNothingUnread(t *testing.T) {
+	push := &recordingNotifier{}
+	env := newNotificationEnv(t, push)
+	env.issue("alice", "infra-ci")
+
+	got := env.markAllRead("alice")
+	if got.MarkedCount != 0 || got.UnreadCount != 0 {
+		t.Fatalf("got = %+v, want a no-op on an empty list", got)
+	}
+
+	expectCode(t, env.do(http.MethodPost, "/api/external-notifications/read-all", "", nil), http.StatusUnauthorized, "no token")
+}
+
 func TestExternalNotificationsPageWithBefore(t *testing.T) {
 	push := &recordingNotifier{}
 	env := newNotificationEnv(t, push)

@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,6 +68,8 @@ private val EMPTY_TOP = 96.dp
 private val EMPTY_TITLE_SIZE = 15.sp
 private val UNREAD_BADGE_SIZE = 10.sp
 private val UNREAD_BADGE_HORIZONTAL = 6.dp
+private val MARK_ALL_READ_ICON_SIZE = 13.dp
+private val MARK_ALL_READ_PROGRESS_STROKE = 2.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +101,11 @@ fun ExternalNotificationsScreen(
             .testTag("notifications.screen"),
     ) {
         Column(Modifier.fillMaxSize()) {
-            Header(unreadCount = state.unreadCount)
+            Header(
+                unreadCount = state.unreadCount,
+                isMarkingAllRead = state.isMarkingAllRead,
+                onMarkAllRead = viewModel::markAllRead,
+            )
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = viewModel::refresh,
@@ -164,7 +171,7 @@ fun ExternalNotificationsScreen(
 }
 
 @Composable
-private fun Header(unreadCount: Int) {
+private fun Header(unreadCount: Int, isMarkingAllRead: Boolean, onMarkAllRead: () -> Unit) {
     val ink = DesignTokens.Colors.ink(AREA)
     Row(
         Modifier
@@ -192,8 +199,43 @@ private fun Header(unreadCount: Int) {
             )
         }
         if (unreadCount > 0) {
-            CountBadge(count = unreadCount, label = "새 알림", countTag = "notifications.unread.count")
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
+                CountBadge(count = unreadCount, label = "새 알림", countTag = "notifications.unread.count")
+                MarkAllReadButton(isMarkingAllRead = isMarkingAllRead, onClick = onMarkAllRead)
+            }
         }
+    }
+}
+
+@Composable
+private fun MarkAllReadButton(isMarkingAllRead: Boolean, onClick: () -> Unit) {
+    val accent = DesignTokens.Colors.accent(AREA)
+    val shape = RoundedCornerShape(ApprovalMetrics.chipRadius)
+    Row(
+        Modifier
+            .clip(shape)
+            .border(ApprovalMetrics.ruleWidth, accent, shape)
+            .clickable(enabled = !isMarkingAllRead, role = Role.Button, onClick = onClick)
+            .padding(horizontal = DesignTokens.Spacing.sm, vertical = ApprovalMetrics.chipVertical)
+            .testTag("notifications.mark-all-read.button"),
+        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (isMarkingAllRead) {
+            CircularProgressIndicator(
+                color = accent,
+                strokeWidth = MARK_ALL_READ_PROGRESS_STROKE,
+                modifier = Modifier.size(MARK_ALL_READ_ICON_SIZE),
+            )
+        } else {
+            Icon(
+                Icons.Filled.Check,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(MARK_ALL_READ_ICON_SIZE),
+            )
+        }
+        Text("전체 읽음", style = DesignTokens.Typography.style(ApprovalMetrics.chipSize, FontWeight.Bold), color = accent)
     }
 }
 

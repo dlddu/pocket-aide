@@ -15,6 +15,7 @@ data class ExternalNotificationsUiState(
     val unreadCount: Int = 0,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
+    val isMarkingAllRead: Boolean = false,
     val hasLoaded: Boolean = false,
     val hasMore: Boolean = false,
     val errorMessage: String? = null,
@@ -62,6 +63,10 @@ class ExternalNotificationsViewModel(
             val item = notification(id) ?: return@launch
             select(item)
         }
+    }
+
+    fun markAllRead() {
+        viewModelScope.launch { performMarkAllRead() }
     }
 
     internal suspend fun reload() {
@@ -138,6 +143,30 @@ class ExternalNotificationsViewModel(
             if (index < 0 || !state.items[index].isUnread) return@update state
             val items = state.items.toMutableList().also { it[index] = it[index].markedRead(now) }
             state.copy(items = items, unreadCount = maxOf(0, state.unreadCount - 1))
+        }
+        onMarkedRead()
+    }
+
+    internal suspend fun performMarkAllRead() {
+        if (_state.value.isMarkingAllRead || _state.value.unreadCount == 0) return
+        _state.update { it.copy(isMarkingAllRead = true) }
+        try {
+            api.markAllExternalNotificationsRead()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(errorMessage = e.message ?: e.toString()) }
+            return
+        } finally {
+            _state.update { it.copy(isMarkingAllRead = false) }
+        }
+        val now = clock() / 1000L
+        _state.update { state ->
+            state.copy(
+                items = state.items.map { if (it.isUnread) it.markedRead(now) else it },
+                unreadCount = 0,
+                errorMessage = null,
+            )
         }
         onMarkedRead()
     }

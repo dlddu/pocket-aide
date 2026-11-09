@@ -104,6 +104,7 @@ type ExternalNotificationReader interface {
 	UnreadCount(ctx context.Context, userID int64) (int, error)
 	Get(ctx context.Context, userID, id int64) (externalnotify.Item, error)
 	MarkRead(ctx context.Context, userID, id int64) error
+	MarkAllRead(ctx context.Context, userID int64) (int64, error)
 }
 
 // ListExternalNotifications handles GET /api/external-notifications (PRD-12 AC17).
@@ -189,5 +190,23 @@ func MarkExternalNotificationRead(store ExternalNotificationReader) http.Handler
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// MarkAllExternalNotificationsRead handles POST /api/external-notifications/read-all: a "전체 읽음" action
+// marks every notification unread for the caller as seen in one request.
+func MarkAllExternalNotificationsRead(store ExternalNotificationReader) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			writeError(w, http.StatusInternalServerError, "no user in context")
+			return
+		}
+		marked, err := store.MarkAllRead(r.Context(), u.ID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "mark all read failed")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"marked_count": marked, "unread_count": 0})
 	}
 }

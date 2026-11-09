@@ -75,6 +75,7 @@ func newNotificationEnvWithLog(t *testing.T, push handlers.NotificationSender, l
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(store))
 		p.Get("/api/external-notifications", handlers.ListExternalNotifications(notes))
 		p.Get("/api/external-notifications/{id}", handlers.GetExternalNotification(notes))
+		p.Post("/api/external-notifications/read-all", handlers.MarkAllExternalNotificationsRead(notes))
 		p.Post("/api/external-notifications/{id}/read", handlers.MarkExternalNotificationRead(notes))
 	})
 	r.Group(func(x chi.Router) {
