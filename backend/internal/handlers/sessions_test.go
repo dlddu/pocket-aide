@@ -40,7 +40,7 @@ const catalogPlatformConfig = `{"claudeCode":{"defaultModel":"~anthropic/claude-
   {"type":"shell","label":"Shell","description":"bash","takesModel":false,"input":"terminal","defaultModel":null,"models":[]},
   {"type":"claude-code","label":"Claude Code","description":"agent","takesModel":true,"input":"prompt","defaultModel":"~anthropic/claude-opus-latest","models":["sonnet","opus"]},
   {"type":"minimax-code","label":"MiniMax Code","description":"mcode","takesModel":true,"input":"prompt","defaultModel":"platform-default","models":[]},
-  {"type":"approval-gated","label":"Approval-gated","description":"gated","takesModel":true,"input":"prompt","defaultModel":"~anthropic/claude-opus-latest","models":["sonnet"]},
+  {"type":"codex-chat","label":"Codex Chat","description":"codex","takesModel":true,"input":"prompt","defaultModel":"gpt-5","models":["gpt-5"]},
   {"type":"future-kind","label":"Future","description":"?","takesModel":false,"input":"hologram","defaultModel":"stray","models":["x"]}
  ]}`
 
@@ -568,7 +568,7 @@ func TestSessionConfigRelaysCatalog(t *testing.T) {
 	for _, w := range cat.WorkloadTypes {
 		types = append(types, w.Type)
 	}
-	if strings.Join(types, ",") != "shell,claude-code,minimax-code,approval-gated,future-kind" {
+	if strings.Join(types, ",") != "shell,claude-code,minimax-code,codex-chat,future-kind" {
 		t.Fatalf("catalog order must be the platform's, got %v", types)
 	}
 	mm, _ := cat.Workload("minimax-code")
