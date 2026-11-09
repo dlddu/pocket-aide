@@ -221,8 +221,8 @@
   - 1단계: 목록 자리에 「세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.」와 「다시 시도」가 보인다. 빈 상태 문구는 보이지 않는다.
   - 3단계: 타입 칸에 「세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.」와 「다시 시도」가 보이고, 「만들기」를 누를 수 없다. 내부 주소·오류 원문은 보이지 않는다.
 - **검증 AC**: AC11
-- **구현 상태**: 구현됨 — 백엔드는 플랫폼 도달 불가를 502로 돌려주고, 앱은 카탈로그 조회 실패를 기억해 안내와 「다시 시도」를 보인다. 목록·상세의 같은 상태(502·503·네트워크)는 「세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.」 배너다.
-- **관련 코드 테스트**: `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `backend/internal/handlers/sessions_test.go` — `TestSessionPlatformUnreachableIsBadGateway`, `ios/PocketAideUnitTests/SessionsTests.swift` — `testErrorCategoriesNeverExposeUpstreamText`
+- **구현 상태**: 구현됨 — 백엔드는 플랫폼 도달 불가를 502로 돌려주고, 앱은 카탈로그 조회 실패를 기억해 안내와 「다시 시도」를 보인다. 목록·상세의 같은 상태(502·503·네트워크)는 「세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.」 배너다. *2026-11-09*: 503 중 로그인 슬롯 소진(`code: auth_pool_exhausted`)만은 「로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요.」로 따로 안내한다.
+- **관련 코드 테스트**: `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `backend/internal/handlers/sessions_test.go` — `TestSessionPlatformUnreachableIsBadGateway`·`TestSessionAuthPoolExhaustedKeepsItsCode`, `ios/PocketAideUnitTests/SessionsTests.swift` — `testErrorCategoriesNeverExposeUpstreamText`·`testExhaustedLoginSlotsAreTheirOwnCategory`, `android/app/src/test/java/com/dlddu/pocketaide/sessions/SessionsModelTest.kt` — `errorMapping`
 
 
 ### 시나리오 13: 터미널 타입 세션은 명령으로 실행되고 제어 문자 없이 보인다

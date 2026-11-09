@@ -29,6 +29,7 @@ type fakePlatform struct {
 	creates   []map[string]any
 	next      int
 	statusFor map[string]int
+	bodyFor   map[string]string // body for a forced status; default leaks pod detail
 	config    string
 }
 
@@ -44,7 +45,7 @@ const catalogPlatformConfig = `{"claudeCode":{"defaultModel":"~anthropic/claude-
  ]}`
 
 func newFakePlatform() *fakePlatform {
-	return &fakePlatform{sessions: map[string]map[string]any{}, statusFor: map[string]int{}, config: legacyPlatformConfig}
+	return &fakePlatform{sessions: map[string]map[string]any{}, statusFor: map[string]int{}, bodyFor: map[string]string{}, config: legacyPlatformConfig}
 }
 
 func (f *fakePlatform) seed(name, workload, lastAccess string) string {
@@ -79,11 +80,15 @@ func (f *fakePlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	f.calls = append(f.calls, call)
 	forced, hasForced := f.statusFor[call]
+	forcedBody, hasBody := f.bodyFor[call]
 	f.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 	if hasForced {
 		w.WriteHeader(forced)
-		_, _ = w.Write([]byte(`{"error":"pod session-x-pod on node k3s-1 failed"}`))
+		if !hasBody {
+			forcedBody = `{"error":"pod session-x-pod on node k3s-1 failed"}`
+		}
+		_, _ = w.Write([]byte(forcedBody))
 		return
 	}
 	path := strings.TrimPrefix(r.URL.Path, "/api/v1")
@@ -308,6 +313,41 @@ func TestSessionUpstreamErrorKeepsStatusButNotBody(t *testing.T) {
 		}
 		if strings.Contains(rec.Body.String(), "k3s-1") || strings.Contains(rec.Body.String(), "pod") {
 			t.Errorf("upstream %d: body leaks upstream detail: %s", status, rec.Body.String())
+		}
+	}
+}
+
+// session-platform answers 503 both for a disabled feature and for exhausted
+// login slots; only the latter carries auth_pool_exhausted to the app, on a
+// create and on the actions that restore a session.
+func TestSessionAuthPoolExhaustedKeepsItsCode(t *testing.T) {
+	fx := newSessionFixture(t)
+	s := createSession(t, fx, map[string]any{"name": "snap"}, 1)
+	exhausted := `{"error":"auth pool exhausted: all 1 slots are held"}`
+	fx.platform.mu.Lock()
+	fx.platform.statusFor["POST /api/v1/sessions"] = http.StatusServiceUnavailable
+	fx.platform.bodyFor["POST /api/v1/sessions"] = exhausted
+	fx.platform.statusFor["POST /api/v1/sessions/"+s.ID+"/write"] = http.StatusServiceUnavailable
+	fx.platform.bodyFor["POST /api/v1/sessions/"+s.ID+"/write"] = exhausted
+	fx.platform.statusFor["POST /api/v1/sessions/"+s.ID+"/snapshot"] = http.StatusServiceUnavailable
+	fx.platform.bodyFor["POST /api/v1/sessions/"+s.ID+"/snapshot"] = `{"error":"archive disabled"}`
+	fx.platform.mu.Unlock()
+
+	for _, tc := range []struct {
+		path string
+		body any
+		want bool
+	}{
+		{"/api/sessions", map[string]any{"name": "x"}, true},
+		{"/api/sessions/" + s.ID + "/write", map[string]any{"payload": "hi"}, true},
+		{"/api/sessions/" + s.ID + "/snapshot", nil, false},
+	} {
+		rec := doTodo(t, fx.router, http.MethodPost, tc.path, tc.body, 1)
+		if rec.Code != http.StatusServiceUnavailable {
+			t.Errorf("%s: got %d, want 503", tc.path, rec.Code)
+		}
+		if got := strings.Contains(rec.Body.String(), sessions.ErrorCodeAuthPoolExhausted); got != tc.want {
+			t.Errorf("%s: body %s, want auth_pool_exhausted %v", tc.path, rec.Body.String(), tc.want)
 		}
 	}
 }

@@ -107,6 +107,8 @@ func writeChatError(w http.ResponseWriter, err error) {
 	case errors.As(err, &platformErr) && (platformErr.Status == http.StatusUnauthorized || platformErr.Status == http.StatusForbidden):
 		// The platform refused the chat tab's tenant; that is not the app user's credential.
 		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "session platform refused the chat tenant"})
+	case errors.As(err, &platformErr) && platformErr.AuthPoolExhausted:
+		writeAuthPoolExhausted(w)
 	case errors.As(err, &platformErr):
 		writeSessionError(w, platformErr.Status)
 	default:

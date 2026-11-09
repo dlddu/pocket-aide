@@ -70,6 +70,7 @@ public enum ChatError: Hashable, Sendable {
     case noConversation
     case tooLarge
     case unreachable
+    case slotsBusy
     case failed
 
     public static let maxMessageBytes = 16 * 1024
@@ -80,7 +81,8 @@ public enum ChatError: Hashable, Sendable {
             switch status {
             case 409: self = refreshing && body.contains("send a message first") ? .noConversation : .busy
             case 413: self = .tooLarge
-            case 502, 503, 504: self = .unreachable
+            case 503: self = body.contains(APIError.authPoolExhaustedCode) ? .slotsBusy : .unreachable
+            case 502, 504: self = .unreachable
             default: self = .failed
             }
         case .transport?, .missingBaseURL?:
@@ -96,6 +98,7 @@ public enum ChatError: Hashable, Sendable {
         case .noConversation: return "먼저 메시지를 한 번 보내 주세요."
         case .tooLarge: return "메시지가 너무 깁니다."
         case .unreachable: return "세션 플랫폼에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요."
+        case .slotsBusy: return "로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요."
         case .failed: return "요청을 처리하지 못했어요."
         }
     }
