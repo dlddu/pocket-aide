@@ -44,6 +44,7 @@
   같은 날 알림 상세 시트(AC17 개정 — 줄임 없는 상세)를 구현과 같은 PR 에서 더하며 시나리오 21에 8단계를 덧붙였다(「구현됨」 유지).
   같은 날 푸시 탭 → 그 알림 상세·상세를 열면 확인(AC16·AC17 개정)을 구현과 같은 PR 에서 반영하며 시나리오 19의 7단계, 시나리오 21의 3·4·8단계를 고치고 9단계를 덧붙였다(「구현됨」 유지).
   같은 날 `requester` 필수화(AC17 2단계)를 구현과 같은 PR 에서 반영하며 시나리오 19의 3단계에 누락·공백 `requester` 를, 시나리오 21의 3단계 「ping」에 `requester` 를 더했다(「구현됨」 유지).
+  2026-11-09 Android 알림의 「읽음」 버튼(AC17 개정)을 구현과 같은 PR 에서 반영하며 시나리오 21에 10단계를 덧붙였다(「구현됨」 유지).
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
@@ -412,7 +413,7 @@
   - 5단계: 셋 다 400이고 대기 목록에 새 요청이 생기지 않는다.
   - 6단계: 대기 목록 항목과 푸시는 세션 제목·이유를 보이지 않고 이전 형식 그대로다.
 - **검증 AC**: AC6, AC1, AC10
-- **구현 상태**: 구현됨 — 서버: 호출자 계약의 선택 필드 `sessionId`(128자)·`reason`(2000자, 앞뒤 공백 trim · 빈 값 = 없음 · 초과 400 · 그 밖 필드 400), 생성 시점 session-platform `GET /api/v1/sessions/{id}` 2초 조회로 `session_name` 저장(실패·404·타임아웃은 빈 이름으로 201), 앱용 JSON `session_id`·`session_name`·`reason`(마이그레이션 `0016_approval_session_reason`). 앱: 상세 메타 「세션」 행(`ApprovalFormatting.sessionLabel`)과 「에이전트 설명」 섹션(`ApprovalFormatting.agentReason`), 필드가 없는 옛 서버 응답도 디코딩된다. 목록·푸시는 변경 없음. CI 에는 세션 플랫폼이 없어(`e2e-mocking-policy.md` BF-5 와 같은 원인) 1·2단계의 실제 제목 조회는 앱 E2E 로 관찰되지 않고 서버 핸들러 테스트의 가짜 control-plane 으로 잰다. 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
+- **구현 상태**: 구현됨 — 서버: 호출자 계약의 선택 필드 `sessionId`(128자)·`reason`(2000자, 앞뒤 공백 trim · 빈 값 = 없음 · 초과 400 · 그 밖 필드 400), 생성 시점 session-platform `GET /api/v1/sessions/{id}` 2초 조회로 `session_name` 저장(실패·404·타임아웃은 빈 이름으로 201), 앱용 JSON `session_id`·`session_name`·`reason`(마이그레이션 `0016_approval_session_reason`). 앱: 상세 메타 「세션」 행(`ApprovalFormatting.sessionLabel`)과 「에이전트 설명」 섹션(`ApprovalFormatting.agentReason`), 필드가 없는 옛 서버 응답도 디코딩된다. 목록·푸시는 변경 없음. CI 에는 세션 플랫폼이 없어(`e2e-mocking-policy.md` BF-5 와 같은 원인) 1·2단계의 실제 제목 조회는 앱 E2E 로 관찰되지 않고 서버 핸들러 테스트의 가짜 control-plane 으로 잰다. Android: 단순 알림 푸시를 데이터 전용(카테고리 `EXTERNAL_NOTIFICATION`)으로 받아 앱이 그린 알림에 「읽음」 버튼(`ExternalNotificationActionReceiver` — 확인 처리 후 알림 지움·위젯 갱신, 10단계). 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
 - **관련 코드 테스트**: `backend/internal/handlers/approval_session_reason_test.go` — `TestApprovalCreateStoresTrimmedSessionAndReasonWithLookedUpName`·`TestApprovalCreateWithoutSessionOrReasonKeepsFieldsEmptyAndSkipsLookup`·`TestApprovalCreateSurvivesSessionLookupFailure`·`TestApprovalCreateSurvivesUnknownAndUnreachableSession`·`TestApprovalCreateRejectsOverlongSessionOrReason`, `ios/PocketAideUnitTests/ApprovalsTests.swift` — `testDecodesSessionAndReasonAndToleratesServersWithoutThem`·`testSessionRowLabel`·`testAgentReasonShownOnlyWhenPresent`
 
 
@@ -428,6 +429,7 @@
   7. 백엔드를 멈추고 화면을 다시 연 다음, 백엔드를 되살리고 「다시 시도」를 누른다.
   8. 호출자가 200자 `requester` 와 여러 줄 `body` 로 알림을 보내고, 화면을 새로고침한 뒤 그 행을 누른다. 상세에서 요청 주체를 길게 눌러 복사한 다음 「닫기」를 누른다.
   9. 「ping」 상세를 열어 둔 채 호출자가 `{"title": "상세 위로 온 알림", "requester": "r"}` 을 보내고, 그 푸시를 탭한다.
+  10. (Android) 호출자가 `{"title": "읽음 버튼", "requester": "r"}` 을 보내고, 알림에서 「읽음」을 누른다.
 - **기대 결과**:
   - 1단계: 「받은 알림이 없어요.」가 보인다.
   - 2단계: 맨 위 행에 제목 「백업 완료」, 본문, 「infra-ci · 키」, 「요청 nightly 백업 크론잡」, 받은 시각, 「1/1 기기」와 「새 알림」 표시가 보인다.
@@ -437,7 +439,8 @@
   - 6단계: 처음 50건 뒤로 이전 기록이 이어서 불러와지고, 같은 행이 두 번 보이지 않는다.
   - 7단계: 오류 배너가 보이고 기록을 잘못 비우지 않는다. 다시 시도하면 목록이 돌아온다.
   - 9단계: 떠 있던 「ping」 상세가 「상세 위로 온 알림」의 상세로 바뀐다. 닫으면 두 행 모두 「새 알림」이 없다.
+  - 10단계: 앱을 열지 않고 알림이 사라지고, 알림 기록에서 「읽음 버튼」 행에 「새 알림」 표시가 없다.
   - 8단계: 목록 행의 요청 주체는 두 줄에서 끝이 말줄임으로 잘린다. 상세 시트에는 제목·본문 전체, 「보낸 호출자」 「infra-ci · 키」, 「요청 주체」 200자 전체, 「받은 시각」(날짜와 초), 「도달」이 줄임 없이 보이고 요청 주체를 복사할 수 있다. 닫으면 목록으로 돌아오고 그 행의 「새 알림」 표시가 사라져 있다.
 - **검증 AC**: AC17, AC16, AC15
-- **구현 상태**: 구현됨 — 서버: 마이그레이션 `0017_external_notifications`, 발송 전 기록(기록 실패 시 500·발송 없음, 기기 목록 실패 시 기록 삭제), 앱용 `GET /api/external-notifications`(`items`·`unread_count`, `limit`·`before`)·`GET /api/external-notifications/{id}`·`POST /api/external-notifications/{id}/read`(알림 하나 확인), 푸시 페이로드 `notification_id`. 앱: 「더 보기」의 「알림 기록」 탭(`ExternalNotificationsView`), 상세를 열면 그 알림 확인 처리 후 위젯 타임라인 갱신, 푸시 탭(`pocketaide://notifications?id=`)으로 그 알림 상세 열기(떠 있는 상세도 교체), 끝에서 이전 기록 더 불러오기, 행을 누르면 줄임 없는 상세 시트(`ExternalNotificationDetailSheet` — 텍스트 선택 가능). 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
+- **구현 상태**: 구현됨 — 서버: 마이그레이션 `0017_external_notifications`, 발송 전 기록(기록 실패 시 500·발송 없음, 기기 목록 실패 시 기록 삭제), 앱용 `GET /api/external-notifications`(`items`·`unread_count`, `limit`·`before`)·`GET /api/external-notifications/{id}`·`POST /api/external-notifications/{id}/read`(알림 하나 확인), 푸시 페이로드 `notification_id`. 앱: 「더 보기」의 「알림 기록」 탭(`ExternalNotificationsView`), 상세를 열면 그 알림 확인 처리 후 위젯 타임라인 갱신, 푸시 탭(`pocketaide://notifications?id=`)으로 그 알림 상세 열기(떠 있는 상세도 교체), 끝에서 이전 기록 더 불러오기, 행을 누르면 줄임 없는 상세 시트(`ExternalNotificationDetailSheet` — 텍스트 선택 가능). Android: 단순 알림 푸시를 데이터 전용(카테고리 `EXTERNAL_NOTIFICATION`)으로 받아 앱이 그린 알림에 「읽음」 버튼(`ExternalNotificationActionReceiver` — 확인 처리 후 알림 지움·위젯 갱신, 10단계). 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
 - **관련 코드 테스트**: `backend/internal/handlers/external_notification_log_test.go` — `TestExternalNotificationIsRecordedWithCallerAndRequester`·`TestExternalNotificationRecordsServiceAccountCaller`·`TestExternalNotificationRequesterTooLongIsRejected`·`TestExternalNotificationsAreScopedToTheOwner`·`TestExternalNotificationSendFailureLeavesNoRecord`·`TestExternalNotificationIsNotSentWhenItCannotBeRecorded`·`TestExternalNotificationPushCarriesTheRecordedID`·`TestExternalNotificationDetailAndReadArePerItem`·`TestExternalNotificationsPageWithBefore`, `ios/PocketAideUnitTests/ExternalNotificationsTests.swift`
