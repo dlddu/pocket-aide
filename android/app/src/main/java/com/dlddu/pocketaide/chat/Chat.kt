@@ -39,11 +39,25 @@ data class ChatPending(
 )
 
 @Serializable
+data class ChatQueued(
+    val content: String = "",
+    @SerialName("queued_at") val queuedAt: Long = 0,
+)
+
+@Serializable
 data class ChatView(
     val conversation: ChatConversation,
     val messages: List<ChatMessage> = emptyList(),
     val pending: ChatPending? = null,
+    val queued: ChatQueued? = null,
 )
+
+/** A send either went out at once or, with a reply already in progress, is
+ * held to go right after (PRD-1 AC1, 2026-11-09 개정). */
+sealed class ChatSendOutcome {
+    data class Sent(val message: ChatMessage) : ChatSendOutcome()
+    data class Queued(val queued: ChatQueued) : ChatSendOutcome()
+}
 
 @Serializable
 data class ChatPluginRefresh(
@@ -60,7 +74,7 @@ data class ChatPluginRefresh(
 internal data class ChatSendPayload(val content: String)
 
 @Serializable
-internal data class ChatSendResponse(val message: ChatMessage)
+internal data class ChatSendResponse(val message: ChatMessage? = null, val queued: ChatQueued? = null)
 
 @Serializable
 internal class ChatEmptyPayload
@@ -130,13 +144,26 @@ private fun chatLinkEnd(text: String, match: IntRange): Int {
 
 suspend fun ApiClient.chat(): ChatView = get("/api/chat", ChatView.serializer())
 
-suspend fun ApiClient.sendChatMessage(content: String): ChatMessage =
-    post(
+/** Always safe to call whether or not a reply is in progress: the server
+ * sends at once when it can, and otherwise holds the message to send right
+ * after (PRD-1 AC1, 2026-11-09 개정). */
+suspend fun ApiClient.sendChatMessage(content: String): ChatSendOutcome {
+    val response = post(
         "/api/chat/messages",
         ChatSendPayload(content),
         ChatSendPayload.serializer(),
         ChatSendResponse.serializer(),
-    ).message
+    )
+    response.message?.let { return ChatSendOutcome.Sent(it) }
+    response.queued?.let { return ChatSendOutcome.Queued(it) }
+    error("chat send answered with neither a message nor a queued one")
+}
+
+/** Drops the message held for after the reply in progress, if it has not
+ * already been sent. */
+suspend fun ApiClient.cancelQueuedChatMessage() {
+    delete("/api/chat/queue")
+}
 
 suspend fun ApiClient.refreshChatPlugins(): ChatPluginRefresh =
     post(

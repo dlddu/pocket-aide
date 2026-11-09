@@ -6,6 +6,7 @@ final class ChatViewModel: ObservableObject {
     @Published private(set) var conversation: ChatConversation?
     @Published private(set) var messages: [ChatMessage] = []
     @Published private(set) var pending: ChatPending?
+    @Published private(set) var queued: ChatQueued?
     @Published private(set) var hasLoaded = false
     @Published private(set) var isSending = false
     @Published private(set) var isRefreshing = false
@@ -26,8 +27,10 @@ final class ChatViewModel: ObservableObject {
     }
 
     var isReplying: Bool { pending != nil }
-    var canSend: Bool { hasLoaded && !isSending && !isReplying && !isRefreshing }
-    var canRefresh: Bool { canSend && !messages.isEmpty }
+    // Sending while a reply is in progress queues instead of failing (server
+    // decides), so only an already-queued message blocks the composer.
+    var canSend: Bool { hasLoaded && !isSending && queued == nil && !isRefreshing }
+    var canRefresh: Bool { hasLoaded && !isSending && !isReplying && !isRefreshing && !messages.isEmpty }
 
     func pollWhileVisible() async {
         while !Task.isCancelled {
@@ -43,6 +46,7 @@ final class ChatViewModel: ObservableObject {
             conversation = view.conversation
             messages = view.messages
             pending = view.pending
+            queued = view.queued
             hasLoaded = true
             if error == .unreachable { error = nil }
         } catch is CancellationError {
@@ -64,14 +68,35 @@ final class ChatViewModel: ObservableObject {
         notice = nil
         defer { isSending = false }
         do {
-            let sent = try await api.sendChatMessage(text)
-            messages.append(sent)
-            if pending == nil { pending = ChatPending() }
+            switch try await api.sendChatMessage(text) {
+            case .sent(let sent):
+                messages.append(sent)
+                if pending == nil { pending = ChatPending() }
+            case .queued(let held):
+                queued = held
+            }
             return true
         } catch {
             self.error = ChatError(error)
             return false
         }
+    }
+
+    /// Drops the message waiting for after the reply in progress. A 404
+    /// means it was already dispatched just as the user cancelled — not an
+    /// error worth showing, since it is about to appear as a sent message.
+    func cancelQueued() async {
+        guard let api, queued != nil else { return }
+        do {
+            try await api.cancelQueuedChatMessage()
+        } catch {
+            if case .badStatus(404, _)? = error as? APIError {
+            } else {
+                self.error = ChatError(error)
+                return
+            }
+        }
+        queued = nil
     }
 
     func refreshPlugins() async {

@@ -89,6 +89,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	r := chi.NewRouter()
 	r.Get("/api/chat", handlers.GetChat(store, engine))
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
+	r.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))
 	return r, platform, engine
 }
@@ -119,6 +120,9 @@ type chatView struct {
 	Pending *struct {
 		Content string `json:"content"`
 	} `json:"pending"`
+	Queued *struct {
+		Content string `json:"content"`
+	} `json:"queued"`
 }
 
 func getChat(t *testing.T, router http.Handler, userID int64) chatView {
@@ -152,6 +156,18 @@ func TestChat_SendThenPoll(t *testing.T) {
 	}
 	if other := getChat(t, router, 2); len(other.Messages) != 0 {
 		t.Fatalf("user 2 sees %+v", other.Messages)
+	}
+}
+
+// PRD-1 AC1 (2026-11-09 개정): cancelling with nothing queued is a 404, and
+// GET /api/chat reports no queued message while idle.
+func TestChat_CancelQueuedWithNothingQueued(t *testing.T) {
+	router, _, _ := newChatRouter(t)
+	if v := getChat(t, router, 1); v.Queued != nil {
+		t.Fatalf("fresh chat queued = %+v, want nil", v.Queued)
+	}
+	if rec := chatDo(t, router, http.MethodDelete, "/api/chat/queue", nil, 1); rec.Code != http.StatusNotFound {
+		t.Fatalf("cancel with nothing queued = %d %s", rec.Code, rec.Body)
 	}
 }
 

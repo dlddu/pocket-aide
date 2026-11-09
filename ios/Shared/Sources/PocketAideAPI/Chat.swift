@@ -43,10 +43,33 @@ public struct ChatPending: Codable, Hashable, Sendable {
     }
 }
 
+public struct ChatQueued: Codable, Hashable, Sendable {
+    public let content: String
+    public let queuedAt: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case content
+        case queuedAt = "queued_at"
+    }
+
+    public init(content: String = "", queuedAt: Int64 = 0) {
+        self.content = content
+        self.queuedAt = queuedAt
+    }
+}
+
 public struct ChatThread: Codable, Sendable {
     public let conversation: ChatConversation
     public let messages: [ChatMessage]
     public let pending: ChatPending?
+    public let queued: ChatQueued?
+}
+
+/// A send either went out at once or, with a reply already in progress, is
+/// held to go right after (PRD-1 AC1, 2026-11-09 개정).
+public enum ChatSendOutcome: Sendable {
+    case sent(ChatMessage)
+    case queued(ChatQueued)
 }
 
 public struct ChatPluginRefresh: Codable, Hashable, Sendable {
@@ -148,7 +171,8 @@ struct ChatSendPayload: Encodable {
 }
 
 struct ChatSendResponse: Decodable {
-    let message: ChatMessage
+    let message: ChatMessage?
+    let queued: ChatQueued?
 }
 
 struct ChatEmptyPayload: Encodable {}
@@ -158,9 +182,24 @@ public extension APIClient {
         try await get("/api/chat", authenticated: true)
     }
 
-    func sendChatMessage(_ content: String) async throws -> ChatMessage {
+    /// Always safe to call whether or not a reply is in progress: the
+    /// server sends at once when it can, and otherwise holds the message
+    /// to send right after (PRD-1 AC1, 2026-11-09 개정).
+    func sendChatMessage(_ content: String) async throws -> ChatSendOutcome {
         let response: ChatSendResponse = try await post("/api/chat/messages", body: ChatSendPayload(content: content), authenticated: true)
-        return response.message
+        if let message = response.message {
+            return .sent(message)
+        }
+        guard let queued = response.queued else {
+            throw APIError.badStatus(200, "chat send answered with neither a message nor a queued one")
+        }
+        return .queued(queued)
+    }
+
+    /// Drops the message held for after the reply in progress, if it has
+    /// not already been sent.
+    func cancelQueuedChatMessage() async throws {
+        try await delete("/api/chat/queue", authenticated: true)
     }
 
     func refreshChatPlugins() async throws -> ChatPluginRefresh {

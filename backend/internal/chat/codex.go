@@ -38,8 +38,10 @@ const (
 )
 
 var (
-	ErrBusy           = errors.New("a reply is still in progress")
-	ErrNoConversation = errors.New("no codex session yet")
+	ErrBusy            = errors.New("a reply is still in progress")
+	ErrNoConversation  = errors.New("no codex session yet")
+	ErrQueueFull       = errors.New("a message is already queued")
+	ErrNoQueuedMessage = errors.New("no message queued")
 )
 
 // PlatformError is a session-platform answer the caller should relay.
@@ -147,6 +149,17 @@ func (e *Engine) appendPending(userID int64, text string) {
 	e.mu.Unlock()
 }
 
+// resetPending clears a still-claimed turn's accumulated preview text before
+// a dequeued message starts a new one in its place.
+func (e *Engine) resetPending(userID int64) {
+	e.mu.Lock()
+	if p, ok := e.turns[userID]; ok {
+		p.Content = ""
+		p.StartedAt = e.now().Unix()
+	}
+	e.mu.Unlock()
+}
+
 // Send stores the user's message, hands it to the codex session and follows
 // the reply in the background; the reply lands in chat_messages when the
 // turn ends. One turn per user at a time.
@@ -237,6 +250,114 @@ func (e *Engine) finishTurn(ctx context.Context, userID, convID int64, sessionID
 	if saveErr := e.store.SetPlatform(save, userID, convID, sessionID, next); saveErr != nil {
 		e.logger.Error("chat: save transcript offset", "user", userID, "err", saveErr)
 	}
+	e.resetPending(userID)
+	e.drainQueued(save, userID, convID)
+}
+
+// Queue sends content right away if no reply is in progress, or holds it for
+// after the one that is (PRD-1 AC1 2026-11-09 개정). At most one message
+// waits at a time; a second arrival while one is already queued is ErrQueueFull.
+func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Message, *QueuedMessage, error) {
+	msg, err := e.Send(ctx, userID, content)
+	if err == nil {
+		return msg, nil, nil
+	}
+	if !errors.Is(err, ErrBusy) {
+		return Message{}, nil, err
+	}
+	conv, cErr := e.store.Conversation(ctx, userID)
+	if cErr != nil {
+		return Message{}, nil, cErr
+	}
+	existing, gErr := e.store.GetQueued(ctx, userID, conv.ID)
+	if gErr != nil {
+		return Message{}, nil, gErr
+	}
+	if existing != nil {
+		return Message{}, nil, ErrQueueFull
+	}
+	q, sErr := e.store.SetQueued(ctx, userID, conv.ID, content, e.now().Unix())
+	if sErr != nil {
+		return Message{}, nil, sErr
+	}
+	// The turn in progress may have ended between the busy check above and
+	// the write just made, in which case nothing is left running to drain
+	// this message — claim it ourselves and start its turn if so. Whichever
+	// of this and the turn's own drainQueued call sees the row first wins;
+	// claim() makes that exclusive.
+	if e.claim(userID) {
+		e.running.Add(1)
+		go func() {
+			defer e.running.Done()
+			defer e.release(userID)
+			e.drainQueued(context.WithoutCancel(ctx), userID, conv.ID)
+		}()
+	}
+	return Message{}, &q, nil
+}
+
+// CancelQueued drops the message held for after the turn in progress, if one
+// is still waiting — once drainQueued has taken it, there is nothing left to
+// cancel and the caller sees ErrNoQueuedMessage.
+func (e *Engine) CancelQueued(ctx context.Context, userID int64) error {
+	conv, err := e.store.Conversation(ctx, userID)
+	if err != nil {
+		return err
+	}
+	cleared, err := e.store.ClearQueued(ctx, userID, conv.ID)
+	if err != nil {
+		return err
+	}
+	if !cleared {
+		return ErrNoQueuedMessage
+	}
+	return nil
+}
+
+// drainQueued sends the message waiting behind the turn that just ended, if
+// any, and follows its reply the same way a fresh Send would. The claim for
+// userID must already be held by the caller.
+func (e *Engine) drainQueued(ctx context.Context, userID, convID int64) {
+	queued, err := e.store.TakeQueued(ctx, userID, convID)
+	if err != nil {
+		e.logger.Error("chat: take queued message", "user", userID, "err", err)
+		return
+	}
+	if queued == nil {
+		return
+	}
+	conv, err := e.store.GetSession(ctx, userID, convID)
+	if err != nil {
+		e.logger.Error("chat: dequeue lookup conversation", "user", userID, "err", err)
+		return
+	}
+	sessionID, offset := conv.platformSessionID, conv.transcriptOffset
+	if sessionID == "" {
+		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
+			e.logger.Error("chat: dequeue open session", "user", userID, "err", err)
+			return
+		}
+	}
+	status, body, err := e.write(ctx, sessionID, queued.Content)
+	if err == nil && status == http.StatusNotFound {
+		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
+			e.logger.Error("chat: dequeue reopen session", "user", userID, "err", err)
+			return
+		}
+		status, body, err = e.write(ctx, sessionID, queued.Content)
+	}
+	if err != nil {
+		e.logger.Error("chat: dequeued message write failed", "user", userID, "err", err)
+		return
+	}
+	if status != http.StatusOK && status != http.StatusAccepted {
+		e.logger.Error("chat: dequeued message refused", "user", userID, "status", status, "body", string(body))
+		return
+	}
+	if _, saveErr := e.store.AppendMessage(ctx, userID, convID, RoleUser, queued.Content); saveErr != nil {
+		e.logger.Error("chat: save dequeued message", "user", userID, "err", saveErr)
+	}
+	e.finishTurn(ctx, userID, convID, sessionID, offset)
 }
 
 // catchUp reads what the transcript holds past offset. Finished turns are

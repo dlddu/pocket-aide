@@ -19,6 +19,30 @@ final class ChatTests: XCTestCase {
         let thread = try JSONDecoder().decode(ChatThread.self, from: Data(json.utf8))
         XCTAssertTrue(thread.messages.isEmpty)
         XCTAssertNil(thread.pending)
+        XCTAssertNil(thread.queued)
+    }
+
+    // PRD-1 AC1 (2026-11-09 개정): a message sent while a reply is in progress
+    // is held, surfaced here the same way a pending reply is.
+    func testDecodesAQueuedMessage() throws {
+        let json = #"""
+        {"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},
+         "messages":[],"pending":{"content":"쓰는 중","started_at":3},
+         "queued":{"content":"다음 질문","queued_at":4}}
+        """#
+        let thread = try JSONDecoder().decode(ChatThread.self, from: Data(json.utf8))
+        XCTAssertEqual(thread.queued?.content, "다음 질문")
+        XCTAssertEqual(thread.queued?.queuedAt, 4)
+    }
+
+    func testSendOutcomeDecodesSentOrQueued() throws {
+        let sent = try JSONDecoder().decode(ChatSendResponse.self, from: Data(#"{"message":{"id":1,"role":"user","content":"hi","created_at":1}}"#.utf8))
+        XCTAssertEqual(sent.message?.content, "hi")
+        XCTAssertNil(sent.queued)
+
+        let queued = try JSONDecoder().decode(ChatSendResponse.self, from: Data(#"{"queued":{"content":"hi","queued_at":5}}"#.utf8))
+        XCTAssertNil(queued.message)
+        XCTAssertEqual(queued.queued?.content, "hi")
     }
 
     func testMapsErrors() {
