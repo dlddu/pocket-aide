@@ -16,7 +16,7 @@ object NotificationChannels {
                 NotificationChannel(
                     DEFAULT,
                     context.getString(R.string.notification_channel_default),
-                    NotificationManager.IMPORTANCE_DEFAULT,
+                    NotificationManager.IMPORTANCE_HIGH,
                 ),
                 NotificationChannel(
                     APPROVAL,

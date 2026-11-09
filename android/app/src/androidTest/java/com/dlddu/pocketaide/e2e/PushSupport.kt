@@ -96,6 +96,12 @@ object Shade {
         context.getSystemService(NotificationManager::class.java)?.cancelAll()
     }
 
+    fun awaitNoAppNotifications(timeoutMillis: Long = 20_000): Boolean {
+        val manager = InstrumentationRegistry.getInstrumentation().targetContext.getSystemService(NotificationManager::class.java)
+            ?: return false
+        return E2e.eventually(timeoutMillis) { manager.activeNotifications.isEmpty() }
+    }
+
     fun find(text: String, timeoutMillis: Long = 20_000): UiObject2? = find(By.pkg(SYSTEM_UI).text(text), timeoutMillis)
 
     fun findContaining(text: String, timeoutMillis: Long = 20_000): UiObject2? =
