@@ -3,8 +3,9 @@ import PocketAideAPI
 import SwiftUI
 
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
-// action refreshes plugin skills (one conversation, no "new chat"), and the
-// composer's round button sends (voice mode is not built yet).
+// two actions sync the conversation on demand and refresh plugin skills (one
+// conversation, no "new chat"), and the composer's round button sends (voice
+// mode is not built yet).
 struct ChatTab: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
@@ -28,7 +29,10 @@ struct ChatTab: View {
                 title: (viewModel.conversation?.title).flatMap { $0.isEmpty ? nil : $0 } ?? "새 대화",
                 subtitle: "\(viewModel.messages.count)개의 메시지"
             ) {
-                refreshButton
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    syncButton
+                    refreshButton
+                }
             }
             Rectangle().fill(DesignTokens.Color.rule(area)).frame(height: 1)
             if let notice = viewModel.notice {
@@ -49,15 +53,44 @@ struct ChatTab: View {
         }
     }
 
+    private var syncButton: some View {
+        headerIconButton(
+            systemImage: "arrow.triangle.2.circlepath",
+            isLoading: viewModel.isSyncing,
+            enabled: viewModel.canSync,
+            accessibilityLabel: "대화 동기화",
+            accessibilityIdentifier: "chat.sync.button"
+        ) {
+            Task { await viewModel.sync() }
+        }
+    }
+
     private var refreshButton: some View {
-        Button {
+        headerIconButton(
+            systemImage: "arrow.clockwise",
+            isLoading: viewModel.isRefreshing,
+            enabled: viewModel.canRefresh,
+            accessibilityLabel: "스킬 새로고침",
+            accessibilityIdentifier: "chat.refresh.button"
+        ) {
             Task { await viewModel.refreshPlugins() }
-        } label: {
+        }
+    }
+
+    private func headerIconButton(
+        systemImage: String,
+        isLoading: Bool,
+        enabled: Bool,
+        accessibilityLabel: String,
+        accessibilityIdentifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
             Group {
-                if viewModel.isRefreshing {
+                if isLoading {
                     ProgressView().tint(DesignTokens.Color.ink(area))
                 } else {
-                    Image(systemName: "arrow.clockwise")
+                    Image(systemName: systemImage)
                         .font(.system(size: 14, weight: .semibold))
                 }
             }
@@ -66,10 +99,10 @@ struct ChatTab: View {
             .foregroundStyle(DesignTokens.Color.ink(area))
         }
         .buttonStyle(.plain)
-        .disabled(!viewModel.canRefresh)
-        .opacity(viewModel.canRefresh ? 1 : 0.4)
-        .accessibilityLabel("스킬 새로고침")
-        .accessibilityIdentifier("chat.refresh.button")
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.4)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 
     private func banner(_ text: String, color: Color, identifier: String) -> some View {
