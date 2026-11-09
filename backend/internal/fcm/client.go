@@ -28,7 +28,7 @@ const (
 // Android notification channel IDs; they must match the channels the Android app creates, or the push lands in the OS fallback channel.
 const (
 	ChannelApproval = "approval"
-	ChannelDefault  = "general"
+	ChannelDefault  = "default"
 )
 
 // Client posts messages for one Firebase project.

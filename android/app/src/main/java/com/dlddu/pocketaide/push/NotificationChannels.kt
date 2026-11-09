@@ -6,15 +6,11 @@ import android.content.Context
 import com.dlddu.pocketaide.R
 
 object NotificationChannels {
-    // A channel's importance is fixed once created, so raising it to heads-up needs a new ID.
-    const val DEFAULT = "general"
+    const val DEFAULT = "default"
     const val APPROVAL = "approval"
-
-    private const val LEGACY_DEFAULT = "default"
 
     fun register(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
-        manager.deleteNotificationChannel(LEGACY_DEFAULT)
         manager.createNotificationChannels(
             listOf(
                 NotificationChannel(
