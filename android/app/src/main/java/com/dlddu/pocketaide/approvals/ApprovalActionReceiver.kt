@@ -35,7 +35,6 @@ class ApprovalActionReceiver : BroadcastReceiver() {
                     Result.failure(e)
                 }
                 if (result.getOrNull() is ApprovalDecisionOutcome.Decided) {
-                    // The decision went through as asked, so the notification has nothing left to say.
                     NotificationManagerCompat.from(app).cancel(notificationId)
                 } else {
                     showResult(app, notificationId, approvalId, title, ApprovalNotificationAction.resultNotice(result))
