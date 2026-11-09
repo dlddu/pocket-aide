@@ -79,6 +79,46 @@ class ChatViewModelTest {
         assertTrue(vm.state.value.canSend)
     }
 
+    // PRD-1 AC1 (2026-11-09 개정): a message sent while a reply is in progress
+    // is held instead of failing, and can be cancelled before it is sent.
+    @Test
+    fun sendWhileBusyQueuesInsteadOfFailing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"content":"다음","queued_at":5}}"""))
+
+        assertTrue(vm.performSend("다음"))
+        assertEquals("다음", vm.state.value.queued?.content)
+        assertFalse(vm.state.value.canSend)
+
+        server.enqueue(MockResponse().setResponseCode(204))
+        vm.performCancelQueued()
+
+        val request = server.takeRequest()
+        assertEquals("/api/chat/queue", request.path)
+        assertEquals("DELETE", request.method)
+        assertNull(vm.state.value.queued)
+        assertTrue(vm.state.value.canSend)
+    }
+
+    @Test
+    fun cancelQueuedSwallowsAlreadyDispatched() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"content":"다음","queued_at":5}}"""))
+        vm.performSend("다음")
+
+        server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":"no message queued"}"""))
+        vm.performCancelQueued()
+
+        assertNull(vm.state.value.queued)
+        assertNull(vm.state.value.error)
+    }
+
     @Test
     fun busyAndUnreachableMapToMessages() = runTest {
         val vm = ChatViewModel(api())

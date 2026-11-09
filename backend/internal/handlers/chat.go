@@ -32,10 +32,16 @@ func GetChat(store *chat.Store, engine *chat.Engine) http.HandlerFunc {
 			http.Error(w, "get failed", http.StatusInternalServerError)
 			return
 		}
+		queued, err := store.GetQueued(r.Context(), u.ID, conv.ID)
+		if err != nil {
+			http.Error(w, "get failed", http.StatusInternalServerError)
+			return
+		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"conversation": conv,
 			"messages":     messages,
 			"pending":      engine.Pending(u.ID),
+			"queued":       queued,
 		})
 	}
 }
@@ -44,10 +50,12 @@ type chatMessagePayload struct {
 	Content string `json:"content"`
 }
 
-// SendChatMessage handles POST /api/chat/messages. It stores the message,
-// hands it to the user's codex session and answers 202 at once; the reply
-// arrives through GET /api/chat. The first message of a codex session asks
-// for a ChatGPT sign-in, and that request is the reply.
+// SendChatMessage handles POST /api/chat/messages. It stores the message and
+// hands it to the user's codex session at once, or — if a reply is already
+// in progress — holds it to send right after (PRD-1 AC1, 2026-11-09 개정),
+// answering 202 either way; the reply arrives through GET /api/chat. The
+// first message of a codex session asks for a ChatGPT sign-in, and that
+// request is the reply.
 func SendChatMessage(engine *chat.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -70,12 +78,33 @@ func SendChatMessage(engine *chat.Engine) http.HandlerFunc {
 			http.Error(w, "content too long", http.StatusRequestEntityTooLarge)
 			return
 		}
-		msg, err := engine.Send(r.Context(), u.ID, content)
+		msg, queued, err := engine.Queue(r.Context(), u.ID, content)
 		if err != nil {
 			writeChatError(w, err)
 			return
 		}
+		if queued != nil {
+			writeJSON(w, http.StatusAccepted, map[string]any{"queued": queued})
+			return
+		}
 		writeJSON(w, http.StatusAccepted, map[string]any{"message": msg})
+	}
+}
+
+// CancelQueuedChatMessage handles DELETE /api/chat/queue: drops the message
+// held for after the reply in progress, if it has not already been sent.
+func CancelQueuedChatMessage(engine *chat.Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			http.Error(w, "no user in context", http.StatusInternalServerError)
+			return
+		}
+		if err := engine.CancelQueued(r.Context(), u.ID); err != nil {
+			writeChatError(w, err)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
@@ -100,6 +129,10 @@ func RefreshChatPlugins(engine *chat.Engine) http.HandlerFunc {
 func writeChatError(w http.ResponseWriter, err error) {
 	var platformErr *chat.PlatformError
 	switch {
+	case errors.Is(err, chat.ErrQueueFull):
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "a message is already queued"})
+	case errors.Is(err, chat.ErrNoQueuedMessage):
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "no message queued"})
 	case errors.Is(err, chat.ErrBusy):
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "a reply is still in progress"})
 	case errors.Is(err, chat.ErrNoConversation):

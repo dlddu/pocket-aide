@@ -197,6 +197,7 @@ func main() {
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
 		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine))
 		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
+		p.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
 		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))
 		p.Get("/api/sessions", handlers.ListSessions(sessionsPlatform))

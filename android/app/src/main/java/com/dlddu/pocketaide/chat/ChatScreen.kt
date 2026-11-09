@@ -117,7 +117,7 @@ fun ChatScreen(api: ApiClient) {
             Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = viewModel::dismissNotice)
         }
         state.error?.let { Banner(it.message, DesignTokens.StatusColors.failure(), tag = "chat.error", onDismiss = null) }
-        Messages(state, Modifier.weight(1f))
+        Messages(state, Modifier.weight(1f), onCancelQueued = viewModel::cancelQueued)
         Composer(
             draft = draft,
             onDraftChange = { draft = it },
@@ -201,10 +201,10 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-private fun Messages(state: ChatUiState, modifier: Modifier) {
+private fun Messages(state: ChatUiState, modifier: Modifier, onCancelQueued: () -> Unit) {
     val listState = rememberLazyListState()
-    val count = state.messages.size + if (state.isReplying) 1 else 0
-    LaunchedEffect(count, state.pending?.content) {
+    val count = state.messages.size + (if (state.isReplying) 1 else 0) + (if (state.queued != null) 1 else 0)
+    LaunchedEffect(count, state.pending?.content, state.queued) {
         if (count > 0) listState.animateScrollToItem(count - 1)
     }
     if (state.hasLoaded && count == 0) {
@@ -241,6 +241,11 @@ private fun Messages(state: ChatUiState, modifier: Modifier) {
                     AiBubble(pending.content, pending = true, Modifier.widthIn(max = width * AI_MAX_FRACTION))
                 }
             }
+            state.queued?.let { queued ->
+                item(key = "queued") {
+                    QueuedBubble(queued.content, onCancelQueued, Modifier.widthIn(max = width * ME_MAX_FRACTION))
+                }
+            }
         }
     }
 }
@@ -264,6 +269,41 @@ private fun MyBubble(text: String, modifier: Modifier) {
                 .padding(horizontal = DesignTokens.Spacing.lg, vertical = BUBBLE_VERTICAL)
                 .testTag("chat.message.mine"),
         )
+    }
+}
+
+/** A message held for after the reply in progress (PRD-1 AC1, 2026-11-09
+ * 개정) — dimmer than a sent bubble, with a cancel button while it waits. */
+@Composable
+private fun QueuedBubble(text: String, onCancel: () -> Unit, modifier: Modifier) {
+    val shape = RoundedCornerShape(
+        topStart = DesignTokens.Radius.bubble,
+        topEnd = DesignTokens.Radius.bubble,
+        bottomEnd = BUBBLE_TAIL,
+        bottomStart = DesignTokens.Radius.bubble,
+    )
+    Column(
+        Modifier.fillMaxWidth().testTag("chat.message.queued"),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+    ) {
+        Text(
+            text,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg),
+            color = DesignTokens.Colors.card(CHAT_AREA),
+            modifier = modifier
+                .clip(shape)
+                .background(DesignTokens.Colors.ink(CHAT_AREA).copy(alpha = MUTED_OPACITY))
+                .padding(horizontal = DesignTokens.Spacing.lg, vertical = BUBBLE_VERTICAL),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "대기 중",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = DesignTokens.Colors.ink(CHAT_AREA).copy(alpha = MUTED_OPACITY),
+            )
+            Chip("취소", tag = "chat.queued.cancel", onClick = onCancel)
+        }
     }
 }
 
@@ -356,7 +396,7 @@ private fun Typing() {
 }
 
 @Composable
-private fun Chip(label: String, onClick: () -> Unit) {
+private fun Chip(label: String, tag: String = "chat.message.copy", onClick: () -> Unit) {
     val shape = RoundedCornerShape(DesignTokens.Radius.chip)
     Text(
         label,
@@ -368,8 +408,14 @@ private fun Chip(label: String, onClick: () -> Unit) {
             .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), shape)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
-            .testTag("chat.message.copy"),
+            .testTag(tag),
     )
+}
+
+private fun composerHint(state: ChatUiState): String = when {
+    state.queued != null -> "대기 중인 메시지가 있어요 — 답이 끝나면 보낼게요"
+    state.isReplying -> "답을 쓰는 중이에요 — 보내면 끝난 뒤 바로 전달돼요"
+    else -> "ChatGPT 계정의 Codex가 답해요"
 }
 
 @Composable
@@ -434,7 +480,7 @@ private fun Composer(draft: String, onDraftChange: (String) -> Unit, state: Chat
             }
         }
         Text(
-            if (state.isReplying) "답을 쓰는 중이에요 — 끝나면 이어서 보낼 수 있어요" else "ChatGPT 계정의 Codex가 답해요",
+            composerHint(state),
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
             modifier = Modifier.testTag("chat.composer.hint"),

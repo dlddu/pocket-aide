@@ -3,6 +3,7 @@ package com.dlddu.pocketaide.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dlddu.pocketaide.api.ApiClient
+import com.dlddu.pocketaide.api.ApiException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ data class ChatUiState(
     val conversation: ChatConversation? = null,
     val messages: List<ChatMessage> = emptyList(),
     val pending: ChatPending? = null,
+    val queued: ChatQueued? = null,
     val hasLoaded: Boolean = false,
     val isSending: Boolean = false,
     val isRefreshing: Boolean = false,
@@ -24,7 +26,10 @@ data class ChatUiState(
     val error: ChatError? = null,
 ) {
     val isReplying: Boolean get() = pending != null
-    val canSend: Boolean get() = hasLoaded && !isSending && !isReplying && !isRefreshing
+
+    // Sending while a reply is in progress queues instead of failing (server
+    // decides), so only an already-queued message blocks the composer.
+    val canSend: Boolean get() = hasLoaded && !isSending && queued == null && !isRefreshing
     val canRefresh: Boolean get() = hasLoaded && !isSending && !isReplying && !isRefreshing && messages.isNotEmpty()
 }
 
@@ -43,6 +48,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         viewModelScope.launch { if (performSend(content)) onSent() }
     }
 
+    fun cancelQueued() {
+        viewModelScope.launch { performCancelQueued() }
+    }
+
     fun refreshPlugins() {
         viewModelScope.launch { performRefreshPlugins() }
     }
@@ -59,6 +68,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                     conversation = view.conversation,
                     messages = view.messages,
                     pending = view.pending,
+                    queued = view.queued,
                     hasLoaded = true,
                     error = if (it.error == ChatError.UNREACHABLE) null else it.error,
                 )
@@ -79,9 +89,11 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
         _state.update { it.copy(isSending = true, error = null, notice = null) }
         try {
-            val sent = api.sendChatMessage(text)
-            _state.update {
-                it.copy(messages = it.messages + sent, pending = it.pending ?: ChatPending())
+            when (val outcome = api.sendChatMessage(text)) {
+                is ChatSendOutcome.Sent -> _state.update {
+                    it.copy(messages = it.messages + outcome.message, pending = it.pending ?: ChatPending())
+                }
+                is ChatSendOutcome.Queued -> _state.update { it.copy(queued = outcome.queued) }
             }
             return true
         } catch (e: CancellationException) {
@@ -92,6 +104,27 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         } finally {
             _state.update { it.copy(isSending = false) }
         }
+    }
+
+    /** A 404 means the queued message was already dispatched just as the
+     * user cancelled — not an error worth showing, since it is about to
+     * appear as a sent message. */
+    internal suspend fun performCancelQueued() {
+        if (_state.value.queued == null) return
+        try {
+            api.cancelQueuedChatMessage()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: ApiException.BadStatus) {
+            if (e.status != 404) {
+                _state.update { it.copy(error = ChatError.from(e)) }
+                return
+            }
+        } catch (e: Exception) {
+            _state.update { it.copy(error = ChatError.from(e)) }
+            return
+        }
+        _state.update { it.copy(queued = null) }
     }
 
     internal suspend fun performRefreshPlugins() {

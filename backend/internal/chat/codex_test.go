@@ -226,6 +226,76 @@ func TestEngine_OneTurnAtATimeAndPendingReply(t *testing.T) {
 	}
 }
 
+// PRD-1 AC1 (2026-11-09 개정): a message that arrives while a reply is in
+// progress waits instead of failing, and is sent right after that reply
+// ends. Only one waits at a time.
+func TestEngine_QueuesAMessageSentWhileBusyAndDrainsItAfter(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+
+	msg, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil || queued == nil || queued.Content != "second" || msg.ID != 0 {
+		t.Fatalf("queue while busy = msg %+v, queued %+v, err %v", msg, queued, err)
+	}
+	if _, _, err := engine.Queue(ctx, 1, "third"); !errors.Is(err, chat.ErrQueueFull) {
+		t.Fatalf("queue behind an already-queued message = %v, want ErrQueueFull", err)
+	}
+
+	close(platform.hold)
+	engine.Wait()
+
+	want := "user:slow|assistant:re: slow|user:second|assistant:re: second|"
+	if got := transcriptOf(messages(t, store, 1)); got != want {
+		t.Fatalf("history = %q, want %q", got, want)
+	}
+	s := platform.session("cx1")
+	if len(s.prompts) != 2 || s.prompts[1] != "second" {
+		t.Fatalf("prompts = %v, want the dequeued message sent after the first turn", s.prompts)
+	}
+	if engine.Pending(1) != nil {
+		t.Error("nothing should be pending once the dequeued turn also ended")
+	}
+}
+
+// A queued message cancelled before its turn starts is never sent.
+func TestEngine_CancelsAQueuedMessage(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := engine.Queue(ctx, 1, "second"); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelQueued(ctx, 1); err != nil {
+		t.Fatalf("cancel a queued message = %v", err)
+	}
+	if err := engine.CancelQueued(ctx, 1); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("cancel again = %v, want ErrNoQueuedMessage", err)
+	}
+
+	close(platform.hold)
+	engine.Wait()
+
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|" {
+		t.Fatalf("a cancelled message must never be sent: history = %q", got)
+	}
+}
+
+func TestEngine_CancelQueuedWithNothingQueued(t *testing.T) {
+	_, engine, _ := newEngine(t)
+	ctx := context.Background()
+	if err := engine.CancelQueued(ctx, 1); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("cancel with nothing queued = %v, want ErrNoQueuedMessage", err)
+	}
+}
+
 // A platform session that disappeared is replaced by a new one.
 func TestEngine_RecreatesAMissingSession(t *testing.T) {
 	store, engine, platform := newEngine(t)
