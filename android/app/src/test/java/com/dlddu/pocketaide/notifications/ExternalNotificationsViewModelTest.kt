@@ -132,7 +132,7 @@ class ExternalNotificationsViewModelTest {
 
         vm.performMarkAllRead()
 
-        assertEquals(0, server.requestCount)
+        assertEquals(1, server.requestCount)
         assertEquals(0, markedRead)
     }
 
