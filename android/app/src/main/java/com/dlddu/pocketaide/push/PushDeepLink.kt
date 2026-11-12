@@ -3,6 +3,7 @@ package com.dlddu.pocketaide.push
 sealed interface PushDeepLink {
     data class Approval(val approvalId: String) : PushDeepLink
     data class ExternalNotification(val notificationId: Long) : PushDeepLink
+    data class CommitStatusRequest(val requestId: String) : PushDeepLink
     data class PrMonitorEvent(val eventId: Long) : PushDeepLink
 
     companion object {
@@ -10,13 +11,18 @@ sealed interface PushDeepLink {
         const val KEY_APPROVAL_ID = "approval_id"
         const val KEY_NOTIFICATION_ID = "notification_id"
         const val KEY_EVENT_ID = "event_id"
+        const val KEY_COMMIT_STATUS_REQUEST_ID = "commit_status_request_id"
         const val KIND_EXTERNAL_NOTIFICATION = "external_notification"
+        const val KIND_COMMIT_STATUS_REQUEST = "commit_status_request"
 
-        val KEYS = listOf(KEY_KIND, KEY_APPROVAL_ID, KEY_NOTIFICATION_ID, KEY_EVENT_ID)
+        val KEYS = listOf(KEY_KIND, KEY_APPROVAL_ID, KEY_NOTIFICATION_ID, KEY_EVENT_ID, KEY_COMMIT_STATUS_REQUEST_ID)
 
         fun from(data: Map<String, String?>): PushDeepLink? {
             if (data[KEY_KIND] == KIND_EXTERNAL_NOTIFICATION) {
                 return data[KEY_NOTIFICATION_ID]?.toLongOrNull()?.let(::ExternalNotification)
+            }
+            if (data[KEY_KIND] == KIND_COMMIT_STATUS_REQUEST) {
+                return data[KEY_COMMIT_STATUS_REQUEST_ID]?.takeIf { it.isNotBlank() }?.let(::CommitStatusRequest)
             }
             data[KEY_APPROVAL_ID]?.takeIf { it.isNotBlank() }?.let { return Approval(it) }
             return data[KEY_EVENT_ID]?.toLongOrNull()?.let(::PrMonitorEvent)

@@ -42,6 +42,12 @@ What a preview is and is not:
   `pocket-aide-secrets`, an empty `pocket-aide-ssm-config` and
   `SQS_QUEUE_URL=""`, so it never consumes
   production's SQS queue and never calls APNs.
+- **No GitHub App unless you add it.** Commit status approvals (PRD-12 AC20) write
+  through the optional Secret `pocket-aide-github-app` (`GITHUB_APP_CLIENT_ID`,
+  `GITHUB_APP_PRIVATE_KEY`). Production reads it from SSM `/flux-cd/pocket-aide/github-app`
+  through an ExternalSecret in flux-cd-apps; a preview has none, so approving a commit
+  status request there answers 503 (rejecting still works) until that Secret is created
+  in the preview namespace.
 - **At most 5** previews at once (input provider `filter.limit`).
 - A PR that edits a migration already applied to its preview database may
   fail to start on the next push. Clean the volume or continue in a new PR.

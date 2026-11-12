@@ -22,6 +22,8 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/chat"
+	"github.com/dlddu/pocket-aide/backend/internal/commitstatus"
+	"github.com/dlddu/pocket-aide/backend/internal/commitstatuspush"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
@@ -98,6 +100,8 @@ func main() {
 		log.Fatalf("sessions tab session platform tokens: %v", err)
 	}
 	approvalStore := approvals.New(conn)
+	commitStatusStore := commitstatus.New(conn)
+	commitStatusDecider := commitstatus.NewDecider(commitStatusStore, commitStatusWriter(cfg))
 	chatStore := chat.New(conn)
 	chatPlatform, err := tenantPlatformClient(cfg.SessionPlatformURL, cfg.ChatServiceAccount, inClusterPlatformTokens)
 	if err != nil {
@@ -125,7 +129,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("fcm: %v", err)
 		}
-		fcmClient = fcmClient.WithChannels(map[string]string{approvalpush.Category: fcm.ChannelApproval}).WithDataOnly(approvalpush.Category, externalnotify.Category)
+		fcmClient = fcmClient.WithChannels(map[string]string{
+			approvalpush.Category:     fcm.ChannelApproval,
+			commitstatuspush.Category: fcm.ChannelApproval,
+		}).WithDataOnly(approvalpush.Category, commitstatuspush.Category, externalnotify.Category)
 		if cfg.FCMHost != "" {
 			log.Printf("fcm: pushes go to %s (FCM_HOST)", cfg.FCMHost)
 			fcmClient = fcmClient.WithEndpoint(cfg.FCMHost)
@@ -145,10 +152,12 @@ func main() {
 	}
 	var pushRouter *push.Router
 	var approvalPusher handlers.ApprovalPusher
+	var commitStatusPusher handlers.CommitStatusPusher
 	var notificationSender handlers.NotificationSender
 	if apnsClient != nil || fcmClient != nil {
 		pushRouter = push.New(apnsClient, fcmClient)
 		approvalPusher = approvalpush.New(pushRouter, deviceStore)
+		commitStatusPusher = commitstatuspush.New(pushRouter, deviceStore)
 		notificationSender = externalnotify.New(pushRouter, deviceStore)
 	}
 
@@ -217,6 +226,10 @@ func main() {
 		p.Get("/api/approvals/{id}", handlers.GetApproval(approvalStore))
 		p.Post("/api/approvals/{id}/approve", handlers.DecideApproval(approvalStore, approvals.DecisionApprove))
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(approvalStore, approvals.DecisionReject))
+		p.Get("/api/commit-status-requests", handlers.ListCommitStatusRequests(commitStatusStore))
+		p.Get("/api/commit-status-requests/{id}", handlers.GetCommitStatusRequest(commitStatusStore))
+		p.Post("/api/commit-status-requests/{id}/approve", handlers.ApproveCommitStatusRequest(commitStatusDecider))
+		p.Post("/api/commit-status-requests/{id}/reject", handlers.RejectCommitStatusRequest(commitStatusDecider))
 	})
 
 	var reviewer handlers.TokenReviewer
@@ -232,6 +245,7 @@ func main() {
 		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, operatorPlatform))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender, externalNotificationStore))
+		x.Post("/api/external/commit-status-requests", handlers.CreateExternalCommitStatusRequest(commitStatusStore, commitStatusPusher, operatorPlatform))
 	})
 
 	srv := &http.Server{
@@ -383,6 +397,10 @@ type config struct {
 	K8SCallerAuth    bool
 	K8STokenAudience string
 	K8STokenIssuer   string
+
+	GitHubAppClientID   string
+	GitHubAppPrivateKey string
+	GitHubAPIURL        string
 }
 
 func loadConfig() config {
@@ -409,6 +427,10 @@ func loadConfig() config {
 		K8SCallerAuth:    os.Getenv("K8S_CALLER_AUTH") == "true",
 		K8STokenAudience: envOr("K8S_TOKEN_AUDIENCE", "pocket-aide"),
 		K8STokenIssuer:   os.Getenv("K8S_TOKEN_ISSUER"),
+
+		GitHubAppClientID:   os.Getenv("GITHUB_APP_CLIENT_ID"),
+		GitHubAppPrivateKey: os.Getenv("GITHUB_APP_PRIVATE_KEY"),
+		GitHubAPIURL:        os.Getenv("GITHUB_API_URL"),
 	}
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
@@ -424,6 +446,19 @@ func loadConfig() config {
 		}
 	}
 	return c
+}
+
+func commitStatusWriter(cfg config) commitstatus.Writer {
+	if cfg.GitHubAppClientID == "" || cfg.GitHubAppPrivateKey == "" {
+		log.Printf("commit status requests: approvals cannot write (GITHUB_APP_CLIENT_ID / GITHUB_APP_PRIVATE_KEY not set)")
+		return nil
+	}
+	app, err := commitstatus.NewApp(cfg.GitHubAppClientID, []byte(cfg.GitHubAppPrivateKey), cfg.GitHubAPIURL)
+	if err != nil {
+		log.Fatalf("commit status github app: %v", err)
+	}
+	log.Printf("commit status requests: approvals write as GitHub App %s", cfg.GitHubAppClientID)
+	return app
 }
 
 func tenantPlatformClient(baseURL, account string, tokensFor func(string) (sessions.TokenSource, error)) (*sessions.Client, error) {

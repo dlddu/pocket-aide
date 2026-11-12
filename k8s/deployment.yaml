@@ -45,6 +45,9 @@ spec:
                 name: pocket-aide-ssm-config
             - secretRef:
                 name: pocket-aide-secrets
+            - secretRef:
+                name: pocket-aide-github-app
+                optional: true
           volumeMounts:
             - name: data
               mountPath: /data
