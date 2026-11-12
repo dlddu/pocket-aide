@@ -23,7 +23,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
-        UNUserNotificationCenter.current().setNotificationCategories([Self.approvalCategory])
+        UNUserNotificationCenter.current().setNotificationCategories([Self.approvalCategory, Self.commitStatusCategory])
 
         // Cold-start path: the system surfaces the originating notification
         // here when the app launched in response to a push tap. Hand the URL
@@ -80,6 +80,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
             decideFromNotification(approvalID, decision, replacing: response.notification.request, completion: completionHandler)
             return
         }
+        if let decision = CommitStatusNotificationAction.decision(forActionIdentifier: response.actionIdentifier),
+           let requestID = CommitStatusPushPayload.requestID(from: info) {
+            decideCommitStatusFromNotification(requestID, decision, replacing: response.notification.request, completion: completionHandler)
+            return
+        }
         if let url = PushDeepLink.url(fromUserInfo: info) {
             Task { @MainActor in
                 DeepLinkRouter.shared.receive(url)
@@ -105,6 +110,50 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
             ],
             intentIdentifiers: []
         )
+    }
+
+    private static var commitStatusCategory: UNNotificationCategory {
+        UNNotificationCategory(
+            identifier: CommitStatusNotificationAction.categoryIdentifier,
+            actions: [
+                UNNotificationAction(
+                    identifier: CommitStatusNotificationAction.approveIdentifier,
+                    title: CommitStatusNotificationAction.title(.approve),
+                    options: [.authenticationRequired]
+                ),
+                UNNotificationAction(
+                    identifier: CommitStatusNotificationAction.rejectIdentifier,
+                    title: CommitStatusNotificationAction.title(.reject),
+                    options: [.destructive]
+                ),
+            ],
+            intentIdentifiers: []
+        )
+    }
+
+    private func decideCommitStatusFromNotification(
+        _ requestID: String,
+        _ decision: ApprovalDecision,
+        replacing request: UNNotificationRequest,
+        completion: @escaping () -> Void
+    ) {
+        Task { @MainActor in
+            let result: Result<CommitStatusDecisionOutcome, Error>
+            do {
+                guard let api = Self.makeActionAPI() else { throw APIError.missingBaseURL }
+                result = .success(try await api.decideCommitStatusRequest(id: requestID, decision))
+            } catch {
+                result = .failure(error)
+            }
+            let content = UNMutableNotificationContent()
+            content.title = request.content.title
+            content.body = CommitStatusNotificationAction.resultNotice(result)
+            content.userInfo = request.content.userInfo
+            try? await UNUserNotificationCenter.current().add(
+                UNNotificationRequest(identifier: request.identifier, content: content, trigger: nil)
+            )
+            completion()
+        }
     }
 
     private func decideFromNotification(

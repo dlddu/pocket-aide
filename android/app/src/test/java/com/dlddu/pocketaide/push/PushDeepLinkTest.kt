@@ -31,6 +31,18 @@ class PushDeepLinkTest {
     }
 
     @Test
+    fun commitStatusRequestRoutesToCommitStatusTab() {
+        val link = PushDeepLink.from(
+            mapOf("kind" to "commit_status_request", "commit_status_request_id" to "csr_1", "category" to "COMMIT_STATUS_REQUEST"),
+        )
+
+        assertEquals(PushDeepLink.CommitStatusRequest("csr_1"), link)
+        assertEquals(RootTab.CommitStatus, RootTab.forDeepLink(link!!))
+        assertNull(PushDeepLink.from(mapOf("kind" to "commit_status_request")))
+        assertEquals(NotificationChannels.APPROVAL, NotificationChannels.forCategory("COMMIT_STATUS_REQUEST"))
+    }
+
+    @Test
     fun malformedOrEmptyPayloadIsIgnored() {
         assertNull(PushDeepLink.from(emptyMap()))
         assertNull(PushDeepLink.from(mapOf("event_id" to "abc")))

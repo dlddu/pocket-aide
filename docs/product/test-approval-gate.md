@@ -18,6 +18,10 @@
 - AC15: k8s ServiceAccount 호출자 등록 (PRD-12)
 - AC16: 호출자의 단순 푸시 알림 (PRD-12)
 - AC17: 알림 기록 (PRD-12)
+- AC18: 호출자의 커밋 상태 요청 (PRD-12)
+- AC19: 커밋 상태 탭 (PRD-12)
+- AC20: 승인하면 GitHub 에 기록하고, 거절하면 아무것도 쓰지 않는다 (PRD-12)
+- AC21: 신규 커밋 상태 요청 푸시와 알림 액션 (PRD-12)
 
 ## 달성 가치
 - V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」, AC16·AC17은 「알림」) — 검증 대상 AC 모두 V9를 달성한다.
@@ -45,6 +49,8 @@
   같은 날 푸시 탭 → 그 알림 상세·상세를 열면 확인(AC16·AC17 개정)을 구현과 같은 PR 에서 반영하며 시나리오 19의 7단계, 시나리오 21의 3·4·8단계를 고치고 9단계를 덧붙였다(「구현됨」 유지).
   같은 날 `requester` 필수화(AC17 2단계)를 구현과 같은 PR 에서 반영하며 시나리오 19의 3단계에 누락·공백 `requester` 를, 시나리오 21의 3단계 「ping」에 `requester` 를 더했다(「구현됨」 유지).
   2026-11-09 Android 알림의 「읽음」 버튼(AC17 개정)을 구현과 같은 PR 에서 반영하며 시나리오 21에 10단계를 덧붙였다(「구현됨」 유지).
+  2026-11-12 커밋 상태 요청(AC18~AC21)을 구현과 같은 PR 에서 더하며 시나리오 22~25를 덧붙였다(「구현됨」).
+- 커밋 상태 시나리오(22~25)의 「GitHub」는 PocketAide 전용 GitHub App 이 설치된 실제 저장소다. CI 에서는 실제 GitHub 대신 백엔드 단위 테스트의 가짜 GitHub(httptest)로 토큰 발급 본문·status 기록 요청을 관찰하고, 실제 기록은 프리뷰·운영에서 확인한다(`EXT`).
 - SA 호출자 시나리오의 「SA 토큰」은 그 ServiceAccount로 도는 파드가 마운트한 projected 토큰이다. 「audience `pocket-aide`」 토큰과
   apiserver용 기본 토큰(`/var/run/secrets/kubernetes.io/serviceaccount/token`)을 구분한다. CI에서는 kind 클러스터의 실물 apiserver가
   발급하고 검증한다.
@@ -444,3 +450,75 @@
 - **검증 AC**: AC17, AC16, AC15
 - **구현 상태**: 구현됨 — 서버: 마이그레이션 `0017_external_notifications`, 발송 전 기록(기록 실패 시 500·발송 없음, 기기 목록 실패 시 기록 삭제), 앱용 `GET /api/external-notifications`(`items`·`unread_count`, `limit`·`before`)·`GET /api/external-notifications/{id}`·`POST /api/external-notifications/{id}/read`(알림 하나 확인), 푸시 페이로드 `notification_id`. 앱: 「더 보기」의 「알림 기록」 탭(`ExternalNotificationsView`), 상세를 열면 그 알림 확인 처리 후 위젯 타임라인 갱신, 푸시 탭(`pocketaide://notifications?id=`)으로 그 알림 상세 열기(떠 있는 상세도 교체), 끝에서 이전 기록 더 불러오기, 행을 누르면 줄임 없는 상세 시트(`ExternalNotificationDetailSheet` — 텍스트 선택 가능). Android: 단순 알림 푸시를 데이터 전용(카테고리 `EXTERNAL_NOTIFICATION`)으로 받아 앱이 그린 알림에 「읽음」 버튼(`ExternalNotificationActionReceiver` — 확인 처리 후 알림 지움·위젯 갱신, 10단계). 이 시나리오의 XCUITest 대응은 아직 없다(판정은 `doc-tracker/` 「e2e 매핑」 절의 몫).
 - **관련 코드 테스트**: `backend/internal/handlers/external_notification_log_test.go` — `TestExternalNotificationIsRecordedWithCallerAndRequester`·`TestExternalNotificationRecordsServiceAccountCaller`·`TestExternalNotificationRequesterTooLongIsRejected`·`TestExternalNotificationsAreScopedToTheOwner`·`TestExternalNotificationSendFailureLeavesNoRecord`·`TestExternalNotificationIsNotSentWhenItCannotBeRecorded`·`TestExternalNotificationPushCarriesTheRecordedID`·`TestExternalNotificationDetailAndReadArePerItem`·`TestExternalNotificationsPageWithBefore`, `ios/PocketAideUnitTests/ExternalNotificationsTests.swift`
+
+
+### 시나리오 22: 에이전트가 커밋 상태를 요청하면 바로 돌아오고 아무것도 기록되지 않는다
+- **사전 조건**: 사용자 A로 로그인, SA 호출자 `homelab-k3s-mcp` 를 등록했고 자동 응답 모드는 「자동 승인」. 저장소 `dlddu/pocket-aide` 의 PR 하나와 그 head 커밋 SHA `H`(40자)가 있다.
+- **실행 단계**:
+  1. 호출자가 `{owner: "dlddu", repo: "pocket-aide", sha: H, state: "success", context: "review/manual-approval", description: "수동 승인", targetUrl: <PR URL>, requester: "Claude Code 세션 — PR 검토", reason: "검토를 마쳤다."}` 로 요청한다.
+  2. GitHub 에서 커밋 `H` 의 status 를 본다.
+  3. 호출자가 `sha` 를 7자로, `main` 으로, `state` 를 `approved` 로, `description` 을 141자로, `targetUrl` 을 `/pull/1` 로, `requester` 를 빼고, 계약에 없는 `token` 필드를 더해 각각 요청한다.
+  4. 폐기한 키로 1단계를 다시 보낸다.
+- **기대 결과**:
+  - 1단계: 응답이 결정을 기다리지 않고 201 `{id, status: "PENDING", createdAt}` 으로 돌아온다(자동 승인 모드여도 `PENDING`).
+  - 2단계: `review/manual-approval` status 가 없다.
+  - 3단계: 모두 400, 커밋 상태 탭에 새 요청이 없고 푸시도 없다.
+  - 4단계: 401.
+- **검증 AC**: AC18, AC2, AC13, AC15
+- **구현 상태**: 구현됨 — 서버: `POST /api/external/commit-status-requests`(호출자 미들웨어 뒤, `commitstatus.Validate` 로 GitHub 형식 검증 후 `commit_status_requests` 에 `PENDING` 저장 → 201, 자동 응답 모드 미적용).
+- **관련 코드 테스트**: `backend/internal/handlers/commit_status_requests_test.go` — `TestCommitStatusRequestIsStoredAndReturnsAtOnce`·`TestCommitStatusRequestRefusesWhatGitHubWouldRefuse`
+
+
+### 시나리오 23: 커밋 상태 탭에서 요청을 보고 승인하면 GitHub 에 그대로 기록된다
+- **사전 조건**: 시나리오 22 의 1단계 요청 R1 이 대기 중. 서버에 PocketAide GitHub App 이 설정돼 있고 `dlddu/pocket-aide` 에 설치돼 있다.
+- **실행 단계**:
+  1. 「더 보기」를 연다.
+  2. 「커밋 상태」를 열고 R1 행을 누른다.
+  3. 「승인」 → 확인 다이얼로그에서 「승인」.
+  4. GitHub 에서 커밋 `H` 의 status 를 본다.
+  5. 목록으로 돌아간다.
+  6. 사용자 B로 로그인해 커밋 상태 탭을 연다.
+- **기대 결과**:
+  - 1단계: 「커밋 상태」 항목에 배지 1.
+  - 2단계: 행에 「homelab-k3s-mcp」, 「review/manual-approval → success」, 「dlddu/pocket-aide@<H 앞 7자>」, 요청 주체가 보인다. 상세에 저장소·전체 SHA·context·state·설명·링크·「에이전트 설명 · 검증되지 않음」 섹션이 보인다.
+  - 3단계: 상세 상태가 「승인됨 — 기록함」, GitHub status id 와 처리 시각이 보이고 결정 버튼이 사라진다.
+  - 4단계: `review/manual-approval` = success, description 「수동 승인」, target_url 이 PR URL 이고 작성자가 PocketAide App 이다.
+  - 5단계: 대기 목록이 비어 「기록을 기다리는 커밋 상태가 없습니다」가 보이고 「최근 처리」에 R1 이 있다. 배지가 사라진다.
+  - 6단계: R1 이 보이지 않는다.
+- **검증 AC**: AC19, AC20
+- **구현 상태**: 구현됨 — 서버: `GET /api/commit-status-requests`(대기 + 최근 처리 30건)·`GET /{id}`·`POST /{id}/approve`(`commitstatus.App` — 저장소 설치 조회 → `repositories=[repo]`·`statuses: write` 토큰 → status 기록 → 토큰 폐기)·`POST /{id}/reject`. 앱: iOS `CommitStatusRequestsView`·`CommitStatusDetailView`(탭 「커밋 상태」), Android `CommitStatusScreen`(「더 보기」 → 「커밋 상태」, 「더 보기」 탭 배지). 4단계의 실제 GitHub 기록은 `EXT`.
+- **관련 코드 테스트**: `backend/internal/handlers/commit_status_requests_test.go` — `TestCommitStatusApprovalWritesExactlyWhatWasFiled`·`TestCommitStatusConcurrentApprovalsWriteOnce`, `backend/internal/commitstatus/github_test.go` — `TestAppWritesStatusWithARepoScopedStatusesToken`, `android/app/src/test/java/com/dlddu/pocketaide/commitstatus/CommitStatusViewModelTest.kt`, `ios/PocketAideUnitTests/CommitStatusRequestsTests.swift`
+
+
+### 시나리오 24: GitHub 기록이 실패하면 대기로 남고, 거절하면 아무것도 쓰지 않는다
+- **사전 조건**: 사용자 A로 로그인. 존재하지 않는 SHA `Z` 로 만든 요청 R2, 정상 SHA 로 만든 요청 R3 이 대기 중.
+- **실행 단계**:
+  1. R2 를 승인한다.
+  2. 목록으로 돌아간다.
+  3. R3 을 거절한다.
+  4. 서버의 GitHub App 설정을 비운 상태에서 새 요청 R4 를 승인한 뒤 거절한다.
+- **기대 결과**:
+  - 1단계: 「GitHub 에 기록하지 못했습니다 — GitHub answered 422: …」 안내가 보이고 상태는 「대기 중」, 결정 버튼이 그대로다.
+  - 2단계: R2 행에 같은 실패 문구가 보인다.
+  - 3단계: 「거절됨」, GitHub 에 R3 의 status 가 생기지 않는다.
+  - 4단계: 승인은 「커밋 상태를 쓸 GitHub App 이 설정되지 않아 승인할 수 없습니다」로 안내되고 R4 는 대기로 남는다. 거절은 된다.
+- **검증 AC**: AC20
+- **구현 상태**: 구현됨 — 서버: 기록 실패 시 `last_error` 저장 후 502 + 현재 요청, App 미설정 시 503, 거절은 GitHub 를 부르지 않는다. 앱: 502·503·409 를 각각 안내 문구로 보이고 실패한 대기 요청은 목록·상세에 실패 문구를 보인다.
+- **관련 코드 테스트**: `backend/internal/handlers/commit_status_requests_test.go` — `TestCommitStatusWriteFailureLeavesRequestPending`·`TestCommitStatusRejectNeverWrites`·`TestCommitStatusWithoutGitHubAppStillRejects`, `backend/internal/commitstatus/github_test.go` — `TestAppSurfacesGitHubMessage`·`TestAppNotInstalledOnRepo`
+
+
+### 시나리오 25: 커밋 상태 요청 푸시를 받아 알림에서 바로 결정한다
+- **사전 조건**: 사용자 A가 기기 하나를 등록했다.
+- **실행 단계**:
+  1. 호출자가 커밋 상태 요청 R5 를 만든다.
+  2. 푸시를 탭한다.
+  3. 호출자가 R6 을 만들고, 잠금화면에서 그 알림의 「거절」을 누른다.
+  4. 호출자가 R7 을 만들고, 알림의 「승인」을 누른다.
+- **기대 결과**:
+  - 1단계: 「커밋 상태 요청 · homelab-k3s-mcp」 제목, `review/manual-approval → success` / `dlddu/pocket-aide@<짧은 SHA>` / 요청 주체 본문의 알림이 온다.
+  - 2단계: 앱이 커밋 상태 탭에서 R5 의 상세를 연다.
+  - 3단계: 앱을 열지 않고 R6 이 「거절됨」이 되고, 알림이 결과 문구로 바뀐다(Android 는 사라진다).
+  - 4단계: 잠금 해제를 요구한 뒤 R7 이 기록되고 「승인됨 — 기록함」이 된다.
+- **검증 AC**: AC21, AC20
+- **구현 상태**: 구현됨 — 서버: `commitstatuspush`(카테고리 `COMMIT_STATUS_REQUEST`, 데이터 `kind`·`commit_status_request_id`, FCM 승인 채널·데이터 전용). 앱: iOS 알림 카테고리·액션(`CommitStatusNotificationAction`, 승인 `.authenticationRequired`)과 딥링크 `pocketaide://commit-status?id=`, Android `CommitStatusActionReceiver`(승인 잠금 해제 요구)·`PushDeepLink.CommitStatusRequest`. 실기기 도달·잠금 해제는 `EXT`.
+- **관련 코드 테스트**: `backend/internal/commitstatuspush/notifier_test.go` — `TestSendGoesToEveryOwnerDeviceWithDecisionCategory`, `android/app/src/test/java/com/dlddu/pocketaide/push/PushDeepLinkTest.kt` — `commitStatusRequestRoutesToCommitStatusTab`, `ios/PocketAideUnitTests/CommitStatusRequestsTests.swift` — `testPushOpensTheRequestAndCarriesLockScreenActions`·`testResultNoticeCoversEveryOutcome`

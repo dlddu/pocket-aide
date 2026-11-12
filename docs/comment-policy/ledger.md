@@ -36,6 +36,8 @@
 | 2026-11-06 | `backend/internal/chat/codex_test.go` | 17 | `bdc375246c42` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-07 session-platform codex-chat 이름 변경에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-11-06 | `backend/internal/chat/follower_test.go` | 2 | `9a3e3b39feb8` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-11-04 | `backend/internal/chat/store.go` | 20 | `bc3262d6bc90` | — | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-12 | `backend/internal/commitstatus/decide.go`, `backend/internal/commitstatus/github.go`, `backend/internal/commitstatus/store.go` | 22 | `c0bb17cf8d83` | — | 등록 — 필요성 판정 대기. 2026-11-12 커밋 상태 요청(PRD-12 AC18–AC21)이 새로 둔 주석 |
+| 2026-11-12 | `backend/internal/commitstatuspush/notifier.go` | 2 | `d46939ea6e03` | — | 등록 — 필요성 판정 대기. 2026-11-12 커밋 상태 요청(PRD-12 AC18–AC21)이 새로 둔 주석 |
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-09-29 | `backend/internal/devicetokens/store.go` | 9 | `b3d186c91592` | 완료 | 필요성 판정 — 제거 4줄 · 유지 10줄(개작 2블록 포함) · 2026-10-11 유지 3줄 함수째 소멸(`ListAll` 제거) — [상세](passes/2026-09-29-backend.md) · 2026-11-02 증분 유지 4줄(개작 2블록 포함 · 안드로이드 플랫폼) — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-09-29 | `backend/internal/excludedrepos/store.go` | 17 | `b974cf8db724` | 완료 | 필요성 판정 — 제거 21줄 · 유지 17줄(개작 3블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -46,6 +48,7 @@
 | 2026-09-29 | `backend/internal/handlers/affirmations.go`, `backend/internal/handlers/affirmations_test.go`, `backend/internal/handlers/device_tokens.go`, `backend/internal/handlers/excluded_repos.go`, `backend/internal/handlers/handlers.go`, `backend/internal/handlers/notification_history.go` | 23 | `6868961a4e57` | 완료 | 필요성 판정 — 제거 6줄 · 유지 23줄(개작 2블록 포함) — [상세](passes/2026-09-29-backend.md) |
 | 2026-11-04 | `backend/internal/handlers/chat.go` | 10 | `fdd235e40997` | — | 필요성 판정 — 제거 2줄 · 유지 13줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-11-06 | `backend/internal/handlers/chat_test.go` | 8 | `d245fa2c67c8` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-09 세션 플랫폼 로그인 슬롯 소진 구분에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-12 | `backend/internal/handlers/commit_status_requests.go` | 5 | `80579c01f256` | — | 등록 — 필요성 판정 대기. 2026-11-12 커밋 상태 요청(PRD-12 AC18–AC21)이 새로 둔 주석 |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 6 | `cf2983573f9d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) |
 | 2026-11-04 | `backend/internal/handlers/mail.go` | 7 | `f9ccc4202240` | 완료 | 필요성 판정 — 제거 4줄 · 유지 7줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-10-01 | `backend/internal/handlers/scratchpad.go` | 7 | `41fd3099fe13` | 완료 | 필요성 판정 — 제거 0줄 · 유지 7줄 — [상세](passes/2026-10-01-scratchpad.md) |

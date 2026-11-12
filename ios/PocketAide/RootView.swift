@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 enum RootTab: Hashable {
-    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, sessions, notifications
+    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, commitStatus, sessions, notifications
 }
 
 struct RootView: View {
@@ -11,10 +11,12 @@ struct RootView: View {
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
     @Binding var openedApprovalID: String?
+    @Binding var openedCommitStatusID: String?
     @Binding var notificationsReloadToken: Int
     @Binding var openedNotificationID: Int64?
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
+    @StateObject private var commitStatuses: CommitStatusRequestsViewModel
 
     private static let approvalBadgeAppearance: Void = {
         let badge = UIColor { traits in
@@ -34,6 +36,7 @@ struct RootView: View {
         selectedTab: Binding<RootTab>,
         highlightedEventID: Binding<Int64?> = .constant(nil),
         openedApprovalID: Binding<String?> = .constant(nil),
+        openedCommitStatusID: Binding<String?> = .constant(nil),
         notificationsReloadToken: Binding<Int> = .constant(0),
         openedNotificationID: Binding<Int64?> = .constant(nil)
     ) {
@@ -41,10 +44,12 @@ struct RootView: View {
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
         _openedApprovalID = openedApprovalID
+        _openedCommitStatusID = openedCommitStatusID
         _notificationsReloadToken = notificationsReloadToken
         _openedNotificationID = openedNotificationID
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
         _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
+        _commitStatuses = StateObject(wrappedValue: CommitStatusRequestsViewModel(api: nil))
     }
 
     var body: some View {
@@ -96,7 +101,7 @@ struct RootView: View {
 
     private var activeTint: Color {
         switch selectedTab {
-        case .prMonitor, .approval, .sessions, .notifications: return DesignTokens.Color.accent(.prMonitor)
+        case .prMonitor, .approval, .commitStatus, .sessions, .notifications: return DesignTokens.Color.accent(.prMonitor)
         case .affirmations: return DesignTokens.Color.accent(.affirmations)
         case .personal: return DesignTokens.Color.accent(.personal)
         case .work: return DesignTokens.Color.accent(.work)
@@ -140,6 +145,10 @@ struct RootView: View {
             Tab("알림 기록", systemImage: "bell", value: RootTab.notifications) {
                 ExternalNotificationsView(reloadToken: notificationsReloadToken, openedNotificationID: $openedNotificationID)
             }
+            Tab("커밋 상태", systemImage: "arrow.triangle.branch", value: RootTab.commitStatus) {
+                CommitStatusRequestsView(viewModel: commitStatuses, openedRequestID: $openedCommitStatusID)
+            }
+            .badge(commitStatuses.pendingCount)
         }
         .tint(activeTint)
         .task {
@@ -151,6 +160,10 @@ struct RootView: View {
                 approvals.replaceAPI(api)
             }
             await approvals.load()
+            if commitStatuses.api == nil, let api = auth.api {
+                commitStatuses.replaceAPI(api)
+            }
+            await commitStatuses.load()
         }
     }
 }

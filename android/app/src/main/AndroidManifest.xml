@@ -63,6 +63,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".commitstatus.CommitStatusActionReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".widget.PocketAideWidgetReceiver"
             android:exported="true"
             android:label="@string/widget_name">
