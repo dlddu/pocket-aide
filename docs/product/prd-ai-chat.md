@@ -14,6 +14,8 @@
 > 대화는 그 세션의 스레드에 이어지고, pocket-aide 는 읽을 수 있는 이력을 자기 DB(`chat_sessions`·`chat_messages`)에 남긴다.
 > 백엔드는 채팅 탭 전용 ServiceAccount(`pocket-aide-chat`)의 토큰으로 플랫폼을 불러, 채팅 세션이 세션 탭과 다른 테넌트에 속하게 한다
 > (session-platform `docs/prd/multitenancy.md`). 이전의 OpenRouter 직접 호출은 없앴다.
+> 세션을 만들 때 플러그인 `codex-session`을 **명시한다**(`plugins: ["codex-session"]`) — 플랫폼은 요청이 고른 플러그인만 설치하고
+> 기본값을 대신 고르지 않는다(session-platform AC-A5·AC-L1, 2026-11-14). 채팅이 쓰는 스킬(AC6 새로고침 대상)은 이 번들의 것이다.
 
 ## Acceptance Criteria
 
