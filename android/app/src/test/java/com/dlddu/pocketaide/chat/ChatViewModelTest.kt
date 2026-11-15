@@ -68,7 +68,7 @@ class ChatViewModelTest {
         val state = vm.state.value
         assertEquals(1, state.messages.size)
         assertTrue(state.isReplying)
-        assertFalse(state.canSend)
+        assertTrue(state.canSend)
 
         server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"), """{"content":"쓰는 중","started_at":1}""")))
         vm.load()

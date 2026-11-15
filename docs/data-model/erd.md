@@ -124,6 +124,8 @@ erDiagram
 | `updated_at` | INTEGER | NO |  |
 | `platform_session_id` | TEXT | NO |  |
 | `transcript_offset` | INTEGER | NO |  |
+| `queued_content` | TEXT | YES |  |
+| `queued_at` | INTEGER | YES |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
