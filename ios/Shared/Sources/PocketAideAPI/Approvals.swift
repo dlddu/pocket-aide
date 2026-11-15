@@ -393,6 +393,7 @@ public enum ExternalNotificationPushPayload {
 public enum PushDeepLink {
     public static func url(fromUserInfo info: [AnyHashable: Any]) -> URL? {
         if ExternalNotificationPushPayload.matches(info) { return ExternalNotificationPushPayload.deepLinkURL(fromUserInfo: info) }
+        if CommitStatusPushPayload.matches(info) { return CommitStatusPushPayload.deepLinkURL(fromUserInfo: info) }
         return ApprovalPushPayload.deepLinkURL(fromUserInfo: info) ?? PRMonitorPushPayload.deepLinkURL(fromUserInfo: info)
     }
 }

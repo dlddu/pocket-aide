@@ -33,6 +33,7 @@ type fakePlatform struct {
 
 type fakeSession struct {
 	name, workload string
+	plugins        []string
 	createdAt      string
 	transcript     []byte
 	turns          int
@@ -53,11 +54,15 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 	parts := strings.Split(strings.TrimPrefix(path, "/sessions"), "/")
 	switch {
 	case method == http.MethodPost && path == "/sessions":
-		var req map[string]string
+		var req struct {
+			Name         string   `json:"name"`
+			WorkloadType string   `json:"workloadType"`
+			Plugins      []string `json:"plugins"`
+		}
 		_ = json.Unmarshal(body, &req)
 		f.created++
 		id := fmt.Sprintf("cx%d", f.created)
-		f.sessions[id] = &fakeSession{name: req["name"], workload: req["workloadType"], createdAt: fmt.Sprintf("2026-11-06T00:00:%02dZ", f.created)}
+		f.sessions[id] = &fakeSession{name: req.Name, workload: req.WorkloadType, plugins: req.Plugins, createdAt: fmt.Sprintf("2026-11-06T00:00:%02dZ", f.created)}
 		if f.createFails {
 			return http.StatusGatewayTimeout, nil, nil
 		}
@@ -188,6 +193,11 @@ func TestEngine_OneCodexSessionPerUser(t *testing.T) {
 	s := platform.session("cx1")
 	if platform.created != 1 || s.workload != "codex-chat" || s.name != "pocket-aide-chat-1" || len(s.prompts) != 2 {
 		t.Fatalf("platform = created %d, session %+v", platform.created, s)
+	}
+	// The platform installs only the plugins the create names (session-platform
+	// AC-A5): the chat's skills come from naming codex-session here.
+	if len(s.plugins) != 1 || s.plugins[0] != "codex-session" {
+		t.Fatalf("create plugins = %v, want [codex-session]", s.plugins)
 	}
 	if engine.Pending(1) != nil {
 		t.Error("nothing should be pending after the turns ended")
