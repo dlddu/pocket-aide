@@ -5,6 +5,7 @@
 ```mermaid
 erDiagram
     approval_caller_keys ||--o{ approval_requests : caller_key_id
+    approval_caller_keys ||--o{ commit_status_requests : caller_key_id
     approval_caller_keys ||--o{ external_notifications : caller_key_id
     chat_sessions ||--o{ chat_messages : session_id
     routine_steps ||--o{ routine_step_checks : step_id
@@ -13,6 +14,7 @@ erDiagram
     users ||--o{ approval_caller_keys : user_id
     users ||--o{ approval_requests : user_id
     users ||--o{ chat_sessions : user_id
+    users ||--o{ commit_status_requests : user_id
     users ||--o{ device_tokens : user_id
     users ||--o{ external_notifications : user_id
     users ||--o{ mail_accounts : user_id
@@ -128,6 +130,36 @@ erDiagram
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
 | `idx_chat_sessions_user_updated` | `user_id`, `updated_at DESC`, `id DESC` | NO | - |
+
+### `commit_status_requests`
+
+의미: [`commitstatus.Request`](../../backend/internal/commitstatus/store.go)
+
+| 컬럼 | 타입 | NULL | 키 |
+| --- | --- | --- | --- |
+| `id` | TEXT | YES | PK |
+| `user_id` | INTEGER | NO | FK → users.id |
+| `caller_key_id` | INTEGER | NO | FK → approval_caller_keys.id |
+| `owner` | TEXT | NO |  |
+| `repo` | TEXT | NO |  |
+| `sha` | TEXT | NO |  |
+| `state` | TEXT | NO |  |
+| `context` | TEXT | NO |  |
+| `description` | TEXT | NO |  |
+| `target_url` | TEXT | NO |  |
+| `requester` | TEXT | NO |  |
+| `reason` | TEXT | NO |  |
+| `session_id` | TEXT | NO |  |
+| `session_name` | TEXT | NO |  |
+| `status` | TEXT | NO |  |
+| `github_status_id` | INTEGER | YES |  |
+| `last_error` | TEXT | NO |  |
+| `created_at` | INTEGER | NO |  |
+| `processed_at` | INTEGER | YES |  |
+
+| 인덱스 | 컬럼 | UNIQUE | 조건 |
+| --- | --- | --- | --- |
+| `idx_commit_status_requests_user_status_created` | `user_id`, `status`, `created_at` | NO | - |
 
 ### `device_tokens`
 

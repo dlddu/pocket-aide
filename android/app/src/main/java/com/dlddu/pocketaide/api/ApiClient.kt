@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.api
 
 import com.dlddu.pocketaide.auth.TokenRefresher
 import com.dlddu.pocketaide.auth.TokenStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -18,7 +19,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 sealed class ApiException(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    class BadStatus(val status: Int, val body: String) : ApiException("HTTP $status: $body")
+    class BadStatus(val status: Int, val body: String, cause: Throwable? = null) :
+        ApiException("HTTP $status: $body", cause)
     class Decoding(cause: Throwable) : ApiException("decode: ${cause.message}", cause)
     class Transport(cause: Throwable) : ApiException("transport: ${cause.message}", cause)
 }
@@ -39,6 +41,9 @@ class ApiClient(
 
     @Volatile
     var tokenRefresher: TokenRefresher? = null
+
+    @Volatile
+    var onUnauthorized: ((request: String, body: String) -> Unit)? = null
 
     suspend fun health() {
         get("/healthz", HealthResponse.serializer(), authenticated = false)
@@ -144,12 +149,18 @@ class ApiClient(
             try {
                 refresher.refresh()
             } catch (e: Exception) {
-                throw ApiException.BadStatus(status, text)
+                if (e !is CancellationException) reportUnauthorized(method, path, text)
+                throw ApiException.BadStatus(status, text, cause = e)
             }
             return perform(method, path, body, authenticated, retriedAfterRefresh = true)
         }
+        if (authenticated && status == 401) reportUnauthorized(method, path, text)
         if (status !in 200..299) throw ApiException.BadStatus(status, text)
         return text
+    }
+
+    private fun reportUnauthorized(method: String, path: String, body: String) {
+        onUnauthorized?.invoke("$method ${path.substringBefore('?')}", body)
     }
 
     private suspend fun refreshIfExpired() {

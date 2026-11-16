@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -27,17 +28,19 @@ enum class RootTab(val title: String, val icon: ImageVector, val area: Area) {
     Personal("개인", Icons.Outlined.Person, Area.Personal),
     Work("회사", Icons.Outlined.WorkOutline, Area.Work),
     Routines("루틴", Icons.Outlined.Autorenew, Area.Routines),
-    Notifications("알림 기록", Icons.Outlined.Notifications, Area.PrMonitor);
+    Notifications("알림 기록", Icons.Outlined.Notifications, Area.PrMonitor),
+    CommitStatus("커밋 상태", Icons.Outlined.AccountTree, Area.PrMonitor);
 
     val isInMore: Boolean get() = this in MORE_TABS
 
     companion object {
         val BOTTOM_TABS = listOf(Affirmations, Chat, Approval, Sessions, More)
-        val MORE_TABS = listOf(PrMonitor, Scratchpad, Personal, Work, Routines, Notifications)
+        val MORE_TABS = listOf(PrMonitor, Scratchpad, Personal, Work, Routines, Notifications, CommitStatus)
 
         fun forDeepLink(link: PushDeepLink): RootTab = when (link) {
             is PushDeepLink.Approval -> Approval
             is PushDeepLink.ExternalNotification -> Notifications
+            is PushDeepLink.CommitStatusRequest -> CommitStatus
             is PushDeepLink.PrMonitorEvent -> PrMonitor
         }
     }

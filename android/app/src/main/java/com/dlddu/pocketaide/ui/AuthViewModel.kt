@@ -8,7 +8,9 @@ import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.MeResponse
 import com.dlddu.pocketaide.auth.AuthBrowser
+import com.dlddu.pocketaide.auth.AuthNotice
 import com.dlddu.pocketaide.auth.OidcException
+import com.dlddu.pocketaide.auth.isTransientRefreshFailure
 import com.dlddu.pocketaide.push.DeviceName
 import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,8 +43,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         ),
     )
     val state: StateFlow<AuthUiState> = _state.asStateFlow()
+    val notice: StateFlow<AuthNotice?> = container.authNotices.current
 
     init {
+        container.authNotices.onLaunch(hasToken = _state.value.signedIn)
         viewModelScope.launch {
             refreshHealth()
             if (_state.value.signedIn) {
@@ -58,6 +62,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(isSigningIn = true, signInError = null) }
             try {
                 container.oidc.signIn(browser)
+                container.authNotices.onSignedIn()
                 _state.update { it.copy(signedIn = true) }
                 WidgetRefresher.reloadAll(getApplication<Application>())
                 refreshMe()
@@ -75,6 +80,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signOut() {
+        container.authNotices.onSignedOutByUser()
+        clearSession()
+    }
+
+    fun dismissNotice() = container.authNotices.dismiss()
+
+    private fun expireSession(apiBody: String) {
+        container.authNotices.onSessionExpired("GET /api/me", apiBody)
+        clearSession()
+    }
+
+    private fun clearSession() {
         container.oidc.signOut()
         container.pushRegistrar.unregister()
         _state.update { it.copy(signedIn = false, me = null, meError = null, deviceNamePrompt = null) }
@@ -102,7 +119,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             val me = container.api.me()
             _state.update { it.copy(me = me) }
         } catch (e: ApiException.BadStatus) {
-            if (e.status == 401) signOut() else _state.update { it.copy(me = null, meError = e.message) }
+            val refreshFailure = e.cause
+            when {
+                e.status != 401 -> _state.update { it.copy(me = null, meError = e.message) }
+                refreshFailure != null && refreshFailure.isTransientRefreshFailure() ->
+                    _state.update { it.copy(me = null, meError = refreshFailure.message ?: e.message) }
+                else -> expireSession(e.body)
+            }
         } catch (e: Exception) {
             _state.update { it.copy(me = null, meError = e.message ?: e.toString()) }
         }

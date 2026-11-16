@@ -12,11 +12,13 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 
 class OidcClientTest {
@@ -24,6 +26,7 @@ class OidcClientTest {
     private val tokenCalls = AtomicInteger()
     private var tokenResponse = MockResponse().setBody("""{"access_token":"new","expires_in":60}""")
     private var lastTokenForm = ""
+    private val reasons = InMemorySignOutReasonStore()
 
     @Before
     fun setUp() {
@@ -54,7 +57,7 @@ class OidcClientTest {
 
     private fun oidc(store: TokenStore, bus: OidcRedirectBus = OidcRedirectBus()): OidcClient {
         val api = ApiClient(server.url("/").toString(), store)
-        return OidcClient(api, store, bus, clock = { 0L })
+        return OidcClient(api, store, bus, reasons, clock = { 0L })
     }
 
     @Test
@@ -145,6 +148,56 @@ class OidcClientTest {
         runCatching { oidc(store).refresh() }
 
         assertEquals(original, store.load())
+    }
+
+    @Test
+    fun refreshRecordsIdpRejectionAsSignOutReason() = runTest {
+        val store = InMemoryTokenStore(TokenBundle("old", "r0", 0))
+        tokenResponse = MockResponse().setResponseCode(400)
+            .setBody("""{"error":"invalid_grant","error_description":"Token is not active"}""")
+
+        runCatching { oidc(store).refresh() }
+
+        assertEquals(SignOutReason("토큰 갱신 거절 — HTTP 400: invalid_grant: Token is not active", 0), reasons.load())
+    }
+
+    @Test
+    fun refreshRecordsServerErrorAsSignOutReason() = runTest {
+        val store = InMemoryTokenStore(TokenBundle("old", "r0", 0))
+        tokenResponse = MockResponse().setResponseCode(503)
+
+        runCatching { oidc(store).refresh() }
+
+        assertEquals(SignOutReason("토큰 갱신 실패 — HTTP 503", 0), reasons.load())
+    }
+
+    @Test
+    fun successfulRefreshForgetsEarlierFailure() = runTest {
+        reasons.save(SignOutReason("토큰 갱신 실패 — HTTP 503", 0))
+
+        oidc(InMemoryTokenStore(TokenBundle("old", "r0", 0))).refresh()
+
+        assertNull(reasons.load())
+    }
+
+    @Test
+    fun refreshWithoutRefreshTokenKeepsRecordedReason() = runTest {
+        val rejected = SignOutReason("토큰 갱신 거절 — HTTP 400: invalid_grant", 0)
+        reasons.save(rejected)
+
+        runCatching { oidc(InMemoryTokenStore()).refresh() }
+
+        assertEquals(rejected, reasons.load())
+    }
+
+    @Test
+    fun onlyIdpRejectionOrMissingRefreshTokenIsPermanent() {
+        assertTrue(OidcException.TokenExchange(503, "").isTransientRefreshFailure())
+        assertTrue(OidcException.TokenExchange(-1, "timeout").isTransientRefreshFailure())
+        assertTrue(OidcException.Discovery(IOException("offline")).isTransientRefreshFailure())
+        assertTrue(IOException("offline").isTransientRefreshFailure())
+        assertFalse(OidcException.TokenExchange(400, "invalid_grant").isTransientRefreshFailure())
+        assertFalse(OidcException.NoRefreshToken().isTransientRefreshFailure())
     }
 
     @Test

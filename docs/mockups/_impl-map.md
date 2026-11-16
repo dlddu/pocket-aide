@@ -1,6 +1,6 @@
 ---
 type: mockup-impl-map
-last_updated: 2026-11-06
+last_updated: 2026-11-16
 ---
 
 # 구현 ↔ 목업 매핑
@@ -123,7 +123,8 @@ last_updated: 2026-11-06
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowMeta.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 메타 줄 — 마감일·우선순위·구분자 표기 |
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoRowParts.kt` | 부분 | `screen-todo-personal`, `screen-todo-work` | 투두 행 공용 파트 — `TodoCheckBox`·`TodoPriorityTag`·`TodoDueFilterChips`(완료 체크·우선순위 태그·개인 전용 기한 필터 칩 줄) |
 | `android/app/src/main/java/com/dlddu/pocketaide/todos/Todos.kt` | 비렌더링 | — | 투두 도메인 — 항목 변환·마감일·필터·미완료 개수 |
-| `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthViewModel.kt` | 비렌더링 | — | 로그인 상태·푸시 권한·헬스 조회·토큰 갱신·첫 푸시 등록 때 기기 이름 묻기 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthNoticeDialog.kt` | 목업 없음 | — | 인증 알림 다이얼로그 — 401 거절·로그인 화면 복귀 때 시각과 사유를 보인다. 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/AuthViewModel.kt` | 비렌더링 | — | 로그인 상태·푸시 권한·헬스 조회·토큰 갱신·첫 푸시 등록 때 기기 이름 묻기·인증 알림(401 거절·로그인 화면 복귀 사유) 상태 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeepLinkRouter.kt` | 비렌더링 | — | 딥링크 수신 — 날씨·탭·푸시 도착지 진입점 처리 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | 화면 | `screen-device-name` | 기기 이름 시트 전체 — `DeviceNameSheet`(제목·설명·한 줄 입력·저장/건너뛰기). 시트 아래 탭 화면은 해당 행, 시트를 띄우는 쪽은 `ui/RootScreen.kt` 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/LoginScreen.kt` | 목업 없음 | — | 로그인 화면 — 대응 화면 목업이 없다 |
