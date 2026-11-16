@@ -19,7 +19,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 sealed class ApiException(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    class BadStatus(val status: Int, val body: String) : ApiException("HTTP $status: $body")
+    class BadStatus(val status: Int, val body: String, cause: Throwable? = null) :
+        ApiException("HTTP $status: $body", cause)
     class Decoding(cause: Throwable) : ApiException("decode: ${cause.message}", cause)
     class Transport(cause: Throwable) : ApiException("transport: ${cause.message}", cause)
 }
@@ -149,7 +150,7 @@ class ApiClient(
                 refresher.refresh()
             } catch (e: Exception) {
                 if (e !is CancellationException) reportUnauthorized(method, path, text)
-                throw ApiException.BadStatus(status, text)
+                throw ApiException.BadStatus(status, text, cause = e)
             }
             return perform(method, path, body, authenticated, retriedAfterRefresh = true)
         }

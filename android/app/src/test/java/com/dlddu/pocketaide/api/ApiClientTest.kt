@@ -1,6 +1,7 @@
 package com.dlddu.pocketaide.api
 
 import com.dlddu.pocketaide.auth.InMemoryTokenStore
+import com.dlddu.pocketaide.auth.OidcException
 import com.dlddu.pocketaide.auth.TokenBundle
 import com.dlddu.pocketaide.auth.TokenRefresher
 import kotlinx.coroutines.test.runTest
@@ -12,6 +13,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -114,6 +116,19 @@ class ApiClientTest {
         runCatching { api.get<EmptyResponse>("/api/sessions?limit=5") }
 
         assertEquals(listOf("GET /api/sessions" to "invalid token: expired"), reports)
+    }
+
+    @Test
+    fun unauthorizedCarriesTheRefreshFailure() = runTest {
+        val (_, api) = client()
+        val failure = OidcException.TokenExchange(503, "")
+        api.tokenRefresher = TokenRefresher { throw failure }
+        server.enqueue(MockResponse().setResponseCode(401))
+
+        val error = runCatching { api.me() }.exceptionOrNull()
+
+        assertEquals(401, (error as ApiException.BadStatus).status)
+        assertSame(failure, error.cause)
     }
 
     @Test

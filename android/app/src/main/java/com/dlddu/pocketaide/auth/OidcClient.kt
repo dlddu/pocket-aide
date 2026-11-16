@@ -27,6 +27,12 @@ sealed class OidcException(message: String, cause: Throwable? = null) : Exceptio
     class NoRefreshToken : OidcException("no refresh token stored")
 }
 
+fun Throwable.isTransientRefreshFailure(): Boolean = when (this) {
+    is OidcException.TokenExchange -> status !in 400..499
+    is OidcException -> this is OidcException.Discovery
+    else -> true
+}
+
 fun interface AuthBrowser {
     fun open(url: String)
 }

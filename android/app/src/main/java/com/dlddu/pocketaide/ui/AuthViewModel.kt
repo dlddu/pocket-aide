@@ -10,6 +10,7 @@ import com.dlddu.pocketaide.api.MeResponse
 import com.dlddu.pocketaide.auth.AuthBrowser
 import com.dlddu.pocketaide.auth.AuthNotice
 import com.dlddu.pocketaide.auth.OidcException
+import com.dlddu.pocketaide.auth.isTransientRefreshFailure
 import com.dlddu.pocketaide.push.DeviceName
 import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,7 +119,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             val me = container.api.me()
             _state.update { it.copy(me = me) }
         } catch (e: ApiException.BadStatus) {
-            if (e.status == 401) expireSession(e.body) else _state.update { it.copy(me = null, meError = e.message) }
+            val refreshFailure = e.cause
+            when {
+                e.status != 401 -> _state.update { it.copy(me = null, meError = e.message) }
+                refreshFailure != null && refreshFailure.isTransientRefreshFailure() ->
+                    _state.update { it.copy(me = null, meError = refreshFailure.message ?: e.message) }
+                else -> expireSession(e.body)
+            }
         } catch (e: Exception) {
             _state.update { it.copy(me = null, meError = e.message ?: e.toString()) }
         }

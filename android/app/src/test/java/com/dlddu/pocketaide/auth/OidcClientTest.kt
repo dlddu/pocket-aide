@@ -12,11 +12,13 @@ import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 
 class OidcClientTest {
@@ -186,6 +188,16 @@ class OidcClientTest {
         runCatching { oidc(InMemoryTokenStore()).refresh() }
 
         assertEquals(rejected, reasons.load())
+    }
+
+    @Test
+    fun onlyIdpRejectionOrMissingRefreshTokenIsPermanent() {
+        assertTrue(OidcException.TokenExchange(503, "").isTransientRefreshFailure())
+        assertTrue(OidcException.TokenExchange(-1, "timeout").isTransientRefreshFailure())
+        assertTrue(OidcException.Discovery(IOException("offline")).isTransientRefreshFailure())
+        assertTrue(IOException("offline").isTransientRefreshFailure())
+        assertFalse(OidcException.TokenExchange(400, "invalid_grant").isTransientRefreshFailure())
+        assertFalse(OidcException.NoRefreshToken().isTransientRefreshFailure())
     }
 
     @Test
