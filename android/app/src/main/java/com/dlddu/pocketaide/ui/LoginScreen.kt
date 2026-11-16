@@ -12,20 +12,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import com.dlddu.pocketaide.auth.SignOutReason
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
 
 @Composable
-fun LoginScreen(state: AuthUiState, canSignIn: Boolean, onSignIn: () -> Unit) {
+fun LoginScreen(
+    state: AuthUiState,
+    canSignIn: Boolean,
+    onSignIn: () -> Unit,
+    onDismissSignOutNotice: () -> Unit,
+) {
     val area = Area.AiChat
     Box(
         Modifier
@@ -99,10 +108,36 @@ fun LoginScreen(state: AuthUiState, canSignIn: Boolean, onSignIn: () -> Unit) {
                 Text(
                     if (state.healthOk) "Health: OK" else "Health: ${state.healthError ?: "checking…"}",
                     style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-                    color = DesignTokens.Colors.ink(area).copy(alpha = 0.7f),
+                    color = DesignTokens.Colors.ink(area).copy(alpha = SECONDARY_TEXT_OPACITY),
                     modifier = Modifier.testTag("HealthStatus"),
                 )
             }
         }
     }
+    state.signOutNotice?.let { SignOutNoticeDialog(it, area, onDismissSignOutNotice) }
 }
+
+@Composable
+private fun SignOutNoticeDialog(notice: SignOutReason, area: Area, onDismiss: () -> Unit) {
+    val ink = DesignTokens.Colors.ink(area)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = DesignTokens.Colors.surface(area),
+        titleContentColor = ink,
+        textContentColor = ink.copy(alpha = SECONDARY_TEXT_OPACITY),
+        title = { Text("로그인이 풀렸어요") },
+        text = {
+            SelectionContainer {
+                Text(notice.message(), modifier = Modifier.testTag("SignOutNotice.message"))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("SignOutNotice.dismiss")) {
+                Text("확인", color = DesignTokens.Colors.accent(area))
+            }
+        },
+        modifier = Modifier.testTag("SignOutNotice"),
+    )
+}
+
+private const val SECONDARY_TEXT_OPACITY = 0.7f

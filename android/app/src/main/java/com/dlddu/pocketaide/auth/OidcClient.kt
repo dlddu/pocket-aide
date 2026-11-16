@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.auth
 
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.AuthConfig
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -34,6 +35,7 @@ class OidcClient(
     private val api: ApiClient,
     private val tokenStore: TokenStore,
     private val redirects: OidcRedirectBus,
+    private val signOutReasons: SignOutReasonStore,
     private val http: OkHttpClient = OkHttpClient(),
     private val clock: () -> Long = System::currentTimeMillis,
 ) : TokenRefresher {
@@ -77,25 +79,40 @@ class OidcClient(
             val current = tokenStore.load()
             if (current != null && current.accessToken != tokenBeforeWait) return@withLock current
             val refreshToken = current?.refreshToken ?: throw OidcException.NoRefreshToken()
-            val cfg = api.authConfig()
-            val discovery = fetchDiscovery(cfg.issuer)
             val bundle = try {
-                exchange(
-                    discovery.tokenEndpoint,
-                    mapOf(
-                        "grant_type" to "refresh_token",
-                        "refresh_token" to refreshToken,
-                        "client_id" to cfg.clientId,
-                    ),
-                    fallbackRefreshToken = refreshToken,
-                )
-            } catch (e: OidcException.TokenExchange) {
-                if (e.status in 400..499) tokenStore.clear()
+                exchangeRefreshToken(refreshToken)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (e is OidcException.TokenExchange && e.status in 400..499) tokenStore.clear()
+                signOutReasons.save(signOutReason(e))
                 throw e
             }
             tokenStore.save(bundle)
+            signOutReasons.clear()
             bundle
         }
+    }
+
+    private suspend fun exchangeRefreshToken(refreshToken: String): TokenBundle {
+        val cfg = api.authConfig()
+        val discovery = fetchDiscovery(cfg.issuer)
+        return exchange(
+            discovery.tokenEndpoint,
+            mapOf(
+                "grant_type" to "refresh_token",
+                "refresh_token" to refreshToken,
+                "client_id" to cfg.clientId,
+            ),
+            fallbackRefreshToken = refreshToken,
+        )
+    }
+
+    private fun signOutReason(error: Exception): SignOutReason = when {
+        error is OidcException.TokenExchange && error.status > 0 ->
+            SignOutReason.refreshHttpFailure(error.status, error.body, clock())
+        error is OidcException.TokenExchange -> SignOutReason.refreshFailure("네트워크 오류: ${error.body}", clock())
+        else -> SignOutReason.refreshFailure(error.message ?: error.toString(), clock())
     }
 
     private suspend fun exchange(

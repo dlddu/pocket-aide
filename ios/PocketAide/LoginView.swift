@@ -19,6 +19,16 @@ struct LoginView: View {
             .padding(.horizontal, DesignTokens.Spacing.xl)
             .padding(.vertical, DesignTokens.Spacing.xxl)
         }
+        .alert(
+            "로그인이 풀렸어요",
+            isPresented: Binding(get: { auth.signOutNotice != nil }, set: { if !$0 { auth.dismissSignOutNotice() } }),
+            presenting: auth.signOutNotice
+        ) { _ in
+            Button("확인") { auth.dismissSignOutNotice() }
+                .accessibilityIdentifier("SignOutNotice.dismiss")
+        } message: { notice in
+            Text(notice.message())
+        }
     }
 
     private var brand: some View {

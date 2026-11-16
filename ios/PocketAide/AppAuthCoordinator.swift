@@ -15,12 +15,14 @@ final class AppAuthCoordinator: ObservableObject {
     @Published var meError: String?
     @Published var pushAuthorizationDenied = false
     @Published var deviceNamePrompt: String?
+    @Published var signOutNotice: SignOutReason?
 
     let api: APIClient?
     let oidc: OIDCClient?
     private let tokenStore: TokenStoring
     private let pushRegistrar = PushRegistrar()
     private let deviceNames = DeviceNameStore()
+    private let signOutReasons = SignOutReasonStore()
     private var pendingDeviceToken: String?
 
     init() {
@@ -42,6 +44,9 @@ final class AppAuthCoordinator: ObservableObject {
             self.healthError = "BackendBaseURL missing"
         }
         self.signedIn = (try? store.load()) != nil
+        if !signedIn {
+            self.signOutNotice = signOutReasons.load()
+        }
     }
 
     func bootstrap() async {
@@ -71,8 +76,8 @@ final class AppAuthCoordinator: ObservableObject {
         meError = nil
         do {
             me = try await api.me()
-        } catch APIError.badStatus(401, _) {
-            signOut()
+        } catch APIError.badStatus(401, let body) {
+            expireSession(apiBody: body)
         } catch {
             me = nil
             meError = String(describing: error)
@@ -86,6 +91,8 @@ final class AppAuthCoordinator: ObservableObject {
         defer { isSigningIn = false }
         do {
             _ = try await oidc.signIn()
+            signOutReasons.clear()
+            signOutNotice = nil
             signedIn = true
             WidgetRefresher.reloadAll()
             await refreshMe()
@@ -99,6 +106,24 @@ final class AppAuthCoordinator: ObservableObject {
     }
 
     func signOut() {
+        signOutReasons.clear()
+        signOutNotice = nil
+        clearSession()
+    }
+
+    func dismissSignOutNotice() {
+        signOutReasons.clear()
+        signOutNotice = nil
+    }
+
+    private func expireSession(apiBody: String) {
+        let reason = SignOutReason.afterUnauthorized(signOutReasons.load(), apiBody: apiBody, at: Date())
+        signOutReasons.save(reason)
+        signOutNotice = reason
+        clearSession()
+    }
+
+    private func clearSession() {
         try? oidc?.signOut()
         try? KeychainGitHubCredentialStore().clear()
         me = nil

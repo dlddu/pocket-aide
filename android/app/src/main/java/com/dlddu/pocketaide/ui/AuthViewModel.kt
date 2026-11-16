@@ -9,6 +9,7 @@ import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.MeResponse
 import com.dlddu.pocketaide.auth.AuthBrowser
 import com.dlddu.pocketaide.auth.OidcException
+import com.dlddu.pocketaide.auth.SignOutReason
 import com.dlddu.pocketaide.push.DeviceName
 import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ data class AuthUiState(
     val meError: String? = null,
     val pushDenied: Boolean = false,
     val deviceNamePrompt: String? = null,
+    val signOutNotice: SignOutReason? = null,
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -35,10 +37,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val canSignIn: Boolean get() = container.backendConfigured
 
     private val _state = MutableStateFlow(
-        AuthUiState(
-            signedIn = container.tokenStore.load() != null,
-            healthError = if (container.backendConfigured) null else "BackendBaseURL missing",
-        ),
+        (container.tokenStore.load() != null).let { signedIn ->
+            AuthUiState(
+                signedIn = signedIn,
+                healthError = if (container.backendConfigured) null else "BackendBaseURL missing",
+                signOutNotice = if (signedIn) null else container.signOutReasons.load(),
+            )
+        },
     )
     val state: StateFlow<AuthUiState> = _state.asStateFlow()
 
@@ -58,7 +63,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(isSigningIn = true, signInError = null) }
             try {
                 container.oidc.signIn(browser)
-                _state.update { it.copy(signedIn = true) }
+                container.signOutReasons.clear()
+                _state.update { it.copy(signedIn = true, signOutNotice = null) }
                 WidgetRefresher.reloadAll(getApplication<Application>())
                 refreshMe()
                 registerForPush()
@@ -75,9 +81,27 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signOut() {
+        container.signOutReasons.clear()
+        clearSession(notice = null)
+    }
+
+    fun dismissSignOutNotice() {
+        container.signOutReasons.clear()
+        _state.update { it.copy(signOutNotice = null) }
+    }
+
+    private fun expireSession(apiBody: String) {
+        val reason = SignOutReason.afterUnauthorized(container.signOutReasons.load(), apiBody, System.currentTimeMillis())
+        container.signOutReasons.save(reason)
+        clearSession(notice = reason)
+    }
+
+    private fun clearSession(notice: SignOutReason?) {
         container.oidc.signOut()
         container.pushRegistrar.unregister()
-        _state.update { it.copy(signedIn = false, me = null, meError = null, deviceNamePrompt = null) }
+        _state.update {
+            it.copy(signedIn = false, me = null, meError = null, deviceNamePrompt = null, signOutNotice = notice)
+        }
         WidgetRefresher.reloadAll(getApplication<Application>())
     }
 
@@ -102,7 +126,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             val me = container.api.me()
             _state.update { it.copy(me = me) }
         } catch (e: ApiException.BadStatus) {
-            if (e.status == 401) signOut() else _state.update { it.copy(me = null, meError = e.message) }
+            if (e.status == 401) expireSession(e.body) else _state.update { it.copy(me = null, meError = e.message) }
         } catch (e: Exception) {
             _state.update { it.copy(me = null, meError = e.message ?: e.toString()) }
         }

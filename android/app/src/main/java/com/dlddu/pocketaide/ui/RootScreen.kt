@@ -75,7 +75,12 @@ fun RootScreen(authBrowser: AuthBrowser, onRequestStartupPermissions: () -> Unit
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { auth.refreshPushPermission() }
 
     if (!state.signedIn) {
-        LoginScreen(state = state, canSignIn = auth.canSignIn, onSignIn = { auth.signIn(authBrowser) })
+        LoginScreen(
+            state = state,
+            canSignIn = auth.canSignIn,
+            onSignIn = { auth.signIn(authBrowser) },
+            onDismissSignOutNotice = auth::dismissSignOutNotice,
+        )
         return
     }
     LaunchedEffect(Unit) { onRequestStartupPermissions() }

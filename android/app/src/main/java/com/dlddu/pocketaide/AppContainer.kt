@@ -5,6 +5,8 @@ import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.auth.KeystoreTokenStore
 import com.dlddu.pocketaide.auth.OidcClient
 import com.dlddu.pocketaide.auth.OidcRedirectBus
+import com.dlddu.pocketaide.auth.PrefsSignOutReasonStore
+import com.dlddu.pocketaide.auth.SignOutReasonStore
 import com.dlddu.pocketaide.auth.TokenStore
 import com.dlddu.pocketaide.push.DeviceNameStore
 import com.dlddu.pocketaide.push.PrefsDeviceNameStore
@@ -23,6 +25,7 @@ class AppContainer(context: Context) {
     val deepLinks = DeepLinkRouter()
     val pushRegistrar = PushRegistrar(context)
     val deviceNames: DeviceNameStore = PrefsDeviceNameStore(context)
+    val signOutReasons: SignOutReasonStore = PrefsSignOutReasonStore(context)
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -37,7 +40,7 @@ class AppContainer(context: Context) {
         http = http,
     )
 
-    val oidc: OidcClient = OidcClient(api, tokenStore, redirectBus, http).also { api.tokenRefresher = it }
+    val oidc: OidcClient = OidcClient(api, tokenStore, redirectBus, signOutReasons, http).also { api.tokenRefresher = it }
 
     private companion object {
         const val UNCONFIGURED_BASE_URL = "http://backend.invalid"

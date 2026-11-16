@@ -34,12 +34,19 @@ public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextP
     private let api: APIClient
     private let tokenStore: TokenStoring
     private let session: URLSession
+    private let signOutReasons: SignOutReasonStore
     private weak var presentationAnchor: ASPresentationAnchor?
     private var refreshTask: Task<TokenBundle, Error>?
 
-    public init(api: APIClient, tokenStore: TokenStoring, session: URLSession = .shared) {
+    public init(
+        api: APIClient,
+        tokenStore: TokenStoring,
+        signOutReasons: SignOutReasonStore = SignOutReasonStore(),
+        session: URLSession = .shared
+    ) {
         self.api = api
         self.tokenStore = tokenStore
+        self.signOutReasons = signOutReasons
         self.session = session
     }
 
@@ -109,6 +116,19 @@ public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextP
               let refreshToken = current.refreshToken else {
             throw OIDCError.noRefreshToken
         }
+        do {
+            let bundle = try await exchangeRefreshToken(refreshToken)
+            signOutReasons.clear()
+            return bundle
+        } catch {
+            if !Self.isCancellation(error) {
+                signOutReasons.save(Self.signOutReason(for: error))
+            }
+            throw error
+        }
+    }
+
+    private func exchangeRefreshToken(_ refreshToken: String) async throws -> TokenBundle {
         let cfg = try await api.authConfig()
         let discovery = try await fetchDiscovery(issuer: cfg.issuer)
 
@@ -210,6 +230,25 @@ public final class OIDCClient: NSObject, ASWebAuthenticationPresentationContextP
         } catch {
             throw OIDCError.decoding(error)
         }
+    }
+
+    private static func signOutReason(for error: Error) -> SignOutReason {
+        switch error {
+        case OIDCError.tokenExchange(let status, let body) where status > 0:
+            return .refreshHTTPFailure(status: status, body: body, at: Date())
+        case let error as OIDCError:
+            return .refreshFailure(error.description, at: Date())
+        case let error as APIError:
+            return .refreshFailure(error.description, at: Date())
+        case let error as URLError:
+            return .refreshFailure("네트워크 오류: \(error.localizedDescription)", at: Date())
+        default:
+            return .refreshFailure(String(describing: error), at: Date())
+        }
+    }
+
+    private static func isCancellation(_ error: Error) -> Bool {
+        error is CancellationError || (error as? URLError)?.code == .cancelled
     }
 
     private func fetchDiscovery(issuer: String) async throws -> Discovery {
