@@ -72,7 +72,9 @@ import com.dlddu.pocketaide.widget.WidgetRefresher
 fun RootScreen(authBrowser: AuthBrowser, onRequestStartupPermissions: () -> Unit) {
     val auth: AuthViewModel = viewModel()
     val state by auth.state.collectAsStateWithLifecycle()
+    val notice by auth.notice.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { auth.refreshPushPermission() }
+    notice?.let { AuthNoticeDialog(it, onDismiss = auth::dismissNotice) }
 
     if (!state.signedIn) {
         LoginScreen(state = state, canSignIn = auth.canSignIn, onSignIn = { auth.signIn(authBrowser) })
