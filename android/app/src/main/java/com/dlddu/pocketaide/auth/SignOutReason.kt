@@ -15,7 +15,7 @@ import java.util.TimeZone
 data class SignOutReason(val detail: String, val atMillis: Long) {
     fun message(timeZone: TimeZone = TimeZone.getDefault()): String {
         val format = SimpleDateFormat("M월 d일 a h:mm", Locale.KOREAN).apply { this.timeZone = timeZone }
-        return "${format.format(Date(atMillis))}에 자동으로 로그아웃됐어요.\n\n$detail"
+        return "${format.format(Date(atMillis))}\n\n$detail"
     }
 
     companion object {
@@ -30,10 +30,19 @@ data class SignOutReason(val detail: String, val atMillis: Long) {
         fun refreshFailure(message: String, atMillis: Long): SignOutReason =
             SignOutReason("토큰 갱신 실패 — ${oneLine(message)}", atMillis)
 
-        fun afterUnauthorized(stored: SignOutReason?, apiBody: String, atMillis: Long): SignOutReason {
-            val api = "API 응답 — HTTP 401${suffix(oneLine(apiBody))}"
-            return SignOutReason(listOfNotNull(stored?.detail, api).joinToString("\n"), stored?.atMillis ?: atMillis)
+        fun unauthorized(stored: SignOutReason?, request: String, apiBody: String, atMillis: Long): SignOutReason {
+            val api = "API 응답 — $request → HTTP 401${suffix(oneLine(apiBody))}"
+            return SignOutReason(listOfNotNull(stored?.detail, api).joinToString("\n"), atMillis)
         }
+
+        fun tokenUnreadable(error: Throwable, atMillis: Long): SignOutReason =
+            SignOutReason(
+                "저장된 로그인 토큰을 읽지 못해 지웠어요 — ${oneLine("${error::class.simpleName}: ${error.message}")}",
+                atMillis,
+            )
+
+        fun tokenMissing(atMillis: Long): SignOutReason =
+            SignOutReason("앱을 시작할 때 저장된 로그인 토큰이 없었어요. 지워진 이유는 기록되지 않았어요.", atMillis)
 
         private fun oauthError(body: String): String {
             val parsed = runCatching {
@@ -62,6 +71,9 @@ interface SignOutReasonStore {
     fun load(): SignOutReason?
     fun save(reason: SignOutReason)
     fun clear()
+    fun hadSession(): Boolean
+    fun markSession()
+    fun forgetSession()
 }
 
 class PrefsSignOutReasonStore(context: Context) : SignOutReasonStore {
@@ -80,16 +92,30 @@ class PrefsSignOutReasonStore(context: Context) : SignOutReasonStore {
         prefs.edit().remove(KEY_REASON).commit()
     }
 
+    override fun hadSession(): Boolean = prefs.getBoolean(KEY_HAD_SESSION, false)
+
+    override fun markSession() {
+        if (!hadSession()) prefs.edit().putBoolean(KEY_HAD_SESSION, true).commit()
+    }
+
+    override fun forgetSession() {
+        prefs.edit().remove(KEY_HAD_SESSION).commit()
+    }
+
     private companion object {
         const val PREFS = "pocketaide.auth"
         const val KEY_REASON = "signOutReason"
+        const val KEY_HAD_SESSION = "hadSession"
         val json = Json { ignoreUnknownKeys = true }
     }
 }
 
-class InMemorySignOutReasonStore(initial: SignOutReason? = null) : SignOutReasonStore {
+class InMemorySignOutReasonStore(initial: SignOutReason? = null, hadSession: Boolean = false) : SignOutReasonStore {
     @Volatile
     private var reason: SignOutReason? = initial
+
+    @Volatile
+    private var session: Boolean = hadSession
 
     override fun load(): SignOutReason? = reason
 
@@ -99,5 +125,15 @@ class InMemorySignOutReasonStore(initial: SignOutReason? = null) : SignOutReason
 
     override fun clear() {
         reason = null
+    }
+
+    override fun hadSession(): Boolean = session
+
+    override fun markSession() {
+        session = true
+    }
+
+    override fun forgetSession() {
+        session = false
     }
 }

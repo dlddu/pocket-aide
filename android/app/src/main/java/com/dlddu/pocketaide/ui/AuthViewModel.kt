@@ -8,8 +8,8 @@ import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.MeResponse
 import com.dlddu.pocketaide.auth.AuthBrowser
+import com.dlddu.pocketaide.auth.AuthNotice
 import com.dlddu.pocketaide.auth.OidcException
-import com.dlddu.pocketaide.auth.SignOutReason
 import com.dlddu.pocketaide.push.DeviceName
 import com.dlddu.pocketaide.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +28,6 @@ data class AuthUiState(
     val meError: String? = null,
     val pushDenied: Boolean = false,
     val deviceNamePrompt: String? = null,
-    val signOutNotice: SignOutReason? = null,
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -37,17 +36,16 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val canSignIn: Boolean get() = container.backendConfigured
 
     private val _state = MutableStateFlow(
-        (container.tokenStore.load() != null).let { signedIn ->
-            AuthUiState(
-                signedIn = signedIn,
-                healthError = if (container.backendConfigured) null else "BackendBaseURL missing",
-                signOutNotice = if (signedIn) null else container.signOutReasons.load(),
-            )
-        },
+        AuthUiState(
+            signedIn = container.tokenStore.load() != null,
+            healthError = if (container.backendConfigured) null else "BackendBaseURL missing",
+        ),
     )
     val state: StateFlow<AuthUiState> = _state.asStateFlow()
+    val notice: StateFlow<AuthNotice?> = container.authNotices.current
 
     init {
+        container.authNotices.onLaunch(hasToken = _state.value.signedIn)
         viewModelScope.launch {
             refreshHealth()
             if (_state.value.signedIn) {
@@ -63,8 +61,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(isSigningIn = true, signInError = null) }
             try {
                 container.oidc.signIn(browser)
-                container.signOutReasons.clear()
-                _state.update { it.copy(signedIn = true, signOutNotice = null) }
+                container.authNotices.onSignedIn()
+                _state.update { it.copy(signedIn = true) }
                 WidgetRefresher.reloadAll(getApplication<Application>())
                 refreshMe()
                 registerForPush()
@@ -81,27 +79,21 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun signOut() {
-        container.signOutReasons.clear()
-        clearSession(notice = null)
+        container.authNotices.onSignedOutByUser()
+        clearSession()
     }
 
-    fun dismissSignOutNotice() {
-        container.signOutReasons.clear()
-        _state.update { it.copy(signOutNotice = null) }
-    }
+    fun dismissNotice() = container.authNotices.dismiss()
 
     private fun expireSession(apiBody: String) {
-        val reason = SignOutReason.afterUnauthorized(container.signOutReasons.load(), apiBody, System.currentTimeMillis())
-        container.signOutReasons.save(reason)
-        clearSession(notice = reason)
+        container.authNotices.onSessionExpired("GET /api/me", apiBody)
+        clearSession()
     }
 
-    private fun clearSession(notice: SignOutReason?) {
+    private fun clearSession() {
         container.oidc.signOut()
         container.pushRegistrar.unregister()
-        _state.update {
-            it.copy(signedIn = false, me = null, meError = null, deviceNamePrompt = null, signOutNotice = notice)
-        }
+        _state.update { it.copy(signedIn = false, me = null, meError = null, deviceNamePrompt = null) }
         WidgetRefresher.reloadAll(getApplication<Application>())
     }
 

@@ -11,7 +11,11 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-class KeystoreTokenStore(context: Context) : TokenStore {
+class KeystoreTokenStore(
+    context: Context,
+    private val signOutReasons: SignOutReasonStore,
+    private val clock: () -> Long = System::currentTimeMillis,
+) : TokenStore {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val lock = Any()
 
@@ -24,8 +28,9 @@ class KeystoreTokenStore(context: Context) : TokenStore {
             cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(TAG_BITS, iv))
             val plain = cipher.doFinal(raw, IV_LENGTH, raw.size - IV_LENGTH)
             json.decodeFromString(TokenBundle.serializer(), plain.decodeToString())
-        }.getOrElse {
+        }.getOrElse { error ->
             prefs.edit().remove(KEY_BUNDLE).apply()
+            signOutReasons.save(SignOutReason.tokenUnreadable(error, clock()))
             null
         }
     }

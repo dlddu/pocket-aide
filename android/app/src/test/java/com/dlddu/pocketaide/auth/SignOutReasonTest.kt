@@ -22,30 +22,33 @@ class SignOutReasonTest {
     }
 
     @Test
-    fun unauthorizedKeepsEarlierRefreshFailureAndItsTime() {
+    fun unauthorizedNamesRequestAndKeepsEarlierRefreshFailure() {
         val stored = SignOutReason("토큰 갱신 거절 — HTTP 400: invalid_grant", 1_000)
 
-        val reason = SignOutReason.afterUnauthorized(stored, "missing Authorization header\n", 5_000)
+        val reason = SignOutReason.unauthorized(stored, "GET /api/sessions", "invalid token: oidc: token is expired\n", 5_000)
 
         assertEquals(
-            SignOutReason("토큰 갱신 거절 — HTTP 400: invalid_grant\nAPI 응답 — HTTP 401: missing Authorization header", 1_000),
+            SignOutReason(
+                "토큰 갱신 거절 — HTTP 400: invalid_grant\nAPI 응답 — GET /api/sessions → HTTP 401: invalid token: oidc: token is expired",
+                5_000,
+            ),
             reason,
         )
     }
 
     @Test
-    fun unauthorizedWithoutStoredFailureUsesNow() {
-        val reason = SignOutReason.afterUnauthorized(null, "invalid token: oidc: token is expired", 5_000)
+    fun unreadableTokenNamesTheError() {
+        val reason = SignOutReason.tokenUnreadable(IllegalStateException("key invalidated"), 0)
 
-        assertEquals(SignOutReason("API 응답 — HTTP 401: invalid token: oidc: token is expired", 5_000), reason)
+        assertEquals("저장된 로그인 토큰을 읽지 못해 지웠어요 — IllegalStateException: key invalidated", reason.detail)
     }
 
     @Test
     fun messageLeadsWithLocalTime() {
-        val reason = SignOutReason("API 응답 — HTTP 401", 1_763_253_120_000)
+        val reason = SignOutReason("API 응답 — GET /api/me → HTTP 401", 1_763_253_120_000)
 
         assertEquals(
-            "11월 16일 오전 9:32에 자동으로 로그아웃됐어요.\n\nAPI 응답 — HTTP 401",
+            "11월 16일 오전 9:32\n\nAPI 응답 — GET /api/me → HTTP 401",
             reason.message(TimeZone.getTimeZone("Asia/Seoul")),
         )
     }

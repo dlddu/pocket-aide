@@ -10,6 +10,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -100,6 +101,47 @@ class ApiClientTest {
 
         assertEquals("Bearer access", server.takeRequest().getHeader("Authorization"))
         assertEquals("Bearer fresh", server.takeRequest().getHeader("Authorization"))
+    }
+
+    @Test
+    fun reportsUnauthorizedWhenRefreshFails() = runTest {
+        val (_, api) = client()
+        val reports = mutableListOf<Pair<String, String>>()
+        api.onUnauthorized = { request, body -> reports += request to body }
+        api.tokenRefresher = TokenRefresher { throw IllegalStateException("rejected") }
+        server.enqueue(MockResponse().setResponseCode(401).setBody("invalid token: expired"))
+
+        runCatching { api.get<EmptyResponse>("/api/sessions?limit=5") }
+
+        assertEquals(listOf("GET /api/sessions" to "invalid token: expired"), reports)
+    }
+
+    @Test
+    fun reportsUnauthorizedOnceWhenRetryIsStillRejected() = runTest {
+        val (store, api) = client()
+        val reports = mutableListOf<String>()
+        api.onUnauthorized = { request, _ -> reports += request }
+        api.tokenRefresher = TokenRefresher { TokenBundle("fresh", "refresh2", now + 3_600_000).also(store::save) }
+        server.enqueue(MockResponse().setResponseCode(401))
+        server.enqueue(MockResponse().setResponseCode(401).setBody("still no"))
+
+        runCatching { api.me() }
+
+        assertEquals(listOf("GET /api/me"), reports)
+    }
+
+    @Test
+    fun recoveredRetryIsNotReported() = runTest {
+        val (store, api) = client()
+        var reported = false
+        api.onUnauthorized = { _, _ -> reported = true }
+        api.tokenRefresher = TokenRefresher { TokenBundle("fresh", "refresh2", now + 3_600_000).also(store::save) }
+        server.enqueue(MockResponse().setResponseCode(401))
+        server.enqueue(MockResponse().setBody("""{"id":1,"sub":"s"}"""))
+
+        api.me()
+
+        assertFalse(reported)
     }
 
     @Test
