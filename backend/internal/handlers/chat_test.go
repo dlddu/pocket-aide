@@ -87,7 +87,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	engine := chat.NewEngine(store, sessions.NewClient(srv.URL), nil).WithPoll(5 * time.Millisecond)
 	t.Cleanup(engine.Wait)
 	r := chi.NewRouter()
-	r.Get("/api/chat", handlers.GetChat(store, engine))
+	r.Get("/api/chat", handlers.GetChat(store, engine, chat.NewPresence()))
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))
 	return r, platform, engine
