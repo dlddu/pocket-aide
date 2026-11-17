@@ -108,6 +108,7 @@ func main() {
 		log.Fatalf("chat session platform tokens: %v", err)
 	}
 	chatEngine := chat.NewEngine(chatStore, chatPlatform, slog.Default())
+	chatPresence := chat.NewPresence()
 
 	var apnsClient *apns.Client
 	if cfg.PRMonitorEnabled && !cfg.APNSDisabled {
@@ -185,6 +186,7 @@ func main() {
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
 		p.Get("/api/external-notifications", handlers.ListExternalNotifications(externalNotificationStore))
 		p.Get("/api/external-notifications/{id}", handlers.GetExternalNotification(externalNotificationStore))
+		p.Post("/api/external-notifications/read-all", handlers.MarkAllExternalNotificationsRead(externalNotificationStore))
 		p.Post("/api/external-notifications/{id}/read", handlers.MarkExternalNotificationRead(externalNotificationStore))
 		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
 		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))
@@ -204,7 +206,7 @@ func main() {
 		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
-		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine))
+		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine, chatPresence))
 		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
 		p.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
@@ -247,6 +249,7 @@ func main() {
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender, externalNotificationStore))
 		x.Post("/api/external/commit-status-requests", handlers.CreateExternalCommitStatusRequest(commitStatusStore, commitStatusPusher, operatorPlatform))
+		x.Get("/api/external/chat-presence", handlers.GetExternalChatPresence(chatPresence))
 	})
 
 	srv := &http.Server{

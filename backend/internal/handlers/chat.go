@@ -15,13 +15,18 @@ const maxChatMessageBytes = 16 * 1024
 // GetChat handles GET /api/chat: the user's one conversation, its messages,
 // and the reply still being written, if any — the apps poll this while a
 // reply is pending (PRD-1 AC1·AC4).
-func GetChat(store *chat.Store, engine *chat.Engine) http.HandlerFunc {
+//
+// Only the chat screen polls this route, and only while it is visible, so the
+// read doubles as the presence signal (PRD-1 AC8). Recorded before the store
+// is read: a DB failure does not mean the user stopped looking.
+func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
 		if !ok {
 			http.Error(w, "no user in context", http.StatusInternalServerError)
 			return
 		}
+		presence.Touch(u.ID)
 		conv, err := store.Conversation(r.Context(), u.ID)
 		if err != nil {
 			http.Error(w, "get failed", http.StatusInternalServerError)
