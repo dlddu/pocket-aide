@@ -90,6 +90,7 @@ class ChatViewModelTest {
         server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"id":"q1","content":"다음","queued_at":5}}"""))
 
         assertTrue(vm.performSend("다음"))
+        assertEquals("/api/chat/messages", server.takeRequest().path)
         assertEquals("다음", vm.state.value.queued?.content)
         assertEquals("q1", vm.state.value.queued?.id)
         assertFalse(vm.state.value.canSend)
