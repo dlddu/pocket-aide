@@ -29,6 +29,14 @@ type fakePlatform struct {
 	// gateway timing out on a slow create does.
 	createFails bool
 	writeStatus int // forced status for writes; 0 = normal
+	// steerApplies makes /sessions/{id}/steer take the message into the
+	// running turn. Off by default: a platform that refuses is the case the
+	// queue tests exercise.
+	steerApplies bool
+	// steerStatus is the refusal status; 0 = 409.
+	steerStatus int
+	// steered is every mid-turn message the platform was handed, in order.
+	steered []string
 }
 
 type fakeSession struct {
@@ -75,6 +83,21 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 		}
 		raw, _ := json.Marshal(map[string]any{"sessions": list})
 		return http.StatusOK, raw, nil
+	case len(parts) == 3 && parts[2] == "steer":
+		if _, ok := f.sessions[parts[1]]; !ok {
+			return http.StatusNotFound, nil, nil
+		}
+		var req map[string]string
+		_ = json.Unmarshal(body, &req)
+		f.steered = append(f.steered, req["text"])
+		if f.steerApplies {
+			return http.StatusOK, []byte(`{"status":"applied","turnId":"t1"}`), nil
+		}
+		status := f.steerStatus
+		if status == 0 {
+			status = http.StatusConflict
+		}
+		return status, []byte(`{"status":"rejected","reason":"expectedTurnId does not match the active turn"}`), nil
 	case len(parts) == 3 && parts[2] == "write":
 		s, ok := f.sessions[parts[1]]
 		if !ok {
@@ -609,4 +632,106 @@ func TestEngine_QueuedMessagesAreIsolatedPerUser(t *testing.T) {
 		t.Fatalf("user 2's history = %q, want no trace of user 1's message", got)
 	}
 	_ = platform
+}
+
+// PRD-1 AC1 · session-platform AC-J9: a message sent while a reply is in
+// progress goes into that reply when the platform takes it — it reads as a
+// sent message, not as one still waiting.
+func TestEngine_SteersIntoTheRunningTurn(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	platform.steerApplies = true
+	// A test that fails before the reply is released would otherwise deadlock
+	// in the engine.Wait() cleanup.
+	defer func() {
+		if platform.hold != nil {
+			close(platform.hold)
+		}
+	}()
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+
+	msg, queued, err := engine.Queue(ctx, 1, "actually, the newer paper")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued != nil {
+		t.Fatalf("queued = %+v, want the running turn to have taken it", queued)
+	}
+	if msg.Content != "actually, the newer paper" {
+		t.Fatalf("message = %+v, want the steered message", msg)
+	}
+	platform.mu.Lock()
+	steered := append([]string(nil), platform.steered...)
+	platform.mu.Unlock()
+	if len(steered) != 1 || steered[0] != "actually, the newer paper" {
+		t.Fatalf("platform was handed %q, want the message once", steered)
+	}
+	// Steering is not a write: the turn still ran the one prompt it started with.
+	if s := platform.session("cx1"); len(s.prompts) != 1 || s.prompts[0] != "slow" {
+		t.Fatalf("prompts = %v, want only the original prompt", s.prompts)
+	}
+	if queuedRow, err := store.GetQueued(ctx, 1, convID(t, store, 1)); err != nil || queuedRow != nil {
+		t.Fatalf("queued row = %v, %v, want none", queuedRow, err)
+	}
+
+	close(platform.hold)
+	platform.hold = nil
+	engine.Wait()
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|user:actually, the newer paper|assistant:re: slow|" {
+		t.Fatalf("history = %q, want the steered message in the turn it joined", got)
+	}
+}
+
+// The turn may end between the busy check and the steer; the platform says so
+// and the message falls back to the queue rather than being lost.
+func TestEngine_FallsBackToTheQueueWhenSteeringIsRefused(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+
+	msg, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "second" || queued.ID == "" {
+		t.Fatalf("queued = %+v, want the refused message waiting with an id", queued)
+	}
+	if msg.Content != "" {
+		t.Fatalf("message = %+v, want nothing sent", msg)
+	}
+
+	close(platform.hold)
+	engine.Wait()
+	// It went out as its own turn once the first one ended.
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|user:second|assistant:re: second|" {
+		t.Fatalf("history = %q", got)
+	}
+}
+
+// A platform with no mid-turn path at all (an older control plane answering
+// 404/422) must not swallow the message either.
+func TestEngine_QueuesWhenThePlatformHasNoSteerPath(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	platform.steerStatus = http.StatusUnprocessableEntity
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+	_, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil || queued == nil {
+		t.Fatalf("queue = %+v, %v, want the message waiting", queued, err)
+	}
+	close(platform.hold)
+	engine.Wait()
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|user:second|assistant:re: second|" {
+		t.Fatalf("history = %q", got)
+	}
+	_ = store
 }

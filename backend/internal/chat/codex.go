@@ -41,6 +41,9 @@ const (
 	defaultPoll    = 700 * time.Millisecond
 	defaultTimeout = 40 * time.Minute
 	emptyReply     = "(응답이 비어 있습니다)"
+	// steerApplied is session-platform's answer when the running turn took a
+	// mid-turn message (AC-J9); anything else means it did not.
+	steerApplied = "applied"
 	// retryHold spaces out dispatches of a queued message whose last one
 	// failed. The apps poll GET /api/chat about once a second while they
 	// wait, and each poll could otherwise re-send to a refusing platform.
@@ -268,9 +271,46 @@ func (e *Engine) finishTurn(ctx context.Context, userID, convID int64, sessionID
 	e.drainQueued(save, userID, convID)
 }
 
-// Queue sends content right away if no reply is in progress, or holds it for
-// after the one that is (PRD-1 AC1 2026-11-09 개정). At most one message
-// waits at a time; a second arrival while one is already queued is ErrQueueFull.
+// steer offers content to the turn in progress so it can change where that
+// turn is going (session-platform AC-J9). applied is true only when the
+// platform says the running turn took it; anything else — a turn that ended
+// first, a platform that does not take mid-turn messages — leaves the
+// message for the caller to queue instead, so it is never lost.
+func (e *Engine) steer(ctx context.Context, sessionID, content string) (bool, error) {
+	body, _ := json.Marshal(map[string]string{"text": content})
+	status, raw, err := e.platform.Do(ctx, http.MethodPost, "/sessions/"+url.PathEscape(sessionID)+"/steer", body)
+	if err != nil {
+		return false, err
+	}
+	switch status {
+	case http.StatusOK:
+		var out struct {
+			Status string `json:"status"`
+		}
+		if json.Unmarshal(raw, &out) == nil && out.Status == steerApplied {
+			return true, nil
+		}
+		return false, nil
+	case http.StatusConflict, http.StatusUnprocessableEntity, http.StatusNotFound, http.StatusMethodNotAllowed:
+		// 409 the turn would not take it; 422/404/405 the platform has no
+		// mid-turn path for this session at all. Both mean: queue it.
+		return false, nil
+	default:
+		return false, platformError("steer", status, raw)
+	}
+}
+
+// Queue is what a send does while a reply is in progress. It tries three
+// things in order, and the first that works wins (PRD-1 AC1):
+//
+//  1. send it as its own turn, when no reply is in progress;
+//  2. put it into the reply in progress, so that reply changes course
+//     (session-platform AC-J9) — the message is then part of that turn and
+//     shows up as a sent message;
+//  3. hold it for right after, as the queued message the user can cancel.
+//
+// At most one message waits at a time; a second arrival while one is already
+// queued is ErrQueueFull.
 func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Message, *QueuedMessage, error) {
 	msg, err := e.Send(ctx, userID, content)
 	if err == nil {
@@ -282,6 +322,22 @@ func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Messa
 	conv, cErr := e.store.Conversation(ctx, userID)
 	if cErr != nil {
 		return Message{}, nil, cErr
+	}
+	// The reply in progress may take the message and change course with it.
+	if conv.platformSessionID != "" {
+		applied, sErr := e.steer(ctx, conv.platformSessionID, content)
+		if sErr != nil {
+			e.logger.Warn("chat: mid-turn delivery failed; queueing instead", "user", userID, "err", sErr)
+		}
+		if applied {
+			// It belongs to the running turn now, so it reads as a message
+			// that went out — not as one still waiting.
+			sent, aErr := e.store.AppendMessage(context.WithoutCancel(ctx), userID, conv.ID, RoleUser, content)
+			if aErr != nil {
+				return Message{}, nil, aErr
+			}
+			return sent, nil, nil
+		}
 	}
 	existing, gErr := e.store.GetQueued(ctx, userID, conv.ID)
 	if gErr != nil {
