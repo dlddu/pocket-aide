@@ -44,6 +44,7 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 | 결과 조회 | `GET /api/external/approvals/{id}` | 같음 | - | 200 `{id, externalId, status, decisionMode, createdAt, expiresAt, processedAt}` |
 | 단순 알림 (AC16) | `POST /api/external/notifications` | 같음 | `title`(필수, 120자 이하), `body`(선택), `requester`(필수, 200자 이하 — AC17) | 200 `{devices, sent}` |
 | 커밋 상태 요청 (AC18) | `POST /api/external/commit-status-requests` | 같음 | `owner`·`repo`·`sha`(40자 16진)·`state`(`error`/`failure`/`pending`/`success`)·`context`(255자 이하)·`requester`(필수, 200자 이하), `description`(선택, 140자 이하)·`targetUrl`(선택, http(s) 절대 URL)·`reason`(선택, 2000자 이하)·`sessionId`(선택, 128자 이하) | 201 `{id, status, createdAt}` |
+| 채팅 접속 상태 조회 (AC22) | `GET /api/external/chat-presence` | 같음 | - (대상은 등록자 고정, 매개변수 없음) | 200 `{present, last_seen_at, ttl_seconds}` |
 
 - `/api/external/` 아래는 호출자 키만, 그 밖의 `/api/`는 OIDC만 받는다. 인증 경계를 경로로 구분한다.
 - 수신자 필드는 없다. 알 수 없는 필드(예: 옛 `userId`)가 오면 400으로 거부해, 옛 클라이언트 설정이 섞여 들어오는 것을 전환 중에 바로 드러낸다.
@@ -168,6 +169,11 @@ gatekeeper 형식과 호환하지 않고 새로 정의한다. 기존 호출자�
 - **설명**: 요청이 저장되면 백엔드는 승인 푸시(AC10·AC11)와 **같은 구조**로 그 사용자의 모든 기기에 알린다 — 제목 「커밋 상태 요청 · {호출자 이름}」, 본문 `context → state` / `owner/repo@짧은 SHA` / 요청 주체, 카테고리 `COMMIT_STATUS_REQUEST`(Android 는 승인 채널·데이터 전용), 페이로드 `kind`=`commit_status_request`·`commit_status_request_id`. 알림을 탭하면 앱이 커밋 상태 탭에서 그 요청의 상세를 연다. 알림에는 「승인」(잠금 해제 요구)·「거절」 액션이 있어 앱을 열지 않고 결정하고, 결과를 같은 알림 자리에 보인다(Android 는 성공하면 알림을 지운다) — 기록 실패·App 미설정·이미 처리됨도 문구로 안내한다. 푸시는 응답 뒤에 비동기로 보내 호출자를 기다리게 하지 않는다.
 - **달성 가치**: V9
 - **검증 방법**: 요청 생성 → 등록 기기에 「커밋 상태 요청 · homelab-k3s-mcp」 푸시, 탭하면 그 요청의 상세. 잠금화면에서 「거절」 → 앱을 열지 않고 `REJECTED`, 알림이 결과 문구로 바뀐다(Android 는 성공 시 사라짐). 「승인」 → 잠금 해제 요구 뒤 기록. 기기 0개여도 생성은 201.
+
+### AC22: 호출자의 채팅 접속 상태 조회
+- **설명**: 백엔드는 **읽기 전용** 엔드포인트(`GET /api/external/chat-presence`)를 승인 요청과 같은 호출자 미들웨어 뒤에 노출한다. 호출자 키(AC13)와 SA 호출자(AC15)가 같은 자격 증명으로 쓰고, 폐기(AC14)·미등록·검증 실패는 401이며 OIDC 토큰으로는 부를 수 없다. 조회 대상은 **그 호출자를 등록한 사용자 하나**로 고정된다 — 사용자를 가리키는 매개변수가 없어(AC2 와 같은 귀속), 호출자가 남의 접속 상태를 묻는 경로가 없다. 응답은 `present`(PRD-1 AC8 의 45초 창 안에 채팅 화면이 대화를 읽었는가), `last_seen_at`(마지막 읽기의 unix 초, 이 프로세스가 본 적 없으면 `null`), `ttl_seconds`(45) **셋뿐**이고, 대화 내용·메시지·기기 정보는 싣지 않는다 — 「지금 말을 걸면 읽히는가」를 답하는 데 필요한 최소값이다. 아무것도 바꾸지 않으므로 승인 요청을 만들지 않고 자동 응답 모드(AC9)·승인 게이트와 무관하며, 알림(AC16)처럼 사용자를 방해하지도 않는다. 접속 상태를 모르는 것(`last_seen_at: null`)과 떠난 것(`present: false` + 시각 있음)은 구분되어, 호출자가 「한 번도 본 적 없음」을 「방금 떠남」으로 읽지 않는다.
+- **달성 가치**: V9
+- **검증 방법**: SA 호출자(AC15)로 조회 → 등록한 사용자의 상태만 돌아온다. 그 사용자가 채팅 화면을 열면 `present: true` + 시각, 화면을 떠나고 45초 지나면 `present: false` + 같은 시각. 다른 사용자의 호출자로 조회 → 그 사용자의 상태(남의 화면에 영향받지 않음). 키 없음·폐기 키·OIDC 토큰 → 401. 요청에 사용자 지정 필드를 넣어도 대상이 바뀌지 않는다. 조회 후 승인 탭 대기 목록·알림 기록에 아무것도 생기지 않는지 확인.
 
 ## 결정 사항
 

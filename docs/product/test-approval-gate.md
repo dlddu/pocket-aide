@@ -22,6 +22,8 @@
 - AC19: 커밋 상태 탭 (PRD-12)
 - AC20: 승인하면 GitHub 에 기록하고, 거절하면 아무것도 쓰지 않는다 (PRD-12)
 - AC21: 신규 커밋 상태 요청 푸시와 알림 액션 (PRD-12)
+- AC22: 호출자의 채팅 접속 상태 조회 (PRD-12)
+- PRD-AI채팅 AC8: 채팅 화면 접속 상태 (PRD-1: `prd-ai-chat.md`)
 
 ## 달성 가치
 - V9: 개발 워크플로우 인지 부하 감소 (범위의 「결정」, AC16·AC17은 「알림」) — 검증 대상 AC 모두 V9를 달성한다.
@@ -522,3 +524,23 @@
 - **검증 AC**: AC21, AC20
 - **구현 상태**: 구현됨 — 서버: `commitstatuspush`(카테고리 `COMMIT_STATUS_REQUEST`, 데이터 `kind`·`commit_status_request_id`, FCM 승인 채널·데이터 전용). 앱: iOS 알림 카테고리·액션(`CommitStatusNotificationAction`, 승인 `.authenticationRequired`)과 딥링크 `pocketaide://commit-status?id=`, Android `CommitStatusActionReceiver`(승인 잠금 해제 요구)·`PushDeepLink.CommitStatusRequest`. 실기기 도달·잠금 해제는 `EXT`.
 - **관련 코드 테스트**: `backend/internal/commitstatuspush/notifier_test.go` — `TestSendGoesToEveryOwnerDeviceWithDecisionCategory`, `android/app/src/test/java/com/dlddu/pocketaide/push/PushDeepLinkTest.kt` — `commitStatusRequestRoutesToCommitStatusTab`, `ios/PocketAideUnitTests/CommitStatusRequestsTests.swift` — `testPushOpensTheRequestAndCarriesLockScreenActions`·`testResultNoticeCoversEveryOutcome`
+
+### 시나리오 26: 에이전트가 「지금 채팅을 보고 있는지」를 묻고, 떠나면 그 답이 바뀐다
+- **사전 조건**: 사용자 A가 SA 호출자 `homelab-k3s-mcp`(AC15)를 등록했고, 사용자 B도 자기 호출자 키를 하나 갖고 있다.
+- **실행 단계**:
+  1. A가 채팅 화면을 한 번도 열지 않은 상태에서 호출자가 접속 상태를 조회한다.
+  2. A가 채팅 탭을 열어 둔 채(앱 포그라운드) 조회한다.
+  3. B의 호출자 키로 조회한다.
+  4. A가 다른 탭으로 옮기고 45초가 지난 뒤 조회한다.
+  5. A가 채팅 탭으로 돌아온 뒤 조회한다.
+  6. 폐기한 키와 A의 OIDC 토큰으로 각각 조회한다.
+- **기대 결과**:
+  - 1단계: `present: false` · `last_seen_at: null` · `ttl_seconds: 45` — 「본 적 없음」이 「방금 떠남」과 구분된다.
+  - 2단계: `present: true` 와 직전 읽기 시각. 승인 탭 대기 목록·알림 기록에는 아무것도 생기지 않고 A의 폰에 알림도 오지 않는다.
+  - 3단계: B의 상태(A의 화면과 무관) — 호출자는 자기 등록자만 본다.
+  - 4단계: `present: false` 이고 `last_seen_at` 은 4단계 직전의 마지막 읽기 시각으로 남는다.
+  - 5단계: 다시 `present: true`.
+  - 6단계: 둘 다 401.
+- **검증 AC**: AC22, PRD-AI채팅 AC8
+- **구현 상태**: 구현됨 — 서버: `chat.Presence`(TTL 45초, 프로세스 메모리)를 `GET /api/chat` 핸들러가 갱신하고 `GET /api/external/chat-presence` 가 호출자 미들웨어 뒤에서 읽는다. 앱 변경은 없다(두 앱이 이미 화면이 보일 때만 폴링한다). 45초 경과·실기기 포그라운드 전환은 `EXT`(단위 테스트는 시계를 주입해 대신 단언한다).
+- **관련 코드 테스트**: `backend/internal/chat/presence_test.go` — `TestPresence_TouchExpiresAfterTTL`·`TestPresence_NilIsAbsent`, `backend/internal/handlers/chat_presence_test.go` — `TestChatPresenceFollowsCallerOwnersChatReads`·`TestChatPresenceRequiresLiveCaller`·`TestChatPresenceAcceptsServiceAccountCaller`
