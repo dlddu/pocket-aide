@@ -32,6 +32,11 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
+    // The reading position of the message list lives here because this view
+    // model is what survives the user moving to another tab — the screen and
+    // its LazyListState do not.
+    internal val scrollMemory = ChatScrollMemory()
+
     suspend fun pollWhileVisible() {
         while (coroutineContext.isActive) {
             load()

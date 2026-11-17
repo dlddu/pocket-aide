@@ -67,7 +67,8 @@ IPhoneFrame
 │   └─ Action (IconCircleButton.outline, "+" 아이콘)
 ├─ ChatScrollArea (top-[140px] ~ bottom-[170px])
 │   ├─ TimestampDivider (선택)
-│   └─ ChatBubble × N (me / ai / typing)
+│   ├─ ChatBubble × N (me / ai / typing)
+│   └─ IconCircleButton.floating "맨 아래로" (우하단에 떠 있음, 끝에서 떨어졌을 때만)
 ├─ Composer (bottom-[88px], 탭바 위에 고정)
 │   ├─ Input (placeholder)
 │   └─ IconCircleButton.accent-ring (음성 진입)
@@ -81,6 +82,7 @@ IPhoneFrame
 - 사용자 버블은 우측 정렬, AI 버블은 좌측 정렬 + Avatar 동반
 - AI 버블 안에 인라인 액션(`Chip`)이 들어갈 수 있음 ("회사 투두로", "복사")
 - Composer는 탭바 위에 항상 고정(absolute), 스크롤되지 않음
+- 「맨 아래로」는 ChatScrollArea 안에 떠 있고 목록이 끝에서 떨어졌을 때만 보인다 (PRD-AI채팅 AC10) — 끝에 있으면 사라진다
 
 ---
 

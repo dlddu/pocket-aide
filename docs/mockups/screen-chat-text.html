@@ -109,6 +109,12 @@
 
     </main>
 
+    <!-- 맨 아래로 (IconCircleButton.floating) — 목록이 끝에서 떨어졌을 때만 뜬다 (PRD-AI채팅 AC10).
+         누르면 가장 새 내용으로 가고 긴 답 따라가기(AC9)가 되살아난다. -->
+    <button class="absolute right-5 bottom-[182px] w-9 h-9 rounded-full bg-white border border-stone-300/80 grid place-items-center text-[var(--ink)] active:bg-stone-100 z-10" aria-label="맨 아래로">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+    </button>
+
     <!-- composer -->
     <div class="absolute bottom-[88px] inset-x-0 px-4 pb-2 pt-3 bg-[var(--paper)]/95 backdrop-blur border-t border-stone-200/60 z-20">
       <div class="flex items-end gap-2">
