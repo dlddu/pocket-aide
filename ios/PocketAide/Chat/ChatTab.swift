@@ -10,6 +10,7 @@ struct ChatTab: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = ChatViewModel(api: nil)
     @State private var draft = ""
+    @State private var followsLatest = true
 
     private let area: DesignTokens.Area = .aiChat
     private static let bottomAnchor = "chat.messages.bottom"
@@ -20,6 +21,7 @@ struct ChatTab: View {
     private static let mutedOpacity = 0.55
     // Bubbles stop short of the trailing edge (patterns.md §2: 78–82% wide).
     private static let bubbleInset: CGFloat = 56
+    private static let followSlack: CGFloat = 48
 
     var body: some View {
         VStack(spacing: 0) {
@@ -110,15 +112,35 @@ struct ChatTab: View {
                     .padding(.horizontal, DesignTokens.Spacing.xl)
                     .padding(.vertical, DesignTokens.Spacing.lg)
                 }
-                .onChange(of: viewModel.messages.count) { _, _ in
-                    withAnimation { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
+                .onScrollPhaseChange { _, phase, context in
+                    if phase == .idle {
+                        guard !followsLatest else { return }
+                        followsLatest = Self.isAtEnd(
+                            visibleMaxY: context.geometry.visibleRect.maxY,
+                            contentHeight: context.geometry.contentSize.height
+                        )
+                    } else if phase != .animating {
+                        followsLatest = false
+                    }
                 }
-                .onChange(of: viewModel.pending) { _, _ in
-                    withAnimation { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
-                }
-                .onAppear { proxy.scrollTo(Self.bottomAnchor, anchor: .bottom) }
+                .onChange(of: viewModel.messages.count) { _, _ in follow(proxy) }
+                .onChange(of: viewModel.pending) { _, _ in follow(proxy) }
+                .onAppear { follow(proxy) }
             }
         }
+    }
+
+    /// Keeps the end of a streaming reply in view — instantly, because a reply
+    /// changes every poll and an animation restarts on each change instead of
+    /// arriving. A drag hands the position over until a gesture settles back
+    /// at the end.
+    private func follow(_ proxy: ScrollViewProxy) {
+        guard followsLatest else { return }
+        proxy.scrollTo(Self.bottomAnchor, anchor: .bottom)
+    }
+
+    private static func isAtEnd(visibleMaxY: CGFloat, contentHeight: CGFloat) -> Bool {
+        visibleMaxY >= contentHeight - followSlack
     }
 
     /// Web addresses become links the system opens in the browser.
