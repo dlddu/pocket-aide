@@ -228,12 +228,10 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-private fun Messages(state: ChatUiState, modifier: Modifier) {
+internal fun Messages(state: ChatUiState, modifier: Modifier) {
     val listState = rememberLazyListState()
     val count = state.messages.size + if (state.isReplying) 1 else 0
-    LaunchedEffect(count, state.pending?.content) {
-        if (count > 0) listState.animateScrollToItem(count - 1)
-    }
+    FollowLatestMessage(listState, count, state.pending?.content)
     if (state.hasLoaded && count == 0) {
         Box(modifier.fillMaxWidth().padding(DesignTokens.Spacing.xl), contentAlignment = Alignment.Center) {
             Text(

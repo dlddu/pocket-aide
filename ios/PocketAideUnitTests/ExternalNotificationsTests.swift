@@ -53,6 +53,15 @@ final class ExternalNotificationsTests: XCTestCase {
         XCTAssertEqual(ExternalNotificationFormatting.requesterValue(named), long)
     }
 
+    func testDecodesMarkAllReadResult() throws {
+        let json = """
+        {"marked_count":3,"unread_count":0}
+        """
+        let result = try APIClient.decoder.decode(MarkAllExternalNotificationsReadResult.self, from: Data(json.utf8))
+        XCTAssertEqual(result.markedCount, 3)
+        XCTAssertEqual(result.unreadCount, 0)
+    }
+
     func testMarkedReadKeepsEverythingButTheReadTime() {
         let unread = ExternalNotification(
             id: 5, title: "t", body: "b", callerName: "infra-ci", callerKind: "key",

@@ -71,6 +71,21 @@ public struct ExternalNotificationsPage: Decodable, Equatable, Sendable {
     }
 }
 
+public struct MarkAllExternalNotificationsReadResult: Decodable, Equatable, Sendable {
+    public let markedCount: Int64
+    public let unreadCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case markedCount = "marked_count"
+        case unreadCount = "unread_count"
+    }
+
+    public init(markedCount: Int64, unreadCount: Int) {
+        self.markedCount = markedCount
+        self.unreadCount = unreadCount
+    }
+}
+
 public extension APIClient {
     func externalNotifications(limit: Int? = nil, before: Int64? = nil) async throws -> ExternalNotificationsPage {
         var path = "/api/external-notifications"
@@ -91,6 +106,15 @@ public extension APIClient {
             body: EmptyPayload(),
             authenticated: true,
             decodeAs: APIClient.EmptyResponse.self
+        )
+    }
+
+    func markAllExternalNotificationsRead() async throws -> MarkAllExternalNotificationsReadResult {
+        try await post(
+            "/api/external-notifications/read-all",
+            body: EmptyPayload(),
+            authenticated: true,
+            decodeAs: MarkAllExternalNotificationsReadResult.self
         )
     }
 }

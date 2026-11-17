@@ -30,11 +30,15 @@ const (
 	// can still be listed under the old name, so adoption accepts both.
 	workloadCodex       = "codex-chat"
 	legacyWorkloadCodex = "codex"
-	turnSentinel        = 0x1e
-	turnLead            = "session-platform "
-	defaultPoll         = 700 * time.Millisecond
-	defaultTimeout      = 40 * time.Minute
-	emptyReply          = "(응답이 비어 있습니다)"
+	// chatPlugin is the marketplace bundle whose skills the chat session runs
+	// with. The platform installs only what the create request names — it has
+	// no default for codex-chat since session-platform AC-A5 (2026-11-14).
+	chatPlugin     = "codex-session"
+	turnSentinel   = 0x1e
+	turnLead       = "session-platform "
+	defaultPoll    = 700 * time.Millisecond
+	defaultTimeout = 40 * time.Minute
+	emptyReply     = "(응답이 비어 있습니다)"
 )
 
 var (
@@ -353,7 +357,7 @@ func (e *Engine) openSession(ctx context.Context, userID, convID int64) (string,
 	if id, end, ok := e.adoptSession(ctx, userID); ok {
 		return id, end, e.store.SetPlatform(ctx, userID, convID, id, end)
 	}
-	body, _ := json.Marshal(map[string]string{"name": sessionName(userID), "workloadType": workloadCodex})
+	body, _ := json.Marshal(map[string]any{"name": sessionName(userID), "workloadType": workloadCodex, "plugins": []string{chatPlugin}})
 	status, raw, err := e.platform.Do(ctx, http.MethodPost, "/sessions", body)
 	if err == nil && status != http.StatusCreated && status != http.StatusOK {
 		err = platformError("create", status, raw)
