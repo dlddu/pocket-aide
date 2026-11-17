@@ -66,6 +66,7 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
   - `outline`: 보더 + 투명 배경 + ink 색 (채팅 추가 버튼)
   - `solid`: 영역 강조색 배경 + 흰 아이콘 (todo 추가 버튼)
   - `accent-ring`: solid + `.ringy` 외곽 링 (음성 진입 버튼)
+  - `floating`: `outline` + **불투명 `--card` 배경** (채팅 「맨 아래로」, 2026-11-17). 스크롤 영역 **위에 떠서** 내용과 겹치는 자리에만 쓴다 — 투명 배경이면 뒤의 말풍선과 겹쳐 그 말풍선의 일부로 읽힌다. 그림자는 쓰지 않는다(이 시스템에는 디바이스 frame 말고 그림자 토큰이 없다, `tokens.md` §5). 떠 있는 버튼은 상시 노출이 아니라 **상태에 따라 나타났다 사라진다**
 
 ### `PillButton`
 가로형 강조 버튼. 라벨 + 아이콘.
@@ -264,7 +265,7 @@ mockup 갤러리에서 사용 (실제 앱이 아닌 문서 영역). 본 시스�
 
 대표 매핑 예 (인덱스 갱신 시 참고):
 
-- `screen-chat-text`: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader.with-icon-button-fab`, `ChatBubble.me`, `ChatBubble.ai`, `ChatBubble.typing`, `Avatar`, `Chip`, `Composer`, `IconCircleButton.accent-ring`, `TabBar`, `TabBarItem` (active/idle), `Disclaimer`
+- `screen-chat-text`: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader.with-icon-button-fab`, `ChatBubble.me`, `ChatBubble.ai`, `ChatBubble.typing`, `Avatar`, `Chip`, `Composer`, `IconCircleButton.accent-ring`, `IconCircleButton.floating`, `TabBar`, `TabBarItem` (active/idle), `Disclaimer`
 - `screen-todo-personal`: `IPhoneFrame`, `StatusBar`, `AreaStrip`, `AreaLabel`, `ScreenHeader.with-icon-button-fab`, `FilterPills`, `SectionHeader`, `Card.task-card`, `Card.dimmed`, `CheckCircle` (unchecked/done), `TabBar`, `TabBarItem`
 - `screen-routines`: `IPhoneFrame`, `StatusBar`, `ScreenHeader.with-pill-button`, `AreaLabel`, `Card.routine-card`, `ProgressBar`, `CheckCircle`, `HeatmapDay`, `TabBar`
 - `screen-affirmations-priority-edit`: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `Sheet` (다짐 영역 변형), `Backdrop`, `Handle`, `FilterPills` (단일 선택형 3-tier), 1차 액션 버튼, 2차 텍스트 액션

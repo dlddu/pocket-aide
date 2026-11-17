@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -117,7 +119,7 @@ fun ChatScreen(api: ApiClient) {
             Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = viewModel::dismissNotice)
         }
         state.error?.let { Banner(it.message, DesignTokens.StatusColors.failure(), tag = "chat.error", onDismiss = null) }
-        Messages(state, Modifier.weight(1f))
+        Messages(state, Modifier.weight(1f), viewModel.scrollMemory)
         Composer(
             draft = draft,
             onDraftChange = { draft = it },
@@ -201,10 +203,19 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-internal fun Messages(state: ChatUiState, modifier: Modifier) {
+internal fun Messages(
+    state: ChatUiState,
+    modifier: Modifier,
+    // The default is a memory of its own, which reads as "nothing remembered"
+    // and lands at the end — what a caller without a conversation to return to
+    // wants. The screen passes the view model's, which outlives the tab.
+    memory: ChatScrollMemory = remember { ChatScrollMemory() },
+) {
     val listState = rememberLazyListState()
     val count = state.messages.size + if (state.isReplying) 1 else 0
-    FollowLatestMessage(listState, count, state.pending?.content)
+    val follows = rememberFollowsListEnd(memory)
+    FollowLatestMessage(listState, count, state.pending?.content, follows)
+    KeepReadingPosition(listState, state.messages, memory, follows)
     if (state.hasLoaded && count == 0) {
         Box(modifier.fillMaxWidth().padding(DesignTokens.Spacing.xl), contentAlignment = Alignment.Center) {
             Text(
@@ -240,6 +251,43 @@ internal fun Messages(state: ChatUiState, modifier: Modifier) {
                 }
             }
         }
+        val showsListEnd by rememberShowsListEndButton(listState)
+        if (showsListEnd) {
+            ListEndButton(
+                onClick = { follows.value = true },
+                modifier = Modifier.align(Alignment.BottomEnd).padding(DesignTokens.Spacing.lg),
+            )
+        }
+    }
+}
+
+/**
+ * The way back to the newest message, over the list's bottom corner. Filled
+ * with the card colour rather than left transparent like the header's buttons:
+ * it sits on top of message bubbles, and an outline alone would read as part
+ * of whichever bubble happens to be behind it (design-system components.md §3,
+ * `IconCircleButton.floating`). Taking it hands following back to the list, so
+ * a reply that is still arriving is followed again from here on.
+ */
+@Composable
+private fun ListEndButton(onClick: () -> Unit, modifier: Modifier) {
+    Box(
+        modifier
+            .size(HEADER_BUTTON_SIZE)
+            .clip(CircleShape)
+            .background(DesignTokens.Colors.card(CHAT_AREA))
+            .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = "맨 아래로" }
+            .testTag("chat.listend.button"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            Icons.Filled.ArrowDownward,
+            contentDescription = null,
+            tint = DesignTokens.Colors.ink(CHAT_AREA),
+            modifier = Modifier.size(HEADER_ICON_SIZE),
+        )
     }
 }
 

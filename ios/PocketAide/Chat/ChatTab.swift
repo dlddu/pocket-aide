@@ -11,6 +11,7 @@ struct ChatTab: View {
     @StateObject private var viewModel = ChatViewModel(api: nil)
     @State private var draft = ""
     @State private var followsLatest = true
+    @State private var showsListEnd = false
 
     private let area: DesignTokens.Area = .aiChat
     private static let bottomAnchor = "chat.messages.bottom"
@@ -123,11 +124,48 @@ struct ChatTab: View {
                         followsLatest = false
                     }
                 }
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    Self.isAtEnd(
+                        visibleMaxY: geometry.visibleRect.maxY,
+                        contentHeight: geometry.contentSize.height
+                    )
+                } action: { _, atEnd in
+                    showsListEnd = !atEnd
+                }
                 .onChange(of: viewModel.messages.count) { _, _ in follow(proxy) }
                 .onChange(of: viewModel.pending) { _, _ in follow(proxy) }
                 .onAppear { follow(proxy) }
+                .overlay(alignment: .bottomTrailing) {
+                    if showsListEnd {
+                        listEndButton(proxy).padding(DesignTokens.Spacing.lg)
+                    }
+                }
             }
         }
+    }
+
+    /// The way back to the newest message, over the list's bottom corner.
+    /// Filled with the card colour rather than left transparent like the
+    /// header's buttons: it sits on top of message bubbles, and an outline
+    /// alone would read as part of whichever bubble is behind it
+    /// (design-system components.md §3, `IconCircleButton.floating`). Taking it
+    /// hands following back to the list, so a reply that is still arriving is
+    /// followed again from here on.
+    private func listEndButton(_ proxy: ScrollViewProxy) -> some View {
+        Button {
+            followsLatest = true
+            proxy.scrollTo(Self.bottomAnchor, anchor: .bottom)
+        } label: {
+            Image(systemName: "arrow.down")
+                .font(.system(size: 14, weight: .semibold))
+                .frame(width: Self.headerButtonSize, height: Self.headerButtonSize)
+                .background(Circle().fill(DesignTokens.Color.card(area)))
+                .overlay(Circle().stroke(DesignTokens.Color.rule(area), lineWidth: 1))
+                .foregroundStyle(DesignTokens.Color.ink(area))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("맨 아래로")
+        .accessibilityIdentifier("chat.listend.button")
     }
 
     /// Keeps the end of a streaming reply in view — instantly, because a reply

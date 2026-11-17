@@ -155,10 +155,10 @@ last_updated: 2026-11-06
 - **시각화 대상**:
   - 여정: (미정의)
   - 가치: V5 (자연어 대화 기반 작업 처리)
-  - PRD/AC (보조): PRD-1 / AC1 (텍스트 송수신), AC4 (대화 세션 관리)
+  - PRD/AC (보조): PRD-1 / AC1 (텍스트 송수신), AC4 (대화 세션 관리), AC10 (읽던 자리로 돌아오기 — 「맨 아래로」)
 - **사용 디자인 시스템**:
   - 패턴: `채팅 화면` (patterns.md §2)
-  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader.with-icon-button-fab`, `ChatBubble.me`, `ChatBubble.ai`, `ChatBubble.typing`, `Avatar`, `Chip`, `Composer`, `IconCircleButton.outline`, `IconCircleButton.accent-ring`, `TabBar`, `TabBarItem` (active=채팅, idle=나머지), `Disclaimer`
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `ScreenHeader.with-icon-button-fab`, `ChatBubble.me`, `ChatBubble.ai`, `ChatBubble.typing`, `Avatar`, `Chip`, `Composer`, `IconCircleButton.outline`, `IconCircleButton.accent-ring`, `IconCircleButton.floating` (「맨 아래로」), `TabBar`, `TabBarItem` (active=채팅, idle=나머지), `Disclaimer`
   - 토큰: 영역=AI 채팅 (tokens.md §1.3) — `--paper #FAFAF7`, `--ink #1C2624`, `--sage #5E8B73`, 보조 `--clay #B65A3C`
 
 ## screen-chat-voice.html
