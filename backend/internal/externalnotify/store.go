@@ -182,3 +182,19 @@ func (s *Store) MarkRead(ctx context.Context, userID, id int64) error {
 	}
 	return nil
 }
+
+// MarkAllRead stamps every unread notification of userID as seen as of now, and returns how many rows changed.
+func (s *Store) MarkAllRead(ctx context.Context, userID int64) (int64, error) {
+	res, err := s.db.ExecContext(ctx, `
+		UPDATE external_notifications SET read_at = unixepoch()
+		WHERE user_id = ? AND read_at IS NULL
+	`, userID)
+	if err != nil {
+		return 0, fmt.Errorf("mark all external notifications read: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("rows affected: %w", err)
+	}
+	return n, nil
+}

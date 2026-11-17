@@ -79,23 +79,53 @@ struct ExternalNotificationsView: View {
             }
             Spacer()
             if viewModel.unreadCount > 0 {
-                VStack(spacing: 2) {
-                    Text("\(viewModel.unreadCount)")
-                        .font(.system(size: 15, weight: .bold, design: .monospaced))
-                        .accessibilityIdentifier("notifications.unread.count")
-                    Text("새 알림")
-                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                VStack(alignment: .trailing, spacing: DesignTokens.Spacing.sm) {
+                    VStack(spacing: 2) {
+                        Text("\(viewModel.unreadCount)")
+                            .font(.system(size: 15, weight: .bold, design: .monospaced))
+                            .accessibilityIdentifier("notifications.unread.count")
+                        Text("새 알림")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, DesignTokens.Spacing.xs)
+                    .background(DesignTokens.Color.accent(Self.area))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    markAllReadButton
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, DesignTokens.Spacing.xs)
-                .background(DesignTokens.Color.accent(Self.area))
-                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.xl)
         .padding(.top, DesignTokens.Spacing.md)
         .padding(.bottom, DesignTokens.Spacing.md)
+    }
+
+    private var markAllReadButton: some View {
+        Button {
+            Task { await viewModel.markAllRead() }
+        } label: {
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                if viewModel.isMarkingAllRead {
+                    ProgressView().controlSize(.mini)
+                } else {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                Text("전체 읽음")
+                    .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+            }
+            .foregroundStyle(DesignTokens.Color.accent(Self.area))
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .stroke(DesignTokens.Color.accent(Self.area), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(viewModel.isMarkingAllRead)
+        .accessibilityIdentifier("notifications.mark-all-read.button")
     }
 
     private var list: some View {
