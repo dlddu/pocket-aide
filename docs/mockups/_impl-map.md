@@ -65,6 +65,7 @@ last_updated: 2026-11-16
 | `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalsViewModel.kt` | 비렌더링 | — | 대기 목록 상태·자동 응답 끄기·네비게이션·API 호출 |
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/Chat.kt` | 비렌더링 | — | AI 채팅 도메인 — 대화·메시지·대기 중인 답·스킬 새로고침 결과 모델, `/api/chat` 호출, 오류 분류 |
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | 화면 | `screen-chat-text` | AI 채팅 화면 — 헤더(영역 라벨·대화 제목·메시지 수·스킬 새로고침 버튼)·말풍선(내 말 ink · AI 카드+PA 아바타·「복사」 칩·「입력 중」)·입력창과 보내기 버튼·안내 줄. 목업과 다른 점은 `_deviations.md` S10~S12(헤더 동작·보내기 버튼·생략한 요소) |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScroll.kt` | 비렌더링 | — | AI 채팅 메시지 목록의 하단 추적 — 답이 길어지는 동안 목록 끝을 화면 아래에 붙이고, 사용자가 올려 읽는 중에는 자리를 지킨다. 뷰를 그리지 않는다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatViewModel.kt` | 비렌더링 | — | AI 채팅 상태 — 대화 조회·답 대기 중 폴링·보내기·스킬 새로고침 |
 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | 토큰 | — | `tokens.md` §1 영역 팔레트 접근자(surface·ink·accent·rule·soft·card)·§3 타이포(9사이즈)·§4 스페이싱·라운드 |
 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/GeneratedPalettes.kt` | 토큰 | — | `tokens.md` §1.1~§1.11 영역 팔레트(light/dark 9종)·파괴적 액션·PR 모니터 상태색·위젯·키보드 보조 토큰의 실측 hex 값 |
