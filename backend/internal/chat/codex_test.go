@@ -29,6 +29,14 @@ type fakePlatform struct {
 	// gateway timing out on a slow create does.
 	createFails bool
 	writeStatus int // forced status for writes; 0 = normal
+	// steerApplies makes /sessions/{id}/steer take the message into the
+	// running turn. Off by default: a platform that refuses is the case the
+	// queue tests exercise.
+	steerApplies bool
+	// steerStatus is the refusal status; 0 = 409.
+	steerStatus int
+	// steered is every mid-turn message the platform was handed, in order.
+	steered []string
 }
 
 type fakeSession struct {
@@ -75,6 +83,21 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 		}
 		raw, _ := json.Marshal(map[string]any{"sessions": list})
 		return http.StatusOK, raw, nil
+	case len(parts) == 3 && parts[2] == "steer":
+		if _, ok := f.sessions[parts[1]]; !ok {
+			return http.StatusNotFound, nil, nil
+		}
+		var req map[string]string
+		_ = json.Unmarshal(body, &req)
+		f.steered = append(f.steered, req["text"])
+		if f.steerApplies {
+			return http.StatusOK, []byte(`{"status":"applied","turnId":"t1"}`), nil
+		}
+		status := f.steerStatus
+		if status == 0 {
+			status = http.StatusConflict
+		}
+		return status, []byte(`{"status":"rejected","reason":"expectedTurnId does not match the active turn"}`), nil
 	case len(parts) == 3 && parts[2] == "write":
 		s, ok := f.sessions[parts[1]]
 		if !ok {
@@ -236,6 +259,77 @@ func TestEngine_OneTurnAtATimeAndPendingReply(t *testing.T) {
 	}
 }
 
+// PRD-1 AC1 (2026-11-09 개정): a message that arrives while a reply is in
+// progress waits instead of failing, and is sent right after that reply
+// ends. Only one waits at a time.
+func TestEngine_QueuesAMessageSentWhileBusyAndDrainsItAfter(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+
+	msg, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil || queued == nil || queued.Content != "second" || msg.ID != 0 {
+		t.Fatalf("queue while busy = msg %+v, queued %+v, err %v", msg, queued, err)
+	}
+	if _, _, err := engine.Queue(ctx, 1, "third"); !errors.Is(err, chat.ErrQueueFull) {
+		t.Fatalf("queue behind an already-queued message = %v, want ErrQueueFull", err)
+	}
+
+	close(platform.hold)
+	engine.Wait()
+
+	want := "user:slow|assistant:re: slow|user:second|assistant:re: second|"
+	if got := transcriptOf(messages(t, store, 1)); got != want {
+		t.Fatalf("history = %q, want %q", got, want)
+	}
+	s := platform.session("cx1")
+	if len(s.prompts) != 2 || s.prompts[1] != "second" {
+		t.Fatalf("prompts = %v, want the dequeued message sent after the first turn", s.prompts)
+	}
+	if engine.Pending(1) != nil {
+		t.Error("nothing should be pending once the dequeued turn also ended")
+	}
+}
+
+// A queued message cancelled before its turn starts is never sent.
+func TestEngine_CancelsAQueuedMessage(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+	_, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelQueued(ctx, 1, queued.ID); err != nil {
+		t.Fatalf("cancel a queued message = %v", err)
+	}
+	if err := engine.CancelQueued(ctx, 1, queued.ID); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("cancel again = %v, want ErrNoQueuedMessage", err)
+	}
+
+	close(platform.hold)
+	engine.Wait()
+
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|" {
+		t.Fatalf("a cancelled message must never be sent: history = %q", got)
+	}
+}
+
+func TestEngine_CancelQueuedWithNothingQueued(t *testing.T) {
+	_, engine, _ := newEngine(t)
+	ctx := context.Background()
+	if err := engine.CancelQueued(ctx, 1, "whatever"); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("cancel with nothing queued = %v, want ErrNoQueuedMessage", err)
+	}
+}
+
 // A platform session that disappeared is replaced by a new one.
 func TestEngine_RecreatesAMissingSession(t *testing.T) {
 	store, engine, platform := newEngine(t)
@@ -370,4 +464,274 @@ func TestEngine_AdoptsAnOrphanFromItsEnd(t *testing.T) {
 			}
 		})
 	}
+}
+
+// convID is the user's one conversation, as the store knows it.
+func convID(t *testing.T, store *chat.Store, userID int64) int64 {
+	t.Helper()
+	conv, err := store.Conversation(context.Background(), userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return conv.ID
+}
+
+// restart is the engine a restarted server builds: the same store, none of
+// the in-memory turn state.
+func restart(t *testing.T, store *chat.Store, platform *fakePlatform) *chat.Engine {
+	t.Helper()
+	engine := chat.NewEngine(store, platform, nil).WithPoll(5 * time.Millisecond)
+	t.Cleanup(engine.Wait)
+	return engine
+}
+
+// A restart kills the turn that would have sent a waiting message, so the row
+// is all that is left. The apps' poll resumes it, once (PRD-1 AC1 개정).
+func TestEngine_ResumesAQueuedMessageAfterARestart(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "first"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	id := convID(t, store, 1)
+	if _, err := store.SetQueued(ctx, 1, id, "q-1", "left over", 5); err != nil {
+		t.Fatal(err)
+	}
+
+	resumed := restart(t, store, platform)
+	resumed.ResumeQueued(ctx, 1, id)
+	resumed.ResumeQueued(ctx, 1, id) // a second poll must not send it twice
+	resumed.Wait()
+
+	if got, want := transcriptOf(messages(t, store, 1)), "user:first|assistant:re: first|user:left over|assistant:re: left over|"; got != want {
+		t.Fatalf("history = %q, want %q", got, want)
+	}
+	sent := 0
+	for _, p := range platform.session("cx1").prompts {
+		if p == "left over" {
+			sent++
+		}
+	}
+	if sent != 1 {
+		t.Fatalf("the resumed message went out %d times, want exactly 1", sent)
+	}
+	queued, err := store.GetQueued(ctx, 1, id)
+	if err != nil || queued != nil {
+		t.Fatalf("queued after the resume = %v, %v, want none", queued, err)
+	}
+}
+
+// Cancel names the message it means: one that arrives after its message went
+// out is a 404, and the message that took its place stays queued.
+func TestEngine_CancelWithAStaleIDLeavesTheNewerMessage(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+	_, stale, err := engine.Queue(ctx, 1, "first queued")
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := convID(t, store, 1)
+	// The turn ended and took it, and the user queued another behind the next.
+	if _, err := store.TakeQueued(ctx, 1, id); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.SetQueued(ctx, 1, id, "q-new", "second queued", 9); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelQueued(ctx, 1, stale.ID); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("cancel with a stale id = %v, want ErrNoQueuedMessage", err)
+	}
+	queued, err := store.GetQueued(ctx, 1, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "second queued" {
+		t.Fatalf("queued = %v, want the newer message untouched", queued)
+	}
+
+	close(platform.hold)
+}
+
+// A dispatch the platform refuses must not swallow the message: it goes back
+// to waiting, and the retry hold keeps a refusing platform from being polled
+// once per second.
+func TestEngine_KeepsAQueuedMessageWhenTheDispatchFails(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "first"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	id := convID(t, store, 1)
+	if _, err := store.SetQueued(ctx, 1, id, "q-2", "refused", 7); err != nil {
+		t.Fatal(err)
+	}
+	platform.mu.Lock()
+	platform.writeStatus = http.StatusInternalServerError
+	platform.mu.Unlock()
+
+	resumed := restart(t, store, platform)
+	resumed.ResumeQueued(ctx, 1, id)
+	resumed.Wait()
+
+	queued, err := store.GetQueued(ctx, 1, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "refused" || queued.ID != "q-2" || queued.QueuedAt != 7 {
+		t.Fatalf("queued after a refused dispatch = %v, want it still waiting as itself", queued)
+	}
+	if got := transcriptOf(messages(t, store, 1)); got != "user:first|assistant:re: first|" {
+		t.Fatalf("a message that never reached the session must not be in the history: %q", got)
+	}
+	before := len(platform.session("cx1").prompts)
+	resumed.ResumeQueued(ctx, 1, id) // inside the retry hold
+	resumed.Wait()
+	if got := len(platform.session("cx1").prompts); got != before {
+		t.Fatalf("writes = %d, want no retry inside the hold (%d)", got, before)
+	}
+}
+
+// One user's queue is not another's: a cancel or a resume for user 2 never
+// touches user 1's waiting message.
+func TestEngine_QueuedMessagesAreIsolatedPerUser(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "one"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := engine.Send(ctx, 2, "two"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	one, two := convID(t, store, 1), convID(t, store, 2)
+	if _, err := store.SetQueued(ctx, 1, one, "q-3", "mine", 11); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelQueued(ctx, 2, "q-3"); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("user 2 cancelling user 1's id = %v, want ErrNoQueuedMessage", err)
+	}
+	engine.ResumeQueued(ctx, 2, two)
+	engine.Wait()
+
+	queued, err := store.GetQueued(ctx, 1, one)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "mine" {
+		t.Fatalf("user 1's queued message = %v, want it untouched", queued)
+	}
+	if got := transcriptOf(messages(t, store, 2)); got != "user:two|assistant:re: two|" {
+		t.Fatalf("user 2's history = %q, want no trace of user 1's message", got)
+	}
+	_ = platform
+}
+
+// PRD-1 AC1 · session-platform AC-J9: a message sent while a reply is in
+// progress goes into that reply when the platform takes it — it reads as a
+// sent message, not as one still waiting.
+func TestEngine_SteersIntoTheRunningTurn(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	platform.steerApplies = true
+	// A test that fails before the reply is released would otherwise deadlock
+	// in the engine.Wait() cleanup.
+	defer func() {
+		if platform.hold != nil {
+			close(platform.hold)
+		}
+	}()
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+
+	msg, queued, err := engine.Queue(ctx, 1, "actually, the newer paper")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued != nil {
+		t.Fatalf("queued = %+v, want the running turn to have taken it", queued)
+	}
+	if msg.Content != "actually, the newer paper" {
+		t.Fatalf("message = %+v, want the steered message", msg)
+	}
+	platform.mu.Lock()
+	steered := append([]string(nil), platform.steered...)
+	platform.mu.Unlock()
+	if len(steered) != 1 || steered[0] != "actually, the newer paper" {
+		t.Fatalf("platform was handed %q, want the message once", steered)
+	}
+	// Steering is not a write: the turn still ran the one prompt it started with.
+	if s := platform.session("cx1"); len(s.prompts) != 1 || s.prompts[0] != "slow" {
+		t.Fatalf("prompts = %v, want only the original prompt", s.prompts)
+	}
+	if queuedRow, err := store.GetQueued(ctx, 1, convID(t, store, 1)); err != nil || queuedRow != nil {
+		t.Fatalf("queued row = %v, %v, want none", queuedRow, err)
+	}
+
+	close(platform.hold)
+	platform.hold = nil
+	engine.Wait()
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|user:actually, the newer paper|assistant:re: slow|" {
+		t.Fatalf("history = %q, want the steered message in the turn it joined", got)
+	}
+}
+
+// The turn may end between the busy check and the steer; the platform says so
+// and the message falls back to the queue rather than being lost.
+func TestEngine_FallsBackToTheQueueWhenSteeringIsRefused(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+
+	msg, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "second" || queued.ID == "" {
+		t.Fatalf("queued = %+v, want the refused message waiting with an id", queued)
+	}
+	if msg.Content != "" {
+		t.Fatalf("message = %+v, want nothing sent", msg)
+	}
+
+	close(platform.hold)
+	engine.Wait()
+	// It went out as its own turn once the first one ended.
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|user:second|assistant:re: second|" {
+		t.Fatalf("history = %q", got)
+	}
+}
+
+// A platform with no mid-turn path at all (an older control plane answering
+// 404/422) must not swallow the message either.
+func TestEngine_QueuesWhenThePlatformHasNoSteerPath(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	platform.steerStatus = http.StatusUnprocessableEntity
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+	_, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil || queued == nil {
+		t.Fatalf("queue = %+v, %v, want the message waiting", queued, err)
+	}
+	close(platform.hold)
+	engine.Wait()
+	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|user:second|assistant:re: second|" {
+		t.Fatalf("history = %q", got)
+	}
+	_ = store
 }

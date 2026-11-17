@@ -1,6 +1,6 @@
 ---
 type: mockup-copy-map
-last_updated: 2026-11-06
+last_updated: 2026-11-09
 ---
 
 # 카피 ↔ 구현 대응표
@@ -36,16 +36,16 @@ last_updated: 2026-11-06
 
 ## 집계
 
-남은 카피 drift: 표 A `구현 대기` 5행 · `목업 대기` 19행, 표 B `구현 대기` 23행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
+남은 카피 drift: 표 A `구현 대기` 5행 · `목업 대기` 22행, 표 B `구현 대기` 23행. (같은 차이가 양쪽 표에 한 행씩 나올 수 있다.)
 
 | 표 | 판정 | 행 수 |
 |---|---|---|
 | A | 일치 | 211 |
 | A | 데이터 | 14 |
-| A | 비표시 | 43 |
+| A | 비표시 | 44 |
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 5 |
-| A | 목업 대기 | 19 |
+| A | 목업 대기 | 22 |
 | B | 일치 | 275 |
 | B | 외부 | 129 |
 | B | 예시 데이터 | 202 |
@@ -54,7 +54,7 @@ last_updated: 2026-11-06
 | B | 기준 4 | 4 |
 | B | 구현 대기 | 23 |
 
-## 표 A — 정방향 (구현 리터럴 → 목업) · 297행
+## 표 A — 정방향 (구현 리터럴 → 목업) · 301행
 
 | 구현 파일 | 리터럴 | 판정 | 근거 |
 |---|---|---|---|
@@ -163,7 +163,11 @@ last_updated: 2026-11-06
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `복사` | 일치 | `screen-chat-text` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `메시지를 입력하세요` | 목업 대기 | 음성 모드가 없어 목업의 「메시지를 입력하거나…」 대신 쓴다(`_deviations.md` S11) |
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `보내기` | 비표시 | 보내기 버튼의 `contentDescription` |
-| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `답을 쓰는 중이에요 — 끝나면 이어서 보낼 수 있어요` | 목업 대기 | 답을 기다리는 동안의 안내 줄 — 목업이 그리지 않는 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `chat.message.copy` | 비표시 | `Chip` 의 기본 태그 인자 — 테스트 식별자 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `취소` | 목업 대기 | 대기 중인 메시지를 무르는 버튼 — 목업이 그리지 않는 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `대기 중` | 목업 대기 | 대기 중인 메시지 말풍선의 상태 꼬리표 — 목업이 그리지 않는 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `대기 중인 메시지가 있어요 — 답이 끝나면 보낼게요` | 목업 대기 | 대기 중인 메시지가 있을 때의 안내 줄 — 목업이 그리지 않는 상태 |
+| `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `답을 쓰는 중이에요 — 보내면 끝난 뒤 바로 전달돼요` | 목업 대기 | 답을 기다리는 동안의 안내 줄 — 목업이 그리지 않는 상태 |
 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | `ChatGPT 계정의 Codex가 답해요` | 목업 대기 | 입력창 아래 안내 줄 — 목업의 음성 안내 자리(`_deviations.md` S11) |
 | `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `닫기` | 일치 | `screen-external-notifications` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/notifications/ExternalNotificationDetailSheet.kt` | `보낸 호출자` | 일치 | `screen-external-notifications` 에 같은 텍스트 |

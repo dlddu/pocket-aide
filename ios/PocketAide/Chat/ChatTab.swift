@@ -107,6 +107,9 @@ struct ChatTab: View {
                         if let pending = viewModel.pending {
                             aiBubble(pending.content, pending: true)
                         }
+                        if let queued = viewModel.queued {
+                            queuedBubble(queued.content)
+                        }
                         Color.clear.frame(height: 1).id(Self.bottomAnchor)
                     }
                     .padding(.horizontal, DesignTokens.Spacing.xl)
@@ -125,6 +128,9 @@ struct ChatTab: View {
                 }
                 .onChange(of: viewModel.messages.count) { _, _ in follow(proxy) }
                 .onChange(of: viewModel.pending) { _, _ in follow(proxy) }
+                // A message held for after the reply is the newest thing on
+                // screen, so following the end (AC9) covers it too.
+                .onChange(of: viewModel.queued) { _, _ in follow(proxy) }
                 .onAppear { follow(proxy) }
             }
         }
@@ -178,6 +184,51 @@ struct ChatTab: View {
             .padding(.trailing, Self.bubbleInset)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityIdentifier("chat.message.mine")
+    }
+
+    /// A message held for after the reply in progress (PRD-1 AC1, 2026-11-09
+    /// 개정) — dimmer than a sent bubble, with a cancel button while it waits.
+    private func queuedBubble(_ text: String) -> some View {
+        VStack(alignment: .trailing, spacing: DesignTokens.Spacing.xs) {
+            Text(text)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
+                .foregroundStyle(DesignTokens.Color.card(area))
+                .textSelection(.enabled)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                .padding(.vertical, 10)
+                .background(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: DesignTokens.Radius.bubble,
+                        bottomLeadingRadius: DesignTokens.Radius.bubble,
+                        bottomTrailingRadius: Self.tail,
+                        topTrailingRadius: DesignTokens.Radius.bubble,
+                        style: .continuous
+                    )
+                    .fill(DesignTokens.Color.ink(area).opacity(Self.mutedOpacity))
+                )
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: DesignTokens.Spacing.xs) {
+                Text("대기 중")
+                    .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                    .foregroundStyle(DesignTokens.Color.ink(area).opacity(Self.mutedOpacity))
+                Button {
+                    Task { await viewModel.cancelQueued() }
+                } label: {
+                    Text("취소")
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                        .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.75))
+                        .padding(.horizontal, DesignTokens.Spacing.md)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(Capsule().fill(DesignTokens.Color.card(area)))
+                        .overlay(Capsule().stroke(DesignTokens.Color.rule(area), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("chat.queued.cancel")
+            }
+        }
+        .padding(.leading, Self.bubbleInset)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .accessibilityIdentifier("chat.message.queued")
     }
 
     private func aiBubble(_ text: String, pending: Bool) -> some View {
@@ -243,6 +294,16 @@ struct ChatTab: View {
         .accessibilityIdentifier(pending ? "chat.message.pending" : "chat.message.ai")
     }
 
+    private var composerHint: String {
+        if viewModel.queued != nil {
+            return "대기 중인 메시지가 있어요 — 답이 끝나면 보낼게요"
+        }
+        if viewModel.isReplying {
+            return "답을 쓰는 중이에요 — 보내면 끝난 뒤 바로 전달돼요"
+        }
+        return "ChatGPT 계정의 Codex가 답해요"
+    }
+
     private var composer: some View {
         let canSend = viewModel.canSend && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return VStack(spacing: DesignTokens.Spacing.xs) {
@@ -286,7 +347,7 @@ struct ChatTab: View {
                 .accessibilityLabel("보내기")
                 .accessibilityIdentifier("chat.composer.send")
             }
-            Text(viewModel.isReplying ? "답을 쓰는 중이에요 — 끝나면 이어서 보낼 수 있어요" : "ChatGPT 계정의 Codex가 답해요")
+            Text(composerHint)
                 .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
                 .foregroundStyle(DesignTokens.Color.ink(area).opacity(Self.mutedOpacity))
                 .accessibilityIdentifier("chat.composer.hint")
