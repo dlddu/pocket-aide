@@ -123,6 +123,7 @@ fun ChatScreen(api: ApiClient) {
             onDraftChange = { draft = it },
             state = state,
             onSend = { viewModel.send(draft) { draft = "" } },
+            onSendNext = { viewModel.send(CHAT_NEXT_MESSAGE) {} },
         )
     }
 }
@@ -372,8 +373,42 @@ private fun Chip(label: String, onClick: () -> Unit) {
     )
 }
 
+/**
+ * 「다음」 — 본문이 정확히 이 라벨인 메시지를 보내기와 같은 경로·같은 전송 가능 조건으로 보낸다(PRD-1 AC1).
+ * 보내기와 달리 초안을 읽지도 비우지도 않으므로 초안이 비어 있어도 눌리고, 쓰던 초안은 그대로 남는다.
+ */
 @Composable
-private fun Composer(draft: String, onDraftChange: (String) -> Unit, state: ChatUiState, onSend: () -> Unit) {
+private fun NextButton(enabled: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+    Box(
+        Modifier
+            .height(SEND_SIZE)
+            .alpha(if (enabled) 1f else DISABLED_OPACITY)
+            .clip(shape)
+            .background(DesignTokens.Colors.card(CHAT_AREA))
+            .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), shape)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = DesignTokens.Spacing.md)
+            .testTag("chat.composer.next"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            CHAT_NEXT_MESSAGE,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold),
+            color = DesignTokens.Colors.ink(CHAT_AREA),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun Composer(
+    draft: String,
+    onDraftChange: (String) -> Unit,
+    state: ChatUiState,
+    onSend: () -> Unit,
+    onSendNext: () -> Unit,
+) {
     val ink = DesignTokens.Colors.ink(CHAT_AREA)
     val canSend = state.canSend && draft.isNotBlank()
     val fieldShape = RoundedCornerShape(DesignTokens.Radius.cardLarge)
@@ -406,6 +441,7 @@ private fun Composer(draft: String, onDraftChange: (String) -> Unit, state: Chat
                     modifier = Modifier.fillMaxWidth().testTag("chat.composer.field"),
                 )
             }
+            NextButton(enabled = state.canSend, onClick = onSendNext)
             Box(
                 Modifier
                     .size(SEND_SIZE)

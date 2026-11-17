@@ -104,6 +104,9 @@ public enum ChatError: Hashable, Sendable {
     }
 }
 
+/// 「다음」 버튼이 보내는 메시지 본문이자 그 버튼의 라벨 — 두 값이 갈라지면 라벨과 보낸 말이 어긋난다.
+public let chatNextMessage = "다음"
+
 /// Where the web addresses in a message are, so the screen can make them
 /// tappable — the ChatGPT sign-in a codex session asks for arrives as one.
 /// Punctuation that ends a sentence is not part of the address, and neither is

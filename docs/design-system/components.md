@@ -70,7 +70,7 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
 ### `PillButton`
 가로형 강조 버튼. 라벨 + 아이콘.
 - 형태: `rounded-full px-3 py-1.5 text-[12px] font-semibold`
-- 변형: `solid` (영역 강조색 배경 + 흰 텍스트), `outline` (보더만)
+- 변형: `solid` (영역 강조색 배경 + 흰 텍스트), `outline` (보더만), `outline-composer` (outline + 높이를 입력창 전송 버튼과 같은 44px 로 고정 — 전송과 나란히 서는 보조 액션의 터치 영역을 전송과 맞춘다. AI 채팅의 「다음」)
 
 ---
 
@@ -78,7 +78,7 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
 
 ### `Composer`
 채팅/메시지 입력창. 입력 필드 + 우측 액션 버튼(음성/전송).
-- 슬롯: `placeholder` (또는 입력값) + `action-button`
+- 슬롯: `placeholder` (또는 입력값) + `action-button` (+ 선택적 보조 액션 — 전송 버튼 **왼쪽**에 `PillButton.outline-composer` 1개. 예: AI 채팅의 「다음」 한 마디 전송)
 - 토큰: `rounded-3xl`, 흰 배경, 보더 `border-stone-300/80`
 - 변형: 위치(`bottom-[88px]` 탭바 위에 고정) / 키보드 확장에서는 다른 형태
 

@@ -221,6 +221,27 @@ struct ChatTab: View {
         .accessibilityIdentifier(pending ? "chat.message.pending" : "chat.message.ai")
     }
 
+    /// 「다음」 — 본문이 정확히 이 라벨인 메시지를 보내기와 같은 경로·같은 전송 가능 조건으로 보낸다(PRD-1 AC1).
+    /// 보내기와 달리 초안을 읽지도 비우지도 않으므로 초안이 비어 있어도 눌리고, 쓰던 초안은 그대로 남는다.
+    private var nextButton: some View {
+        Button {
+            Task { _ = await viewModel.send(chatNextMessage) }
+        } label: {
+            Text(chatNextMessage)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
+                .foregroundStyle(DesignTokens.Color.ink(area))
+                .lineLimit(1)
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .frame(height: Self.sendSize)
+                .background(Capsule().fill(DesignTokens.Color.card(area)))
+                .overlay(Capsule().stroke(DesignTokens.Color.rule(area), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(!viewModel.canSend)
+        .opacity(viewModel.canSend ? 1 : 0.4)
+        .accessibilityIdentifier("chat.composer.next")
+    }
+
     private var composer: some View {
         let canSend = viewModel.canSend && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return VStack(spacing: DesignTokens.Spacing.xs) {
@@ -240,6 +261,7 @@ struct ChatTab: View {
                             .stroke(DesignTokens.Color.rule(area), lineWidth: 1)
                     )
                     .accessibilityIdentifier("chat.composer.field")
+                nextButton
                 Button {
                     let text = draft
                     Task {

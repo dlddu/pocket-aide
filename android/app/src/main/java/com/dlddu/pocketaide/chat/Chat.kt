@@ -91,6 +91,9 @@ enum class ChatError(val message: String) {
 
 const val CHAT_MAX_MESSAGE_BYTES = 16 * 1024
 
+/** 「다음」 버튼이 보내는 메시지 본문이자 그 버튼의 라벨 — 두 값이 갈라지면 라벨과 보낸 말이 어긋난다. */
+const val CHAT_NEXT_MESSAGE = "다음"
+
 private val CHAT_URL = Regex("""https?://[^\s<>"'`]+""")
 private const val CHAT_URL_TRAILING = ".,;:!?'\""
 private val CHAT_URL_CLOSERS = mapOf(')' to '(', ']' to '[', '}' to '{')
