@@ -201,12 +201,13 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-private fun Messages(state: ChatUiState, modifier: Modifier, onCancelQueued: () -> Unit) {
+internal fun Messages(state: ChatUiState, modifier: Modifier, onCancelQueued: () -> Unit) {
     val listState = rememberLazyListState()
+    // The queued bubble is one more item, so following the list end (AC9)
+    // reaches it too — a message held for after the reply is the newest thing
+    // on screen and must not sit below the fold.
     val count = state.messages.size + (if (state.isReplying) 1 else 0) + (if (state.queued != null) 1 else 0)
-    LaunchedEffect(count, state.pending?.content, state.queued) {
-        if (count > 0) listState.animateScrollToItem(count - 1)
-    }
+    FollowLatestMessage(listState, count, state.pending?.content)
     if (state.hasLoaded && count == 0) {
         Box(modifier.fillMaxWidth().padding(DesignTokens.Spacing.xl), contentAlignment = Alignment.Center) {
             Text(
