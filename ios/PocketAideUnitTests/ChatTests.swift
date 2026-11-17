@@ -31,6 +31,11 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(ChatError(APIError.transport(URLError(.timedOut))), .unreachable)
     }
 
+    func testNextMessageIsTheWordItself() {
+        XCTAssertEqual(chatNextMessage, "다음")
+        XCTAssertEqual(chatNextMessage.trimmingCharacters(in: .whitespacesAndNewlines), chatNextMessage)
+    }
+
     func testPluginRefreshNotice() throws {
         let json = #"{"state":"ready","revision":"abc","added":["p--new"],"updated":[],"removed":["p--old"]}"#
         let result = try JSONDecoder().decode(ChatPluginRefresh.self, from: Data(json.utf8))

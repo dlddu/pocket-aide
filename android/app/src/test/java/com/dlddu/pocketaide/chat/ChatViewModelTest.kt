@@ -80,6 +80,38 @@ class ChatViewModelTest {
     }
 
     @Test
+    fun nextSendsTheWordItselfThroughTheOrdinarySendPath() = runTest {
+        assertEquals("다음", CHAT_NEXT_MESSAGE)
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"message":${message(1, "user", "다음")}}"""))
+
+        assertTrue(vm.performSend(CHAT_NEXT_MESSAGE))
+
+        val request = server.takeRequest()
+        assertEquals("/api/chat/messages", request.path)
+        assertEquals("""{"content":"다음"}""", request.body.readUtf8())
+        assertEquals(listOf("다음"), vm.state.value.messages.map { it.content })
+        assertTrue(vm.state.value.isReplying)
+    }
+
+    @Test
+    fun nextIsRefusedWhileAReplyIsInProgress() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"), """{"content":"쓰는 중","started_at":1}""")))
+        vm.load()
+        server.takeRequest()
+        assertFalse(vm.state.value.canSend)
+
+        assertFalse(vm.performSend(CHAT_NEXT_MESSAGE))
+
+        assertEquals(1, server.requestCount)
+        assertNull(vm.state.value.error)
+    }
+
+    @Test
     fun busyAndUnreachableMapToMessages() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setBody(chatJson()))
