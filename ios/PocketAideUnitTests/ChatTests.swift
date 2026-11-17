@@ -28,9 +28,10 @@ final class ChatTests: XCTestCase {
         let json = #"""
         {"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},
          "messages":[],"pending":{"content":"쓰는 중","started_at":3},
-         "queued":{"content":"다음 질문","queued_at":4}}
+         "queued":{"id":"q1","content":"다음 질문","queued_at":4}}
         """#
         let thread = try JSONDecoder().decode(ChatThread.self, from: Data(json.utf8))
+        XCTAssertEqual(thread.queued?.id, "q1")
         XCTAssertEqual(thread.queued?.content, "다음 질문")
         XCTAssertEqual(thread.queued?.queuedAt, 4)
     }
@@ -40,8 +41,9 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(sent.message?.content, "hi")
         XCTAssertNil(sent.queued)
 
-        let queued = try JSONDecoder().decode(ChatSendResponse.self, from: Data(#"{"queued":{"content":"hi","queued_at":5}}"#.utf8))
+        let queued = try JSONDecoder().decode(ChatSendResponse.self, from: Data(#"{"queued":{"id":"q2","content":"hi","queued_at":5}}"#.utf8))
         XCTAssertNil(queued.message)
+        XCTAssertEqual(queued.queued?.id, "q2")
         XCTAssertEqual(queued.queued?.content, "hi")
     }
 

@@ -279,14 +279,15 @@ func TestEngine_CancelsAQueuedMessage(t *testing.T) {
 	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := engine.Queue(ctx, 1, "second"); err != nil {
+	_, queued, err := engine.Queue(ctx, 1, "second")
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := engine.CancelQueued(ctx, 1); err != nil {
+	if err := engine.CancelQueued(ctx, 1, queued.ID); err != nil {
 		t.Fatalf("cancel a queued message = %v", err)
 	}
-	if err := engine.CancelQueued(ctx, 1); !errors.Is(err, chat.ErrNoQueuedMessage) {
+	if err := engine.CancelQueued(ctx, 1, queued.ID); !errors.Is(err, chat.ErrNoQueuedMessage) {
 		t.Fatalf("cancel again = %v, want ErrNoQueuedMessage", err)
 	}
 
@@ -301,7 +302,7 @@ func TestEngine_CancelsAQueuedMessage(t *testing.T) {
 func TestEngine_CancelQueuedWithNothingQueued(t *testing.T) {
 	_, engine, _ := newEngine(t)
 	ctx := context.Background()
-	if err := engine.CancelQueued(ctx, 1); !errors.Is(err, chat.ErrNoQueuedMessage) {
+	if err := engine.CancelQueued(ctx, 1, "whatever"); !errors.Is(err, chat.ErrNoQueuedMessage) {
 		t.Fatalf("cancel with nothing queued = %v, want ErrNoQueuedMessage", err)
 	}
 }
@@ -440,4 +441,172 @@ func TestEngine_AdoptsAnOrphanFromItsEnd(t *testing.T) {
 			}
 		})
 	}
+}
+
+// convID is the user's one conversation, as the store knows it.
+func convID(t *testing.T, store *chat.Store, userID int64) int64 {
+	t.Helper()
+	conv, err := store.Conversation(context.Background(), userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return conv.ID
+}
+
+// restart is the engine a restarted server builds: the same store, none of
+// the in-memory turn state.
+func restart(t *testing.T, store *chat.Store, platform *fakePlatform) *chat.Engine {
+	t.Helper()
+	engine := chat.NewEngine(store, platform, nil).WithPoll(5 * time.Millisecond)
+	t.Cleanup(engine.Wait)
+	return engine
+}
+
+// A restart kills the turn that would have sent a waiting message, so the row
+// is all that is left. The apps' poll resumes it, once (PRD-1 AC1 개정).
+func TestEngine_ResumesAQueuedMessageAfterARestart(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "first"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	id := convID(t, store, 1)
+	if _, err := store.SetQueued(ctx, 1, id, "q-1", "left over", 5); err != nil {
+		t.Fatal(err)
+	}
+
+	resumed := restart(t, store, platform)
+	resumed.ResumeQueued(ctx, 1, id)
+	resumed.ResumeQueued(ctx, 1, id) // a second poll must not send it twice
+	resumed.Wait()
+
+	if got, want := transcriptOf(messages(t, store, 1)), "user:first|assistant:re: first|user:left over|assistant:re: left over|"; got != want {
+		t.Fatalf("history = %q, want %q", got, want)
+	}
+	sent := 0
+	for _, p := range platform.session("cx1").prompts {
+		if p == "left over" {
+			sent++
+		}
+	}
+	if sent != 1 {
+		t.Fatalf("the resumed message went out %d times, want exactly 1", sent)
+	}
+	queued, err := store.GetQueued(ctx, 1, id)
+	if err != nil || queued != nil {
+		t.Fatalf("queued after the resume = %v, %v, want none", queued, err)
+	}
+}
+
+// Cancel names the message it means: one that arrives after its message went
+// out is a 404, and the message that took its place stays queued.
+func TestEngine_CancelWithAStaleIDLeavesTheNewerMessage(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.hold = make(chan struct{})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "slow"); err != nil {
+		t.Fatal(err)
+	}
+	_, stale, err := engine.Queue(ctx, 1, "first queued")
+	if err != nil {
+		t.Fatal(err)
+	}
+	id := convID(t, store, 1)
+	// The turn ended and took it, and the user queued another behind the next.
+	if _, err := store.TakeQueued(ctx, 1, id); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.SetQueued(ctx, 1, id, "q-new", "second queued", 9); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelQueued(ctx, 1, stale.ID); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("cancel with a stale id = %v, want ErrNoQueuedMessage", err)
+	}
+	queued, err := store.GetQueued(ctx, 1, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "second queued" {
+		t.Fatalf("queued = %v, want the newer message untouched", queued)
+	}
+
+	close(platform.hold)
+}
+
+// A dispatch the platform refuses must not swallow the message: it goes back
+// to waiting, and the retry hold keeps a refusing platform from being polled
+// once per second.
+func TestEngine_KeepsAQueuedMessageWhenTheDispatchFails(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "first"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	id := convID(t, store, 1)
+	if _, err := store.SetQueued(ctx, 1, id, "q-2", "refused", 7); err != nil {
+		t.Fatal(err)
+	}
+	platform.mu.Lock()
+	platform.writeStatus = http.StatusInternalServerError
+	platform.mu.Unlock()
+
+	resumed := restart(t, store, platform)
+	resumed.ResumeQueued(ctx, 1, id)
+	resumed.Wait()
+
+	queued, err := store.GetQueued(ctx, 1, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "refused" || queued.ID != "q-2" || queued.QueuedAt != 7 {
+		t.Fatalf("queued after a refused dispatch = %v, want it still waiting as itself", queued)
+	}
+	if got := transcriptOf(messages(t, store, 1)); got != "user:first|assistant:re: first|" {
+		t.Fatalf("a message that never reached the session must not be in the history: %q", got)
+	}
+	before := len(platform.session("cx1").prompts)
+	resumed.ResumeQueued(ctx, 1, id) // inside the retry hold
+	resumed.Wait()
+	if got := len(platform.session("cx1").prompts); got != before {
+		t.Fatalf("writes = %d, want no retry inside the hold (%d)", got, before)
+	}
+}
+
+// One user's queue is not another's: a cancel or a resume for user 2 never
+// touches user 1's waiting message.
+func TestEngine_QueuedMessagesAreIsolatedPerUser(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "one"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := engine.Send(ctx, 2, "two"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	one, two := convID(t, store, 1), convID(t, store, 2)
+	if _, err := store.SetQueued(ctx, 1, one, "q-3", "mine", 11); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelQueued(ctx, 2, "q-3"); !errors.Is(err, chat.ErrNoQueuedMessage) {
+		t.Fatalf("user 2 cancelling user 1's id = %v, want ErrNoQueuedMessage", err)
+	}
+	engine.ResumeQueued(ctx, 2, two)
+	engine.Wait()
+
+	queued, err := store.GetQueued(ctx, 1, one)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if queued == nil || queued.Content != "mine" {
+		t.Fatalf("user 1's queued message = %v, want it untouched", queued)
+	}
+	if got := transcriptOf(messages(t, store, 2)); got != "user:two|assistant:re: two|" {
+		t.Fatalf("user 2's history = %q, want no trace of user 1's message", got)
+	}
+	_ = platform
 }

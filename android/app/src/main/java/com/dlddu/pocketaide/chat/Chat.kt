@@ -3,6 +3,7 @@ package com.dlddu.pocketaide.chat
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.isAuthPoolExhausted
+import java.net.URLEncoder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -40,6 +41,7 @@ data class ChatPending(
 
 @Serializable
 data class ChatQueued(
+    val id: String = "",
     val content: String = "",
     @SerialName("queued_at") val queuedAt: Long = 0,
 )
@@ -161,8 +163,8 @@ suspend fun ApiClient.sendChatMessage(content: String): ChatSendOutcome {
 
 /** Drops the message held for after the reply in progress, if it has not
  * already been sent. */
-suspend fun ApiClient.cancelQueuedChatMessage() {
-    delete("/api/chat/queue")
+suspend fun ApiClient.cancelQueuedChatMessage(id: String) {
+    delete("/api/chat/queue?id=" + URLEncoder.encode(id, "UTF-8"))
 }
 
 suspend fun ApiClient.refreshChatPlugins(): ChatPluginRefresh =

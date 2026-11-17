@@ -110,9 +110,9 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
      * user cancelled — not an error worth showing, since it is about to
      * appear as a sent message. */
     internal suspend fun performCancelQueued() {
-        if (_state.value.queued == null) return
+        val queued = _state.value.queued ?: return
         try {
-            api.cancelQueuedChatMessage()
+            api.cancelQueuedChatMessage(queued.id)
         } catch (e: CancellationException) {
             throw e
         } catch (e: ApiException.BadStatus) {

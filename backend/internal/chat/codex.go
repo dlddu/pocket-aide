@@ -3,6 +3,8 @@ package chat
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,6 +41,10 @@ const (
 	defaultPoll    = 700 * time.Millisecond
 	defaultTimeout = 40 * time.Minute
 	emptyReply     = "(응답이 비어 있습니다)"
+	// retryHold spaces out dispatches of a queued message whose last one
+	// failed. The apps poll GET /api/chat about once a second while they
+	// wait, and each poll could otherwise re-send to a refusing platform.
+	retryHold = 30 * time.Second
 )
 
 var (
@@ -93,9 +99,13 @@ type Engine struct {
 	timeout  time.Duration
 	now      func() time.Time
 
-	mu      sync.Mutex
-	turns   map[int64]*Pending
-	running sync.WaitGroup
+	mu    sync.Mutex
+	turns map[int64]*Pending
+	// retryAfter holds off the next dispatch of a message whose last one
+	// failed, so a platform that keeps refusing is not hammered once per
+	// poll. In memory only: a restart just means one earlier retry.
+	retryAfter map[int64]time.Time
+	running    sync.WaitGroup
 }
 
 func NewEngine(store *Store, platform Platform, logger *slog.Logger) *Engine {
@@ -105,7 +115,7 @@ func NewEngine(store *Store, platform Platform, logger *slog.Logger) *Engine {
 	return &Engine{
 		store: store, platform: platform, logger: logger,
 		poll: defaultPoll, timeout: defaultTimeout, now: time.Now,
-		turns: map[int64]*Pending{},
+		turns: map[int64]*Pending{}, retryAfter: map[int64]time.Time{},
 	}
 }
 
@@ -280,7 +290,11 @@ func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Messa
 	if existing != nil {
 		return Message{}, nil, ErrQueueFull
 	}
-	q, sErr := e.store.SetQueued(ctx, userID, conv.ID, content, e.now().Unix())
+	id, idErr := randomID()
+	if idErr != nil {
+		return Message{}, nil, idErr
+	}
+	q, sErr := e.store.SetQueued(ctx, userID, conv.ID, id, content, e.now().Unix())
 	if sErr != nil {
 		return Message{}, nil, sErr
 	}
@@ -300,22 +314,76 @@ func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Messa
 	return Message{}, &q, nil
 }
 
-// CancelQueued drops the message held for after the turn in progress, if one
-// is still waiting — once drainQueued has taken it, there is nothing left to
-// cancel and the caller sees ErrNoQueuedMessage.
-func (e *Engine) CancelQueued(ctx context.Context, userID int64) error {
+// CancelQueued drops the queued message named by id, if it is still waiting
+// — once drainQueued has taken it there is nothing left to cancel, and the
+// caller sees ErrNoQueuedMessage rather than losing whatever took its place.
+func (e *Engine) CancelQueued(ctx context.Context, userID int64, id string) error {
 	conv, err := e.store.Conversation(ctx, userID)
 	if err != nil {
 		return err
 	}
-	cleared, err := e.store.ClearQueued(ctx, userID, conv.ID)
+	cleared, err := e.store.ClearQueued(ctx, userID, conv.ID, id)
 	if err != nil {
 		return err
 	}
 	if !cleared {
 		return ErrNoQueuedMessage
 	}
+	e.forgetRetry(userID)
 	return nil
+}
+
+// ResumeQueued dispatches a message left waiting with no turn running behind
+// it — what a restart leaves, since the turn that would have drained it died
+// with the process. The apps' GET /api/chat poll is what calls this, so the
+// wait resumes without the user having to send anything.
+func (e *Engine) ResumeQueued(ctx context.Context, userID, convID int64) {
+	if !e.retryDue(userID) {
+		return
+	}
+	queued, err := e.store.GetQueued(ctx, userID, convID)
+	if err != nil || queued == nil {
+		return
+	}
+	if !e.claim(userID) {
+		return // a turn is running; its own drainQueued will take this one
+	}
+	e.running.Add(1)
+	go func() {
+		defer e.running.Done()
+		defer e.release(userID)
+		turnCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), e.timeout)
+		defer cancel()
+		e.drainQueued(turnCtx, userID, convID)
+	}()
+}
+
+func (e *Engine) retryDue(userID int64) bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return !e.now().Before(e.retryAfter[userID])
+}
+
+func (e *Engine) holdRetry(userID int64) {
+	e.mu.Lock()
+	e.retryAfter[userID] = e.now().Add(retryHold)
+	e.mu.Unlock()
+}
+
+func (e *Engine) forgetRetry(userID int64) {
+	e.mu.Lock()
+	delete(e.retryAfter, userID)
+	e.mu.Unlock()
+}
+
+// keepQueued puts a taken message back under its own id after a dispatch
+// that failed, so a message the user was told is waiting is never dropped on
+// the floor: the next turn end or poll tries it again.
+func (e *Engine) keepQueued(ctx context.Context, userID, convID int64, queued *QueuedMessage) {
+	e.holdRetry(userID)
+	if _, err := e.store.SetQueued(context.WithoutCancel(ctx), userID, convID, queued.ID, queued.Content, queued.QueuedAt); err != nil {
+		e.logger.Error("chat: keep queued message after a failed dispatch", "user", userID, "err", err)
+	}
 }
 
 // drainQueued sends the message waiting behind the turn that just ended, if
@@ -333,12 +401,14 @@ func (e *Engine) drainQueued(ctx context.Context, userID, convID int64) {
 	conv, err := e.store.GetSession(ctx, userID, convID)
 	if err != nil {
 		e.logger.Error("chat: dequeue lookup conversation", "user", userID, "err", err)
+		e.keepQueued(ctx, userID, convID, queued)
 		return
 	}
 	sessionID, offset := conv.platformSessionID, conv.transcriptOffset
 	if sessionID == "" {
 		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
 			e.logger.Error("chat: dequeue open session", "user", userID, "err", err)
+			e.keepQueued(ctx, userID, convID, queued)
 			return
 		}
 	}
@@ -346,18 +416,22 @@ func (e *Engine) drainQueued(ctx context.Context, userID, convID int64) {
 	if err == nil && status == http.StatusNotFound {
 		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
 			e.logger.Error("chat: dequeue reopen session", "user", userID, "err", err)
+			e.keepQueued(ctx, userID, convID, queued)
 			return
 		}
 		status, body, err = e.write(ctx, sessionID, queued.Content)
 	}
 	if err != nil {
 		e.logger.Error("chat: dequeued message write failed", "user", userID, "err", err)
+		e.keepQueued(ctx, userID, convID, queued)
 		return
 	}
 	if status != http.StatusOK && status != http.StatusAccepted {
 		e.logger.Error("chat: dequeued message refused", "user", userID, "status", status, "body", string(body))
+		e.keepQueued(ctx, userID, convID, queued)
 		return
 	}
+	e.forgetRetry(userID)
 	if _, saveErr := e.store.AppendMessage(ctx, userID, convID, RoleUser, queued.Content); saveErr != nil {
 		e.logger.Error("chat: save dequeued message", "user", userID, "err", saveErr)
 	}
@@ -466,6 +540,14 @@ func (e *Engine) write(ctx context.Context, sessionID, content string) (int, []b
 
 func sessionName(userID int64) string {
 	return "pocket-aide-chat-" + strconv.FormatInt(userID, 10)
+}
+
+func randomID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("read random: %w", err)
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // openSession gives the conversation a codex session. Creating one can

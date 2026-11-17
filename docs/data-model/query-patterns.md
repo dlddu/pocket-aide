@@ -93,12 +93,13 @@
 | Q-94 | `insert chat_messages \| - \| - \| -` | — | `backend/internal/chat/store.go::Store::AppendMessage` |
 | Q-95 | `select chat_messages \| eq(id) \| - \| -` | PK(chat_messages) | `backend/internal/chat/store.go::Store::AppendMessage` |
 | Q-96 | `select chat_messages \| eq(session_id) \| - \| order(id asc)` | idx_chat_messages_session | `backend/internal/chat/store.go::Store::Messages` |
-| Q-97 | `update chat_sessions \| eq(id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::ClearQueued`, `backend/internal/chat/store.go::Store::SetPlatform`, `backend/internal/chat/store.go::Store::SetQueued`, `backend/internal/chat/store.go::Store::TakeQueued` |
+| Q-97 | `update chat_sessions \| eq(id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::SetPlatform`, `backend/internal/chat/store.go::Store::SetQueued`, `backend/internal/chat/store.go::Store::TakeQueued` |
 | Q-98 | `insert commit_status_requests \| - \| - \| -` | — | `backend/internal/commitstatus/store.go::Store::Create` |
 | Q-99 | `select approval_caller_keys,commit_status_requests \| eq(approval_caller_keys.id=commit_status_requests.caller_key_id, commit_status_requests.id, commit_status_requests.user_id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); commit_status_requests: PK(commit_status_requests) | `backend/internal/commitstatus/store.go::Store::Get` |
 | Q-100 | `select approval_caller_keys,commit_status_requests \| eq(approval_caller_keys.id=commit_status_requests.caller_key_id, commit_status_requests.status, commit_status_requests.user_id) \| - \| order(commit_status_requests.created_at desc, commit_status_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); commit_status_requests: idx_commit_status_requests_user_status_created | `backend/internal/commitstatus/store.go::Store::ListPending` |
 | Q-101 | `select approval_caller_keys,commit_status_requests \| eq(approval_caller_keys.id=commit_status_requests.caller_key_id, commit_status_requests.status, commit_status_requests.user_id) \| - \| order(commit_status_requests.processed_at desc, commit_status_requests.id desc)` | approval_caller_keys: PK(approval_caller_keys); commit_status_requests: idx_commit_status_requests_user_status_created | `backend/internal/commitstatus/store.go::Store::ListHistory` |
 | Q-102 | `update commit_status_requests \| eq(id, status, user_id) \| - \| -` | PK(commit_status_requests) | `backend/internal/commitstatus/store.go::Store::markApproved`, `backend/internal/commitstatus/store.go::Store::markRejected`, `backend/internal/commitstatus/store.go::Store::setLastError` |
+| Q-103 | `update chat_sessions \| eq(id, queued_id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::ClearQueued` |
 
 ## 수동 형태
 

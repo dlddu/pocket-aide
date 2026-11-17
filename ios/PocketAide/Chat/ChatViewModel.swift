@@ -86,9 +86,9 @@ final class ChatViewModel: ObservableObject {
     /// means it was already dispatched just as the user cancelled — not an
     /// error worth showing, since it is about to appear as a sent message.
     func cancelQueued() async {
-        guard let api, queued != nil else { return }
+        guard let api, let waiting = queued else { return }
         do {
-            try await api.cancelQueuedChatMessage()
+            try await api.cancelQueuedChatMessage(id: waiting.id)
         } catch {
             if case .badStatus(404, _)? = error as? APIError {
             } else {

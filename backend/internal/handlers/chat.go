@@ -37,6 +37,11 @@ func GetChat(store *chat.Store, engine *chat.Engine) http.HandlerFunc {
 			http.Error(w, "get failed", http.StatusInternalServerError)
 			return
 		}
+		// A restart kills the turn that would have sent a waiting message, so
+		// this poll is what gets it moving again (PRD-1 AC1 2026-11-09 개정).
+		if queued != nil {
+			engine.ResumeQueued(r.Context(), u.ID, conv.ID)
+		}
 		writeJSON(w, http.StatusOK, map[string]any{
 			"conversation": conv,
 			"messages":     messages,
@@ -91,8 +96,10 @@ func SendChatMessage(engine *chat.Engine) http.HandlerFunc {
 	}
 }
 
-// CancelQueuedChatMessage handles DELETE /api/chat/queue: drops the message
-// held for after the reply in progress, if it has not already been sent.
+// CancelQueuedChatMessage handles DELETE /api/chat/queue?id=<id>: drops the
+// message held for after the reply in progress, if that message is still the
+// one waiting. The id is required so a cancel that arrives just after its
+// message went out answers 404 instead of dropping the next one.
 func CancelQueuedChatMessage(engine *chat.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -100,7 +107,12 @@ func CancelQueuedChatMessage(engine *chat.Engine) http.HandlerFunc {
 			http.Error(w, "no user in context", http.StatusInternalServerError)
 			return
 		}
-		if err := engine.CancelQueued(r.Context(), u.ID); err != nil {
+		id := strings.TrimSpace(r.URL.Query().Get("id"))
+		if id == "" {
+			http.Error(w, "id is required", http.StatusBadRequest)
+			return
+		}
+		if err := engine.CancelQueued(r.Context(), u.ID, id); err != nil {
 			writeChatError(w, err)
 			return
 		}

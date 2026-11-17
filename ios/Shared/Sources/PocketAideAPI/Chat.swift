@@ -44,15 +44,18 @@ public struct ChatPending: Codable, Hashable, Sendable {
 }
 
 public struct ChatQueued: Codable, Hashable, Sendable {
+    public let id: String
     public let content: String
     public let queuedAt: Int64
 
     enum CodingKeys: String, CodingKey {
+        case id
         case content
         case queuedAt = "queued_at"
     }
 
-    public init(content: String = "", queuedAt: Int64 = 0) {
+    public init(id: String = "", content: String = "", queuedAt: Int64 = 0) {
+        self.id = id
         self.content = content
         self.queuedAt = queuedAt
     }
@@ -198,8 +201,9 @@ public extension APIClient {
 
     /// Drops the message held for after the reply in progress, if it has
     /// not already been sent.
-    func cancelQueuedChatMessage() async throws {
-        try await delete("/api/chat/queue", authenticated: true)
+    func cancelQueuedChatMessage(id: String) async throws {
+        let escaped = id.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? id
+        try await delete("/api/chat/queue?id=\(escaped)", authenticated: true)
     }
 
     func refreshChatPlugins() async throws -> ChatPluginRefresh {

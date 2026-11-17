@@ -121,6 +121,7 @@ type chatView struct {
 		Content string `json:"content"`
 	} `json:"pending"`
 	Queued *struct {
+		ID      string `json:"id"`
 		Content string `json:"content"`
 	} `json:"queued"`
 }
@@ -160,14 +161,18 @@ func TestChat_SendThenPoll(t *testing.T) {
 }
 
 // PRD-1 AC1 (2026-11-09 개정): cancelling with nothing queued is a 404, and
-// GET /api/chat reports no queued message while idle.
+// GET /api/chat reports no queued message while idle. The id says which
+// message the cancel means, so a cancel without one is a 400.
 func TestChat_CancelQueuedWithNothingQueued(t *testing.T) {
 	router, _, _ := newChatRouter(t)
 	if v := getChat(t, router, 1); v.Queued != nil {
 		t.Fatalf("fresh chat queued = %+v, want nil", v.Queued)
 	}
-	if rec := chatDo(t, router, http.MethodDelete, "/api/chat/queue", nil, 1); rec.Code != http.StatusNotFound {
+	if rec := chatDo(t, router, http.MethodDelete, "/api/chat/queue?id=whatever", nil, 1); rec.Code != http.StatusNotFound {
 		t.Fatalf("cancel with nothing queued = %d %s", rec.Code, rec.Body)
+	}
+	if rec := chatDo(t, router, http.MethodDelete, "/api/chat/queue", nil, 1); rec.Code != http.StatusBadRequest {
+		t.Fatalf("cancel without an id = %d %s", rec.Code, rec.Body)
 	}
 }
 

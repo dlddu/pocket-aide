@@ -87,17 +87,20 @@ class ChatViewModelTest {
         server.enqueue(MockResponse().setBody(chatJson()))
         vm.load()
         server.takeRequest()
-        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"content":"다음","queued_at":5}}"""))
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"id":"q1","content":"다음","queued_at":5}}"""))
 
         assertTrue(vm.performSend("다음"))
         assertEquals("다음", vm.state.value.queued?.content)
+        assertEquals("q1", vm.state.value.queued?.id)
         assertFalse(vm.state.value.canSend)
 
         server.enqueue(MockResponse().setResponseCode(204))
         vm.performCancelQueued()
 
         val request = server.takeRequest()
-        assertEquals("/api/chat/queue", request.path)
+        // The cancel names the message on screen, so one that arrives after
+        // it went out cannot drop whatever took its place.
+        assertEquals("/api/chat/queue?id=q1", request.path)
         assertEquals("DELETE", request.method)
         assertNull(vm.state.value.queued)
         assertTrue(vm.state.value.canSend)
@@ -109,7 +112,7 @@ class ChatViewModelTest {
         server.enqueue(MockResponse().setBody(chatJson()))
         vm.load()
         server.takeRequest()
-        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"content":"다음","queued_at":5}}"""))
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"id":"q1","content":"다음","queued_at":5}}"""))
         vm.performSend("다음")
 
         server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":"no message queued"}"""))
