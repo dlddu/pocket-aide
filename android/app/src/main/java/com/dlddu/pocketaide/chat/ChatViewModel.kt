@@ -35,7 +35,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     // The reading position of the message list lives here because this view
     // model is what survives the user moving to another tab — the screen and
     // its LazyListState do not.
-    val scrollMemory = ChatScrollMemory()
+    internal val scrollMemory = ChatScrollMemory()
 
     suspend fun pollWhileVisible() {
         while (coroutineContext.isActive) {
