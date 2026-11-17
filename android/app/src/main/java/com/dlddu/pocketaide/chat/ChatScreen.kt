@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -68,8 +70,9 @@ import com.dlddu.pocketaide.designsystem.components.AreaLabel
 import com.dlddu.pocketaide.designsystem.components.PlainTextField
 
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
-// action refreshes plugin skills (one conversation, no "new chat"), and the
-// composer's round button sends (voice mode is not built yet).
+// two actions sync the conversation on demand and refresh plugin skills (one
+// conversation, no "new chat"), and the composer's round button sends (voice
+// mode is not built yet).
 private val CHAT_AREA = Area.AiChat
 private val HEADER_BUTTON_SIZE = 36.dp
 private val HEADER_ICON_SIZE = 16.dp
@@ -111,7 +114,7 @@ fun ChatScreen(api: ApiClient) {
             .imePadding()
             .testTag("chat.screen"),
     ) {
-        Header(state, viewModel::refreshPlugins)
+        Header(state, onSync = viewModel::sync, onRefresh = viewModel::refreshPlugins)
         Box(Modifier.fillMaxWidth().height(RULE_WIDTH).background(DesignTokens.Colors.rule(CHAT_AREA)))
         state.notice?.let {
             Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = viewModel::dismissNotice)
@@ -128,7 +131,7 @@ fun ChatScreen(api: ApiClient) {
 }
 
 @Composable
-private fun Header(state: ChatUiState, onRefresh: () -> Unit) {
+private fun Header(state: ChatUiState, onSync: () -> Unit, onRefresh: () -> Unit) {
     val ink = DesignTokens.Colors.ink(CHAT_AREA)
     Row(
         Modifier
@@ -160,28 +163,52 @@ private fun Header(state: ChatUiState, onRefresh: () -> Unit) {
                 )
             }
         }
-        RefreshButton(state, onRefresh)
+        Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
+            HeaderIconButton(
+                enabled = state.canSync,
+                isLoading = state.isSyncing,
+                icon = Icons.Outlined.Sync,
+                description = "대화 동기화",
+                tag = "chat.sync.button",
+                onClick = onSync,
+            )
+            HeaderIconButton(
+                enabled = state.canRefresh,
+                isLoading = state.isRefreshing,
+                icon = Icons.Outlined.Refresh,
+                description = "스킬 새로고침",
+                tag = "chat.refresh.button",
+                onClick = onRefresh,
+            )
+        }
     }
 }
 
 @Composable
-private fun RefreshButton(state: ChatUiState, onRefresh: () -> Unit) {
+private fun HeaderIconButton(
+    enabled: Boolean,
+    isLoading: Boolean,
+    icon: ImageVector,
+    description: String,
+    tag: String,
+    onClick: () -> Unit,
+) {
     val ink = DesignTokens.Colors.ink(CHAT_AREA)
     Box(
         Modifier
             .size(HEADER_BUTTON_SIZE)
-            .alpha(if (state.canRefresh) 1f else DISABLED_OPACITY)
+            .alpha(if (enabled) 1f else DISABLED_OPACITY)
             .clip(CircleShape)
             .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), CircleShape)
-            .clickable(enabled = state.canRefresh, role = Role.Button, onClick = onRefresh)
-            .semantics { contentDescription = "스킬 새로고침" }
-            .testTag("chat.refresh.button"),
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description }
+            .testTag(tag),
         contentAlignment = Alignment.Center,
     ) {
-        if (state.isRefreshing) {
+        if (isLoading) {
             CircularProgressIndicator(color = ink, strokeWidth = SPINNER_STROKE, modifier = Modifier.size(SPINNER_SIZE))
         } else {
-            Icon(Icons.Outlined.Refresh, contentDescription = null, tint = ink, modifier = Modifier.size(HEADER_ICON_SIZE))
+            Icon(icon, contentDescription = null, tint = ink, modifier = Modifier.size(HEADER_ICON_SIZE))
         }
     }
 }

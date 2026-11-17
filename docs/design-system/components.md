@@ -55,7 +55,7 @@ source: 10개 mockup HTML에서 반복 등장하는 단위 추출
 
 ### `ScreenHeader`
 화면 상단 헤더. 상태바 바로 아래 위치.
-- 슬롯: `area-label` (선택) + `title` (h1, 22~28px bold) + `meta` (선택, 카운트·날짜 등) + `action` (우측 1개 버튼, 선택)
+- 슬롯: `area-label` (선택) + `title` (h1, 22~28px bold) + `meta` (선택, 카운트·날짜 등) + `action` (우측 1~2개 아이콘 버튼, 선택 — 2개면 `gap` 간격의 Row/HStack으로 묶음. 예: PR 모니터의 「열린 PR」·설정, AI 채팅의 「동기화」·「스킬 새로고침」)
 - 영역별 화면에서 거의 동일 패턴으로 반복됨
 - 변형: `with-icon-button-fab` (오른쪽이 IconCircleButton) / `with-pill-button` (오른쪽이 가로형 강조 버튼, 루틴의 "새 루틴")
 

@@ -128,6 +128,75 @@ class ChatViewModelTest {
     }
 
     @Test
+    fun syncPullsHistoryAddedInTheBackground() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        server.takeRequest()
+
+        // The reply finished server-side while the tab wasn't polling — sync pulls it now.
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문") + "," + message(2, "assistant", "답"))))
+        assertTrue(vm.performSync())
+
+        assertEquals("/api/chat", server.takeRequest().path)
+        val state = vm.state.value
+        assertEquals(listOf("질문", "답"), state.messages.map { it.content })
+        assertFalse(state.isSyncing)
+        assertTrue(state.canSync)
+    }
+
+    @Test
+    fun syncFailureSurfacesAnErrorAndCanBeRetried() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(MockResponse().setResponseCode(502))
+        assertTrue(vm.performSync())
+        assertEquals(ChatError.UNREACHABLE, vm.state.value.error)
+        assertFalse(vm.state.value.isSyncing)
+        assertTrue(vm.state.value.canSync)
+
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "재시도"))))
+        assertTrue(vm.performSync())
+        assertNull(vm.state.value.error)
+        assertEquals(listOf("재시도"), vm.state.value.messages.map { it.content })
+    }
+
+    @Test
+    fun syncIsGuardedAgainstDuplicateDispatchAndAnEmptyConversation() = runTest {
+        val vm = ChatViewModel(api())
+
+        // Before the first load, there is nothing to sync yet.
+        assertFalse(vm.state.value.canSync)
+        assertFalse(vm.performSync())
+        assertEquals(0, server.requestCount)
+
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+
+        // A rapid repeat tap while a sync is already in flight is a no-op.
+        assertFalse(ChatUiState(hasLoaded = true, isSyncing = true).canSync)
+    }
+
+    @Test
+    fun syncStaysAvailableWhileAReplyIsInProgress() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"), """{"content":"쓰는 중","started_at":1}""")))
+        vm.load()
+        server.takeRequest()
+        assertTrue(vm.state.value.isReplying)
+        assertTrue(vm.state.value.canSync)
+
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문") + "," + message(2, "assistant", "답"))))
+        assertTrue(vm.performSync())
+        assertNull(vm.state.value.pending)
+        assertEquals(2, vm.state.value.messages.size)
+    }
+
+    @Test
     fun refreshNoticeWording() {
         assertEquals("스킬이 이미 최신이에요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "ready")))
         assertEquals("이 대화에는 새로 받을 스킬이 없어요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "unconfigured")))
