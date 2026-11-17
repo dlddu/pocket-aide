@@ -201,7 +201,7 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-private fun Messages(state: ChatUiState, modifier: Modifier) {
+internal fun Messages(state: ChatUiState, modifier: Modifier) {
     val listState = rememberLazyListState()
     val count = state.messages.size + if (state.isReplying) 1 else 0
     FollowLatestMessage(listState, count, state.pending?.content)
