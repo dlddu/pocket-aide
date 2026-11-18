@@ -99,7 +99,7 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 		}
 		sessions := []outSess{}
 		for _, s := range row.Sessions {
-			sessions = append(sessions, outSess{Cleanup: s.Cleanup, Reason: s.Reason, NextAction: s.NextAction})
+			sessions = append(sessions, outSess(s))
 		}
 		page.Tasks = append(page.Tasks, outRow{
 			ID: row.ID,
