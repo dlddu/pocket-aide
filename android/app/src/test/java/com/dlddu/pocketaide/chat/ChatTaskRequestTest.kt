@@ -48,7 +48,7 @@ class ChatTaskRequestTest {
     ) = ChatTask(id = id, title = title, status = status, stage = stage, reason = reason, nextAction = next)
 
     /** One ledger row as the backend serialises it, for the read-side tests. */
-    private fun task(id: String, status: String, requests: String = "") =
+    private fun taskJson(id: String, status: String, requests: String = "") =
         """{"id":"$id","title":"작업 $id","status":"$status","stage":"review"$requests}"""
 
     private fun storedJson(id: String, taskId: String, text: String, replayed: Boolean = false) =
@@ -364,7 +364,7 @@ class ChatTaskRequestTest {
         server.enqueue(
             MockResponse().setBody(
                 tasksJson(
-                    tasks = task("t1", "blocked", requests = ""","requests":{"pending":2,"claimed":1,"last_seq":7}"""),
+                    tasks = taskJson("t1", "blocked", requests = ""","requests":{"pending":2,"claimed":1,"last_seq":7}"""),
                     counts = """{"blocked":1}""",
                 ),
             ),
