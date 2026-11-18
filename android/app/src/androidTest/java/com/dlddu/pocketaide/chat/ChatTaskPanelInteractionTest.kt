@@ -32,15 +32,15 @@ import kotlin.math.abs
 // 작업 패널을 실제로 눌러 본다: 칩과 완료 숨김으로 목록을 좁히고, 한 작업으로
 // 들어가 보낼 문장을 고르거나 직접 쓰고, 실패한 요청을 다시 보낸다.
 //
-// 어느 테스트도 네트워크로 나가지 않는다 — 보내기는 세어 보는 콜백에서 멈춘다.
-// 운영 세션에는 아무 요청도 가지 않는다.
+// 어느 테스트도 네트워크로 나가지 않는다 — 저장은 세어 보는 콜백에서 멈춘다.
+// 운영 세션·원장에는 아무 요청도 가지 않는다.
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 class ChatTaskPanelInteractionTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private var sends = 0
+    private var stores = 0
 
     private val blocked = ChatTask(
         id = "t-blocked",
@@ -75,7 +75,7 @@ class ChatTaskPanelInteractionTest {
     private fun start(
         tasks: ChatTasksUiState = ledger,
         chat: ChatUiState = ChatUiState(hasLoaded = true),
-        followUp: ChatFollowUpUiState = ChatFollowUpUiState(),
+        taskRequest: ChatTaskRequestUiState = ChatTaskRequestUiState(),
     ) {
         compose.setContent {
             // 넓은 창이면서 상태 칩이 한 줄에 다 들어오는 폭 — 칩이 가로
@@ -106,10 +106,10 @@ class ChatTaskPanelInteractionTest {
                         request = ""
                     },
                     onCloseTask = { openId = null },
-                    followUp = followUp,
-                    followUpDraft = request,
-                    onFollowUpDraftChange = { request = it },
-                    onSendFollowUp = { sends++ },
+                    taskRequest = taskRequest,
+                    requestDraft = request,
+                    onRequestDraftChange = { request = it },
+                    onStoreRequest = { stores++ },
                 )
             }
         }
@@ -241,56 +241,85 @@ class ChatTaskPanelInteractionTest {
 
         compose.onNodeWithTag("chat.tasks.detail.field")
             .assertTextContains("「CI 가 막혔다」", substring = true)
-        compose.onNodeWithTag("chat.tasks.detail.context")
-            .assertTextContains("t-blocked", substring = true)
-        assertEquals("고르는 것은 보내는 것이 아니다", 0, sends)
+        assertEquals("고르는 것은 저장하는 것이 아니다", 0, stores)
     }
 
-    // 직접 쓴 요청도 그 작업 앞에서 보낸다.
+    // 직접 쓴 요청도 그 작업의 원장에 저장된다.
     @Test
-    fun aTypedRequestIsSentForTheTaskOnScreen() {
+    fun aTypedRequestIsStoredForTheTaskOnScreen() {
         start()
         openBlocked()
 
         compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("내가 직접 쓴 요청")
         compose.waitForIdle()
-        compose.onNodeWithTag("chat.tasks.detail.send").performClick()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
         compose.waitForIdle()
 
-        assertEquals(1, sends)
+        assertEquals(1, stores)
     }
 
-    // 빈 요청으로는 보낼 수 없다.
+    // 빈 요청으로는 저장할 수 없다.
     @Test
-    fun anEmptyRequestCannotBeSent() {
+    fun anEmptyRequestCannotBeStored() {
         start()
         openBlocked()
 
-        compose.onNodeWithTag("chat.tasks.detail.send").performClick()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
         compose.waitForIdle()
 
-        assertEquals(0, sends)
+        assertEquals(0, stores)
     }
 
-    // 답이 오는 중에는 기다린다고 말하고, 그동안 눌러도 가지 않는다.
+    // 답이 오는 중에도 저장된다 — 요청은 턴으로 가지 않고 원장으로 간다.
     @Test
-    fun whileAReplyIsBeingWrittenTheRequestWaits() {
+    fun aRequestIsStorableWhileAReplyIsBeingWritten() {
         start(chat = ChatUiState(hasLoaded = true, pending = ChatPending()))
         openBlocked()
 
-        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("지금 보내 줘")
+        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("지금 저장해 줘")
         compose.waitForIdle()
-        compose.onNodeWithTag("chat.tasks.detail.waiting").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
+        compose.waitForIdle()
 
-        compose.onNodeWithTag("chat.tasks.detail.send").performClick()
-        compose.waitForIdle()
-        assertEquals(0, sends)
+        assertEquals("답을 쓰는 중이어도 저장된다", 1, stores)
     }
 
-    // 실패는 쓴 말을 지우지 않는다 — 이유를 말하고 다시 보내기를 내민다.
+    // 저장됐다는 말은 처리됐다는 말이 아니다.
+    @Test
+    fun theStoredNoteSaysWaitingNotDone() {
+        start(
+            taskRequest = ChatTaskRequestUiState(
+                taskId = "t-blocked",
+                stored = ChatTaskRequest(id = "app-1", taskId = "t-blocked", text = "요청"),
+            ),
+        )
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.stored").assertIsDisplayed()
+        compose.onNodeWithText("요청 저장됨 · 부모 확인 대기").assertIsDisplayed()
+        compose.onAllNodesWithText("처리됨").assertCountEquals(0)
+    }
+
+    // 대기 중인 요청 수는 원장이 센 것을 그대로 보여 준다.
+    @Test
+    fun waitingRequestsAreShownAsTheLedgerCountsThem() {
+        start(
+            ledger.copy(
+                tasks = ledger.tasks.map {
+                    if (it.id == "t-blocked") it.copy(requests = ChatTaskRequests(pending = 2, reconciling = 1, lastSeq = 9)) else it
+                },
+            ),
+        )
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.waitingRequests")
+            .assertTextContains("확인 대기 3건", substring = true)
+    }
+
+    // 실패는 쓴 말을 지우지 않는다 — 이유를 말하고 다시 저장하기를 내민다.
     @Test
     fun aRefusedRequestKeepsTheWordsAndOffersARetry() {
-        start(followUp = ChatFollowUpUiState(taskId = "t-blocked", error = ChatError.UNREACHABLE))
+        start(taskRequest = ChatTaskRequestUiState(taskId = "t-blocked", error = ChatTaskRequestError.UNREACHABLE))
         openBlocked()
 
         compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("다시 보낼 요청")
@@ -298,20 +327,25 @@ class ChatTaskPanelInteractionTest {
 
         compose.onNodeWithTag("chat.tasks.detail.error").assertIsDisplayed()
         compose.onNodeWithTag("chat.tasks.detail.field").assertTextContains("다시 보낼 요청", substring = true)
-        compose.onNodeWithText("다시 보내기").assertIsDisplayed()
+        compose.onNodeWithText("다시 저장하기").assertIsDisplayed()
 
-        compose.onNodeWithTag("chat.tasks.detail.send").performClick()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
         compose.waitForIdle()
-        assertEquals("다시 보내기는 보낼 수 있다", 1, sends)
+        assertEquals("다시 저장하기는 저장할 수 있다", 1, stores)
     }
 
-    // 보냈다는 말은 보낸 그 작업 아래에만 뜬다.
+    // 저장됐다는 말은 저장한 그 작업 아래에만 뜬다.
     @Test
     fun anotherTasksOutcomeIsNotShownUnderThisTask() {
-        start(followUp = ChatFollowUpUiState(taskId = "t-review", accepted = true))
+        start(
+            taskRequest = ChatTaskRequestUiState(
+                taskId = "t-review",
+                stored = ChatTaskRequest(id = "app-9", taskId = "t-review", text = "다른 작업"),
+            ),
+        )
         openBlocked()
 
-        compose.onAllNodesWithTag("chat.tasks.detail.accepted").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.stored").assertCountEquals(0)
         compose.onNodeWithTag("chat.tasks.detail.hint").assertIsDisplayed()
     }
 

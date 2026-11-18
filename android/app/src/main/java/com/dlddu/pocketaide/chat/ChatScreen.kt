@@ -103,7 +103,7 @@ fun ChatScreen(api: ApiClient) {
     val viewModel: ChatViewModel = viewModel(key = "chat") { ChatViewModel(api) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-    val followUp by viewModel.followUp.collectAsStateWithLifecycle()
+    val taskRequest by viewModel.taskRequest.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     // The draft and the panel's open/closed choice survive a fold, a rotation
     // and a trip through the back stack, so neither is lost by the layout
@@ -116,9 +116,13 @@ fun ChatScreen(api: ApiClient) {
     var filterStatus by rememberSaveable { mutableStateOf<String?>(null) }
     var hideCompleted by rememberSaveable { mutableStateOf(false) }
     var openTaskId by rememberSaveable { mutableStateOf<String?>(null) }
-    // The follow-up being written is its own draft, separate from the chat
-    // composer's — sending one never touches the other.
-    var followUpDraft by rememberSaveable { mutableStateOf("") }
+    // The request being written is its own draft, separate from the chat
+    // composer's — storing one never touches the other. The key beside it is
+    // this draft's identity on the ledger: the backend stores one row per key,
+    // so a retry after an answer the app never saw cannot leave two requests,
+    // and a new key is drawn only once a request has actually been stored.
+    var requestDraft by rememberSaveable { mutableStateOf("") }
+    var requestKey by rememberSaveable { mutableStateOf(newTaskRequestKey()) }
     // One list state each for the conversation and the task list, held above the
     // layout branch, so both reading positions survive folding, unfolding,
     // collapsing the panel and stepping into a task and back.
@@ -137,8 +141,9 @@ fun ChatScreen(api: ApiClient) {
     LaunchedEffect(openTaskId, tasks.hasLoaded, openTask == null) {
         if (openTaskId != null && openTask == null && tasks.hasLoaded) {
             openTaskId = null
-            followUpDraft = ""
-            viewModel.dismissFollowUp()
+            requestDraft = ""
+            requestKey = newTaskRequestKey()
+            viewModel.dismissTaskRequest()
         }
     }
 
@@ -168,22 +173,28 @@ fun ChatScreen(api: ApiClient) {
         onOpenTask = { task ->
             openTaskId = task.id
             // A new task starts with an empty request rather than the last
-            // one's words, which belonged to a different task.
-            followUpDraft = ""
-            viewModel.dismissFollowUp()
+            // one's words, which belonged to a different task — and with its
+            // own key, so the two are never stored as one.
+            requestDraft = ""
+            requestKey = newTaskRequestKey()
+            viewModel.dismissTaskRequest()
         },
         onCloseTask = {
             openTaskId = null
-            viewModel.dismissFollowUp()
+            viewModel.dismissTaskRequest()
         },
-        followUp = followUp,
-        followUpDraft = followUpDraft,
-        onFollowUpDraftChange = { followUpDraft = it },
-        // The draft is cleared only once the backend has taken the request; a
-        // failure leaves it on screen to retry.
-        onSendFollowUp = {
+        taskRequest = taskRequest,
+        requestDraft = requestDraft,
+        onRequestDraftChange = { requestDraft = it },
+        // The draft is cleared only once the backend has stored the request,
+        // and the next request gets a new key then; a failure leaves both as
+        // they are, so the same words retry as the same request.
+        onStoreRequest = {
             openTask?.let { task ->
-                viewModel.sendTaskFollowUp(task, followUpDraft) { followUpDraft = "" }
+                viewModel.storeTaskRequest(task, requestKey, requestDraft) {
+                    requestDraft = ""
+                    requestKey = newTaskRequestKey()
+                }
             }
         },
     )
@@ -220,10 +231,10 @@ internal fun ChatPanes(
     openTask: ChatTask?,
     onOpenTask: (ChatTask) -> Unit,
     onCloseTask: () -> Unit,
-    followUp: ChatFollowUpUiState,
-    followUpDraft: String,
-    onFollowUpDraftChange: (String) -> Unit,
-    onSendFollowUp: () -> Unit,
+    taskRequest: ChatTaskRequestUiState,
+    requestDraft: String,
+    onRequestDraftChange: (String) -> Unit,
+    onStoreRequest: () -> Unit,
 ) {
     BoxWithConstraints(
         Modifier
@@ -282,13 +293,12 @@ internal fun ChatPanes(
                         BackHandler(onBack = onCloseTask)
                         ChatTaskDetailPane(
                             task = openTask,
-                            draft = followUpDraft,
-                            onDraftChange = onFollowUpDraftChange,
-                            followUp = followUp,
-                            // One reply at a time, so a follow-up waits for the
-                            // one being written rather than being refused.
-                            replying = state.isReplying,
-                            onSend = onSendFollowUp,
+                            draft = requestDraft,
+                            onDraftChange = onRequestDraftChange,
+                            request = taskRequest,
+                            // No reply gate: the request goes to the ledger,
+                            // not into the turn being written.
+                            onStore = onStoreRequest,
                             onBack = onCloseTask,
                         )
                     }
@@ -297,6 +307,13 @@ internal fun ChatPanes(
         }
     }
 }
+
+/**
+ * A fresh key for one request draft. It is the app's idempotency key on the
+ * ledger, so it has to be unique per request and stable across a retry — which
+ * is why it is drawn when a draft starts, not when the store button is tapped.
+ */
+private fun newTaskRequestKey(): String = "app-" + java.util.UUID.randomUUID().toString().replace("-", "")
 
 /** The conversation pane: the whole chat screen in a narrow window, the left half in a wide one. */
 @Composable

@@ -69,10 +69,10 @@ class ChatTaskPanelLayoutTest {
                     openTask = null,
                     onOpenTask = {},
                     onCloseTask = {},
-                    followUp = ChatFollowUpUiState(),
-                    followUpDraft = "",
-                    onFollowUpDraftChange = {},
-                    onSendFollowUp = {},
+                    taskRequest = ChatTaskRequestUiState(),
+                    requestDraft = "",
+                    onRequestDraftChange = {},
+                    onStoreRequest = {},
                 )
             }
         }

@@ -28,6 +28,9 @@ type ledgerPlatform struct {
 	// platform would.
 	stuckCursor bool
 	pages       int
+	// requests is the waiting-request summary the platform rides along with a
+	// task, keyed by task id (AC-N7). A task absent from the map carries none.
+	requests map[string]*chat.TaskRequestSummary
 }
 
 type ledgerRow struct {
@@ -80,8 +83,9 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 		Details  map[string]any `json:"details"`
 	}
 	type outRow struct {
-		ID   string  `json:"id"`
-		Task outTask `json:"task"`
+		ID       string                   `json:"id"`
+		Requests *chat.TaskRequestSummary `json:"requests,omitempty"`
+		Task     outTask                  `json:"task"`
 	}
 	page := struct {
 		Tasks      []outRow `json:"tasks"`
@@ -102,7 +106,8 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 			sessions = append(sessions, outSess(s))
 		}
 		page.Tasks = append(page.Tasks, outRow{
-			ID: row.ID,
+			ID:       row.ID,
+			Requests: p.requests[row.ID],
 			Task: outTask{
 				Title: row.Title, Status: row.Status, Stage: row.Stage,
 				Sessions: sessions, Details: row.Details,

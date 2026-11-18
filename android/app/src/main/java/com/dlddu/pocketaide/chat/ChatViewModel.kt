@@ -46,15 +46,19 @@ data class ChatTasksUiState(
 }
 
 /**
- * A follow-up request sent from the task panel. It carries its own in-flight
- * flag so a second tap cannot send a second copy, and its own outcome so the
- * panel can say the request was taken — or say it failed and keep the draft.
+ * The request the panel is storing on a task's ledger.
+ *
+ * It carries its own in-flight flag so a second tap cannot store a second copy,
+ * and its own outcome so the panel can say the request is *saved and waiting* —
+ * never that the session has dealt with it, which only the ledger's own status
+ * says.
  */
-data class ChatFollowUpUiState(
+data class ChatTaskRequestUiState(
     val taskId: String = "",
-    val isSending: Boolean = false,
-    val accepted: Boolean = false,
-    val error: ChatError? = null,
+    val isStoring: Boolean = false,
+    val stored: ChatTaskRequest? = null,
+    val replayed: Boolean = false,
+    val error: ChatTaskRequestError? = null,
 )
 
 class ChatViewModel(private val api: ApiClient) : ViewModel() {
@@ -64,12 +68,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     private val _tasks = MutableStateFlow(ChatTasksUiState())
     val tasks: StateFlow<ChatTasksUiState> = _tasks.asStateFlow()
 
-    private val _followUp = MutableStateFlow(ChatFollowUpUiState())
-    val followUp: StateFlow<ChatFollowUpUiState> = _followUp.asStateFlow()
+    private val _taskRequest = MutableStateFlow(ChatTaskRequestUiState())
+    val taskRequest: StateFlow<ChatTaskRequestUiState> = _taskRequest.asStateFlow()
 
-    // taskRequest orders the panel's reads. A reply that is not the newest
-    // request's is dropped, so a slow answer cannot overwrite a fresher one.
-    private var taskRequest = 0L
+    // taskReadSeq orders the panel's reads. A reply that is not the newest
+    // read's is dropped, so a slow answer cannot overwrite a fresher one.
+    private var taskReadSeq = 0L
 
     suspend fun pollWhileVisible() {
         while (coroutineContext.isActive) {
@@ -103,44 +107,48 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     }
 
     /**
-     * Sends one follow-up about [task] as a message in this conversation.
-     * [onAccepted] runs only when the backend took it, so the caller clears its
+     * Stores one request about [task] on the session's task ledger.
+     * [onStored] runs only when the backend stored it, so the caller clears its
      * draft then and keeps it on every failure.
      */
-    fun sendTaskFollowUp(task: ChatTask, request: String, onAccepted: () -> Unit) {
-        viewModelScope.launch { if (performTaskFollowUp(task, request)) onAccepted() }
+    fun storeTaskRequest(task: ChatTask, requestID: String, request: String, onStored: () -> Unit) {
+        viewModelScope.launch { if (performTaskRequest(task, requestID, request)) onStored() }
     }
 
-    /** Clears the last follow-up's outcome once the panel has shown it. */
-    fun dismissFollowUp() {
-        _followUp.update { it.copy(accepted = false, error = null) }
+    /** Clears the last request's outcome once the panel has shown it. */
+    fun dismissTaskRequest() {
+        _taskRequest.update { it.copy(stored = null, replayed = false, error = null) }
     }
 
-    internal suspend fun performTaskFollowUp(task: ChatTask, request: String): Boolean {
-        val text = request.trim()
+    internal suspend fun performTaskRequest(task: ChatTask, requestID: String, request: String): Boolean {
+        val text = chatTaskRequestText(request)
         if (text.isEmpty()) return false
-        // A second tap while the first is in flight would send the request
-        // twice; the panel also disables its button, and this is the guard that
-        // holds when a tap gets through anyway.
-        if (_followUp.value.isSending) return false
-        val message = chatTaskFollowUpMessage(task, text)
-        if (message.toByteArray(Charsets.UTF_8).size > CHAT_MAX_MESSAGE_BYTES) {
-            _followUp.value = ChatFollowUpUiState(taskId = task.id, error = ChatError.TOO_LARGE)
+        // A second tap while the first is in flight would store the request
+        // twice if the backend had not seen the first one yet; the panel also
+        // disables its button, and this is the guard that holds when a tap gets
+        // through anyway. The request id makes the retry of a lost answer safe,
+        // and this makes the double tap unnecessary.
+        if (_taskRequest.value.isStoring) return false
+        if (text.toByteArray(Charsets.UTF_8).size > CHAT_TASK_REQUEST_MAX_BYTES) {
+            _taskRequest.value = ChatTaskRequestUiState(taskId = task.id, error = ChatTaskRequestError.INVALID)
             return false
         }
-        _followUp.value = ChatFollowUpUiState(taskId = task.id, isSending = true)
+        _taskRequest.value = ChatTaskRequestUiState(taskId = task.id, isStoring = true)
         try {
-            val sent = api.sendChatMessage(message)
-            // The request lands in the conversation beside the panel, the same
-            // as a typed message — the user can see what was sent and the reply
-            // arrives in the usual place. The chat's own draft is not touched.
-            _state.update { it.copy(messages = it.messages + sent, pending = it.pending ?: ChatPending()) }
-            _followUp.value = ChatFollowUpUiState(taskId = task.id, accepted = true)
+            val stored = api.storeChatTaskRequest(task.id, requestID, text)
+            // Nothing is added to the conversation and no reply is awaited: the
+            // request is on the ledger, and the session finds it when it next
+            // looks. Storing therefore works while a reply is being written.
+            _taskRequest.value = ChatTaskRequestUiState(
+                taskId = task.id,
+                stored = stored.request,
+                replayed = stored.replayed,
+            )
             return true
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _followUp.value = ChatFollowUpUiState(taskId = task.id, error = ChatError.from(e))
+            _taskRequest.value = ChatTaskRequestUiState(taskId = task.id, error = ChatTaskRequestError.from(e))
             return false
         }
     }
@@ -165,12 +173,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     }
 
     internal suspend fun loadTasks() {
-        val mine = ++taskRequest
+        val mine = ++taskReadSeq
         try {
             val list = api.chatTasks()
             // A reply that lost its race is stale; applying it would move the
             // panel backwards.
-            if (mine != taskRequest) return
+            if (mine != taskReadSeq) return
             _tasks.update {
                 // A reply for another session replaces the list outright — two
                 // sessions' tasks are never shown together, and the conversation
@@ -187,7 +195,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (mine != taskRequest) return
+            if (mine != taskReadSeq) return
             val failure = ChatTaskError.from(e)
             // The list that is on screen belongs to a session we can no longer
             // read, so it is cleared rather than left to look current.
@@ -235,6 +243,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     }
 
     companion object {
+        // What one stored request may carry. The backend and the ledger bound
+        // it too; this is the app saying so before the hop.
+        const val CHAT_TASK_REQUEST_MAX_BYTES = 4_000
+
         const val REPLY_POLL_MILLIS = 1_500L
         const val IDLE_POLL_MILLIS = 15_000L
 

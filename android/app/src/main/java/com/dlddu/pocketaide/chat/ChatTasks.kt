@@ -21,7 +21,28 @@ data class ChatTask(
     // "not recorded" rather than leaving a blank.
     val reason: String = "",
     @SerialName("next_action") val nextAction: String = "",
+    // How many requests a person left on this task are still open. Absent when
+    // none ever arrived, so "nothing waiting" and "nothing to say" are not the
+    // same answer. The parent's own progress is what moves these.
+    val requests: ChatTaskRequests? = null,
 )
+
+/**
+ * The requests waiting on one task, as the ledger counts them. Pending is
+ * nobody has taken it yet, claimed is the session is on it, and reconciling is
+ * a claim that lapsed after something had already been handed over — the
+ * session has to find out what landed before sending anything again.
+ */
+@Serializable
+data class ChatTaskRequests(
+    val pending: Int = 0,
+    val claimed: Int = 0,
+    val reconciling: Int = 0,
+    @SerialName("last_seq") val lastSeq: Long = 0,
+) {
+    /** What the session has not settled yet — the number the panel shows. */
+    val open: Int get() = pending + claimed + reconciling
+}
 
 @Serializable
 data class ChatTaskList(
@@ -172,17 +193,90 @@ fun chatTaskSuggestions(task: ChatTask): List<ChatTaskSuggestion> {
 }
 
 /**
- * The message a follow-up actually sends, through the same chat route as
- * anything the user types (`POST /api/chat/messages`). It names the task by the
- * ledger's own id and title and states the status the panel was showing, so the
- * answer is about the task that was on screen — and so a request written
- * against a row that has since moved can be recognised as one.
+ * One request stored on a task's ledger row.
+ *
+ * It is not a chat message: it is written to the session's own task ledger and
+ * stays there until the session picks it up, so leaving one never interrupts a
+ * reply being written and never puts words in the conversation. [status] is the
+ * ledger's, and only the session moves it — the app shows it and never infers
+ * it.
  */
-fun chatTaskFollowUpMessage(task: ChatTask, request: String): String {
-    val stage = task.stage.trim()
-    val where = ChatTaskStatus.label(task.status) + if (stage.isNotEmpty()) " · 단계 $stage" else ""
-    return "[작업 후속 요청] ${task.id} 「${task.title.ifBlank { task.id }}」 · 원장 상태 $where\n${request.trim()}"
+@Serializable
+data class ChatTaskRequest(
+    val id: String,
+    @SerialName("task_id") val taskId: String = "",
+    val seq: Long = 0,
+    val text: String = "",
+    val status: String = ChatTaskRequestStatus.PENDING,
+    val result: String = "",
+) {
+    /** Whether the session has finished with this request, either way. */
+    val settled: Boolean
+        get() = status == ChatTaskRequestStatus.PROCESSED || status == ChatTaskRequestStatus.FAILED
 }
+
+/** What the backend answers when a request is stored. */
+@Serializable
+data class ChatTaskRequestStored(
+    val request: ChatTaskRequest,
+    // True when this id had already stored the same words: the app's retry of
+    // an answer it never saw, not a second request.
+    val replayed: Boolean = false,
+)
+
+object ChatTaskRequestStatus {
+    const val PENDING = "pending"
+    const val CLAIMED = "claimed"
+    const val RECONCILING = "reconciling"
+    const val PROCESSED = "processed"
+    const val FAILED = "failed"
+
+    /** What the person is told the request is doing now. */
+    fun label(status: String): String = when (status) {
+        PENDING -> "저장됨 · 확인 대기"
+        CLAIMED -> "확인 중"
+        RECONCILING -> "확인 중 · 결과 대조"
+        PROCESSED -> "처리됨"
+        FAILED -> "처리 실패"
+        else -> "알 수 없음"
+    }
+}
+
+/**
+ * Why a request could not be stored. Each is a different sentence because the
+ * person's next move differs: wait, retry, or nothing to do here. None of them
+ * says the request was stored.
+ */
+enum class ChatTaskRequestError(val message: String) {
+    NOT_FOUND("이 작업이 원장에서 사라졌어요. 목록을 다시 불러요."),
+    UNAVAILABLE("채팅 세션이 깨어 있지 않아 저장하지 못했어요. 잠시 뒤 다시 시도해요."),
+    UNSUPPORTED("이 대화의 세션은 작업 요청을 받지 않아요."),
+    CONFLICT("같은 요청 번호로 다른 내용이 이미 저장돼 있어요. 다시 쓰면 새 번호로 저장해요."),
+    INVALID("요청을 저장할 수 없는 형식이에요."),
+    UNREACHABLE("요청을 저장하지 못했어요. 잠시 뒤 다시 시도해요."),
+    ;
+
+    companion object {
+        fun from(e: Exception): ChatTaskRequestError = when (e) {
+            is ApiException.BadStatus -> when {
+                e.status == 404 -> NOT_FOUND
+                e.status == 501 -> UNSUPPORTED
+                e.status == 409 && e.body.contains("task_request_unavailable") -> UNAVAILABLE
+                e.status == 409 -> CONFLICT
+                e.status == 400 -> INVALID
+                else -> UNREACHABLE
+            }
+            else -> UNREACHABLE
+        }
+    }
+}
+
+/**
+ * The words that are stored. The free text is the person's own, trimmed and
+ * otherwise untouched — the task is named by the route, not by a line pasted
+ * into the message, so nothing is sent that the person did not write.
+ */
+fun chatTaskRequestText(request: String): String = request.trim()
 
 /**
  * Why the panel cannot show a list. Each is a different sentence on purpose —
@@ -209,3 +303,20 @@ enum class ChatTaskError(val message: String) {
 }
 
 suspend fun ApiClient.chatTasks(): ChatTaskList = get("/api/chat/tasks", ChatTaskList.serializer())
+
+/**
+ * Stores one request on [taskId]'s ledger row. [id] is the app's own key for
+ * this request, so sending it again after an answer the app never saw stores
+ * nothing twice. The backend derives the session and who asked from the signed
+ * in user — neither is in this body.
+ */
+suspend fun ApiClient.storeChatTaskRequest(taskId: String, id: String, text: String): ChatTaskRequestStored =
+    post(
+        "/api/chat/tasks/$taskId/requests",
+        ChatTaskRequestPayload(id = id, text = text),
+        ChatTaskRequestPayload.serializer(),
+        ChatTaskRequestStored.serializer(),
+    )
+
+@Serializable
+private data class ChatTaskRequestPayload(val id: String, val text: String)

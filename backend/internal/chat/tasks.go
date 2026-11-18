@@ -73,6 +73,11 @@ type Task struct {
 	// panel says so rather than leaving a blank.
 	Reason     string `json:"reason,omitempty"`
 	NextAction string `json:"next_action,omitempty"`
+	// Requests is how many user requests are waiting on this task, absent when
+	// none ever arrived. It comes from the ledger page itself, so the panel can
+	// show "someone asked something" without a second call — and the parent's
+	// own progress on them is what moves the counts.
+	Requests *TaskRequestSummary `json:"requests,omitempty"`
 }
 
 // TaskList is the panel's whole payload.
@@ -99,8 +104,9 @@ type ledgerSessionNote struct {
 // ledgerPage is session-platform's answer to the read-only ledger route.
 type ledgerPage struct {
 	Tasks []struct {
-		ID   string `json:"id"`
-		Task struct {
+		ID       string              `json:"id"`
+		Requests *TaskRequestSummary `json:"requests"`
+		Task     struct {
 			Title    string              `json:"title"`
 			Status   string              `json:"status"`
 			Stage    string              `json:"stage"`
@@ -158,6 +164,13 @@ func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error
 				Stage:  strings.TrimSpace(row.Task.Stage),
 			}
 			task.Reason, task.NextAction = currentNote(row.Task.Sessions)
+			// Only when something is actually waiting: a zeroed summary on
+			// every row would read as "nothing asked here" rather than
+			// "nothing to say".
+			if row.Requests != nil && row.Requests.Open() > 0 {
+				summary := *row.Requests
+				task.Requests = &summary
+			}
 			out.Tasks = append(out.Tasks, task)
 			out.Counts[task.Status]++
 		}

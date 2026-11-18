@@ -59,27 +59,29 @@ private const val REQUEST_MAX_LINES = 6
  * next action, each marked 미기록 when the ledger carries none. The pane adds no
  * judgement of its own and states nothing the ledger does not.
  *
- * Everything below it is one message in this conversation. The suggestions fill
- * the field rather than send, so what a button promises is the text the user
- * reads before it goes; the session receives it as a request and decides, which
+ * Everything below it stores one request on this task's ledger row. The
+ * suggestions fill the field rather than store, so what a button promises is the
+ * text the user reads before it is kept. Storing adds nothing to the
+ * conversation and starts no turn — it works while a reply is being written —
+ * and the session picks the request up when it next reads its ledger, which
  * leaves every tool approval and the human merge gate exactly where they were.
+ *
+ * The screen says *saved and waiting*, never *done*: only the ledger's own
+ * status says the session dealt with it.
  */
 @Composable
 fun ChatTaskDetailPane(
     task: ChatTask,
     draft: String,
     onDraftChange: (String) -> Unit,
-    followUp: ChatFollowUpUiState,
-    // A conversation carries one reply at a time (PRD-1 AC1), so a follow-up
-    // waits for the one in flight instead of being refused by the backend.
-    replying: Boolean,
-    onSend: () -> Unit,
+    request: ChatTaskRequestUiState,
+    onStore: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // The outcome belongs to the task it was sent about; another task's result
     // must not appear under this one.
-    val mine = followUp.taskId == task.id
+    val mine = request.taskId == task.id
     Column(
         modifier
             .fillMaxSize()
@@ -97,15 +99,14 @@ fun ChatTaskDetailPane(
             Field("진행 내용", task.stage, "chat.tasks.detail.stage")
             Field("검토·차단 사유", task.reason, "chat.tasks.detail.reason")
             Field("남은 다음 행동", task.nextAction, "chat.tasks.detail.next")
+            task.requests?.takeIf { it.open > 0 }?.let { Waiting(it) }
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
             Suggestions(task, onDraftChange)
-            Request(
-                task = task,
+            RequestField(
                 draft = draft,
                 onDraftChange = onDraftChange,
-                followUp = if (mine) followUp else ChatFollowUpUiState(),
-                replying = replying,
-                onSend = onSend,
+                request = if (mine) request else ChatTaskRequestUiState(),
+                onStore = onStore,
             )
         }
     }
@@ -225,37 +226,51 @@ private fun Suggestions(task: ChatTask, onDraftChange: (String) -> Unit) {
 }
 
 /**
- * The request itself: free text, the line the task is named on, and one send.
- *
- * The whole outgoing message is on screen — the quoted line above the field is
- * exactly what is prepended — so nothing is sent that the user did not read.
+ * How many requests on this task the session has not settled yet, and what the
+ * newest of them is doing. It is the ledger's own count — the panel reports it
+ * and never decides that something is finished.
  */
 @Composable
-private fun Request(
-    task: ChatTask,
+private fun Waiting(requests: ChatTaskRequests) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
+        Text(
+            "보낸 요청",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        Text(
+            buildString {
+                append("확인 대기 ").append(requests.open).append("건")
+                if (requests.reconciling > 0) append(" · 결과 대조 중 ").append(requests.reconciling).append("건")
+            },
+            style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+            color = ink,
+            modifier = Modifier.testTag("chat.tasks.detail.waitingRequests"),
+        )
+    }
+}
+
+/**
+ * The request itself: free text and one store.
+ *
+ * Storing writes the words to this task's ledger row and nothing else — no
+ * message, no turn — so it is available while a reply is being written. A
+ * refusal keeps what was typed so the same words can be stored again.
+ */
+@Composable
+private fun RequestField(
     draft: String,
     onDraftChange: (String) -> Unit,
-    followUp: ChatFollowUpUiState,
-    replying: Boolean,
-    onSend: () -> Unit,
+    request: ChatTaskRequestUiState,
+    onStore: () -> Unit,
 ) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     val fieldShape = RoundedCornerShape(DesignTokens.Radius.cardLarge)
-    // Blocked while one is in flight (so a second tap cannot send a second
-    // copy) and while a reply is still being written.
-    val canSend = draft.isNotBlank() && !followUp.isSending && !replying
+    // Blocked only while one is in flight: a reply being written does not stop
+    // a request from being stored.
+    val canStore = draft.isNotBlank() && !request.isStoring
     Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
-        Text(
-            chatTaskFollowUpMessage(task, "").trim(),
-            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-            color = ink.copy(alpha = MUTED_OPACITY),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(DesignTokens.Radius.chip))
-                .background(ink.copy(alpha = QUOTE_OPACITY))
-                .padding(DesignTokens.Spacing.sm)
-                .testTag("chat.tasks.detail.context"),
-        )
         Box(
             Modifier
                 .fillMaxWidth()
@@ -280,37 +295,49 @@ private fun Request(
         Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier
-                    .alpha(if (canSend) 1f else DISABLED_OPACITY)
+                    .alpha(if (canStore) 1f else DISABLED_OPACITY)
                     .clip(shape)
                     .background(DesignTokens.Colors.accent(DETAIL_AREA))
-                    .clickable(enabled = canSend, role = Role.Button, onClick = onSend)
+                    .clickable(enabled = canStore, role = Role.Button, onClick = onStore)
                     .padding(horizontal = DesignTokens.Spacing.lg, vertical = DesignTokens.Spacing.sm)
-                    .testTag("chat.tasks.detail.send"),
+                    .testTag("chat.tasks.detail.store"),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     // Says what the tap does, including that a failed one is a
                     // retry rather than a second request.
-                    if (followUp.error != null) "다시 보내기" else "대화로 보내기",
+                    if (request.error != null) "다시 저장하기" else "요청 등록",
                     style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.Bold),
                     color = DesignTokens.Colors.card(DETAIL_AREA),
                 )
             }
-            if (followUp.isSending) {
+            if (request.isStoring) {
                 CircularProgressIndicator(
                     color = ink.copy(alpha = MUTED_OPACITY),
                     strokeWidth = SPINNER_STROKE,
-                    modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.sending"),
+                    modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.storing"),
                 )
             }
         }
-        // Taken, refused, or waiting on the reply in flight — three different
-        // sentences, and a refusal never clears what was typed.
+        // Saved, refused, or nothing yet — three different sentences, and a
+        // refusal never clears what was typed. "Saved" is deliberately not
+        // "done": the session has not seen it yet.
         when {
-            followUp.error != null -> Note(followUp.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.error")
-            followUp.accepted -> Note("보냈어요 — 왼쪽 대화에 올라갔어요.", ink.copy(alpha = MUTED_OPACITY), "chat.tasks.detail.accepted")
-            replying -> Note("답을 쓰는 중이에요 — 끝나면 보낼 수 있어요.", ink.copy(alpha = MUTED_OPACITY), "chat.tasks.detail.waiting")
-            else -> Note("보내면 왼쪽 대화의 메시지로 올라가요. 원장은 이 화면에서 바뀌지 않아요.", ink.copy(alpha = MUTED_OPACITY), "chat.tasks.detail.hint")
+            request.error != null -> Note(request.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.error")
+            request.stored != null -> Note(
+                if (request.replayed) {
+                    "이미 저장된 요청이에요 · 부모 확인 대기"
+                } else {
+                    "요청 저장됨 · 부모 확인 대기"
+                },
+                ink.copy(alpha = MUTED_OPACITY),
+                "chat.tasks.detail.stored",
+            )
+            else -> Note(
+                "등록하면 이 작업의 원장에 남고, 부모가 다음 확인 때 접수해요. 대화로는 보내지 않아요.",
+                ink.copy(alpha = MUTED_OPACITY),
+                "chat.tasks.detail.hint",
+            )
         }
     }
 }
