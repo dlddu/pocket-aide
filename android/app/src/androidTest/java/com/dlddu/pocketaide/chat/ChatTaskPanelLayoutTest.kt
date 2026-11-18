@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.printToString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -133,9 +134,11 @@ class ChatTaskPanelLayoutTest {
     @Test
     fun theBlockedTaskShowsItsStatusInTheWideLayout() {
         start(800.dp)
-        compose.onNodeWithTag("chat.tasks.item.status.blocked").assertIsDisplayed()
+        // 보이지 않을 때 어디에 있었는지를 함께 남긴다 — 「안 보인다」만으로는
+        // 창 밖인지, 잘렸는지, 자리를 못 받았는지 가릴 수 없다.
+        assertDisplayedWithTree("chat.tasks.item.status.blocked")
         // 상태별 개수는 그 상태로 좁히는 칩이 들고 있다.
-        compose.onNodeWithTag("chat.tasks.filter.blocked").assertIsDisplayed()
+        assertDisplayedWithTree("chat.tasks.filter.blocked")
     }
 
     @Test
@@ -160,6 +163,27 @@ class ChatTaskPanelLayoutTest {
         tasks.value = tasks.value.copy(truncated = true)
         start(800.dp)
         compose.onNodeWithTag("chat.tasks.truncated").assertIsDisplayed()
+    }
+
+    /**
+     * 그 태그의 노드가 보이는지 본다. 보이지 않으면 노드의 좌표와 창·패널의
+     * 좌표, 그리고 패널의 의미 트리를 실패 메시지에 담는다 — 다음 사람이 한
+     * 번의 실행으로 이유를 읽을 수 있게.
+     */
+    private fun assertDisplayedWithTree(tag: String) {
+        val node = compose.onNodeWithTag(tag)
+        runCatching { node.assertIsDisplayed() }.onFailure { failure ->
+            throw AssertionError(
+                buildString {
+                    append("`$tag` 가 보이지 않는다")
+                    append(" — 노드 ").append(runCatching { node.getUnclippedBoundsInRoot() }.getOrNull())
+                    append(" · 창 ").append(runCatching { compose.onNodeWithTag("chat.screen").getUnclippedBoundsInRoot() }.getOrNull())
+                    append(" · 패널 ").append(runCatching { compose.onNodeWithTag("chat.tasks.panel").getUnclippedBoundsInRoot() }.getOrNull())
+                    append("\n").append(runCatching { compose.onNodeWithTag("chat.tasks.panel").printToString(maxDepth = 30) }.getOrNull())
+                },
+                failure,
+            )
+        }
     }
 
     private fun assertRatio(what: String, got: Float, want: Float) {
