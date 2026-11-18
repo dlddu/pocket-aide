@@ -22,9 +22,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -43,17 +41,6 @@ class ChatTaskPanelInteractionTest {
     val compose = createComposeRule()
 
     private var sends = 0
-
-    /**
-     * 요청 칸에 타이핑한 테스트는 소프트 키보드를 띄운 채로 끝난다. 계측
-     * 테스트는 앱 프로세스를 함께 쓰고 채팅 화면은 `imePadding()` 을 두므로,
-     * 올라온 키보드는 다음 테스트의 화면 높이를 줄여 그 테스트를 깨뜨린다.
-     * 띄운 테스트가 내리고 나간다.
-     */
-    @After
-    fun closeKeyboard() {
-        runCatching { Espresso.closeSoftKeyboard() }
-    }
 
     private val blocked = ChatTask(
         id = "t-blocked",
