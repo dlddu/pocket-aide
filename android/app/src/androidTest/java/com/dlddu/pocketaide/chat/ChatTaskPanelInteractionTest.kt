@@ -12,14 +12,10 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
-import androidx.compose.ui.test.hasAnyDescendant
-import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -123,7 +119,7 @@ class ChatTaskPanelInteractionTest {
     private fun rows(): Int = compose.onAllNodesWithTag("chat.tasks.item").fetchSemanticsNodes().size
 
     private fun openBlocked() {
-        compose.onNode(hasTestTag("chat.tasks.item") and hasAnyDescendant(hasText("막힌 작업"))).performClick()
+        compose.onNodeWithText("막힌 작업").performClick()
         compose.waitForIdle()
     }
 
@@ -224,7 +220,7 @@ class ChatTaskPanelInteractionTest {
     @Test
     fun anUnrecordedFieldSaysSoRatherThanLookingBlank() {
         start()
-        compose.onNode(hasTestTag("chat.tasks.item") and hasAnyDescendant(hasText("도는 작업"))).performClick()
+        compose.onNodeWithText("도는 작업").performClick()
         compose.waitForIdle()
 
         compose.onNodeWithTag("chat.tasks.detail.reason").assertTextContains("원장에 적혀 있지 않아요.")
@@ -330,7 +326,7 @@ class ChatTaskPanelInteractionTest {
 
         compose.onNodeWithTag("chat.tasks.detail.back").performClick()
         compose.waitForIdle()
-        compose.onNode(hasTestTag("chat.tasks.item") and hasAnyDescendant(hasText("검토 대기"))).performClick()
+        compose.onNodeWithText("검토 대기").performClick()
         compose.waitForIdle()
 
         compose.onNodeWithTag("chat.tasks.detail.id").assertTextContains("t-review", substring = true)
