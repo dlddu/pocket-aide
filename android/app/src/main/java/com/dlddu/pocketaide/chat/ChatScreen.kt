@@ -1,5 +1,6 @@
 package com.dlddu.pocketaide.chat
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -102,18 +103,43 @@ fun ChatScreen(api: ApiClient) {
     val viewModel: ChatViewModel = viewModel(key = "chat") { ChatViewModel(api) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val followUp by viewModel.followUp.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     // The draft and the panel's open/closed choice survive a fold, a rotation
     // and a trip through the back stack, so neither is lost by the layout
     // changing under the user.
     var draft by rememberSaveable { mutableStateOf("") }
     var panelOpen by rememberSaveable { mutableStateOf(true) }
-    // One list state for the conversation, held above the layout branch, so the
-    // reading position survives folding, unfolding and collapsing the panel.
+    // How the panel is being looked at, and which task is open, kept the same
+    // way for the same reason: a fold or a rotation must not silently widen a
+    // narrowed list or close a task the user was working on.
+    var filterStatus by rememberSaveable { mutableStateOf<String?>(null) }
+    var hideCompleted by rememberSaveable { mutableStateOf(false) }
+    var openTaskId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The follow-up being written is its own draft, separate from the chat
+    // composer's — sending one never touches the other.
+    var followUpDraft by rememberSaveable { mutableStateOf("") }
+    // One list state each for the conversation and the task list, held above the
+    // layout branch, so both reading positions survive folding, unfolding,
+    // collapsing the panel and stepping into a task and back.
     val messageList = rememberLazyListState()
+    val taskList = rememberLazyListState()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.pollWhileVisible() }
+    }
+
+    val openTask = tasks.tasks.firstOrNull { it.id == openTaskId }
+    // A task the ledger no longer carries — finished and dropped, or a session
+    // we can no longer read — closes for good rather than waiting to reappear
+    // under a request the user wrote against the row it used to be. Only once
+    // the panel has an answer, so a read in flight closes nothing.
+    LaunchedEffect(openTaskId, tasks.hasLoaded, openTask == null) {
+        if (openTaskId != null && openTask == null && tasks.hasLoaded) {
+            openTaskId = null
+            followUpDraft = ""
+            viewModel.dismissFollowUp()
+        }
     }
 
     ChatPanes(
@@ -130,6 +156,34 @@ fun ChatScreen(api: ApiClient) {
         pollTasks = {
             lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.pollTasksWhileVisible()
+            }
+        },
+        taskListState = taskList,
+        filter = ChatTaskFilter(filterStatus, hideCompleted),
+        onFilterChange = {
+            filterStatus = it.status
+            hideCompleted = it.hideCompleted
+        },
+        openTask = openTask,
+        onOpenTask = { task ->
+            openTaskId = task.id
+            // A new task starts with an empty request rather than the last
+            // one's words, which belonged to a different task.
+            followUpDraft = ""
+            viewModel.dismissFollowUp()
+        },
+        onCloseTask = {
+            openTaskId = null
+            viewModel.dismissFollowUp()
+        },
+        followUp = followUp,
+        followUpDraft = followUpDraft,
+        onFollowUpDraftChange = { followUpDraft = it },
+        // The draft is cleared only once the backend has taken the request; a
+        // failure leaves it on screen to retry.
+        onSendFollowUp = {
+            openTask?.let { task ->
+                viewModel.sendTaskFollowUp(task, followUpDraft) { followUpDraft = "" }
             }
         },
     )
@@ -157,6 +211,19 @@ internal fun ChatPanes(
     onTogglePanel: () -> Unit,
     // Runs for exactly as long as the panel is on screen.
     pollTasks: suspend () -> Unit,
+    taskListState: androidx.compose.foundation.lazy.LazyListState,
+    filter: ChatTaskFilter,
+    onFilterChange: (ChatTaskFilter) -> Unit,
+    // The task whose detail the right pane is showing, or null for the list.
+    // Resolved from the ledger each read, so a task that leaves the ledger
+    // closes rather than freezing on a row that no longer exists.
+    openTask: ChatTask?,
+    onOpenTask: (ChatTask) -> Unit,
+    onCloseTask: () -> Unit,
+    followUp: ChatFollowUpUiState,
+    followUpDraft: String,
+    onFollowUpDraftChange: (String) -> Unit,
+    onSendFollowUp: () -> Unit,
 ) {
     BoxWithConstraints(
         Modifier
@@ -197,8 +264,35 @@ internal fun ChatPanes(
                         .width(DesignTokens.Split.rule)
                         .background(DesignTokens.Colors.rule(CHAT_AREA)),
                 )
-                // 1:1 — the same weight as the conversation beside it.
-                ChatTaskPanel(tasks, Modifier.weight(DesignTokens.Split.paneWeight))
+                // 1:1 — the same weight as the conversation beside it. The pane
+                // shows the list or one task's detail, never both: the detail is
+                // a step into the same pane, so the conversation keeps its half.
+                Box(Modifier.weight(DesignTokens.Split.paneWeight).fillMaxHeight()) {
+                    if (openTask == null) {
+                        ChatTaskPanel(
+                            state = tasks,
+                            filter = filter,
+                            onFilterChange = onFilterChange,
+                            onSelect = onOpenTask,
+                            listState = taskListState,
+                        )
+                    } else {
+                        // Back belongs to the step the user took, so it returns
+                        // to the list instead of leaving the chat tab.
+                        BackHandler(onBack = onCloseTask)
+                        ChatTaskDetailPane(
+                            task = openTask,
+                            draft = followUpDraft,
+                            onDraftChange = onFollowUpDraftChange,
+                            followUp = followUp,
+                            // One reply at a time, so a follow-up waits for the
+                            // one being written rather than being refused.
+                            replying = state.isReplying,
+                            onSend = onSendFollowUp,
+                            onBack = onCloseTask,
+                        )
+                    }
+                }
             }
         }
     }

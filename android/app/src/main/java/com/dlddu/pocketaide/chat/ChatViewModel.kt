@@ -45,12 +45,27 @@ data class ChatTasksUiState(
     val isEmpty: Boolean get() = hasLoaded && error == null && tasks.isEmpty()
 }
 
+/**
+ * A follow-up request sent from the task panel. It carries its own in-flight
+ * flag so a second tap cannot send a second copy, and its own outcome so the
+ * panel can say the request was taken — or say it failed and keep the draft.
+ */
+data class ChatFollowUpUiState(
+    val taskId: String = "",
+    val isSending: Boolean = false,
+    val accepted: Boolean = false,
+    val error: ChatError? = null,
+)
+
 class ChatViewModel(private val api: ApiClient) : ViewModel() {
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
     private val _tasks = MutableStateFlow(ChatTasksUiState())
     val tasks: StateFlow<ChatTasksUiState> = _tasks.asStateFlow()
+
+    private val _followUp = MutableStateFlow(ChatFollowUpUiState())
+    val followUp: StateFlow<ChatFollowUpUiState> = _followUp.asStateFlow()
 
     // taskRequest orders the panel's reads. A reply that is not the newest
     // request's is dropped, so a slow answer cannot overwrite a fresher one.
@@ -85,6 +100,49 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     fun dismissNotice() {
         _state.update { it.copy(notice = null) }
+    }
+
+    /**
+     * Sends one follow-up about [task] as a message in this conversation.
+     * [onAccepted] runs only when the backend took it, so the caller clears its
+     * draft then and keeps it on every failure.
+     */
+    fun sendTaskFollowUp(task: ChatTask, request: String, onAccepted: () -> Unit) {
+        viewModelScope.launch { if (performTaskFollowUp(task, request)) onAccepted() }
+    }
+
+    /** Clears the last follow-up's outcome once the panel has shown it. */
+    fun dismissFollowUp() {
+        _followUp.update { it.copy(accepted = false, error = null) }
+    }
+
+    internal suspend fun performTaskFollowUp(task: ChatTask, request: String): Boolean {
+        val text = request.trim()
+        if (text.isEmpty()) return false
+        // A second tap while the first is in flight would send the request
+        // twice; the panel also disables its button, and this is the guard that
+        // holds when a tap gets through anyway.
+        if (_followUp.value.isSending) return false
+        val message = chatTaskFollowUpMessage(task, text)
+        if (message.toByteArray(Charsets.UTF_8).size > CHAT_MAX_MESSAGE_BYTES) {
+            _followUp.value = ChatFollowUpUiState(taskId = task.id, error = ChatError.TOO_LARGE)
+            return false
+        }
+        _followUp.value = ChatFollowUpUiState(taskId = task.id, isSending = true)
+        try {
+            val sent = api.sendChatMessage(message)
+            // The request lands in the conversation beside the panel, the same
+            // as a typed message — the user can see what was sent and the reply
+            // arrives in the usual place. The chat's own draft is not touched.
+            _state.update { it.copy(messages = it.messages + sent, pending = it.pending ?: ChatPending()) }
+            _followUp.value = ChatFollowUpUiState(taskId = task.id, accepted = true)
+            return true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _followUp.value = ChatFollowUpUiState(taskId = task.id, error = ChatError.from(e))
+            return false
+        }
     }
 
     internal suspend fun load() {

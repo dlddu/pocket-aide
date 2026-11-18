@@ -61,6 +61,18 @@ class ChatTaskPanelLayoutTest {
                     onTogglePanel = {},
                     // 패널의 조회는 뷰모델 몫이다. 이 테스트가 보는 것은 레이아웃이다.
                     pollTasks = {},
+                    taskListState = rememberLazyListState(),
+                    // 보는 방식과 고른 작업은 상호작용 테스트가 본다. 여기서는
+                    // 목록이 그려진 기본 상태의 레이아웃만 본다.
+                    filter = ChatTaskFilter(),
+                    onFilterChange = {},
+                    openTask = null,
+                    onOpenTask = {},
+                    onCloseTask = {},
+                    followUp = ChatFollowUpUiState(),
+                    followUpDraft = "",
+                    onFollowUpDraftChange = {},
+                    onSendFollowUp = {},
                 )
             }
         }
@@ -122,7 +134,8 @@ class ChatTaskPanelLayoutTest {
     fun theBlockedTaskShowsItsStatusInTheWideLayout() {
         start(800.dp)
         compose.onNodeWithTag("chat.tasks.item.status.blocked").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.count.blocked").assertIsDisplayed()
+        // 상태별 개수는 그 상태로 좁히는 칩이 들고 있다.
+        compose.onNodeWithTag("chat.tasks.filter.blocked").assertIsDisplayed()
     }
 
     @Test
