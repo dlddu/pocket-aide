@@ -7,10 +7,12 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -133,6 +135,10 @@ class ChatTaskPanelLayoutTest {
     @Test
     fun theBlockedTaskShowsItsStatusInTheWideLayout() {
         start(800.dp)
+        // 목록 안의 줄이므로 먼저 보이는 자리로 스크롤한다 — 뷰포트가 얼마나
+        // 남았는지(키보드·좁은 창)에 판정이 매달리지 않게.
+        compose.onNodeWithTag("chat.tasks.list")
+            .performScrollToNode(hasTestTag("chat.tasks.item.status.blocked"))
         compose.onNodeWithTag("chat.tasks.item.status.blocked").assertIsDisplayed()
         // 상태별 개수는 그 상태로 좁히는 칩이 들고 있다.
         compose.onNodeWithTag("chat.tasks.filter.blocked").assertIsDisplayed()
