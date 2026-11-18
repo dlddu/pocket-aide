@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +26,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -97,38 +101,144 @@ private const val DISABLED_OPACITY = 0.4f
 fun ChatScreen(api: ApiClient) {
     val viewModel: ChatViewModel = viewModel(key = "chat") { ChatViewModel(api) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    // The draft and the panel's open/closed choice survive a fold, a rotation
+    // and a trip through the back stack, so neither is lost by the layout
+    // changing under the user.
     var draft by rememberSaveable { mutableStateOf("") }
+    var panelOpen by rememberSaveable { mutableStateOf(true) }
+    // One list state for the conversation, held above the layout branch, so the
+    // reading position survives folding, unfolding and collapsing the panel.
+    val messageList = rememberLazyListState()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.pollWhileVisible() }
     }
 
-    Column(
+    ChatPanes(
+        state = state,
+        tasks = tasks,
+        draft = draft,
+        onDraftChange = { draft = it },
+        onSend = { viewModel.send(draft) { draft = "" } },
+        onRefresh = viewModel::refreshPlugins,
+        onDismissNotice = viewModel::dismissNotice,
+        listState = messageList,
+        panelOpen = panelOpen,
+        onTogglePanel = { panelOpen = !panelOpen },
+        pollTasks = {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.pollTasksWhileVisible()
+            }
+        },
+    )
+}
+
+/**
+ * The chat screen's layout: one pane in a narrow window, two in a wide one.
+ *
+ * The branch is taken from the window's own available width
+ * (docs/design-system/tokens.md §6.1) — not from the device, the screen size or
+ * the orientation — so a folded phone and a split window stay narrow while an
+ * unfolded foldable goes wide even in portrait.
+ */
+@Composable
+internal fun ChatPanes(
+    state: ChatUiState,
+    tasks: ChatTasksUiState,
+    draft: String,
+    onDraftChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onRefresh: () -> Unit,
+    onDismissNotice: () -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    panelOpen: Boolean,
+    onTogglePanel: () -> Unit,
+    // Runs for exactly as long as the panel is on screen.
+    pollTasks: suspend () -> Unit,
+) {
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(DesignTokens.Colors.surface(CHAT_AREA))
             .imePadding()
             .testTag("chat.screen"),
     ) {
-        Header(state, viewModel::refreshPlugins)
+        val wide = isWideChatWindow(maxWidth)
+        val panelShown = wide && panelOpen
+
+        // Polling follows what is on screen: this effect exists only while the
+        // panel does, so a narrow window or a collapsed panel costs no requests
+        // at all — cancelling it is what stops the reads.
+        if (panelShown) {
+            LaunchedEffect(Unit) { pollTasks() }
+        }
+
+        Row(Modifier.fillMaxSize()) {
+            Conversation(
+                state = state,
+                draft = draft,
+                onDraftChange = onDraftChange,
+                onSend = onSend,
+                onRefresh = onRefresh,
+                onDismissNotice = onDismissNotice,
+                listState = listState,
+                // The toggle belongs to the wide layout only; a narrow window
+                // has no second pane to open.
+                panelOpen = if (wide) panelOpen else null,
+                onTogglePanel = onTogglePanel,
+                modifier = Modifier.weight(DesignTokens.Split.paneWeight),
+            )
+            if (panelShown) {
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .width(DesignTokens.Split.rule)
+                        .background(DesignTokens.Colors.rule(CHAT_AREA)),
+                )
+                // 1:1 — the same weight as the conversation beside it.
+                ChatTaskPanel(tasks, Modifier.weight(DesignTokens.Split.paneWeight))
+            }
+        }
+    }
+}
+
+/** The conversation pane: the whole chat screen in a narrow window, the left half in a wide one. */
+@Composable
+private fun Conversation(
+    state: ChatUiState,
+    draft: String,
+    onDraftChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onRefresh: () -> Unit,
+    onDismissNotice: () -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    panelOpen: Boolean?,
+    onTogglePanel: () -> Unit,
+    modifier: Modifier,
+) {
+    Column(modifier.fillMaxHeight().testTag("chat.messages.pane")) {
+        Header(state, onRefresh, panelOpen = panelOpen, onTogglePanel = onTogglePanel)
         Box(Modifier.fillMaxWidth().height(RULE_WIDTH).background(DesignTokens.Colors.rule(CHAT_AREA)))
         state.notice?.let {
-            Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = viewModel::dismissNotice)
+            Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = onDismissNotice)
         }
         state.error?.let { Banner(it.message, DesignTokens.StatusColors.failure(), tag = "chat.error", onDismiss = null) }
-        Messages(state, Modifier.weight(1f))
-        Composer(
-            draft = draft,
-            onDraftChange = { draft = it },
-            state = state,
-            onSend = { viewModel.send(draft) { draft = "" } },
-        )
+        Messages(state, Modifier.weight(1f), listState)
+        Composer(draft = draft, onDraftChange = onDraftChange, state = state, onSend = onSend)
     }
 }
 
 @Composable
-private fun Header(state: ChatUiState, onRefresh: () -> Unit) {
+private fun Header(
+    state: ChatUiState,
+    onRefresh: () -> Unit,
+    // panelOpen is null in a narrow window, which has no second pane to open,
+    // so no toggle is drawn there at all.
+    panelOpen: Boolean? = null,
+    onTogglePanel: () -> Unit = {},
+) {
     val ink = DesignTokens.Colors.ink(CHAT_AREA)
     Row(
         Modifier
@@ -160,7 +270,33 @@ private fun Header(state: ChatUiState, onRefresh: () -> Unit) {
                 )
             }
         }
+        if (panelOpen != null) {
+            PanelToggle(panelOpen, onTogglePanel, Modifier.padding(end = DesignTokens.Spacing.sm))
+        }
         RefreshButton(state, onRefresh)
+    }
+}
+
+/** Collapses and reopens the task panel. Wide layout only. */
+@Composable
+private fun PanelToggle(open: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    val ink = DesignTokens.Colors.ink(CHAT_AREA)
+    Box(
+        modifier
+            .size(HEADER_BUTTON_SIZE)
+            .clip(CircleShape)
+            .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), CircleShape)
+            .clickable(role = Role.Button, onClick = onToggle)
+            .semantics { contentDescription = if (open) "작업 패널 접기" else "작업 패널 펼치기" }
+            .testTag("chat.tasks.toggle"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (open) Icons.Outlined.KeyboardArrowRight else Icons.Outlined.KeyboardArrowLeft,
+            contentDescription = null,
+            tint = ink,
+            modifier = Modifier.size(HEADER_ICON_SIZE),
+        )
     }
 }
 
@@ -201,8 +337,13 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-internal fun Messages(state: ChatUiState, modifier: Modifier) {
-    val listState = rememberLazyListState()
+internal fun Messages(
+    state: ChatUiState,
+    modifier: Modifier,
+    // The caller owns the list state so the reading position survives the
+    // layout changing — folding, unfolding, or collapsing the task panel.
+    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+) {
     val count = state.messages.size + if (state.isReplying) 1 else 0
     FollowLatestMessage(listState, count, state.pending?.content)
     if (state.hasLoaded && count == 0) {

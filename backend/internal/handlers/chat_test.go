@@ -27,6 +27,10 @@ type chatPlatform struct {
 	status     int    // forced status for every call when non-zero
 	statusBody string // body sent with the forced status
 	refresh    int
+	// ledgerStatus forces the read-only ledger route's status; ledger is the
+	// page it answers otherwise.
+	ledgerStatus int
+	ledger       string
 }
 
 func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +63,13 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t := p.transcript[id]
 		offset := int(body["offset"].(float64))
 		_ = json.NewEncoder(w).Encode(map[string]any{"payload": t[min(offset, len(t)):], "nextOffset": len(t)})
+	case strings.Contains(path, "/ledger/tasks"):
+		if p.ledgerStatus != 0 {
+			w.WriteHeader(p.ledgerStatus)
+			_, _ = w.Write([]byte(`{"code":"x","error":"no"}`))
+			return
+		}
+		_, _ = w.Write([]byte(p.ledger))
 	case strings.HasSuffix(path, "/plugins/refresh"):
 		if p.refresh != 0 {
 			w.WriteHeader(p.refresh)
@@ -80,7 +91,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1'), (2, 'u2')`); err != nil {
 		t.Fatalf("seed users: %v", err)
 	}
-	platform := &chatPlatform{transcript: map[string]string{}}
+	platform := &chatPlatform{transcript: map[string]string{}, ledger: `{"tasks":[],"next_cursor":""}`}
 	srv := httptest.NewServer(platform)
 	t.Cleanup(srv.Close)
 	store := chat.New(conn)
@@ -88,6 +99,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	t.Cleanup(engine.Wait)
 	r := chi.NewRouter()
 	r.Get("/api/chat", handlers.GetChat(store, engine, chat.NewPresence()))
+	r.Get("/api/chat/tasks", handlers.GetChatTasks(engine))
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))
 	return r, platform, engine
