@@ -207,6 +207,7 @@ func main() {
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
 		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine, chatPresence))
+		p.Get("/api/chat/tasks", handlers.GetChatTasks(chatEngine))
 		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
 		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))

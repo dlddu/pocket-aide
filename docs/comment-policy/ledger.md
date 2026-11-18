@@ -19,15 +19,21 @@
 | 2026-11-02 | `.github/workflows/android-test.yml` | 1 | `9dac1c010296` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-fcm-push.md) |
 | 2026-10-09 | `.github/workflows/backend-docker-push.yml`, `.github/workflows/backend-integration-test.yml`, `.github/workflows/ci.yml`, `.github/workflows/ios-test.yml`, `.github/workflows/preview.yml`, `.github/workflows/testflight-upload.yml` | 91 | `631eeb49ad6b` | 완료 | 필요성 판정 — 제거 89줄 · 유지 74줄(개작 9블록 포함) · 2026-10-09 증분 유지 11줄(샤딩 · main 배포 필터) · 2026-10-09 증분 유지 3줄 · 개작 1블록(main push ios-test 생략) · 2026-10-10 개작 1블록(푸시 준비 신호) · 2026-10-11 증분 유지 2줄(iOS 테스트 백엔드 교차 빌드) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-11-17 | `android/app/src/androidTest/java/com/dlddu/pocketaide/chat/ChatScrollBehaviorTest.kt` | 8 | `0de81a9b220e` | — | 등록 — 필요성 판정 대기. 2026-11-17 채팅 하단 추적 회귀 계측 테스트가 새로 둔 주석 |
+| 2026-11-18 | `android/app/src/androidTest/java/com/dlddu/pocketaide/chat/ChatTaskPanelLayoutTest.kt` | 16 | `11f48485ae7a` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
 | 2026-11-09 | `android/app/src/main/java/com/dlddu/pocketaide/api/ApiClient.kt` | 1 | `7e018132bd43` | — | 등록 — 필요성 판정 대기. 2026-11-09 세션 플랫폼 로그인 슬롯 소진(503 auth_pool_exhausted) 구분이 새로 둔 주석 |
 | 2026-11-08 | `android/app/src/main/java/com/dlddu/pocketaide/chat/Chat.kt` | 10 | `e2567feb2f56` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-08 채팅 링크 닫는 괄호 처리에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
-| 2026-11-06 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | 4 | `79c6e86dac9c` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-06 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScreen.kt` | 29 | `12b54063554d` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 *2026-11-18 재측정(넓은 창 작업 패널 — 채팅 좌/작업 우 1:1): 4→29줄. 판정하지 않았다 — 판정 칸 `—`.* |
 | 2026-11-17 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatScroll.kt` | 8 | `2c8b32a5d9ac` | — | 등록 — 필요성 판정 대기. 2026-11-17 채팅 하단 추적이 새로 둔 주석 |
+| 2026-11-18 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatTaskPanel.kt` | 23 | `b24c6dddcd29` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
+| 2026-11-18 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatTasks.kt` | 19 | `e8fe1071a6d9` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
+| 2026-11-18 | `android/app/src/main/java/com/dlddu/pocketaide/chat/ChatViewModel.kt` | 20 | `fee918ed7513` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
+| 2026-11-18 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/DesignTokens.kt` | 7 | `b038ac6fc996` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationAccess.kt` | 1 | `4a77c750667d` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherLocationWorker.kt` | 1 | `d805164c7960` | 완료 | 필요성 판정 — 제거 1줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 1 | `241224badd21` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 1 | `74928df54084` | 완료 | 필요성 판정 — 제거 0줄 · 유지 1줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
 | 2026-11-02 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | 4 | `22c0305195ad` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-11-02-android-widget-location-telemetry.md) |
+| 2026-11-18 | `android/app/src/test/java/com/dlddu/pocketaide/chat/ChatTasksTest.kt` | 11 | `c2fa5fdaae2e` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
 | 2026-09-29 | `backend/cmd/oidcmock/main.go` | 4 | `555987b7c830` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-08 | `backend/cmd/server/main.go` | 25 | `bd3839c66d3f` | — | 필요성 판정 — 제거 13줄 · 유지 17줄(개작 5블록 · 자리 이동 1블록 포함) — [상세](passes/2026-10-08-server-main-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-07 세션 탭 테넌트 클라이언트 분리에서 주석이 늘었다 — 재측정만, 판정하지 않았다 |
 | 2026-09-29 | `backend/internal/affirmations/store.go` | 15 | `11e73a3e0f7a` | 완료 | 필요성 판정 — 제거 2줄 · 유지 15줄(개작 1블록 포함) — [상세](passes/2026-09-29-backend.md) |
@@ -40,6 +46,8 @@
 | 2026-11-16 | `backend/internal/chat/presence.go` | 23 | `e9cacbd0d02b` | — | 등록 — 필요성 판정 대기. 2026-11-16 채팅 화면 접속 상태(PRD-AI채팅 AC8 · PRD-12 AC22)가 새로 둔 주석 |
 | 2026-11-16 | `backend/internal/chat/presence_test.go` | 7 | `0359e27dd5ee` | — | 등록 — 필요성 판정 대기. 2026-11-16 채팅 화면 접속 상태(PRD-AI채팅 AC8 · PRD-12 AC22)가 새로 둔 주석 |
 | 2026-11-04 | `backend/internal/chat/store.go` | 20 | `bc3262d6bc90` | — | 필요성 판정 — 제거 1줄 · 유지 17줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-18 | `backend/internal/chat/tasks.go` | 65 | `ce003c056e7b` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
+| 2026-11-18 | `backend/internal/chat/tasks_test.go` | 35 | `2f3d1f11dac3` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
 | 2026-11-12 | `backend/internal/commitstatus/decide.go`, `backend/internal/commitstatus/github.go`, `backend/internal/commitstatus/store.go` | 22 | `c0bb17cf8d83` | — | 등록 — 필요성 판정 대기. 2026-11-12 커밋 상태 요청(PRD-12 AC18–AC21)이 새로 둔 주석 |
 | 2026-11-12 | `backend/internal/commitstatuspush/notifier.go` | 2 | `d46939ea6e03` | — | 등록 — 필요성 판정 대기. 2026-11-12 커밋 상태 요청(PRD-12 AC18–AC21)이 새로 둔 주석 |
 | 2026-09-29 | `backend/internal/db/db.go` | 14 | `d53f8dbb4e54` | 완료 | 필요성 판정 — 제거 0줄 · 유지 14줄 — [상세](passes/2026-09-29-backend.md) |
@@ -53,7 +61,9 @@
 | 2026-11-04 | `backend/internal/handlers/chat.go` | 14 | `85d4d1a4cd09` | — | 필요성 판정 — 제거 2줄 · 유지 13줄 — [상세](passes/2026-11-04-chat-api-sessions.md) · 2026-11-06 AI 채팅 codex 전환에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 · 2026-11-16 채팅 접속 상태(AC8)가 presence 기록 사유 4줄을 더해 재측정 — 판정하지 않았다 |
 | 2026-11-16 | `backend/internal/handlers/chat_presence.go` | 8 | `4368128b8d09` | — | 등록 — 필요성 판정 대기. 2026-11-16 채팅 화면 접속 상태(PRD-AI채팅 AC8 · PRD-12 AC22)가 새로 둔 주석 |
 | 2026-11-16 | `backend/internal/handlers/chat_presence_test.go` | 14 | `76fb7a386f84` | — | 등록 — 필요성 판정 대기. 2026-11-16 채팅 화면 접속 상태(PRD-AI채팅 AC8 · PRD-12 AC22)가 새로 둔 주석 |
-| 2026-11-06 | `backend/internal/handlers/chat_test.go` | 8 | `d245fa2c67c8` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-09 세션 플랫폼 로그인 슬롯 소진 구분에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-18 | `backend/internal/handlers/chat_tasks.go` | 10 | `ecfc32349094` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
+| 2026-11-18 | `backend/internal/handlers/chat_tasks_test.go` | 11 | `d460565736c5` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
+| 2026-11-06 | `backend/internal/handlers/chat_test.go` | 10 | `4f8ff6a6e4b8` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-09 세션 플랫폼 로그인 슬롯 소진 구분에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 *2026-11-18 재측정(넓은 창 작업 패널 — 채팅 좌/작업 우 1:1): 8→10줄. 판정하지 않았다 — 판정 칸 `—`.* |
 | 2026-11-12 | `backend/internal/handlers/commit_status_requests.go` | 5 | `80579c01f256` | — | 등록 — 필요성 판정 대기. 2026-11-12 커밋 상태 요청(PRD-12 AC18–AC21)이 새로 둔 주석 |
 | 2026-10-28 | `backend/internal/handlers/external_notifications.go` | 8 | `f16788fba9ec` | — | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-10-28-approval-gate-notifications.md) · 2026-11-09 알림 전체 읽음(mark-all-read)에서 `MarkAllExternalNotificationsRead` doc 주석 2줄이 늘었다 — 재측정만, 판정하지 않았다
 | 2026-11-04 | `backend/internal/handlers/mail.go` | 7 | `f9ccc4202240` | 완료 | 필요성 판정 — 제거 4줄 · 유지 7줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
@@ -113,6 +123,7 @@
 | --- | --- | ---: | --- | :-: | --- |
 | 2026-11-06 | `backend/internal/chat/codex.go` | 5 | `732487916628` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 |
 | 2026-11-06 | `backend/internal/chat/codex_test.go` | 3 | `4a3d835f0a60` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-06 AI 채팅 링크·세션 이어받기에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
+| 2026-11-18 | `backend/internal/chat/tasks_test.go` | 2 | `ca9285de5810` | — | 등록 — 2026-11-18 넓은 창 작업 패널(채팅 좌/작업 우 1:1, 세션 원장 읽기 전용 조회)이 새로 둔 주석. 필요성 판정 대기. |
 | 2026-09-29 | `backend/internal/githubwebhook/consumer.go` | 2 | `fc7742939d4d` | 완료 | 필요성 판정 — 제거 10줄 · 유지 2줄 — [상세](passes/2026-09-29-backend.md) |
 | 2026-11-06 | `backend/internal/handlers/chat_test.go` | 2 | `58ab1c8398c5` | — | 등록 — 필요성 판정 대기. 2026-11-06 AI 채팅 codex 전환이 새로 둔 주석 · 2026-11-09 세션 플랫폼 로그인 슬롯 소진 구분에서 이 범위의 주석이 바뀌었다 — 재측정만, 판정하지 않았다 |
 | 2026-11-09 | `backend/internal/handlers/sessions_test.go` | 1 | `0aba1f39ec29` | — | 등록 — 필요성 판정 대기. 2026-11-09 세션 플랫폼 로그인 슬롯 소진(503 auth_pool_exhausted) 구분이 새로 둔 주석 |
