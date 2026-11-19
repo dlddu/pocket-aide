@@ -488,6 +488,9 @@ class ChatTaskRequestTest {
         assertEquals(listOf(1L, 2L), state.events.map { it.seq })
         assertEquals("요청을 남겼다", state.events[1].summary)
         assertEquals("이 작업 진행해 줘", state.events[1].text)
+        // 숫자를 들고 온 줄도 읽힌다 — 본문이 없을 뿐, 이력 자체가 실패하지 않는다.
+        assertEquals("작업을 원장에 등록했다", state.events[0].summary)
+        assertEquals("", state.events[0].text)
         assertTrue(state.hasMore)
         assertFalse(state.isEmpty)
 
@@ -495,7 +498,11 @@ class ChatTaskRequestTest {
         assertTrue(vm.performTaskHistory("t-42", more = true))
         assertEquals("/api/chat/tasks/t-42/events?after_seq=2&limit=20", server.takeRequest().path)
         state = vm.taskHistory.value
-        assertEquals(listOf(1L, 2L, 3L), state.events.map { it.seq })
+        assertEquals(listOf(1L, 2L, 3L, 4L), state.events.map { it.seq })
+        assertEquals("진행했다", state.events[2].result)
+        // 라벨 배열을 들고 온 선택지 줄도 읽히고, 본문으로 끌어다 쓰지는 않는다.
+        assertEquals("보낼 수 있는 선택지 2개를 올렸다", state.events[3].summary)
+        assertEquals("", state.events[3].result)
         assertFalse("마지막 페이지에는 커서가 없다", state.hasMore)
     }
 
@@ -535,13 +542,19 @@ class ChatTaskRequestTest {
         }
     }
 
+    // 원장이 적는 detail 은 문자열만이 아니다 — 작업 등록·변경 줄은 버전을 숫자로,
+    // 선택지 줄은 라벨을 배열로 들고 온다. 그런 줄이 섞인 이력도 읽혀야 한다.
     private fun eventsJson(firstPage: Boolean) = if (firstPage) {
         """{"events":[{"seq":1,"task_id":"t-42","at":"2026-11-19T00:00:00Z","kind":"task_created",""" +
-            """"actor":"parent","summary":"작업을 원장에 등록했다"},""" +
+            """"actor":"parent","summary":"작업을 원장에 등록했다",""" +
+            """"detail":{"version":1,"status":"planned","stage":"조사"}},""" +
             """{"seq":2,"task_id":"t-42","at":"2026-11-19T00:01:00Z","kind":"request_stored","actor":"user-1",""" +
             """"summary":"요청을 남겼다","detail":{"text":"이 작업 진행해 줘"},"request_id":"app-1"}],"next_cursor":2}"""
     } else {
         """{"events":[{"seq":3,"task_id":"t-42","at":"2026-11-19T00:02:00Z","kind":"request_settled",""" +
-            """"actor":"parent","summary":"요청을 processed 로 닫았다","detail":{"result":"진행했다"}}]}"""
+            """"actor":"parent","summary":"요청을 processed 로 닫았다","detail":{"result":"진행했다"}},""" +
+            """{"seq":4,"task_id":"t-42","at":"2026-11-19T00:03:00Z","kind":"choices_published",""" +
+            """"actor":"parent","summary":"보낼 수 있는 선택지 2개를 올렸다",""" +
+            """"detail":{"basis_version":2,"labels":["CI 로그를 본다","건너뛴다"]}}]}"""
     }
 }

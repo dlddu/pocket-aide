@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -313,7 +314,7 @@ class ChatTaskPanelInteractionTest {
                         kind = "task_created", actor = "parent", summary = "작업을 원장에 등록했다"),
                     ChatTaskEvent(seq = 2, taskId = "t-blocked", at = "2026-11-19T00:01:00Z",
                         kind = "request_stored", actor = "user-1", summary = "요청을 남겼다",
-                        detail = mapOf("text" to "아주 긴 요청 ".repeat(20))),
+                        detail = mapOf("text" to JsonPrimitive("아주 긴 요청 ".repeat(20)))),
                 ),
             ),
         )
@@ -383,7 +384,7 @@ class ChatTaskPanelInteractionTest {
                     ChatTaskEvent(
                         seq = 9, taskId = "t-blocked", at = "2026-11-19T00:09:00Z",
                         kind = "request_settled", actor = "parent", summary = "요청을 처리했다",
-                        detail = mapOf("result" to "PR 올리고 CI 통과까지 확인했다", "outcome" to "processed"),
+                        detail = mapOf("result" to JsonPrimitive("PR 올리고 CI 통과까지 확인했다"), "outcome" to JsonPrimitive("processed")),
                     ),
                 ),
             ),
@@ -415,7 +416,7 @@ class ChatTaskPanelInteractionTest {
             ChatTaskEvent(
                 seq = 2, taskId = "t-blocked", at = "2026-11-19T00:01:00Z",
                 kind = "request_stored", actor = "user-1", summary = "요청을 남겼다",
-                detail = mapOf("text" to "아주 긴 요청 ".repeat(20)),
+                detail = mapOf("text" to JsonPrimitive("아주 긴 요청 ".repeat(20))),
             ),
         ),
     )

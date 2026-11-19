@@ -175,10 +175,11 @@ func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error
 				continue
 			}
 			task := Task{
-				ID:     row.ID,
-				Title:  strings.TrimSpace(row.Task.Title),
-				Status: normaliseStatus(row.Task.Status),
-				Stage:  strings.TrimSpace(row.Task.Stage),
+				ID:      row.ID,
+				Title:   strings.TrimSpace(row.Task.Title),
+				Status:  normaliseStatus(row.Task.Status),
+				Stage:   strings.TrimSpace(row.Task.Stage),
+				Choices: row.Choices,
 			}
 			task.Reason, task.NextAction = currentNote(row.Task.Sessions)
 			// Only when something is actually waiting: a zeroed summary on

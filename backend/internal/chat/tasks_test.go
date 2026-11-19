@@ -40,6 +40,7 @@ type ledgerRow struct {
 	Stage    string
 	Sessions []ledgerSess
 	Details  map[string]any
+	Choices  []chat.TaskChoice
 }
 
 type ledgerSess struct {
@@ -85,6 +86,7 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 	type outRow struct {
 		ID       string                   `json:"id"`
 		Requests *chat.TaskRequestSummary `json:"requests,omitempty"`
+		Choices  []chat.TaskChoice        `json:"choices,omitempty"`
 		Task     outTask                  `json:"task"`
 	}
 	page := struct {
@@ -108,6 +110,7 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 		page.Tasks = append(page.Tasks, outRow{
 			ID:       row.ID,
 			Requests: p.requests[row.ID],
+			Choices:  row.Choices,
 			Task: outTask{
 				Title: row.Title, Status: row.Status, Stage: row.Stage,
 				Sessions: sessions, Details: row.Details,
@@ -419,5 +422,36 @@ func TestTasks_UnknownStatusIsNotGuessed(t *testing.T) {
 	}
 	if list.Tasks[1].Status != chat.TaskStatusReview {
 		t.Fatalf("a known status in other casing must normalise: %q", list.Tasks[1].Status)
+	}
+}
+
+// The sentences the session offers travel with the row they were written
+// against. Dropping them here is invisible to the app — the screen says the
+// session offers none while the ledger holds two, and the pick cannot be sent
+// because its basis version never arrives.
+func TestTasks_OfferedChoicesReachTheApp(t *testing.T) {
+	store, engine, platform := ledgerEngine(t)
+	bindSession(t, store, 1, "cx1")
+	offered := row("t1", "blocked", "review")
+	offered.Choices = []chat.TaskChoice{
+		{ID: "c-ci", Label: "CI 로그를 본다", RequestText: "CI 로그를 확인해 줘", BasisVersion: 6, CreatedAt: "2026-11-19T04:00:00Z"},
+		{ID: "c-skip", Label: "건너뛴다", RequestText: "이 작업은 건너뛰어 줘", BasisVersion: 6, CreatedAt: "2026-11-19T04:00:00Z"},
+	}
+	platform.rows["cx1"] = []ledgerRow{offered, row("t2", "running", "impl")}
+
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list.Tasks[0].Choices) != 2 {
+		t.Fatalf("choices = %+v, want the two the ledger offers", list.Tasks[0].Choices)
+	}
+	first := list.Tasks[0].Choices[0]
+	if first.ID != "c-ci" || first.Label != "CI 로그를 본다" ||
+		first.RequestText != "CI 로그를 확인해 줘" || first.BasisVersion != 6 {
+		t.Fatalf("a choice reached the app without what the pick needs: %+v", first)
+	}
+	if len(list.Tasks[1].Choices) != 0 {
+		t.Fatalf("a task offered none must carry none: %+v", list.Tasks[1].Choices)
 	}
 }
