@@ -22,6 +22,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -32,6 +37,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
@@ -50,6 +56,7 @@ private const val MUTED_OPACITY = 0.55f
 private const val DISABLED_OPACITY = 0.4f
 private const val QUOTE_OPACITY = 0.06f
 private const val REQUEST_MAX_LINES = 6
+private const val HISTORY_COLLAPSED_LINES = 2
 
 /**
  * One task of the ledger, and the ways to ask about it.
@@ -74,8 +81,12 @@ fun ChatTaskDetailPane(
     task: ChatTask,
     draft: String,
     onDraftChange: (String) -> Unit,
+    onChoicePicked: (ChatTaskChoice) -> Unit,
     request: ChatTaskRequestUiState,
     onStore: () -> Unit,
+    history: ChatTaskHistoryUiState,
+    onLoadHistory: () -> Unit,
+    onLoadMoreHistory: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -101,13 +112,15 @@ fun ChatTaskDetailPane(
             Field("남은 다음 행동", task.nextAction, "chat.tasks.detail.next")
             task.requests?.takeIf { it.open > 0 }?.let { Waiting(it) }
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
-            Suggestions(task, onDraftChange)
+            Choices(task.choices, onChoicePicked)
             RequestField(
                 draft = draft,
                 onDraftChange = onDraftChange,
                 request = if (mine) request else ChatTaskRequestUiState(),
                 onStore = onStore,
             )
+            Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+            History(task.id, history, onLoadHistory, onLoadMoreHistory)
         }
     }
 }
@@ -193,12 +206,15 @@ private fun Field(label: String, value: String, tag: String) {
 }
 
 /**
- * Ready-made follow-ups for this task's state. Tapping one writes its sentence
- * into the request field — it does not send — so the user sees the words that
- * will go and can change them first.
+ * What the session itself offers to say about this task.
+ *
+ * The app writes none of these: they are the sentences the session wrote
+ * against this very task version, and a task that has moved offers none until
+ * the session writes new ones. Tapping one fills the request box — it does not
+ * store and does not send — so the words that go are the words that were read.
  */
 @Composable
-private fun Suggestions(task: ChatTask, onDraftChange: (String) -> Unit) {
+private fun Choices(choices: List<ChatTaskChoice>, onPicked: (ChatTaskChoice) -> Unit) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
         Text(
@@ -206,10 +222,21 @@ private fun Suggestions(task: ChatTask, onDraftChange: (String) -> Unit) {
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
         )
-        chatTaskSuggestions(task).forEach { suggestion ->
+        if (choices.isEmpty()) {
+            // Saying there are none is the honest answer: the app has no list
+            // of its own to fall back on, and free text is still there.
+            Text(
+                "세션이 올려 둔 선택지가 없어요. 직접 써서 보낼 수 있어요.",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.testTag("chat.tasks.detail.noChoices"),
+            )
+            return@Column
+        }
+        choices.forEach { choice ->
             val shape = RoundedCornerShape(DesignTokens.Radius.chip)
             Text(
-                suggestion.label,
+                choice.label,
                 style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
                 color = ink,
                 modifier = Modifier
@@ -217,9 +244,9 @@ private fun Suggestions(task: ChatTask, onDraftChange: (String) -> Unit) {
                     .clip(shape)
                     .background(DesignTokens.Colors.card(DETAIL_AREA))
                     .border(RULE, DesignTokens.Colors.rule(DETAIL_AREA), shape)
-                    .clickable(role = Role.Button) { onDraftChange(suggestion.request) }
+                    .clickable(role = Role.Button) { onPicked(choice) }
                     .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.sm)
-                    .testTag("chat.tasks.detail.suggestion"),
+                    .testTag("chat.tasks.detail.choice"),
             )
         }
     }
@@ -350,4 +377,121 @@ private fun Note(text: String, color: androidx.compose.ui.graphics.Color, tag: S
         color = color,
         modifier = Modifier.testTag(tag),
     )
+}
+
+/**
+ * This task's history, oldest first: what the person asked, what the session
+ * did with it, and the task's own transitions.
+ *
+ * It shows only what the ledger recorded. A task from before the ledger kept a
+ * history has none, and the pane says so rather than reconstructing one from
+ * the task's current state. A long line opens in place rather than being cut.
+ */
+@Composable
+private fun History(
+    taskID: String,
+    history: ChatTaskHistoryUiState,
+    onLoad: () -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    // The first page is read when this task's pane opens, and again when the
+    // pane switches to another task.
+    LaunchedEffect(taskID) { onLoad() }
+    Column(
+        Modifier.fillMaxWidth().testTag("chat.tasks.detail.history"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+    ) {
+        Text(
+            "작업 이력",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        when {
+            history.error != null -> {
+                Note(history.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.history.error")
+                val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+                Text(
+                    "다시 시도",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                    color = DesignTokens.Colors.accent(DETAIL_AREA),
+                    modifier = Modifier
+                        .clip(shape)
+                        .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
+                        .clickable(role = Role.Button, onClick = onLoad)
+                        .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+                        .testTag("chat.tasks.detail.history.retry"),
+                )
+            }
+
+            history.isLoading && history.events.isEmpty() -> CircularProgressIndicator(
+                color = ink.copy(alpha = MUTED_OPACITY),
+                strokeWidth = SPINNER_STROKE,
+                modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.history.loading"),
+            )
+
+            history.isEmpty -> Note(
+                "아직 남은 기록이 없어요. 이 시점 이전의 일은 원장에 적혀 있지 않아요.",
+                ink.copy(alpha = MUTED_OPACITY),
+                "chat.tasks.detail.history.empty",
+            )
+
+            else -> {
+                history.events.forEach { HistoryLine(it) }
+                if (history.hasMore) {
+                    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+                    Text(
+                        if (history.isLoading) "불러오는 중" else "이전 기록 더 보기",
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                        color = DesignTokens.Colors.accent(DETAIL_AREA),
+                        modifier = Modifier
+                            .clip(shape)
+                            .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
+                            .clickable(enabled = !history.isLoading, role = Role.Button, onClick = onLoadMore)
+                            .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+                            .testTag("chat.tasks.detail.history.more"),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** One history line. Its long body opens in place so nothing is read half. */
+@Composable
+private fun HistoryLine(event: ChatTaskEvent) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    var open by remember(event.seq) { mutableStateOf(false) }
+    val body = listOf(event.text, event.result).firstOrNull { it.isNotBlank() }.orEmpty()
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(DesignTokens.Radius.card))
+            .background(DesignTokens.Colors.card(DETAIL_AREA))
+            .then(if (body.isBlank()) Modifier else Modifier.clickable(role = Role.Button) { open = !open })
+            .padding(DesignTokens.Spacing.md)
+            .testTag("chat.tasks.detail.history.line"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+    ) {
+        Text(
+            ChatTaskEventKind.label(event.kind) + " · " + event.at,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        Text(
+            event.summary,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+            color = ink,
+        )
+        if (body.isNotBlank()) {
+            Text(
+                body,
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                maxLines = if (open) Int.MAX_VALUE else HISTORY_COLLAPSED_LINES,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.testTag("chat.tasks.detail.history.body"),
+            )
+        }
+    }
 }

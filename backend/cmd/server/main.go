@@ -210,6 +210,7 @@ func main() {
 		p.Get("/api/chat/tasks", handlers.GetChatTasks(chatEngine))
 		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
 		p.Post("/api/chat/tasks/{taskID}/requests", handlers.PostChatTaskRequest(chatEngine))
+		p.Get("/api/chat/tasks/{taskID}/events", handlers.GetChatTaskEvents(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
 		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))
 		p.Get("/api/sessions", handlers.ListSessions(sessionsPlatform))

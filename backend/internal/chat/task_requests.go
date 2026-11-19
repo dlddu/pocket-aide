@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -54,6 +55,11 @@ var (
 	// A retry of the same words is not an error; different words under a used id
 	// is, because it would otherwise silently replace what the person asked.
 	ErrTaskRequestConflict = errors.New("that request id is already used for a different request")
+	// ErrTaskRequestStaleChoice is a picked choice the session no longer
+	// offers — the task moved under a screen that was already open, or the
+	// choice was never offered. The words the person typed are still good, so
+	// the app keeps the draft, re-reads the task, and says the choices changed.
+	ErrTaskRequestStaleChoice = errors.New("that offered choice is no longer current; the task moved")
 	// ErrTaskRequestInvalid is a malformed id or text.
 	ErrTaskRequestInvalid = errors.New("the request id or text is not usable")
 )
@@ -70,6 +76,7 @@ type TaskRequest struct {
 	TaskID    string `json:"task_id"`
 	Seq       int64  `json:"seq"`
 	Text      string `json:"text"`
+	ChoiceID  string `json:"choice_id,omitempty"`
 	Author    string `json:"author"`
 	CreatedAt string `json:"created_at"`
 	Status    string `json:"status"`
@@ -111,7 +118,7 @@ func (s TaskRequestSummary) Open() int { return s.Pending + s.Claimed + s.Reconc
 // nothing twice, and the same id with different text is a conflict rather than a
 // second request. It does not claim a turn, so a request can be stored while a
 // reply is still being written.
-func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, requestID, text string) (TaskRequestStored, error) {
+func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, requestID, text, choiceID string, choiceBasisVersion int64) (TaskRequestStored, error) {
 	var out TaskRequestStored
 	body := strings.TrimSpace(text)
 	if body == "" || len(body) > TaskRequestTextMax {
@@ -123,6 +130,12 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 	if !ledgerRequestID.MatchString(taskID) {
 		return out, fmt.Errorf("%w: task id must be 1..128 letters, digits, _ or -", ErrTaskRequestInvalid)
 	}
+	if choiceID != "" && !ledgerRequestID.MatchString(choiceID) {
+		return out, fmt.Errorf("%w: choice id must be 1..128 letters, digits, _ or -", ErrTaskRequestInvalid)
+	}
+	if choiceBasisVersion < 0 || (choiceID == "" && choiceBasisVersion != 0) {
+		return out, fmt.Errorf("%w: a choice basis version belongs to a picked choice", ErrTaskRequestInvalid)
+	}
 	conv, err := e.store.Conversation(ctx, userID)
 	if err != nil {
 		return out, err
@@ -132,9 +145,18 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 		// and no task to leave a request on.
 		return out, ErrNoConversation
 	}
-	payload, err := json.Marshal(map[string]string{
-		"id": requestID, "text": body, "author": taskRequestAuthor(userID),
-	})
+	fields := map[string]any{"id": requestID, "text": body, "author": taskRequestAuthor(userID)}
+	if choiceID != "" {
+		// Which of the session's own offered sentences the person picked, and
+		// the task version the screen saw it on. The slot checks both, so a
+		// screen left open while the task moved has its pick refused rather
+		// than stored. Empty means they typed their own words.
+		fields["choice_id"] = choiceID
+		if choiceBasisVersion > 0 {
+			fields["choice_basis_version"] = choiceBasisVersion
+		}
+	}
+	payload, err := json.Marshal(fields)
 	if err != nil {
 		return out, err
 	}
@@ -170,6 +192,14 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 		if strings.Contains(strings.ToLower(string(raw)), "deleted") {
 			return out, ErrTaskNotFound
 		}
+		// A pick the session no longer offers: the screen is out of date, not
+		// the words. Its own class, because the answer is to re-read the task
+		// and keep what the person already typed. The platform's sentences for
+		// it are stable (session-platform docs/session-ledger.md).
+		if lower := strings.ToLower(string(raw)); strings.Contains(lower, "no longer offered") ||
+			strings.Contains(lower, "no longer current") {
+			return out, ErrTaskRequestStaleChoice
+		}
 		return out, ErrTaskRequestConflict
 	case http.StatusNotImplemented, http.StatusMethodNotAllowed:
 		// 501 is a session that keeps no ledger; 405 is a control plane without
@@ -188,4 +218,89 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 // users' requests apart without the ledger carrying anything personal.
 func taskRequestAuthor(userID int64) string {
 	return fmt.Sprintf("user-%d", userID)
+}
+
+// TaskEvent is one line of a task's history as the app shows it: a named fact
+// the session or the person caused, in the order it happened.
+type TaskEvent struct {
+	Seq       int64          `json:"seq"`
+	TaskID    string         `json:"task_id"`
+	At        string         `json:"at"`
+	Kind      string         `json:"kind"`
+	Actor     string         `json:"actor"`
+	Summary   string         `json:"summary"`
+	Detail    map[string]any `json:"detail,omitempty"`
+	RequestID string         `json:"request_id,omitempty"`
+}
+
+// TaskEventPage is one keyset page of that history. NextCursor is the seq to
+// continue after and is zero on the last page.
+type TaskEventPage struct {
+	Events     []TaskEvent `json:"events"`
+	NextCursor int64       `json:"next_cursor,omitempty"`
+}
+
+// TaskEventPageLimit bounds one page the app asks for.
+const TaskEventPageLimitMax = 100
+
+// TaskEvents reads one page of taskID's history from the ledger of the session
+// that answers userID's own conversation.
+//
+// Read-only and derived from the user's own row, like the task list: a caller
+// cannot read another user's history. The history is the ledger's, so a task
+// with nothing recorded answers an empty page — the app says "no record from
+// before this" rather than inventing earlier lines.
+func (e *Engine) TaskEvents(ctx context.Context, userID int64, taskID string, afterSeq int64, limit int) (TaskEventPage, error) {
+	out := TaskEventPage{Events: []TaskEvent{}}
+	if !ledgerRequestID.MatchString(taskID) {
+		return out, fmt.Errorf("%w: task id must be 1..128 letters, digits, _ or -", ErrTaskRequestInvalid)
+	}
+	if afterSeq < 0 || limit < 0 || limit > TaskEventPageLimitMax {
+		return out, fmt.Errorf("%w: after_seq and limit must be in range", ErrTaskRequestInvalid)
+	}
+	conv, err := e.store.Conversation(ctx, userID)
+	if err != nil {
+		return out, err
+	}
+	if conv.platformSessionID == "" {
+		return out, ErrNoConversation
+	}
+	query := url.Values{}
+	if afterSeq > 0 {
+		query.Set("after_seq", strconv.FormatInt(afterSeq, 10))
+	}
+	if limit > 0 {
+		query.Set("limit", strconv.Itoa(limit))
+	}
+	path := "/sessions/" + url.PathEscape(conv.platformSessionID) +
+		"/ledger/tasks/" + url.PathEscape(taskID) + "/events"
+	if len(query) > 0 {
+		path += "?" + query.Encode()
+	}
+	status, raw, err := e.platform.Do(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return out, fmt.Errorf("read task history: %w", err)
+	}
+	switch status {
+	case http.StatusOK:
+		if err := json.Unmarshal(raw, &out); err != nil {
+			return TaskEventPage{Events: []TaskEvent{}}, fmt.Errorf("decode task history: %w", err)
+		}
+		if out.Events == nil {
+			out.Events = []TaskEvent{}
+		}
+		return out, nil
+	case http.StatusNotFound:
+		return out, ErrTaskNotFound
+	case http.StatusConflict:
+		return out, ErrTaskRequestUnavailable
+	case http.StatusNotImplemented, http.StatusMethodNotAllowed:
+		// A platform or a session pod without the history route. Not an empty
+		// history: the app says the session cannot show one.
+		return out, ErrTaskRequestUnsupported
+	case http.StatusBadRequest:
+		return out, fmt.Errorf("%w: the platform refused the history query", ErrTaskRequestInvalid)
+	default:
+		return out, platformError("ledger events", status, raw)
+	}
 }

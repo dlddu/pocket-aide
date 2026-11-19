@@ -25,6 +25,27 @@ data class ChatTask(
     // none ever arrived, so "nothing waiting" and "nothing to say" are not the
     // same answer. The parent's own progress is what moves these.
     val requests: ChatTaskRequests? = null,
+    // What the session itself offers to say about this task, written against
+    // the version this row carries. Empty means it offers none — the screen
+    // says so and keeps free text; the app never makes up a choice.
+    val choices: List<ChatTaskChoice> = emptyList(),
+)
+
+/**
+ * One sentence the session offers for this task. The button shows [label] and
+ * fills the request box with [requestText]; [id] goes back with the stored
+ * request so the session knows which of its own sentences came back.
+ *
+ * It is a sentence to send, not a permission: picking one approves no tool and
+ * no merge, and nothing is sent until the person stores it.
+ */
+@Serializable
+data class ChatTaskChoice(
+    val id: String,
+    val label: String = "",
+    @SerialName("request_text") val requestText: String = "",
+    @SerialName("basis_version") val basisVersion: Long = 0,
+    @SerialName("created_at") val createdAt: String = "",
 )
 
 /**
@@ -122,77 +143,6 @@ data class ChatTaskFilter(
 enum class ChatTaskEmptiness { LEDGER, FILTERED, COMPLETED_HIDDEN }
 
 /**
- * One ready-made follow-up. [label] says what it asks for and [request] is the
- * sentence that is actually sent — the panel puts the request in the editable
- * field before anything goes, so a label can never promise what the message
- * does not say.
- */
-data class ChatTaskSuggestion(val label: String, val request: String)
-
-/**
- * Follow-ups worth offering for one task, grounded in what the ledger records.
- * A recorded reason or next action is quoted verbatim; when the ledger has
- * none, the request says it has none and asks — it never supplies a reason
- * nobody wrote, and it never states a next step as settled.
- *
- * None of these instructs the session directly. Each is a message the user
- * sends into their own conversation, which the session reads and decides on,
- * so a tool approval or a human merge gate still happens where it did before.
- */
-fun chatTaskSuggestions(task: ChatTask): List<ChatTaskSuggestion> {
-    val reason = task.reason.trim()
-    val next = task.nextAction.trim()
-    val out = mutableListOf<ChatTaskSuggestion>()
-    when (task.status) {
-        ChatTaskStatus.BLOCKED -> out += if (reason.isNotEmpty()) {
-            ChatTaskSuggestion("차단 해제 방법 받기", "이 작업의 차단 사유가 원장에 「$reason」로 적혀 있어. 이걸 풀 방법을 알려 줘.")
-        } else {
-            ChatTaskSuggestion("차단 사유 물어보기", "원장에 차단 사유가 적혀 있지 않아. 무엇 때문에 막혀 있는지 확인해서 알려 줘.")
-        }
-
-        ChatTaskStatus.REVIEW -> {
-            out += if (reason.isNotEmpty()) {
-                ChatTaskSuggestion("검토할 내용 받기", "이 작업의 검토 사유가 원장에 「$reason」로 적혀 있어. 내가 무엇을 보고 결정해야 하는지 알려 줘.")
-            } else {
-                ChatTaskSuggestion("검토할 내용 받기", "원장에 검토 사유가 적혀 있지 않아. 내가 무엇을 보고 결정해야 하는지 정리해서 알려 줘.")
-            }
-            out += ChatTaskSuggestion("진행해도 된다고 전하기", "검토 내용을 확인했어. 이 작업을 이대로 진행해 줘.")
-            out += ChatTaskSuggestion("잠시 멈추라고 전하기", "이 작업은 아직 진행하지 말고, 내가 다시 말할 때까지 기다려 줘.")
-        }
-
-        ChatTaskStatus.RUNNING -> {
-            out += ChatTaskSuggestion("지금까지 진행 내용 받기", "이 작업을 지금까지 어디까지 진행했는지 정리해서 알려 줘.")
-            out += ChatTaskSuggestion("계속 진행하라고 전하기", "이 작업을 계속 진행해 줘.")
-        }
-
-        ChatTaskStatus.PLANNED -> {
-            out += ChatTaskSuggestion("시작하라고 전하기", "이 작업을 시작해 줘.")
-            out += ChatTaskSuggestion("무엇부터 할지 받기", "이 작업을 시작하면 무엇부터 하게 되는지 알려 줘.")
-        }
-
-        ChatTaskStatus.COMPLETED -> {
-            out += ChatTaskSuggestion("결과 요약 받기", "이 작업의 결과를 요약해서 알려 줘.")
-            out += ChatTaskSuggestion("남은 일 확인하기", "이 작업에서 더 남은 일이 있는지 알려 줘.")
-        }
-
-        // A status this app does not know. Ask what it is rather than name one.
-        else -> out += ChatTaskSuggestion(
-            "상태 확인하기",
-            "원장에 적힌 이 작업의 상태 값을 앱이 알지 못해. 지금 어떤 상태인지 확인해서 알려 줘.",
-        )
-    }
-    // The ledger's own next action, quoted. A completed task gets this only when
-    // one is actually recorded — asking "what is next" about finished work would
-    // invent a step the ledger does not have.
-    if (next.isNotEmpty()) {
-        out += ChatTaskSuggestion("적힌 다음 행동 진행", "원장에 적힌 다음 행동은 「$next」야. 이걸 진행해 줘.")
-    } else if (task.status != ChatTaskStatus.COMPLETED) {
-        out += ChatTaskSuggestion("다음 행동 받기", "원장에 다음 행동이 적혀 있지 않아. 다음에 무엇을 할지 정해서 알려 줘.")
-    }
-    return out
-}
-
-/**
  * One request stored on a task's ledger row.
  *
  * It is not a chat message: it is written to the session's own task ledger and
@@ -252,6 +202,7 @@ enum class ChatTaskRequestError(val message: String) {
     UNAVAILABLE("채팅 세션이 깨어 있지 않아 저장하지 못했어요. 잠시 뒤 다시 시도해요."),
     UNSUPPORTED("이 대화의 세션은 작업 요청을 받지 않아요."),
     CONFLICT("같은 요청 번호로 다른 내용이 이미 저장돼 있어요. 다시 쓰면 새 번호로 저장해요."),
+    STALE_CHOICE("작업이 바뀌어 고른 선택지가 더 이상 유효하지 않아요. 쓴 내용은 그대로 두었으니, 새 선택지를 보거나 그대로 다시 저장해요."),
     INVALID("요청을 저장할 수 없는 형식이에요."),
     UNREACHABLE("요청을 저장하지 못했어요. 잠시 뒤 다시 시도해요."),
     ;
@@ -262,6 +213,9 @@ enum class ChatTaskRequestError(val message: String) {
                 e.status == 404 -> NOT_FOUND
                 e.status == 501 -> UNSUPPORTED
                 e.status == 409 && e.body.contains("task_request_unavailable") -> UNAVAILABLE
+                // The screen is out of date, not the words: its own sentence,
+                // and the draft is kept.
+                e.status == 409 && e.body.contains("task_request_stale_choice") -> STALE_CHOICE
                 e.status == 409 -> CONFLICT
                 e.status == 400 -> INVALID
                 else -> UNREACHABLE
@@ -277,6 +231,18 @@ enum class ChatTaskRequestError(val message: String) {
  * into the message, so nothing is sent that the person did not write.
  */
 fun chatTaskRequestText(request: String): String = request.trim()
+
+/**
+ * Whether a draft still carries the pick it was filled from.
+ *
+ * Provenance holds only while the draft is the session's sentence word for
+ * word. Edit one character and the words are the person's own: the pick and its
+ * basis version are dropped and the request is stored as free text, so the
+ * session is never told that a sentence it wrote came back when it did not.
+ * The same rule decides what is sent, which keeps the two from disagreeing.
+ */
+fun chatTaskPickHolds(draft: String, pickedText: String): Boolean =
+    pickedText.isNotEmpty() && draft == pickedText
 
 /**
  * Why the panel cannot show a list. Each is a different sentence on purpose —
@@ -302,7 +268,82 @@ enum class ChatTaskError(val message: String) {
     }
 }
 
+/**
+ * One line of a task's history. The session writes these as it works and the
+ * app shows them in order — it never fills a gap with the task's current state.
+ */
+@Serializable
+data class ChatTaskEvent(
+    val seq: Long = 0,
+    @SerialName("task_id") val taskId: String = "",
+    val at: String = "",
+    val kind: String = "",
+    val actor: String = "",
+    val summary: String = "",
+    val detail: Map<String, String> = emptyMap(),
+    @SerialName("request_id") val requestId: String = "",
+) {
+    /** The person's own words, when this line is a request they left. */
+    val text: String get() = detail["text"].orEmpty()
+
+    /** What the session wrote back, when this line settles a request. */
+    val result: String get() = detail["result"].orEmpty()
+}
+
+@Serializable
+data class ChatTaskEventPage(
+    val events: List<ChatTaskEvent> = emptyList(),
+    @SerialName("next_cursor") val nextCursor: Long = 0,
+)
+
+object ChatTaskEventKind {
+    /** What each line is, said in the words a person reads. */
+    fun label(kind: String): String = when (kind) {
+        "task_created" -> "작업 등록"
+        "task_updated" -> "작업 변경"
+        "task_deleted" -> "작업 삭제"
+        "request_stored" -> "내 요청"
+        "request_claimed" -> "요청 접수"
+        "request_dispatched" -> "처리 시작"
+        "request_settled" -> "요청 종료"
+        "choices_published" -> "선택지 갱신"
+        "choices_cleared" -> "선택지 비움"
+        else -> "기록"
+    }
+}
+
+/** Why a task's history could not be read. */
+enum class ChatTaskHistoryError(val message: String) {
+    NOT_FOUND("이 작업이 원장에서 사라졌어요."),
+    UNAVAILABLE("채팅 세션이 깨어 있지 않아 이력을 읽지 못했어요."),
+    UNSUPPORTED("이 대화의 세션은 작업 이력을 두지 않아요."),
+    UNREACHABLE("작업 이력을 불러오지 못했어요. 다시 시도해요."),
+    ;
+
+    companion object {
+        fun from(e: Exception): ChatTaskHistoryError = when (e) {
+            is ApiException.BadStatus -> when (e.status) {
+                404 -> NOT_FOUND
+                409 -> UNAVAILABLE
+                501 -> UNSUPPORTED
+                else -> UNREACHABLE
+            }
+            else -> UNREACHABLE
+        }
+    }
+}
+
 suspend fun ApiClient.chatTasks(): ChatTaskList = get("/api/chat/tasks", ChatTaskList.serializer())
+
+/** One page of [taskId]'s history, oldest first. */
+suspend fun ApiClient.chatTaskEvents(taskId: String, afterSeq: Long, limit: Int): ChatTaskEventPage {
+    val query = buildList {
+        if (afterSeq > 0) add("after_seq=$afterSeq")
+        if (limit > 0) add("limit=$limit")
+    }.joinToString("&")
+    val path = "/api/chat/tasks/$taskId/events" + if (query.isEmpty()) "" else "?$query"
+    return get(path, ChatTaskEventPage.serializer())
+}
 
 /**
  * Stores one request on [taskId]'s ledger row. [id] is the app's own key for
@@ -310,13 +351,32 @@ suspend fun ApiClient.chatTasks(): ChatTaskList = get("/api/chat/tasks", ChatTas
  * nothing twice. The backend derives the session and who asked from the signed
  * in user — neither is in this body.
  */
-suspend fun ApiClient.storeChatTaskRequest(taskId: String, id: String, text: String): ChatTaskRequestStored =
+suspend fun ApiClient.storeChatTaskRequest(
+    taskId: String,
+    id: String,
+    text: String,
+    choiceId: String,
+    choiceBasisVersion: Long = 0,
+): ChatTaskRequestStored =
     post(
         "/api/chat/tasks/$taskId/requests",
-        ChatTaskRequestPayload(id = id, text = text),
+        ChatTaskRequestPayload(
+            id = id,
+            text = text,
+            choiceId = choiceId,
+            choiceBasisVersion = choiceBasisVersion,
+        ),
         ChatTaskRequestPayload.serializer(),
         ChatTaskRequestStored.serializer(),
     )
 
 @Serializable
-private data class ChatTaskRequestPayload(val id: String, val text: String)
+private data class ChatTaskRequestPayload(
+    val id: String,
+    val text: String,
+    @SerialName("choice_id") val choiceId: String = "",
+    // The task version the screen saw that choice on. The slot refuses a pick
+    // whose basis no longer holds, so an open screen cannot act on a sentence
+    // the session wrote about an older state.
+    @SerialName("choice_basis_version") val choiceBasisVersion: Long = 0,
+)
