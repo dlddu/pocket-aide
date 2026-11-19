@@ -4,6 +4,9 @@ import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 // The chat tab's wide layout shows the task ledger of the codex session that
 // answers this conversation. The backend reads it straight from the session's
@@ -280,14 +283,22 @@ data class ChatTaskEvent(
     val kind: String = "",
     val actor: String = "",
     val summary: String = "",
-    val detail: Map<String, String> = emptyMap(),
+    // The ledger's own bounded JSON, so a value is not always a string: a
+    // task_created line carries its version as a number and a published-choices
+    // line carries its labels as an array. Decoding it as strings made every
+    // history that has such a line fail to read at all, which the screen could
+    // only report as "could not load".
+    val detail: Map<String, JsonElement> = emptyMap(),
     @SerialName("request_id") val requestId: String = "",
 ) {
     /** The person's own words, when this line is a request they left. */
-    val text: String get() = detail["text"].orEmpty()
+    val text: String get() = detailText("text")
 
     /** What the session wrote back, when this line settles a request. */
-    val result: String get() = detail["result"].orEmpty()
+    val result: String get() = detailText("result")
+
+    private fun detailText(key: String): String =
+        (detail[key] as? JsonPrimitive)?.contentOrNull.orEmpty()
 }
 
 @Serializable
