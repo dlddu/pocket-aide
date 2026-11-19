@@ -324,8 +324,12 @@ class ChatTaskPanelInteractionTest {
         compose.onNodeWithText("내 요청 · 2026-11-19T00:01:00Z").assertIsDisplayed()
         compose.onNodeWithTag("chat.tasks.detail.history.more").assertIsDisplayed()
         assertEquals("상세를 열면 한 번 읽는다", 1, historyLoads)
-        // 긴 본문은 눌러서 펼친다.
-        compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst().performClick()
+        // 긴 본문은 눌러서 펼친다. 이력 줄은 본문이 있으면 눌러서 펼치는
+        // 버튼이 되고, 그래서 자손의 의미를 자기에게 합친다
+        // (MergeDescendants) — 본문은 합쳐진 트리에 자기 노드가 없으므로
+        // 합치지 않은 트리에서 본다.
+        compose.onAllNodesWithTag("chat.tasks.detail.history.body", useUnmergedTree = true)
+            .onFirst().performClick()
         compose.waitForIdle()
     }
 
@@ -351,12 +355,14 @@ class ChatTaskPanelInteractionTest {
         start(history = historyOf(nextCursor = 0))
         openBlocked()
 
-        val body = compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst()
+        // 합쳐진 트리에는 본문 노드가 없다(줄 자체가 버튼이다) — 합치지 않은
+        // 트리에서 본다.
+        val body = compose.onAllNodesWithTag("chat.tasks.detail.history.body", useUnmergedTree = true).onFirst()
         val collapsed = body.getUnclippedBoundsInRoot().let { it.bottom - it.top }
         body.performClick()
         compose.waitForIdle()
-        val expanded = compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst()
-            .getUnclippedBoundsInRoot().let { it.bottom - it.top }
+        val expanded = compose.onAllNodesWithTag("chat.tasks.detail.history.body", useUnmergedTree = true)
+            .onFirst().getUnclippedBoundsInRoot().let { it.bottom - it.top }
         assertTrue("펼치면 더 많이 보여야 한다 (접힘 $collapsed → 펼침 $expanded)", expanded > collapsed)
     }
 
