@@ -2,6 +2,8 @@ package com.dlddu.pocketaide.chat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -24,6 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
@@ -36,13 +43,28 @@ private val SPINNER_SIZE = 18.dp
 private val SPINNER_STROKE = 2.dp
 private const val MUTED_OPACITY = 0.55f
 private const val CHIP_OPACITY = 0.12f
+private const val CHIP_SELECTED_OPACITY = 0.22f
+private val CHIP_BORDER = 1.dp
 
 /**
- * The task ledger of the session answering this conversation. Read-only: the
- * panel shows what the ledger says and offers nothing that changes it.
+ * The task ledger of the session answering this conversation.
+ *
+ * The panel reads the ledger and never writes it: picking a status pill or
+ * hiding completed work changes what is drawn, not what the ledger says, and
+ * choosing a task opens a detail pane whose only outward action is a message
+ * sent into this same conversation.
  */
 @Composable
-fun ChatTaskPanel(state: ChatTasksUiState, modifier: Modifier = Modifier) {
+fun ChatTaskPanel(
+    state: ChatTasksUiState,
+    filter: ChatTaskFilter,
+    onFilterChange: (ChatTaskFilter) -> Unit,
+    onSelect: (ChatTask) -> Unit,
+    // Held by the caller so the reading position survives collapsing the panel
+    // and stepping into a task's detail and back.
+    listState: LazyListState,
+    modifier: Modifier = Modifier,
+) {
     val ink = DesignTokens.Colors.ink(PANEL_AREA)
     Column(
         modifier
@@ -50,7 +72,7 @@ fun ChatTaskPanel(state: ChatTasksUiState, modifier: Modifier = Modifier) {
             .background(DesignTokens.Colors.surface(PANEL_AREA))
             .testTag("chat.tasks.panel"),
     ) {
-        PanelHeader(state)
+        PanelHeader(state, filter, onFilterChange)
         when {
             // Loading, "cannot read", "no tasks" and a list are four different
             // answers. None of them is allowed to look like another.
@@ -75,22 +97,78 @@ fun ChatTaskPanel(state: ChatTasksUiState, modifier: Modifier = Modifier) {
                 )
             }
 
-            state.isEmpty -> PanelCentre {
+            else -> when (val empty = filter.emptiness(state.tasks)) {
+                null -> TaskList(filter.select(state.tasks), listState, onSelect)
+                else -> EmptyNote(empty, filter, onFilterChange)
+            }
+        }
+    }
+}
+
+/**
+ * Nothing to draw, said in the words of the reason. A ledger with no tasks is
+ * not the same as work the user chose to hide, and the two that still have work
+ * behind them offer the one tap that brings it back.
+ */
+@Composable
+private fun EmptyNote(empty: ChatTaskEmptiness, filter: ChatTaskFilter, onFilterChange: (ChatTaskFilter) -> Unit) {
+    val ink = DesignTokens.Colors.ink(PANEL_AREA)
+    val chosen = filter.status?.let { ChatTaskStatus.label(it) }
+    val (tag, text, undo) = when (empty) {
+        ChatTaskEmptiness.LEDGER ->
+            Triple("chat.tasks.empty", "아직 기록된 작업이 없어요.", null)
+
+        ChatTaskEmptiness.FILTERED -> Triple(
+            "chat.tasks.empty.filtered",
+            if (chosen != null) "「$chosen」 작업이 없어요." else "보여 줄 작업이 없어요.",
+            "전체 보기" to filter.copy(status = null),
+        )
+
+        // The rows are completed and hidden — they are still in the ledger, so
+        // this says so and offers to show them rather than looking like none.
+        ChatTaskEmptiness.COMPLETED_HIDDEN -> Triple(
+            "chat.tasks.empty.completedHidden",
+            "완료한 작업을 숨기고 있어요. 지워진 것은 아니에요.",
+            "완료 표시하기" to filter.copy(hideCompleted = false),
+        )
+    }
+    PanelCentre {
+        Column(
+            Modifier.padding(DesignTokens.Spacing.xl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
+        ) {
+            Text(
+                text,
+                style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag(tag),
+            )
+            undo?.let { (label, restored) ->
+                val shape = RoundedCornerShape(DesignTokens.Radius.chip)
                 Text(
-                    "아직 기록된 작업이 없어요.",
-                    style = DesignTokens.Typography.style(DesignTokens.Typography.body),
-                    color = ink.copy(alpha = MUTED_OPACITY),
-                    modifier = Modifier.padding(DesignTokens.Spacing.xl).testTag("chat.tasks.empty"),
+                    label,
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                    color = DesignTokens.Colors.accent(PANEL_AREA),
+                    modifier = Modifier
+                        .clip(shape)
+                        .border(CHIP_BORDER, DesignTokens.Colors.accent(PANEL_AREA), shape)
+                        .clickable(role = Role.Button) { onFilterChange(restored) }
+                        .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+                        .testTag("chat.tasks.empty.undo"),
                 )
             }
-
-            else -> TaskList(state)
         }
     }
 }
 
 @Composable
-private fun PanelHeader(state: ChatTasksUiState) {
+private fun PanelHeader(
+    state: ChatTasksUiState,
+    filter: ChatTaskFilter,
+    onFilterChange: (ChatTaskFilter) -> Unit,
+) {
     val ink = DesignTokens.Colors.ink(PANEL_AREA)
     Column(
         Modifier
@@ -104,13 +182,43 @@ private fun PanelHeader(state: ChatTasksUiState) {
             color = ink,
             modifier = Modifier.testTag("chat.tasks.title"),
         )
-        // Counts for the statuses the ledger actually has, in display order, so
-        // what needs a person is read first.
-        val present = ChatTaskStatus.order.filter { (state.counts[it] ?: 0) > 0 }
+        // The statuses the ledger actually has, in display order, so what needs
+        // a person is read first — and the chosen one stays even when its count
+        // falls to zero, or there would be no way to see what is narrowing the
+        // list. The counts are the whole ledger's, not the filtered view's.
+        val present = ChatTaskStatus.order.filter { (state.counts[it] ?: 0) > 0 || filter.status == it }
         if (present.isNotEmpty()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
-                present.forEach { status -> CountChip(status, state.counts[status] ?: 0) }
+            Row(
+                Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+            ) {
+                StatusPill(
+                    label = "전체",
+                    count = state.tasks.size,
+                    selected = filter.status == null,
+                    tone = ink,
+                    tag = "chat.tasks.filter.all",
+                ) { onFilterChange(filter.copy(status = null)) }
+                present.forEach { status ->
+                    StatusPill(
+                        label = ChatTaskStatus.label(status),
+                        count = state.counts[status] ?: 0,
+                        selected = filter.status == status,
+                        tone = if (ChatTaskStatus.needsAttention(status)) {
+                            DesignTokens.Colors.accent(PANEL_AREA)
+                        } else {
+                            ink
+                        },
+                        tag = "chat.tasks.filter.$status",
+                    ) { onFilterChange(filter.toggled(status)) }
+                }
             }
+        }
+        // Offered while the ledger has completed work, and while the hide is on
+        // even if it has none — a choice the user cannot see is a choice they
+        // cannot undo.
+        if ((state.counts[ChatTaskStatus.COMPLETED] ?: 0) > 0 || filter.hideCompleted) {
+            HideCompletedToggle(filter.hideCompleted) { onFilterChange(filter.copy(hideCompleted = it)) }
         }
         if (state.truncated) {
             // A prefix must not read as the whole ledger.
@@ -130,27 +238,59 @@ private fun PanelHeader(state: ChatTasksUiState) {
     )
 }
 
+/**
+ * One status and how many the ledger has of it. Tapping narrows the list to
+ * that status; tapping the chosen one again goes back to 전체. It is a way of
+ * looking, so it carries no label that suggests a change to the work.
+ */
 @Composable
-private fun CountChip(status: String, count: Int) {
-    val ink = DesignTokens.Colors.ink(PANEL_AREA)
-    val tone = if (ChatTaskStatus.needsAttention(status)) DesignTokens.Colors.accent(PANEL_AREA) else ink
+private fun StatusPill(
+    label: String,
+    count: Int,
+    selected: Boolean,
+    tone: androidx.compose.ui.graphics.Color,
+    tag: String,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
     Text(
-        "${ChatTaskStatus.label(status)} $count",
+        "$label $count",
         style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
         color = tone,
         modifier = Modifier
-            .clip(RoundedCornerShape(DesignTokens.Radius.chip))
-            .background(tone.copy(alpha = CHIP_OPACITY))
+            .clip(shape)
+            .background(tone.copy(alpha = if (selected) CHIP_SELECTED_OPACITY else CHIP_OPACITY))
+            .then(if (selected) Modifier.border(CHIP_BORDER, tone, shape) else Modifier)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .padding(horizontal = DesignTokens.Spacing.sm, vertical = DesignTokens.Spacing.xs)
-            .testTag("chat.tasks.count.$status"),
+            .testTag(tag),
+    )
+}
+
+/**
+ * Hides or shows completed work. Display only — the label says so, because a
+ * control next to a task list could otherwise read as finishing or removing
+ * something.
+ */
+@Composable
+private fun HideCompletedToggle(hidden: Boolean, onChange: (Boolean) -> Unit) {
+    val ink = DesignTokens.Colors.ink(PANEL_AREA)
+    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+    Text(
+        if (hidden) "완료 표시하기" else "완료 숨기기",
+        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+        color = ink.copy(alpha = if (hidden) 1f else MUTED_OPACITY),
+        modifier = Modifier
+            .clip(shape)
+            .border(CHIP_BORDER, DesignTokens.Colors.rule(PANEL_AREA), shape)
+            .toggleable(value = hidden, role = Role.Switch) { onChange(it) }
+            .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+            .testTag("chat.tasks.hideCompleted"),
     )
 }
 
 @Composable
-private fun TaskList(state: ChatTasksUiState) {
-    // The panel keeps its own scroll position, so collapsing and reopening it
-    // does not move the conversation beside it.
-    val listState = rememberLazyListState()
+private fun TaskList(tasks: List<ChatTask>, listState: LazyListState, onSelect: (ChatTask) -> Unit) {
     LazyColumn(
         state = listState,
         modifier = Modifier.fillMaxSize().testTag("chat.tasks.list"),
@@ -160,12 +300,12 @@ private fun TaskList(state: ChatTasksUiState) {
             vertical = DesignTokens.Spacing.lg,
         ),
     ) {
-        items(state.tasks, key = { it.id }) { task -> TaskCard(task) }
+        items(tasks, key = { it.id }) { task -> TaskCard(task, onSelect) }
     }
 }
 
 @Composable
-private fun TaskCard(task: ChatTask) {
+private fun TaskCard(task: ChatTask, onSelect: (ChatTask) -> Unit) {
     val ink = DesignTokens.Colors.ink(PANEL_AREA)
     val shape = RoundedCornerShape(DesignTokens.Radius.card)
     Column(
@@ -174,6 +314,7 @@ private fun TaskCard(task: ChatTask) {
             .clip(shape)
             .background(DesignTokens.Colors.card(PANEL_AREA))
             .border(DesignTokens.Split.rule, DesignTokens.Colors.rule(PANEL_AREA), shape)
+            .clickable(role = Role.Button) { onSelect(task) }
             .padding(DesignTokens.Spacing.md)
             .testTag("chat.tasks.item"),
         verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
@@ -211,7 +352,7 @@ private fun TaskCard(task: ChatTask) {
 
 /** Where one task stands. Blocked and review carry the area's accent, because they are the two a person is meant to act on. */
 @Composable
-private fun StatusBadge(status: String) {
+internal fun StatusBadge(status: String, tag: String = "chat.tasks.item.status.$status") {
     val ink = DesignTokens.Colors.ink(PANEL_AREA)
     val tone = if (ChatTaskStatus.needsAttention(status)) DesignTokens.Colors.accent(PANEL_AREA) else ink.copy(alpha = MUTED_OPACITY)
     Text(
@@ -222,7 +363,7 @@ private fun StatusBadge(status: String) {
             .clip(RoundedCornerShape(DesignTokens.Radius.chip))
             .background(tone.copy(alpha = CHIP_OPACITY))
             .padding(horizontal = DesignTokens.Spacing.sm, vertical = DesignTokens.Spacing.xs)
-            .testTag("chat.tasks.item.status.$status"),
+            .testTag(tag),
     )
 }
 
