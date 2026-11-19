@@ -2,8 +2,13 @@ package com.dlddu.pocketaide.auth
 
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.AuthConfig
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.mockwebserver.Dispatcher
@@ -19,6 +24,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 class OidcClientTest {
@@ -123,6 +129,21 @@ class OidcClientTest {
 
         assertEquals(TokenBundle("new", "r0", 60_000), bundle)
         assertEquals(bundle, store.load())
+    }
+
+    @Test
+    fun refreshSavesRotatedTokenEvenWhenCallerIsCancelledMidExchange() = runBlocking {
+        val store = InMemoryTokenStore(TokenBundle("old", "r0", 0))
+        tokenResponse = MockResponse()
+            .setBody("""{"access_token":"a1","refresh_token":"r1","expires_in":60}""")
+            .setHeadersDelay(300, TimeUnit.MILLISECONDS)
+        val client = oidc(store)
+
+        val caller = launch(Dispatchers.Default) { client.refresh() }
+        while (tokenCalls.get() == 0) delay(10)
+        caller.cancelAndJoin()
+
+        assertEquals(TokenBundle("a1", "r1", 60_000), store.load())
     }
 
     @Test
