@@ -105,6 +105,7 @@ fun ChatScreen(api: ApiClient) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val taskRequest by viewModel.taskRequest.collectAsStateWithLifecycle()
     val taskHistory by viewModel.taskHistory.collectAsStateWithLifecycle()
+    val taskTurns by viewModel.taskTurns.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     // The draft and the panel's open/closed choice survive a fold, a rotation
     // and a trip through the back stack, so neither is lost by the layout
@@ -159,6 +160,7 @@ fun ChatScreen(api: ApiClient) {
             requestChoiceText = ""
             viewModel.dismissTaskRequest()
             viewModel.clearTaskHistory()
+            viewModel.clearTaskTurns()
         }
     }
 
@@ -201,6 +203,7 @@ fun ChatScreen(api: ApiClient) {
             openTaskId = null
             viewModel.dismissTaskRequest()
             viewModel.clearTaskHistory()
+            viewModel.clearTaskTurns()
         },
         taskRequest = taskRequest,
         requestDraft = requestDraft,
@@ -224,6 +227,9 @@ fun ChatScreen(api: ApiClient) {
         history = taskHistory,
         onLoadHistory = { openTask?.let { viewModel.loadTaskHistory(it.id) } },
         onLoadMoreHistory = viewModel::loadMoreTaskHistory,
+        turns = taskTurns,
+        onLoadTurns = { openTask?.let { viewModel.loadTaskTurns(it.id) } },
+        onLoadMoreTurns = viewModel::loadMoreTaskTurns,
         // The draft is cleared only once the backend has stored the request,
         // and the next request gets a new key then; a failure leaves both as
         // they are, so the same words retry as the same request.
@@ -292,6 +298,9 @@ internal fun ChatPanes(
     onRequestDraftChange: (String) -> Unit,
     onChoicePicked: (ChatTaskChoice) -> Unit,
     history: ChatTaskHistoryUiState,
+    turns: ChatTaskTurnsUiState,
+    onLoadTurns: () -> Unit,
+    onLoadMoreTurns: () -> Unit,
     onLoadHistory: () -> Unit,
     onLoadMoreHistory: () -> Unit,
     onStoreRequest: () -> Unit,
@@ -360,6 +369,9 @@ internal fun ChatPanes(
                             history = history,
                             onLoadHistory = onLoadHistory,
                             onLoadMoreHistory = onLoadMoreHistory,
+                            turns = turns,
+                            onLoadTurns = onLoadTurns,
+                            onLoadMoreTurns = onLoadMoreTurns,
                             // No reply gate: the request goes to the ledger,
                             // not into the turn being written.
                             onStore = onStoreRequest,

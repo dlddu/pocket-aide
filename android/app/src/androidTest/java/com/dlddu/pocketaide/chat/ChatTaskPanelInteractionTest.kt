@@ -45,6 +45,8 @@ class ChatTaskPanelInteractionTest {
     private var stores = 0
     private var historyLoads = 0
     private var historyMores = 0
+    private var turnLoads = 0
+    private var turnMores = 0
 
     private val blocked = ChatTask(
         id = "t-blocked",
@@ -81,6 +83,7 @@ class ChatTaskPanelInteractionTest {
         chat: ChatUiState = ChatUiState(hasLoaded = true),
         taskRequest: ChatTaskRequestUiState = ChatTaskRequestUiState(),
         history: ChatTaskHistoryUiState = ChatTaskHistoryUiState(taskId = "t-blocked", hasLoaded = true),
+        turns: ChatTaskTurnsUiState = ChatTaskTurnsUiState(taskId = "t-blocked", hasLoaded = true),
     ) {
         compose.setContent {
             // 넓은 창이면서 상태 칩이 한 줄에 다 들어오는 폭 — 칩이 가로
@@ -135,6 +138,9 @@ class ChatTaskPanelInteractionTest {
                     history = history,
                     onLoadHistory = { historyLoads++ },
                     onLoadMoreHistory = { historyMores++ },
+                    turns = turns,
+                    onLoadTurns = { turnLoads++ },
+                    onLoadMoreTurns = { turnMores++ },
                     onStoreRequest = {
                         stores++
                         sentPick = pickId to pickBasis
