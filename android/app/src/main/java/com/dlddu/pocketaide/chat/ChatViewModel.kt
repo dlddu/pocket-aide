@@ -141,18 +141,34 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         onChoiceStale: () -> Unit = {},
     ) {
         viewModelScope.launch {
-            if (performTaskRequest(task, requestID, request, choiceID, choiceBasisVersion)) {
-                onStored()
-                return@launch
-            }
-            // The pick is gone, the words are not: tell the caller to drop the
-            // provenance (so a second tap stores the same words as the
-            // person's own), and read the task again so the pane shows the
-            // choices that hold now instead of the ones it was refused on.
-            if (_taskRequest.value.error == ChatTaskRequestError.STALE_CHOICE) {
-                onChoiceStale()
-                loadTasks()
-            }
+            runTaskRequest(task, requestID, request, choiceID, choiceBasisVersion, onStored, onChoiceStale)
+        }
+    }
+
+    /**
+     * The store and what follows it, as one suspending step so it can be driven
+     * without a main looper. [onStored] runs only on a store; a pick the session
+     * no longer offers runs [onChoiceStale] instead and re-reads the task, so
+     * the pane shows the choices that hold now rather than the ones it was
+     * refused on. Neither path touches the draft — the caller clears it only on
+     * [onStored].
+     */
+    internal suspend fun runTaskRequest(
+        task: ChatTask,
+        requestID: String,
+        request: String,
+        choiceID: String,
+        choiceBasisVersion: Long,
+        onStored: () -> Unit,
+        onChoiceStale: () -> Unit = {},
+    ) {
+        if (performTaskRequest(task, requestID, request, choiceID, choiceBasisVersion)) {
+            onStored()
+            return
+        }
+        if (_taskRequest.value.error == ChatTaskRequestError.STALE_CHOICE) {
+            onChoiceStale()
+            loadTasks()
         }
     }
 

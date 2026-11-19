@@ -379,6 +379,61 @@ class ChatTaskRequestTest {
         )
     }
 
+    // 화면이 저장 버튼에 매단 그 경로 그대로: 낡은 선택지로 거부되면 저장
+    // 콜백은 돌지 않고(초안을 지우는 쪽이 그쪽이다) 출처만 떨어뜨리는 콜백이
+    // 돌고, 작업을 **다시 읽어** 지금 유효한 선택지를 가져온다.
+    @Test
+    fun aStalePickDropsTheProvenanceAndReReadsTheTask() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setResponseCode(409)
+                .setBody("""{"error":"그 선택지는 더 이상 유효하지 않아요","code":"task_request_stale_choice"}"""),
+        )
+        server.enqueue(
+            MockResponse().setBody(
+                tasksJson(
+                    tasks = """{"id":"t-42","title":"작업","status":"blocked","stage":"review",""" +
+                        """"choices":[{"id":"c-new","label":"지금 유효한 선택","request_text":"지금 기준의 문장","basis_version":5}]}""",
+                ),
+            ),
+        )
+        var storedRan = false
+        var staleRan = false
+
+        vm.runTaskRequest(
+            task = task(id = "t-42"),
+            requestID = "app-1",
+            request = "CI 로그를 확인해 줘.",
+            choiceID = "c-ci",
+            choiceBasisVersion = 1L,
+            onStored = { storedRan = true },
+            onChoiceStale = { staleRan = true },
+        )
+
+        assertFalse("저장되지 않았으므로 초안을 지우는 콜백은 돌지 않는다", storedRan)
+        assertTrue("출처만 떨어뜨리는 콜백이 돈다", staleRan)
+        assertEquals(ChatTaskRequestError.STALE_CHOICE, vm.taskRequest.value.error)
+        assertEquals("/api/chat/tasks/t-42/requests", server.takeRequest().path)
+        assertEquals("거부 뒤에는 작업을 다시 읽는다", "/api/chat/tasks", server.takeRequest().path)
+        assertEquals("c-new", vm.tasks.value.tasks.single().choices.single().id)
+    }
+
+    // 저장에 성공하면 초안을 지우는 쪽만 돌고, 작업을 다시 읽지 않는다 —
+    // 성공과 거부가 같은 모습이 되지 않는다.
+    @Test
+    fun aStoredRequestRunsOnlyTheStoredCallback() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
+        var storedRan = false
+        var staleRan = false
+
+        vm.runTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", "c-go", 2L, { storedRan = true }, { staleRan = true })
+
+        assertTrue(storedRan)
+        assertFalse(staleRan)
+        assertEquals(1, server.requestCount)
+    }
+
     // 선택지로 채운 초안을 사람이 **고치면** 그것은 더 이상 세션의 문장이
     // 아니다 — 출처와 기준이 함께 떨어지고 자유 입력으로 저장된다. 한 글자도
     // 고치지 않았다면 출처는 유지된다.
