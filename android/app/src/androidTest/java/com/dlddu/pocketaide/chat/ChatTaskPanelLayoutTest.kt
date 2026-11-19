@@ -76,6 +76,9 @@ class ChatTaskPanelLayoutTest {
                     history = ChatTaskHistoryUiState(),
                     onLoadHistory = {},
                     onLoadMoreHistory = {},
+                    turns = ChatTaskTurnsUiState(),
+                    onLoadTurns = {},
+                    onLoadMoreTurns = {},
                     onStoreRequest = {},
                 )
             }
