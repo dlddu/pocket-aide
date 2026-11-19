@@ -72,6 +72,10 @@ class ChatTaskPanelLayoutTest {
                     taskRequest = ChatTaskRequestUiState(),
                     requestDraft = "",
                     onRequestDraftChange = {},
+                    onChoicePicked = {},
+                    history = ChatTaskHistoryUiState(),
+                    onLoadHistory = {},
+                    onLoadMoreHistory = {},
                     onStoreRequest = {},
                 )
             }

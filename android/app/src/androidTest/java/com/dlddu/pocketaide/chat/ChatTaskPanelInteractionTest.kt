@@ -41,6 +41,7 @@ class ChatTaskPanelInteractionTest {
     val compose = createComposeRule()
 
     private var stores = 0
+    private var historyLoads = 0
 
     private val blocked = ChatTask(
         id = "t-blocked",
@@ -76,6 +77,7 @@ class ChatTaskPanelInteractionTest {
         tasks: ChatTasksUiState = ledger,
         chat: ChatUiState = ChatUiState(hasLoaded = true),
         taskRequest: ChatTaskRequestUiState = ChatTaskRequestUiState(),
+        history: ChatTaskHistoryUiState = ChatTaskHistoryUiState(taskId = "t-blocked", hasLoaded = true),
     ) {
         compose.setContent {
             // 넓은 창이면서 상태 칩이 한 줄에 다 들어오는 폭 — 칩이 가로
@@ -109,6 +111,10 @@ class ChatTaskPanelInteractionTest {
                     taskRequest = taskRequest,
                     requestDraft = request,
                     onRequestDraftChange = { request = it },
+                    onChoicePicked = { request = it.requestText },
+                    history = history,
+                    onLoadHistory = { historyLoads++ },
+                    onLoadMoreHistory = {},
                     onStoreRequest = { stores++ },
                 )
             }
@@ -229,19 +235,95 @@ class ChatTaskPanelInteractionTest {
 
     // ── 보낼 문장 ───────────────────────────────────────────────────────────
 
-    // 추천을 누르면 보내지 않고 요청 칸을 채운다. 보내는 문장은 사용자가 먼저
-    // 읽는다 — 붙어 나갈 줄도 화면에 있다.
+    // 세션이 올려 둔 선택지를 누르면 저장하지 않고 요청 칸을 채운다. 앱에는
+    // 상태별 목록이 없으므로, 선택지가 없으면 없다고 말하고 자유 입력만 남는다.
     @Test
-    fun aSuggestionFillsTheRequestWithoutSendingIt() {
-        start()
+    fun aStoredChoiceFillsTheRequestWithoutStoringIt() {
+        start(
+            ledger.copy(
+                tasks = ledger.tasks.map {
+                    if (it.id == "t-blocked") {
+                        it.copy(choices = listOf(ChatTaskChoice(
+                            id = "c-ci", label = "CI 로그 확인 요청",
+                            requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.", basisVersion = 3,
+                        )))
+                    } else {
+                        it
+                    }
+                },
+            ),
+        )
         openBlocked()
 
-        compose.onAllNodesWithTag("chat.tasks.detail.suggestion").onFirst().performClick()
+        compose.onAllNodesWithTag("chat.tasks.detail.choice").onFirst().performClick()
         compose.waitForIdle()
 
         compose.onNodeWithTag("chat.tasks.detail.field")
-            .assertTextContains("「CI 가 막혔다」", substring = true)
+            .assertTextContains("어디서 멈췄는지", substring = true)
         assertEquals("고르는 것은 저장하는 것이 아니다", 0, stores)
+    }
+
+    @Test
+    fun noOfferedChoicesSaysSoAndKeepsFreeText() {
+        start()
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.noChoices").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.detail.choice").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("직접 쓴 요청")
+        compose.waitForIdle()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
+        compose.waitForIdle()
+        assertEquals(1, stores)
+    }
+
+    // 상세를 열면 이력을 한 번 읽고, 기록이 있으면 시간순으로 보여 준다.
+    @Test
+    fun theHistoryIsReadOnceAndShownInOrder() {
+        start(
+            history = ChatTaskHistoryUiState(
+                taskId = "t-blocked", hasLoaded = true, nextCursor = 2,
+                events = listOf(
+                    ChatTaskEvent(seq = 1, taskId = "t-blocked", at = "2026-11-19T00:00:00Z",
+                        kind = "task_created", actor = "parent", summary = "작업을 원장에 등록했다"),
+                    ChatTaskEvent(seq = 2, taskId = "t-blocked", at = "2026-11-19T00:01:00Z",
+                        kind = "request_stored", actor = "user-1", summary = "요청을 남겼다",
+                        detail = mapOf("text" to "아주 긴 요청 ".repeat(20))),
+                ),
+            ),
+        )
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.history").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.detail.history.line").assertCountEquals(2)
+        compose.onNodeWithText("내 요청 · 2026-11-19T00:01:00Z").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.history.more").assertIsDisplayed()
+        assertEquals("상세를 열면 한 번 읽는다", 1, historyLoads)
+        // 긴 본문은 눌러서 펼친다.
+        compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst().performClick()
+        compose.waitForIdle()
+    }
+
+    // 기록 없음과 실패는 다른 화면이고, 실패는 다시 시도를 내민다.
+    @Test
+    fun anEmptyHistoryAndAFailureLookDifferent() {
+        start()
+        openBlocked()
+        compose.onNodeWithTag("chat.tasks.detail.history.empty").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.detail.history.error").assertCountEquals(0)
+    }
+
+    @Test
+    fun aFailedHistoryOffersARetry() {
+        start(history = ChatTaskHistoryUiState(
+            taskId = "t-blocked", hasLoaded = true, error = ChatTaskHistoryError.UNREACHABLE,
+        ))
+        openBlocked()
+        compose.onNodeWithTag("chat.tasks.detail.history.error").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.history.retry").performClick()
+        compose.waitForIdle()
+        assertEquals("다시 시도는 다시 읽는다", 2, historyLoads)
+        compose.onAllNodesWithTag("chat.tasks.detail.history.empty").assertCountEquals(0)
     }
 
     // 직접 쓴 요청도 그 작업의 원장에 저장된다.

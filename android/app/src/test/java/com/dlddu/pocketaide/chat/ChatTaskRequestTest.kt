@@ -140,73 +140,6 @@ class ChatTaskRequestTest {
         )
     }
 
-    // ── 추천: 원장에 적힌 것만 ──────────────────────────────────────────────
-
-    // 적힌 사유·다음 행동은 그대로 인용하고, 적혀 있지 않으면 지어내지 않고
-    // 물어본다.
-    @Test
-    fun suggestionsQuoteTheLedgerAndAskWhenItIsSilent() {
-        val recorded = chatTaskSuggestions(
-            task(status = ChatTaskStatus.BLOCKED, reason = "CI 가 막혔다", next = "로그를 본다"),
-        )
-        assertTrue(
-            "적힌 차단 사유를 그대로 인용해야 한다",
-            recorded.any { it.request.contains("「CI 가 막혔다」") },
-        )
-        assertTrue(
-            "적힌 다음 행동을 그대로 인용해야 한다",
-            recorded.any { it.request.contains("「로그를 본다」") && it.label == "적힌 다음 행동 진행" },
-        )
-
-        val silent = chatTaskSuggestions(task(status = ChatTaskStatus.BLOCKED))
-        assertTrue(
-            "사유가 없으면 없다고 말하고 물어봐야 한다",
-            silent.any { it.request.contains("차단 사유가 적혀 있지 않아") },
-        )
-        assertTrue(
-            "다음 행동이 없으면 없다고 말하고 물어봐야 한다",
-            silent.any { it.request.contains("다음 행동이 적혀 있지 않아") },
-        )
-        for (suggestion in silent) {
-            assertFalse(
-                "빈 인용부호는 원장에 없는 말을 적어 넣은 흔적이다: ${suggestion.request}",
-                suggestion.request.contains("「」"),
-            )
-        }
-    }
-
-    // 끝난 일에는 다음 행동을 지어 주지 않는다 — 원장이 적어 둔 경우에만 있다.
-    @Test
-    fun finishedWorkGetsANextStepOnlyWhenTheLedgerRecordedOne() {
-        val done = chatTaskSuggestions(task(status = ChatTaskStatus.COMPLETED))
-        assertTrue(done.none { it.label.contains("다음 행동") })
-        assertTrue(done.any { it.label == "결과 요약 받기" })
-
-        val doneWithNext = chatTaskSuggestions(task(status = ChatTaskStatus.COMPLETED, next = "회고를 적는다"))
-        assertTrue(doneWithNext.any { it.request.contains("「회고를 적는다」") })
-    }
-
-    // 앱이 모르는 상태에는 아무 상태도 가정하지 않고 무엇인지 묻는다.
-    @Test
-    fun anUnknownStatusIsAskedAboutRatherThanGuessed() {
-        val unknown = chatTaskSuggestions(task(status = "deploying"))
-        assertTrue(unknown.any { it.request.contains("상태 값을 앱이 알지 못해") })
-        assertTrue(unknown.none { it.request.contains("진행해 줘") })
-    }
-
-    // 어떤 상태든 보낼 문장이 있고, 비어 있는 요청은 없다.
-    @Test
-    fun everyStatusHasSomethingToSendAndNoneOfItIsBlank() {
-        for (status in ChatTaskStatus.order + listOf("deploying")) {
-            val suggestions = chatTaskSuggestions(task(status = status))
-            assertTrue("$status 에 보낼 문장이 없다", suggestions.isNotEmpty())
-            for (suggestion in suggestions) {
-                assertTrue("$status 의 라벨이 비었다", suggestion.label.isNotBlank())
-                assertTrue("$status 의 요청문이 비었다", suggestion.request.isNotBlank())
-            }
-        }
-    }
-
     // ── 저장하는 것: 사용자가 쓴 그 문장, 그 작업 ──────────────────────────
 
     // 자유 입력은 앞뒤 공백만 떼고 그대로 저장된다 — 앱이 문장을 덧붙이거나
@@ -227,7 +160,7 @@ class ChatTaskRequestTest {
         server.takeRequest()
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
 
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "  진행해 줘  "))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "  진행해 줘  ", "c-go"))
 
         val request = server.takeRequest()
         assertEquals("/api/chat/tasks/t-42/requests", request.path)
@@ -260,7 +193,7 @@ class ChatTaskRequestTest {
         assertTrue("답이 오는 중이어야 한다", vm.state.value.isReplying)
 
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         assertEquals("/api/chat/tasks/t-42/requests", server.takeRequest().path)
         assertNull(vm.taskRequest.value.error)
     }
@@ -271,11 +204,11 @@ class ChatTaskRequestTest {
     fun resendingTheSameRequestKeyStoresOneRequest() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         server.takeRequest()
 
         server.enqueue(MockResponse().setResponseCode(200).setBody(storedJson("app-1", "t-42", "진행해 줘", replayed = true)))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         val second = server.takeRequest()
         assertTrue("같은 번호로 가야 한다", second.body.readUtf8().contains("app-1"))
 
@@ -293,10 +226,10 @@ class ChatTaskRequestTest {
                 .setBodyDelay(300, TimeUnit.MILLISECONDS),
         )
         val first = launch(start = CoroutineStart.UNDISPATCHED) {
-            assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+            assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         }
         assertTrue("첫 저장이 가는 중이어야 한다", vm.taskRequest.value.isStoring)
-        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         first.join()
         assertEquals("저장은 한 번만 간다", 1, server.requestCount)
     }
@@ -317,7 +250,7 @@ class ChatTaskRequestTest {
             server.enqueue(MockResponse().setResponseCode(status).setBody(body))
 
             // false 는 화면이 초안과 요청 번호를 그대로 둔다는 뜻이다.
-            assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+            assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
             server.takeRequest()
 
             val state = vm.taskRequest.value
@@ -333,11 +266,11 @@ class ChatTaskRequestTest {
     fun aFailedRequestCanBeRetriedUnderTheSameKey() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(502).setBody("""{"error":"no"}"""))
-        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         server.takeRequest()
 
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘"))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
         assertTrue(server.takeRequest().body.readUtf8().contains("app-1"))
         assertNull(vm.taskRequest.value.error)
         assertEquals(ChatTaskRequestStatus.PENDING, vm.taskRequest.value.stored?.status)
@@ -347,11 +280,11 @@ class ChatTaskRequestTest {
     @Test
     fun anEmptyOrOversizedRequestNeverLeavesTheApp() = runTest {
         val vm = ChatViewModel(api())
-        assertFalse(vm.performTaskRequest(task(), "app-1", "   "))
+        assertFalse(vm.performTaskRequest(task(), "app-1", "   ", ""))
         assertNull(vm.taskRequest.value.error)
 
         assertFalse(
-            vm.performTaskRequest(task(id = "t-42"), "app-1", "가".repeat(ChatViewModel.CHAT_TASK_REQUEST_MAX_BYTES)),
+            vm.performTaskRequest(task(id = "t-42"), "app-1", "가".repeat(ChatViewModel.CHAT_TASK_REQUEST_MAX_BYTES), ""),
         )
         assertEquals(ChatTaskRequestError.INVALID, vm.taskRequest.value.error)
         assertEquals(0, server.requestCount)
@@ -395,7 +328,7 @@ class ChatTaskRequestTest {
     fun theOutcomeIsClearedOnceShown() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(502).setBody("""{"error":"no"}"""))
-        vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘")
+        vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", "")
         server.takeRequest()
         assertEquals(ChatTaskRequestError.UNREACHABLE, vm.taskRequest.value.error)
 
@@ -403,5 +336,114 @@ class ChatTaskRequestTest {
 
         assertNull(vm.taskRequest.value.error)
         assertNull(vm.taskRequest.value.stored)
+    }
+
+    // 고른 선택지의 id 가 본문에 함께 간다 — 세션이 자기 문장 중 무엇이
+    // 돌아왔는지 알 수 있어야 한다.
+    @Test
+    fun theChosenChoiceIdTravelsWithTheRequest() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", "c-go"))
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue("선택지 id 가 본문에 있어야 한다: $body", body.contains("c-go"))
+    }
+
+    // 선택지는 원장이 준 것만 쓴다 — 앱에는 상태별 목록이 없다.
+    @Test
+    fun theOfferedChoicesComeFromTheLedgerOnly() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setBody(
+                tasksJson(
+                    tasks = """{"id":"t1","title":"작업","status":"blocked","stage":"review",""" +
+                        """"choices":[{"id":"c-ci","label":"CI 로그 확인","request_text":"CI 로그를 확인해 줘.","basis_version":3}]}""",
+                    counts = """{"blocked":1}""",
+                ),
+            ),
+        )
+
+        vm.loadTasks()
+
+        val task = vm.tasks.value.tasks.single()
+        assertEquals(1, task.choices.size)
+        assertEquals("c-ci", task.choices[0].id)
+        assertEquals("CI 로그를 확인해 줘.", task.choices[0].requestText)
+        assertEquals(3L, task.choices[0].basisVersion)
+        // 선택지를 주지 않은 작업은 비어 있다 — 앱이 대신 만들지 않는다.
+        server.enqueue(MockResponse().setBody(tasksJson(tasks = taskJson("t2", "running"))))
+        vm.loadTasks()
+        assertTrue(vm.tasks.value.tasks.single().choices.isEmpty())
+    }
+
+    // 이력은 원장이 적어 둔 것만, 도착 순서대로 — 페이지를 이어 읽으면 앞 페이지에
+    // 덧붙는다.
+    @Test
+    fun theHistoryPagesInOrderAndKeepsWhatItAlreadyShowed() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(eventsJson(firstPage = true)))
+
+        assertTrue(vm.performTaskHistory("t-42", more = false))
+
+        assertEquals("/api/chat/tasks/t-42/events?limit=20", server.takeRequest().path)
+        var state = vm.taskHistory.value
+        assertEquals(listOf(1L, 2L), state.events.map { it.seq })
+        assertEquals("요청을 남겼다", state.events[1].summary)
+        assertEquals("이 작업 진행해 줘", state.events[1].text)
+        assertTrue(state.hasMore)
+        assertFalse(state.isEmpty)
+
+        server.enqueue(MockResponse().setBody(eventsJson(firstPage = false)))
+        assertTrue(vm.performTaskHistory("t-42", more = true))
+        assertEquals("/api/chat/tasks/t-42/events?after_seq=2&limit=20", server.takeRequest().path)
+        state = vm.taskHistory.value
+        assertEquals(listOf(1L, 2L, 3L), state.events.map { it.seq })
+        assertFalse("마지막 페이지에는 커서가 없다", state.hasMore)
+    }
+
+    // 기록이 없는 작업은 빈 상태이고, 실패는 빈 상태로 보이지 않으며 이미 보던
+    // 페이지를 지우지 않는다.
+    @Test
+    fun anEmptyHistoryAndAFailureAreNotTheSameThing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody("""{"events":[]}"""))
+        assertTrue(vm.performTaskHistory("t-42", more = false))
+        server.takeRequest()
+        assertTrue(vm.taskHistory.value.isEmpty)
+        assertNull(vm.taskHistory.value.error)
+
+        server.enqueue(MockResponse().setBody(eventsJson(firstPage = true)))
+        vm.performTaskHistory("t-42", more = false)
+        server.takeRequest()
+        val shown = vm.taskHistory.value.events
+        server.enqueue(MockResponse().setResponseCode(502).setBody("""{"error":"no"}"""))
+        assertFalse(vm.performTaskHistory("t-42", more = true))
+        server.takeRequest()
+        val failed = vm.taskHistory.value
+        assertEquals(ChatTaskHistoryError.UNREACHABLE, failed.error)
+        assertEquals("보던 페이지는 남는다", shown.map { it.seq }, failed.events.map { it.seq })
+        assertFalse(failed.isEmpty)
+
+        for ((status, want) in listOf(
+            404 to ChatTaskHistoryError.NOT_FOUND,
+            409 to ChatTaskHistoryError.UNAVAILABLE,
+            501 to ChatTaskHistoryError.UNSUPPORTED,
+        )) {
+            val other = ChatViewModel(api())
+            server.enqueue(MockResponse().setResponseCode(status).setBody("""{"code":"x"}"""))
+            assertFalse(other.performTaskHistory("t-42", more = false))
+            server.takeRequest()
+            assertEquals("status $status", want, other.taskHistory.value.error)
+        }
+    }
+
+    private fun eventsJson(firstPage: Boolean) = if (firstPage) {
+        """{"events":[{"seq":1,"task_id":"t-42","at":"2026-11-19T00:00:00Z","kind":"task_created",""" +
+            """"actor":"parent","summary":"작업을 원장에 등록했다"},""" +
+            """{"seq":2,"task_id":"t-42","at":"2026-11-19T00:01:00Z","kind":"request_stored","actor":"user-1",""" +
+            """"summary":"요청을 남겼다","detail":{"text":"이 작업 진행해 줘"},"request_id":"app-1"}],"next_cursor":2}"""
+    } else {
+        """{"events":[{"seq":3,"task_id":"t-42","at":"2026-11-19T00:02:00Z","kind":"request_settled",""" +
+            """"actor":"parent","summary":"요청을 processed 로 닫았다","detail":{"result":"진행했다"}}]}"""
     }
 }

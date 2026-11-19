@@ -105,7 +105,7 @@ func TestCreateTaskRequest_StoresOnTheCallersOwnLedger(t *testing.T) {
 	platform.tasks["cx1"] = map[string]bool{"t1": true}
 	platform.tasks["cx2"] = map[string]bool{"t1": true}
 
-	stored, err := engine.CreateTaskRequest(context.Background(), 1, "t1", "req-1", "  이 작업 진행해 줘  ")
+	stored, err := engine.CreateTaskRequest(context.Background(), 1, "t1", "req-1", "  이 작업 진행해 줘  ", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestCreateTaskRequest_StoresOnTheCallersOwnLedger(t *testing.T) {
 		t.Fatalf("stored = %+v, want session cx1 and author user-1", got)
 	}
 	// Another user's request lands on their own ledger, never on this one.
-	if _, err := engine.CreateTaskRequest(context.Background(), 2, "t1", "req-2", "다른 사용자"); err != nil {
+	if _, err := engine.CreateTaskRequest(context.Background(), 2, "t1", "req-2", "다른 사용자", ""); err != nil {
 		t.Fatal(err)
 	}
 	if got := platform.stored["req-2"]; got.Session != "cx2" {
@@ -142,11 +142,11 @@ func TestCreateTaskRequest_IsIdempotentOnTheRequestID(t *testing.T) {
 	platform.tasks["cx1"] = map[string]bool{"t1": true}
 	ctx := context.Background()
 
-	first, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘")
+	first, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	again, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘")
+	again, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func TestCreateTaskRequest_IsIdempotentOnTheRequestID(t *testing.T) {
 	if len(platform.order) != 1 {
 		t.Fatalf("stored rows = %d, want the retry to have stored nothing twice", len(platform.order))
 	}
-	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "다른 말"); !errors.Is(err, chat.ErrTaskRequestConflict) {
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "다른 말", ""); !errors.Is(err, chat.ErrTaskRequestConflict) {
 		t.Fatalf("reused id with other words = %v, want a conflict", err)
 	}
 }
@@ -171,7 +171,7 @@ func TestCreateTaskRequest_KeepsArrivalOrder(t *testing.T) {
 	for _, r := range []struct{ task, id, text string }{
 		{"t1", "req-1", "첫 번째"}, {"t2", "req-2", "다른 작업"}, {"t1", "req-3", "두 번째"},
 	} {
-		if _, err := engine.CreateTaskRequest(ctx, 1, r.task, r.id, r.text); err != nil {
+		if _, err := engine.CreateTaskRequest(ctx, 1, r.task, r.id, r.text, ""); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -205,7 +205,7 @@ func TestCreateTaskRequest_DistinguishesRefusals(t *testing.T) {
 		store, engine, platform := requestEngine(t)
 		bindSession(t, store, 1, "cx1")
 		platform.status, platform.body = tc.status, tc.body
-		if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "요청"); !errors.Is(err, tc.want) {
+		if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "요청", ""); !errors.Is(err, tc.want) {
 			t.Errorf("%s = %v, want %v", tc.name, err, tc.want)
 		}
 		if len(platform.stored) != 0 {
@@ -228,7 +228,7 @@ func TestCreateTaskRequest_RefusesBeforeTheHop(t *testing.T) {
 		{"t1", "요청 아이디", "요청"},
 		{"작업 아이디", "req-1", "요청"},
 	} {
-		if _, err := engine.CreateTaskRequest(ctx, 1, tc.taskID, tc.id, tc.text); !errors.Is(err, chat.ErrTaskRequestInvalid) {
+		if _, err := engine.CreateTaskRequest(ctx, 1, tc.taskID, tc.id, tc.text, ""); !errors.Is(err, chat.ErrTaskRequestInvalid) {
 			t.Errorf("%+v = %v, want invalid", tc, err)
 		}
 	}
@@ -237,7 +237,7 @@ func TestCreateTaskRequest_RefusesBeforeTheHop(t *testing.T) {
 	}
 
 	// User 2 has no session bound yet.
-	if _, err := engine.CreateTaskRequest(ctx, 2, "t1", "req-9", "요청"); !errors.Is(err, chat.ErrNoConversation) {
+	if _, err := engine.CreateTaskRequest(ctx, 2, "t1", "req-9", "요청", ""); !errors.Is(err, chat.ErrNoConversation) {
 		t.Fatalf("no session = %v, want ErrNoConversation", err)
 	}
 }

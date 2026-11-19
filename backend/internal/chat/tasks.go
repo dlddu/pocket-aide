@@ -78,6 +78,22 @@ type Task struct {
 	// show "someone asked something" without a second call — and the parent's
 	// own progress on them is what moves the counts.
 	Requests *TaskRequestSummary `json:"requests,omitempty"`
+	// Choices are what the session itself offers a person to say about this
+	// task, written against the version this row carries. Absent when it offers
+	// none — the app then says so rather than inventing something.
+	Choices []TaskChoice `json:"choices,omitempty"`
+}
+
+// TaskChoice is one sentence the session offers for this task. The app shows
+// Label, fills its request box with RequestText and sends ID back, so the
+// session can tell which of its own sentences came back. It is a sentence to
+// send, not a permission.
+type TaskChoice struct {
+	ID           string `json:"id"`
+	Label        string `json:"label"`
+	RequestText  string `json:"request_text"`
+	BasisVersion int64  `json:"basis_version"`
+	CreatedAt    string `json:"created_at"`
 }
 
 // TaskList is the panel's whole payload.
@@ -106,6 +122,7 @@ type ledgerPage struct {
 	Tasks []struct {
 		ID       string              `json:"id"`
 		Requests *TaskRequestSummary `json:"requests"`
+		Choices  []TaskChoice        `json:"choices"`
 		Task     struct {
 			Title    string              `json:"title"`
 			Status   string              `json:"status"`

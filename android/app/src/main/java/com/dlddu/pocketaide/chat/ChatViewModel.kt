@@ -53,6 +53,23 @@ data class ChatTasksUiState(
  * never that the session has dealt with it, which only the ledger's own status
  * says.
  */
+/**
+ * One task's history as the panel shows it. Loading, empty, a page and a
+ * failure are separate on purpose: an empty list means the ledger recorded
+ * nothing for this task, and a failure must not look like that.
+ */
+data class ChatTaskHistoryUiState(
+    val taskId: String = "",
+    val events: List<ChatTaskEvent> = emptyList(),
+    val nextCursor: Long = 0,
+    val isLoading: Boolean = false,
+    val hasLoaded: Boolean = false,
+    val error: ChatTaskHistoryError? = null,
+) {
+    val isEmpty: Boolean get() = hasLoaded && error == null && events.isEmpty()
+    val hasMore: Boolean get() = nextCursor > 0
+}
+
 data class ChatTaskRequestUiState(
     val taskId: String = "",
     val isStoring: Boolean = false,
@@ -70,6 +87,9 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     private val _taskRequest = MutableStateFlow(ChatTaskRequestUiState())
     val taskRequest: StateFlow<ChatTaskRequestUiState> = _taskRequest.asStateFlow()
+
+    private val _taskHistory = MutableStateFlow(ChatTaskHistoryUiState())
+    val taskHistory: StateFlow<ChatTaskHistoryUiState> = _taskHistory.asStateFlow()
 
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
@@ -111,8 +131,63 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
      * [onStored] runs only when the backend stored it, so the caller clears its
      * draft then and keeps it on every failure.
      */
-    fun storeTaskRequest(task: ChatTask, requestID: String, request: String, onStored: () -> Unit) {
-        viewModelScope.launch { if (performTaskRequest(task, requestID, request)) onStored() }
+    fun storeTaskRequest(
+        task: ChatTask,
+        requestID: String,
+        request: String,
+        choiceID: String,
+        onStored: () -> Unit,
+    ) {
+        viewModelScope.launch { if (performTaskRequest(task, requestID, request, choiceID)) onStored() }
+    }
+
+    /**
+     * Reads the first page of [taskId]'s history, or the next one. A failure
+     * keeps the page already on screen, so a retry adds to it rather than
+     * replacing what the person was reading with an error.
+     */
+    fun loadTaskHistory(taskId: String) {
+        viewModelScope.launch { performTaskHistory(taskId, more = false) }
+    }
+
+    fun loadMoreTaskHistory() {
+        val state = _taskHistory.value
+        if (!state.hasMore || state.isLoading) return
+        viewModelScope.launch { performTaskHistory(state.taskId, more = true) }
+    }
+
+    /** Forgets the history once that task's pane is closed. */
+    fun clearTaskHistory() {
+        _taskHistory.value = ChatTaskHistoryUiState()
+    }
+
+    internal suspend fun performTaskHistory(taskId: String, more: Boolean): Boolean {
+        val current = _taskHistory.value
+        if (current.isLoading) return false
+        val after = if (more && current.taskId == taskId) current.nextCursor else 0
+        val kept = if (more && current.taskId == taskId) current.events else emptyList()
+        _taskHistory.value = current.copy(taskId = taskId, events = kept, isLoading = true, error = null)
+        return try {
+            val page = api.chatTaskEvents(taskId, after, CHAT_TASK_HISTORY_PAGE)
+            _taskHistory.value = ChatTaskHistoryUiState(
+                taskId = taskId,
+                // Pages arrive oldest first and are appended in that order, so
+                // the screen reads top to bottom as it happened.
+                events = kept + page.events,
+                nextCursor = page.nextCursor,
+                hasLoaded = true,
+            )
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _taskHistory.value = _taskHistory.value.copy(
+                isLoading = false,
+                hasLoaded = true,
+                error = ChatTaskHistoryError.from(e),
+            )
+            false
+        }
     }
 
     /** Clears the last request's outcome once the panel has shown it. */
@@ -120,7 +195,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         _taskRequest.update { it.copy(stored = null, replayed = false, error = null) }
     }
 
-    internal suspend fun performTaskRequest(task: ChatTask, requestID: String, request: String): Boolean {
+    internal suspend fun performTaskRequest(
+        task: ChatTask,
+        requestID: String,
+        request: String,
+        choiceID: String = "",
+    ): Boolean {
         val text = chatTaskRequestText(request)
         if (text.isEmpty()) return false
         // A second tap while the first is in flight would store the request
@@ -135,7 +215,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
         _taskRequest.value = ChatTaskRequestUiState(taskId = task.id, isStoring = true)
         try {
-            val stored = api.storeChatTaskRequest(task.id, requestID, text)
+            val stored = api.storeChatTaskRequest(task.id, requestID, text, choiceID)
             // Nothing is added to the conversation and no reply is awaited: the
             // request is on the ledger, and the session finds it when it next
             // looks. Storing therefore works while a reply is being written.
@@ -246,6 +326,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         // What one stored request may carry. The backend and the ledger bound
         // it too; this is the app saying so before the hop.
         const val CHAT_TASK_REQUEST_MAX_BYTES = 4_000
+
+        // One history page: small enough that the first page is quick and the
+        // rest is one tap away.
+        const val CHAT_TASK_HISTORY_PAGE = 20
 
         const val REPLY_POLL_MILLIS = 1_500L
         const val IDLE_POLL_MILLIS = 15_000L
