@@ -349,6 +349,49 @@ class ChatTaskRequestTest {
         assertTrue("선택지 id 가 본문에 있어야 한다: $body", body.contains("c-go"))
     }
 
+    // 고른 선택지는 **그 선택지를 본 작업 version** 과 함께 간다 — 서버가 그
+    // 기준으로 낡은 화면의 제출을 거부할 수 있어야 한다.
+    @Test
+    fun theChosenChoiceCarriesTheVersionItWasOfferedOn() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("app-1", "t-42", "진행해 줘")))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", "c-go", 7L))
+        val body = server.takeRequest().body.readUtf8()
+        assertTrue("기준 version 이 본문에 있어야 한다: $body", body.contains("\"choice_basis_version\":7"))
+    }
+
+    // 작업이 움직인 뒤 열어 둔 화면이 제출하면 서버가 거부한다. 그때 앱은
+    // **초안을 지우지 않고** 다른 거절과 구별되는 말을 한다.
+    @Test
+    fun aStalePickIsItsOwnRefusalAndKeepsTheDraft() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setResponseCode(409)
+                .setBody("""{"error":"그 선택지는 더 이상 유효하지 않아요","code":"task_request_stale_choice"}"""),
+        )
+        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "CI 로그를 확인해 줘.", "c-ci", 1L))
+        assertEquals(ChatTaskRequestError.STALE_CHOICE, vm.taskRequest.value.error)
+        // 저장된 것은 없다 — 저장 성공으로 오표시하지 않는다.
+        assertNull(vm.taskRequest.value.stored)
+        // 같은 409 라도 요청 번호 충돌과는 다른 말을 한다.
+        assertTrue(
+            ChatTaskRequestError.STALE_CHOICE.message != ChatTaskRequestError.CONFLICT.message,
+        )
+    }
+
+    // 선택지로 채운 초안을 사람이 **고치면** 그것은 더 이상 세션의 문장이
+    // 아니다 — 출처와 기준이 함께 떨어지고 자유 입력으로 저장된다. 한 글자도
+    // 고치지 않았다면 출처는 유지된다.
+    @Test
+    fun editingAFilledDraftTurnsItIntoTheUsersOwnWords() {
+        val sentence = "실패한 CI 로그를 확인해 줘."
+        assertTrue(chatTaskPickHolds(sentence, sentence))
+        assertFalse(chatTaskPickHolds(sentence + " 그리고 원인도 알려 줘", sentence))
+        assertFalse(chatTaskPickHolds(sentence.dropLast(1), sentence))
+        // 처음부터 직접 쓴 초안에는 출처가 없다.
+        assertFalse(chatTaskPickHolds("내가 쓴 요청", ""))
+    }
+
     // 선택지는 원장이 준 것만 쓴다 — 앱에는 상태별 목록이 없다.
     @Test
     fun theOfferedChoicesComeFromTheLedgerOnly() = runTest {

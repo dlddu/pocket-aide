@@ -202,6 +202,7 @@ enum class ChatTaskRequestError(val message: String) {
     UNAVAILABLE("채팅 세션이 깨어 있지 않아 저장하지 못했어요. 잠시 뒤 다시 시도해요."),
     UNSUPPORTED("이 대화의 세션은 작업 요청을 받지 않아요."),
     CONFLICT("같은 요청 번호로 다른 내용이 이미 저장돼 있어요. 다시 쓰면 새 번호로 저장해요."),
+    STALE_CHOICE("작업이 바뀌어 고른 선택지가 더 이상 유효하지 않아요. 쓴 내용은 그대로 두었으니, 새 선택지를 보거나 그대로 다시 저장해요."),
     INVALID("요청을 저장할 수 없는 형식이에요."),
     UNREACHABLE("요청을 저장하지 못했어요. 잠시 뒤 다시 시도해요."),
     ;
@@ -212,6 +213,9 @@ enum class ChatTaskRequestError(val message: String) {
                 e.status == 404 -> NOT_FOUND
                 e.status == 501 -> UNSUPPORTED
                 e.status == 409 && e.body.contains("task_request_unavailable") -> UNAVAILABLE
+                // The screen is out of date, not the words: its own sentence,
+                // and the draft is kept.
+                e.status == 409 && e.body.contains("task_request_stale_choice") -> STALE_CHOICE
                 e.status == 409 -> CONFLICT
                 e.status == 400 -> INVALID
                 else -> UNREACHABLE
@@ -227,6 +231,18 @@ enum class ChatTaskRequestError(val message: String) {
  * into the message, so nothing is sent that the person did not write.
  */
 fun chatTaskRequestText(request: String): String = request.trim()
+
+/**
+ * Whether a draft still carries the pick it was filled from.
+ *
+ * Provenance holds only while the draft is the session's sentence word for
+ * word. Edit one character and the words are the person's own: the pick and its
+ * basis version are dropped and the request is stored as free text, so the
+ * session is never told that a sentence it wrote came back when it did not.
+ * The same rule decides what is sent, which keeps the two from disagreeing.
+ */
+fun chatTaskPickHolds(draft: String, pickedText: String): Boolean =
+    pickedText.isNotEmpty() && draft == pickedText
 
 /**
  * Why the panel cannot show a list. Each is a different sentence on purpose —
@@ -340,10 +356,16 @@ suspend fun ApiClient.storeChatTaskRequest(
     id: String,
     text: String,
     choiceId: String,
+    choiceBasisVersion: Long = 0,
 ): ChatTaskRequestStored =
     post(
         "/api/chat/tasks/$taskId/requests",
-        ChatTaskRequestPayload(id = id, text = text, choiceId = choiceId),
+        ChatTaskRequestPayload(
+            id = id,
+            text = text,
+            choiceId = choiceId,
+            choiceBasisVersion = choiceBasisVersion,
+        ),
         ChatTaskRequestPayload.serializer(),
         ChatTaskRequestStored.serializer(),
     )
@@ -353,4 +375,8 @@ private data class ChatTaskRequestPayload(
     val id: String,
     val text: String,
     @SerialName("choice_id") val choiceId: String = "",
+    // The task version the screen saw that choice on. The slot refuses a pick
+    // whose basis no longer holds, so an open screen cannot act on a sentence
+    // the session wrote about an older state.
+    @SerialName("choice_basis_version") val choiceBasisVersion: Long = 0,
 )

@@ -18,10 +18,17 @@ import (
 // that one user's request never reaches another's session and that storing one
 // never touches the chat's message routes.
 type requestPlatform struct {
-	tasks  map[string]map[string]bool // platform session id -> task ids it holds
-	stored map[string]storedRequest   // request id -> what was stored
-	order  []string                   // request ids in arrival order
-	calls  []string                   // method+path of every call
+	tasks map[string]map[string]bool // platform session id -> task ids it holds
+	// version is the task's current version, and choices the basis version each
+	// offered choice was written against — the two the slot compares before it
+	// accepts a pick.
+	version map[string]int64
+	choices map[string]int64
+	stored  map[string]storedRequest // request id -> what was stored
+	order   []string                 // request ids in arrival order
+	calls   []string                 // method+path of every call
+	// picked is what the body said about the chosen sentence, per request id.
+	picked map[string]pickedChoice
 	// status, when set, is answered instead of storing.
 	status int
 	body   string
@@ -32,8 +39,17 @@ type storedRequest struct {
 	Seq                               int64
 }
 
+type pickedChoice struct {
+	ID    string
+	Basis int64
+}
+
 func newRequestPlatform() *requestPlatform {
-	return &requestPlatform{tasks: map[string]map[string]bool{}, stored: map[string]storedRequest{}}
+	return &requestPlatform{
+		tasks: map[string]map[string]bool{}, stored: map[string]storedRequest{},
+		version: map[string]int64{}, choices: map[string]int64{},
+		picked: map[string]pickedChoice{},
+	}
 }
 
 func (p *requestPlatform) Do(_ context.Context, method, path string, body []byte) (int, []byte, error) {
@@ -51,9 +67,11 @@ func (p *requestPlatform) Do(_ context.Context, method, path string, body []byte
 	taskID, _ = url.PathUnescape(taskID)
 
 	var in struct {
-		ID     string `json:"id"`
-		Text   string `json:"text"`
-		Author string `json:"author"`
+		ID                 string `json:"id"`
+		Text               string `json:"text"`
+		Author             string `json:"author"`
+		ChoiceID           string `json:"choice_id"`
+		ChoiceBasisVersion int64  `json:"choice_basis_version"`
 	}
 	if err := json.Unmarshal(body, &in); err != nil {
 		return http.StatusBadRequest, []byte(`{"error":"bad body"}`), nil
@@ -67,6 +85,17 @@ func (p *requestPlatform) Do(_ context.Context, method, path string, body []byte
 	if !p.tasks[session][taskID] {
 		return http.StatusNotFound, []byte(`{"error":"task not found"}`), nil
 	}
+	// The slot's own rule: a pick is accepted only while the task still offers
+	// it, and only when the basis the caller saw agrees.
+	if in.ChoiceID != "" {
+		basis, offered := p.choices[in.ChoiceID]
+		if !offered || basis != p.version[taskID] ||
+			(in.ChoiceBasisVersion != 0 && in.ChoiceBasisVersion != basis) {
+			return http.StatusConflict,
+				[]byte(`{"code":"stale_choice","error":"that choice is no longer offered for this task"}`), nil
+		}
+	}
+	p.picked[in.ID] = pickedChoice{ID: in.ChoiceID, Basis: in.ChoiceBasisVersion}
 	stored := storedRequest{
 		ID: in.ID, TaskID: taskID, Text: in.Text, Author: in.Author,
 		Session: session, Seq: int64(len(p.order) + 1),
@@ -105,7 +134,7 @@ func TestCreateTaskRequest_StoresOnTheCallersOwnLedger(t *testing.T) {
 	platform.tasks["cx1"] = map[string]bool{"t1": true}
 	platform.tasks["cx2"] = map[string]bool{"t1": true}
 
-	stored, err := engine.CreateTaskRequest(context.Background(), 1, "t1", "req-1", "  이 작업 진행해 줘  ", "")
+	stored, err := engine.CreateTaskRequest(context.Background(), 1, "t1", "req-1", "  이 작업 진행해 줘  ", "", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +150,7 @@ func TestCreateTaskRequest_StoresOnTheCallersOwnLedger(t *testing.T) {
 		t.Fatalf("stored = %+v, want session cx1 and author user-1", got)
 	}
 	// Another user's request lands on their own ledger, never on this one.
-	if _, err := engine.CreateTaskRequest(context.Background(), 2, "t1", "req-2", "다른 사용자", ""); err != nil {
+	if _, err := engine.CreateTaskRequest(context.Background(), 2, "t1", "req-2", "다른 사용자", "", 0); err != nil {
 		t.Fatal(err)
 	}
 	if got := platform.stored["req-2"]; got.Session != "cx2" {
@@ -142,11 +171,11 @@ func TestCreateTaskRequest_IsIdempotentOnTheRequestID(t *testing.T) {
 	platform.tasks["cx1"] = map[string]bool{"t1": true}
 	ctx := context.Background()
 
-	first, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘", "")
+	first, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘", "", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	again, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘", "")
+	again, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "진행해 줘", "", 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +185,7 @@ func TestCreateTaskRequest_IsIdempotentOnTheRequestID(t *testing.T) {
 	if len(platform.order) != 1 {
 		t.Fatalf("stored rows = %d, want the retry to have stored nothing twice", len(platform.order))
 	}
-	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "다른 말", ""); !errors.Is(err, chat.ErrTaskRequestConflict) {
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "다른 말", "", 0); !errors.Is(err, chat.ErrTaskRequestConflict) {
 		t.Fatalf("reused id with other words = %v, want a conflict", err)
 	}
 }
@@ -171,7 +200,7 @@ func TestCreateTaskRequest_KeepsArrivalOrder(t *testing.T) {
 	for _, r := range []struct{ task, id, text string }{
 		{"t1", "req-1", "첫 번째"}, {"t2", "req-2", "다른 작업"}, {"t1", "req-3", "두 번째"},
 	} {
-		if _, err := engine.CreateTaskRequest(ctx, 1, r.task, r.id, r.text, ""); err != nil {
+		if _, err := engine.CreateTaskRequest(ctx, 1, r.task, r.id, r.text, "", 0); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -205,7 +234,7 @@ func TestCreateTaskRequest_DistinguishesRefusals(t *testing.T) {
 		store, engine, platform := requestEngine(t)
 		bindSession(t, store, 1, "cx1")
 		platform.status, platform.body = tc.status, tc.body
-		if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "요청", ""); !errors.Is(err, tc.want) {
+		if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "요청", "", 0); !errors.Is(err, tc.want) {
 			t.Errorf("%s = %v, want %v", tc.name, err, tc.want)
 		}
 		if len(platform.stored) != 0 {
@@ -228,7 +257,7 @@ func TestCreateTaskRequest_RefusesBeforeTheHop(t *testing.T) {
 		{"t1", "요청 아이디", "요청"},
 		{"작업 아이디", "req-1", "요청"},
 	} {
-		if _, err := engine.CreateTaskRequest(ctx, 1, tc.taskID, tc.id, tc.text, ""); !errors.Is(err, chat.ErrTaskRequestInvalid) {
+		if _, err := engine.CreateTaskRequest(ctx, 1, tc.taskID, tc.id, tc.text, "", 0); !errors.Is(err, chat.ErrTaskRequestInvalid) {
 			t.Errorf("%+v = %v, want invalid", tc, err)
 		}
 	}
@@ -237,7 +266,7 @@ func TestCreateTaskRequest_RefusesBeforeTheHop(t *testing.T) {
 	}
 
 	// User 2 has no session bound yet.
-	if _, err := engine.CreateTaskRequest(ctx, 2, "t1", "req-9", "요청", ""); !errors.Is(err, chat.ErrNoConversation) {
+	if _, err := engine.CreateTaskRequest(ctx, 2, "t1", "req-9", "요청", "", 0); !errors.Is(err, chat.ErrNoConversation) {
 		t.Fatalf("no session = %v, want ErrNoConversation", err)
 	}
 }
@@ -269,5 +298,61 @@ func TestTasks_CarryWaitingRequestCounts(t *testing.T) {
 	}
 	if list.Tasks[1].Requests != nil {
 		t.Fatalf("t2 requests = %+v, want no summary when none arrived", list.Tasks[1].Requests)
+	}
+}
+
+// A picked sentence travels with the task version the screen saw it on, and the
+// slot refuses it once that no longer holds — the words the person typed are
+// unaffected, and nothing is stored.
+func TestCreateTaskRequest_CarriesThePickAndItsBasisAndRefusesAStaleOne(t *testing.T) {
+	store, engine, platform := requestEngine(t)
+	bindSession(t, store, 1, "cx1")
+	platform.tasks["cx1"] = map[string]bool{"t1": true}
+	platform.version["t1"] = 1
+	platform.choices["c-ci"] = 1
+	ctx := context.Background()
+
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-1", "실패한 CI 로그를 확인해 줘", "c-ci", 1); err != nil {
+		t.Fatal(err)
+	}
+	if got := platform.picked["req-1"]; got.ID != "c-ci" || got.Basis != 1 {
+		t.Fatalf("sent pick = %+v, want c-ci on version 1", got)
+	}
+
+	// The task moves. The same pick, from a screen that never saw the move, is
+	// its own refusal — not a clash of words.
+	platform.version["t1"] = 2
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-2", "실패한 CI 로그를 확인해 줘", "c-ci", 1); !errors.Is(err, chat.ErrTaskRequestStaleChoice) {
+		t.Fatalf("stale pick = %v, want ErrTaskRequestStaleChoice", err)
+	}
+	// Re-publishing the same choice_id against the newer version does not let
+	// the older screen through either.
+	platform.choices["c-ci"] = 2
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-3", "실패한 CI 로그를 확인해 줘", "c-ci", 1); !errors.Is(err, chat.ErrTaskRequestStaleChoice) {
+		t.Fatalf("re-published pick from an old screen = %v, want ErrTaskRequestStaleChoice", err)
+	}
+	// A pick the task never offered answers the same way.
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-4", "없는 선택", "c-made-up", 0); !errors.Is(err, chat.ErrTaskRequestStaleChoice) {
+		t.Fatalf("unknown pick = %v, want ErrTaskRequestStaleChoice", err)
+	}
+	// The person's own words store while every offered choice is stale, and
+	// they carry no pick.
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-5", "내가 직접 쓴 요청", "", 0); err != nil {
+		t.Fatal(err)
+	}
+	if got := platform.picked["req-5"]; got.ID != "" || got.Basis != 0 {
+		t.Fatalf("free text sent %+v, want no pick", got)
+	}
+	// A basis with no pick never leaves the app.
+	before := len(platform.calls)
+	if _, err := engine.CreateTaskRequest(ctx, 1, "t1", "req-6", "선택 없이 기준", "", 3); !errors.Is(err, chat.ErrTaskRequestInvalid) {
+		t.Fatalf("basis without a pick = %v, want invalid", err)
+	}
+	if len(platform.calls) != before {
+		t.Fatal("a malformed pick must not reach the platform")
+	}
+	// Only the two accepted stores exist.
+	if len(platform.order) != 2 {
+		t.Fatalf("stored = %v, want only the fresh pick and the typed words", platform.order)
 	}
 }

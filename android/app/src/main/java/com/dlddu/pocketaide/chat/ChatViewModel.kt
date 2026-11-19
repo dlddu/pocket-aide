@@ -136,9 +136,24 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         requestID: String,
         request: String,
         choiceID: String,
+        choiceBasisVersion: Long = 0,
         onStored: () -> Unit,
+        onChoiceStale: () -> Unit = {},
     ) {
-        viewModelScope.launch { if (performTaskRequest(task, requestID, request, choiceID)) onStored() }
+        viewModelScope.launch {
+            if (performTaskRequest(task, requestID, request, choiceID, choiceBasisVersion)) {
+                onStored()
+                return@launch
+            }
+            // The pick is gone, the words are not: tell the caller to drop the
+            // provenance (so a second tap stores the same words as the
+            // person's own), and read the task again so the pane shows the
+            // choices that hold now instead of the ones it was refused on.
+            if (_taskRequest.value.error == ChatTaskRequestError.STALE_CHOICE) {
+                onChoiceStale()
+                loadTasks()
+            }
+        }
     }
 
     /**
@@ -200,6 +215,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         requestID: String,
         request: String,
         choiceID: String = "",
+        choiceBasisVersion: Long = 0,
     ): Boolean {
         val text = chatTaskRequestText(request)
         if (text.isEmpty()) return false
@@ -215,7 +231,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
         _taskRequest.value = ChatTaskRequestUiState(taskId = task.id, isStoring = true)
         try {
-            val stored = api.storeChatTaskRequest(task.id, requestID, text, choiceID)
+            val stored = api.storeChatTaskRequest(task.id, requestID, text, choiceID, choiceBasisVersion)
             // Nothing is added to the conversation and no reply is awaited: the
             // request is on the ledger, and the session finds it when it next
             // looks. Storing therefore works while a reply is being written.

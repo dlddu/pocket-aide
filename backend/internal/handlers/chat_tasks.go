@@ -66,6 +66,10 @@ type postChatTaskRequestBody struct {
 	// ChoiceID, when set, is the session's own offered choice the person
 	// picked; empty means they typed their own words.
 	ChoiceID string `json:"choice_id"`
+	// ChoiceBasisVersion is the task version the screen saw that choice on.
+	// The slot checks it, so a pick from a screen opened before the task moved
+	// is refused rather than stored.
+	ChoiceBasisVersion int64 `json:"choice_basis_version"`
 }
 
 // PostChatTaskRequest handles POST /api/chat/tasks/{taskID}/requests: one user
@@ -90,7 +94,7 @@ func PostChatTaskRequest(engine *chat.Engine) http.HandlerFunc {
 			})
 			return
 		}
-		stored, err := engine.CreateTaskRequest(r.Context(), u.ID, chi.URLParam(r, "taskID"), body.ID, body.Text, body.ChoiceID)
+		stored, err := engine.CreateTaskRequest(r.Context(), u.ID, chi.URLParam(r, "taskID"), body.ID, body.Text, body.ChoiceID, body.ChoiceBasisVersion)
 		if err != nil {
 			switch {
 			case errors.Is(err, chat.ErrTaskRequestInvalid):
@@ -100,6 +104,12 @@ func PostChatTaskRequest(engine *chat.Engine) http.HandlerFunc {
 			case errors.Is(err, chat.ErrTaskNotFound), errors.Is(err, chat.ErrNoConversation):
 				writeJSON(w, http.StatusNotFound, map[string]string{
 					"error": chat.ErrTaskNotFound.Error(), "code": "task_not_found",
+				})
+			case errors.Is(err, chat.ErrTaskRequestStaleChoice):
+				// Its own code so the app can keep the draft and re-read the
+				// task instead of telling the person their words clashed.
+				writeJSON(w, http.StatusConflict, map[string]string{
+					"error": err.Error(), "code": "task_request_stale_choice",
 				})
 			case errors.Is(err, chat.ErrTaskRequestConflict):
 				writeJSON(w, http.StatusConflict, map[string]string{

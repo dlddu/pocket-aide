@@ -55,6 +55,11 @@ var (
 	// A retry of the same words is not an error; different words under a used id
 	// is, because it would otherwise silently replace what the person asked.
 	ErrTaskRequestConflict = errors.New("that request id is already used for a different request")
+	// ErrTaskRequestStaleChoice is a picked choice the session no longer
+	// offers — the task moved under a screen that was already open, or the
+	// choice was never offered. The words the person typed are still good, so
+	// the app keeps the draft, re-reads the task, and says the choices changed.
+	ErrTaskRequestStaleChoice = errors.New("that offered choice is no longer current; the task moved")
 	// ErrTaskRequestInvalid is a malformed id or text.
 	ErrTaskRequestInvalid = errors.New("the request id or text is not usable")
 )
@@ -113,7 +118,7 @@ func (s TaskRequestSummary) Open() int { return s.Pending + s.Claimed + s.Reconc
 // nothing twice, and the same id with different text is a conflict rather than a
 // second request. It does not claim a turn, so a request can be stored while a
 // reply is still being written.
-func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, requestID, text, choiceID string) (TaskRequestStored, error) {
+func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, requestID, text, choiceID string, choiceBasisVersion int64) (TaskRequestStored, error) {
 	var out TaskRequestStored
 	body := strings.TrimSpace(text)
 	if body == "" || len(body) > TaskRequestTextMax {
@@ -128,6 +133,9 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 	if choiceID != "" && !ledgerRequestID.MatchString(choiceID) {
 		return out, fmt.Errorf("%w: choice id must be 1..128 letters, digits, _ or -", ErrTaskRequestInvalid)
 	}
+	if choiceBasisVersion < 0 || (choiceID == "" && choiceBasisVersion != 0) {
+		return out, fmt.Errorf("%w: a choice basis version belongs to a picked choice", ErrTaskRequestInvalid)
+	}
 	conv, err := e.store.Conversation(ctx, userID)
 	if err != nil {
 		return out, err
@@ -137,11 +145,16 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 		// and no task to leave a request on.
 		return out, ErrNoConversation
 	}
-	fields := map[string]string{"id": requestID, "text": body, "author": taskRequestAuthor(userID)}
+	fields := map[string]any{"id": requestID, "text": body, "author": taskRequestAuthor(userID)}
 	if choiceID != "" {
-		// Which of the session's own offered sentences the person picked. Empty
-		// means they typed their own words.
+		// Which of the session's own offered sentences the person picked, and
+		// the task version the screen saw it on. The slot checks both, so a
+		// screen left open while the task moved has its pick refused rather
+		// than stored. Empty means they typed their own words.
 		fields["choice_id"] = choiceID
+		if choiceBasisVersion > 0 {
+			fields["choice_basis_version"] = choiceBasisVersion
+		}
 	}
 	payload, err := json.Marshal(fields)
 	if err != nil {
@@ -178,6 +191,14 @@ func (e *Engine) CreateTaskRequest(ctx context.Context, userID int64, taskID, re
 		}
 		if strings.Contains(strings.ToLower(string(raw)), "deleted") {
 			return out, ErrTaskNotFound
+		}
+		// A pick the session no longer offers: the screen is out of date, not
+		// the words. Its own class, because the answer is to re-read the task
+		// and keep what the person already typed. The platform's sentences for
+		// it are stable (session-platform docs/session-ledger.md).
+		if lower := strings.ToLower(string(raw)); strings.Contains(lower, "no longer offered") ||
+			strings.Contains(lower, "no longer current") {
+			return out, ErrTaskRequestStaleChoice
 		}
 		return out, ErrTaskRequestConflict
 	case http.StatusNotImplemented, http.StatusMethodNotAllowed:

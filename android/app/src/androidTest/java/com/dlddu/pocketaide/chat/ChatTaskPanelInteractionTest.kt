@@ -86,6 +86,11 @@ class ChatTaskPanelInteractionTest {
                 var filter by remember { mutableStateOf(ChatTaskFilter()) }
                 var openId by remember { mutableStateOf<String?>(null) }
                 var request by remember { mutableStateOf("") }
+                // 화면이 쓰는 그 규칙을 그대로 둔다(`chatTaskPickHolds`): 고른
+                // 문장을 한 글자라도 고치면 출처와 기준이 함께 떨어진다.
+                var pickId by remember { mutableStateOf("") }
+                var pickBasis by remember { mutableStateOf(0L) }
+                var pickText by remember { mutableStateOf("") }
                 ChatPanes(
                     state = chat,
                     tasks = tasks,
@@ -110,17 +115,35 @@ class ChatTaskPanelInteractionTest {
                     onCloseTask = { openId = null },
                     taskRequest = taskRequest,
                     requestDraft = request,
-                    onRequestDraftChange = { request = it },
-                    onChoicePicked = { request = it.requestText },
+                    onRequestDraftChange = {
+                        request = it
+                        if (!chatTaskPickHolds(it, pickText)) {
+                            pickId = ""
+                            pickBasis = 0L
+                            pickText = ""
+                        }
+                    },
+                    onChoicePicked = {
+                        request = it.requestText
+                        pickId = it.id
+                        pickBasis = it.basisVersion
+                        pickText = it.requestText
+                    },
                     history = history,
                     onLoadHistory = { historyLoads++ },
                     onLoadMoreHistory = {},
-                    onStoreRequest = { stores++ },
+                    onStoreRequest = {
+                        stores++
+                        sentPick = pickId to pickBasis
+                    },
                 )
             }
         }
         compose.waitForIdle()
     }
+
+    /** 마지막 저장이 함께 보낸 출처와 기준 version. */
+    private var sentPick: Pair<String, Long> = "" to 0L
 
     private fun rows(): Int = compose.onAllNodesWithTag("chat.tasks.item").fetchSemanticsNodes().size
 
@@ -455,6 +478,65 @@ class ChatTaskPanelInteractionTest {
         val bounds = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
         return (bounds.right - bounds.left).value
     }
+
+    // 고른 문장은 그 선택지를 본 작업 version 과 함께 저장으로 간다. 그리고 그
+    // 초안을 사람이 고치면 출처가 떨어져 자유 입력으로 간다 — 세션에게 「내
+    // 문장이 돌아왔다」고 잘못 말하지 않는다.
+    @Test
+    fun aPickedSentenceCarriesItsBasisAndAnEditedOneDoesNot() {
+        start(withChoice())
+        openBlocked()
+
+        compose.onAllNodesWithTag("chat.tasks.detail.choice").onFirst().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
+        compose.waitForIdle()
+        assertEquals("고른 선택지의 id 와 기준 version 이 함께 간다", "c-ci" to 3L, sentPick)
+
+        // 같은 문장을 고른 뒤 한 글자를 덧붙이면 그것은 사람의 말이다.
+        compose.onAllNodesWithTag("chat.tasks.detail.choice").onFirst().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("!")
+        compose.waitForIdle()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
+        compose.waitForIdle()
+        assertEquals("고친 초안은 출처 없이 간다", "" to 0L, sentPick)
+    }
+
+    // 작업이 움직여 선택지가 낡았다는 거절은 다른 실패와 다른 말을 하고, 쓴 말을
+    // 지우지 않는다 — 그대로 다시 저장할 수 있다.
+    @Test
+    fun aStalePickSaysSoAndKeepsTheWords() {
+        start(taskRequest = ChatTaskRequestUiState(taskId = "t-blocked", error = ChatTaskRequestError.STALE_CHOICE))
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("내가 쓴 요청")
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("chat.tasks.detail.error").assertTextContains("선택지", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.field").assertTextContains("내가 쓴 요청", substring = true)
+        compose.onNodeWithText("다시 저장하기").assertIsDisplayed()
+    }
+
+    /** 막힌 작업에 선택지 하나를 올려 둔 원장. */
+    private fun withChoice(): ChatTasksUiState = ledger.copy(
+        tasks = ledger.tasks.map {
+            if (it.id == "t-blocked") {
+                it.copy(
+                    choices = listOf(
+                        ChatTaskChoice(
+                            id = "c-ci",
+                            label = "CI 로그 확인 요청",
+                            requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.",
+                            basisVersion = 3,
+                        ),
+                    ),
+                )
+            } else {
+                it
+            }
+        },
+    )
 
     private fun assertRatio(what: String, got: Float, want: Float) {
         org.junit.Assert.assertTrue("$what 가 창 폭의 $want 배여야 한다 (실측 $got)", abs(got - want) <= 0.02f)

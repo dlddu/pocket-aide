@@ -125,9 +125,15 @@ fun ChatScreen(api: ApiClient) {
     var requestDraft by rememberSaveable { mutableStateOf("") }
     var requestKey by rememberSaveable { mutableStateOf(newTaskRequestKey()) }
     // Which of the session's offered sentences the draft came from, so the
-    // stored request can name it. Typing clears it: the words are then the
-    // person's own.
+    // stored request can name it — with the task version it was offered on,
+    // which the slot checks. The provenance holds only while the draft is
+    // still that sentence word for word: editing it makes the words the
+    // person's own, and it is then stored as free text. Kept beside the draft
+    // rather than derived from the task, so the pick the person made survives
+    // the task being read again under them.
     var requestChoiceID by rememberSaveable { mutableStateOf("") }
+    var requestChoiceBasis by rememberSaveable { mutableStateOf(0L) }
+    var requestChoiceText by rememberSaveable { mutableStateOf("") }
     // One list state each for the conversation and the task list, held above the
     // layout branch, so both reading positions survive folding, unfolding,
     // collapsing the panel and stepping into a task and back.
@@ -149,6 +155,8 @@ fun ChatScreen(api: ApiClient) {
             requestDraft = ""
             requestKey = newTaskRequestKey()
             requestChoiceID = ""
+            requestChoiceBasis = 0L
+            requestChoiceText = ""
             viewModel.dismissTaskRequest()
             viewModel.clearTaskHistory()
         }
@@ -185,6 +193,8 @@ fun ChatScreen(api: ApiClient) {
             requestDraft = ""
             requestKey = newTaskRequestKey()
             requestChoiceID = ""
+            requestChoiceBasis = 0L
+            requestChoiceText = ""
             viewModel.dismissTaskRequest()
         },
         onCloseTask = {
@@ -196,12 +206,20 @@ fun ChatScreen(api: ApiClient) {
         requestDraft = requestDraft,
         onRequestDraftChange = {
             requestDraft = it
-            // Edited by hand, so it is no longer the session's sentence.
-            requestChoiceID = ""
+            // Edited by hand, so it is no longer the session's sentence: the
+            // provenance and its basis go with it, and the words are stored as
+            // the person's own free text.
+            if (!chatTaskPickHolds(it, requestChoiceText)) {
+                requestChoiceID = ""
+                requestChoiceBasis = 0L
+                requestChoiceText = ""
+            }
         },
         onChoicePicked = { choice ->
             requestDraft = choice.requestText
             requestChoiceID = choice.id
+            requestChoiceBasis = choice.basisVersion
+            requestChoiceText = choice.requestText
         },
         history = taskHistory,
         onLoadHistory = { openTask?.let { viewModel.loadTaskHistory(it.id) } },
@@ -211,11 +229,28 @@ fun ChatScreen(api: ApiClient) {
         // they are, so the same words retry as the same request.
         onStoreRequest = {
             openTask?.let { task ->
-                viewModel.storeTaskRequest(task, requestKey, requestDraft, requestChoiceID) {
-                    requestDraft = ""
-                    requestKey = newTaskRequestKey()
-                    requestChoiceID = ""
-                }
+                viewModel.storeTaskRequest(
+                    task = task,
+                    requestID = requestKey,
+                    request = requestDraft,
+                    choiceID = requestChoiceID,
+                    choiceBasisVersion = requestChoiceBasis,
+                    onStored = {
+                        requestDraft = ""
+                        requestKey = newTaskRequestKey()
+                        requestChoiceID = ""
+                        requestChoiceBasis = 0L
+                        requestChoiceText = ""
+                    },
+                    // Refused because the task moved: the draft stays exactly
+                    // as written and only the pick is dropped, so saving again
+                    // stores those same words as the person's own.
+                    onChoiceStale = {
+                        requestChoiceID = ""
+                        requestChoiceBasis = 0L
+                        requestChoiceText = ""
+                    },
+                )
             }
         },
     )
