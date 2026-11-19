@@ -342,11 +342,17 @@ class ChatTaskPanelInteractionTest {
         compose.onNodeWithTag("chat.tasks.detail.history.more").performClick()
         compose.waitForIdle()
         assertEquals("더 보기는 다음 페이지를 청한다", 1, historyMores)
+    }
 
-        // 커서가 없으면(마지막 페이지) 더 보기를 두지 않는다 — 누를 것이 없다.
+    // 커서가 없으면(마지막 페이지) 더 보기를 두지 않는다 — 누를 것이 없다.
+    // 화면은 테스트마다 한 번만 띄울 수 있으므로 커서 있는 경우와 따로 본다.
+    @Test
+    fun theLastPageOfHistoryOffersNothingMoreToRead() {
         start(history = historyOf(nextCursor = 0))
         openBlocked()
+
         compose.onAllNodesWithTag("chat.tasks.detail.history.more").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.history.line").assertCountEquals(2)
     }
 
     // 긴 본문은 접혀 있고, 누르면 실제로 더 많이 보인다 — 화면에서 자란다.
