@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,6 +43,7 @@ class ChatTaskPanelInteractionTest {
 
     private var stores = 0
     private var historyLoads = 0
+    private var historyMores = 0
 
     private val blocked = ChatTask(
         id = "t-blocked",
@@ -131,7 +133,7 @@ class ChatTaskPanelInteractionTest {
                     },
                     history = history,
                     onLoadHistory = { historyLoads++ },
-                    onLoadMoreHistory = {},
+                    onLoadMoreHistory = { historyMores++ },
                     onStoreRequest = {
                         stores++
                         sentPick = pickId to pickBasis
@@ -326,6 +328,85 @@ class ChatTaskPanelInteractionTest {
         compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst().performClick()
         compose.waitForIdle()
     }
+
+    // 「이전 기록 더 보기」는 다음 페이지를 청한다 — 커서가 있을 때만 보인다.
+    @Test
+    fun askingForOlderHistoryReadsTheNextPage() {
+        start(history = historyOf(nextCursor = 2))
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.history.more").performClick()
+        compose.waitForIdle()
+        assertEquals("더 보기는 다음 페이지를 청한다", 1, historyMores)
+
+        // 커서가 없으면(마지막 페이지) 더 보기를 두지 않는다 — 누를 것이 없다.
+        start(history = historyOf(nextCursor = 0))
+        openBlocked()
+        compose.onAllNodesWithTag("chat.tasks.detail.history.more").assertCountEquals(0)
+    }
+
+    // 긴 본문은 접혀 있고, 누르면 실제로 더 많이 보인다 — 화면에서 자란다.
+    @Test
+    fun aLongHistoryBodyGrowsWhenTapped() {
+        start(history = historyOf(nextCursor = 0))
+        openBlocked()
+
+        val body = compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst()
+        val collapsed = body.getUnclippedBoundsInRoot().let { it.bottom - it.top }
+        body.performClick()
+        compose.waitForIdle()
+        val expanded = compose.onAllNodesWithTag("chat.tasks.detail.history.body").onFirst()
+            .getUnclippedBoundsInRoot().let { it.bottom - it.top }
+        assertTrue("펼치면 더 많이 보여야 한다 (접힘 $collapsed → 펼침 $expanded)", expanded > collapsed)
+    }
+
+    // 끝난 요청의 이력 줄은 **사람이 읽을 결과**를 담는다 — 상태 낱말만 두지
+    // 않는다.
+    @Test
+    fun aSettledRequestShowsTheResultThePersonWillRead() {
+        start(
+            history = ChatTaskHistoryUiState(
+                taskId = "t-blocked", hasLoaded = true,
+                events = listOf(
+                    ChatTaskEvent(
+                        seq = 9, taskId = "t-blocked", at = "2026-11-19T00:09:00Z",
+                        kind = "request_settled", actor = "parent", summary = "요청을 처리했다",
+                        detail = mapOf("result" to "PR 올리고 CI 통과까지 확인했다", "outcome" to "processed"),
+                    ),
+                ),
+            ),
+        )
+        openBlocked()
+
+        compose.onNodeWithText("PR 올리고 CI 통과까지 확인했다", substring = true).assertIsDisplayed()
+    }
+
+    // 불러오는 중은 빈 기록도 실패도 아니다.
+    @Test
+    fun aHistoryBeingReadSaysItIsLoading() {
+        start(history = ChatTaskHistoryUiState(taskId = "t-blocked", isLoading = true))
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.history.loading").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.detail.history.empty").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.history.error").assertCountEquals(0)
+    }
+
+    /** 이력 두 줄 — 하나는 등록, 하나는 아주 긴 요청 원문. */
+    private fun historyOf(nextCursor: Long) = ChatTaskHistoryUiState(
+        taskId = "t-blocked", hasLoaded = true, nextCursor = nextCursor,
+        events = listOf(
+            ChatTaskEvent(
+                seq = 1, taskId = "t-blocked", at = "2026-11-19T00:00:00Z",
+                kind = "task_created", actor = "parent", summary = "작업을 원장에 등록했다",
+            ),
+            ChatTaskEvent(
+                seq = 2, taskId = "t-blocked", at = "2026-11-19T00:01:00Z",
+                kind = "request_stored", actor = "user-1", summary = "요청을 남겼다",
+                detail = mapOf("text" to "아주 긴 요청 ".repeat(20)),
+            ),
+        ),
+    )
 
     // 기록 없음과 실패는 다른 화면이고, 실패는 다시 시도를 내민다.
     @Test
@@ -539,6 +620,6 @@ class ChatTaskPanelInteractionTest {
     )
 
     private fun assertRatio(what: String, got: Float, want: Float) {
-        org.junit.Assert.assertTrue("$what 가 창 폭의 $want 배여야 한다 (실측 $got)", abs(got - want) <= 0.02f)
+        assertTrue("$what 가 창 폭의 $want 배여야 한다 (실측 $got)", abs(got - want) <= 0.02f)
     }
 }
