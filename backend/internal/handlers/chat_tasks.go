@@ -13,19 +13,19 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// chatRequestBodyLimit bounds one stored request's body. The ledger's own cap
-// is smaller still; this only keeps a stray large body from being read.
+// chatRequestBodyLimit bounds one stored request's body. The slot's own cap is
+// smaller still; this only keeps a stray large body from being read.
 const chatRequestBodyLimit = 1 << 16
 
-// GetChatTasks handles GET /api/chat/tasks: the task ledger of the codex
+// GetChatTasks handles GET /api/chat/tasks: the work records of the codex
 // session answering the caller's own conversation. Read-only — the route never
 // restores, writes to or deletes a session, and the session is derived from the
 // authenticated user's row rather than taken from the request, so one user
-// cannot read another's ledger.
+// cannot read another's work.
 //
 // The three answers the panel has to tell apart are separate statuses: an empty
-// list is "no tasks", 501 is "this session keeps no ledger", and 409 is "the
-// session is not awake, so the list cannot be read" — never an empty list,
+// list is "no tasks", 501 is "this session keeps no work records", and 409 is
+// "the session is not awake, so the list cannot be read" — never an empty list,
 // which would claim there is no work.
 func GetChatTasks(engine *chat.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -63,23 +63,27 @@ func GetChatTasks(engine *chat.Engine) http.HandlerFunc {
 type postChatTaskRequestBody struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
-	// ChoiceID, when set, is the session's own offered choice the person
-	// picked; empty means they typed their own words.
-	ChoiceID string `json:"choice_id"`
-	// ChoiceBasisVersion is the task version the screen saw that choice on.
-	// The slot checks it, so a pick from a screen opened before the task moved
-	// is refused rather than stored.
-	ChoiceBasisVersion int64 `json:"choice_basis_version"`
+	// ChoiceTurnID, when set, is the turn whose offered sentences the person
+	// picked from. The slot refuses a pick from a turn the task has moved past,
+	// so a screen opened before a newer turn arrived cannot act on it. Free
+	// text omits it and is never refused for staleness.
+	//
+	// It replaced the ledger's (choice_id, choice_basis_version) pair: the turn
+	// a pick answers is the one fact that decides whether it is current, and a
+	// version carried beside a choice id was a second way of saying it that
+	// could disagree with the first.
+	ChoiceTurnID int64 `json:"choice_turn_id"`
 }
 
 // PostChatTaskRequest handles POST /api/chat/tasks/{taskID}/requests: one user
 // request left on a task of the caller's own session ledger.
 //
-// It is not a chat message. Nothing is added to the conversation, no turn is
-// started, and the answer says the request is *stored and waiting* — never that
-// it has been dealt with, which only the session can say by settling it. The
-// session is derived from the authenticated user's row, so one user cannot
-// leave a request on another's ledger.
+// It is not a chat message. Nothing is added to the conversation and no turn of
+// the session's own is started. The answer is the turn the request became, and
+// that turn being open is what says it is waiting — never that it has been
+// dealt with, which only the parent can say by finishing the turn. The session
+// is derived from the authenticated user's row, so one user cannot leave a
+// request on another's slot.
 func PostChatTaskRequest(engine *chat.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -94,7 +98,8 @@ func PostChatTaskRequest(engine *chat.Engine) http.HandlerFunc {
 			})
 			return
 		}
-		stored, err := engine.CreateTaskRequest(r.Context(), u.ID, chi.URLParam(r, "taskID"), body.ID, body.Text, body.ChoiceID, body.ChoiceBasisVersion)
+		stored, err := engine.CreateTaskRequest(
+			r.Context(), u.ID, chi.URLParam(r, "taskID"), body.ID, body.Text, body.ChoiceTurnID)
 		if err != nil {
 			switch {
 			case errors.Is(err, chat.ErrTaskRequestInvalid):
@@ -139,67 +144,12 @@ func PostChatTaskRequest(engine *chat.Engine) http.HandlerFunc {
 	}
 }
 
-// GetChatTaskEvents handles GET /api/chat/tasks/{taskID}/events: one page of
-// that task's history, oldest first.
-//
-// Read-only and scoped to the caller's own session, like the task list. A task
-// with nothing recorded answers an empty page; a session that keeps no history
-// says so with 501 rather than pretending the task has none.
-func GetChatTaskEvents(engine *chat.Engine) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		u, ok := auth.FromContext(r.Context())
-		if !ok {
-			http.Error(w, "no user in context", http.StatusInternalServerError)
-			return
-		}
-		after, limit := int64(0), 0
-		if raw := strings.TrimSpace(r.URL.Query().Get("after_seq")); raw != "" {
-			parsed, err := strconv.ParseInt(raw, 10, 64)
-			if err != nil || parsed < 0 {
-				writeJSON(w, http.StatusBadRequest, map[string]string{
-					"error": "after_seq must be a nonnegative number", "code": "task_request_invalid",
-				})
-				return
-			}
-			after = parsed
-		}
-		if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
-			parsed, err := strconv.Atoi(raw)
-			if err != nil || parsed < 1 || parsed > chat.TaskEventPageLimitMax {
-				writeJSON(w, http.StatusBadRequest, map[string]string{
-					"error": "limit must be a number from 1 to 100", "code": "task_request_invalid",
-				})
-				return
-			}
-			limit = parsed
-		}
-		page, err := engine.TaskEvents(r.Context(), u.ID, chi.URLParam(r, "taskID"), after, limit)
-		if err != nil {
-			switch {
-			case errors.Is(err, chat.ErrTaskRequestInvalid):
-				writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error(), "code": "task_request_invalid"})
-			case errors.Is(err, chat.ErrTaskNotFound), errors.Is(err, chat.ErrNoConversation):
-				writeJSON(w, http.StatusNotFound, map[string]string{"error": chat.ErrTaskNotFound.Error(), "code": "task_not_found"})
-			case errors.Is(err, chat.ErrTaskRequestUnavailable):
-				writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error(), "code": "task_request_unavailable"})
-			case errors.Is(err, chat.ErrTaskRequestUnsupported):
-				writeJSON(w, http.StatusNotImplemented, map[string]string{"error": err.Error(), "code": "task_request_unsupported"})
-			default:
-				writeChatError(w, err)
-			}
-			return
-		}
-		writeJSON(w, http.StatusOK, page)
-	}
-}
-
 // GetChatTaskTurns handles GET /api/chat/tasks/{taskID}/turns: one page of a
 // task's turns, with the task itself in the agreed shape.
 //
-// This is what the detail pane reads. The task and history routes beside it are
-// the old ledger's shapes and cannot carry a description, a completion
-// criterion or anything a turn holds, so a pane built on them could show that
-// work exists but never the work.
+// This is what the detail pane reads, and a task's turns are its whole history:
+// the ledger's separate history route is gone with the ledger, because a past
+// management event was never a turn.
 func GetChatTaskTurns(engine *chat.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())

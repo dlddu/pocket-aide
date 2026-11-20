@@ -115,7 +115,7 @@ private fun EmptyNote(empty: ChatTaskEmptiness, filter: ChatTaskFilter, onFilter
     val ink = DesignTokens.Colors.ink(PANEL_AREA)
     val chosen = filter.status?.let { ChatTaskStatus.label(it) }
     val (tag, text, undo) = when (empty) {
-        ChatTaskEmptiness.LEDGER ->
+        ChatTaskEmptiness.NO_TASKS ->
             Triple("chat.tasks.empty", "아직 기록된 작업이 없어요.", null)
 
         ChatTaskEmptiness.FILTERED -> Triple(
@@ -332,20 +332,25 @@ private fun TaskCard(task: ChatTask, onSelect: (ChatTask) -> Unit) {
             )
             StatusBadge(task.status)
         }
-        if (task.stage.isNotBlank()) {
+        if (task.description.isNotBlank()) {
             Text(
-                task.stage,
+                task.description,
                 style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
                 color = ink.copy(alpha = MUTED_OPACITY),
-                modifier = Modifier.testTag("chat.tasks.item.stage"),
+                modifier = Modifier.testTag("chat.tasks.item.description"),
             )
         }
         // A blocked or reviewing task is the one a person has to act on, so its
         // reason and next action are spelled out — and when the ledger recorded
         // neither, the panel says so instead of leaving a blank.
-        if (ChatTaskStatus.needsAttention(task.status) || task.reason.isNotBlank() || task.nextAction.isNotBlank()) {
-            Note("사유", task.reason, "chat.tasks.item.reason")
-            Note("다음", task.nextAction, "chat.tasks.item.next")
+        // What the session is asking, and what it would take to be done. The
+        // ledger's free-text reason and next action were the parent's own
+        // bookkeeping; these are the records a person actually reads.
+        if (ChatTaskStatus.needsAttention(task.status) ||
+            task.waiting?.question?.isNotBlank() == true || task.completionCriteria.isNotBlank()
+        ) {
+            Note("묻는 것", task.waiting?.question.orEmpty(), "chat.tasks.item.question")
+            Note("완료 기준", task.completionCriteria, "chat.tasks.item.criteria")
         }
     }
 }

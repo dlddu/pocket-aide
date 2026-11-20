@@ -74,7 +74,6 @@ data class ChatTaskTurnsUiState(
     val taskVersion: Long = 0,
     val turns: List<ChatTaskTurn> = emptyList(),
     val nextCursor: Long = 0,
-    val ledgerHistory: Boolean = false,
     val isLoading: Boolean = false,
     val hasLoaded: Boolean = false,
     val error: ChatTaskHistoryError? = null,
@@ -101,7 +100,7 @@ data class ChatTaskHistoryUiState(
 data class ChatTaskRequestUiState(
     val taskId: String = "",
     val isStoring: Boolean = false,
-    val stored: ChatTaskRequest? = null,
+    val stored: ChatTaskTurnRef? = null,
     val replayed: Boolean = false,
     val error: ChatTaskRequestError? = null,
 )
@@ -254,7 +253,6 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                 // the pane reads top to bottom as it happened.
                 turns = kept + page.turns,
                 nextCursor = page.nextCursor,
-                ledgerHistory = page.ledgerHistory,
                 hasLoaded = true,
             )
             true
@@ -329,7 +327,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
         _taskRequest.value = ChatTaskRequestUiState(taskId = task.id, isStoring = true)
         try {
-            val stored = api.storeChatTaskRequest(task.id, requestID, text, choiceID, choiceBasisVersion)
+            val stored = api.storeChatTaskRequest(task.id, requestID, text, choiceTurnId)
             // Nothing is added to the conversation and no reply is awaited: the
             // request is on the ledger, and the session finds it when it next
             // looks. Storing therefore works while a reply is being written.

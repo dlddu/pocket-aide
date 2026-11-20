@@ -9,27 +9,29 @@ import (
 	"strings"
 )
 
-// The chat tab's wide layout shows the task ledger of the codex session that
-// answers this conversation. The ledger is the chat slot's own SQLite
-// bookkeeping, read through session-platform's read-only ledger route; nothing
-// here parses chat text or asks a model to summarise, and nothing here writes.
+// The chat tab's wide layout shows the work records of the codex session that
+// answers this conversation, read through session-platform's read-only work
+// route. Nothing here parses chat text or asks a model to summarise, and
+// nothing here writes.
+//
+// This used to read the ledger page. The ledger is gone (platform AC-N10), and
+// the shapes went with it rather than being aliased onto the new route: the
+// ledger page had nowhere to put a task's description and completion criteria
+// or anything a turn holds, so a panel built on it could say work existed but
+// not what the work was. The agreed task and turn records are what this reads
+// now, and the fields the panel shows come from them rather than from a
+// translation layer that could disagree with either end.
 const (
-	// ledgerPageLimit is the platform's per-page cap for the ledger route.
-	ledgerPageLimit = 100
-	// ledgerMaxPages bounds a keyset walk. Reaching it is reported as a
+	// workPageLimit is the platform's per-page cap for the work task route.
+	workPageLimit = 100
+	// workMaxPages bounds a keyset walk. Reaching it is reported as a
 	// truncated list rather than a finished one — a panel that silently drops
 	// the tail would read as "this is all the work there is".
-	ledgerMaxPages = 50
-	// monitorTaskKind marks a record the parent's own monitoring loop keeps for
-	// bookkeeping. The ledger schema has no kind column, so the kind lives in
-	// details; that is the contract the parent ledger writes (the platform's
-	// docs/session-ledger.md). Such rows are not the user's work and stay out
-	// of the panel.
-	monitorTaskKind = "monitor"
+	workMaxPages = 50
 )
 
-// TaskStatus values the ledger allows. Anything else — including a status a
-// newer platform starts writing — is reported as TaskStatusUnknown so the
+// TaskStatus values the work records allow. Anything else — including a status
+// a newer platform starts writing — is reported as TaskStatusUnknown so the
 // panel can show it without guessing.
 const (
 	TaskStatusPlanned   = "planned"
@@ -47,53 +49,81 @@ var taskStatuses = []string{
 	TaskStatusPlanned, TaskStatusCompleted, TaskStatusUnknown,
 }
 
-// ErrTasksUnsupported means this conversation's session keeps no task ledger —
+// ErrTasksUnsupported means this conversation's session keeps no work records —
 // an older control plane without the route, or a workload type that gets no
 // session DB. It is distinct from "no tasks yet" so the app can say so.
-var ErrTasksUnsupported = errTasks{"session keeps no task ledger"}
+var ErrTasksUnsupported = errTasks{"session keeps no work records"}
 
-// ErrTasksUnavailable means the session keeps a ledger but cannot be read right
-// now: it holds no live pod. The rows are still on the slot's volume, so this
-// is not an empty ledger — and reading never wakes the session to get at them.
+// ErrTasksUnavailable means the session keeps work records but cannot be read
+// right now: it holds no live pod. The rows are still on the slot's volume, so
+// this is not an empty list — and reading never wakes the session to get at
+// them.
 var ErrTasksUnavailable = errTasks{"the chat session is not awake, so its task list cannot be read"}
 
 type errTasks struct{ msg string }
 
 func (e errTasks) Error() string { return e.msg }
 
-// Task is one ledger record as the app needs it: what it is, where it stands,
-// and — when the ledger carries them — why it is stuck and what comes next.
+// Task is one work task as the panel needs it: what it is, where it stands,
+// and — when the records carry them — what the session is asking and what it
+// offers the person to say.
 type Task struct {
 	ID     string `json:"id"`
 	Title  string `json:"title"`
 	Status string `json:"status"`
-	Stage  string `json:"stage"`
-	// Reason and NextAction come from the task's *current* state, not from the
-	// first session it ever used. Empty means the ledger has none recorded; the
-	// panel says so rather than leaving a blank.
-	Reason     string `json:"reason,omitempty"`
-	NextAction string `json:"next_action,omitempty"`
-	// Requests is how many user requests are waiting on this task, absent when
-	// none ever arrived. It comes from the ledger page itself, so the panel can
-	// show "someone asked something" without a second call — and the parent's
-	// own progress on them is what moves the counts.
-	Requests *TaskRequestSummary `json:"requests,omitempty"`
-	// Choices are what the session itself offers a person to say about this
-	// task, written against the version this row carries. Absent when it offers
-	// none — the app then says so rather than inventing something.
+	// Description and CompletionCriteria are the agreed task's own fields. The
+	// ledger page had no column for either, so the panel could not show what a
+	// task was for or how it would be known to be done. Empty means the record
+	// has none, and the panel says so rather than leaving a blank that reads
+	// like an answer.
+	Description        string `json:"description,omitempty"`
+	CompletionCriteria string `json:"completion_criteria,omitempty"`
+	// TurnsTotal is how many exchanges this task has had, so the panel can
+	// show that a task has history without opening it.
+	TurnsTotal int64 `json:"turns_total"`
+	// Migrated says this task came from the ledger the platform retired. The
+	// panel uses it to avoid presenting a carried-over task as one written
+	// here; it is not a reason to offer a separate history, because the task's
+	// turns are its history either way.
+	Migrated bool `json:"migrated,omitempty"`
+	// Waiting is the task's latest turn when that turn still needs somebody.
+	// Absent when nothing is waiting: a zeroed record on every row would read
+	// as "nothing asked here" rather than "nothing to say".
+	Waiting *TaskWaiting `json:"waiting,omitempty"`
+	// Choices are what the session offers a person to say next. They belong to
+	// one turn — ChoiceTurnID — because what makes a pick current is that turn
+	// still being the task's latest. Absent when it offers none; the app then
+	// says so rather than inventing something.
 	Choices []TaskChoice `json:"choices,omitempty"`
+	// ChoiceTurnID is the turn Choices were offered on, sent back with a pick
+	// so the platform can refuse one from a screen the task has moved past. It
+	// replaced the ledger's (choice id, basis version) pair: the turn is the
+	// one fact that decides currency, and a version carried beside a choice id
+	// was a second way of saying it that could disagree with the first.
+	ChoiceTurnID int64 `json:"choice_turn_id,omitempty"`
 }
 
-// TaskChoice is one sentence the session offers for this task. The app shows
-// Label, fills its request box with RequestText and sends ID back, so the
-// session can tell which of its own sentences came back. It is a sentence to
-// send, not a permission.
+// TaskWaiting is the open turn on a task: what was asked, and whether anybody
+// has picked it up. Running is a turn the parent has started and not finished;
+// otherwise nobody has taken it yet.
+type TaskWaiting struct {
+	TurnID  int64  `json:"turn_id"`
+	Request string `json:"request,omitempty"`
+	// Question is what the session is asking about this task, which is the
+	// nearest thing the agreed records have to "why this is stuck". The ledger
+	// carried a free-text reason and next action in its session relations;
+	// those were the parent's own bookkeeping and are not part of what a person
+	// reads, so the panel shows the question the session actually asked.
+	Question string `json:"question,omitempty"`
+	Running  bool   `json:"running,omitempty"`
+}
+
+// TaskChoice is one sentence a turn offers for the next one. The app shows
+// Label and fills its request box with RequestText. It is a sentence to send,
+// not a permission: picking one approves no tool and no merge.
 type TaskChoice struct {
-	ID           string `json:"id"`
-	Label        string `json:"label"`
-	RequestText  string `json:"request_text"`
-	BasisVersion int64  `json:"basis_version"`
-	CreatedAt    string `json:"created_at"`
+	Label       string `json:"label"`
+	RequestText string `json:"request_text"`
 }
 
 // TaskList is the panel's whole payload.
@@ -109,32 +139,33 @@ type TaskList struct {
 	Truncated bool `json:"truncated"`
 }
 
-// ledgerSessionNote is one session entry of a ledger task, narrowed to what the
-// panel reads: whether the entry is still live, and the note it carries.
-type ledgerSessionNote struct {
-	Cleanup    string `json:"cleanup"`
-	Reason     string `json:"reason"`
-	NextAction string `json:"next_action"`
-}
-
-// ledgerPage is session-platform's answer to the read-only ledger route.
-type ledgerPage struct {
+// workTaskPage is session-platform's answer to the read-only work task route.
+// It is decoded into the fields the panel reads and no others — a struct that
+// mirrored the whole platform shape would quietly grow fields nothing renders.
+type workTaskPage struct {
 	Tasks []struct {
-		ID       string              `json:"id"`
-		Requests *TaskRequestSummary `json:"requests"`
-		Choices  []TaskChoice        `json:"choices"`
-		Task     struct {
-			Title    string              `json:"title"`
-			Status   string              `json:"status"`
-			Stage    string              `json:"stage"`
-			Sessions []ledgerSessionNote `json:"sessions"`
-			Details  map[string]any      `json:"details"`
+		Task struct {
+			ID                 string  `json:"id"`
+			Title              string  `json:"title"`
+			Description        *string `json:"description"`
+			CompletionCriteria *string `json:"completion_criteria"`
+			Status             string  `json:"status"`
 		} `json:"task"`
+		TurnsTotal int64 `json:"turns_total"`
+		LatestTurn *struct {
+			ID        int64        `json:"id"`
+			Request   *string      `json:"request"`
+			Question  *string      `json:"question"`
+			Choices   []TaskChoice `json:"choices"`
+			StartedAt *string      `json:"started_at"`
+			EndedAt   *string      `json:"ended_at"`
+		} `json:"latest_turn"`
+		Migrated bool `json:"migrated"`
 	} `json:"tasks"`
 	NextCursor string `json:"next_cursor"`
 }
 
-// Tasks reads the task ledger of the codex session answering userID's
+// Tasks reads the work records of the codex session answering userID's
 // conversation. The session is taken from the user's own chat_sessions row, so
 // a caller cannot name someone else's session; a conversation that has not
 // opened a session yet simply has no tasks.
@@ -154,40 +185,56 @@ func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error
 	seen := map[string]bool{}
 	cursor := ""
 	for page := 0; ; page++ {
-		if page == ledgerMaxPages {
+		if page == workMaxPages {
 			// More pages remain. Say so rather than presenting a prefix as the
 			// whole list.
 			out.Truncated = true
 			break
 		}
-		decoded, err := e.ledgerPage(ctx, sessionID, cursor)
+		decoded, err := e.workTaskPage(ctx, sessionID, cursor)
 		if err != nil {
 			return TaskList{}, err
 		}
 		for _, row := range decoded.Tasks {
 			// Keyset pages are not a snapshot, and a retried page can repeat a
 			// row; the first sighting of an ID wins.
-			if row.ID == "" || seen[row.ID] {
+			if row.Task.ID == "" || seen[row.Task.ID] {
 				continue
 			}
-			seen[row.ID] = true
-			if detailsKind(row.Task.Details) == monitorTaskKind {
-				continue
-			}
+			seen[row.Task.ID] = true
+			// There is no monitoring row to filter out any more: the parent's
+			// loops are a record of their own on the slot and were never tasks
+			// (platform AC-N10). A filter here would be dead code that reads
+			// like a live rule.
 			task := Task{
-				ID:      row.ID,
-				Title:   strings.TrimSpace(row.Task.Title),
-				Status:  normaliseStatus(row.Task.Status),
-				Stage:   strings.TrimSpace(row.Task.Stage),
-				Choices: row.Choices,
+				ID:                 row.Task.ID,
+				Title:              strings.TrimSpace(row.Task.Title),
+				Status:             normaliseStatus(row.Task.Status),
+				Description:        strings.TrimSpace(derefString(row.Task.Description)),
+				CompletionCriteria: strings.TrimSpace(derefString(row.Task.CompletionCriteria)),
+				TurnsTotal:         row.TurnsTotal,
+				Migrated:           row.Migrated,
 			}
-			task.Reason, task.NextAction = currentNote(row.Task.Sessions)
-			// Only when something is actually waiting: a zeroed summary on
-			// every row would read as "nothing asked here" rather than
-			// "nothing to say".
-			if row.Requests != nil && row.Requests.Open() > 0 {
-				summary := *row.Requests
-				task.Requests = &summary
+			if turn := row.LatestTurn; turn != nil {
+				// Only the latest turn's choices are current, so those are the
+				// only ones the panel may offer — and the turn they belong to
+				// travels with them.
+				if len(turn.Choices) > 0 {
+					task.Choices = turn.Choices
+					task.ChoiceTurnID = turn.ID
+				}
+				// A turn with words and no end is one somebody still owes an
+				// answer. Started means the parent took it; otherwise nobody
+				// has yet. This is the platform's own definition of an open
+				// turn, applied to the one turn this page carries.
+				if turn.Request != nil && turn.EndedAt == nil {
+					task.Waiting = &TaskWaiting{
+						TurnID:   turn.ID,
+						Request:  strings.TrimSpace(derefString(turn.Request)),
+						Question: strings.TrimSpace(derefString(turn.Question)),
+						Running:  turn.StartedAt != nil,
+					}
+				}
 			}
 			out.Tasks = append(out.Tasks, task)
 			out.Counts[task.Status]++
@@ -207,36 +254,36 @@ func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error
 	return out, nil
 }
 
-func (e *Engine) ledgerPage(ctx context.Context, sessionID, cursor string) (ledgerPage, error) {
+func (e *Engine) workTaskPage(ctx context.Context, sessionID, cursor string) (workTaskPage, error) {
 	query := url.Values{}
-	query.Set("limit", fmt.Sprint(ledgerPageLimit))
+	query.Set("limit", fmt.Sprint(workPageLimit))
 	if cursor != "" {
 		query.Set("after_id", cursor)
 	}
-	path := "/sessions/" + url.PathEscape(sessionID) + "/ledger/tasks?" + query.Encode()
+	path := "/sessions/" + url.PathEscape(sessionID) + "/work/tasks?" + query.Encode()
 	status, raw, err := e.platform.Do(ctx, http.MethodGet, path, nil)
 	if err != nil {
-		return ledgerPage{}, fmt.Errorf("read task ledger: %w", err)
+		return workTaskPage{}, fmt.Errorf("read work tasks: %w", err)
 	}
 	switch status {
 	case http.StatusOK:
 	case http.StatusNotImplemented, http.StatusNotFound:
-		// 501 is a session whose type keeps no ledger; 404 is a control plane
-		// without the route at all, or a session this deployment no longer
-		// has. None of them is an empty ledger, so the panel must not claim
-		// there is no work.
-		return ledgerPage{}, ErrTasksUnsupported
+		// 501 is a session whose type keeps no work records; 404 is a control
+		// plane without the route at all, or a session this deployment no
+		// longer has. None of them is an empty list, so the panel must not
+		// claim there is no work.
+		return workTaskPage{}, ErrTasksUnsupported
 	case http.StatusConflict:
 		// The session is snapshotted or holds no pod. Its rows are still on
-		// the slot, so this is not an empty ledger — and the panel must not
-		// wake the session to read them.
-		return ledgerPage{}, ErrTasksUnavailable
+		// the slot, so this is not an empty list — and the panel must not wake
+		// the session to read them.
+		return workTaskPage{}, ErrTasksUnavailable
 	default:
-		return ledgerPage{}, platformError("ledger", status, raw)
+		return workTaskPage{}, platformError("work tasks", status, raw)
 	}
-	var decoded ledgerPage
+	var decoded workTaskPage
 	if err := json.Unmarshal(raw, &decoded); err != nil {
-		return ledgerPage{}, fmt.Errorf("decode task ledger: %w", err)
+		return workTaskPage{}, fmt.Errorf("decode work tasks: %w", err)
 	}
 	return decoded, nil
 }
@@ -259,37 +306,13 @@ func normaliseStatus(raw string) string {
 	return TaskStatusUnknown
 }
 
-// currentNote is why the task stands where it does now and what comes next. A
-// task collects a session entry as it goes, so its present state is the *last*
-// entry carrying a note — not the first, which is where the task started.
-// Entries the parent has finished with (cleanup "deleted") are history, so a
-// live entry wins over them even when it comes earlier in the list.
-func currentNote(sessions []ledgerSessionNote) (reason, nextAction string) {
-	for i := len(sessions) - 1; i >= 0; i-- {
-		s := sessions[i]
-		r, n := strings.TrimSpace(s.Reason), strings.TrimSpace(s.NextAction)
-		if r == "" && n == "" {
-			continue
-		}
-		if strings.ToLower(strings.TrimSpace(s.Cleanup)) == "deleted" {
-			// Keep it as a fallback, but a live entry describes the present
-			// better, so keep looking.
-			if reason == "" && nextAction == "" {
-				reason, nextAction = r, n
-			}
-			continue
-		}
-		return r, n
-	}
-	return reason, nextAction
-}
-
-// detailsKind reads details.kind, the contract that marks a monitoring
-// bookkeeping row. A details map without it yields "".
-func detailsKind(details map[string]any) string {
-	if details == nil {
+// derefString is "not recorded" read as the empty string. The platform sends
+// null for a field it never had, which is deliberately not an empty string on
+// the wire; the panel shows nothing for either, so they collapse here and the
+// distinction is not carried further than it means anything.
+func derefString(s *string) string {
+	if s == nil {
 		return ""
 	}
-	kind, _ := details["kind"].(string)
-	return strings.ToLower(strings.TrimSpace(kind))
+	return *s
 }

@@ -52,7 +52,7 @@ func (p *turnPlatform) Do(_ context.Context, method, path string, _ []byte) (int
 
 func turnEngine(t *testing.T) (*chat.Store, *chat.Engine, *turnPlatform) {
 	t.Helper()
-	store, _, _ := ledgerEngine(t)
+	store, _, _ := workEngine(t)
 	platform := newTurnPlatform()
 	engine := chat.NewEngine(store, platform, nil)
 	t.Cleanup(engine.Wait)
@@ -148,19 +148,19 @@ func TestTaskTurns_CarryTheAgreedModelToTheApp(t *testing.T) {
 	if two.EndedAt != nil {
 		t.Fatalf("turn 2 arrived already closed: %+v", two)
 	}
-	// A carried-over exchange is marked, so the pane can offer the old ledger
-	// history under the turns rather than implying it is missing.
+	// A carried-over exchange is marked, so the pane does not present it as
+	// something written here. It is not an offer of a second history: the
+	// ledger's own history route is gone, and a task's turns are its history
+	// whether it was carried over or written here.
 	if one.Origin != "user_request" || two.Origin != "app_request" {
 		t.Fatalf("origins lost: %q %q", one.Origin, two.Origin)
-	}
-	if !page.LedgerHistory {
-		t.Fatal("a migrated task did not advertise its ledger history")
 	}
 }
 
 // A task created after the cutover: the agreed fields it *did* record arrive,
-// it has no turns, and it does not claim a ledger history it never had.
-func TestTaskTurns_FreshTaskHasItsFieldsAndNoInventedHistory(t *testing.T) {
+// and having no turns yet is the ordinary state of a new task rather than an
+// error or a missing history.
+func TestTaskTurns_FreshTaskHasItsFieldsAndNoTurns(t *testing.T) {
 	store, engine, platform := turnEngine(t)
 	bindSession(t, store, 1, "cx1")
 	platform.pages["cx1/t2"] = freshTurnsPage
@@ -177,9 +177,6 @@ func TestTaskTurns_FreshTaskHasItsFieldsAndNoInventedHistory(t *testing.T) {
 	}
 	if len(page.Turns) != 0 {
 		t.Fatalf("a fresh task has turns: %+v", page.Turns)
-	}
-	if page.LedgerHistory {
-		t.Fatal("a task created after the cutover claimed a ledger history")
 	}
 }
 

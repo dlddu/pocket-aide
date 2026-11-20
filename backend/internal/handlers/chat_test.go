@@ -27,10 +27,10 @@ type chatPlatform struct {
 	status     int    // forced status for every call when non-zero
 	statusBody string // body sent with the forced status
 	refresh    int
-	// ledgerStatus forces the read-only ledger route's status; ledger is the
+	// workStatus forces the read-only work task route's status; work is the
 	// page it answers otherwise.
-	ledgerStatus int
-	ledger       string
+	workStatus int
+	work       string
 }
 
 func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -63,13 +63,13 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t := p.transcript[id]
 		offset := int(body["offset"].(float64))
 		_ = json.NewEncoder(w).Encode(map[string]any{"payload": t[min(offset, len(t)):], "nextOffset": len(t)})
-	case strings.Contains(path, "/ledger/tasks"):
-		if p.ledgerStatus != 0 {
-			w.WriteHeader(p.ledgerStatus)
+	case strings.Contains(path, "/work/tasks"):
+		if p.workStatus != 0 {
+			w.WriteHeader(p.workStatus)
 			_, _ = w.Write([]byte(`{"code":"x","error":"no"}`))
 			return
 		}
-		_, _ = w.Write([]byte(p.ledger))
+		_, _ = w.Write([]byte(p.work))
 	case strings.HasSuffix(path, "/plugins/refresh"):
 		if p.refresh != 0 {
 			w.WriteHeader(p.refresh)
@@ -91,7 +91,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1'), (2, 'u2')`); err != nil {
 		t.Fatalf("seed users: %v", err)
 	}
-	platform := &chatPlatform{transcript: map[string]string{}, ledger: `{"tasks":[],"next_cursor":""}`}
+	platform := &chatPlatform{transcript: map[string]string{}, work: `{"tasks":[],"next_cursor":""}`}
 	srv := httptest.NewServer(platform)
 	t.Cleanup(srv.Close)
 	store := chat.New(conn)
