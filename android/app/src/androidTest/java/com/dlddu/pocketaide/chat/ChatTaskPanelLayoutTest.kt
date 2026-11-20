@@ -38,7 +38,7 @@ class ChatTaskPanelLayoutTest {
     private val tasks = mutableStateOf(
         ChatTasksUiState(
             sessionId = "cx1",
-            tasks = listOf(ChatTask(id = "t1", title = "막힌 작업", status = ChatTaskStatus.BLOCKED, stage = "review")),
+            tasks = listOf(ChatTask(id = "t1", title = "막힌 작업", status = ChatTaskStatus.BLOCKED)),
             counts = mapOf(ChatTaskStatus.BLOCKED to 1),
             hasLoaded = true,
         ),
@@ -73,9 +73,6 @@ class ChatTaskPanelLayoutTest {
                     requestDraft = "",
                     onRequestDraftChange = {},
                     onChoicePicked = {},
-                    history = ChatTaskHistoryUiState(),
-                    onLoadHistory = {},
-                    onLoadMoreHistory = {},
                     turns = ChatTaskTurnsUiState(),
                     onLoadTurns = {},
                     onLoadMoreTurns = {},

@@ -23,7 +23,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -43,8 +42,6 @@ class ChatTaskPanelInteractionTest {
     val compose = createComposeRule()
 
     private var stores = 0
-    private var historyLoads = 0
-    private var historyMores = 0
     private var turnLoads = 0
     private var turnMores = 0
 
@@ -52,15 +49,17 @@ class ChatTaskPanelInteractionTest {
         id = "t-blocked",
         title = "막힌 작업",
         status = ChatTaskStatus.BLOCKED,
-        stage = "review",
-        reason = "CI 가 막혔다",
+        completionCriteria = "CI 가 초록이면 끝",
+        // 「묻는 것」은 세션이 실제로 물은 question 이다 — 원장의 자유문 사유와
+        // 다음 행동은 부모의 기장이었고 사람이 읽는 것이 아니었다.
+        waiting = ChatTaskWaiting(turnId = 5, request = "이거 해 줘", question = "CI 가 막혔다"),
     )
 
     private val ledger = ChatTasksUiState(
         sessionId = "cx1",
         tasks = listOf(
             blocked,
-            ChatTask(id = "t-review", title = "검토 대기", status = ChatTaskStatus.REVIEW, stage = "review"),
+            ChatTask(id = "t-review", title = "검토 대기", status = ChatTaskStatus.REVIEW),
             ChatTask(id = "t-running", title = "도는 작업", status = ChatTaskStatus.RUNNING),
             ChatTask(id = "t-done1", title = "끝난 작업 1", status = ChatTaskStatus.COMPLETED),
             ChatTask(id = "t-done2", title = "끝난 작업 2", status = ChatTaskStatus.COMPLETED),
@@ -82,7 +81,6 @@ class ChatTaskPanelInteractionTest {
         tasks: ChatTasksUiState = ledger,
         chat: ChatUiState = ChatUiState(hasLoaded = true),
         taskRequest: ChatTaskRequestUiState = ChatTaskRequestUiState(),
-        history: ChatTaskHistoryUiState = ChatTaskHistoryUiState(taskId = "t-blocked", hasLoaded = true),
         turns: ChatTaskTurnsUiState = ChatTaskTurnsUiState(taskId = "t-blocked", hasLoaded = true),
     ) {
         compose.setContent {
@@ -93,9 +91,9 @@ class ChatTaskPanelInteractionTest {
                 var openId by remember { mutableStateOf<String?>(null) }
                 var request by remember { mutableStateOf("") }
                 // 화면이 쓰는 그 규칙을 그대로 둔다(`chatTaskPickHolds`): 고른
-                // 문장을 한 글자라도 고치면 출처와 기준이 함께 떨어진다.
-                var pickId by remember { mutableStateOf("") }
-                var pickBasis by remember { mutableStateOf(0L) }
+                // 문장을 한 글자라도 고치면 출처가 함께 떨어진다. 출처는 이제
+                // 선택지 id 가 아니라 그것이 제시된 turn 이다.
+                var pickTurn by remember { mutableStateOf(0L) }
                 var pickText by remember { mutableStateOf("") }
                 ChatPanes(
                     state = chat,
@@ -124,26 +122,21 @@ class ChatTaskPanelInteractionTest {
                     onRequestDraftChange = {
                         request = it
                         if (!chatTaskPickHolds(it, pickText)) {
-                            pickId = ""
-                            pickBasis = 0L
+                            pickTurn = 0L
                             pickText = ""
                         }
                     },
                     onChoicePicked = {
                         request = it.requestText
-                        pickId = it.id
-                        pickBasis = it.basisVersion
+                        pickTurn = tasks.tasks.firstOrNull { t -> t.id == openId }?.choiceTurnId ?: 0L
                         pickText = it.requestText
                     },
-                    history = history,
-                    onLoadHistory = { historyLoads++ },
-                    onLoadMoreHistory = { historyMores++ },
                     turns = turns,
                     onLoadTurns = { turnLoads++ },
                     onLoadMoreTurns = { turnMores++ },
                     onStoreRequest = {
                         stores++
-                        sentPick = pickId to pickBasis
+                        sentPick = pickTurn
                     },
                 )
             }
@@ -152,7 +145,8 @@ class ChatTaskPanelInteractionTest {
     }
 
     /** 마지막 저장이 함께 보낸 출처와 기준 version. */
-    private var sentPick: Pair<String, Long> = "" to 0L
+    // The turn a pick named, or zero for the person's own words.
+    private var sentPick: Long = 0L
 
     private fun rows(): Int = compose.onAllNodesWithTag("chat.tasks.item").fetchSemanticsNodes().size
 
@@ -234,7 +228,7 @@ class ChatTaskPanelInteractionTest {
         compose.onAllNodesWithTag("chat.tasks.list").assertCountEquals(0)
         // 어느 작업인지가 화면에 있다 — 보내는 메시지가 그 id 로 부른다.
         compose.onNodeWithTag("chat.tasks.detail.id").assertTextContains("t-blocked", substring = true)
-        compose.onNodeWithTag("chat.tasks.detail.reason").assertTextContains("CI 가 막혔다", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.question").assertTextContains("CI 가 막혔다", substring = true)
 
         val window = widthOf("chat.screen")
         assertRatio("대화", widthOf("chat.messages.pane") / window, 0.5f)
@@ -254,15 +248,15 @@ class ChatTaskPanelInteractionTest {
         compose.onAllNodesWithTag("chat.tasks.detail").assertCountEquals(0)
     }
 
-    // 원장에 없는 칸은 비워 두지도, 채워 넣지도 않는다.
+    // 기록에 없는 칸은 비워 두지도, 채워 넣지도 않는다 — 빈 줄은 사람이 답으로
+    // 읽는다.
     @Test
     fun anUnrecordedFieldSaysSoRatherThanLookingBlank() {
         start()
         compose.onNodeWithText("도는 작업").performClick()
         compose.waitForIdle()
 
-        compose.onNodeWithTag("chat.tasks.detail.reason").assertTextContains("원장에 적혀 있지 않아요.")
-        compose.onNodeWithTag("chat.tasks.detail.next").assertTextContains("원장에 적혀 있지 않아요.")
+        compose.onNodeWithTag("chat.tasks.detail.question").assertTextContains("원장에 적혀 있지 않아요.")
     }
 
     // ── 보낼 문장 ───────────────────────────────────────────────────────────
@@ -275,10 +269,15 @@ class ChatTaskPanelInteractionTest {
             ledger.copy(
                 tasks = ledger.tasks.map {
                     if (it.id == "t-blocked") {
-                        it.copy(choices = listOf(ChatTaskChoice(
-                            id = "c-ci", label = "CI 로그 확인 요청",
-                            requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.", basisVersion = 3,
-                        )))
+                        it.copy(
+                            choices = listOf(
+                                ChatTaskChoice(
+                                    label = "CI 로그 확인 요청",
+                                    requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.",
+                                ),
+                            ),
+                            choiceTurnId = 3L,
+                        )
                     } else {
                         it
                     }
@@ -309,147 +308,6 @@ class ChatTaskPanelInteractionTest {
         assertEquals(1, stores)
     }
 
-    // 상세를 열면 이력을 한 번 읽고, 기록이 있으면 시간순으로 보여 준다.
-    @Test
-    fun theHistoryIsReadOnceAndShownInOrder() {
-        start(
-            history = ChatTaskHistoryUiState(
-                taskId = "t-blocked", hasLoaded = true, nextCursor = 2,
-                events = listOf(
-                    ChatTaskEvent(seq = 1, taskId = "t-blocked", at = "2026-11-19T00:00:00Z",
-                        kind = "task_created", actor = "parent", summary = "작업을 원장에 등록했다"),
-                    ChatTaskEvent(seq = 2, taskId = "t-blocked", at = "2026-11-19T00:01:00Z",
-                        kind = "request_stored", actor = "user-1", summary = "요청을 남겼다",
-                        detail = mapOf("text" to JsonPrimitive("아주 긴 요청 ".repeat(20)))),
-                ),
-            ),
-        )
-        openBlocked()
-
-        compose.onNodeWithTag("chat.tasks.detail.history").assertIsDisplayed()
-        compose.onAllNodesWithTag("chat.tasks.detail.history.line").assertCountEquals(2)
-        compose.onNodeWithText("내 요청 · 2026-11-19T00:01:00Z").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.history.more").assertIsDisplayed()
-        assertEquals("상세를 열면 한 번 읽는다", 1, historyLoads)
-        // 긴 본문은 눌러서 펼친다. 이력 줄은 본문이 있으면 눌러서 펼치는
-        // 버튼이 되고, 그래서 자손의 의미를 자기에게 합친다
-        // (MergeDescendants) — 본문은 합쳐진 트리에 자기 노드가 없으므로
-        // 합치지 않은 트리에서 본다.
-        compose.onAllNodesWithTag("chat.tasks.detail.history.body", useUnmergedTree = true)
-            .onFirst().performClick()
-        compose.waitForIdle()
-    }
-
-    // 「이전 기록 더 보기」는 다음 페이지를 청한다 — 커서가 있을 때만 보인다.
-    @Test
-    fun askingForOlderHistoryReadsTheNextPage() {
-        start(history = historyOf(nextCursor = 2))
-        openBlocked()
-
-        compose.onNodeWithTag("chat.tasks.detail.history.more").performClick()
-        compose.waitForIdle()
-        assertEquals("더 보기는 다음 페이지를 청한다", 1, historyMores)
-    }
-
-    // 커서가 없으면(마지막 페이지) 더 보기를 두지 않는다 — 누를 것이 없다.
-    // 화면은 테스트마다 한 번만 띄울 수 있으므로 커서 있는 경우와 따로 본다.
-    @Test
-    fun theLastPageOfHistoryOffersNothingMoreToRead() {
-        start(history = historyOf(nextCursor = 0))
-        openBlocked()
-
-        compose.onAllNodesWithTag("chat.tasks.detail.history.more").assertCountEquals(0)
-        compose.onAllNodesWithTag("chat.tasks.detail.history.line").assertCountEquals(2)
-    }
-
-    // 긴 본문은 접혀 있고, 누르면 실제로 더 많이 보인다 — 화면에서 자란다.
-    @Test
-    fun aLongHistoryBodyGrowsWhenTapped() {
-        start(history = historyOf(nextCursor = 0))
-        openBlocked()
-
-        // 합쳐진 트리에는 본문 노드가 없다(줄 자체가 버튼이다) — 합치지 않은
-        // 트리에서 본다.
-        val body = compose.onAllNodesWithTag("chat.tasks.detail.history.body", useUnmergedTree = true).onFirst()
-        val collapsed = body.getUnclippedBoundsInRoot().let { it.bottom - it.top }
-        body.performClick()
-        compose.waitForIdle()
-        val expanded = compose.onAllNodesWithTag("chat.tasks.detail.history.body", useUnmergedTree = true)
-            .onFirst().getUnclippedBoundsInRoot().let { it.bottom - it.top }
-        assertTrue("펼치면 더 많이 보여야 한다 (접힘 $collapsed → 펼침 $expanded)", expanded > collapsed)
-    }
-
-    // 끝난 요청의 이력 줄은 **사람이 읽을 결과**를 담는다 — 상태 낱말만 두지
-    // 않는다.
-    @Test
-    fun aSettledRequestShowsTheResultThePersonWillRead() {
-        start(
-            history = ChatTaskHistoryUiState(
-                taskId = "t-blocked", hasLoaded = true,
-                events = listOf(
-                    ChatTaskEvent(
-                        seq = 9, taskId = "t-blocked", at = "2026-11-19T00:09:00Z",
-                        kind = "request_settled", actor = "parent", summary = "요청을 처리했다",
-                        detail = mapOf("result" to JsonPrimitive("PR 올리고 CI 통과까지 확인했다"), "outcome" to JsonPrimitive("processed")),
-                    ),
-                ),
-            ),
-        )
-        openBlocked()
-
-        compose.onNodeWithText("PR 올리고 CI 통과까지 확인했다", substring = true).assertIsDisplayed()
-    }
-
-    // 불러오는 중은 빈 기록도 실패도 아니다.
-    @Test
-    fun aHistoryBeingReadSaysItIsLoading() {
-        start(history = ChatTaskHistoryUiState(taskId = "t-blocked", isLoading = true))
-        openBlocked()
-
-        compose.onNodeWithTag("chat.tasks.detail.history.loading").assertIsDisplayed()
-        compose.onAllNodesWithTag("chat.tasks.detail.history.empty").assertCountEquals(0)
-        compose.onAllNodesWithTag("chat.tasks.detail.history.error").assertCountEquals(0)
-    }
-
-    /** 이력 두 줄 — 하나는 등록, 하나는 아주 긴 요청 원문. */
-    private fun historyOf(nextCursor: Long) = ChatTaskHistoryUiState(
-        taskId = "t-blocked", hasLoaded = true, nextCursor = nextCursor,
-        events = listOf(
-            ChatTaskEvent(
-                seq = 1, taskId = "t-blocked", at = "2026-11-19T00:00:00Z",
-                kind = "task_created", actor = "parent", summary = "작업을 원장에 등록했다",
-            ),
-            ChatTaskEvent(
-                seq = 2, taskId = "t-blocked", at = "2026-11-19T00:01:00Z",
-                kind = "request_stored", actor = "user-1", summary = "요청을 남겼다",
-                detail = mapOf("text" to JsonPrimitive("아주 긴 요청 ".repeat(20))),
-            ),
-        ),
-    )
-
-    // 기록 없음과 실패는 다른 화면이고, 실패는 다시 시도를 내민다.
-    @Test
-    fun anEmptyHistoryAndAFailureLookDifferent() {
-        start()
-        openBlocked()
-        compose.onNodeWithTag("chat.tasks.detail.history.empty").assertIsDisplayed()
-        compose.onAllNodesWithTag("chat.tasks.detail.history.error").assertCountEquals(0)
-    }
-
-    @Test
-    fun aFailedHistoryOffersARetry() {
-        start(history = ChatTaskHistoryUiState(
-            taskId = "t-blocked", hasLoaded = true, error = ChatTaskHistoryError.UNREACHABLE,
-        ))
-        openBlocked()
-        compose.onNodeWithTag("chat.tasks.detail.history.error").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.history.retry").performClick()
-        compose.waitForIdle()
-        assertEquals("다시 시도는 다시 읽는다", 2, historyLoads)
-        compose.onAllNodesWithTag("chat.tasks.detail.history.empty").assertCountEquals(0)
-    }
-
-    // 직접 쓴 요청도 그 작업의 원장에 저장된다.
     @Test
     fun aTypedRequestIsStoredForTheTaskOnScreen() {
         start()
@@ -495,7 +353,7 @@ class ChatTaskPanelInteractionTest {
         start(
             taskRequest = ChatTaskRequestUiState(
                 taskId = "t-blocked",
-                stored = ChatTaskRequest(id = "app-1", taskId = "t-blocked", text = "요청"),
+                stored = ChatTaskTurnRef(id = 11, request = "요청"),
             ),
         )
         openBlocked()
@@ -511,14 +369,18 @@ class ChatTaskPanelInteractionTest {
         start(
             ledger.copy(
                 tasks = ledger.tasks.map {
-                    if (it.id == "t-blocked") it.copy(requests = ChatTaskRequests(pending = 2, reconciling = 1, lastSeq = 9)) else it
+                    if (it.id == "t-blocked") {
+                        it.copy(waiting = ChatTaskWaiting(turnId = 9, request = "이거 해 줘", question = "어디까지?"))
+                    } else {
+                        it
+                    }
                 },
             ),
         )
         openBlocked()
 
         compose.onNodeWithTag("chat.tasks.detail.waitingRequests")
-            .assertTextContains("확인 대기 3건", substring = true)
+            .assertTextContains("확인 대기", substring = true)
     }
 
     // 실패는 쓴 말을 지우지 않는다 — 이유를 말하고 다시 저장하기를 내민다.
@@ -545,7 +407,7 @@ class ChatTaskPanelInteractionTest {
         start(
             taskRequest = ChatTaskRequestUiState(
                 taskId = "t-review",
-                stored = ChatTaskRequest(id = "app-9", taskId = "t-review", text = "다른 작업"),
+                stored = ChatTaskTurnRef(id = 12, request = "다른 작업"),
             ),
         )
         openBlocked()
@@ -591,7 +453,7 @@ class ChatTaskPanelInteractionTest {
         compose.waitForIdle()
         compose.onNodeWithTag("chat.tasks.detail.store").performClick()
         compose.waitForIdle()
-        assertEquals("고른 선택지의 id 와 기준 version 이 함께 간다", "c-ci" to 3L, sentPick)
+        assertEquals("고른 선택지가 제시된 turn 이 함께 간다", 3L, sentPick)
 
         // 같은 문장을 고른 뒤 한 글자를 덧붙이면 그것은 사람의 말이다.
         compose.onAllNodesWithTag("chat.tasks.detail.choice").onFirst().performClick()
@@ -600,7 +462,7 @@ class ChatTaskPanelInteractionTest {
         compose.waitForIdle()
         compose.onNodeWithTag("chat.tasks.detail.store").performClick()
         compose.waitForIdle()
-        assertEquals("고친 초안은 출처 없이 간다", "" to 0L, sentPick)
+        assertEquals("고친 초안은 출처 없이 간다", 0L, sentPick)
     }
 
     // 작업이 움직여 선택지가 낡았다는 거절은 다른 실패와 다른 말을 하고, 쓴 말을
@@ -625,12 +487,13 @@ class ChatTaskPanelInteractionTest {
                 it.copy(
                     choices = listOf(
                         ChatTaskChoice(
-                            id = "c-ci",
                             label = "CI 로그 확인 요청",
                             requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.",
-                            basisVersion = 3,
                         ),
                     ),
+                    // 선택지가 제시된 turn. 픽은 이것을 들고 가고, 플랫폼은 이
+                    // turn 이 아직 작업의 최신인지로 낡음을 판정한다.
+                    choiceTurnId = 3L,
                 )
             } else {
                 it

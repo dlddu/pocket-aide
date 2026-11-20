@@ -6,14 +6,30 @@ import (
 	"testing"
 )
 
+// tasksBody is the panel's payload as the app decodes it. It is declared here
+// rather than reused from the chat package so that a field quietly leaving the
+// response is a failing test rather than a shared struct change.
 type tasksBody struct {
 	SessionID string `json:"session_id"`
 	Tasks     []struct {
-		ID         string `json:"id"`
-		Status     string `json:"status"`
-		Stage      string `json:"stage"`
-		Reason     string `json:"reason"`
-		NextAction string `json:"next_action"`
+		ID                 string `json:"id"`
+		Title              string `json:"title"`
+		Status             string `json:"status"`
+		Description        string `json:"description"`
+		CompletionCriteria string `json:"completion_criteria"`
+		TurnsTotal         int64  `json:"turns_total"`
+		Migrated           bool   `json:"migrated"`
+		Waiting            *struct {
+			TurnID   int64  `json:"turn_id"`
+			Request  string `json:"request"`
+			Question string `json:"question"`
+			Running  bool   `json:"running"`
+		} `json:"waiting"`
+		Choices []struct {
+			Label       string `json:"label"`
+			RequestText string `json:"request_text"`
+		} `json:"choices"`
+		ChoiceTurnID int64 `json:"choice_turn_id"`
 	} `json:"tasks"`
 	Counts    map[string]int `json:"counts"`
 	Truncated bool           `json:"truncated"`
@@ -57,16 +73,21 @@ func TestGetChatTasks_NoSessionIsAnEmptyList(t *testing.T) {
 	}
 }
 
-// The ledger's rows reach the panel with status, stage, reason and next action.
-func TestGetChatTasks_ServesTheLedgerPage(t *testing.T) {
+// The agreed task and turn records reach the panel end to end, through the
+// route the app actually calls. The ledger page this used to read could carry
+// none of the description, the completion criteria, or the turn the choices
+// belong to — a panel built on it could say work existed but not what it was.
+func TestGetChatTasks_ServesTheWorkPage(t *testing.T) {
 	router, platform, _ := newChatRouter(t)
 	openSession(t, router, 1)
 	platform.mu.Lock()
-	platform.ledger = `{"tasks":[
-      {"id":"t1","task":{"title":"작업","status":"blocked","stage":"review","sessions":[
-        {"cleanup":"deleted","reason":"옛 사유","next_action":"옛 행동"},
-        {"cleanup":"retained","reason":"지금 사유","next_action":"지금 행동"}],"details":{}}},
-      {"id":"m1","task":{"title":"감시","status":"running","stage":"watch","sessions":[],"details":{"kind":"monitor"}}}
+	platform.work = `{"tasks":[
+      {"task":{"id":"t1","title":"작업","status":"blocked",
+        "description":"무엇을 why","completion_criteria":"머지되면 끝"},
+       "turns_total":2,"migrated":true,
+       "latest_turn":{"id":7,"request":"이거 해 줘","question":"어디까지 할까요?",
+         "choices":[{"label":"전부","request_text":"전부 해 줘"}],
+         "started_at":null,"ended_at":null}}
     ],"next_cursor":""}`
 	platform.mu.Unlock()
 
@@ -75,14 +96,22 @@ func TestGetChatTasks_ServesTheLedgerPage(t *testing.T) {
 		t.Fatalf("status = %d %+v", status, body)
 	}
 	if len(body.Tasks) != 1 || body.Tasks[0].ID != "t1" {
-		t.Fatalf("the monitor row must be excluded: %+v", body.Tasks)
+		t.Fatalf("tasks = %+v", body.Tasks)
 	}
 	got := body.Tasks[0]
-	if got.Status != "blocked" || got.Stage != "review" {
-		t.Fatalf("status/stage = %+v", got)
+	if got.Status != "blocked" || got.Description != "무엇을 why" || got.CompletionCriteria != "머지되면 끝" {
+		t.Fatalf("the agreed task fields did not reach the panel: %+v", got)
 	}
-	if got.Reason != "지금 사유" || got.NextAction != "지금 행동" {
-		t.Fatalf("the current state's note must win: %+v", got)
+	if got.TurnsTotal != 2 || !got.Migrated {
+		t.Fatalf("turn count or carried-over flag lost: %+v", got)
+	}
+	// What is waiting comes from the latest turn, and the choices carry the
+	// turn they were offered on — which is what a pick is checked against.
+	if got.Waiting == nil || got.Waiting.TurnID != 7 || got.Waiting.Question != "어디까지 할까요?" {
+		t.Fatalf("waiting = %+v", got.Waiting)
+	}
+	if len(got.Choices) != 1 || got.ChoiceTurnID != 7 {
+		t.Fatalf("choices = %+v turn=%d", got.Choices, got.ChoiceTurnID)
 	}
 	if body.SessionID == "" {
 		t.Fatal("the answer must name the session it read")
@@ -98,7 +127,7 @@ func TestGetChatTasks_DistinguishesUnsupportedAndUnavailable(t *testing.T) {
 		want     int
 		code     string
 	}{
-		{"this session keeps no ledger", http.StatusNotImplemented, http.StatusNotImplemented, "task_ledger_unsupported"},
+		{"this session keeps no work records", http.StatusNotImplemented, http.StatusNotImplemented, "task_ledger_unsupported"},
 		{"no such route or session", http.StatusNotFound, http.StatusNotImplemented, "task_ledger_unsupported"},
 		{"the session is not awake", http.StatusConflict, http.StatusConflict, "task_ledger_unavailable"},
 	} {
@@ -106,7 +135,7 @@ func TestGetChatTasks_DistinguishesUnsupportedAndUnavailable(t *testing.T) {
 			router, platform, _ := newChatRouter(t)
 			openSession(t, router, 1)
 			platform.mu.Lock()
-			platform.ledgerStatus = tc.platform
+			platform.workStatus = tc.platform
 			platform.mu.Unlock()
 
 			status, body := getTasks(t, router, 1)
@@ -117,7 +146,7 @@ func TestGetChatTasks_DistinguishesUnsupportedAndUnavailable(t *testing.T) {
 				t.Fatalf("code = %q, want %q", body.Code, tc.code)
 			}
 			if len(body.Tasks) != 0 {
-				t.Fatalf("an unreadable ledger must not answer tasks: %+v", body.Tasks)
+				t.Fatalf("unreadable work records must not answer tasks: %+v", body.Tasks)
 			}
 		})
 	}
@@ -129,7 +158,7 @@ func TestGetChatTasks_IsTheCallersOwnConversation(t *testing.T) {
 	router, platform, _ := newChatRouter(t)
 	openSession(t, router, 1)
 	platform.mu.Lock()
-	platform.ledger = `{"tasks":[{"id":"mine","task":{"title":"내 것","status":"running","stage":"impl","sessions":[],"details":{}}}],"next_cursor":""}`
+	platform.work = `{"tasks":[{"task":{"id":"mine","title":"내 것","status":"running"}}],"next_cursor":""}`
 	platform.mu.Unlock()
 
 	_, mine := getTasks(t, router, 1)

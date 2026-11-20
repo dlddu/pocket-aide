@@ -1,18 +1,12 @@
-// One task's turns, as the detail pane needs them (platform AC-N9).
+// One task's turns, as the detail pane needs them (platform AC-N9, AC-N10).
 //
-// Why this exists beside TaskEvents: the task page and the history page are the
-// ledger's shapes, and those have nowhere to put what the agreed model holds —
-// a task's description and completion criteria, and a turn's instruction, the
-// session's own final answer, the parent's explanation, its question and the
-// artifacts. A detail pane built on them alone can say a task exists and that
-// someone asked something, but not what was asked, what was done, or what came
-// back. The turns route carries the records themselves.
-//
-// The two are not alternatives. A task migrated from the ledger keeps its
-// ledger history and is read with TaskEvents; a task created after the cutover
-// has no ledger history and none is invented for it — its turns *are* its
-// history. The pane shows the turns, and the ledger history underneath only
-// when there is one.
+// These are the whole history of a task now. There used to be a second pane
+// underneath built on the ledger's history route, and both the route and the
+// rows behind it are gone: a past management event was never a turn, and
+// dressing one up as a turn would put words in a person's mouth. So a task's
+// exchanges are its history, for a task carried over from the ledger exactly
+// as for one written here — the pane no longer has a second source to offer,
+// and does not imply one is missing.
 package chat
 
 import (
@@ -55,9 +49,11 @@ type TaskTurn struct {
 	StartedAt   *string `json:"started_at"`
 	EndedAt     *string `json:"ended_at"`
 	// Origin says where the turn came from: empty for one the session wrote,
-	// "user_request" for one carried over from the old ledger, "app_request"
-	// for one a person wrote through this app after the cutover. The pane uses
-	// it to avoid presenting a carried-over exchange as something written here.
+	// "user_request" for one carried over from the retired ledger, and
+	// "app_request" for one a person wrote through this app. The pane uses it
+	// to avoid presenting a carried-over exchange as something written here —
+	// the ledger's own words were a stored request, never an exchange the
+	// session had.
 	Origin string `json:"origin,omitempty"`
 }
 
@@ -90,10 +86,6 @@ type TaskTurnPage struct {
 	Task        TaskTurnTask `json:"task"`
 	Turns       []TaskTurn   `json:"turns"`
 	NextCursor  int64        `json:"next_cursor,omitempty"`
-	// LedgerHistory says this task was carried over from the old ledger, so the
-	// pane also has a history to offer under the turns. A task created after
-	// the cutover has none, and the pane does not imply one is missing.
-	LedgerHistory bool `json:"ledger_history"`
 }
 
 // TaskTurns reads one page of a task's turns from the platform session
@@ -103,7 +95,7 @@ func (e *Engine) TaskTurns(
 	ctx context.Context, userID int64, taskID string, afterTurnID int64, limit int,
 ) (TaskTurnPage, error) {
 	out := TaskTurnPage{Turns: []TaskTurn{}}
-	if !ledgerRequestID.MatchString(taskID) {
+	if !workRecordID.MatchString(taskID) {
 		return out, fmt.Errorf("%w: task id must be 1..128 letters, digits, _ or -", ErrTaskRequestInvalid)
 	}
 	if afterTurnID < 0 || limit < 0 || limit > TaskTurnPageLimitMax {
@@ -139,15 +131,6 @@ func (e *Engine) TaskTurns(
 		}
 		if out.Turns == nil {
 			out.Turns = []TaskTurn{}
-		}
-		// A carried-over task has an old ledger history worth offering; one
-		// created here does not, and is not shown as if its history were
-		// missing.
-		for _, turn := range out.Turns {
-			if turn.Origin == "user_request" {
-				out.LedgerHistory = true
-				break
-			}
 		}
 		return out, nil
 	case http.StatusNotFound:

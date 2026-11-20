@@ -15,50 +15,57 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 )
 
-// ledgerPlatform is session-platform's read-only ledger route as the engine
+// workPlatform is session-platform's read-only work task route as the engine
 // sees it. It pages by id the way the platform does, so a test reads pages
 // rather than one canned answer, and it records which sessions were asked for
 // so a test can show one user's read never reaches another's session.
-type ledgerPlatform struct {
-	rows map[string][]ledgerRow // platform session id -> its ledger, in id order
+type workPlatform struct {
+	rows map[string][]workRow // platform session id -> its tasks, in id order
 	// status, when set for a session, is answered instead of a page.
 	status map[string]int
 	asked  []string
+	// paths is every path that was asked for, so a test can show the engine
+	// stopped calling a route that no longer exists.
+	paths []string
 	// stuckCursor makes every page answer the same cursor, as a misbehaving
 	// platform would.
 	stuckCursor bool
 	pages       int
-	// requests is the waiting-request summary the platform rides along with a
-	// task, keyed by task id (AC-N7). A task absent from the map carries none.
-	requests map[string]*chat.TaskRequestSummary
 }
 
-type ledgerRow struct {
-	ID       string
-	Title    string
-	Status   string
-	Stage    string
-	Sessions []ledgerSess
-	Details  map[string]any
-	Choices  []chat.TaskChoice
+// workRow is one task as the platform's page carries it: the agreed task, its
+// turn count, its latest turn and whether it came from the retired ledger.
+type workRow struct {
+	ID                 string
+	Title              string
+	Status             string
+	Description        *string
+	CompletionCriteria *string
+	TurnsTotal         int64
+	Migrated           bool
+	Latest             *workLatest
 }
 
-type ledgerSess struct {
-	Cleanup    string
-	Reason     string
-	NextAction string
+type workLatest struct {
+	ID        int64
+	Request   *string
+	Question  *string
+	Choices   []chat.TaskChoice
+	StartedAt *string
+	EndedAt   *string
 }
 
-func newLedgerPlatform() *ledgerPlatform {
-	return &ledgerPlatform{rows: map[string][]ledgerRow{}, status: map[string]int{}}
+func newWorkPlatform() *workPlatform {
+	return &workPlatform{rows: map[string][]workRow{}, status: map[string]int{}}
 }
 
-func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (int, []byte, error) {
-	if method != http.MethodGet || !strings.Contains(path, "/ledger/tasks") {
+func (p *workPlatform) Do(_ context.Context, method, path string, _ []byte) (int, []byte, error) {
+	p.paths = append(p.paths, method+" "+path)
+	if method != http.MethodGet || !strings.Contains(path, "/work/tasks") {
 		return http.StatusNotFound, nil, nil
 	}
 	raw := strings.TrimPrefix(path, "/sessions/")
-	id, query, _ := strings.Cut(raw, "/ledger/tasks?")
+	id, query, _ := strings.Cut(raw, "/work/tasks?")
 	id, _ = url.PathUnescape(id)
 	p.asked = append(p.asked, id)
 	if s, ok := p.status[id]; ok {
@@ -71,23 +78,26 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 	}
 	after := values.Get("after_id")
 
-	type outSess struct {
-		Cleanup    string `json:"cleanup"`
-		Reason     string `json:"reason"`
-		NextAction string `json:"next_action"`
+	type outTurn struct {
+		ID        int64             `json:"id"`
+		Request   *string           `json:"request"`
+		Question  *string           `json:"question"`
+		Choices   []chat.TaskChoice `json:"choices"`
+		StartedAt *string           `json:"started_at"`
+		EndedAt   *string           `json:"ended_at"`
 	}
 	type outTask struct {
-		Title    string         `json:"title"`
-		Status   string         `json:"status"`
-		Stage    string         `json:"stage"`
-		Sessions []outSess      `json:"sessions"`
-		Details  map[string]any `json:"details"`
+		ID                 string  `json:"id"`
+		Title              string  `json:"title"`
+		Description        *string `json:"description"`
+		CompletionCriteria *string `json:"completion_criteria"`
+		Status             string  `json:"status"`
 	}
 	type outRow struct {
-		ID       string                   `json:"id"`
-		Requests *chat.TaskRequestSummary `json:"requests,omitempty"`
-		Choices  []chat.TaskChoice        `json:"choices,omitempty"`
-		Task     outTask                  `json:"task"`
+		Task       outTask  `json:"task"`
+		TurnsTotal int64    `json:"turns_total"`
+		LatestTurn *outTurn `json:"latest_turn,omitempty"`
+		Migrated   bool     `json:"migrated,omitempty"`
 	}
 	page := struct {
 		Tasks      []outRow `json:"tasks"`
@@ -100,22 +110,23 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 			continue
 		}
 		if len(page.Tasks) == limit {
-			page.NextCursor = page.Tasks[len(page.Tasks)-1].ID
+			page.NextCursor = page.Tasks[len(page.Tasks)-1].Task.ID
 			break
 		}
-		sessions := []outSess{}
-		for _, s := range row.Sessions {
-			sessions = append(sessions, outSess(s))
-		}
-		page.Tasks = append(page.Tasks, outRow{
-			ID:       row.ID,
-			Requests: p.requests[row.ID],
-			Choices:  row.Choices,
+		out := outRow{
 			Task: outTask{
-				Title: row.Title, Status: row.Status, Stage: row.Stage,
-				Sessions: sessions, Details: row.Details,
+				ID: row.ID, Title: row.Title, Status: row.Status,
+				Description: row.Description, CompletionCriteria: row.CompletionCriteria,
 			},
-		})
+			TurnsTotal: row.TurnsTotal, Migrated: row.Migrated,
+		}
+		if row.Latest != nil {
+			out.LatestTurn = &outTurn{
+				ID: row.Latest.ID, Request: row.Latest.Request, Question: row.Latest.Question,
+				Choices: row.Latest.Choices, StartedAt: row.Latest.StartedAt, EndedAt: row.Latest.EndedAt,
+			}
+		}
+		page.Tasks = append(page.Tasks, out)
 	}
 	if p.stuckCursor {
 		page.NextCursor = after
@@ -127,9 +138,9 @@ func (p *ledgerPlatform) Do(_ context.Context, method, path string, _ []byte) (i
 	return http.StatusOK, body, nil
 }
 
-// ledgerEngine is a chat engine over the ledger platform, with each user's
+// workEngine is a chat engine over the work platform, with each user's
 // conversation already bound to its own platform session.
-func ledgerEngine(t *testing.T) (*chat.Store, *chat.Engine, *ledgerPlatform) {
+func workEngine(t *testing.T) (*chat.Store, *chat.Engine, *workPlatform) {
 	t.Helper()
 	conn, err := db.Open(filepath.Join(t.TempDir(), "chat.db"))
 	if err != nil {
@@ -140,7 +151,7 @@ func ledgerEngine(t *testing.T) (*chat.Store, *chat.Engine, *ledgerPlatform) {
 		t.Fatalf("seed users: %v", err)
 	}
 	store := chat.New(conn)
-	platform := newLedgerPlatform()
+	platform := newWorkPlatform()
 	engine := chat.NewEngine(store, platform, nil)
 	t.Cleanup(engine.Wait)
 	return store, engine, platform
@@ -158,300 +169,325 @@ func bindSession(t *testing.T, store *chat.Store, userID int64, sessionID string
 	}
 }
 
-func row(id, status, stage string, sessions ...ledgerSess) ledgerRow {
-	return ledgerRow{ID: id, Title: "작업 " + id, Status: status, Stage: stage, Sessions: sessions}
+func str(s string) *string { return &s }
+
+func row(id, status string) workRow {
+	return workRow{ID: id, Title: "작업 " + id, Status: status}
 }
 
-// The panel reads every page of its own session's ledger, keeps status and
-// stage, and counts by status.
-func TestTasks_WalksEveryPage(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	var rows []ledgerRow
-	for i := 0; i < 250; i++ {
-		rows = append(rows, row(fmt.Sprintf("t%03d", i), "running", "implementation"))
+// taskByID finds one task in the answer, so an assertion names the task it is
+// about rather than an index that shifts when the fixture grows.
+func taskByID(t *testing.T, list chat.TaskList, id string) chat.Task {
+	t.Helper()
+	for _, task := range list.Tasks {
+		if task.ID == id {
+			return task
+		}
 	}
-	rows = append(rows, row("z-blocked", "blocked", "review", ledgerSess{Cleanup: "retained", Reason: "CI 가 막혔다", NextAction: "로그를 본다"}))
-	platform.rows["cx1"] = rows
+	t.Fatalf("task %q is not in %+v", id, list.Tasks)
+	return chat.Task{}
+}
+
+// The whole read side in one test: the panel walks every page of its own
+// session's work records, carries the agreed task fields the ledger page could
+// not hold, and counts by status.
+func TestTasks_CarryTheAgreedModelAndWalkEveryPage(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	rows := []workRow{}
+	for i := 0; i < 150; i++ {
+		rows = append(rows, row(fmt.Sprintf("t%03d", i), chat.TaskStatusRunning))
+	}
+	rows[0].Description = str("무엇을 why")
+	rows[0].CompletionCriteria = str("머지되면 끝")
+	rows[0].TurnsTotal = 3
+	rows[0].Migrated = true
+	rows[1].Status = chat.TaskStatusBlocked
+	platform.rows["sess-1"] = rows
 
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("tasks: %v", err)
 	}
-	if len(list.Tasks) != 251 {
-		t.Fatalf("read %d tasks, want 251 — the walk stopped early", len(list.Tasks))
+	if len(list.Tasks) != 150 || list.Truncated {
+		t.Fatalf("tasks = %d truncated=%v, want the whole walk", len(list.Tasks), list.Truncated)
 	}
-	if list.Truncated {
-		t.Fatal("a finished walk must not be reported as truncated")
+	if platform.pages < 2 {
+		t.Fatalf("pages = %d, want more than one page walked", platform.pages)
 	}
-	if list.Counts[chat.TaskStatusRunning] != 250 || list.Counts[chat.TaskStatusBlocked] != 1 {
+	first := taskByID(t, list, "t000")
+	// The two fields the ledger page had nowhere to put. Without them a panel
+	// could say work existed but never what the work was.
+	if first.Description != "무엇을 why" || first.CompletionCriteria != "머지되면 끝" {
+		t.Fatalf("task = %+v, want the agreed description and completion criteria", first)
+	}
+	if first.TurnsTotal != 3 || !first.Migrated {
+		t.Fatalf("task = %+v, want the turn count and the carried-over flag", first)
+	}
+	if list.Counts[chat.TaskStatusBlocked] != 1 || list.Counts[chat.TaskStatusRunning] != 149 {
 		t.Fatalf("counts = %v", list.Counts)
 	}
-	last := list.Tasks[len(list.Tasks)-1]
-	if last.Status != chat.TaskStatusBlocked || last.Stage != "review" {
-		t.Fatalf("blocked row = %+v", last)
+	// Every status is a key even at zero, so the panel's filter chips do not
+	// have to decide between "no such status" and "none of these".
+	for _, s := range []string{chat.TaskStatusPlanned, chat.TaskStatusReview,
+		chat.TaskStatusCompleted, chat.TaskStatusUnknown} {
+		if _, ok := list.Counts[s]; !ok {
+			t.Fatalf("counts = %v, want %s present at zero", list.Counts, s)
+		}
 	}
-	if last.Reason != "CI 가 막혔다" || last.NextAction != "로그를 본다" {
-		t.Fatalf("reason/next action lost: %+v", last)
-	}
-	if list.SessionID != "cx1" {
-		t.Fatalf("session id = %q, want the session the rows were read from", list.SessionID)
+	// It read the work route and never the ledger route the platform retired.
+	for _, path := range platform.paths {
+		if strings.Contains(path, "/ledger/") {
+			t.Fatalf("the engine called a retired route: %s", path)
+		}
 	}
 }
 
-// A repeated row across pages is one task, not two: keyset pages are not a
-// snapshot.
+// Keyset pages are not a snapshot, so a retried page can repeat a row. The
+// first sighting of an id wins; a second would show the task twice.
 func TestTasks_DeduplicatesByTaskID(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	platform.rows["cx1"] = []ledgerRow{
-		row("t1", "running", "impl"), row("t1", "completed", "done"), row("t2", "planned", "plan"),
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{
+		row("t1", chat.TaskStatusRunning), row("t1", chat.TaskStatusCompleted),
+		row("t2", chat.TaskStatusPlanned),
 	}
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(list.Tasks) != 2 {
-		t.Fatalf("tasks = %+v, want t1 once and t2", list.Tasks)
+		t.Fatalf("tasks = %+v, want the repeat dropped", list.Tasks)
 	}
-	// The first sighting wins, so t1 stays running.
-	if list.Tasks[0].ID != "t1" || list.Tasks[0].Status != chat.TaskStatusRunning {
-		t.Fatalf("first sighting must win: %+v", list.Tasks[0])
+	if taskByID(t, list, "t1").Status != chat.TaskStatusRunning {
+		t.Fatalf("the repeat replaced the first sighting: %+v", list.Tasks)
 	}
 }
 
-// The parent's monitoring bookkeeping is not the user's work, so it stays out.
-func TestTasks_ExcludesMonitorRecords(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	mine := row("t1", "running", "impl")
-	monitor := row("t2", "running", "impl")
-	monitor.Details = map[string]any{"kind": "Monitor"} // case must not matter
-	other := row("t3", "running", "impl")
-	other.Details = map[string]any{"kind": "work"}
-	platform.rows["cx1"] = []ledgerRow{mine, monitor, other}
+// What the panel shows as "somebody is waiting" now comes from the task's
+// latest turn, because that is where the agreed records keep it. A turn with
+// words and no end is one somebody still owes an answer; started means the
+// parent took it.
+func TestTasks_WaitingComesFromTheLatestTurn(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	waiting := row("t-waiting", chat.TaskStatusBlocked)
+	waiting.Latest = &workLatest{ID: 7, Request: str("이거 해 줘"), Question: str("어디까지 할까요?")}
+	running := row("t-running", chat.TaskStatusRunning)
+	running.Latest = &workLatest{ID: 8, Request: str("저것도"), StartedAt: str("2026-11-20T00:00:00Z")}
+	done := row("t-done", chat.TaskStatusCompleted)
+	done.Latest = &workLatest{
+		ID: 9, Request: str("끝난 말"),
+		StartedAt: str("2026-11-20T00:00:00Z"), EndedAt: str("2026-11-20T01:00:00Z"),
+	}
+	quiet := row("t-quiet", chat.TaskStatusPlanned)
+	platform.rows["sess-1"] = []workRow{done, quiet, running, waiting}
 
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tasks) != 2 || list.Tasks[0].ID != "t1" || list.Tasks[1].ID != "t3" {
-		t.Fatalf("tasks = %+v, want the monitor row excluded", list.Tasks)
+	w := taskByID(t, list, "t-waiting").Waiting
+	if w == nil || w.TurnID != 7 || w.Running {
+		t.Fatalf("waiting = %+v, want the open turn nobody has taken", w)
 	}
-	if list.Counts[chat.TaskStatusRunning] != 2 {
-		t.Fatalf("an excluded row must not be counted: %v", list.Counts)
+	// The question is what the session is actually asking — the nearest thing
+	// the agreed records have to the ledger's free-text reason.
+	if w.Question != "어디까지 할까요?" || w.Request != "이거 해 줘" {
+		t.Fatalf("waiting = %+v, want the words and the question", w)
+	}
+	if r := taskByID(t, list, "t-running").Waiting; r == nil || !r.Running {
+		t.Fatalf("running = %+v, want the turn marked taken", r)
+	}
+	// A finished turn and a task with no turn at all are both "nothing
+	// waiting", and neither gets a zeroed record that would read as "nothing
+	// was ever asked here".
+	if taskByID(t, list, "t-done").Waiting != nil {
+		t.Fatal("a finished turn is shown as waiting")
+	}
+	if taskByID(t, list, "t-quiet").Waiting != nil {
+		t.Fatal("a task with no turns is shown as waiting")
 	}
 }
 
-// The reason shown is the task's state now — the last entry carrying a note —
-// not the first session it ever used. A finished entry loses to a live one.
-func TestTasks_ReasonComesFromTheCurrentState(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	platform.rows["cx1"] = []ledgerRow{
-		row("t1", "blocked", "review",
-			ledgerSess{Cleanup: "deleted", Reason: "처음엔 스키마가 막혔다", NextAction: "스키마를 고친다"},
-			ledgerSess{Cleanup: "retained", Reason: "지금은 리뷰 대기다", NextAction: "리뷰를 받는다"},
-		),
-		// Only history: nothing live carries a note, so the finished one is
-		// better than nothing.
-		row("t2", "blocked", "review",
-			ledgerSess{Cleanup: "deleted", Reason: "옛 사유", NextAction: "옛 다음 행동"},
-		),
-		// Nothing recorded at all — the panel shows "not recorded", so the
-		// fields stay empty rather than being invented.
-		row("t3", "blocked", "review", ledgerSess{Cleanup: "pending"}),
+// Only the latest turn's choices are current, and the turn they belong to
+// travels with them — that turn id is what the platform checks a pick against.
+func TestTasks_OfferedChoicesCarryTheirTurn(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	offered := row("t-offer", chat.TaskStatusReview)
+	offered.Latest = &workLatest{
+		ID: 42, Request: str("리뷰 반영해 줘"), Question: str("어디까지?"),
+		Choices: []chat.TaskChoice{
+			{Label: "전부", RequestText: "코멘트 전부 반영해 줘"},
+			{Label: "필수만", RequestText: "필수 코멘트만 반영해 줘"},
+		},
 	}
+	bare := row("t-bare", chat.TaskStatusRunning)
+	bare.Latest = &workLatest{ID: 43, Request: str("진행 중")}
+	platform.rows["sess-1"] = []workRow{bare, offered}
+
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if list.Tasks[0].Reason != "지금은 리뷰 대기다" || list.Tasks[0].NextAction != "리뷰를 받는다" {
-		t.Fatalf("current state must win over the first session: %+v", list.Tasks[0])
+	got := taskByID(t, list, "t-offer")
+	if len(got.Choices) != 2 || got.Choices[0].RequestText != "코멘트 전부 반영해 줘" {
+		t.Fatalf("choices = %+v", got.Choices)
 	}
-	if list.Tasks[1].Reason != "옛 사유" {
-		t.Fatalf("history is better than nothing: %+v", list.Tasks[1])
+	if got.ChoiceTurnID != 42 {
+		t.Fatalf("choice_turn_id = %d, want the turn the choices were offered on", got.ChoiceTurnID)
 	}
-	if list.Tasks[2].Reason != "" || list.Tasks[2].NextAction != "" {
-		t.Fatalf("an unrecorded note must stay empty: %+v", list.Tasks[2])
+	// A turn offering none carries no turn id either: a bare id with no
+	// choices would let a screen send a pick nothing offered.
+	if bareTask := taskByID(t, list, "t-bare"); len(bareTask.Choices) != 0 || bareTask.ChoiceTurnID != 0 {
+		t.Fatalf("a turn with no choices = %+v", bareTask)
 	}
 }
 
-// A walk that cannot finish says so. Reporting a prefix as the whole list would
-// read as "this is all the work there is".
+// A walk that stops at its page bound says so. A panel that silently dropped
+// the tail would read as "this is all the work there is".
 func TestTasks_UnfinishedWalkIsReportedTruncated(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	platform.rows["cx1"] = []ledgerRow{row("t1", "running", "impl")}
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{row("t1", chat.TaskStatusRunning)}
 	platform.stuckCursor = true
-
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !list.Truncated {
-		t.Fatal("a cursor that does not move must end the walk as truncated")
-	}
-	if len(list.Tasks) != 1 {
-		t.Fatalf("tasks = %+v", list.Tasks)
+		t.Fatal("a cursor that never moves was reported as a finished walk")
 	}
 }
 
-// A conversation that has not opened a session has no tasks — and nothing is
-// asked of the platform.
+// A conversation no session has answered yet simply has no tasks — not an
+// error, and not a reason to open a session.
 func TestTasks_NoSessionYetIsAnEmptyList(t *testing.T) {
-	_, engine, platform := ledgerEngine(t)
+	_, engine, platform := workEngine(t)
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("tasks: %v", err)
 	}
 	if len(list.Tasks) != 0 || list.SessionID != "" {
-		t.Fatalf("list = %+v", list)
+		t.Fatalf("list = %+v, want an empty list for no session", list)
 	}
 	if len(platform.asked) != 0 {
-		t.Fatalf("a conversation with no session must ask the platform nothing, asked %v", platform.asked)
-	}
-	for _, status := range []string{chat.TaskStatusBlocked, chat.TaskStatusRunning, chat.TaskStatusCompleted} {
-		if _, ok := list.Counts[status]; !ok {
-			t.Fatalf("counts must be present and zero, got %v", list.Counts)
-		}
+		t.Fatalf("the platform was asked %v for a conversation with no session", platform.asked)
 	}
 }
 
-// "Cannot read" is never "no tasks": a session with no ledger and a session
-// that is not awake are distinct errors, and both differ from an empty list.
+// The three answers the panel must tell apart. Neither refusal may arrive as
+// an empty list, which would claim there is no work.
 func TestTasks_UnsupportedAndUnavailableAreNotEmptyLists(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
 		status int
 		want   error
 	}{
-		{"no ledger on this type", http.StatusNotImplemented, chat.ErrTasksUnsupported},
-		{"no such route or session", http.StatusNotFound, chat.ErrTasksUnsupported},
-		{"session is not awake", http.StatusConflict, chat.ErrTasksUnavailable},
+		{"a session type that keeps no work records", http.StatusNotImplemented, chat.ErrTasksUnsupported},
+		{"a control plane without the route", http.StatusNotFound, chat.ErrTasksUnsupported},
+		{"a session with no live pod", http.StatusConflict, chat.ErrTasksUnavailable},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			store, engine, platform := ledgerEngine(t)
-			bindSession(t, store, 1, "cx1")
-			platform.status["cx1"] = tc.status
-			_, err := engine.Tasks(context.Background(), 1)
-			if !errors.Is(err, tc.want) {
+			store, engine, platform := workEngine(t)
+			bindSession(t, store, 1, "sess-1")
+			platform.status["sess-1"] = tc.status
+			if _, err := engine.Tasks(context.Background(), 1); !errors.Is(err, tc.want) {
 				t.Fatalf("err = %v, want %v", err, tc.want)
 			}
 		})
 	}
 }
 
-// A platform fault is an error, not an empty list.
+// A fault is an error, not an empty panel.
 func TestTasks_PlatformFaultIsAnError(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	platform.status["cx1"] = http.StatusInternalServerError
-	if _, err := engine.Tasks(context.Background(), 1); err == nil {
-		t.Fatal("a 500 from the platform must not read as an empty ledger")
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.status["sess-1"] = http.StatusInternalServerError
+	_, err := engine.Tasks(context.Background(), 1)
+	if err == nil || errors.Is(err, chat.ErrTasksUnsupported) || errors.Is(err, chat.ErrTasksUnavailable) {
+		t.Fatalf("err = %v, want a plain failure", err)
 	}
 }
 
-// Each user reads its own conversation's session. The session is taken from the
-// caller's own row, so one user's read never reaches another's ledger.
+// The session comes from the caller's own row, so one user's panel can never
+// reach another's slot.
 func TestTasks_ReadsOnlyTheCallersOwnSession(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	bindSession(t, store, 2, "cx2")
-	platform.rows["cx1"] = []ledgerRow{row("mine", "running", "impl")}
-	platform.rows["cx2"] = []ledgerRow{row("theirs", "running", "impl"), row("theirs2", "blocked", "review")}
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	bindSession(t, store, 2, "sess-2")
+	platform.rows["sess-1"] = []workRow{row("mine", chat.TaskStatusRunning)}
+	platform.rows["sess-2"] = []workRow{row("theirs", chat.TaskStatusRunning)}
 
-	first, err := engine.Tasks(context.Background(), 1)
+	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(first.Tasks) != 1 || first.Tasks[0].ID != "mine" || first.SessionID != "cx1" {
-		t.Fatalf("user 1 read %+v", first)
-	}
-	second, err := engine.Tasks(context.Background(), 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(second.Tasks) != 2 || second.SessionID != "cx2" {
-		t.Fatalf("user 2 read %+v", second)
+	if len(list.Tasks) != 1 || list.Tasks[0].ID != "mine" {
+		t.Fatalf("tasks = %+v", list.Tasks)
 	}
 	for _, asked := range platform.asked {
-		if asked != "cx1" && asked != "cx2" {
-			t.Fatalf("the platform was asked for %q, which is nobody's conversation", asked)
+		if asked != "sess-1" {
+			t.Fatalf("user 1's read reached %q", asked)
 		}
 	}
 }
 
-// After the conversation moves to another session, a read reports the new
-// session's id — so a page that arrives late can be told apart from the
-// current one rather than shown under it.
-func TestTasks_SessionSwitchIsIdentifiedInTheAnswer(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	platform.rows["cx1"] = []ledgerRow{row("old", "running", "impl")}
-	platform.rows["cx2"] = []ledgerRow{row("new", "planned", "plan")}
-
-	before, err := engine.Tasks(context.Background(), 1)
+// The answer names the session it came from, so a page that arrives after the
+// conversation moved is discarded rather than shown under the new session.
+func TestTasks_SessionIsIdentifiedInTheAnswer(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{row("t1", chat.TaskStatusRunning)}
+	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	bindSession(t, store, 1, "cx2")
-	after, err := engine.Tasks(context.Background(), 1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if before.SessionID == after.SessionID {
-		t.Fatal("a switched conversation must report a different session id")
-	}
-	if after.Tasks[0].ID != "new" {
-		t.Fatalf("after the switch the panel must read the new session: %+v", after.Tasks)
+	if list.SessionID != "sess-1" {
+		t.Fatalf("session_id = %q", list.SessionID)
 	}
 }
 
-// A status the app does not know is shown as unknown rather than guessed at.
+// A status this app does not know is reported as unknown rather than guessed,
+// so a newer platform cannot make the panel show a status it cannot render.
 func TestTasks_UnknownStatusIsNotGuessed(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	platform.rows["cx1"] = []ledgerRow{row("t1", "DEPLOYING", "impl"), row("t2", "  Review  ", "review")}
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{
+		row("t1", "something-new"), row("t2", "  RUNNING  "), row("t3", ""),
+	}
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if list.Tasks[0].Status != chat.TaskStatusUnknown {
-		t.Fatalf("unknown status = %q", list.Tasks[0].Status)
+	if taskByID(t, list, "t1").Status != chat.TaskStatusUnknown {
+		t.Fatalf("an unknown status was guessed: %+v", list.Tasks)
 	}
-	if list.Tasks[1].Status != chat.TaskStatusReview {
-		t.Fatalf("a known status in other casing must normalise: %q", list.Tasks[1].Status)
+	// Case and padding are the platform's to write however it likes.
+	if taskByID(t, list, "t2").Status != chat.TaskStatusRunning {
+		t.Fatalf("a padded status was not normalised: %+v", list.Tasks)
+	}
+	if taskByID(t, list, "t3").Status != chat.TaskStatusUnknown {
+		t.Fatalf("an empty status = %+v", list.Tasks)
 	}
 }
 
-// The sentences the session offers travel with the row they were written
-// against. Dropping them here is invisible to the app — the screen says the
-// session offers none while the ledger holds two, and the pick cannot be sent
-// because its basis version never arrives.
-func TestTasks_OfferedChoicesReachTheApp(t *testing.T) {
-	store, engine, platform := ledgerEngine(t)
-	bindSession(t, store, 1, "cx1")
-	offered := row("t1", "blocked", "review")
-	offered.Choices = []chat.TaskChoice{
-		{ID: "c-ci", Label: "CI 로그를 본다", RequestText: "CI 로그를 확인해 줘", BasisVersion: 6, CreatedAt: "2026-11-19T04:00:00Z"},
-		{ID: "c-skip", Label: "건너뛴다", RequestText: "이 작업은 건너뛰어 줘", BasisVersion: 6, CreatedAt: "2026-11-19T04:00:00Z"},
+// A monitoring loop is not a task and never arrives as one: the parent's loops
+// are a record of their own on the slot (platform AC-N10). The panel therefore
+// has no kind filter, and a task whose details once said "monitor" is just a
+// task — the filter that used to be here would now hide a person's work.
+func TestTasks_NoMonitoringRowsArriveAsTasks(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{
+		row("t-work", chat.TaskStatusRunning), row("monitor-loop", chat.TaskStatusRunning),
 	}
-	platform.rows["cx1"] = []ledgerRow{offered, row("t2", "running", "impl")}
-
 	list, err := engine.Tasks(context.Background(), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tasks[0].Choices) != 2 {
-		t.Fatalf("choices = %+v, want the two the ledger offers", list.Tasks[0].Choices)
-	}
-	first := list.Tasks[0].Choices[0]
-	if first.ID != "c-ci" || first.Label != "CI 로그를 본다" ||
-		first.RequestText != "CI 로그를 확인해 줘" || first.BasisVersion != 6 {
-		t.Fatalf("a choice reached the app without what the pick needs: %+v", first)
-	}
-	if len(list.Tasks[1].Choices) != 0 {
-		t.Fatalf("a task offered none must carry none: %+v", list.Tasks[1].Choices)
+	if len(list.Tasks) != 2 {
+		t.Fatalf("tasks = %+v, want both — the platform sends no monitoring rows here", list.Tasks)
 	}
 }

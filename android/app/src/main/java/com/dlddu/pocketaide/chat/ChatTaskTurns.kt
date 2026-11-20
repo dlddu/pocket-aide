@@ -1,24 +1,27 @@
 package com.dlddu.pocketaide.chat
 
 import com.dlddu.pocketaide.api.ApiClient
+import com.dlddu.pocketaide.api.ApiException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * One task's turns, which is what the detail pane shows as the work itself.
+ * One task's turns, which is what the detail pane shows — and which is that
+ * task's whole history.
  *
- * Why this exists beside [ChatTaskEvent]: the task row and the history page are
- * the old ledger's shapes, and those have nowhere to put what the agreed model
- * holds — a task's description and completion criteria, and a turn's
- * instruction, the session's own final answer, the parent's explanation, its
- * question and the artifacts. A pane built on them alone can say a task exists
- * and that somebody asked something, but not what was asked, what was done, or
- * what came back.
+ * There used to be a second pane under these, built on the ledger's history
+ * route. Both the route and the rows behind it are gone (platform AC-N10): a
+ * past management event was never a turn, and dressing one up as a turn would
+ * put words in a person's mouth. So the turns are the history, for a task
+ * carried over from the ledger exactly as for one written here — the pane has
+ * no second source to offer and does not imply one is missing.
  *
- * The two are not alternatives. A task carried over from the ledger keeps its
- * ledger history and still shows it, separately and labelled as the older
- * record; a task created after the cutover has no ledger history and none is
- * invented for it — its turns *are* its history.
+ * The turn is also what the old ledger shapes could not hold: a task's
+ * description and completion criteria, and a turn's instruction, the session's
+ * own final answer, the parent's explanation, its question and the artifacts.
+ * A pane built on the ledger page alone could say a task existed and that
+ * somebody asked something, but not what was asked, what was done, or what
+ * came back.
  */
 @Serializable
 data class ChatTaskTurn(
@@ -44,8 +47,11 @@ data class ChatTaskTurn(
     @SerialName("ended_at") val endedAt: String? = null,
     /**
      * Where the turn came from: empty for one the session wrote,
-     * `user_request` for one carried over from the old ledger, `app_request`
-     * for one a person wrote through this app after the cutover.
+     * `user_request` for one carried over from the retired ledger, and
+     * `app_request` for one a person wrote through this app. The pane uses it
+     * to avoid presenting a carried-over exchange as something written here —
+     * the ledger's own words were a stored request, never an exchange the
+     * session had.
      */
     val origin: String = "",
 ) {
@@ -104,13 +110,37 @@ data class ChatTaskTurnPage(
     val task: ChatTaskTurnTask = ChatTaskTurnTask(),
     val turns: List<ChatTaskTurn> = emptyList(),
     @SerialName("next_cursor") val nextCursor: Long = 0,
-    /**
-     * Whether this task also has an older ledger history to offer under the
-     * turns. False for a task created after the cutover, which has none — the
-     * pane then does not imply one is missing.
-     */
-    @SerialName("ledger_history") val ledgerHistory: Boolean = false,
 )
+
+/**
+ * Why a task's turns could not be read. Each is a different sentence because
+ * the person's next move differs, and none of them may be shown as "this task
+ * has no work" — the turns are still on the slot.
+ *
+ * This replaced ChatTaskHistoryError, which named the ledger's history route.
+ * The classes are the same four because the platform's answers are: a task
+ * this slot does not have, a session with no live pod, a deployment that keeps
+ * no work records, and anything else.
+ */
+enum class ChatTaskTurnsError(val message: String) {
+    NOT_FOUND("이 작업이 목록에서 사라졌어요."),
+    UNAVAILABLE("채팅 세션이 깨어 있지 않아 진행 내용을 읽지 못했어요."),
+    UNSUPPORTED("이 대화의 세션은 작업 기록을 두지 않아요."),
+    UNREACHABLE("진행 내용을 불러오지 못했어요. 다시 시도해요."),
+    ;
+
+    companion object {
+        fun from(e: Exception): ChatTaskTurnsError = when (e) {
+            is ApiException.BadStatus -> when (e.status) {
+                404 -> NOT_FOUND
+                409 -> UNAVAILABLE
+                501 -> UNSUPPORTED
+                else -> UNREACHABLE
+            }
+            else -> UNREACHABLE
+        }
+    }
+}
 
 /** One page of [taskId]'s turns, oldest first. */
 suspend fun ApiClient.chatTaskTurns(taskId: String, afterTurnId: Long, limit: Int): ChatTaskTurnPage {
