@@ -159,7 +159,7 @@ class ChatTaskRequestTest {
         server.takeRequest()
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("진행해 줘")))
 
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "  진행해 줘  ", "c-go"))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "  진행해 줘  ", 7L))
 
         val request = server.takeRequest()
         assertEquals("/api/chat/tasks/t-42/requests", request.path)
@@ -197,7 +197,7 @@ class ChatTaskRequestTest {
         assertTrue("답이 오는 중이어야 한다", vm.state.value.isReplying)
 
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("진행해 줘")))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         assertEquals("/api/chat/tasks/t-42/requests", server.takeRequest().path)
         assertNull(vm.taskRequest.value.error)
     }
@@ -208,11 +208,11 @@ class ChatTaskRequestTest {
     fun resendingTheSameRequestKeyStoresOneRequest() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("진행해 줘")))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         server.takeRequest()
 
         server.enqueue(MockResponse().setResponseCode(200).setBody(storedJson("진행해 줘", replayed = true)))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         val second = server.takeRequest()
         assertTrue("같은 번호로 가야 한다", second.body.readUtf8().contains("app-1"))
 
@@ -230,10 +230,10 @@ class ChatTaskRequestTest {
                 .setBodyDelay(300, TimeUnit.MILLISECONDS),
         )
         val first = launch(start = CoroutineStart.UNDISPATCHED) {
-            assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+            assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         }
         assertTrue("첫 저장이 가는 중이어야 한다", vm.taskRequest.value.isStoring)
-        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         first.join()
         assertEquals("저장은 한 번만 간다", 1, server.requestCount)
     }
@@ -254,7 +254,7 @@ class ChatTaskRequestTest {
             server.enqueue(MockResponse().setResponseCode(status).setBody(body))
 
             // false 는 화면이 초안과 요청 번호를 그대로 둔다는 뜻이다.
-            assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+            assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
             server.takeRequest()
 
             val state = vm.taskRequest.value
@@ -270,11 +270,11 @@ class ChatTaskRequestTest {
     fun aFailedRequestCanBeRetriedUnderTheSameKey() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(502).setBody("""{"error":"no"}"""))
-        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+        assertFalse(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         server.takeRequest()
 
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("진행해 줘")))
-        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", ""))
+        assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L))
         assertTrue(server.takeRequest().body.readUtf8().contains("app-1"))
         assertNull(vm.taskRequest.value.error)
         assertFalse("끝나지 않은 turn 이다", vm.taskRequest.value.stored?.settled ?: true)
@@ -284,11 +284,11 @@ class ChatTaskRequestTest {
     @Test
     fun anEmptyOrOversizedRequestNeverLeavesTheApp() = runTest {
         val vm = ChatViewModel(api())
-        assertFalse(vm.performTaskRequest(task(), "app-1", "   ", ""))
+        assertFalse(vm.performTaskRequest(task(), "app-1", "   ", 0L))
         assertNull(vm.taskRequest.value.error)
 
         assertFalse(
-            vm.performTaskRequest(task(id = "t-42"), "app-1", "가".repeat(ChatViewModel.CHAT_TASK_REQUEST_MAX_BYTES), ""),
+            vm.performTaskRequest(task(id = "t-42"), "app-1", "가".repeat(ChatViewModel.CHAT_TASK_REQUEST_MAX_BYTES), 0L),
         )
         assertEquals(ChatTaskRequestError.INVALID, vm.taskRequest.value.error)
         assertEquals(0, server.requestCount)
@@ -334,7 +334,7 @@ class ChatTaskRequestTest {
     fun theOutcomeIsClearedOnceShown() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(502).setBody("""{"error":"no"}"""))
-        vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", "")
+        vm.performTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 0L)
         server.takeRequest()
         assertEquals(ChatTaskRequestError.UNREACHABLE, vm.taskRequest.value.error)
 
@@ -440,7 +440,7 @@ class ChatTaskRequestTest {
         var storedRan = false
         var staleRan = false
 
-        vm.runTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", "c-go", 2L, { storedRan = true }, { staleRan = true })
+        vm.runTaskRequest(task(id = "t-42"), "app-1", "진행해 줘", 2L, { storedRan = true }, { staleRan = true })
 
         assertTrue(storedRan)
         assertFalse(staleRan)
