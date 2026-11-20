@@ -129,13 +129,13 @@ fun ChatTaskDetailPane(
                 request = if (mine) request else ChatTaskRequestUiState(),
                 onStore = onStore,
             )
-            // Only a task carried over from the ledger has an older record to
-            // show. One created after the cutover has none, and the pane does
-            // not imply one is missing.
-            if (turns.ledgerHistory) {
-                Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
-                History(task.id, history, onLoadHistory, onLoadMoreHistory)
-            }
+            Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+            // The ledger history keeps the place it always had. A task carried
+            // over from the ledger says so in the heading, so the older record
+            // is told apart from the turns above it rather than merged into
+            // them — but the section is not taken away from a task that has
+            // none, because its own empty state already says so.
+            History(task.id, history, onLoadHistory, onLoadMoreHistory, turns.ledgerHistory)
         }
     }
 }
@@ -408,6 +408,7 @@ private fun History(
     history: ChatTaskHistoryUiState,
     onLoad: () -> Unit,
     onLoadMore: () -> Unit,
+    carriedOver: Boolean = false,
 ) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     // The first page is read when this task's pane opens, and again when the
@@ -418,9 +419,10 @@ private fun History(
         verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
     ) {
         Text(
-            "작업 이력",
+            if (carriedOver) "이전 원장 이력" else "작업 이력",
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
+            modifier = Modifier.testTag("chat.tasks.detail.history.heading"),
         )
         when {
             history.error != null -> {

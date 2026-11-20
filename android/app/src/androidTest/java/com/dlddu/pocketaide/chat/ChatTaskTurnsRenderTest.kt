@@ -1,6 +1,12 @@
 package com.dlddu.pocketaide.chat
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -9,6 +15,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -22,6 +30,7 @@ import org.junit.runner.RunWith
 // 네 가지를 본다: (1) 각 부분이 자기 라벨로 **구분되어** 보이는지, (2) 세션의
 // 원문과 부모의 설명이 섞이지 않는지, (3) 기록되지 않은 부분이 빈칸으로
 // 보이지 않는지, (4) 옮겨온 작업의 옛 이력이 턴과 **구분 보존**되는지.
+@OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 class ChatTaskTurnsRenderTest {
     @get:Rule
@@ -65,25 +74,32 @@ class ChatTaskTurnsRenderTest {
         choices: List<ChatTaskChoice> = emptyList(),
     ) {
         compose.setContent {
-            val draft = mutableStateOf("")
-            ChatTaskDetailPane(
-                task = task.copy(choices = choices),
-                draft = draft.value,
-                onDraftChange = { draft.value = it },
-                onChoicePicked = {
-                    picked = it
-                    draft.value = it.requestText
-                },
-                request = ChatTaskRequestUiState(),
-                onStore = {},
-                history = ChatTaskHistoryUiState(taskId = "t1", hasLoaded = true),
-                onLoadHistory = {},
-                onLoadMoreHistory = {},
-                turns = turns,
-                onLoadTurns = { turnLoads++ },
-                onLoadMoreTurns = { turnMores++ },
-                onBack = {},
-            )
+            // 상세 창은 스크롤한다. 짧은 창에서는 타임라인이 화면 밖에 남아
+            // `assertIsDisplayed` 와 클릭이 닿지 못하므로, 창을 전체가 들어갈
+            // 만큼 높게 준다 — 보이는지 묻는 판정이 레이아웃 탓에 깨지지 않게.
+            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(900.dp, 3200.dp))) {
+                // remember: 기억하지 않으면 재구성마다 새 상태가 생겨 초안이
+                // 사라지고, 「고른 문장이 칸에 들어갔는지」를 물을 수 없다.
+                var draft by remember { mutableStateOf("") }
+                ChatTaskDetailPane(
+                    task = task.copy(choices = choices),
+                    draft = draft,
+                    onDraftChange = { draft = it },
+                    onChoicePicked = {
+                        picked = it
+                        draft = it.requestText
+                    },
+                    request = ChatTaskRequestUiState(),
+                    onStore = {},
+                    history = ChatTaskHistoryUiState(taskId = "t1", hasLoaded = true),
+                    onLoadHistory = {},
+                    onLoadMoreHistory = {},
+                    turns = turns,
+                    onLoadTurns = { turnLoads++ },
+                    onLoadMoreTurns = { turnMores++ },
+                    onBack = {},
+                )
+            }
         }
     }
 
@@ -174,27 +190,29 @@ class ChatTaskTurnsRenderTest {
         compose.onNodeWithTag("chat.tasks.detail.criteria").assertTextEquals("원장에 적혀 있지 않아요.")
     }
 
-    // (4) 옛 원장 이력은 옮겨온 작업에만, 턴과 구분된 자기 영역으로 보인다.
-    // 커토버 뒤에 생긴 작업에는 그 영역이 아예 없다 — 없는 이력을 있는 척하지
-    // 않는다.
+    // (4) 옛 원장 이력은 턴과 **다른 영역**으로 남고, 옮겨온 작업에서는 제목이
+    // 그것이 이전 기록임을 말한다 — 턴에 섞이지 않는다. 영역 자체는 전과 같이
+    // 늘 있다(없는 작업은 그 영역의 빈 상태가 스스로 말한다).
     @Test
-    fun theLedgerHistoryIsKeptSeparateAndOnlyWhereThereIsOne() {
+    fun theLedgerHistoryIsKeptSeparateFromTheTurns() {
         start(
             ChatTaskTurnsUiState(
                 taskId = "t1", turns = listOf(finished), ledgerHistory = true, hasLoaded = true,
             ),
         )
-        compose.onNodeWithTag("chat.tasks.detail.history").assertIsDisplayed()
         compose.onNodeWithTag("chat.tasks.detail.turns").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.history").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.history.heading").assertTextEquals("이전 원장 이력")
     }
 
-    // 커토버 뒤에 생긴 작업에는 옛 원장 이력이 없다. 그 영역을 아예 올리지
-    // 않는다 — 없는 이력을 「비어 있다」로 보여 주면 빠진 것처럼 읽힌다.
+    // 커토버 뒤에 생긴 작업의 이력은 그 턴들이다. 옛 원장 이력 영역은 전과
+    // 같이 있지만 「이전 기록」이라고 말하지 않는다 — 없는 이전 기록을 있는
+    // 척하지 않는다.
     @Test
-    fun aTaskCreatedAfterTheCutoverHasNoLedgerHistorySection() {
+    fun aTaskCreatedAfterTheCutoverDoesNotClaimAnEarlierRecord() {
         start(ChatTaskTurnsUiState(taskId = "t1", turns = listOf(asking), hasLoaded = true))
         compose.onNodeWithTag("chat.tasks.detail.turns").assertIsDisplayed()
-        compose.onAllNodesWithTag("chat.tasks.detail.history").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.history.heading").assertTextEquals("작업 이력")
     }
 
     // 페이지가 더 있으면 더 읽을 수 있고, 누르면 다음 페이지를 요청한다.
