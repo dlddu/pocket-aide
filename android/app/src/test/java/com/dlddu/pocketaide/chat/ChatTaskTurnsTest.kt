@@ -43,7 +43,6 @@ class ChatTaskTurnsTest {
          "task":{"id":"t1","title":"옮겨 온 작업","description":null,
                  "completion_criteria":null,"status":"blocked","version":3,
                  "session_id":"worker-now","created_at":null,"updated_at":null},
-         "ledger_history":true,
          "turns":[
            {"id":1,"request":"이거 먼저 해 줘","instruction":"저장소를 읽고 패치를 만들어라",
             "response":"세션이 스스로 쓴 원문 답","explanation":"부모가 사람에게 쓴 설명",
@@ -114,7 +113,8 @@ class ChatTaskTurnsTest {
         assertTrue("a fresh task has no turns yet", page.turns.isEmpty())
         // No ledger history to offer, and the pane must not imply one is
         // missing.
-        assertFalse("a task created after the cutover claimed a history", page.ledgerHistory)
+        // 이력은 그 작업의 turn 이다 — 따로 제시할 두 번째 출처가 없다.
+        assertTrue("turn 이 없는 작업은 빈 목록이고 오류가 아니다", page.turns.isEmpty())
     }
 
     @Test
@@ -164,15 +164,15 @@ class ChatTaskTurnsTest {
     @Test
     fun platformAnswersAreNotFlattenedIntoEmpty() = runTest {
         for ((status, want) in listOf(
-            404 to ChatTaskHistoryError.NOT_FOUND,
-            409 to ChatTaskHistoryError.UNAVAILABLE,
-            501 to ChatTaskHistoryError.UNSUPPORTED,
-            500 to ChatTaskHistoryError.UNREACHABLE,
+            404 to ChatTaskTurnsError.NOT_FOUND,
+            409 to ChatTaskTurnsError.UNAVAILABLE,
+            501 to ChatTaskTurnsError.UNSUPPORTED,
+            500 to ChatTaskTurnsError.UNREACHABLE,
         )) {
             server.enqueue(MockResponse().setResponseCode(status).setBody("""{"error":"x"}"""))
             val failed = runCatching { api().chatTaskTurns("t1", 0, 0) }.exceptionOrNull()
             assertTrue("status $status produced no error", failed is Exception)
-            assertEquals("status $status", want, ChatTaskHistoryError.from(failed as Exception))
+            assertEquals("status $status", want, ChatTaskTurnsError.from(failed as Exception))
         }
     }
 }

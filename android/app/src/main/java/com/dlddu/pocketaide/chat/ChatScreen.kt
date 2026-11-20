@@ -104,7 +104,6 @@ fun ChatScreen(api: ApiClient) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val taskRequest by viewModel.taskRequest.collectAsStateWithLifecycle()
-    val taskHistory by viewModel.taskHistory.collectAsStateWithLifecycle()
     val taskTurns by viewModel.taskTurns.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     // The draft and the panel's open/closed choice survive a fold, a rotation
@@ -125,15 +124,14 @@ fun ChatScreen(api: ApiClient) {
     // and a new key is drawn only once a request has actually been stored.
     var requestDraft by rememberSaveable { mutableStateOf("") }
     var requestKey by rememberSaveable { mutableStateOf(newTaskRequestKey()) }
-    // Which of the session's offered sentences the draft came from, so the
-    // stored request can name it — with the task version it was offered on,
-    // which the slot checks. The provenance holds only while the draft is
+    // The turn the draft's sentence was offered on, so the stored request can
+    // name it — that turn still being the task's latest is what the platform
+    // checks a pick against. The provenance holds only while the draft is
     // still that sentence word for word: editing it makes the words the
     // person's own, and it is then stored as free text. Kept beside the draft
     // rather than derived from the task, so the pick the person made survives
     // the task being read again under them.
-    var requestChoiceID by rememberSaveable { mutableStateOf("") }
-    var requestChoiceBasis by rememberSaveable { mutableStateOf(0L) }
+    var requestChoiceTurnId by rememberSaveable { mutableStateOf(0L) }
     var requestChoiceText by rememberSaveable { mutableStateOf("") }
     // One list state each for the conversation and the task list, held above the
     // layout branch, so both reading positions survive folding, unfolding,
@@ -155,11 +153,9 @@ fun ChatScreen(api: ApiClient) {
             openTaskId = null
             requestDraft = ""
             requestKey = newTaskRequestKey()
-            requestChoiceID = ""
-            requestChoiceBasis = 0L
+            requestChoiceTurnId = 0L
             requestChoiceText = ""
             viewModel.dismissTaskRequest()
-            viewModel.clearTaskHistory()
             viewModel.clearTaskTurns()
         }
     }
@@ -194,15 +190,13 @@ fun ChatScreen(api: ApiClient) {
             // own key, so the two are never stored as one.
             requestDraft = ""
             requestKey = newTaskRequestKey()
-            requestChoiceID = ""
-            requestChoiceBasis = 0L
+            requestChoiceTurnId = 0L
             requestChoiceText = ""
             viewModel.dismissTaskRequest()
         },
         onCloseTask = {
             openTaskId = null
             viewModel.dismissTaskRequest()
-            viewModel.clearTaskHistory()
             viewModel.clearTaskTurns()
         },
         taskRequest = taskRequest,
@@ -210,23 +204,22 @@ fun ChatScreen(api: ApiClient) {
         onRequestDraftChange = {
             requestDraft = it
             // Edited by hand, so it is no longer the session's sentence: the
-            // provenance and its basis go with it, and the words are stored as
-            // the person's own free text.
+            // provenance goes with it, and the words are stored as the
+            // person's own free text.
             if (!chatTaskPickHolds(it, requestChoiceText)) {
-                requestChoiceID = ""
-                requestChoiceBasis = 0L
+                requestChoiceTurnId = 0L
                 requestChoiceText = ""
             }
         },
         onChoicePicked = { choice ->
             requestDraft = choice.requestText
-            requestChoiceID = choice.id
-            requestChoiceBasis = choice.basisVersion
+            // The turn comes from the task the choices were read with, which is
+            // the turn they were offered on. A choice carries no id of its own:
+            // which turn a pick answers is the one fact that decides whether it
+            // is still current.
+            requestChoiceTurnId = openTask?.choiceTurnId ?: 0L
             requestChoiceText = choice.requestText
         },
-        history = taskHistory,
-        onLoadHistory = { openTask?.let { viewModel.loadTaskHistory(it.id) } },
-        onLoadMoreHistory = viewModel::loadMoreTaskHistory,
         turns = taskTurns,
         onLoadTurns = { openTask?.let { viewModel.loadTaskTurns(it.id) } },
         onLoadMoreTurns = viewModel::loadMoreTaskTurns,
@@ -239,21 +232,18 @@ fun ChatScreen(api: ApiClient) {
                     task = task,
                     requestID = requestKey,
                     request = requestDraft,
-                    choiceID = requestChoiceID,
-                    choiceBasisVersion = requestChoiceBasis,
+                    choiceTurnId = requestChoiceTurnId,
                     onStored = {
                         requestDraft = ""
                         requestKey = newTaskRequestKey()
-                        requestChoiceID = ""
-                        requestChoiceBasis = 0L
+                        requestChoiceTurnId = 0L
                         requestChoiceText = ""
                     },
                     // Refused because the task moved: the draft stays exactly
                     // as written and only the pick is dropped, so saving again
                     // stores those same words as the person's own.
                     onChoiceStale = {
-                        requestChoiceID = ""
-                        requestChoiceBasis = 0L
+                        requestChoiceTurnId = 0L
                         requestChoiceText = ""
                     },
                 )
@@ -297,12 +287,9 @@ internal fun ChatPanes(
     requestDraft: String,
     onRequestDraftChange: (String) -> Unit,
     onChoicePicked: (ChatTaskChoice) -> Unit,
-    history: ChatTaskHistoryUiState,
     turns: ChatTaskTurnsUiState,
     onLoadTurns: () -> Unit,
     onLoadMoreTurns: () -> Unit,
-    onLoadHistory: () -> Unit,
-    onLoadMoreHistory: () -> Unit,
     onStoreRequest: () -> Unit,
 ) {
     BoxWithConstraints(
@@ -366,14 +353,11 @@ internal fun ChatPanes(
                             onDraftChange = onRequestDraftChange,
                             onChoicePicked = onChoicePicked,
                             request = taskRequest,
-                            history = history,
-                            onLoadHistory = onLoadHistory,
-                            onLoadMoreHistory = onLoadMoreHistory,
                             turns = turns,
                             onLoadTurns = onLoadTurns,
                             onLoadMoreTurns = onLoadMoreTurns,
-                            // No reply gate: the request goes to the ledger,
-                            // not into the turn being written.
+                            // No reply gate: the request becomes the task's next
+                            // turn, not part of the reply being written.
                             onStore = onStoreRequest,
                             onBack = onCloseTask,
                         )

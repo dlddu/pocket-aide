@@ -45,7 +45,6 @@ class ChatTaskTurnsRenderTest {
         id = "t1",
         title = "옮겨 온 작업",
         status = ChatTaskStatus.BLOCKED,
-        stage = "review",
     )
 
     private val finished = ChatTaskTurn(
@@ -92,9 +91,6 @@ class ChatTaskTurnsRenderTest {
                     },
                     request = ChatTaskRequestUiState(),
                     onStore = {},
-                    history = ChatTaskHistoryUiState(taskId = "t1", hasLoaded = true),
-                    onLoadHistory = {},
-                    onLoadMoreHistory = {},
                     turns = turns,
                     onLoadTurns = { turnLoads++ },
                     onLoadMoreTurns = { turnMores++ },
@@ -123,9 +119,6 @@ class ChatTaskTurnsRenderTest {
                     onChoicePicked = {},
                     request = ChatTaskRequestUiState(),
                     onStore = {},
-                    history = ChatTaskHistoryUiState(taskId = "t1", hasLoaded = true),
-                    onLoadHistory = {},
-                    onLoadMoreHistory = {},
                     turns = turns,
                     onLoadTurns = { turnLoads++ },
                     onLoadMoreTurns = { turnMores++ },
@@ -145,16 +138,14 @@ class ChatTaskTurnsRenderTest {
                 taskId = "t1",
                 task = ChatTaskTurnTask(id = "t1", title = "옮겨 온 작업"),
                 turns = listOf(finished, asking),
-                ledgerHistory = true,
                 hasLoaded = true,
             ),
         )
         // 스크롤 전에도 노드는 트리에 있다(존재는 하되 화면 밖일 수 있다).
         compose.onNodeWithTag("chat.tasks.detail.turn.1.response").assertExists()
-        // 스크롤하면 실제로 보인다 — 세션의 원문도, 그 아래 옛 이력 영역도.
+        // 스크롤하면 실제로 보인다 — 세션의 원문까지.
         compose.onNodeWithTag("chat.tasks.detail.turn.1.response").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("chat.tasks.detail.turn.2.question").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.history.heading").performScrollTo().assertIsDisplayed()
     }
 
     // 턴이 많아도 마지막 턴까지 스크롤로 닿는다 — 긴 타임라인이 창을 넘겨도
@@ -183,7 +174,6 @@ class ChatTaskTurnsRenderTest {
                 taskId = "t1",
                 task = ChatTaskTurnTask(id = "t1", title = "옮겨 온 작업", description = null, completionCriteria = null),
                 turns = listOf(finished, asking),
-                ledgerHistory = true,
                 hasLoaded = true,
             ),
         )
@@ -264,26 +254,28 @@ class ChatTaskTurnsRenderTest {
     // (4) 옛 원장 이력은 턴과 **다른 영역**으로 남고, 옮겨온 작업에서는 제목이
     // 그것이 이전 기록임을 말한다 — 턴에 섞이지 않는다. 영역 자체는 전과 같이
     // 늘 있다(없는 작업은 그 영역의 빈 상태가 스스로 말한다).
+    // 작업의 이력은 그 작업의 turn 이다 — 아래에 따로 둔 원장 이력 영역은
+    // 읽을 행이 뒤에 없어 함께 사라졌다. 영역이 남아 있으면 영원히 비어 있을
+    // 칸을 사람이 계속 들여다본다.
     @Test
-    fun theLedgerHistoryIsKeptSeparateFromTheTurns() {
+    fun theTurnsAreTheWholeHistory() {
         start(
             ChatTaskTurnsUiState(
-                taskId = "t1", turns = listOf(finished), ledgerHistory = true, hasLoaded = true,
+                taskId = "t1", turns = listOf(finished), hasLoaded = true,
             ),
         )
         compose.onNodeWithTag("chat.tasks.detail.turns").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.history").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.history.heading").assertTextEquals("이전 원장 이력")
+        compose.onAllNodesWithTag("chat.tasks.detail.history").assertCountEquals(0)
     }
 
     // 커토버 뒤에 생긴 작업의 이력은 그 턴들이다. 옛 원장 이력 영역은 전과
-    // 같이 있지만 「이전 기록」이라고 말하지 않는다 — 없는 이전 기록을 있는
-    // 척하지 않는다.
+    // 이 이미지에서 만든 작업도, 원장에서 옮겨 온 작업도 이력은 그 작업의
+    // turn 뿐이다 — 어느 쪽에도 없는 이전 기록을 있는 척하는 영역이 없다.
     @Test
     fun aTaskCreatedAfterTheCutoverDoesNotClaimAnEarlierRecord() {
         start(ChatTaskTurnsUiState(taskId = "t1", turns = listOf(asking), hasLoaded = true))
         compose.onNodeWithTag("chat.tasks.detail.turns").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.history.heading").assertTextEquals("작업 이력")
+        compose.onAllNodesWithTag("chat.tasks.detail.history").assertCountEquals(0)
     }
 
     // 페이지가 더 있으면 더 읽을 수 있고, 누르면 다음 페이지를 요청한다.
@@ -303,7 +295,7 @@ class ChatTaskTurnsRenderTest {
     // 보내는 말은 사람이 읽은 그 말이다.
     @Test
     fun pickingAChoiceOnlyFillsTheRequestBox() {
-        val offered = ChatTaskChoice(id = "t2p0", label = "전부", requestText = "코멘트 전부 반영해 줘", basisVersion = 3)
+        val offered = ChatTaskChoice(label = "전부", requestText = "코멘트 전부 반영해 줘")
         start(
             ChatTaskTurnsUiState(taskId = "t1", turns = listOf(asking), hasLoaded = true),
             choices = listOf(offered),

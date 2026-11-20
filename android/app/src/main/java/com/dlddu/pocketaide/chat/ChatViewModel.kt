@@ -54,19 +54,17 @@ data class ChatTasksUiState(
  * says.
  */
 /**
- * One task's history as the panel shows it. Loading, empty, a page and a
- * failure are separate on purpose: an empty list means the ledger recorded
- * nothing for this task, and a failure must not look like that.
- */
-/**
- * One task's turns as the detail pane holds them.
+ * One task's turns as the detail pane holds them, which is that task's whole
+ * history.
  *
  * This is the work itself — what was asked, what went to the session doing it,
- * that session's own answer and the parent's explanation. The ledger history
- * beside it ([ChatTaskHistoryUiState]) is the older record of a carried-over
- * task and is shown separately, never merged into these: a past management
- * event is not a turn, and presenting one as a turn would put words a person
- * never said in their place.
+ * that session's own answer and the parent's explanation. There is no separate
+ * ledger history beside it any more: a past management event was never a turn,
+ * and the route that served them is gone with the ledger (platform AC-N10).
+ *
+ * Loading, empty, a page and a failure are separate on purpose: an empty list
+ * means this task has had no exchange yet, and a failure must not look like
+ * that.
  */
 data class ChatTaskTurnsUiState(
     val taskId: String = "",
@@ -76,25 +74,13 @@ data class ChatTaskTurnsUiState(
     val nextCursor: Long = 0,
     val isLoading: Boolean = false,
     val hasLoaded: Boolean = false,
-    val error: ChatTaskHistoryError? = null,
+    val error: ChatTaskTurnsError? = null,
 ) {
     val isEmpty: Boolean get() = hasLoaded && error == null && turns.isEmpty()
     val hasMore: Boolean get() = nextCursor > 0
 
     /** The choices the latest turn offers, which are the only current ones. */
     val offered: List<ChatTaskTurnChoice> get() = turns.lastOrNull()?.choices ?: emptyList()
-}
-
-data class ChatTaskHistoryUiState(
-    val taskId: String = "",
-    val events: List<ChatTaskEvent> = emptyList(),
-    val nextCursor: Long = 0,
-    val isLoading: Boolean = false,
-    val hasLoaded: Boolean = false,
-    val error: ChatTaskHistoryError? = null,
-) {
-    val isEmpty: Boolean get() = hasLoaded && error == null && events.isEmpty()
-    val hasMore: Boolean get() = nextCursor > 0
 }
 
 data class ChatTaskRequestUiState(
@@ -114,9 +100,6 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     private val _taskRequest = MutableStateFlow(ChatTaskRequestUiState())
     val taskRequest: StateFlow<ChatTaskRequestUiState> = _taskRequest.asStateFlow()
-
-    private val _taskHistory = MutableStateFlow(ChatTaskHistoryUiState())
-    val taskHistory: StateFlow<ChatTaskHistoryUiState> = _taskHistory.asStateFlow()
 
     private val _taskTurns = MutableStateFlow(ChatTaskTurnsUiState())
     val taskTurns: StateFlow<ChatTaskTurnsUiState> = _taskTurns.asStateFlow()
@@ -157,42 +140,44 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     }
 
     /**
-     * Stores one request about [task] on the session's task ledger.
+     * Stores one request about [task], where it becomes that task's next turn.
      * [onStored] runs only when the backend stored it, so the caller clears its
      * draft then and keeps it on every failure.
+     *
+     * [choiceTurnId] is the turn the person picked a sentence from, or zero for
+     * their own words. It is the turn rather than a choice id because what
+     * makes a pick current is that turn still being the task's latest.
      */
     fun storeTaskRequest(
         task: ChatTask,
         requestID: String,
         request: String,
-        choiceID: String,
-        choiceBasisVersion: Long = 0,
+        choiceTurnId: Long = 0,
         onStored: () -> Unit,
         onChoiceStale: () -> Unit = {},
     ) {
         viewModelScope.launch {
-            runTaskRequest(task, requestID, request, choiceID, choiceBasisVersion, onStored, onChoiceStale)
+            runTaskRequest(task, requestID, request, choiceTurnId, onStored, onChoiceStale)
         }
     }
 
     /**
      * The store and what follows it, as one suspending step so it can be driven
-     * without a main looper. [onStored] runs only on a store; a pick the session
-     * no longer offers runs [onChoiceStale] instead and re-reads the task, so
-     * the pane shows the choices that hold now rather than the ones it was
-     * refused on. Neither path touches the draft — the caller clears it only on
-     * [onStored].
+     * without a main looper. [onStored] runs only on a store; a pick from a turn
+     * the task has moved past runs [onChoiceStale] instead and re-reads the
+     * task, so the pane shows the choices that hold now rather than the ones it
+     * was refused on. Neither path touches the draft — the caller clears it only
+     * on [onStored].
      */
     internal suspend fun runTaskRequest(
         task: ChatTask,
         requestID: String,
         request: String,
-        choiceID: String,
-        choiceBasisVersion: Long,
+        choiceTurnId: Long,
         onStored: () -> Unit,
         onChoiceStale: () -> Unit = {},
     ) {
-        if (performTaskRequest(task, requestID, request, choiceID, choiceBasisVersion)) {
+        if (performTaskRequest(task, requestID, request, choiceTurnId)) {
             onStored()
             return
         }
@@ -200,26 +185,6 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             onChoiceStale()
             loadTasks()
         }
-    }
-
-    /**
-     * Reads the first page of [taskId]'s history, or the next one. A failure
-     * keeps the page already on screen, so a retry adds to it rather than
-     * replacing what the person was reading with an error.
-     */
-    fun loadTaskHistory(taskId: String) {
-        viewModelScope.launch { performTaskHistory(taskId, more = false) }
-    }
-
-    fun loadMoreTaskHistory() {
-        val state = _taskHistory.value
-        if (!state.hasMore || state.isLoading) return
-        viewModelScope.launch { performTaskHistory(state.taskId, more = true) }
-    }
-
-    /** Forgets the history once that task's pane is closed. */
-    fun clearTaskHistory() {
-        _taskHistory.value = ChatTaskHistoryUiState()
     }
 
     fun loadTaskTurns(taskId: String) {
@@ -266,36 +231,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             _taskTurns.value = _taskTurns.value.copy(
                 isLoading = false,
                 hasLoaded = true,
-                error = ChatTaskHistoryError.from(e),
-            )
-            false
-        }
-    }
-
-    internal suspend fun performTaskHistory(taskId: String, more: Boolean): Boolean {
-        val current = _taskHistory.value
-        if (current.isLoading) return false
-        val after = if (more && current.taskId == taskId) current.nextCursor else 0
-        val kept = if (more && current.taskId == taskId) current.events else emptyList()
-        _taskHistory.value = current.copy(taskId = taskId, events = kept, isLoading = true, error = null)
-        return try {
-            val page = api.chatTaskEvents(taskId, after, CHAT_TASK_HISTORY_PAGE)
-            _taskHistory.value = ChatTaskHistoryUiState(
-                taskId = taskId,
-                // Pages arrive oldest first and are appended in that order, so
-                // the screen reads top to bottom as it happened.
-                events = kept + page.events,
-                nextCursor = page.nextCursor,
-                hasLoaded = true,
-            )
-            true
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            _taskHistory.value = _taskHistory.value.copy(
-                isLoading = false,
-                hasLoaded = true,
-                error = ChatTaskHistoryError.from(e),
+                error = ChatTaskTurnsError.from(e),
             )
             false
         }
@@ -310,8 +246,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         task: ChatTask,
         requestID: String,
         request: String,
-        choiceID: String = "",
-        choiceBasisVersion: Long = 0,
+        choiceTurnId: Long = 0,
     ): Boolean {
         val text = chatTaskRequestText(request)
         if (text.isEmpty()) return false
@@ -329,11 +264,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         try {
             val stored = api.storeChatTaskRequest(task.id, requestID, text, choiceTurnId)
             // Nothing is added to the conversation and no reply is awaited: the
-            // request is on the ledger, and the session finds it when it next
-            // looks. Storing therefore works while a reply is being written.
+            // request is the task's next turn now, and the parent finds it when
+            // it next reads the task's open turns. Storing therefore works
+            // while a reply is being written.
             _taskRequest.value = ChatTaskRequestUiState(
                 taskId = task.id,
-                stored = stored.request,
+                stored = stored.turn,
                 replayed = stored.replayed,
             )
             return true
@@ -441,7 +377,6 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
         // One history page: small enough that the first page is quick and the
         // rest is one tap away.
-        const val CHAT_TASK_HISTORY_PAGE = 20
         const val CHAT_TASK_TURNS_PAGE = 20
 
         const val REPLY_POLL_MILLIS = 1_500L

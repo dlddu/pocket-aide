@@ -23,10 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,7 +33,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
@@ -56,25 +51,31 @@ private const val MUTED_OPACITY = 0.55f
 private const val DISABLED_OPACITY = 0.4f
 private const val QUOTE_OPACITY = 0.06f
 private const val REQUEST_MAX_LINES = 6
-private const val HISTORY_COLLAPSED_LINES = 2
 
 /**
- * One task of the ledger, and the ways to ask about it.
+ * One work task, and the ways to ask about it.
  *
- * Everything above the request field is read straight from the ledger row the
- * panel last read — status, stage, the reason it stands where it does and the
- * next action, each marked 미기록 when the ledger carries none. The pane adds no
- * judgement of its own and states nothing the ledger does not.
+ * Everything above the request field is read straight from the records the
+ * panel last read — the status, what the task is for, how it will be known to
+ * be done, what the session is asking, and the exchanges so far — each marked
+ * 미기록 when the records carry none. The pane adds no judgement of its own and
+ * states nothing the records do not.
  *
- * Everything below it stores one request on this task's ledger row. The
- * suggestions fill the field rather than store, so what a button promises is the
- * text the user reads before it is kept. Storing adds nothing to the
- * conversation and starts no turn — it works while a reply is being written —
- * and the session picks the request up when it next reads its ledger, which
- * leaves every tool approval and the human merge gate exactly where they were.
+ * The task's exchanges *are* its history: the separate ledger history that
+ * used to sit at the bottom is gone with the ledger it read (platform AC-N10),
+ * because a past management event was never a turn and showing one as a turn
+ * would put words in a person's mouth.
  *
- * The screen says *saved and waiting*, never *done*: only the ledger's own
- * status says the session dealt with it.
+ * Everything below the field stores one request, which becomes this task's next
+ * turn. The suggestions fill the field rather than store, so what a button
+ * promises is the text the user reads before it is kept. Storing adds nothing
+ * to the conversation and starts no turn of the session's own — it works while
+ * a reply is being written — and the parent picks it up when it next reads the
+ * task's open turns, which leaves every tool approval and the human merge gate
+ * exactly where they were.
+ *
+ * The screen says *saved and waiting*, never *done*: a turn is dealt with when
+ * it ends, which only the parent writes.
  */
 @Composable
 fun ChatTaskDetailPane(
@@ -84,9 +85,6 @@ fun ChatTaskDetailPane(
     onChoicePicked: (ChatTaskChoice) -> Unit,
     request: ChatTaskRequestUiState,
     onStore: () -> Unit,
-    history: ChatTaskHistoryUiState,
-    onLoadHistory: () -> Unit,
-    onLoadMoreHistory: () -> Unit,
     turns: ChatTaskTurnsUiState,
     onLoadTurns: () -> Unit,
     onLoadMoreTurns: () -> Unit,
@@ -115,10 +113,12 @@ fun ChatTaskDetailPane(
             // task says "not recorded" rather than showing a blank.
             NullableField("무엇을 · 왜", turns.task.description, "chat.tasks.detail.description")
             NullableField("완료 기준", turns.task.completionCriteria, "chat.tasks.detail.criteria")
-            Field("진행 내용", task.stage, "chat.tasks.detail.stage")
-            Field("검토·차단 사유", task.reason, "chat.tasks.detail.reason")
-            Field("남은 다음 행동", task.nextAction, "chat.tasks.detail.next")
-            task.requests?.takeIf { it.open > 0 }?.let { Waiting(it) }
+            // What the session is asking, which is the nearest thing the
+            // agreed records have to the ledger's free-text reason and next
+            // action — those were the parent's own bookkeeping and never part
+            // of what a person reads.
+            Field("묻는 것", task.waiting?.question.orEmpty(), "chat.tasks.detail.question")
+            task.waiting?.let { Waiting(it) }
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
             Turns(task.id, turns, onLoadTurns, onLoadMoreTurns)
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
@@ -129,13 +129,6 @@ fun ChatTaskDetailPane(
                 request = if (mine) request else ChatTaskRequestUiState(),
                 onStore = onStore,
             )
-            Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
-            // The ledger history keeps the place it always had. A task carried
-            // over from the ledger says so in the heading, so the older record
-            // is told apart from the turns above it rather than merged into
-            // them — but the section is not taken away from a task that has
-            // none, because its own empty state already says so.
-            History(task.id, history, onLoadHistory, onLoadMoreHistory, turns.ledgerHistory)
         }
     }
 }
@@ -268,12 +261,16 @@ private fun Choices(choices: List<ChatTaskChoice>, onPicked: (ChatTaskChoice) ->
 }
 
 /**
- * How many requests on this task the session has not settled yet, and what the
- * newest of them is doing. It is the ledger's own count — the panel reports it
- * and never decides that something is finished.
+ * The open turn on this task: what was asked and whether anybody has picked it
+ * up. The pane reports it and never decides that something is finished — a
+ * turn is settled when it ends, which only the parent writes.
+ *
+ * This replaced a tally of stored request rows. A person's words are the
+ * task's next turn now, so what is waiting is one turn rather than a count,
+ * and there is no request lifecycle to report.
  */
 @Composable
-private fun Waiting(requests: ChatTaskRequests) {
+private fun Waiting(waiting: ChatTaskWaiting) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
         Text(
@@ -282,10 +279,7 @@ private fun Waiting(requests: ChatTaskRequests) {
             color = ink.copy(alpha = MUTED_OPACITY),
         )
         Text(
-            buildString {
-                append("확인 대기 ").append(requests.open).append("건")
-                if (requests.reconciling > 0) append(" · 결과 대조 중 ").append(requests.reconciling).append("건")
-            },
+            if (waiting.running) "확인 중" else "확인 대기",
             style = DesignTokens.Typography.style(DesignTokens.Typography.body),
             color = ink,
             modifier = Modifier.testTag("chat.tasks.detail.waitingRequests"),
@@ -394,124 +388,6 @@ private fun Note(text: String, color: androidx.compose.ui.graphics.Color, tag: S
     )
 }
 
-/**
- * This task's history, oldest first: what the person asked, what the session
- * did with it, and the task's own transitions.
- *
- * It shows only what the ledger recorded. A task from before the ledger kept a
- * history has none, and the pane says so rather than reconstructing one from
- * the task's current state. A long line opens in place rather than being cut.
- */
-@Composable
-private fun History(
-    taskID: String,
-    history: ChatTaskHistoryUiState,
-    onLoad: () -> Unit,
-    onLoadMore: () -> Unit,
-    carriedOver: Boolean = false,
-) {
-    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
-    // The first page is read when this task's pane opens, and again when the
-    // pane switches to another task.
-    LaunchedEffect(taskID) { onLoad() }
-    Column(
-        Modifier.fillMaxWidth().testTag("chat.tasks.detail.history"),
-        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
-    ) {
-        Text(
-            if (carriedOver) "이전 원장 이력" else "작업 이력",
-            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-            color = ink.copy(alpha = MUTED_OPACITY),
-            modifier = Modifier.testTag("chat.tasks.detail.history.heading"),
-        )
-        when {
-            history.error != null -> {
-                Note(history.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.history.error")
-                val shape = RoundedCornerShape(DesignTokens.Radius.chip)
-                Text(
-                    "다시 시도",
-                    style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
-                    color = DesignTokens.Colors.accent(DETAIL_AREA),
-                    modifier = Modifier
-                        .clip(shape)
-                        .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
-                        .clickable(role = Role.Button, onClick = onLoad)
-                        .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
-                        .testTag("chat.tasks.detail.history.retry"),
-                )
-            }
-
-            history.isLoading && history.events.isEmpty() -> CircularProgressIndicator(
-                color = ink.copy(alpha = MUTED_OPACITY),
-                strokeWidth = SPINNER_STROKE,
-                modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.history.loading"),
-            )
-
-            history.isEmpty -> Note(
-                "아직 남은 기록이 없어요. 이 시점 이전의 일은 원장에 적혀 있지 않아요.",
-                ink.copy(alpha = MUTED_OPACITY),
-                "chat.tasks.detail.history.empty",
-            )
-
-            else -> {
-                history.events.forEach { HistoryLine(it) }
-                if (history.hasMore) {
-                    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
-                    Text(
-                        if (history.isLoading) "불러오는 중" else "이전 기록 더 보기",
-                        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
-                        color = DesignTokens.Colors.accent(DETAIL_AREA),
-                        modifier = Modifier
-                            .clip(shape)
-                            .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
-                            .clickable(enabled = !history.isLoading, role = Role.Button, onClick = onLoadMore)
-                            .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
-                            .testTag("chat.tasks.detail.history.more"),
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** One history line. Its long body opens in place so nothing is read half. */
-@Composable
-private fun HistoryLine(event: ChatTaskEvent) {
-    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
-    var open by remember(event.seq) { mutableStateOf(false) }
-    val body = listOf(event.text, event.result).firstOrNull { it.isNotBlank() }.orEmpty()
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(DesignTokens.Radius.card))
-            .background(DesignTokens.Colors.card(DETAIL_AREA))
-            .then(if (body.isBlank()) Modifier else Modifier.clickable(role = Role.Button) { open = !open })
-            .padding(DesignTokens.Spacing.md)
-            .testTag("chat.tasks.detail.history.line"),
-        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
-    ) {
-        Text(
-            ChatTaskEventKind.label(event.kind) + " · " + event.at,
-            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-            color = ink.copy(alpha = MUTED_OPACITY),
-        )
-        Text(
-            event.summary,
-            style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
-            color = ink,
-        )
-        if (body.isNotBlank()) {
-            Text(
-                body,
-                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
-                color = ink.copy(alpha = MUTED_OPACITY),
-                maxLines = if (open) Int.MAX_VALUE else HISTORY_COLLAPSED_LINES,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.testTag("chat.tasks.detail.history.body"),
-            )
-        }
-    }
-}
 
 /**
  * A field the agreed records may genuinely not have recorded.

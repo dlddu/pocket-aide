@@ -31,13 +31,18 @@ class ChatTasksTest {
         return ApiClient(server.url("/").toString(), store, clock = { now })
     }
 
+    // One task as the backend now serves it: the agreed task fields, the turn
+    // count, and the open turn the panel reads "something is waiting" from.
     private fun task(
         id: String,
         status: String,
-        stage: String = "implementation",
-        reason: String = "",
-        next: String = "",
-    ) = """{"id":"$id","title":"작업 $id","status":"$status","stage":"$stage","reason":"$reason","next_action":"$next"}"""
+        description: String = "무엇을 why",
+        criteria: String = "머지되면 끝",
+        question: String = "",
+        turns: Long = 0,
+    ) = """{"id":"$id","title":"작업 $id","status":"$status",""" +
+        """"description":"$description","completion_criteria":"$criteria","turns_total":$turns""" +
+        (if (question.isBlank()) "}" else ""","waiting":{"turn_id":7,"request":"이거 해 줘","question":"$question"}}""")
 
     private fun tasksJson(
         tasks: String = "",
@@ -63,7 +68,7 @@ class ChatTasksTest {
         server.enqueue(
             MockResponse().setBody(
                 tasksJson(
-                    tasks = task("t1", "blocked", "review", "CI 가 막혔다", "로그를 본다"),
+                    tasks = task("t1", "blocked", question = "CI 가 막혔다", turns = 2),
                     counts = """{"blocked":1,"running":0}""",
                 ),
             ),
@@ -80,9 +85,13 @@ class ChatTasksTest {
         assertEquals("cx1", state.sessionId)
         val task = state.tasks.single()
         assertEquals(ChatTaskStatus.BLOCKED, task.status)
-        assertEquals("review", task.stage)
-        assertEquals("CI 가 막혔다", task.reason)
-        assertEquals("로그를 본다", task.nextAction)
+        // The two fields the ledger page had nowhere to put.
+        assertEquals("무엇을 why", task.description)
+        assertEquals("머지되면 끝", task.completionCriteria)
+        // What is waiting comes from the task's open turn, not a count of rows
+        // beside it.
+        assertEquals("CI 가 막혔다", task.waiting?.question)
+        assertEquals(7L, task.waiting?.turnId)
         assertEquals(1, state.counts["blocked"])
     }
 
