@@ -58,6 +58,34 @@ data class ChatTasksUiState(
  * failure are separate on purpose: an empty list means the ledger recorded
  * nothing for this task, and a failure must not look like that.
  */
+/**
+ * One task's turns as the detail pane holds them.
+ *
+ * This is the work itself — what was asked, what went to the session doing it,
+ * that session's own answer and the parent's explanation. The ledger history
+ * beside it ([ChatTaskHistoryUiState]) is the older record of a carried-over
+ * task and is shown separately, never merged into these: a past management
+ * event is not a turn, and presenting one as a turn would put words a person
+ * never said in their place.
+ */
+data class ChatTaskTurnsUiState(
+    val taskId: String = "",
+    val task: ChatTaskTurnTask = ChatTaskTurnTask(),
+    val taskVersion: Long = 0,
+    val turns: List<ChatTaskTurn> = emptyList(),
+    val nextCursor: Long = 0,
+    val ledgerHistory: Boolean = false,
+    val isLoading: Boolean = false,
+    val hasLoaded: Boolean = false,
+    val error: ChatTaskHistoryError? = null,
+) {
+    val isEmpty: Boolean get() = hasLoaded && error == null && turns.isEmpty()
+    val hasMore: Boolean get() = nextCursor > 0
+
+    /** The choices the latest turn offers, which are the only current ones. */
+    val offered: List<ChatTaskTurnChoice> get() = turns.lastOrNull()?.choices ?: emptyList()
+}
+
 data class ChatTaskHistoryUiState(
     val taskId: String = "",
     val events: List<ChatTaskEvent> = emptyList(),
@@ -90,6 +118,9 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     private val _taskHistory = MutableStateFlow(ChatTaskHistoryUiState())
     val taskHistory: StateFlow<ChatTaskHistoryUiState> = _taskHistory.asStateFlow()
+
+    private val _taskTurns = MutableStateFlow(ChatTaskTurnsUiState())
+    val taskTurns: StateFlow<ChatTaskTurnsUiState> = _taskTurns.asStateFlow()
 
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
@@ -190,6 +221,57 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     /** Forgets the history once that task's pane is closed. */
     fun clearTaskHistory() {
         _taskHistory.value = ChatTaskHistoryUiState()
+    }
+
+    fun loadTaskTurns(taskId: String) {
+        viewModelScope.launch { performTaskTurns(taskId, more = false) }
+    }
+
+    fun loadMoreTaskTurns() {
+        val state = _taskTurns.value
+        if (!state.hasMore || state.isLoading) return
+        viewModelScope.launch { performTaskTurns(state.taskId, more = true) }
+    }
+
+    /** Forgets the turns once that task's pane is closed. */
+    fun clearTaskTurns() {
+        _taskTurns.value = ChatTaskTurnsUiState()
+    }
+
+    internal suspend fun performTaskTurns(taskId: String, more: Boolean): Boolean {
+        val current = _taskTurns.value
+        if (current.isLoading) return false
+        val after = if (more && current.taskId == taskId) current.nextCursor else 0
+        val kept = if (more && current.taskId == taskId) current.turns else emptyList()
+        _taskTurns.value = current.copy(taskId = taskId, turns = kept, isLoading = true, error = null)
+        return try {
+            val page = api.chatTaskTurns(taskId, after, CHAT_TASK_TURNS_PAGE)
+            _taskTurns.value = ChatTaskTurnsUiState(
+                taskId = taskId,
+                task = page.task,
+                taskVersion = page.taskVersion,
+                // Pages arrive oldest first and are appended in that order, so
+                // the pane reads top to bottom as it happened.
+                turns = kept + page.turns,
+                nextCursor = page.nextCursor,
+                ledgerHistory = page.ledgerHistory,
+                hasLoaded = true,
+            )
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // The platform's four answers stay four different things: a task
+            // this slot does not have, a session with no live pod, a
+            // deployment that keeps no work records, and anything else. None
+            // of them is "this task has no work".
+            _taskTurns.value = _taskTurns.value.copy(
+                isLoading = false,
+                hasLoaded = true,
+                error = ChatTaskHistoryError.from(e),
+            )
+            false
+        }
     }
 
     internal suspend fun performTaskHistory(taskId: String, more: Boolean): Boolean {
@@ -362,6 +444,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         // One history page: small enough that the first page is quick and the
         // rest is one tap away.
         const val CHAT_TASK_HISTORY_PAGE = 20
+        const val CHAT_TASK_TURNS_PAGE = 20
 
         const val REPLY_POLL_MILLIS = 1_500L
         const val IDLE_POLL_MILLIS = 15_000L

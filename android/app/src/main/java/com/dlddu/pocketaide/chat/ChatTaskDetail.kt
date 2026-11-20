@@ -87,6 +87,9 @@ fun ChatTaskDetailPane(
     history: ChatTaskHistoryUiState,
     onLoadHistory: () -> Unit,
     onLoadMoreHistory: () -> Unit,
+    turns: ChatTaskTurnsUiState,
+    onLoadTurns: () -> Unit,
+    onLoadMoreTurns: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -107,10 +110,17 @@ fun ChatTaskDetailPane(
                 .padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
         ) {
+            // What the task is for and how it will be known to be done. The
+            // older ledger shape had no column for either, so a carried-over
+            // task says "not recorded" rather than showing a blank.
+            NullableField("무엇을 · 왜", turns.task.description, "chat.tasks.detail.description")
+            NullableField("완료 기준", turns.task.completionCriteria, "chat.tasks.detail.criteria")
             Field("진행 내용", task.stage, "chat.tasks.detail.stage")
             Field("검토·차단 사유", task.reason, "chat.tasks.detail.reason")
             Field("남은 다음 행동", task.nextAction, "chat.tasks.detail.next")
             task.requests?.takeIf { it.open > 0 }?.let { Waiting(it) }
+            Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+            Turns(task.id, turns, onLoadTurns, onLoadMoreTurns)
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
             Choices(task.choices, onChoicePicked)
             RequestField(
@@ -120,7 +130,12 @@ fun ChatTaskDetailPane(
                 onStore = onStore,
             )
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
-            History(task.id, history, onLoadHistory, onLoadMoreHistory)
+            // The ledger history keeps the place it always had. A task carried
+            // over from the ledger says so in the heading, so the older record
+            // is told apart from the turns above it rather than merged into
+            // them — but the section is not taken away from a task that has
+            // none, because its own empty state already says so.
+            History(task.id, history, onLoadHistory, onLoadMoreHistory, turns.ledgerHistory)
         }
     }
 }
@@ -393,6 +408,7 @@ private fun History(
     history: ChatTaskHistoryUiState,
     onLoad: () -> Unit,
     onLoadMore: () -> Unit,
+    carriedOver: Boolean = false,
 ) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     // The first page is read when this task's pane opens, and again when the
@@ -403,9 +419,10 @@ private fun History(
         verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
     ) {
         Text(
-            "작업 이력",
+            if (carriedOver) "이전 원장 이력" else "작업 이력",
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
+            modifier = Modifier.testTag("chat.tasks.detail.history.heading"),
         )
         when {
             history.error != null -> {
@@ -494,4 +511,207 @@ private fun HistoryLine(event: ChatTaskEvent) {
             )
         }
     }
+}
+
+/**
+ * A field the agreed records may genuinely not have recorded.
+ *
+ * null is not an empty string here: a task carried over from a ledger that
+ * never kept the field has nothing to show, and saying so is more honest than
+ * a blank line a person would read as the answer.
+ */
+@Composable
+private fun NullableField(label: String, value: String?, tag: String) {
+    Field(label, value ?: "", tag)
+}
+
+/**
+ * One task's turns, oldest first — the work itself.
+ *
+ * Each turn is shown as the exchange it was: the person's words, the
+ * instruction that went to the session doing the work, that session's own
+ * answer, and the parent's explanation of it, each labelled so none of them is
+ * read as another. The parent's summary is never shown as the session's words.
+ */
+@Composable
+private fun Turns(
+    taskID: String,
+    turns: ChatTaskTurnsUiState,
+    onLoad: () -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    // The first page is read when this task's pane opens, and again when the
+    // pane switches to another task.
+    LaunchedEffect(taskID) { onLoad() }
+    Column(
+        Modifier.fillMaxWidth().testTag("chat.tasks.detail.turns"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
+    ) {
+        Text(
+            "주고받은 내용",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        when {
+            turns.error != null -> {
+                Note(turns.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.turns.error")
+                val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+                Text(
+                    "다시 시도",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                    color = DesignTokens.Colors.accent(DETAIL_AREA),
+                    modifier = Modifier
+                        .clip(shape)
+                        .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
+                        .clickable(role = Role.Button, onClick = onLoad)
+                        .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+                        .testTag("chat.tasks.detail.turns.retry"),
+                )
+            }
+
+            turns.isLoading && turns.turns.isEmpty() -> CircularProgressIndicator(
+                color = ink.copy(alpha = MUTED_OPACITY),
+                strokeWidth = SPINNER_STROKE,
+                modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.turns.loading"),
+            )
+
+            turns.isEmpty -> Text(
+                "아직 주고받은 내용이 없어요.",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.testTag("chat.tasks.detail.turns.empty"),
+            )
+
+            else -> {
+                turns.turns.forEach { TurnCard(it) }
+                if (turns.hasMore) {
+                    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+                    Text(
+                        "이전 내용 더 보기",
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                        color = DesignTokens.Colors.accent(DETAIL_AREA),
+                        modifier = Modifier
+                            .clip(shape)
+                            .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
+                            .clickable(role = Role.Button, onClick = onLoadMore)
+                            .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+                            .testTag("chat.tasks.detail.turns.more"),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** One turn, with every part of it labelled for what it is. */
+@Composable
+private fun TurnCard(turn: ChatTaskTurn) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    val shape = RoundedCornerShape(DesignTokens.Radius.card)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(DesignTokens.Colors.card(DETAIL_AREA))
+            .padding(DesignTokens.Spacing.md)
+            .testTag("chat.tasks.detail.turn.${turn.id}"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                turnWhen(turn),
+                style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.testTag("chat.tasks.detail.turn.${turn.id}.when"),
+            )
+            if (turn.isCarriedOver) {
+                // A carried-over exchange is not presented as something written
+                // here: the older ledger is where it came from.
+                Text(
+                    "이전 기록",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                    color = ink.copy(alpha = MUTED_OPACITY),
+                    modifier = Modifier.testTag("chat.tasks.detail.turn.${turn.id}.carried"),
+                )
+            }
+        }
+        TurnPart("보낸 요청", turn.request, "chat.tasks.detail.turn.${turn.id}.request")
+        TurnPart("세션에 전달한 지시", turn.instruction, "chat.tasks.detail.turn.${turn.id}.instruction")
+        TurnPart("세션의 답(원문)", turn.response, "chat.tasks.detail.turn.${turn.id}.response")
+        TurnPart("설명", turn.explanation, "chat.tasks.detail.turn.${turn.id}.explanation")
+        TurnPart("질문", turn.question, "chat.tasks.detail.turn.${turn.id}.question")
+        if (turn.choices.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
+                turn.choices.forEachIndexed { index, choice ->
+                    Text(
+                        choice.label,
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                        color = ink,
+                        modifier = Modifier.testTag("chat.tasks.detail.turn.${turn.id}.choice.$index"),
+                    )
+                }
+            }
+        }
+        if (turn.artifacts.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
+                Text(
+                    "산출물",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                    color = ink.copy(alpha = MUTED_OPACITY),
+                )
+                turn.artifacts.forEachIndexed { index, artifact ->
+                    Text(
+                        artifact,
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                        color = ink,
+                        modifier = Modifier.testTag("chat.tasks.detail.turn.${turn.id}.artifact.$index"),
+                    )
+                }
+            }
+        }
+        if (turn.isOpen) {
+            Note(
+                "아직 답을 기다리고 있어요.",
+                DesignTokens.StatusColors.inProgress(),
+                "chat.tasks.detail.turn.${turn.id}.open",
+            )
+        }
+    }
+}
+
+/**
+ * One labelled part of a turn. A part the records do not have is left out
+ * entirely rather than shown as an empty row: a turn is written as it happens,
+ * so a turn with only a request is the ordinary case and not a gap.
+ */
+@Composable
+private fun TurnPart(label: String, value: String?, tag: String) {
+    if (value.isNullOrBlank()) return
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
+        Text(
+            label,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        Text(
+            value,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+            color = ink,
+            modifier = Modifier.testTag(tag),
+        )
+    }
+}
+
+/** When a turn happened, as far as the records say. */
+private fun turnWhen(turn: ChatTaskTurn): String = when {
+    turn.endedAt != null -> turn.endedAt
+    turn.startedAt != null -> turn.startedAt
+    turn.requestedAt.isNotBlank() -> turn.requestedAt
+    else -> "시각 기록 없음"
 }

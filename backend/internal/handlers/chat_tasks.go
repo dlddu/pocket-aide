@@ -192,3 +192,58 @@ func GetChatTaskEvents(engine *chat.Engine) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, page)
 	}
 }
+
+// GetChatTaskTurns handles GET /api/chat/tasks/{taskID}/turns: one page of a
+// task's turns, with the task itself in the agreed shape.
+//
+// This is what the detail pane reads. The task and history routes beside it are
+// the old ledger's shapes and cannot carry a description, a completion
+// criterion or anything a turn holds, so a pane built on them could show that
+// work exists but never the work.
+func GetChatTaskTurns(engine *chat.Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			http.Error(w, "no user in context", http.StatusInternalServerError)
+			return
+		}
+		after, limit := int64(0), 0
+		if raw := strings.TrimSpace(r.URL.Query().Get("after_turn_id")); raw != "" {
+			parsed, err := strconv.ParseInt(raw, 10, 64)
+			if err != nil || parsed < 0 {
+				writeJSON(w, http.StatusBadRequest, map[string]string{
+					"error": "after_turn_id must be a nonnegative number", "code": "task_request_invalid",
+				})
+				return
+			}
+			after = parsed
+		}
+		if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+			parsed, err := strconv.Atoi(raw)
+			if err != nil || parsed < 1 || parsed > chat.TaskTurnPageLimitMax {
+				writeJSON(w, http.StatusBadRequest, map[string]string{
+					"error": "limit must be a number from 1 to 100", "code": "task_request_invalid",
+				})
+				return
+			}
+			limit = parsed
+		}
+		page, err := engine.TaskTurns(r.Context(), u.ID, chi.URLParam(r, "taskID"), after, limit)
+		if err != nil {
+			switch {
+			case errors.Is(err, chat.ErrTaskRequestInvalid):
+				writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error(), "code": "task_request_invalid"})
+			case errors.Is(err, chat.ErrTaskNotFound), errors.Is(err, chat.ErrNoConversation):
+				writeJSON(w, http.StatusNotFound, map[string]string{"error": chat.ErrTaskNotFound.Error(), "code": "task_not_found"})
+			case errors.Is(err, chat.ErrTaskRequestUnavailable):
+				writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error(), "code": "task_request_unavailable"})
+			case errors.Is(err, chat.ErrTaskRequestUnsupported):
+				writeJSON(w, http.StatusNotImplemented, map[string]string{"error": err.Error(), "code": "task_request_unsupported"})
+			default:
+				writeChatError(w, err)
+			}
+			return
+		}
+		writeJSON(w, http.StatusOK, page)
+	}
+}
