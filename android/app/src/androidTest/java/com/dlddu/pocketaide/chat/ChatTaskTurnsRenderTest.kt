@@ -8,6 +8,7 @@ import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -101,6 +103,76 @@ class ChatTaskTurnsRenderTest {
                 )
             }
         }
+    }
+
+    /**
+     * 실제 휴대폰 크기의 창. 상세 창이 다 들어가지 않으므로 **스크롤을 써야**
+     * 타임라인에 닿는다.
+     *
+     * 위의 [start] 는 전체가 들어가는 높은 창을 주는데, 그것만 있으면 「스크롤로
+     * 닿을 수 있는가」를 한 번도 묻지 않게 되어 제품 쪽 스크롤 결함을 가릴 수
+     * 있다. 그래서 좁고 낮은 창에서 스크롤해 닿는 것을 따로 고정한다.
+     */
+    private fun startOnAPhone(turns: ChatTaskTurnsUiState) {
+        compose.setContent {
+            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(411.dp, 731.dp))) {
+                var draft by remember { mutableStateOf("") }
+                ChatTaskDetailPane(
+                    task = task,
+                    draft = draft,
+                    onDraftChange = { draft = it },
+                    onChoicePicked = {},
+                    request = ChatTaskRequestUiState(),
+                    onStore = {},
+                    history = ChatTaskHistoryUiState(taskId = "t1", hasLoaded = true),
+                    onLoadHistory = {},
+                    onLoadMoreHistory = {},
+                    turns = turns,
+                    onLoadTurns = { turnLoads++ },
+                    onLoadMoreTurns = { turnMores++ },
+                    onBack = {},
+                )
+            }
+        }
+    }
+
+    // 휴대폰 크기에서 타임라인은 화면 아래에 있지만 **스크롤로 닿는다**. 내가
+    // 더한 영역이 잘려 못 보게 되는 일이 없다는 뜻이고, 높은 창 테스트가
+    // 스크롤 결함을 가리고 있지 않다는 증거다.
+    @Test
+    fun theTimelineIsReachableByScrollingOnAPhone() {
+        startOnAPhone(
+            ChatTaskTurnsUiState(
+                taskId = "t1",
+                task = ChatTaskTurnTask(id = "t1", title = "옮겨 온 작업"),
+                turns = listOf(finished, asking),
+                ledgerHistory = true,
+                hasLoaded = true,
+            ),
+        )
+        // 스크롤 전에도 노드는 트리에 있다(존재는 하되 화면 밖일 수 있다).
+        compose.onNodeWithTag("chat.tasks.detail.turn.1.response").assertExists()
+        // 스크롤하면 실제로 보인다 — 세션의 원문도, 그 아래 옛 이력 영역도.
+        compose.onNodeWithTag("chat.tasks.detail.turn.1.response").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.turn.2.question").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.history.heading").performScrollTo().assertIsDisplayed()
+    }
+
+    // 턴이 많아도 마지막 턴까지 스크롤로 닿는다 — 긴 타임라인이 창을 넘겨도
+    // 아래쪽이 영원히 가려지지 않는다.
+    @Test
+    fun aLongTimelineStaysReachableToItsLastTurn() {
+        val many = (1..12).map { n ->
+            ChatTaskTurn(
+                id = n.toLong(),
+                request = "요청 " + n,
+                explanation = "설명 " + n,
+                requestedAt = "2026-11-19T00:00:00Z",
+            )
+        }
+        startOnAPhone(ChatTaskTurnsUiState(taskId = "t1", turns = many, hasLoaded = true))
+        compose.onNodeWithTag("chat.tasks.detail.turn.12.request").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.turn.12.request").assertTextEquals("요청 " + 12)
     }
 
     // (1)(2) 각 부분이 자기 라벨 아래 구분되어 보이고, 세션의 원문과 부모의
