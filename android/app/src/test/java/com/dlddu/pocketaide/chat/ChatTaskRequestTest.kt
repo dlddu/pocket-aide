@@ -367,7 +367,10 @@ class ChatTaskRequestTest {
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("제 말로 쓸게요")))
         assertTrue(vm.performTaskRequest(task(id = "t-42"), "app-1", "제 말로 쓸게요", 0L))
         val body = server.takeRequest().body.readUtf8()
-        assertFalse("자유 입력은 turn 을 달지 않는다: $body", body.contains("choice_turn_id"))
+        // 직렬화가 기본값도 싣기 때문에 칸은 있고 값이 0 이다. 0 은 플랫폼이
+        // 「픽 없음」으로 읽는 값이므로, 없는 것과 같은 뜻이다 — 칸의 부재가
+        // 아니라 값이 0 인 것을 단언한다.
+        assertTrue("자유 입력은 turn 을 0 으로 보낸다: $body", body.contains("\"choice_turn_id\":0"))
     }
 
     // 작업이 움직인 뒤 열어 둔 화면이 제출하면 서버가 거부한다. 그때 앱은

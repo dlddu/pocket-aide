@@ -269,10 +269,15 @@ class ChatTaskPanelInteractionTest {
             ledger.copy(
                 tasks = ledger.tasks.map {
                     if (it.id == "t-blocked") {
-                        it.copy(choices = listOf(ChatTaskChoice(
-                            id = "c-ci", label = "CI 로그 확인 요청",
-                            requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.",
-                        )))
+                        it.copy(
+                            choices = listOf(
+                                ChatTaskChoice(
+                                    label = "CI 로그 확인 요청",
+                                    requestText = "방금 실패한 CI 로그에서 어디서 멈췄는지 알려 줘.",
+                                ),
+                            ),
+                            choiceTurnId = 3L,
+                        )
                     } else {
                         it
                     }
@@ -348,7 +353,7 @@ class ChatTaskPanelInteractionTest {
         start(
             taskRequest = ChatTaskRequestUiState(
                 taskId = "t-blocked",
-                stored = ChatTaskRequest(id = "app-1", taskId = "t-blocked", text = "요청"),
+                stored = ChatTaskTurnRef(id = 11, request = "요청"),
             ),
         )
         openBlocked()
@@ -402,7 +407,7 @@ class ChatTaskPanelInteractionTest {
         start(
             taskRequest = ChatTaskRequestUiState(
                 taskId = "t-review",
-                stored = ChatTaskRequest(id = "app-9", taskId = "t-review", text = "다른 작업"),
+                stored = ChatTaskTurnRef(id = 12, request = "다른 작업"),
             ),
         )
         openBlocked()
