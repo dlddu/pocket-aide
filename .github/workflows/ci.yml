@@ -8,6 +8,11 @@ on:
   # Manual escape hatch: TestFlight builds expire 90 days after upload, so a
   # quiet stretch with no ios/** changes would leave testers on a dead build.
   workflow_dispatch:
+    inputs:
+      ios_verify:
+        description: Run the iOS UI suite only (no image push, TestFlight or Android distribution)
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.sha }}
@@ -36,7 +41,7 @@ jobs:
       # Not on main pushes: the PR already ran the suite on its merge ref, and a
       # rerun holds macOS slots for ~40 min that queued PRs are waiting on. The
       # cost is no check for two PRs that each passed but break when combined.
-      ios_tests: ${{ false && (github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.ios_tests == 'true')) }}
+      ios_tests: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_verify == true }}
       android_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_tests == 'true') }}
       android_instrumented_tests: ${{ github.event_name == 'workflow_dispatch' || (github.event_name != 'push' && steps.filter.outputs.android_instrumented_tests == 'true') }}
       backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
@@ -163,6 +168,7 @@ jobs:
           BACKEND: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
           IOS: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios == 'true' }}
           IOS_TESTS: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.ios_tests == 'true' }}
+          IOS_VERIFY: ${{ github.event_name == 'workflow_dispatch' && inputs.ios_verify == true }}
           BACKEND_DEPLOY: ${{ steps.filter.outputs.backend_deploy == 'true' }}
           IOS_DEPLOY: ${{ steps.filter.outputs.ios_deploy == 'true' }}
           ANDROID: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.android == 'true' }}
@@ -193,7 +199,11 @@ jobs:
               if [ "$ANDROID_DEPLOY" = true ] || [ "$merged_labelled" = true ]; then android_distribute=true; fi
               ;;
             workflow_dispatch)
-              testflight=true android_distribute=true build_source=수동
+              if [ "$IOS_VERIFY" = true ]; then
+                image=false
+              else
+                testflight=true android_distribute=true build_source=수동
+              fi
               ;;
           esac
           {
