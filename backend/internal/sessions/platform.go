@@ -21,6 +21,7 @@ const (
 type Client struct {
 	baseURL string
 	http    *http.Client
+	tokens  TokenSource
 }
 
 func NewClient(baseURL string) *Client {
@@ -28,6 +29,14 @@ func NewClient(baseURL string) *Client {
 		baseURL: strings.TrimRight(baseURL, "/") + apiPrefix,
 		http:    &http.Client{Timeout: 120 * time.Second},
 	}
+}
+
+// WithTokens makes every call carry a bearer token from tokens, so the
+// platform answers as that token's tenant. Without it the call has no
+// Authorization header and the platform treats it as the operator.
+func (c *Client) WithTokens(tokens TokenSource) *Client {
+	c.tokens = tokens
+	return c
 }
 
 func (c *Client) Do(ctx context.Context, method, path string, body []byte) (int, []byte, error) {
@@ -43,6 +52,13 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte) (int,
 		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
+	if c.tokens != nil {
+		token, err := c.tokens.Token(ctx)
+		if err != nil {
+			return 0, nil, fmt.Errorf("platform token: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return 0, nil, fmt.Errorf("do: %w", err)

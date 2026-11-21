@@ -12,6 +12,8 @@ import com.dlddu.pocketaide.MainActivity
 import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.R
 import com.dlddu.pocketaide.approvals.ApprovalActionReceiver
+import com.dlddu.pocketaide.commitstatus.CommitStatusActionReceiver
+import com.dlddu.pocketaide.notifications.ExternalNotificationActionReceiver
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.launch
@@ -21,7 +23,7 @@ class PocketAideMessagingService : FirebaseMessagingService() {
         val container = (application as PocketAideApplication).container
         if (container.tokenStore.load() == null) return
         container.appScope.launch {
-            runCatching { container.api.registerDeviceToken(token) }
+            runCatching { container.api.registerDeviceToken(token, DeviceName.forRegistration(container.deviceNames.load())) }
         }
     }
 
@@ -49,6 +51,8 @@ class PocketAideMessagingService : FirebaseMessagingService() {
             .setAutoCancel(true)
             .setContentIntent(pending)
         ApprovalActionReceiver.addActions(this, builder, message.data, requestCode, title)
+        CommitStatusActionReceiver.addActions(this, builder, message.data, requestCode, title)
+        ExternalNotificationActionReceiver.addAction(this, builder, message.data, requestCode)
         val built = builder.build()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=

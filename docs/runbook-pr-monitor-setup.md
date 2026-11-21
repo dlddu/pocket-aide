@@ -164,8 +164,8 @@ test environments run without any of this set up.
 | `FCM_HOST`              | env        | never in production; sends FCM HTTP v1 requests to this host instead of Google's (`http://` = plain HTTP). The Android E2E job points it at the fake FCM receiver, see `docs/engineering/android-app.md` §5 |
 | `MAIL_ENCRYPTION_KEY`   | Secret     | widget mail area (PRD-8 AC3, AC11); base64 of 32 random bytes (`openssl rand -base64 32`), the AES-256-GCM key that seals IMAP app passwords at rest. Empty disables the mail feature only (`/api/mail/*` answers 503; the rest of the server is unaffected). Losing the key makes stored passwords unreadable — accounts are reconnected, not recovered |
 | `MAIL_ENCRYPTION_KEY_VERSION` | env  | optional, default `1`; prefix written on every sealed password so a later key rotation can tell which key sealed a row. Not wired to a second key yet |
-| `OPENROUTER_API_KEY`    | Secret     | optional; enables AI chat replies (`POST /api/chat/sessions/{id}/messages`). Without it that route answers 503 and the rest of the server runs normally |
-| `CHAT_MODEL`            | env        | optional; OpenRouter model id for AI chat, default `anthropic/claude-sonnet-4.5` |
+| `CHAT_SESSION_PLATFORM_SERVICE_ACCOUNT` | env | optional; the ServiceAccount (in the pod's namespace) whose TokenRequest token, audience `session-platform`, the AI chat tab presents to session-platform, so chat's codex sessions belong to that account's tenant. Production sets `pocket-aide-chat` (flux-cd-apps `apps/pocket-aide/`); the pod's own ServiceAccount needs `create` on that account's `serviceaccounts/token`. Empty: chat calls the platform without a token (the operator view) — previews |
+| `SESSIONS_SESSION_PLATFORM_SERVICE_ACCOUNT` | env | optional; the same as `CHAT_SESSION_PLATFORM_SERVICE_ACCOUNT` for the sessions tab (`/api/sessions*`). Production sets `pocket-aide-sessions`, which flux-cd-apps puts in the session-platform tenant `homelab-k3s-mcp` (shared with the K3s MCP session tools, every workload type) — the tab then lists and opens only that tenant's sessions; untenanted sessions and the chat tab's sessions answer 404. The pod's own ServiceAccount needs `create` on that account's `serviceaccounts/token`. The approval API's session-title lookup always calls without a token (operator view), because approvals come from sessions of every tenant. Empty: the sessions tab is the operator view too — previews |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Deployment env (`k8s/deployment.yaml`) | optional; empty (and no `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`) disables tracing. Production sets `http://alloy.alloy.svc.cluster.local:4318` (OTLP/HTTP), see "Tracing" below |
 | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | env | optional; traces-only OTLP/HTTP endpoint, also enables tracing. Not set in production |
 | `OTEL_SERVICE_NAME` | env | optional; overrides the compiled-in service name `pocket-aide`. Not set in production |
@@ -212,6 +212,10 @@ configured provider is skipped, not an error.
   `platform` may be omitted and then means `ios`. iOS tokens must be 64 hex
   characters; Android (FCM registration) tokens must be at most 4096
   characters without whitespace; any other `platform` is rejected (400).
+  An optional `name` (the device nickname the app asks for once, trimmed,
+  at most 40 characters, no control characters) is stored in
+  `device_tokens.name` (migration `0021`). Omitting it keeps the name the
+  same user set earlier; a token rebound to another user loses it.
 - **FCM service account**: the backend sends through the FCM HTTP v1 API
   with a service-account key. The key JSON is provisioned by
   `dlddu/infrastructure` (`terraform/dlddu/google/pocket-aide-firebase.tf`),

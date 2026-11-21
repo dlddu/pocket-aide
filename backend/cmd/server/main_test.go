@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
+	"github.com/dlddu/pocket-aide/backend/internal/sessions"
 )
 
 func TestFormatPushText(t *testing.T) {
@@ -101,5 +106,53 @@ func TestLoadConfigAPNSDisabled(t *testing.T) {
 	}
 	if c.APNSKeyID != "" || c.APNSAuthKeyP8 != "" {
 		t.Fatalf("APNs credentials should stay empty when disabled, got key=%q", c.APNSKeyID)
+	}
+}
+
+type staticTokens string
+
+func (s staticTokens) Token(context.Context) (string, error) { return string(s), nil }
+
+func TestTenantPlatformClient(t *testing.T) {
+	var got []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.Header.Get("Authorization"))
+		_, _ = w.Write([]byte(`{"sessions":[]}`))
+	}))
+	defer srv.Close()
+
+	var asked []string
+	tokensFor := func(account string) (sessions.TokenSource, error) {
+		asked = append(asked, account)
+		return staticTokens("tok-" + account), nil
+	}
+
+	tenant, err := tenantPlatformClient(srv.URL, "pocket-aide-sessions", tokensFor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	operator, err := tenantPlatformClient(srv.URL, "", tokensFor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []*sessions.Client{tenant, operator} {
+		if _, _, err := c.Do(context.Background(), http.MethodGet, "/sessions", nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(asked) != 1 || asked[0] != "pocket-aide-sessions" {
+		t.Fatalf("token sources requested for %v, want only pocket-aide-sessions", asked)
+	}
+	if len(got) != 2 || got[0] != "Bearer tok-pocket-aide-sessions" || got[1] != "" {
+		t.Fatalf("Authorization headers = %q, want tenant bearer then none", got)
+	}
+}
+
+func TestTenantPlatformClientTokenError(t *testing.T) {
+	_, err := tenantPlatformClient("http://unused", "pocket-aide-sessions", func(string) (sessions.TokenSource, error) {
+		return nil, errors.New("not in cluster")
+	})
+	if err == nil {
+		t.Fatal("token source failure must stop startup rather than fall back to the operator view")
 	}
 }

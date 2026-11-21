@@ -48,6 +48,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dlddu.pocketaide.PocketAideApplication
 import com.dlddu.pocketaide.affirmations.AffirmationsScreen
+import com.dlddu.pocketaide.chat.ChatScreen
+import com.dlddu.pocketaide.commitstatus.CommitStatusScreen
+import com.dlddu.pocketaide.commitstatus.CommitStatusViewModel
 import com.dlddu.pocketaide.approvals.ApprovalsScreen
 import com.dlddu.pocketaide.approvals.ApprovalsViewModel
 import com.dlddu.pocketaide.notifications.ExternalNotificationsScreen
@@ -69,7 +72,9 @@ import com.dlddu.pocketaide.widget.WidgetRefresher
 fun RootScreen(authBrowser: AuthBrowser, onRequestStartupPermissions: () -> Unit) {
     val auth: AuthViewModel = viewModel()
     val state by auth.state.collectAsStateWithLifecycle()
+    val notice by auth.notice.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { auth.refreshPushPermission() }
+    notice?.let { AuthNoticeDialog(it, onDismiss = auth::dismissNotice) }
 
     if (!state.signedIn) {
         LoginScreen(state = state, canSignIn = auth.canSignIn, onSignIn = { auth.signIn(authBrowser) })
@@ -77,6 +82,9 @@ fun RootScreen(authBrowser: AuthBrowser, onRequestStartupPermissions: () -> Unit
     }
     LaunchedEffect(Unit) { onRequestStartupPermissions() }
     SignedInRoot(auth = auth, pushDenied = state.pushDenied)
+    state.deviceNamePrompt?.let { suggestion ->
+        DeviceNameSheet(initial = suggestion, onSave = auth::saveDeviceName, onSkip = auth::skipDeviceName)
+    }
 }
 
 @Composable
@@ -90,8 +98,11 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
     val unclassified by scratchpad.unclassifiedCount.collectAsStateWithLifecycle()
     val approvals: ApprovalsViewModel = viewModel { ApprovalsViewModel(auth.api) }
     val pendingApprovals by approvals.pendingCount.collectAsStateWithLifecycle()
+    val commitStatuses: CommitStatusViewModel = viewModel { CommitStatusViewModel(auth.api) }
+    val pendingCommitStatuses by commitStatuses.pendingCount.collectAsStateWithLifecycle()
     var selected by rememberSaveable { mutableStateOf(RootTab.Affirmations) }
     var openedApprovalId by rememberSaveable { mutableStateOf<String?>(null) }
+    var openedCommitStatusId by rememberSaveable { mutableStateOf<String?>(null) }
     var openedNotificationId by rememberSaveable { mutableStateOf<Long?>(null) }
     var notificationsReloadToken by remember { mutableIntStateOf(0) }
     var showsWeather by rememberSaveable { mutableStateOf(false) }
@@ -107,6 +118,7 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
                     notificationsReloadToken += 1
                 }
                 is PushDeepLink.PrMonitorEvent -> highlightedEventId = it.eventId
+                is PushDeepLink.CommitStatusRequest -> openedCommitStatusId = it.requestId
             }
             selected = RootTab.forDeepLink(it)
             container.deepLinks.consume(it)
@@ -131,6 +143,7 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
     LaunchedEffect(Unit) {
         scratchpad.load()
         approvals.load()
+        commitStatuses.load()
     }
     BackHandler(enabled = selected.isInMore) { selected = RootTab.More }
 
@@ -149,12 +162,20 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
                 }
             },
             bottomBar = {
-                RootNavigationBar(selected = selected, approvalBadge = pendingApprovals, onSelect = { selected = it })
+                RootNavigationBar(
+                    selected = selected,
+                    approvalBadge = pendingApprovals,
+                    moreBadge = pendingCommitStatuses,
+                    onSelect = { selected = it },
+                )
             },
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
                 when (selected) {
-                    RootTab.More -> MoreList(scratchpadBadge = unclassified, onSelect = { selected = it })
+                    RootTab.More -> MoreList(
+                        badges = mapOf(RootTab.Scratchpad to unclassified, RootTab.CommitStatus to pendingCommitStatuses),
+                        onSelect = { selected = it },
+                    )
                     RootTab.Scratchpad -> ScratchpadScreen(viewModel = scratchpad)
                     RootTab.Personal -> TodoListScreen(area = TodoArea.PERSONAL, api = auth.api)
                     RootTab.Work -> TodoListScreen(area = TodoArea.WORK, api = auth.api)
@@ -179,7 +200,12 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
                         onSignOut = auth::signOut,
                     )
                     RootTab.Sessions -> SessionsScreen(api = auth.api)
-                    RootTab.Chat -> PlaceholderScreen(Area.AiChat, "AI 채팅")
+                    RootTab.CommitStatus -> CommitStatusScreen(
+                        viewModel = commitStatuses,
+                        openedRequestId = openedCommitStatusId,
+                        onOpenedRequestConsumed = { openedCommitStatusId = null },
+                    )
+                    RootTab.Chat -> ChatScreen(api = auth.api)
                 }
             }
         }
@@ -190,7 +216,7 @@ private fun SignedInRoot(auth: AuthViewModel, pushDenied: Boolean) {
 }
 
 @Composable
-private fun RootNavigationBar(selected: RootTab, approvalBadge: Int, onSelect: (RootTab) -> Unit) {
+private fun RootNavigationBar(selected: RootTab, approvalBadge: Int, moreBadge: Int, onSelect: (RootTab) -> Unit) {
     val activeTab = if (selected.isInMore) RootTab.More else selected
     val activeTint = when (selected) {
         RootTab.More -> DesignTokens.Colors.ink(Area.System)
@@ -203,11 +229,16 @@ private fun RootNavigationBar(selected: RootTab, approvalBadge: Int, onSelect: (
                 selected = tab == activeTab,
                 onClick = { onSelect(tab) },
                 icon = {
-                    if (tab == RootTab.Approval && approvalBadge > 0) {
+                    val badge = when (tab) {
+                        RootTab.Approval -> approvalBadge
+                        RootTab.More -> moreBadge
+                        else -> 0
+                    }
+                    if (badge > 0) {
                         BadgedBox(
                             badge = {
                                 Badge(containerColor = DesignTokens.Colors.accent(Area.PrMonitor), contentColor = Color.White) {
-                                    Text("$approvalBadge")
+                                    Text("$badge")
                                 }
                             },
                         ) {
@@ -240,7 +271,7 @@ private fun RootNavigationBar(selected: RootTab, approvalBadge: Int, onSelect: (
 }
 
 @Composable
-private fun MoreList(scratchpadBadge: Int, onSelect: (RootTab) -> Unit) {
+private fun MoreList(badges: Map<RootTab, Int>, onSelect: (RootTab) -> Unit) {
     val area = Area.System
     Column(Modifier.fillMaxSize().background(DesignTokens.Colors.surface(area))) {
         Text(
@@ -269,9 +300,10 @@ private fun MoreList(scratchpadBadge: Int, onSelect: (RootTab) -> Unit) {
                         color = DesignTokens.Colors.ink(area),
                         modifier = Modifier.weight(1f),
                     )
-                    if (tab == RootTab.Scratchpad && scratchpadBadge > 0) {
+                    val badge = badges[tab] ?: 0
+                    if (badge > 0) {
                         Badge(containerColor = DesignTokens.Colors.accent(Area.PrMonitor), contentColor = Color.White) {
-                            Text("$scratchpadBadge")
+                            Text("$badge")
                         }
                     }
                     Icon(

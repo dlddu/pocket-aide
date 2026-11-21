@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.api
 
 import com.dlddu.pocketaide.auth.TokenRefresher
 import com.dlddu.pocketaide.auth.TokenStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -18,10 +19,17 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 sealed class ApiException(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    class BadStatus(val status: Int, val body: String) : ApiException("HTTP $status: $body")
+    class BadStatus(val status: Int, val body: String, cause: Throwable? = null) :
+        ApiException("HTTP $status: $body", cause)
     class Decoding(cause: Throwable) : ApiException("decode: ${cause.message}", cause)
     class Transport(cause: Throwable) : ApiException("transport: ${cause.message}", cause)
 }
+
+/** The backend's code for a 503 whose cause is exhausted session login slots, not a disabled platform. */
+const val AUTH_POOL_EXHAUSTED = "auth_pool_exhausted"
+
+fun Throwable.isAuthPoolExhausted(): Boolean =
+    this is ApiException.BadStatus && status == 503 && body.contains(AUTH_POOL_EXHAUSTED)
 
 class ApiClient(
     baseUrl: String,
@@ -34,6 +42,9 @@ class ApiClient(
     @Volatile
     var tokenRefresher: TokenRefresher? = null
 
+    @Volatile
+    var onUnauthorized: ((request: String, body: String) -> Unit)? = null
+
     suspend fun health() {
         get("/healthz", HealthResponse.serializer(), authenticated = false)
     }
@@ -42,10 +53,10 @@ class ApiClient(
 
     suspend fun me(): MeResponse = get("/api/me", MeResponse.serializer())
 
-    suspend fun registerDeviceToken(token: String) {
+    suspend fun registerDeviceToken(token: String, name: String? = null) {
         post(
             "/api/device-tokens",
-            DeviceTokenRegistration(token = token, platform = DeviceTokenRegistration.ANDROID),
+            DeviceTokenRegistration(token = token, platform = DeviceTokenRegistration.ANDROID, name = name),
             DeviceTokenRegistration.serializer(),
             EmptyResponse.serializer(),
         )
@@ -138,12 +149,18 @@ class ApiClient(
             try {
                 refresher.refresh()
             } catch (e: Exception) {
-                throw ApiException.BadStatus(status, text)
+                if (e !is CancellationException) reportUnauthorized(method, path, text)
+                throw ApiException.BadStatus(status, text, cause = e)
             }
             return perform(method, path, body, authenticated, retriedAfterRefresh = true)
         }
+        if (authenticated && status == 401) reportUnauthorized(method, path, text)
         if (status !in 200..299) throw ApiException.BadStatus(status, text)
         return text
+    }
+
+    private fun reportUnauthorized(method: String, path: String, body: String) {
+        onUnauthorized?.invoke("$method ${path.substringBefore('?')}", body)
     }
 
     private suspend fun refreshIfExpired() {

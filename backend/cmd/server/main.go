@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,6 +22,8 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/approvals"
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/chat"
+	"github.com/dlddu/pocket-aide/backend/internal/commitstatus"
+	"github.com/dlddu/pocket-aide/backend/internal/commitstatuspush"
 	"github.com/dlddu/pocket-aide/backend/internal/db"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
 	"github.com/dlddu/pocket-aide/backend/internal/excludedrepos"
@@ -29,7 +32,6 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/githubwebhook"
 	"github.com/dlddu/pocket-aide/backend/internal/handlers"
 	"github.com/dlddu/pocket-aide/backend/internal/k8sauth"
-	"github.com/dlddu/pocket-aide/backend/internal/llm"
 	"github.com/dlddu/pocket-aide/backend/internal/mail"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationhistory"
 	"github.com/dlddu/pocket-aide/backend/internal/notificationsettings"
@@ -90,13 +92,23 @@ func main() {
 	todoStore := todos.New(conn)
 	scratchStore := scratchpad.New(conn)
 	routineStore := routines.New(conn)
-	platform := sessions.NewClient(cfg.SessionPlatformURL)
-	approvalStore := approvals.New(conn)
-	chatStore := chat.New(conn)
-	var chatLLM handlers.ChatStreamer
-	if cfg.OpenRouterAPIKey != "" {
-		chatLLM = llm.New(cfg.OpenRouterAPIKey)
+	// Approvals arrive from sessions of every tenant, so their session-name
+	// lookup stays on the operator view; a tenant client would 404 them.
+	operatorPlatform := sessions.NewClient(cfg.SessionPlatformURL)
+	sessionsPlatform, err := tenantPlatformClient(cfg.SessionPlatformURL, cfg.SessionsServiceAccount, inClusterPlatformTokens)
+	if err != nil {
+		log.Fatalf("sessions tab session platform tokens: %v", err)
 	}
+	approvalStore := approvals.New(conn)
+	commitStatusStore := commitstatus.New(conn)
+	commitStatusDecider := commitstatus.NewDecider(commitStatusStore, commitStatusWriter(cfg))
+	chatStore := chat.New(conn)
+	chatPlatform, err := tenantPlatformClient(cfg.SessionPlatformURL, cfg.ChatServiceAccount, inClusterPlatformTokens)
+	if err != nil {
+		log.Fatalf("chat session platform tokens: %v", err)
+	}
+	chatEngine := chat.NewEngine(chatStore, chatPlatform, slog.Default())
+	chatPresence := chat.NewPresence()
 
 	var apnsClient *apns.Client
 	if cfg.PRMonitorEnabled && !cfg.APNSDisabled {
@@ -118,7 +130,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("fcm: %v", err)
 		}
-		fcmClient = fcmClient.WithChannels(map[string]string{approvalpush.Category: fcm.ChannelApproval}).WithDataOnly(approvalpush.Category)
+		fcmClient = fcmClient.WithChannels(map[string]string{
+			approvalpush.Category:     fcm.ChannelApproval,
+			commitstatuspush.Category: fcm.ChannelApproval,
+		}).WithDataOnly(approvalpush.Category, commitstatuspush.Category, externalnotify.Category)
 		if cfg.FCMHost != "" {
 			log.Printf("fcm: pushes go to %s (FCM_HOST)", cfg.FCMHost)
 			fcmClient = fcmClient.WithEndpoint(cfg.FCMHost)
@@ -138,10 +153,12 @@ func main() {
 	}
 	var pushRouter *push.Router
 	var approvalPusher handlers.ApprovalPusher
+	var commitStatusPusher handlers.CommitStatusPusher
 	var notificationSender handlers.NotificationSender
 	if apnsClient != nil || fcmClient != nil {
 		pushRouter = push.New(apnsClient, fcmClient)
 		approvalPusher = approvalpush.New(pushRouter, deviceStore)
+		commitStatusPusher = commitstatuspush.New(pushRouter, deviceStore)
 		notificationSender = externalnotify.New(pushRouter, deviceStore)
 	}
 
@@ -169,6 +186,7 @@ func main() {
 		p.Post("/api/notification-history/{id}/ack", handlers.AcknowledgeNotification(historyStore))
 		p.Get("/api/external-notifications", handlers.ListExternalNotifications(externalNotificationStore))
 		p.Get("/api/external-notifications/{id}", handlers.GetExternalNotification(externalNotificationStore))
+		p.Post("/api/external-notifications/read-all", handlers.MarkAllExternalNotificationsRead(externalNotificationStore))
 		p.Post("/api/external-notifications/{id}/read", handlers.MarkExternalNotificationRead(externalNotificationStore))
 		p.Get("/api/notification-settings", handlers.GetNotificationSettings(settingsStore))
 		p.Patch("/api/notification-settings", handlers.UpdateNotificationSettings(settingsStore))
@@ -188,19 +206,21 @@ func main() {
 		p.Get("/api/routines/days/{day}", handlers.ListRoutineDay(routineStore))
 		p.Patch("/api/routines/{id}/days/{day}/steps/{stepID}", handlers.SetRoutineStepCheck(routineStore))
 		p.Get("/api/routines/{id}/history/{day}", handlers.RoutineHistory(routineStore))
-		p.Get("/api/chat/sessions", handlers.ListChatSessions(chatStore))
-		p.Post("/api/chat/sessions", handlers.CreateChatSession(chatStore))
-		p.Get("/api/chat/sessions/{id}", handlers.GetChatSession(chatStore))
-		p.Post("/api/chat/sessions/{id}/messages", handlers.SendChatMessage(chatStore, chatLLM, cfg.ChatModel))
-		p.Get("/api/sessions/config", handlers.SessionConfig(platform))
-		p.Get("/api/sessions", handlers.ListSessions(platform))
-		p.Post("/api/sessions", handlers.CreateSession(platform))
-		p.Get("/api/sessions/{id}", handlers.GetSession(platform))
-		p.Delete("/api/sessions/{id}", handlers.DeleteSession(platform))
-		p.Post("/api/sessions/{id}/read", handlers.ReadSession(platform))
-		p.Post("/api/sessions/{id}/write", handlers.WriteSession(platform))
-		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(platform))
-		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(platform))
+		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine, chatPresence))
+		p.Get("/api/chat/tasks", handlers.GetChatTasks(chatEngine))
+		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
+		p.Post("/api/chat/tasks/{taskID}/requests", handlers.PostChatTaskRequest(chatEngine))
+		p.Get("/api/chat/tasks/{taskID}/turns", handlers.GetChatTaskTurns(chatEngine))
+		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
+		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))
+		p.Get("/api/sessions", handlers.ListSessions(sessionsPlatform))
+		p.Post("/api/sessions", handlers.CreateSession(sessionsPlatform))
+		p.Get("/api/sessions/{id}", handlers.GetSession(sessionsPlatform))
+		p.Delete("/api/sessions/{id}", handlers.DeleteSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/read", handlers.ReadSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/write", handlers.WriteSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/switch", handlers.SwitchSession(sessionsPlatform))
+		p.Post("/api/sessions/{id}/snapshot", handlers.SnapshotSession(sessionsPlatform))
 		p.Get("/api/approval-keys", handlers.ListApprovalKeys(approvalStore))
 		p.Post("/api/approval-keys", handlers.IssueApprovalKey(approvalStore))
 		p.Post("/api/approval-keys/{id}/revoke", handlers.RevokeApprovalKey(approvalStore))
@@ -211,6 +231,10 @@ func main() {
 		p.Get("/api/approvals/{id}", handlers.GetApproval(approvalStore))
 		p.Post("/api/approvals/{id}/approve", handlers.DecideApproval(approvalStore, approvals.DecisionApprove))
 		p.Post("/api/approvals/{id}/reject", handlers.DecideApproval(approvalStore, approvals.DecisionReject))
+		p.Get("/api/commit-status-requests", handlers.ListCommitStatusRequests(commitStatusStore))
+		p.Get("/api/commit-status-requests/{id}", handlers.GetCommitStatusRequest(commitStatusStore))
+		p.Post("/api/commit-status-requests/{id}/approve", handlers.ApproveCommitStatusRequest(commitStatusDecider))
+		p.Post("/api/commit-status-requests/{id}/reject", handlers.RejectCommitStatusRequest(commitStatusDecider))
 	})
 
 	var reviewer handlers.TokenReviewer
@@ -223,9 +247,11 @@ func main() {
 	}
 	r.Group(func(x chi.Router) {
 		x.Use(handlers.CallerKeyMiddleware(approvalStore, reviewer))
-		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, platform))
+		x.Post("/api/external/approvals", handlers.CreateExternalApproval(approvalStore, approvalPusher, operatorPlatform))
 		x.Get("/api/external/approvals/{id}", handlers.GetExternalApproval(approvalStore))
 		x.Post("/api/external/notifications", handlers.CreateExternalNotification(notificationSender, externalNotificationStore))
+		x.Post("/api/external/commit-status-requests", handlers.CreateExternalCommitStatusRequest(commitStatusStore, commitStatusPusher, operatorPlatform))
+		x.Get("/api/external/chat-presence", handlers.GetExternalChatPresence(chatPresence))
 	})
 
 	srv := &http.Server{
@@ -345,8 +371,14 @@ type config struct {
 
 	SessionPlatformURL string
 
-	OpenRouterAPIKey string
-	ChatModel        string
+	// ChatServiceAccount is the ServiceAccount (in this pod's namespace) whose
+	// TokenRequest token the chat tab presents to session-platform, so its
+	// codex sessions belong to that account's tenant. Empty: no token, and the
+	// platform treats the chat tab as the operator (previews).
+	ChatServiceAccount string
+	// SessionsServiceAccount is the same for the sessions tab, whose tenant it
+	// shares with the K3s MCP session tools.
+	SessionsServiceAccount string
 
 	PRMonitorEnabled  bool
 	SQSQueueURL       string
@@ -371,6 +403,10 @@ type config struct {
 	K8SCallerAuth    bool
 	K8STokenAudience string
 	K8STokenIssuer   string
+
+	GitHubAppClientID   string
+	GitHubAppPrivateKey string
+	GitHubAPIURL        string
 }
 
 func loadConfig() config {
@@ -385,8 +421,8 @@ func loadConfig() config {
 
 		SessionPlatformURL: envOr("SESSION_PLATFORM_URL", sessions.DefaultPlatformURL),
 
-		OpenRouterAPIKey: os.Getenv("OPENROUTER_API_KEY"),
-		ChatModel:        envOr("CHAT_MODEL", "anthropic/claude-sonnet-4.5"),
+		ChatServiceAccount:     os.Getenv("CHAT_SESSION_PLATFORM_SERVICE_ACCOUNT"),
+		SessionsServiceAccount: os.Getenv("SESSIONS_SESSION_PLATFORM_SERVICE_ACCOUNT"),
 
 		FCMServiceAccountJSON: os.Getenv("FCM_SERVICE_ACCOUNT_JSON"),
 		FCMHost:               os.Getenv("FCM_HOST"),
@@ -397,6 +433,10 @@ func loadConfig() config {
 		K8SCallerAuth:    os.Getenv("K8S_CALLER_AUTH") == "true",
 		K8STokenAudience: envOr("K8S_TOKEN_AUDIENCE", "pocket-aide"),
 		K8STokenIssuer:   os.Getenv("K8S_TOKEN_ISSUER"),
+
+		GitHubAppClientID:   os.Getenv("GITHUB_APP_CLIENT_ID"),
+		GitHubAppPrivateKey: os.Getenv("GITHUB_APP_PRIVATE_KEY"),
+		GitHubAPIURL:        os.Getenv("GITHUB_API_URL"),
 	}
 	if c.SQSQueueURL != "" {
 		c.PRMonitorEnabled = true
@@ -412,6 +452,43 @@ func loadConfig() config {
 		}
 	}
 	return c
+}
+
+func commitStatusWriter(cfg config) commitstatus.Writer {
+	if cfg.GitHubAppClientID == "" || cfg.GitHubAppPrivateKey == "" {
+		log.Printf("commit status requests: approvals cannot write (GITHUB_APP_CLIENT_ID / GITHUB_APP_PRIVATE_KEY not set)")
+		return nil
+	}
+	app, err := commitstatus.NewApp(cfg.GitHubAppClientID, []byte(cfg.GitHubAppPrivateKey), cfg.GitHubAPIURL)
+	if err != nil {
+		log.Fatalf("commit status github app: %v", err)
+	}
+	log.Printf("commit status requests: approvals write as GitHub App %s", cfg.GitHubAppClientID)
+	return app
+}
+
+func tenantPlatformClient(baseURL, account string, tokensFor func(string) (sessions.TokenSource, error)) (*sessions.Client, error) {
+	client := sessions.NewClient(baseURL)
+	if account == "" {
+		return client, nil
+	}
+	tokens, err := tokensFor(account)
+	if err != nil {
+		return nil, err
+	}
+	return client.WithTokens(tokens), nil
+}
+
+func inClusterPlatformTokens(account string) (sessions.TokenSource, error) {
+	api, err := k8sauth.InClusterAPIServer()
+	if err != nil {
+		return nil, err
+	}
+	namespace, err := k8sauth.InClusterNamespace()
+	if err != nil {
+		return nil, err
+	}
+	return sessions.NewServiceAccountTokens(api, namespace, account, sessions.PlatformAudience), nil
 }
 
 func envOr(k, def string) string {

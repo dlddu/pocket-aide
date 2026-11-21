@@ -19,11 +19,12 @@ import (
 )
 
 const (
-	inClusterTokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	inClusterCAPath    = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-	saUserPrefix       = "system:serviceaccount:"
-	cacheTTL           = 60 * time.Second
-	cacheMax           = 1024
+	inClusterTokenPath     = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	inClusterCAPath        = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+	inClusterNamespacePath = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+	saUserPrefix           = "system:serviceaccount:"
+	cacheTTL               = 60 * time.Second
+	cacheMax               = 1024
 )
 
 var (
@@ -61,23 +62,30 @@ func New(cfg Config) *Reviewer {
 	return &Reviewer{cfg: cfg, now: time.Now, cache: map[[32]byte]cached{}}
 }
 
-func InCluster(audience, issuer string) (*Reviewer, error) {
+// APIServer is how this pod reaches the cluster's API as its own ServiceAccount.
+type APIServer struct {
+	URL string
+	// Token is re-read per call because kubelet rotates it.
+	Token      func() (string, error)
+	HTTPClient *http.Client
+}
+
+// InClusterAPIServer reads the API address, CA and token kubelet gives the pod.
+func InClusterAPIServer() (APIServer, error) {
 	host, port := os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT")
 	if host == "" || port == "" {
-		return nil, errors.New("KUBERNETES_SERVICE_HOST/PORT not set: not running in a cluster")
+		return APIServer{}, errors.New("KUBERNETES_SERVICE_HOST/PORT not set: not running in a cluster")
 	}
 	ca, err := os.ReadFile(inClusterCAPath)
 	if err != nil {
-		return nil, fmt.Errorf("read cluster CA: %w", err)
+		return APIServer{}, fmt.Errorf("read cluster CA: %w", err)
 	}
 	pool := x509.NewCertPool()
 	if !pool.AppendCertsFromPEM(ca) {
-		return nil, errors.New("cluster CA has no certificates")
+		return APIServer{}, errors.New("cluster CA has no certificates")
 	}
-	return New(Config{
-		APIURL:   "https://" + strings.Trim(host, "[]") + ":" + port,
-		Audience: audience,
-		Issuer:   issuer,
+	return APIServer{
+		URL: "https://" + strings.Trim(host, "[]") + ":" + port,
 		Token: func() (string, error) {
 			b, err := os.ReadFile(inClusterTokenPath)
 			return strings.TrimSpace(string(b)), err
@@ -86,6 +94,29 @@ func InCluster(audience, issuer string) (*Reviewer, error) {
 			Timeout:   10 * time.Second,
 			Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}},
 		},
+	}, nil
+}
+
+// InClusterNamespace is the namespace kubelet says the pod runs in.
+func InClusterNamespace() (string, error) {
+	b, err := os.ReadFile(inClusterNamespacePath)
+	if err != nil {
+		return "", fmt.Errorf("read pod namespace: %w", err)
+	}
+	return strings.TrimSpace(string(b)), nil
+}
+
+func InCluster(audience, issuer string) (*Reviewer, error) {
+	api, err := InClusterAPIServer()
+	if err != nil {
+		return nil, err
+	}
+	return New(Config{
+		APIURL:     api.URL,
+		Audience:   audience,
+		Issuer:     issuer,
+		Token:      api.Token,
+		HTTPClient: api.HTTPClient,
 	}), nil
 }
 

@@ -37,12 +37,12 @@ class PushRegistrar(private val context: Context) {
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
 
-    suspend fun register(api: ApiClient) {
+    suspend fun register(api: ApiClient, name: String?) {
         if (!isConfigured) return
         initialize()
         try {
             FirebaseMessaging.getInstance().isAutoInitEnabled = true
-            api.registerDeviceToken(currentToken())
+            api.registerDeviceToken(currentToken(), name)
         } catch (e: Exception) {
             Log.w(TAG, "push registration failed", e)
         }

@@ -69,11 +69,11 @@ func setupDevices(t *testing.T, devices ...devicetokens.Device) (*devicetokens.S
 	}
 	store := devicetokens.New(conn)
 	for _, d := range devices {
-		if err := store.Upsert(context.Background(), uid, d.Token, d.Platform); err != nil {
+		if err := store.Upsert(context.Background(), uid, d.Token, d.Platform, d.Name); err != nil {
 			t.Fatalf("token: %v", err)
 		}
 	}
-	if err := store.Upsert(context.Background(), uid+1, "bob-device", devicetokens.PlatformIOS); err != nil {
+	if err := store.Upsert(context.Background(), uid+1, "bob-device", devicetokens.PlatformIOS, ""); err != nil {
 		t.Fatalf("token: %v", err)
 	}
 	return store, uid

@@ -103,9 +103,7 @@ final class WebhookPushSettingsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         allowNotificationsIfAsked()
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         return app
     }
 
@@ -261,9 +259,7 @@ final class WebhookPushSettingsUITests: XCTestCase {
 
         app.activate()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15), "The app should come back to the front")
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         openSettingsSheet(in: app)
         let notice = app.descendants(matching: .any)["prmonitor.settings.permissionNotice"]
         XCTAssertTrue(notice.waitForExistence(timeout: 15), "The sheet should say system notifications are off")

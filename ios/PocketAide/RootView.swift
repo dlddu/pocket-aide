@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 enum RootTab: Hashable {
-    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, sessions, notifications
+    case chat, scratchpad, personal, work, routines, affirmations, prMonitor, approval, commitStatus, sessions, notifications
 }
 
 struct RootView: View {
@@ -11,10 +11,12 @@ struct RootView: View {
     @Binding var selectedTab: RootTab
     @Binding var highlightedEventID: Int64?
     @Binding var openedApprovalID: String?
+    @Binding var openedCommitStatusID: String?
     @Binding var notificationsReloadToken: Int
     @Binding var openedNotificationID: Int64?
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
+    @StateObject private var commitStatuses: CommitStatusRequestsViewModel
 
     private static let approvalBadgeAppearance: Void = {
         let badge = UIColor { traits in
@@ -34,6 +36,7 @@ struct RootView: View {
         selectedTab: Binding<RootTab>,
         highlightedEventID: Binding<Int64?> = .constant(nil),
         openedApprovalID: Binding<String?> = .constant(nil),
+        openedCommitStatusID: Binding<String?> = .constant(nil),
         notificationsReloadToken: Binding<Int> = .constant(0),
         openedNotificationID: Binding<Int64?> = .constant(nil)
     ) {
@@ -41,10 +44,12 @@ struct RootView: View {
         _selectedTab = selectedTab
         _highlightedEventID = highlightedEventID
         _openedApprovalID = openedApprovalID
+        _openedCommitStatusID = openedCommitStatusID
         _notificationsReloadToken = notificationsReloadToken
         _openedNotificationID = openedNotificationID
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
         _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
+        _commitStatuses = StateObject(wrappedValue: CommitStatusRequestsViewModel(api: nil))
     }
 
     var body: some View {
@@ -63,6 +68,11 @@ struct RootView: View {
                 pushDeniedBanner
             }
             signedInTabs
+        }
+        .overlay {
+            if let suggestion = auth.deviceNamePrompt {
+                DeviceNameSheet(initial: suggestion, onSave: auth.saveDeviceName, onSkip: auth.skipDeviceName)
+            }
         }
     }
 
@@ -91,7 +101,7 @@ struct RootView: View {
 
     private var activeTint: Color {
         switch selectedTab {
-        case .prMonitor, .approval, .sessions, .notifications: return DesignTokens.Color.accent(.prMonitor)
+        case .prMonitor, .approval, .commitStatus, .sessions, .notifications: return DesignTokens.Color.accent(.prMonitor)
         case .affirmations: return DesignTokens.Color.accent(.affirmations)
         case .personal: return DesignTokens.Color.accent(.personal)
         case .work: return DesignTokens.Color.accent(.work)
@@ -102,14 +112,12 @@ struct RootView: View {
     }
 
     private var signedInTabs: some View {
-        // PR 모니터 탭은 More 로 밀리지 않는 앞자리에 둔다 — 푸시 탭 deep link 가
-        // selection 을 이 탭으로 바꿔 바로 연다.
         TabView(selection: $selectedTab) {
             Tab("다짐", systemImage: "heart.fill", value: RootTab.affirmations) {
                 AffirmationsView()
             }
-            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
-                PRMonitorView(highlightedEventID: $highlightedEventID)
+            Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
+                ChatTab()
             }
             Tab("승인", systemImage: "checkmark.shield", value: RootTab.approval) {
                 ApprovalsView(viewModel: approvals, openedApprovalID: $openedApprovalID)
@@ -118,8 +126,8 @@ struct RootView: View {
             Tab("세션", systemImage: "terminal", value: RootTab.sessions) {
                 SessionsView()
             }
-            Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
-                ChatTab()
+            Tab("PR 모니터", systemImage: "checkmark.seal", value: RootTab.prMonitor) {
+                PRMonitorView(highlightedEventID: $highlightedEventID)
             }
             Tab("임시공간", systemImage: "doc.text", value: RootTab.scratchpad) {
                 ScratchpadTab(viewModel: scratchpad)
@@ -137,6 +145,10 @@ struct RootView: View {
             Tab("알림 기록", systemImage: "bell", value: RootTab.notifications) {
                 ExternalNotificationsView(reloadToken: notificationsReloadToken, openedNotificationID: $openedNotificationID)
             }
+            Tab("커밋 상태", systemImage: "arrow.triangle.branch", value: RootTab.commitStatus) {
+                CommitStatusRequestsView(viewModel: commitStatuses, openedRequestID: $openedCommitStatusID)
+            }
+            .badge(commitStatuses.pendingCount)
         }
         .tint(activeTint)
         .task {
@@ -148,6 +160,10 @@ struct RootView: View {
                 approvals.replaceAPI(api)
             }
             await approvals.load()
+            if commitStatuses.api == nil, let api = auth.api {
+                commitStatuses.replaceAPI(api)
+            }
+            await commitStatuses.load()
         }
     }
 }

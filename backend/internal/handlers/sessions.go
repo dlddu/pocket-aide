@@ -48,6 +48,24 @@ func writeSessionError(w http.ResponseWriter, status int) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
 
+// writePlatformError relays a platform refusal without its body, except that
+// a 503 for exhausted login slots keeps a code the app can tell apart from a
+// disabled feature.
+func writePlatformError(w http.ResponseWriter, status int, body []byte) {
+	if sessions.AuthPoolExhausted(status, body) {
+		writeAuthPoolExhausted(w)
+		return
+	}
+	writeSessionError(w, status)
+}
+
+func writeAuthPoolExhausted(w http.ResponseWriter) {
+	writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+		"error": "all login slots are in use",
+		"code":  sessions.ErrorCodeAuthPoolExhausted,
+	})
+}
+
 func writeUnreachable(w http.ResponseWriter) {
 	writeJSON(w, http.StatusBadGateway, map[string]string{"error": "session platform unreachable"})
 }
@@ -174,7 +192,7 @@ func CreateSession(client *sessions.Client) http.HandlerFunc {
 			return
 		}
 		if status != http.StatusCreated {
-			writeSessionError(w, status)
+			writePlatformError(w, status, resp)
 			return
 		}
 		var created sessions.Session
@@ -188,7 +206,7 @@ func CreateSession(client *sessions.Client) http.HandlerFunc {
 
 func relaySession[T any](w http.ResponseWriter, status int, raw []byte) {
 	if status != http.StatusOK {
-		writeSessionError(w, status)
+		writePlatformError(w, status, raw)
 		return
 	}
 	var out T

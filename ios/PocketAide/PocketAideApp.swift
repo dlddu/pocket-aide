@@ -12,13 +12,14 @@ struct PocketAideApp: App {
     @State private var selectedTab: RootTab = .affirmations
     @State private var highlightedEventID: Int64?
     @State private var openedApprovalID: String?
+    @State private var openedCommitStatusID: String?
     @State private var notificationsReloadToken = 0
     @State private var openedNotificationID: Int64?
     @State private var showsWeather = false
 
     var body: some Scene {
         WindowGroup {
-            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID, notificationsReloadToken: $notificationsReloadToken, openedNotificationID: $openedNotificationID)
+            RootView(selectedTab: $selectedTab, highlightedEventID: $highlightedEventID, openedApprovalID: $openedApprovalID, openedCommitStatusID: $openedCommitStatusID, notificationsReloadToken: $notificationsReloadToken, openedNotificationID: $openedNotificationID)
                 .environmentObject(auth)
                 .sheet(isPresented: $showsWeather) { WeatherView() }
                 .task { await auth.bootstrap() }
@@ -97,6 +98,10 @@ struct PocketAideApp: App {
             selectedTab = .approval
             NSLog("[PocketAideApp] selectedTab set to .approval, openedApprovalID=%@",
                   openedApprovalID ?? "<nil>")
+        case "commit-status":
+            showsWeather = false
+            openedCommitStatusID = CommitStatusPushPayload.requestID(fromDeepLink: url)
+            selectedTab = .commitStatus
         case "notifications":
             showsWeather = false
             openedNotificationID = ExternalNotificationPushPayload.notificationID(fromDeepLink: url)

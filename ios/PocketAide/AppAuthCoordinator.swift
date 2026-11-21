@@ -2,6 +2,7 @@ import Foundation
 import PocketAideAPI
 import PocketAideAuth
 import PocketAideStorage
+import UIKit
 
 @MainActor
 final class AppAuthCoordinator: ObservableObject {
@@ -13,11 +14,14 @@ final class AppAuthCoordinator: ObservableObject {
     @Published var me: MeResponse?
     @Published var meError: String?
     @Published var pushAuthorizationDenied = false
+    @Published var deviceNamePrompt: String?
 
     let api: APIClient?
     let oidc: OIDCClient?
     private let tokenStore: TokenStoring
     private let pushRegistrar = PushRegistrar()
+    private let deviceNames = DeviceNameStore()
+    private var pendingDeviceToken: String?
 
     init() {
         // Share the keychain item with the widget extension. Both targets
@@ -99,6 +103,8 @@ final class AppAuthCoordinator: ObservableObject {
         try? KeychainGitHubCredentialStore().clear()
         me = nil
         meError = nil
+        deviceNamePrompt = nil
+        pendingDeviceToken = nil
         signedIn = false
         WidgetRefresher.reloadAll()
     }
@@ -108,9 +114,49 @@ final class AppAuthCoordinator: ObservableObject {
         pushAuthorizationDenied = (state == .denied)
     }
 
+    func saveDeviceName(_ name: String) {
+        finishDeviceName(DeviceName.normalize(name))
+    }
+
+    func skipDeviceName() {
+        finishDeviceName("")
+    }
+
     private func registerForPush() async {
-        guard let api else { return }
-        let state = await pushRegistrar.register(api: api)
+        guard api != nil else { return }
+        let state = await pushRegistrar.register { [weak self] token in self?.handleDeviceToken(token) }
         pushAuthorizationDenied = (state == .denied)
+    }
+
+    private func handleDeviceToken(_ token: String) {
+        if let stored = deviceNames.load() {
+            sendDeviceToken(token, name: DeviceName.forRegistration(stored))
+            return
+        }
+        pendingDeviceToken = token
+        if deviceNamePrompt == nil {
+            deviceNamePrompt = DeviceName.normalize(UIDevice.current.name)
+        }
+    }
+
+    private func finishDeviceName(_ name: String) {
+        guard deviceNamePrompt != nil else { return }
+        deviceNames.save(name)
+        deviceNamePrompt = nil
+        guard let token = pendingDeviceToken else { return }
+        pendingDeviceToken = nil
+        sendDeviceToken(token, name: DeviceName.forRegistration(name))
+    }
+
+    private func sendDeviceToken(_ token: String, name: String?) {
+        guard let api else { return }
+        Task {
+            do {
+                try await api.registerDeviceToken(token, name: name)
+            } catch {
+                // Log only — bootstrap() registers again on the next launch.
+                print("AppAuthCoordinator: registerDeviceToken failed: \(error)")
+            }
+        }
     }
 }

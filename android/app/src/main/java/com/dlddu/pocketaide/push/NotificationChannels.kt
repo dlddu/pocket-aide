@@ -16,7 +16,7 @@ object NotificationChannels {
                 NotificationChannel(
                     DEFAULT,
                     context.getString(R.string.notification_channel_default),
-                    NotificationManager.IMPORTANCE_DEFAULT,
+                    NotificationManager.IMPORTANCE_HIGH,
                 ),
                 NotificationChannel(
                     APPROVAL,
@@ -27,5 +27,6 @@ object NotificationChannels {
         )
     }
 
-    fun forCategory(category: String?): String = if (category == "APPROVAL_REQUEST") APPROVAL else DEFAULT
+    fun forCategory(category: String?): String =
+        if (category == "APPROVAL_REQUEST" || category == "COMMIT_STATUS_REQUEST") APPROVAL else DEFAULT
 }

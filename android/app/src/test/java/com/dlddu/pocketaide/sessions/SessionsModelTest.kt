@@ -73,6 +73,9 @@ class SessionsModelTest {
         assertEquals(AgentSessionError.UNKNOWN, AgentSessionError.from(ApiException.Decoding(IllegalArgumentException("x"))))
         assertEquals(AgentSessionError.DISABLED, AgentSessionError.forSnapshot(ApiException.BadStatus(503, "")))
         assertEquals(AgentSessionError.UNREACHABLE, AgentSessionError.from(ApiException.BadStatus(503, "")))
+        val exhausted = ApiException.BadStatus(503, """{"error":"all login slots are in use","code":"auth_pool_exhausted"}""")
+        assertEquals(AgentSessionError.SLOTS_BUSY, AgentSessionError.from(exhausted))
+        assertEquals(AgentSessionError.SLOTS_BUSY, AgentSessionError.forSnapshot(exhausted))
     }
 
     @Test

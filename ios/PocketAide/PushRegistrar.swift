@@ -1,5 +1,4 @@
 import Foundation
-import PocketAideAPI
 import UIKit
 import UserNotifications
 
@@ -14,7 +13,7 @@ final class PushRegistrar {
 
     private var tokenObserver: NSObjectProtocol?
     private var failureObserver: NSObjectProtocol?
-    private weak var api: APIClient?
+    private var onToken: (@MainActor (String) -> Void)?
 
     deinit {
         if let tokenObserver { NotificationCenter.default.removeObserver(tokenObserver) }
@@ -22,8 +21,8 @@ final class PushRegistrar {
     }
 
     @discardableResult
-    func register(api: APIClient) async -> AuthorizationState {
-        self.api = api
+    func register(onToken: @escaping @MainActor (String) -> Void) async -> AuthorizationState {
+        self.onToken = onToken
         installObserversIfNeeded()
 
         let center = UNUserNotificationCenter.current()
@@ -69,15 +68,8 @@ final class PushRegistrar {
                 object: nil,
                 queue: .main
             ) { [weak self] note in
-                guard let self, let token = note.object as? String, let api = self.api else { return }
-                Task { @MainActor in
-                    do {
-                        try await api.registerDeviceToken(token)
-                    } catch {
-                        // Log only — bootstrap() registers again on the next launch.
-                        print("PushRegistrar: registerDeviceToken failed: \(error)")
-                    }
-                }
+                guard let self, let token = note.object as? String else { return }
+                Task { @MainActor in self.onToken?(token) }
             }
         }
         if failureObserver == nil {

@@ -179,10 +179,11 @@ public enum AgentSessionError: Hashable, Sendable {
     case disabled
     case quotaFull
     case unreachable
+    case slotsBusy
     case unknown
 
     public static func forSnapshot(_ error: Error) -> AgentSessionError {
-        if case .badStatus(503, _)? = error as? APIError {
+        if let apiError = error as? APIError, case .badStatus(503, _) = apiError, !apiError.isAuthPoolExhausted {
             return .disabled
         }
         return AgentSessionError(error)
@@ -198,6 +199,8 @@ public enum AgentSessionError: Hashable, Sendable {
             self = .unreachable
         case .decoding:
             self = .unknown
+        case .badStatus where apiError.isAuthPoolExhausted:
+            self = .slotsBusy
         case .badStatus(let status, _):
             self = Self.fromStatus(status)
         }
@@ -230,6 +233,7 @@ public enum AgentSessionError: Hashable, Sendable {
         .disabled: "이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요.",
         .quotaFull: "세션 출력 한도가 찼어요. 기존 출력은 볼 수 있지만 새 프롬프트는 보낼 수 없어요.",
         .unreachable: "세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.",
+        .slotsBusy: "로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요.",
     ]
 
     public var message: String {

@@ -24,10 +24,6 @@ final class WebhookPushTapUITests: XCTestCase {
         "CI 통과 — \(event.repo) #\(event.pullRequest ?? 0)"
     }
 
-    private func monitorTab(in app: XCUIApplication) -> XCUIElement {
-        app.tabBars.firstMatch.buttons["PR 모니터"]
-    }
-
     private func arrival(in app: XCUIApplication) -> XCUIElement {
         app.staticTexts.matching(NSPredicate(format: "label == %@", "방금 진입")).firstMatch
     }
@@ -44,7 +40,7 @@ final class WebhookPushTapUITests: XCTestCase {
         let other = app.tabBars.firstMatch.buttons["다짐"]
         XCTAssertTrue(other.waitForExistence(timeout: 10), "다짐 should be a direct tab")
         other.tap()
-        XCTAssertFalse(monitorTab(in: app).isSelected, "PR 모니터 should be left before the next push")
+        XCTAssertTrue(other.isSelected, "PR 모니터 should be left before the next push")
     }
 
     private func tapBanner(for event: WebhookEvent) {
@@ -56,8 +52,7 @@ final class WebhookPushTapUITests: XCTestCase {
 
     private func assertOpenedMonitor(_ app: XCUIApplication) {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 15), "Tapping the push should bring the app forward")
-        let selected = expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: monitorTab(in: app))
-        wait(for: [selected], timeout: 10)
+        XCTAssertTrue(app.buttons["prmonitor.openprs.button"].waitForExistence(timeout: 10), "The push should open PR 모니터 without a manual More tap")
     }
 
     private func assertHighlighted(_ event: WebhookEvent, in app: XCUIApplication) {
@@ -96,8 +91,7 @@ final class WebhookPushTapUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         allowNotificationsIfAsked()
-        XCTAssertTrue(monitorTab(in: app).waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        monitorTab(in: app).tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         let before = WebhookHistoryUI.unreadCount(in: app) ?? 0
 
         app.terminate()

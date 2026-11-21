@@ -10,7 +10,7 @@ final class SessionsTabUITests: XCTestCase {
     func testSessionsTabSitsInBottomBar() throws {
         let app = TodoUI.launch()
         let screen = SessionsScreen.open(in: app)
-        XCTAssertFalse(app.tabBars.firstMatch.buttons["채팅"].exists, "채팅 should have moved under More once 세션 took the fourth slot")
+        XCTAssertTrue(app.tabBars.firstMatch.buttons["채팅"].exists, "채팅 should occupy the second bottom slot")
         XCTAssertTrue(screen.createButton.exists, "The 새 세션 button should be in the header")
     }
 

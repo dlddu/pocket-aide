@@ -18,8 +18,10 @@ func Data(notificationID int64) map[string]any {
 	return map[string]any{"kind": "external_notification", "notification_id": notificationID}
 }
 
+const Category = "EXTERNAL_NOTIFICATION"
+
 type Sender interface {
-	SendWithData(ctx context.Context, d devicetokens.Device, title, body string, data map[string]any) error
+	SendWithCategory(ctx context.Context, d devicetokens.Device, category, title, body string, data map[string]any) error
 }
 
 type Tokens interface {
@@ -50,9 +52,9 @@ func (n *Notifier) Send(ctx context.Context, userID, notificationID int64, title
 	}
 	res := Result{Devices: len(devices)}
 	data := Data(notificationID)
-	body = apns.FitAlertBody("", title, body, data)
+	body = apns.FitAlertBody(Category, title, body, data)
 	for _, d := range devices {
-		err := n.sender.SendWithData(ctx, d, title, body, data)
+		err := n.sender.SendWithCategory(ctx, d, Category, title, body, data)
 		if err == nil {
 			res.Sent++
 			continue

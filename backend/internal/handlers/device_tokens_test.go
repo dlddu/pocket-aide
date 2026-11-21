@@ -179,3 +179,81 @@ func TestRegisterDeviceToken_ReRegisterUpdatesPlatform(t *testing.T) {
 		t.Fatalf("devices: %+v", got)
 	}
 }
+
+func deviceNamed(t *testing.T, store *devicetokens.Store, uid int64, token string) (string, bool) {
+	t.Helper()
+	got, err := store.ListByUserID(context.Background(), uid)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	for _, d := range got {
+		if d.Token == token {
+			return d.Name, true
+		}
+	}
+	return "", false
+}
+
+func TestRegisterDeviceToken_StoresTrimmedName(t *testing.T) {
+	store := newDeviceStore(t)
+	tok := strings.Repeat("e", 64)
+	if rec := registerDevice(t, store, 1, `{"token":"`+tok+`","name":"  출근용 폰  "}`); rec.Code != http.StatusCreated {
+		t.Fatalf("status: got %d want 201 (%s)", rec.Code, rec.Body.String())
+	}
+	if name, _ := deviceNamed(t, store, 1, tok); name != "출근용 폰" {
+		t.Fatalf("name: got %q want %q", name, "출근용 폰")
+	}
+}
+
+func TestRegisterDeviceToken_ReRegisterWithoutNameKeepsName(t *testing.T) {
+	store := newDeviceStore(t)
+	tok := strings.Repeat("f", 64)
+	for _, body := range []string{
+		`{"token":"` + tok + `","name":"Pixel 8"}`,
+		`{"token":"` + tok + `"}`,
+	} {
+		if rec := registerDevice(t, store, 1, body); rec.Code != http.StatusCreated {
+			t.Fatalf("body=%s status: got %d want 201", body, rec.Code)
+		}
+	}
+	if name, _ := deviceNamed(t, store, 1, tok); name != "Pixel 8" {
+		t.Fatalf("name after re-register: got %q want %q", name, "Pixel 8")
+	}
+	if rec := registerDevice(t, store, 1, `{"token":"`+tok+`","name":"새 이름"}`); rec.Code != http.StatusCreated {
+		t.Fatalf("rename status: got %d", rec.Code)
+	}
+	if name, _ := deviceNamed(t, store, 1, tok); name != "새 이름" {
+		t.Fatalf("name after rename: got %q want %q", name, "새 이름")
+	}
+}
+
+func TestRegisterDeviceToken_RebindToOtherUserDropsName(t *testing.T) {
+	store := newDeviceStore(t)
+	tok := strings.Repeat("0", 64)
+	if rec := registerDevice(t, store, 1, `{"token":"`+tok+`","name":"u1 폰"}`); rec.Code != http.StatusCreated {
+		t.Fatalf("u1: %d", rec.Code)
+	}
+	if rec := registerDevice(t, store, 2, `{"token":"`+tok+`"}`); rec.Code != http.StatusCreated {
+		t.Fatalf("u2: %d", rec.Code)
+	}
+	name, ok := deviceNamed(t, store, 2, tok)
+	if !ok || name != "" {
+		t.Fatalf("u2 device: ok=%v name=%q, want empty name", ok, name)
+	}
+}
+
+func TestRegisterDeviceToken_RejectsBadNames(t *testing.T) {
+	store := newDeviceStore(t)
+	tok := strings.Repeat("1", 64)
+	for name, n := range map[string]string{
+		"41 chars": strings.Repeat("가", 41),
+		"control":  `폰\n이름`,
+	} {
+		if rec := registerDevice(t, store, 1, `{"token":"`+tok+`","name":"`+n+`"}`); rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: status got %d want 400", name, rec.Code)
+		}
+	}
+	if rec := registerDevice(t, store, 1, `{"token":"`+tok+`","name":"`+strings.Repeat("가", 40)+`"}`); rec.Code != http.StatusCreated {
+		t.Errorf("40 chars: status got %d want 201", rec.Code)
+	}
+}

@@ -34,7 +34,11 @@ class ApprovalActionReceiver : BroadcastReceiver() {
                 } catch (e: Exception) {
                     Result.failure(e)
                 }
-                showResult(app, notificationId, approvalId, title, ApprovalNotificationAction.resultNotice(result))
+                if (result.getOrNull() is ApprovalDecisionOutcome.Decided) {
+                    NotificationManagerCompat.from(app).cancel(notificationId)
+                } else {
+                    showResult(app, notificationId, approvalId, title, ApprovalNotificationAction.resultNotice(result))
+                }
             } finally {
                 pending.finish()
             }

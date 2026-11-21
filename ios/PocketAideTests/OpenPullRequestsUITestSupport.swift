@@ -29,9 +29,7 @@ enum OpenPullRequestsUI {
     }
 
     static func openSheet(in app: XCUIApplication) {
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         let open = app.buttons["prmonitor.openprs.button"]
         XCTAssertTrue(open.waitForExistence(timeout: 10), "PR 모니터 header should offer the open-PR sheet")
         open.tap()

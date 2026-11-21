@@ -1,0 +1,1 @@
+ALTER TABLE device_tokens ADD COLUMN name TEXT NOT NULL DEFAULT '';

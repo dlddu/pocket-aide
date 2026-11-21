@@ -53,7 +53,7 @@ class WebhookPushTapTest : E2eTest() {
         Shade.clearAppNotifications()
         Fcm.deliver(push)
         Shade.tap(event.pushTitle)
-        compose.waitUntil(20_000) { compose.isSelected("tab.PrMonitor") }
+        compose.waitUntil(20_000) { compose.isSelected("tab.More") && compose.exists("prmonitor.screen") }
     }
 
     private fun assertHighlighted(event: WebhookEvent) {

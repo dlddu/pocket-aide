@@ -140,6 +140,7 @@ fun SheetCancelButton(
     tag: String,
     onClick: () -> Unit,
     verticalPadding: Dp = SheetDefaults.cancelVerticalPadding,
+    label: String = "취소",
 ) {
     Box(
         Modifier
@@ -150,7 +151,7 @@ fun SheetCancelButton(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "취소",
+            label,
             style = DesignTokens.Typography.style(DesignTokens.Typography.bodySm),
             color = DesignTokens.Colors.ink(area).copy(alpha = 0.55f),
         )

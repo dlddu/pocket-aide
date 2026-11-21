@@ -2,10 +2,15 @@ package com.dlddu.pocketaide
 
 import android.content.Context
 import com.dlddu.pocketaide.api.ApiClient
+import com.dlddu.pocketaide.auth.AuthNotices
 import com.dlddu.pocketaide.auth.KeystoreTokenStore
 import com.dlddu.pocketaide.auth.OidcClient
 import com.dlddu.pocketaide.auth.OidcRedirectBus
+import com.dlddu.pocketaide.auth.PrefsSignOutReasonStore
+import com.dlddu.pocketaide.auth.SignOutReasonStore
 import com.dlddu.pocketaide.auth.TokenStore
+import com.dlddu.pocketaide.push.DeviceNameStore
+import com.dlddu.pocketaide.push.PrefsDeviceNameStore
 import com.dlddu.pocketaide.push.PushRegistrar
 import com.dlddu.pocketaide.ui.DeepLinkRouter
 import kotlinx.coroutines.CoroutineScope
@@ -16,10 +21,13 @@ import java.util.concurrent.TimeUnit
 
 class AppContainer(context: Context) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    val tokenStore: TokenStore = KeystoreTokenStore(context)
+    val signOutReasons: SignOutReasonStore = PrefsSignOutReasonStore(context)
+    val authNotices = AuthNotices(signOutReasons)
+    val tokenStore: TokenStore = KeystoreTokenStore(context, signOutReasons)
     val redirectBus = OidcRedirectBus()
     val deepLinks = DeepLinkRouter()
     val pushRegistrar = PushRegistrar(context)
+    val deviceNames: DeviceNameStore = PrefsDeviceNameStore(context)
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -32,9 +40,9 @@ class AppContainer(context: Context) {
         baseUrl = BuildConfig.BACKEND_BASE_URL.ifBlank { UNCONFIGURED_BASE_URL },
         tokenStore = tokenStore,
         http = http,
-    )
+    ).also { it.onUnauthorized = authNotices::onUnauthorized }
 
-    val oidc: OidcClient = OidcClient(api, tokenStore, redirectBus, http).also { api.tokenRefresher = it }
+    val oidc: OidcClient = OidcClient(api, tokenStore, redirectBus, signOutReasons, http).also { api.tokenRefresher = it }
 
     private companion object {
         const val UNCONFIGURED_BASE_URL = "http://backend.invalid"

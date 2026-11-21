@@ -147,9 +147,7 @@ final class WebhookUserScopedHistoryUITests: XCTestCase {
         BackendAPI.setNextAppLoginSubject(other)
         AppAccount.signIn(in: app)
 
-        let tab = app.tabBars.firstMatch.buttons["PR 모니터"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 15), "PR 모니터 should be a direct tab")
-        tab.tap()
+        XCTAssertTrue(PRMonitorNavigation.open(in: app), "PR 모니터 should be reachable through More")
         let empty = app.descendants(matching: .any).matching(identifier: "prmonitor.empty.state").firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 20), "The other user should start with an empty history")
         XCTAssertTrue(WebhookHistoryUI.groups(of: repo, in: app).isEmpty, "The first user's history should not show for the other user")

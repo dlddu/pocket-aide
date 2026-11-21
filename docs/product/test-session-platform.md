@@ -2,7 +2,7 @@
 
 ## 검증 대상 AC
 - AC1: 프록시가 인증 경계 (PRD-11: `prd-session-platform.md`)
-- AC2: 플랫폼 전체 세션 노출 (PRD-11)
+- AC2: 세션 탭 테넌트의 세션 노출 (PRD-11)
 - AC3: 워크로드 타입 선택 (플랫폼 카탈로그) (PRD-11)
 - AC4: 세션 생성 (이름 + 타입 + 모델 선택) (PRD-11)
 - AC5: 세션 목록과 상태 표시 (PRD-11)
@@ -67,21 +67,23 @@
 - **관련 코드 테스트**: `backend/internal/handlers/sessions_test.go` — `TestSessionsRequireAuthAndNeverReachPlatform`·`TestSessionResponsesHideInternalTopology`
 
 
-### 시나리오 3: 플랫폼의 세션은 누가 어디서 만들었든 목록에 보이고 열린다
-- **사전 조건**: 사용자 A가 앱에서 만든 세션 S가 있다. 플랫폼 SPA로 직접 만든 셸 세션 X가 있다.
+### 시나리오 3: 세션 탭 테넌트의 세션은 누가 어디서 만들었든 목록에 보이고 열린다
+- **사전 조건**: 세션 탭 계정(`pocket-aide-sessions`)이 설정된 배포. 사용자 A가 앱에서 만든 세션 S가 있다. K3s MCP `session_create`로 만든 셸 세션 X가 있다. 플랫폼 운영 화면에서 테넌트 없이 만든 세션 O와 채팅 탭의 세션 C가 있다.
 - **실행 단계**:
   1. 사용자 B로 로그인해 세션 탭을 연다.
   2. X를 열어 출력을 본다.
-  3. 사용자 B의 토큰으로 플랫폼에 없는 id의 조회·read·write·switch·snapshot·삭제를 부른다.
+  3. 사용자 B의 토큰으로 플랫폼에 없는 id와 O·C의 id로 조회·read·write·switch·snapshot·삭제를 부른다.
   4. 사용자 A로 세션 탭을 연다.
+  5. K3s MCP `session_list`를 부른다.
 - **기대 결과**:
-  - 1단계: S와 X가 모두 목록에 마지막 접근 순으로 보인다.
+  - 1단계: S와 X가 모두 목록에 마지막 접근 순으로 보이고, O와 C는 없다.
   - 2단계: X의 상세와 출력이 열린다.
-  - 3단계: 모두 404이고 응답에 플랫폼 오류 원문이 없다.
+  - 3단계: 모두 404이고 응답에 플랫폼 오류 원문이 없다. O와 C는 플랫폼 운영 화면에 그대로 남아 있다.
   - 4단계: S와 X가 모두 보인다.
+  - 5단계: S와 X가 보인다.
 - **검증 AC**: AC2
-- **구현 상태**: 구현됨 — 백엔드는 세션 소유를 기록하지 않고(2026-10-24, 마이그레이션 0015 로 `agent_sessions` 삭제) 플랫폼 목록과 세션 경로를 인증된 요청 그대로 중계한다. 플랫폼의 404 는 상태 코드만 보존해 돌려준다.
-- **관련 코드 테스트**: `backend/internal/handlers/sessions_test.go` — `TestSessionListShowsEveryPlatformSessionToEveryUser`·`TestSessionUnknownIDRelaysPlatformNotFound`
+- **구현 상태**: 구현됨 — 백엔드는 세션 소유를 기록하지 않고(2026-10-24, 마이그레이션 0015 로 `agent_sessions` 삭제) 플랫폼 목록과 세션 경로를 인증된 요청 그대로 중계한다. 2026-11-07부터 세션 탭 경로는 `SESSIONS_SESSION_PLATFORM_SERVICE_ACCOUNT` 계정의 토큰을 실어 플랫폼이 테넌트 `homelab-k3s-mcp` 로 거른다 — 목록 제한과 테넌트 밖 404는 플랫폼이 정하고, 백엔드는 플랫폼의 404 상태 코드만 보존해 돌려준다. 승인 경로의 세션 제목 조회는 토큰 없이 부른다. 운영 반영은 flux-cd-apps의 계정 env·테넌트 설정이 들어간 뒤다.
+- **관련 코드 테스트**: `backend/internal/handlers/sessions_test.go` — `TestSessionListShowsEveryPlatformSessionToEveryUser`·`TestSessionUnknownIDRelaysPlatformNotFound`, `backend/cmd/server/main_test.go` — `TestTenantPlatformClient`·`TestTenantPlatformClientTokenError`
 
 
 ### 시나리오 4: 플랫폼이 제공하는 타입 중에서 골라 세션을 만든다
@@ -219,8 +221,8 @@
   - 1단계: 목록 자리에 「세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.」와 「다시 시도」가 보인다. 빈 상태 문구는 보이지 않는다.
   - 3단계: 타입 칸에 「세션 플랫폼에 연결하지 못해 타입 목록을 불러오지 못했어요.」와 「다시 시도」가 보이고, 「만들기」를 누를 수 없다. 내부 주소·오류 원문은 보이지 않는다.
 - **검증 AC**: AC11
-- **구현 상태**: 구현됨 — 백엔드는 플랫폼 도달 불가를 502로 돌려주고, 앱은 카탈로그 조회 실패를 기억해 안내와 「다시 시도」를 보인다. 목록·상세의 같은 상태(502·503·네트워크)는 「세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.」 배너다.
-- **관련 코드 테스트**: `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `backend/internal/handlers/sessions_test.go` — `TestSessionPlatformUnreachableIsBadGateway`, `ios/PocketAideUnitTests/SessionsTests.swift` — `testErrorCategoriesNeverExposeUpstreamText`
+- **구현 상태**: 구현됨 — 백엔드는 플랫폼 도달 불가를 502로 돌려주고, 앱은 카탈로그 조회 실패를 기억해 안내와 「다시 시도」를 보인다. 목록·상세의 같은 상태(502·503·네트워크)는 「세션 플랫폼에 연결할 수 없어요. 네트워크를 확인하고 다시 시도해 주세요.」 배너다. *2026-11-09*: 503 중 로그인 슬롯 소진(`code: auth_pool_exhausted`)만은 「로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요.」로 따로 안내한다.
+- **관련 코드 테스트**: `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `backend/internal/handlers/sessions_test.go` — `TestSessionPlatformUnreachableIsBadGateway`·`TestSessionAuthPoolExhaustedKeepsItsCode`, `ios/PocketAideUnitTests/SessionsTests.swift` — `testErrorCategoriesNeverExposeUpstreamText`·`testExhaustedLoginSlotsAreTheirOwnCategory`, `android/app/src/test/java/com/dlddu/pocketaide/sessions/SessionsModelTest.kt` — `errorMapping`
 
 
 ### 시나리오 13: 터미널 타입 세션은 명령으로 실행되고 제어 문자 없이 보인다

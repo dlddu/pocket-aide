@@ -30,13 +30,13 @@ class PrMonitorTest : E2eTest() {
         assertTrue("The push should carry the history row id", Fcm.data(push!!)["event_id"]?.toLongOrNull() != null)
 
         val scenario = launchSignedIn()
-        assertFalse("Launch should land on a different tab than PR 모니터", compose.isSelected("tab.PrMonitor"))
+        assertTrue("Launch should land on 다짐", compose.isSelected("tab.Affirmations"))
         scenario.close()
 
         Shade.clearAppNotifications()
         Fcm.deliver(push)
         Shade.tap(pushTitle)
-        compose.waitUntil(20_000) { compose.isSelected("tab.PrMonitor") }
+        compose.waitUntil(20_000) { compose.isSelected("tab.More") && compose.exists("prmonitor.screen") }
         assertTrue("The pushed event's group should be highlighted", PrMonitor.waitForLabel(compose, fixtureGroup, "방금 진입", 15_000))
         assertTrue("The pushed event's row should be listed", PrMonitor.labels(compose, fixtureGroup).contains(fixtureTitle))
         if (PrMonitor.badge(compose, fixtureGroup) != "모두 확인") {

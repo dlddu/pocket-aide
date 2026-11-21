@@ -8,7 +8,7 @@
 | 최종 수정일 | 2026-11-02 |
 | 결정 출처 | 사용자 본인(단독 소유자), 2026-10-31 — 「iOS 앱을 안드로이드로 마이그레이션, Kotlin + Compose 네이티브, 골격·핵심 탭부터 단계 이식, 백엔드 FCM 경로 함께 추가, 패리티 도달 후 iOS 제거」 |
 | 관련 PRD | PRD-3(개인/회사 투두) · PRD-4(임시공간) · PRD-10(PR 모니터 푸시) · PRD-12(승인 푸시) |
-| 구현 상태 | 2단계 — 골격·인증·API·푸시 수신과 탭 전부(다짐·PR 모니터·승인·세션·임시공간·개인·회사·루틴·알림 기록, 날씨 화면). AI 채팅만 iOS처럼 「준비 중」. 홈 화면 위젯(Glance)·키보드 뼈대(iOS와 같은 범위)까지 |
+| 구현 상태 | 2단계 — 골격·인증·API·푸시 수신과 탭 전부(다짐·PR 모니터·승인·세션·임시공간·개인·회사·루틴·알림 기록, 날씨 화면). AI 채팅은 2026-11-06 텍스트 화면(`chat/` — session-platform codex 세션, PRD-1 AC1·AC4·AC6·AC7)까지, 음성 모드는 아직 없다. 홈 화면 위젯(Glance)·키보드 뼈대(iOS와 같은 범위)까지 |
 
 ## 1. 결정
 
@@ -26,6 +26,7 @@
 ## 3. 푸시 (FCM)
 
 - 앱은 FCM 토큰을 `POST /api/device-tokens`에 `{"token": …, "platform": "android"}`로 등록한다. iOS는 `platform`을 보내지 않으므로 서버 기본값 `ios`가 유지된다.
+- 기기 이름: 로그인 뒤 첫 푸시 등록 때 기기 이름을 한 번 묻는다(`ui/DeviceNameSheet.kt`, 목업 `screen-device-name`, 기본값 `Build.MODEL`). 답은 SharedPreferences(`push/DeviceNameStore.kt`)에 남고 — 「건너뛰기」는 빈 문자열로 — 이후 등록·`onNewToken` 재등록은 저장된 이름을 `name` 필드로 같이 보낸다(빈 이름은 보내지 않는다). Firebase 설정이 없는 빌드(계측 테스트 포함)는 푸시를 등록하지 않으므로 묻지도 않는다. iOS도 같은 규칙이되, APNs 토큰이 처음 도착할 때 시트를 띄운다(`ios/PocketAide/DeviceNameSheet.swift`, 기본값 `UIDevice.current.name`, 저장은 UserDefaults).
 - 백엔드는 `device_tokens.platform`(마이그레이션 0003부터 존재)으로 APNs/FCM을 가른다(`backend/internal/push`). FCM은 HTTP v1 API로 보내며 `FCM_SERVICE_ACCOUNT_JSON`이 설정된 경우에만 켜진다. 데이터 페이로드 키(`approval_id`, `event_id`, `kind`·`notification_id`)는 APNs와 같고, 앱은 같은 규칙으로 탭을 고른다(`push/PushDeepLink.kt`).
 - 승인 요청(`APPROVAL_REQUEST`)만 데이터 전용 메시지로 보낸다(`fcm.Client.WithDataOnly`, title·body 는 data 에). notification 블록이 있으면 앱이 백그라운드일 때 OS 가 알림을 직접 띄워 승인/거절 버튼(`approvals/ApprovalActionReceiver`)을 붙일 수 없기 때문이다. 나머지 푸시는 종료된 앱에도 확실히 보이도록 notification 메시지로 둔다.
 - Firebase 설정은 `google-services.json` 대신 `app/build.gradle.kts`에서 읽는다. 프로젝트 ID·발신자 ID는 공통 기본값, 앱 ID는 빌드 타입별 기본값(release `com.dlddu.pocketaide`, debug `com.dlddu.pocketaide.debug`)으로 둔다. API 키는 레포에 두지 않는다. CI는 레포 Actions secret `FIREBASE_API_KEY`를 환경 변수로 받고(`android-test.yml`), 로컬 빌드는 빌드 속성 `pocketaide.firebaseApiKey`(예: `~/.gradle/gradle.properties`)로 넣는다. 값의 원천은 dlddu/infrastructure `terraform/dlddu/google/pocket-aide-firebase.tf`의 `pocket_aide_android_firebase` 출력이다. API 키가 비어 있으면 앱은 푸시 없이 동작한다.

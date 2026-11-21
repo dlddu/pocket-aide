@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
 	"github.com/dlddu/pocket-aide/backend/internal/devicetokens"
@@ -14,9 +15,13 @@ import (
 type deviceTokenPayload struct {
 	Token    string `json:"token"`
 	Platform string `json:"platform"`
+	Name     string `json:"name"`
 }
 
-const maxFCMTokenLen = 4096
+const (
+	maxFCMTokenLen     = 4096
+	maxDeviceNameRunes = 40
+)
 
 // RegisterDeviceToken handles POST /api/device-tokens.
 func RegisterDeviceToken(store *devicetokens.Store) http.HandlerFunc {
@@ -31,7 +36,7 @@ func RegisterDeviceToken(store *devicetokens.Store) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := store.Upsert(r.Context(), u.ID, body.Token, body.Platform); err != nil {
+		if err := store.Upsert(r.Context(), u.ID, body.Token, body.Platform, body.Name); err != nil {
 			http.Error(w, "upsert failed", http.StatusInternalServerError)
 			return
 		}
@@ -49,6 +54,10 @@ func decodeDeviceTokenPayload(r *http.Request) (deviceTokenPayload, error) {
 	p.Token = strings.TrimSpace(p.Token)
 	if p.Token == "" {
 		return p, errors.New("token is required")
+	}
+	p.Name = strings.TrimSpace(p.Name)
+	if utf8.RuneCountInString(p.Name) > maxDeviceNameRunes || strings.IndexFunc(p.Name, unicode.IsControl) >= 0 {
+		return p, errors.New("name must be at most 40 characters without control characters")
 	}
 	switch p.Platform {
 	case "", devicetokens.PlatformIOS:
