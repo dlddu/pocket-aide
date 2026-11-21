@@ -1,5 +1,6 @@
 package com.dlddu.pocketaide.chat
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,12 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +27,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -97,38 +102,318 @@ private const val DISABLED_OPACITY = 0.4f
 fun ChatScreen(api: ApiClient) {
     val viewModel: ChatViewModel = viewModel(key = "chat") { ChatViewModel(api) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val taskRequest by viewModel.taskRequest.collectAsStateWithLifecycle()
+    val taskTurns by viewModel.taskTurns.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    // The draft and the panel's open/closed choice survive a fold, a rotation
+    // and a trip through the back stack, so neither is lost by the layout
+    // changing under the user.
     var draft by rememberSaveable { mutableStateOf("") }
+    var panelOpen by rememberSaveable { mutableStateOf(true) }
+    // How the panel is being looked at, and which task is open, kept the same
+    // way for the same reason: a fold or a rotation must not silently widen a
+    // narrowed list or close a task the user was working on.
+    var filterStatus by rememberSaveable { mutableStateOf<String?>(null) }
+    var hideCompleted by rememberSaveable { mutableStateOf(false) }
+    var openTaskId by rememberSaveable { mutableStateOf<String?>(null) }
+    // The request being written is its own draft, separate from the chat
+    // composer's — storing one never touches the other. The key beside it is
+    // this draft's identity on the ledger: the backend stores one row per key,
+    // so a retry after an answer the app never saw cannot leave two requests,
+    // and a new key is drawn only once a request has actually been stored.
+    var requestDraft by rememberSaveable { mutableStateOf("") }
+    var requestKey by rememberSaveable { mutableStateOf(newTaskRequestKey()) }
+    // The turn the draft's sentence was offered on, so the stored request can
+    // name it — that turn still being the task's latest is what the platform
+    // checks a pick against. The provenance holds only while the draft is
+    // still that sentence word for word: editing it makes the words the
+    // person's own, and it is then stored as free text. Kept beside the draft
+    // rather than derived from the task, so the pick the person made survives
+    // the task being read again under them.
+    var requestChoiceTurnId by rememberSaveable { mutableStateOf(0L) }
+    var requestChoiceText by rememberSaveable { mutableStateOf("") }
+    // One list state each for the conversation and the task list, held above the
+    // layout branch, so both reading positions survive folding, unfolding,
+    // collapsing the panel and stepping into a task and back.
+    val messageList = rememberLazyListState()
+    val taskList = rememberLazyListState()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.pollWhileVisible() }
     }
 
-    Column(
+    val openTask = tasks.tasks.firstOrNull { it.id == openTaskId }
+    // A task the ledger no longer carries — finished and dropped, or a session
+    // we can no longer read — closes for good rather than waiting to reappear
+    // under a request the user wrote against the row it used to be. Only once
+    // the panel has an answer, so a read in flight closes nothing.
+    LaunchedEffect(openTaskId, tasks.hasLoaded, openTask == null) {
+        if (openTaskId != null && openTask == null && tasks.hasLoaded) {
+            openTaskId = null
+            requestDraft = ""
+            requestKey = newTaskRequestKey()
+            requestChoiceTurnId = 0L
+            requestChoiceText = ""
+            viewModel.dismissTaskRequest()
+            viewModel.clearTaskTurns()
+        }
+    }
+
+    ChatPanes(
+        state = state,
+        tasks = tasks,
+        draft = draft,
+        onDraftChange = { draft = it },
+        onSend = { viewModel.send(draft) { draft = "" } },
+        onRefresh = viewModel::refreshPlugins,
+        onDismissNotice = viewModel::dismissNotice,
+        onCancelQueued = viewModel::cancelQueued,
+        listState = messageList,
+        panelOpen = panelOpen,
+        onTogglePanel = { panelOpen = !panelOpen },
+        pollTasks = {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.pollTasksWhileVisible()
+            }
+        },
+        taskListState = taskList,
+        filter = ChatTaskFilter(filterStatus, hideCompleted),
+        onFilterChange = {
+            filterStatus = it.status
+            hideCompleted = it.hideCompleted
+        },
+        openTask = openTask,
+        onOpenTask = { task ->
+            openTaskId = task.id
+            // A new task starts with an empty request rather than the last
+            // one's words, which belonged to a different task — and with its
+            // own key, so the two are never stored as one.
+            requestDraft = ""
+            requestKey = newTaskRequestKey()
+            requestChoiceTurnId = 0L
+            requestChoiceText = ""
+            viewModel.dismissTaskRequest()
+        },
+        onCloseTask = {
+            openTaskId = null
+            viewModel.dismissTaskRequest()
+            viewModel.clearTaskTurns()
+        },
+        taskRequest = taskRequest,
+        requestDraft = requestDraft,
+        onRequestDraftChange = {
+            requestDraft = it
+            // Edited by hand, so it is no longer the session's sentence: the
+            // provenance goes with it, and the words are stored as the
+            // person's own free text.
+            if (!chatTaskPickHolds(it, requestChoiceText)) {
+                requestChoiceTurnId = 0L
+                requestChoiceText = ""
+            }
+        },
+        onChoicePicked = { choice ->
+            requestDraft = choice.requestText
+            // The turn comes from the task the choices were read with, which is
+            // the turn they were offered on. A choice carries no id of its own:
+            // which turn a pick answers is the one fact that decides whether it
+            // is still current.
+            requestChoiceTurnId = openTask?.choiceTurnId ?: 0L
+            requestChoiceText = choice.requestText
+        },
+        turns = taskTurns,
+        onLoadTurns = { openTask?.let { viewModel.loadTaskTurns(it.id) } },
+        onLoadMoreTurns = viewModel::loadMoreTaskTurns,
+        // The draft is cleared only once the backend has stored the request,
+        // and the next request gets a new key then; a failure leaves both as
+        // they are, so the same words retry as the same request.
+        onStoreRequest = {
+            openTask?.let { task ->
+                viewModel.storeTaskRequest(
+                    task = task,
+                    requestID = requestKey,
+                    request = requestDraft,
+                    choiceTurnId = requestChoiceTurnId,
+                    onStored = {
+                        requestDraft = ""
+                        requestKey = newTaskRequestKey()
+                        requestChoiceTurnId = 0L
+                        requestChoiceText = ""
+                    },
+                    // Refused because the task moved: the draft stays exactly
+                    // as written and only the pick is dropped, so saving again
+                    // stores those same words as the person's own.
+                    onChoiceStale = {
+                        requestChoiceTurnId = 0L
+                        requestChoiceText = ""
+                    },
+                )
+            }
+        },
+    )
+}
+
+/**
+ * The chat screen's layout: one pane in a narrow window, two in a wide one.
+ *
+ * The branch is taken from the window's own available width
+ * (docs/design-system/tokens.md §6.1) — not from the device, the screen size or
+ * the orientation — so a folded phone and a split window stay narrow while an
+ * unfolded foldable goes wide even in portrait.
+ */
+@Composable
+internal fun ChatPanes(
+    state: ChatUiState,
+    tasks: ChatTasksUiState,
+    draft: String,
+    onDraftChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onRefresh: () -> Unit,
+    onDismissNotice: () -> Unit,
+    onCancelQueued: () -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    panelOpen: Boolean,
+    onTogglePanel: () -> Unit,
+    // Runs for exactly as long as the panel is on screen.
+    pollTasks: suspend () -> Unit,
+    taskListState: androidx.compose.foundation.lazy.LazyListState,
+    filter: ChatTaskFilter,
+    onFilterChange: (ChatTaskFilter) -> Unit,
+    // The task whose detail the right pane is showing, or null for the list.
+    // Resolved from the ledger each read, so a task that leaves the ledger
+    // closes rather than freezing on a row that no longer exists.
+    openTask: ChatTask?,
+    onOpenTask: (ChatTask) -> Unit,
+    onCloseTask: () -> Unit,
+    taskRequest: ChatTaskRequestUiState,
+    requestDraft: String,
+    onRequestDraftChange: (String) -> Unit,
+    onChoicePicked: (ChatTaskChoice) -> Unit,
+    turns: ChatTaskTurnsUiState,
+    onLoadTurns: () -> Unit,
+    onLoadMoreTurns: () -> Unit,
+    onStoreRequest: () -> Unit,
+) {
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(DesignTokens.Colors.surface(CHAT_AREA))
             .imePadding()
             .testTag("chat.screen"),
     ) {
-        Header(state, viewModel::refreshPlugins)
+        val wide = isWideChatWindow(maxWidth)
+        val panelShown = wide && panelOpen
+
+        // Polling follows what is on screen: this effect exists only while the
+        // panel does, so a narrow window or a collapsed panel costs no requests
+        // at all — cancelling it is what stops the reads.
+        if (panelShown) {
+            LaunchedEffect(Unit) { pollTasks() }
+        }
+
+        Row(Modifier.fillMaxSize()) {
+            Conversation(
+                state = state,
+                draft = draft,
+                onDraftChange = onDraftChange,
+                onSend = onSend,
+                onRefresh = onRefresh,
+                onDismissNotice = onDismissNotice,
+                onCancelQueued = onCancelQueued,
+                listState = listState,
+                // The toggle belongs to the wide layout only; a narrow window
+                // has no second pane to open.
+                panelOpen = if (wide) panelOpen else null,
+                onTogglePanel = onTogglePanel,
+                modifier = Modifier.weight(DesignTokens.Split.paneWeight),
+            )
+            if (panelShown) {
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .width(DesignTokens.Split.rule)
+                        .background(DesignTokens.Colors.rule(CHAT_AREA)),
+                )
+                // 1:1 — the same weight as the conversation beside it. The pane
+                // shows the list or one task's detail, never both: the detail is
+                // a step into the same pane, so the conversation keeps its half.
+                Box(Modifier.weight(DesignTokens.Split.paneWeight).fillMaxHeight()) {
+                    if (openTask == null) {
+                        ChatTaskPanel(
+                            state = tasks,
+                            filter = filter,
+                            onFilterChange = onFilterChange,
+                            onSelect = onOpenTask,
+                            listState = taskListState,
+                        )
+                    } else {
+                        // Back belongs to the step the user took, so it returns
+                        // to the list instead of leaving the chat tab.
+                        BackHandler(onBack = onCloseTask)
+                        ChatTaskDetailPane(
+                            task = openTask,
+                            draft = requestDraft,
+                            onDraftChange = onRequestDraftChange,
+                            onChoicePicked = onChoicePicked,
+                            request = taskRequest,
+                            turns = turns,
+                            onLoadTurns = onLoadTurns,
+                            onLoadMoreTurns = onLoadMoreTurns,
+                            // No reply gate: the request becomes the task's next
+                            // turn, not part of the reply being written.
+                            onStore = onStoreRequest,
+                            onBack = onCloseTask,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A fresh key for one request draft. It is the app's idempotency key on the
+ * ledger, so it has to be unique per request and stable across a retry — which
+ * is why it is drawn when a draft starts, not when the store button is tapped.
+ */
+private fun newTaskRequestKey(): String = "app-" + java.util.UUID.randomUUID().toString().replace("-", "")
+
+/** The conversation pane: the whole chat screen in a narrow window, the left half in a wide one. */
+@Composable
+private fun Conversation(
+    state: ChatUiState,
+    draft: String,
+    onDraftChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onRefresh: () -> Unit,
+    onDismissNotice: () -> Unit,
+    onCancelQueued: () -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    panelOpen: Boolean?,
+    onTogglePanel: () -> Unit,
+    modifier: Modifier,
+) {
+    Column(modifier.fillMaxHeight().testTag("chat.messages.pane")) {
+        Header(state, onRefresh, panelOpen = panelOpen, onTogglePanel = onTogglePanel)
         Box(Modifier.fillMaxWidth().height(RULE_WIDTH).background(DesignTokens.Colors.rule(CHAT_AREA)))
         state.notice?.let {
-            Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = viewModel::dismissNotice)
+            Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = onDismissNotice)
         }
         state.error?.let { Banner(it.message, DesignTokens.StatusColors.failure(), tag = "chat.error", onDismiss = null) }
-        Messages(state, Modifier.weight(1f), onCancelQueued = viewModel::cancelQueued)
-        Composer(
-            draft = draft,
-            onDraftChange = { draft = it },
-            state = state,
-            onSend = { viewModel.send(draft) { draft = "" } },
-        )
+        Messages(state, Modifier.weight(1f), listState, onCancelQueued = onCancelQueued)
+        Composer(draft = draft, onDraftChange = onDraftChange, state = state, onSend = onSend)
     }
 }
 
 @Composable
-private fun Header(state: ChatUiState, onRefresh: () -> Unit) {
+private fun Header(
+    state: ChatUiState,
+    onRefresh: () -> Unit,
+    // panelOpen is null in a narrow window, which has no second pane to open,
+    // so no toggle is drawn there at all.
+    panelOpen: Boolean? = null,
+    onTogglePanel: () -> Unit = {},
+) {
     val ink = DesignTokens.Colors.ink(CHAT_AREA)
     Row(
         Modifier
@@ -160,7 +445,33 @@ private fun Header(state: ChatUiState, onRefresh: () -> Unit) {
                 )
             }
         }
+        if (panelOpen != null) {
+            PanelToggle(panelOpen, onTogglePanel, Modifier.padding(end = DesignTokens.Spacing.sm))
+        }
         RefreshButton(state, onRefresh)
+    }
+}
+
+/** Collapses and reopens the task panel. Wide layout only. */
+@Composable
+private fun PanelToggle(open: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    val ink = DesignTokens.Colors.ink(CHAT_AREA)
+    Box(
+        modifier
+            .size(HEADER_BUTTON_SIZE)
+            .clip(CircleShape)
+            .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), CircleShape)
+            .clickable(role = Role.Button, onClick = onToggle)
+            .semantics { contentDescription = if (open) "작업 패널 접기" else "작업 패널 펼치기" }
+            .testTag("chat.tasks.toggle"),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            if (open) Icons.Outlined.KeyboardArrowRight else Icons.Outlined.KeyboardArrowLeft,
+            contentDescription = null,
+            tint = ink,
+            modifier = Modifier.size(HEADER_ICON_SIZE),
+        )
     }
 }
 
@@ -201,8 +512,14 @@ private fun Banner(text: String, color: Color, tag: String, onDismiss: (() -> Un
 }
 
 @Composable
-internal fun Messages(state: ChatUiState, modifier: Modifier, onCancelQueued: () -> Unit) {
-    val listState = rememberLazyListState()
+internal fun Messages(
+    state: ChatUiState,
+    modifier: Modifier,
+    // The caller owns the list state so the reading position survives the
+    // layout changing — folding, unfolding, or collapsing the task panel.
+    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+    onCancelQueued: () -> Unit = {},
+) {
     // The queued bubble is one more item, so following the list end (AC9)
     // reaches it too — a message held for after the reply is the newest thing
     // on screen and must not sit below the fold.

@@ -95,6 +95,22 @@ object DesignTokens {
         val xxl = 24.dp
     }
 
+    // docs/design-system/tokens.md §6.1 — the one width boundary between the
+    // narrow and the wide layout. It is read from the window's own available
+    // width, never from a device or orientation query, so a folded phone, a
+    // split window and a small window all get the narrow layout while an
+    // unfolded foldable gets the wide one even in portrait.
+    object Breakpoints {
+        val wide = 600.dp
+    }
+
+    // docs/design-system/tokens.md §6.2 — a wide layout's two panes.
+    object Split {
+        // ratio is 1:1; each pane takes this share of the width.
+        const val paneWeight = 1f
+        val rule = 1.dp
+    }
+
     object Radius {
         val chip = 999.dp
         val key = 6.dp
