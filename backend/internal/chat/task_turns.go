@@ -115,7 +115,16 @@ func (e *Engine) TaskTurns(
 	if limit > 0 {
 		query.Set("limit", strconv.Itoa(limit))
 	}
-	path := "/sessions/" + url.PathEscape(conv.platformSessionID) +
+	// A paired chat session reads its monitor's turns: the history belongs to
+	// the session that owns the task.
+	target, pair, err := e.workTarget(ctx, conv.platformSessionID)
+	if err != nil {
+		return out, err
+	}
+	if pair.Paired() && !pair.Reachable {
+		return out, fmt.Errorf("%w: the monitor session is %s", ErrTasksUnavailable, pair.State)
+	}
+	path := "/sessions/" + url.PathEscape(target) +
 		"/work/tasks/" + url.PathEscape(taskID) + "/turns"
 	if len(query) > 0 {
 		path += "?" + query.Encode()

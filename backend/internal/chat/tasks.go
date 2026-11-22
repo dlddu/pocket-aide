@@ -131,9 +131,13 @@ type TaskList struct {
 	// SessionID is the platform session these tasks were read from. The app
 	// keeps it so a page that arrives after the conversation moved to another
 	// session is discarded instead of shown under the new one.
-	SessionID string         `json:"session_id"`
-	Tasks     []Task         `json:"tasks"`
-	Counts    map[string]int `json:"counts"`
+	SessionID string `json:"session_id"`
+	// Monitor is the pair this list came from, when the chat session has one.
+	// The app shows the monitor's state beside the work so "quiet" and "not
+	// running" are different things on screen.
+	Monitor *MonitorPair   `json:"monitor,omitempty"`
+	Tasks   []Task         `json:"tasks"`
+	Counts  map[string]int `json:"counts"`
 	// Truncated says the walk stopped at its page bound with more to come, so
 	// the panel can say the list is partial instead of implying it is whole.
 	Truncated bool `json:"truncated"`
@@ -177,7 +181,23 @@ func (e *Engine) Tasks(ctx context.Context, userID int64) (TaskList, error) {
 	if conv.platformSessionID == "" {
 		return emptyTaskList(""), nil
 	}
-	return e.tasksOf(ctx, conv.platformSessionID)
+	// A paired chat session shows its monitor's work: the monitor owns the
+	// records, and this session only reads them.
+	target, pair, err := e.workTarget(ctx, conv.platformSessionID)
+	if err != nil {
+		return TaskList{}, err
+	}
+	if pair.Paired() && !pair.Reachable {
+		// The monitor is frozen or stopped. Reading its slot cannot succeed,
+		// so say that rather than present an empty panel as "no work".
+		return TaskList{}, fmt.Errorf("%w: the monitor session is %s", ErrTasksUnavailable, pair.State)
+	}
+	list, err := e.tasksOf(ctx, target)
+	if err != nil {
+		return TaskList{}, err
+	}
+	list.Monitor = &pair
+	return list, nil
 }
 
 func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error) {

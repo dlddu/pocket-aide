@@ -128,7 +128,22 @@ func (e *Engine) CreateTaskRequest(
 	if err != nil {
 		return out, err
 	}
-	path := "/sessions/" + url.PathEscape(conv.platformSessionID) +
+	// A paired chat session does not change a task: the instruction goes to
+	// the monitor that owns it, under the app's own stable request id, and the
+	// monitor decides and records. An unpaired session keeps leaving the
+	// request on its own task, as before.
+	target, pair, err := e.workTarget(ctx, conv.platformSessionID)
+	if err != nil {
+		return out, err
+	}
+	if pair.Paired() && !pair.Reachable {
+		// Not delivered. Saying "sent" here would be a lie the person would
+		// act on; the app shows it as still to send and may retry with the
+		// same request id.
+		return out, fmt.Errorf("%w: the monitor session is %s, so the instruction was not delivered",
+			ErrTasksUnavailable, pair.State)
+	}
+	path := "/sessions/" + url.PathEscape(target) +
 		"/work/tasks/" + url.PathEscape(taskID) + "/requests"
 	status, raw, err := e.platform.Do(ctx, http.MethodPost, path, payload)
 	if err != nil {
