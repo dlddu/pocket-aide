@@ -103,6 +103,7 @@ class ChatTaskPanelInteractionTest {
                     onSend = {},
                     onRefresh = {},
                     onDismissNotice = {},
+                    onCancelQueued = {},
                     listState = rememberLazyListState(),
                     panelOpen = true,
                     onTogglePanel = {},

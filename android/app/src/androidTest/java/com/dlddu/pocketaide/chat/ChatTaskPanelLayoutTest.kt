@@ -56,6 +56,7 @@ class ChatTaskPanelLayoutTest {
                     onSend = {},
                     onRefresh = {},
                     onDismissNotice = {},
+                    onCancelQueued = {},
                     listState = rememberLazyListState(),
                     panelOpen = panelOpen,
                     onTogglePanel = {},

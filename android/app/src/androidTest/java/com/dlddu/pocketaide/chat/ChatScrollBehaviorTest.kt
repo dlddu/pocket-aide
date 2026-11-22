@@ -94,7 +94,9 @@ class ChatScrollBehaviorTest {
         state.value = replying(first)
         compose.setContent {
             Box(Modifier.size(width = VIEWPORT_WIDTH, height = VIEWPORT_HEIGHT)) {
-                Messages(state.value, Modifier.fillMaxSize())
+                // This test is about following the list end, not about the
+                // queued bubble's cancel.
+                Messages(state.value, Modifier.fillMaxSize(), onCancelQueued = {})
             }
         }
         compose.waitForIdle()

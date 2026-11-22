@@ -3,6 +3,8 @@ package chat
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,11 +41,20 @@ const (
 	defaultPoll    = 700 * time.Millisecond
 	defaultTimeout = 40 * time.Minute
 	emptyReply     = "(응답이 비어 있습니다)"
+	// steerApplied is session-platform's answer when the running turn took a
+	// mid-turn message (AC-J9); anything else means it did not.
+	steerApplied = "applied"
+	// retryHold spaces out dispatches of a queued message whose last one
+	// failed. The apps poll GET /api/chat about once a second while they
+	// wait, and each poll could otherwise re-send to a refusing platform.
+	retryHold = 30 * time.Second
 )
 
 var (
-	ErrBusy           = errors.New("a reply is still in progress")
-	ErrNoConversation = errors.New("no codex session yet")
+	ErrBusy            = errors.New("a reply is still in progress")
+	ErrNoConversation  = errors.New("no codex session yet")
+	ErrQueueFull       = errors.New("a message is already queued")
+	ErrNoQueuedMessage = errors.New("no message queued")
 )
 
 // PlatformError is a session-platform answer the caller should relay.
@@ -91,9 +102,13 @@ type Engine struct {
 	timeout  time.Duration
 	now      func() time.Time
 
-	mu      sync.Mutex
-	turns   map[int64]*Pending
-	running sync.WaitGroup
+	mu    sync.Mutex
+	turns map[int64]*Pending
+	// retryAfter holds off the next dispatch of a message whose last one
+	// failed, so a platform that keeps refusing is not hammered once per
+	// poll. In memory only: a restart just means one earlier retry.
+	retryAfter map[int64]time.Time
+	running    sync.WaitGroup
 }
 
 func NewEngine(store *Store, platform Platform, logger *slog.Logger) *Engine {
@@ -103,7 +118,7 @@ func NewEngine(store *Store, platform Platform, logger *slog.Logger) *Engine {
 	return &Engine{
 		store: store, platform: platform, logger: logger,
 		poll: defaultPoll, timeout: defaultTimeout, now: time.Now,
-		turns: map[int64]*Pending{},
+		turns: map[int64]*Pending{}, retryAfter: map[int64]time.Time{},
 	}
 }
 
@@ -147,6 +162,17 @@ func (e *Engine) appendPending(userID int64, text string) {
 	e.mu.Lock()
 	if p, ok := e.turns[userID]; ok {
 		p.Content += text
+	}
+	e.mu.Unlock()
+}
+
+// resetPending clears a still-claimed turn's accumulated preview text before
+// a dequeued message starts a new one in its place.
+func (e *Engine) resetPending(userID int64) {
+	e.mu.Lock()
+	if p, ok := e.turns[userID]; ok {
+		p.Content = ""
+		p.StartedAt = e.now().Unix()
 	}
 	e.mu.Unlock()
 }
@@ -241,6 +267,231 @@ func (e *Engine) finishTurn(ctx context.Context, userID, convID int64, sessionID
 	if saveErr := e.store.SetPlatform(save, userID, convID, sessionID, next); saveErr != nil {
 		e.logger.Error("chat: save transcript offset", "user", userID, "err", saveErr)
 	}
+	e.resetPending(userID)
+	e.drainQueued(save, userID, convID)
+}
+
+// steer offers content to the turn in progress so it can change where that
+// turn is going (session-platform AC-J9). applied is true only when the
+// platform says the running turn took it; anything else — a turn that ended
+// first, a platform that does not take mid-turn messages — leaves the
+// message for the caller to queue instead, so it is never lost.
+func (e *Engine) steer(ctx context.Context, sessionID, content string) (bool, error) {
+	body, _ := json.Marshal(map[string]string{"text": content})
+	status, raw, err := e.platform.Do(ctx, http.MethodPost, "/sessions/"+url.PathEscape(sessionID)+"/steer", body)
+	if err != nil {
+		return false, err
+	}
+	switch status {
+	case http.StatusOK:
+		var out struct {
+			Status string `json:"status"`
+		}
+		if json.Unmarshal(raw, &out) == nil && out.Status == steerApplied {
+			return true, nil
+		}
+		return false, nil
+	case http.StatusConflict, http.StatusUnprocessableEntity, http.StatusNotFound, http.StatusMethodNotAllowed:
+		// 409 the turn would not take it; 422/404/405 the platform has no
+		// mid-turn path for this session at all. Both mean: queue it.
+		return false, nil
+	default:
+		return false, platformError("steer", status, raw)
+	}
+}
+
+// Queue is what a send does while a reply is in progress. It tries three
+// things in order, and the first that works wins (PRD-1 AC1):
+//
+//  1. send it as its own turn, when no reply is in progress;
+//  2. put it into the reply in progress, so that reply changes course
+//     (session-platform AC-J9) — the message is then part of that turn and
+//     shows up as a sent message;
+//  3. hold it for right after, as the queued message the user can cancel.
+//
+// At most one message waits at a time; a second arrival while one is already
+// queued is ErrQueueFull.
+func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Message, *QueuedMessage, error) {
+	msg, err := e.Send(ctx, userID, content)
+	if err == nil {
+		return msg, nil, nil
+	}
+	if !errors.Is(err, ErrBusy) {
+		return Message{}, nil, err
+	}
+	conv, cErr := e.store.Conversation(ctx, userID)
+	if cErr != nil {
+		return Message{}, nil, cErr
+	}
+	// The reply in progress may take the message and change course with it.
+	if conv.platformSessionID != "" {
+		applied, sErr := e.steer(ctx, conv.platformSessionID, content)
+		if sErr != nil {
+			e.logger.Warn("chat: mid-turn delivery failed; queueing instead", "user", userID, "err", sErr)
+		}
+		if applied {
+			// It belongs to the running turn now, so it reads as a message
+			// that went out — not as one still waiting.
+			sent, aErr := e.store.AppendMessage(context.WithoutCancel(ctx), userID, conv.ID, RoleUser, content)
+			if aErr != nil {
+				return Message{}, nil, aErr
+			}
+			return sent, nil, nil
+		}
+	}
+	existing, gErr := e.store.GetQueued(ctx, userID, conv.ID)
+	if gErr != nil {
+		return Message{}, nil, gErr
+	}
+	if existing != nil {
+		return Message{}, nil, ErrQueueFull
+	}
+	id, idErr := randomID()
+	if idErr != nil {
+		return Message{}, nil, idErr
+	}
+	q, sErr := e.store.SetQueued(ctx, userID, conv.ID, id, content, e.now().Unix())
+	if sErr != nil {
+		return Message{}, nil, sErr
+	}
+	// The turn in progress may have ended between the busy check above and
+	// the write just made, in which case nothing is left running to drain
+	// this message — claim it ourselves and start its turn if so. Whichever
+	// of this and the turn's own drainQueued call sees the row first wins;
+	// claim() makes that exclusive.
+	if e.claim(userID) {
+		e.running.Add(1)
+		go func() {
+			defer e.running.Done()
+			defer e.release(userID)
+			e.drainQueued(context.WithoutCancel(ctx), userID, conv.ID)
+		}()
+	}
+	return Message{}, &q, nil
+}
+
+// CancelQueued drops the queued message named by id, if it is still waiting
+// — once drainQueued has taken it there is nothing left to cancel, and the
+// caller sees ErrNoQueuedMessage rather than losing whatever took its place.
+func (e *Engine) CancelQueued(ctx context.Context, userID int64, id string) error {
+	conv, err := e.store.Conversation(ctx, userID)
+	if err != nil {
+		return err
+	}
+	cleared, err := e.store.ClearQueued(ctx, userID, conv.ID, id)
+	if err != nil {
+		return err
+	}
+	if !cleared {
+		return ErrNoQueuedMessage
+	}
+	e.forgetRetry(userID)
+	return nil
+}
+
+// ResumeQueued dispatches a message left waiting with no turn running behind
+// it — what a restart leaves, since the turn that would have drained it died
+// with the process. The apps' GET /api/chat poll is what calls this, so the
+// wait resumes without the user having to send anything.
+func (e *Engine) ResumeQueued(ctx context.Context, userID, convID int64) {
+	if !e.retryDue(userID) {
+		return
+	}
+	queued, err := e.store.GetQueued(ctx, userID, convID)
+	if err != nil || queued == nil {
+		return
+	}
+	if !e.claim(userID) {
+		return // a turn is running; its own drainQueued will take this one
+	}
+	e.running.Add(1)
+	go func() {
+		defer e.running.Done()
+		defer e.release(userID)
+		turnCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), e.timeout)
+		defer cancel()
+		e.drainQueued(turnCtx, userID, convID)
+	}()
+}
+
+func (e *Engine) retryDue(userID int64) bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return !e.now().Before(e.retryAfter[userID])
+}
+
+func (e *Engine) holdRetry(userID int64) {
+	e.mu.Lock()
+	e.retryAfter[userID] = e.now().Add(retryHold)
+	e.mu.Unlock()
+}
+
+func (e *Engine) forgetRetry(userID int64) {
+	e.mu.Lock()
+	delete(e.retryAfter, userID)
+	e.mu.Unlock()
+}
+
+// keepQueued puts a taken message back under its own id after a dispatch
+// that failed, so a message the user was told is waiting is never dropped on
+// the floor: the next turn end or poll tries it again.
+func (e *Engine) keepQueued(ctx context.Context, userID, convID int64, queued *QueuedMessage) {
+	e.holdRetry(userID)
+	if _, err := e.store.SetQueued(context.WithoutCancel(ctx), userID, convID, queued.ID, queued.Content, queued.QueuedAt); err != nil {
+		e.logger.Error("chat: keep queued message after a failed dispatch", "user", userID, "err", err)
+	}
+}
+
+// drainQueued sends the message waiting behind the turn that just ended, if
+// any, and follows its reply the same way a fresh Send would. The claim for
+// userID must already be held by the caller.
+func (e *Engine) drainQueued(ctx context.Context, userID, convID int64) {
+	queued, err := e.store.TakeQueued(ctx, userID, convID)
+	if err != nil {
+		e.logger.Error("chat: take queued message", "user", userID, "err", err)
+		return
+	}
+	if queued == nil {
+		return
+	}
+	conv, err := e.store.GetSession(ctx, userID, convID)
+	if err != nil {
+		e.logger.Error("chat: dequeue lookup conversation", "user", userID, "err", err)
+		e.keepQueued(ctx, userID, convID, queued)
+		return
+	}
+	sessionID, offset := conv.platformSessionID, conv.transcriptOffset
+	if sessionID == "" {
+		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
+			e.logger.Error("chat: dequeue open session", "user", userID, "err", err)
+			e.keepQueued(ctx, userID, convID, queued)
+			return
+		}
+	}
+	status, body, err := e.write(ctx, sessionID, queued.Content)
+	if err == nil && status == http.StatusNotFound {
+		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
+			e.logger.Error("chat: dequeue reopen session", "user", userID, "err", err)
+			e.keepQueued(ctx, userID, convID, queued)
+			return
+		}
+		status, body, err = e.write(ctx, sessionID, queued.Content)
+	}
+	if err != nil {
+		e.logger.Error("chat: dequeued message write failed", "user", userID, "err", err)
+		e.keepQueued(ctx, userID, convID, queued)
+		return
+	}
+	if status != http.StatusOK && status != http.StatusAccepted {
+		e.logger.Error("chat: dequeued message refused", "user", userID, "status", status, "body", string(body))
+		e.keepQueued(ctx, userID, convID, queued)
+		return
+	}
+	e.forgetRetry(userID)
+	if _, saveErr := e.store.AppendMessage(ctx, userID, convID, RoleUser, queued.Content); saveErr != nil {
+		e.logger.Error("chat: save dequeued message", "user", userID, "err", saveErr)
+	}
+	e.finishTurn(ctx, userID, convID, sessionID, offset)
 }
 
 // catchUp reads what the transcript holds past offset. Finished turns are
@@ -345,6 +596,14 @@ func (e *Engine) write(ctx context.Context, sessionID, content string) (int, []b
 
 func sessionName(userID int64) string {
 	return "pocket-aide-chat-" + strconv.FormatInt(userID, 10)
+}
+
+func randomID() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("read random: %w", err)
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // openSession gives the conversation a codex session. Creating one can

@@ -209,6 +209,7 @@ func main() {
 		p.Get("/api/chat", handlers.GetChat(chatStore, chatEngine, chatPresence))
 		p.Get("/api/chat/tasks", handlers.GetChatTasks(chatEngine))
 		p.Post("/api/chat/messages", handlers.SendChatMessage(chatEngine))
+		p.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(chatEngine))
 		p.Post("/api/chat/tasks/{taskID}/requests", handlers.PostChatTaskRequest(chatEngine))
 		p.Get("/api/chat/tasks/{taskID}/turns", handlers.GetChatTaskTurns(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
