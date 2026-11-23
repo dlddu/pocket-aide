@@ -3,8 +3,11 @@ package chat
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -24,6 +27,23 @@ import (
 // header. A deployment whose platform does not have the field yet, or a chat
 // session nobody monitors, resolves to no monitor and every existing path
 // keeps working unchanged.
+// monitorPairDisabledMarker is what the control plane says when the pair
+// feature is off on that deployment. Matching the statement — rather than the
+// bare 503 — is what keeps a transient outage from being read as "no monitor".
+const monitorPairDisabledMarker = "monitor pair is not enabled"
+
+var (
+	// ErrPairUnknown is a pair lookup that neither found a monitor nor proved
+	// there is none: a timeout, a 5xx, an unreadable reply. The panel reports
+	// it instead of falling back, because falling back would mean reading and
+	// writing the parent's own records — which a paired parent may not do.
+	ErrPairUnknown = errors.New("whether this chat session has a monitor could not be determined")
+	// ErrPairRefused is an authorization failure on that lookup. It is kept
+	// apart from ErrPairUnknown so a permission problem is never mistaken for
+	// a deployment without the feature.
+	ErrPairRefused = errors.New("the platform refused this backend's identity for the monitor pair")
+)
+
 const (
 	monitorPairTTL = 30 * time.Second
 	// monitorStateActive and monitorStateIdle are the states whose session can
@@ -90,17 +110,31 @@ func (e *Engine) monitorPair(ctx context.Context, chatSessionID string) (Monitor
 		e.pairs.mu.Unlock()
 		return MonitorPair{}, nil
 	}
-	// Anything but a clear "here is your monitor" means unpaired: 404 is a
-	// chat session nobody monitors, and an older control plane has no such
-	// route at all. Falling back to unpaired reads *this user's own* session,
-	// which is the behaviour every existing deployment has — never another
-	// session — so the panel stays available instead of failing on a lookup
-	// that is only an optimisation of which session to read.
-	if err != nil || status != http.StatusOK {
-		if err != nil {
-			e.logger.Warn("monitor pair lookup failed; reading this session's own work", "err", err)
-		}
+	// Only a *clear* answer may become "unpaired", because unpaired means the
+	// panel reads and writes this session's own work records — the very path a
+	// paired parent must not use. An ambiguous or refused lookup is an error
+	// the caller reports, never a quiet downgrade into writing here.
+	if err != nil {
+		return MonitorPair{}, fmt.Errorf("%w: %v", ErrPairUnknown, err)
+	}
+	switch {
+	case status == http.StatusOK:
+	case status == http.StatusNotFound:
+		// This session has no monitor. Clear, and the common case.
 		return unpaired()
+	case status == http.StatusNotImplemented:
+		// A control plane without the route: clearly an older deployment.
+		return unpaired()
+	case status == http.StatusServiceUnavailable && strings.Contains(string(raw), monitorPairDisabledMarker):
+		// The deployment says the feature is off. That is a statement, not a
+		// hiccup, so it is legacy too.
+		return unpaired()
+	case status == http.StatusUnauthorized, status == http.StatusForbidden:
+		// A refused lookup must never look like "no monitor": that would hand
+		// the parent its own write path back on an authorization failure.
+		return MonitorPair{}, fmt.Errorf("%w: the platform refused this backend's identity (%d)", ErrPairRefused, status)
+	default:
+		return MonitorPair{}, fmt.Errorf("%w: the platform answered %d", ErrPairUnknown, status)
 	}
 	var view struct {
 		Binding struct {
@@ -113,10 +147,11 @@ func (e *Engine) monitorPair(ctx context.Context, chatSessionID string) (Monitor
 		} `json:"monitor"`
 	}
 	if err := json.Unmarshal(raw, &view); err != nil {
-		e.logger.Warn("monitor pair reply not understood; reading this session's own work", "err", err)
-		return unpaired()
+		// A 200 we cannot read is ambiguous, not legacy.
+		return MonitorPair{}, fmt.Errorf("%w: the pair reply could not be read", ErrPairUnknown)
 	}
 	if view.Binding.MonitorSessionID == "" {
+		// A 200 that names no monitor is the platform saying there is none.
 		return unpaired()
 	}
 	pair := MonitorPair{SessionID: view.Binding.MonitorSessionID}

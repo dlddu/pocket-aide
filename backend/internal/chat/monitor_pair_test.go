@@ -3,6 +3,7 @@ package chat_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -246,5 +247,121 @@ func TestUnpairedChatSessionIsUnchanged(t *testing.T) {
 	}
 	if !strings.Contains(read, "/sessions/chat-1/work/tasks") || strings.Contains(read, "/monitor/") {
 		t.Fatalf("an unpaired panel read %q, want its own session's work route", read)
+	}
+}
+
+// pairLookup is a platform that answers the pair lookup with one fixed status
+// and body, so each branch of the contract can be checked on its own.
+type pairLookup struct {
+	status int
+	body   string
+	err    error
+	calls  []string
+}
+
+func (p *pairLookup) Do(_ context.Context, method, path string, _ []byte) (int, []byte, error) {
+	p.calls = append(p.calls, method+" "+path)
+	if strings.HasSuffix(path, "/monitor/pair") {
+		return p.status, []byte(p.body), p.err
+	}
+	// Any work read in these tests would mean the panel fell back to the
+	// parent's own records, which is exactly what must not happen.
+	return http.StatusOK, []byte(`{"tasks":[],"next_cursor":""}`), nil
+}
+
+func lookupEngine(t *testing.T, p *pairLookup) *chat.Engine {
+	t.Helper()
+	conn, err := db.Open(filepath.Join(t.TempDir(), "chat.db"))
+	if err != nil {
+		t.Fatalf("db open: %v", err)
+	}
+	t.Cleanup(func() { _ = conn.Close() })
+	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1')`); err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+	store := chat.New(conn)
+	engine := chat.NewEngine(store, p, nil)
+	t.Cleanup(engine.Wait)
+	bindSession(t, store, 1, "chat-1")
+	return engine
+}
+
+// Only a clear answer may be read as unpaired, because unpaired is the path
+// that reads and writes the parent's own records.
+func TestPairLookupTreatsOnlyClearAnswersAsLegacy(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		status int
+		body   string
+	}{
+		{"no monitor for this session", http.StatusNotFound, "this session has no monitor"},
+		{"control plane without the route", http.StatusNotImplemented, ""},
+		{"deployment says the feature is off", http.StatusServiceUnavailable,
+			"the managed monitor pair is not enabled on this deployment"},
+		{"a 200 that names no monitor", http.StatusOK, `{"role":"parent","binding":{}}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &pairLookup{status: tc.status, body: tc.body}
+			engine := lookupEngine(t, p)
+			list, err := engine.Tasks(context.Background(), 1)
+			if err != nil {
+				t.Fatalf("a clear answer must read as unpaired: %v", err)
+			}
+			if list.Monitor != nil && list.Monitor.Paired() {
+				t.Fatalf("unexpected pair: %+v", list.Monitor)
+			}
+			var read string
+			for _, c := range p.calls {
+				if strings.Contains(c, "/work/tasks") {
+					read = c
+				}
+			}
+			if !strings.Contains(read, "/sessions/chat-1/work/tasks") {
+				t.Fatalf("legacy read = %q, want its own session", read)
+			}
+		})
+	}
+}
+
+// An ambiguous or refused lookup is an error. It must not become "unpaired",
+// because that hands the parent its own write path back.
+func TestPairLookupRefusesToGuessOnAmbiguityOrRefusal(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		status int
+		body   string
+		err    error
+		want   error
+	}{
+		{"unauthenticated", http.StatusUnauthorized, "no", nil, chat.ErrPairRefused},
+		{"forbidden — another tenant", http.StatusForbidden, "no", nil, chat.ErrPairRefused},
+		{"platform error", http.StatusInternalServerError, "boom", nil, chat.ErrPairUnknown},
+		{"gateway timeout", http.StatusGatewayTimeout, "", nil, chat.ErrPairUnknown},
+		{"service unavailable without the feature statement", http.StatusServiceUnavailable, "upstream down", nil, chat.ErrPairUnknown},
+		{"transport failure", 0, "", errors.New("dial tcp: i/o timeout"), chat.ErrPairUnknown},
+		{"a 200 we cannot read", http.StatusOK, "{not json", nil, chat.ErrPairUnknown},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &pairLookup{status: tc.status, body: tc.body, err: tc.err}
+			engine := lookupEngine(t, p)
+			if _, err := engine.Tasks(context.Background(), 1); !errors.Is(err, tc.want) {
+				t.Fatalf("Tasks error = %v, want %v", err, tc.want)
+			}
+			// Neither the list nor a send may have reached the parent's own
+			// work records.
+			for _, c := range p.calls {
+				if strings.Contains(c, "/work/tasks") {
+					t.Fatalf("an unclear lookup still read work records: %q", c)
+				}
+			}
+			if _, err := engine.CreateTaskRequest(context.Background(), 1, "task-1", "req-x", "하지 마", 0); !errors.Is(err, tc.want) {
+				t.Fatalf("CreateTaskRequest error = %v, want %v", err, tc.want)
+			}
+			for _, c := range p.calls {
+				if strings.Contains(c, "/requests") {
+					t.Fatalf("an unclear lookup still wrote to the parent's records: %q", c)
+				}
+			}
+		})
 	}
 }

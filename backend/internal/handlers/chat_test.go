@@ -63,6 +63,12 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t := p.transcript[id]
 		offset := int(body["offset"].(float64))
 		_ = json.NewEncoder(w).Encode(map[string]any{"payload": t[min(offset, len(t)):], "nextOffset": len(t)})
+	case strings.HasSuffix(path, "/monitor/pair"):
+		// This fixture's chat session has no monitor, which is what the
+		// control plane answers with 404. Saying so explicitly is part of the
+		// contract: an unclear reply must not be read as "unpaired".
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte("this session has no monitor"))
 	case strings.Contains(path, "/work/tasks"):
 		if p.workStatus != 0 {
 			w.WriteHeader(p.workStatus)
