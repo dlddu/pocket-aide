@@ -140,7 +140,7 @@ func (e *Engine) CreateTaskRequest(
 	// the monitor is frozen, so a retry with the same id is safe and never a
 	// second delegation. An unpaired session keeps leaving the request on its
 	// own task, as before.
-	prefix, _, err := e.workPrefix(ctx, conv.platformSessionID)
+	prefix, pair, err := e.workPrefix(ctx, conv.platformSessionID)
 	if err != nil {
 		return out, err
 	}
@@ -171,6 +171,13 @@ func (e *Engine) CreateTaskRequest(
 		if json.Unmarshal(raw, &pairedAnswer) == nil && pairedAnswer.Item != nil {
 			answer.State = pairedAnswer.Item.State
 			answer.Accepted = status == http.StatusAccepted || pairedAnswer.Item.TurnID == nil
+		}
+		// A live monitor is nudged so it discovers this instruction now rather
+		// than at its next scheduled run. A frozen one is left alone: the
+		// platform already holds the instruction, and waking it would be a
+		// change the person did not ask for.
+		if pair.Paired() && answer.Accepted {
+			e.NudgeMonitor(ctx, conv.platformSessionID, pair)
 		}
 		return answer, nil
 	case http.StatusNotFound:

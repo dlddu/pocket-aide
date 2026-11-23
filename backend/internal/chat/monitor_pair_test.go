@@ -365,3 +365,168 @@ func TestPairLookupRefusesToGuessOnAmbiguityOrRefusal(t *testing.T) {
 		})
 	}
 }
+
+// setupPlatform is the platform as the opt-in sees it: a session list, a
+// create that records `monitorFor`, the pair lookup that then reports it, and
+// writes it counts so a test can show the bootstrap turn really started.
+type setupPlatform struct {
+	sessions []map[string]any
+	creates  []string
+	writes   []string
+	nextID   int
+}
+
+func (p *setupPlatform) Do(_ context.Context, method, path string, body []byte) (int, []byte, error) {
+	switch {
+	case method == http.MethodGet && path == "/sessions":
+		raw, _ := json.Marshal(map[string]any{"sessions": p.sessions})
+		return http.StatusOK, raw, nil
+	case method == http.MethodPost && path == "/sessions":
+		p.creates = append(p.creates, string(body))
+		var in map[string]any
+		_ = json.Unmarshal(body, &in)
+		p.nextID++
+		id := "created-" + string(rune('0'+p.nextID))
+		p.sessions = append(p.sessions, map[string]any{
+			"id": id, "name": in["name"], "state": "active", "monitorFor": in["monitorFor"],
+		})
+		raw, _ := json.Marshal(map[string]any{"id": id, "state": "active"})
+		return http.StatusCreated, raw, nil
+	case method == http.MethodPost && strings.HasSuffix(path, "/write"):
+		p.writes = append(p.writes, path+" "+string(body))
+		return http.StatusOK, []byte(`{}`), nil
+	case strings.HasSuffix(path, "/monitor/pair"):
+		parent := strings.TrimPrefix(path, "/sessions/")
+		parent, _, _ = strings.Cut(parent, "/")
+		for _, s := range p.sessions {
+			if s["monitorFor"] == parent {
+				raw, _ := json.Marshal(map[string]any{
+					"role":    "parent",
+					"binding": map[string]any{"parentSessionId": parent, "monitorSessionId": s["id"]},
+					"monitor": map[string]any{"state": s["state"], "reads": "available", "intake": "available"},
+				})
+				return http.StatusOK, raw, nil
+			}
+		}
+		return http.StatusNotFound, []byte("this session has no monitor"), nil
+	}
+	return http.StatusNotFound, nil, nil
+}
+
+func setupEngine(t *testing.T, p *setupPlatform, chatSession string) *chat.Engine {
+	t.Helper()
+	conn, err := db.Open(filepath.Join(t.TempDir(), "chat.db"))
+	if err != nil {
+		t.Fatalf("db open: %v", err)
+	}
+	t.Cleanup(func() { _ = conn.Close() })
+	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1')`); err != nil {
+		t.Fatalf("seed users: %v", err)
+	}
+	store := chat.New(conn)
+	engine := chat.NewEngine(store, p, nil)
+	t.Cleanup(engine.Wait)
+	if chatSession != "" {
+		bindSession(t, store, 1, chatSession)
+	}
+	return engine
+}
+
+// Turning the monitor on creates exactly one session, with the monitor bundle
+// and this conversation's parent, and starts its first turn. Asking again
+// reuses it.
+func TestEnableMonitorCreatesOnceWithTheBundleAndBootstraps(t *testing.T) {
+	p := &setupPlatform{sessions: []map[string]any{{"id": "chat-1", "name": "chat", "state": "active"}}}
+	engine := setupEngine(t, p, "chat-1")
+
+	first, err := engine.EnableMonitor(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !first.Created || first.SessionID == "" {
+		t.Fatalf("first enable = %+v, want a created monitor", first)
+	}
+	if !first.Bootstrapped {
+		t.Fatalf("the monitor's first turn did not start: %+v", first)
+	}
+	if len(p.creates) != 1 {
+		t.Fatalf("creates = %v, want one", p.creates)
+	}
+	// The bundle and the parent are what make it a monitor of this chat
+	// session; the platform records the pair from monitorFor.
+	if !strings.Contains(p.creates[0], `"plugins":["monitor-session"]`) {
+		t.Fatalf("create body has the wrong bundle: %s", p.creates[0])
+	}
+	if !strings.Contains(p.creates[0], `"monitorFor":"chat-1"`) {
+		t.Fatalf("create body does not bind the parent: %s", p.creates[0])
+	}
+	if len(p.writes) != 1 || !strings.Contains(p.writes[0], "/sessions/"+first.SessionID+"/write") {
+		t.Fatalf("bootstrap write = %v", p.writes)
+	}
+
+	// Again: the pair already exists, so nothing is created and no second
+	// writer appears.
+	again, err := engine.EnableMonitor(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again.Created || again.SessionID != first.SessionID {
+		t.Fatalf("second enable = %+v, want the same monitor reused", again)
+	}
+	if len(p.creates) != 1 {
+		t.Fatalf("creates after reuse = %v", p.creates)
+	}
+}
+
+// Reading the status creates nothing and does not wake the monitor.
+func TestMonitorStatusIsAReadOnly(t *testing.T) {
+	p := &setupPlatform{sessions: []map[string]any{
+		{"id": "chat-1", "name": "chat", "state": "active"},
+		{"id": "mon-1", "name": "chat-monitor", "state": "snapshot", "monitorFor": "chat-1"},
+	}}
+	engine := setupEngine(t, p, "chat-1")
+	got, err := engine.MonitorStatus(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.SessionID != "mon-1" || got.Created {
+		t.Fatalf("status = %+v", got)
+	}
+	if len(p.creates) != 0 || len(p.writes) != 0 {
+		t.Fatalf("a status read touched the platform: creates=%v writes=%v", p.creates, p.writes)
+	}
+}
+
+// A monitor left over from a lost create reply is adopted, not duplicated —
+// and only when the platform's own record says it monitors *this* parent.
+func TestEnableMonitorAdoptsItsOwnAndNeverAnothersParent(t *testing.T) {
+	p := &setupPlatform{sessions: []map[string]any{
+		{"id": "chat-1", "name": "chat", "state": "active"},
+		// Someone else's monitor, same tenant, same naming scheme.
+		{"id": "mon-other", "name": "chat-monitor", "state": "active", "monitorFor": "chat-2"},
+	}}
+	engine := setupEngine(t, p, "chat-1")
+	got, err := engine.EnableMonitor(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.SessionID == "mon-other" {
+		t.Fatal("adopted another parent's monitor")
+	}
+	if !got.Created || len(p.creates) != 1 {
+		t.Fatalf("want one fresh create, got %+v / %v", got, p.creates)
+	}
+}
+
+// Without a chat session there is nothing to monitor, and the opt-in says so
+// instead of creating a stray session.
+func TestEnableMonitorNeedsAConversation(t *testing.T) {
+	p := &setupPlatform{}
+	engine := setupEngine(t, p, "")
+	if _, err := engine.EnableMonitor(context.Background(), 1); !errors.Is(err, chat.ErrNoConversation) {
+		t.Fatalf("enable without a chat session = %v", err)
+	}
+	if len(p.creates) != 0 {
+		t.Fatalf("creates = %v, want none", p.creates)
+	}
+}
