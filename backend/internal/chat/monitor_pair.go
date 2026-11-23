@@ -44,14 +44,9 @@ var (
 	ErrPairRefused = errors.New("the platform refused this backend's identity for the monitor pair")
 )
 
-const (
-	monitorPairTTL = 30 * time.Second
-	// monitorStateActive and monitorStateIdle are the states whose session can
-	// answer a read. Anything else is frozen, stopped or gone, and the panel
-	// says so instead of showing an empty list.
-	monitorStateActive = "active"
-	monitorStateIdle   = "idle"
-)
+// monitorPairTTL keeps the pair lookup off every read. The platform's answer
+// changes only when a monitor is bound or unbound, which is rare.
+const monitorPairTTL = 30 * time.Second
 
 // MonitorPair is what the panel needs to know about the monitor behind a chat
 // session: whether there is one, and whether it can answer right now.
