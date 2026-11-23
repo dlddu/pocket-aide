@@ -220,6 +220,17 @@ private fun PanelHeader(
         if ((state.counts[ChatTaskStatus.COMPLETED] ?: 0) > 0 || filter.hideCompleted) {
             HideCompletedToggle(filter.hideCompleted) { onFilterChange(filter.copy(hideCompleted = it)) }
         }
+        // The monitor behind this panel, when there is one. A list served from
+        // what the monitor published carries the time it was published, so a
+        // panel opened while the monitor is away is never read as live.
+        state.monitor?.let { monitor ->
+            Text(
+                monitorNote(monitor, state.source, state.asOf),
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.testTag("chat.tasks.monitor"),
+            )
+        }
         if (state.truncated) {
             // A prefix must not read as the whole ledger.
             Text(
@@ -400,3 +411,18 @@ private fun PanelCentre(content: @Composable () -> Unit) {
  */
 fun isWideChatWindow(availableWidth: androidx.compose.ui.unit.Dp): Boolean =
     availableWidth >= DesignTokens.Breakpoints.wide
+
+// monitorNote is the one caption line the panel shows about the monitor: what
+// it is doing, and — when the rows are the state it published rather than its
+// live records — when that state was saved. A monitor that cannot take an
+// instruction right now says so, because a send then waits instead of running.
+internal fun monitorNote(monitor: ChatTaskMonitor, source: String, asOf: String): String {
+    val parts = mutableListOf("모니터 " + (monitor.state.ifBlank { "상태 미확인" }))
+    if (source == "published") {
+        parts += if (asOf.isBlank()) "저장된 상태" else "저장 시각 " + asOf
+    }
+    if (!monitor.intakeLive) {
+        parts += "보낸 지시는 접수 후 대기"
+    }
+    return parts.joinToString(" · ")
+}
