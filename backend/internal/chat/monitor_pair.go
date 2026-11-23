@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -44,6 +45,18 @@ type MonitorPair struct {
 	// False is a frozen or stopped monitor: the panel shows the last state it
 	// has with its time, and an instruction is reported as not delivered.
 	Reachable bool `json:"reachable"`
+	// IntakeLive is whether the monitor can take an instruction right now. It
+	// is false while the monitor is frozen: the platform still accepts the
+	// instruction durably, and the app shows it as waiting rather than done.
+	IntakeLive bool `json:"intake_live"`
+}
+
+// monitorBase is the backend-facing pair surface for the parent session this
+// backend's tenant owns. The monitor is never named here — the platform takes
+// it from the binding, so nothing the app or this process says can point the
+// read at another pair.
+func monitorBase(parentSessionID string) string {
+	return "/sessions/" + url.PathEscape(parentSessionID) + "/monitor"
 }
 
 // Paired reports whether the panel should address a monitor.
@@ -54,12 +67,6 @@ type monitorPairCache struct {
 	at   time.Time
 	for_ string
 	pair MonitorPair
-}
-
-type platformSession struct {
-	ID         string `json:"id"`
-	State      string `json:"state"`
-	MonitorFor string `json:"monitorFor"`
 }
 
 // monitorPair resolves the monitor of chatSessionID. The lookup is the
@@ -77,45 +84,53 @@ func (e *Engine) monitorPair(ctx context.Context, chatSessionID string) (Monitor
 	}
 	e.pairs.mu.Unlock()
 
-	status, raw, err := e.platform.Do(ctx, http.MethodGet, "/sessions", nil)
+	status, raw, err := e.platform.Do(ctx, http.MethodGet, monitorBase(chatSessionID)+"/pair", nil)
 	if err != nil {
-		return MonitorPair{}, fmt.Errorf("list sessions: %w", err)
+		return MonitorPair{}, fmt.Errorf("read monitor pair: %w", err)
 	}
-	switch status {
-	case http.StatusOK:
-	case http.StatusNotFound, http.StatusNotImplemented:
-		// A control plane without the session list, or without the pair field
-		// on it, cannot have a pair either: this chat session is unpaired and
-		// every existing path keeps working. Cache it so the lookup is not
-		// repeated per read.
+	unpaired := func() (MonitorPair, error) {
 		e.pairs.mu.Lock()
 		e.pairs.for_, e.pairs.pair, e.pairs.at = chatSessionID, MonitorPair{}, e.now()
 		e.pairs.mu.Unlock()
 		return MonitorPair{}, nil
+	}
+	switch status {
+	case http.StatusOK:
+	case http.StatusNotFound, http.StatusNotImplemented, http.StatusServiceUnavailable:
+		// 404 is a chat session nobody monitors; 501/503 is a control plane
+		// without the feature. Either way this session is unpaired and every
+		// existing path keeps working. Cached so the lookup is not repeated
+		// per read.
+		return unpaired()
 	default:
 		// Anything else is a real failure. The panel must not guess "unpaired"
 		// from it, because that would read the wrong session's work.
-		return MonitorPair{}, fmt.Errorf("list sessions: platform answered %d", status)
+		return MonitorPair{}, fmt.Errorf("read monitor pair: platform answered %d", status)
 	}
-	var sessions []platformSession
-	if err := json.Unmarshal(raw, &sessions); err != nil {
-		// Some deployments wrap the list; try that shape before giving up.
-		var wrapped struct {
-			Sessions []platformSession `json:"sessions"`
-		}
-		if err2 := json.Unmarshal(raw, &wrapped); err2 != nil {
-			return MonitorPair{}, fmt.Errorf("decode sessions: %w", err)
-		}
-		sessions = wrapped.Sessions
+	var view struct {
+		Binding struct {
+			MonitorSessionID string `json:"monitorSessionId"`
+		} `json:"binding"`
+		Monitor *struct {
+			State  string `json:"state"`
+			Reads  string `json:"reads"`
+			Intake string `json:"intake"`
+		} `json:"monitor"`
 	}
-	var pair MonitorPair
-	for _, s := range sessions {
-		if s.MonitorFor != chatSessionID {
-			continue
-		}
-		pair = MonitorPair{SessionID: s.ID, State: s.State,
-			Reachable: s.State == monitorStateActive || s.State == monitorStateIdle}
-		break
+	if err := json.Unmarshal(raw, &view); err != nil {
+		return MonitorPair{}, fmt.Errorf("decode monitor pair: %w", err)
+	}
+	if view.Binding.MonitorSessionID == "" {
+		return unpaired()
+	}
+	pair := MonitorPair{SessionID: view.Binding.MonitorSessionID}
+	if view.Monitor != nil {
+		pair.State = view.Monitor.State
+		// Reads stay available while the monitor is away: the platform serves
+		// the state the monitor published, with the time it published it.
+		// Intake is what stops, and the platform says so.
+		pair.Reachable = true
+		pair.IntakeLive = view.Monitor.Intake == "available"
 	}
 	e.pairs.mu.Lock()
 	e.pairs.for_, e.pairs.pair, e.pairs.at = chatSessionID, pair, e.now()
@@ -123,15 +138,17 @@ func (e *Engine) monitorPair(ctx context.Context, chatSessionID string) (Monitor
 	return pair, nil
 }
 
-// workTarget is the session whose work records the panel shows, and the pair
-// it came from. For an unpaired chat session it is the chat session itself.
-func (e *Engine) workTarget(ctx context.Context, chatSessionID string) (string, MonitorPair, error) {
+// workPrefix is the path the panel reads and writes under, and the pair it
+// came from. A paired chat session uses the backend-facing monitor surface —
+// which answers while the monitor is frozen, from what it published — and an
+// unpaired one keeps reading its own session's work records as before.
+func (e *Engine) workPrefix(ctx context.Context, chatSessionID string) (string, MonitorPair, error) {
 	pair, err := e.monitorPair(ctx, chatSessionID)
 	if err != nil {
 		return "", MonitorPair{}, err
 	}
 	if pair.Paired() {
-		return pair.SessionID, pair, nil
+		return monitorBase(chatSessionID), pair, nil
 	}
-	return chatSessionID, pair, nil
+	return "/sessions/" + url.PathEscape(chatSessionID), pair, nil
 }

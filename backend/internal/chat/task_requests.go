@@ -75,6 +75,12 @@ var workRecordID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 type TaskRequestStored struct {
 	Turn     TaskTurn `json:"turn"`
 	Replayed bool     `json:"replayed"`
+	// State and Accepted describe a paired send: the monitor owns the task, so
+	// an instruction is first accepted durably ("accepted") and becomes a turn
+	// when the monitor takes it ("forwarded"). Accepted true means the app
+	// should show it as waiting, not done.
+	State    string `json:"state,omitempty"`
+	Accepted bool   `json:"accepted,omitempty"`
 }
 
 // CreateTaskRequest stores one request on taskID of the work records belonging
@@ -130,27 +136,21 @@ func (e *Engine) CreateTaskRequest(
 	}
 	// A paired chat session does not change a task: the instruction goes to
 	// the monitor that owns it, under the app's own stable request id, and the
-	// monitor decides and records. An unpaired session keeps leaving the
-	// request on its own task, as before.
-	target, pair, err := e.workTarget(ctx, conv.platformSessionID)
+	// monitor decides and records. The platform accepts it durably even while
+	// the monitor is frozen, so a retry with the same id is safe and never a
+	// second delegation. An unpaired session keeps leaving the request on its
+	// own task, as before.
+	prefix, _, err := e.workPrefix(ctx, conv.platformSessionID)
 	if err != nil {
 		return out, err
 	}
-	if pair.Paired() && !pair.Reachable {
-		// Not delivered. Saying "sent" here would be a lie the person would
-		// act on; the app shows it as still to send and may retry with the
-		// same request id.
-		return out, fmt.Errorf("%w: the monitor session is %s, so the instruction was not delivered",
-			ErrTasksUnavailable, pair.State)
-	}
-	path := "/sessions/" + url.PathEscape(target) +
-		"/work/tasks/" + url.PathEscape(taskID) + "/requests"
+	path := prefix + "/work/tasks/" + url.PathEscape(taskID) + "/requests"
 	status, raw, err := e.platform.Do(ctx, http.MethodPost, path, payload)
 	if err != nil {
 		return out, fmt.Errorf("store task request: %w", err)
 	}
 	switch status {
-	case http.StatusCreated, http.StatusOK:
+	case http.StatusCreated, http.StatusOK, http.StatusAccepted:
 		var answer TaskRequestStored
 		if err := json.Unmarshal(raw, &answer); err != nil {
 			return out, fmt.Errorf("decode stored task request: %w", err)
@@ -158,6 +158,20 @@ func (e *Engine) CreateTaskRequest(
 		// The platform answers 200 for a replay and 201 for a first store; the
 		// body says so too, and the status is what the app can rely on.
 		answer.Replayed = answer.Replayed || status == http.StatusOK
+		// The paired surface also answers 202: the instruction is durably
+		// accepted but the monitor has not taken it as a turn yet. The app
+		// shows that as waiting — not as done, and not as a failure to retry
+		// blindly, because the same request id is already held.
+		var pairedAnswer struct {
+			Item *struct {
+				State  string `json:"state"`
+				TurnID *int64 `json:"turnId"`
+			} `json:"item"`
+		}
+		if json.Unmarshal(raw, &pairedAnswer) == nil && pairedAnswer.Item != nil {
+			answer.State = pairedAnswer.Item.State
+			answer.Accepted = status == http.StatusAccepted || pairedAnswer.Item.TurnID == nil
+		}
 		return answer, nil
 	case http.StatusNotFound:
 		// Either the session is gone or the task is not among its records. Both
