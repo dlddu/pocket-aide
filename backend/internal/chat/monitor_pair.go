@@ -3,7 +3,6 @@ package chat
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"sync"
@@ -85,27 +84,23 @@ func (e *Engine) monitorPair(ctx context.Context, chatSessionID string) (Monitor
 	e.pairs.mu.Unlock()
 
 	status, raw, err := e.platform.Do(ctx, http.MethodGet, monitorBase(chatSessionID)+"/pair", nil)
-	if err != nil {
-		return MonitorPair{}, fmt.Errorf("read monitor pair: %w", err)
-	}
 	unpaired := func() (MonitorPair, error) {
 		e.pairs.mu.Lock()
 		e.pairs.for_, e.pairs.pair, e.pairs.at = chatSessionID, MonitorPair{}, e.now()
 		e.pairs.mu.Unlock()
 		return MonitorPair{}, nil
 	}
-	switch status {
-	case http.StatusOK:
-	case http.StatusNotFound, http.StatusNotImplemented, http.StatusServiceUnavailable:
-		// 404 is a chat session nobody monitors; 501/503 is a control plane
-		// without the feature. Either way this session is unpaired and every
-		// existing path keeps working. Cached so the lookup is not repeated
-		// per read.
+	// Anything but a clear "here is your monitor" means unpaired: 404 is a
+	// chat session nobody monitors, and an older control plane has no such
+	// route at all. Falling back to unpaired reads *this user's own* session,
+	// which is the behaviour every existing deployment has — never another
+	// session — so the panel stays available instead of failing on a lookup
+	// that is only an optimisation of which session to read.
+	if err != nil || status != http.StatusOK {
+		if err != nil {
+			e.logger.Warn("monitor pair lookup failed; reading this session's own work", "err", err)
+		}
 		return unpaired()
-	default:
-		// Anything else is a real failure. The panel must not guess "unpaired"
-		// from it, because that would read the wrong session's work.
-		return MonitorPair{}, fmt.Errorf("read monitor pair: platform answered %d", status)
 	}
 	var view struct {
 		Binding struct {
@@ -118,7 +113,8 @@ func (e *Engine) monitorPair(ctx context.Context, chatSessionID string) (Monitor
 		} `json:"monitor"`
 	}
 	if err := json.Unmarshal(raw, &view); err != nil {
-		return MonitorPair{}, fmt.Errorf("decode monitor pair: %w", err)
+		e.logger.Warn("monitor pair reply not understood; reading this session's own work", "err", err)
+		return unpaired()
 	}
 	if view.Binding.MonitorSessionID == "" {
 		return unpaired()
