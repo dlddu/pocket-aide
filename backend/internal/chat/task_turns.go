@@ -115,8 +115,13 @@ func (e *Engine) TaskTurns(
 	if limit > 0 {
 		query.Set("limit", strconv.Itoa(limit))
 	}
-	path := "/sessions/" + url.PathEscape(conv.platformSessionID) +
-		"/work/tasks/" + url.PathEscape(taskID) + "/turns"
+	// A paired chat session reads its monitor's turns, through the surface
+	// that answers while the monitor is away.
+	prefix, _, err := e.workPrefix(ctx, conv.platformSessionID)
+	if err != nil {
+		return out, err
+	}
+	path := prefix + "/work/tasks/" + url.PathEscape(taskID) + "/turns"
 	if len(query) > 0 {
 		path += "?" + query.Encode()
 	}

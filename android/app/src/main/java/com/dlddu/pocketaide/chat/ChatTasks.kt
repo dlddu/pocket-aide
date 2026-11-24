@@ -94,6 +94,27 @@ data class ChatTaskList(
     // The backend could not walk the whole ledger, so this is a prefix. Saying
     // so keeps a partial list from reading as "this is all the work".
     val truncated: Boolean = false,
+    // The monitor that owns this work, when the chat session has one. The
+    // panel shows its state so "nothing to report" and "not running" are
+    // different things on screen.
+    val monitor: ChatTaskMonitor? = null,
+    // Where the rows came from: "slot" is the monitor's live records and
+    // "published" is the state it last published. asOf is set for published
+    // rows, so a list read while the monitor is away is never shown as live.
+    val source: String = "",
+    @SerialName("as_of") val asOf: String = "",
+)
+
+// ChatTaskMonitor is the monitor behind a paired chat session, as the backend
+// reports it.
+@Serializable
+data class ChatTaskMonitor(
+    @SerialName("session_id") val sessionId: String = "",
+    val state: String = "",
+    // Whether an instruction can reach the monitor right now. False is a
+    // frozen monitor: the platform still accepts it durably, and the panel
+    // says it is waiting rather than done.
+    @SerialName("intake_live") val intakeLive: Boolean = false,
 )
 
 object ChatTaskStatus {
