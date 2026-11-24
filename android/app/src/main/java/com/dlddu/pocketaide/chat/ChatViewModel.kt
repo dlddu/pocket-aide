@@ -43,12 +43,6 @@ data class ChatTasksUiState(
     val tasks: List<ChatTask> = emptyList(),
     val counts: Map<String, Int> = emptyMap(),
     val truncated: Boolean = false,
-    // The monitor that owns this work, and where the rows came from. Carried
-    // into the panel so a list read while the monitor is away is labelled
-    // with the time it was published rather than shown as live.
-    val monitor: ChatTaskMonitor? = null,
-    val source: String = "",
-    val asOf: String = "",
     val hasLoaded: Boolean = false,
     val error: ChatTaskError? = null,
 ) {
@@ -332,9 +326,6 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                     tasks = list.tasks,
                     counts = list.counts,
                     truncated = list.truncated,
-                    monitor = list.monitor,
-                    source = list.source,
-                    asOf = list.asOf,
                     hasLoaded = true,
                     error = null,
                 )
@@ -346,10 +337,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             val failure = ChatTaskError.from(e)
             // The list that is on screen belongs to a session we can no longer
             // read, so it is cleared rather than left to look current.
-            _tasks.update {
-                it.copy(tasks = emptyList(), counts = emptyMap(), truncated = false,
-                    monitor = null, source = "", asOf = "", hasLoaded = true, error = failure)
-            }
+            _tasks.update { it.copy(tasks = emptyList(), counts = emptyMap(), truncated = false, hasLoaded = true, error = failure) }
         }
     }
 

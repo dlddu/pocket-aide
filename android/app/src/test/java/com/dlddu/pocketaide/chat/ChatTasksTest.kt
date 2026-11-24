@@ -194,30 +194,3 @@ class ChatTasksTest {
         )
     }
 }
-
-class ChatTaskMonitorNoteTest {
-    @Test
-    fun aLivePairSaysWhatTheMonitorIsDoing() {
-        val note = monitorNote(ChatTaskMonitor(sessionId = "m1", state = "active", intakeLive = true), "slot", "")
-        assertEquals("모니터 active", note)
-    }
-
-    @Test
-    fun aPublishedListCarriesWhenItWasSaved() {
-        val note = monitorNote(
-            ChatTaskMonitor(sessionId = "m1", state = "snapshot", intakeLive = false),
-            "published",
-            "2026-11-22T01:00:00Z",
-        )
-        // The time the state was saved, and the fact a send will wait, are both
-        // on screen — a frozen panel must not read as live.
-        assertTrue(note, note.contains("저장 시각 2026-11-22T01:00:00Z"))
-        assertTrue(note, note.contains("접수 후 대기"))
-    }
-
-    @Test
-    fun anUnknownStateStillReadsAsASentence() {
-        val note = monitorNote(ChatTaskMonitor(sessionId = "m1"), "slot", "")
-        assertTrue(note, note.contains("상태 미확인"))
-    }
-}

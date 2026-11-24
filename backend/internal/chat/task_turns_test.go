@@ -279,17 +279,9 @@ func TestTaskTurns_PagesWithTheCursor(t *testing.T) {
 	if got.NextCursor != 7 {
 		t.Fatalf("next_cursor = %d", got.NextCursor)
 	}
-	// The pair lookup comes first on a cold cache; the turn read is the call
-	// under test here.
-	var turnCalls []string
-	for _, c := range platform.calls {
-		if strings.Contains(c, "/turns") {
-			turnCalls = append(turnCalls, c)
-		}
-	}
-	if len(turnCalls) != 1 ||
-		!strings.Contains(turnCalls[0], "after_turn_id=4") ||
-		!strings.Contains(turnCalls[0], "limit=2") {
+	if len(platform.calls) != 1 ||
+		!strings.Contains(platform.calls[0], "after_turn_id=4") ||
+		!strings.Contains(platform.calls[0], "limit=2") {
 		t.Fatalf("calls = %v", platform.calls)
 	}
 }

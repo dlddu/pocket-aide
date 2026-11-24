@@ -104,9 +104,6 @@ type Engine struct {
 
 	mu    sync.Mutex
 	turns map[int64]*Pending
-	// pairs caches which monitor serves the chat session, so the panel does
-	// not list sessions on every read.
-	pairs monitorPairCache
 	// retryAfter holds off the next dispatch of a message whose last one
 	// failed, so a platform that keeps refusing is not hammered once per
 	// poll. In memory only: a restart just means one earlier retry.
