@@ -182,8 +182,9 @@ func (e *Engine) bootstrapMonitor(ctx context.Context, monitorID, prompt string)
 
 // NudgeMonitor wakes a live monitor after an instruction was accepted, so the
 // drain happens now instead of at the next scheduled run. A frozen monitor is
-// not woken: the instruction is already durable, and waking it would be an
-// operational change the person did not ask for.
+// left to the platform, which resumes it on intake through its own write path
+// and says so in the reply (`woken`) — this backend does not have to arrange a
+// recovery of its own.
 func (e *Engine) NudgeMonitor(ctx context.Context, parent string, pair MonitorPair) bool {
 	if !pair.Paired() || !pair.IntakeLive {
 		return false
@@ -199,4 +200,74 @@ func (e *Engine) forgetPair(parent string) {
 		e.pairs.for_, e.pairs.pair, e.pairs.at = "", MonitorPair{}, time.Time{}
 	}
 	e.pairs.mu.Unlock()
+}
+
+// MonitorOff is what the settings screen gets back when the monitor is turned
+// off, including the case where only half of it could be done.
+type MonitorOff struct {
+	// Was is the monitor that was bound, so the person is told what was turned
+	// off rather than just "done".
+	Was string `json:"was,omitempty"`
+	// Off is true when the pair is gone and the conversation writes its own
+	// work records again.
+	Off bool `json:"off"`
+	// Retry is true when the monitor was closed but the records are still
+	// sealed to it. Nothing writes them in that state — which is the safe half
+	// to be stuck in — and calling again finishes the rollback.
+	Retry bool   `json:"retry,omitempty"`
+	Note  string `json:"note,omitempty"`
+}
+
+// DisableMonitor turns the separated monitor off for userID's conversation.
+//
+// The order is the platform's and it matters: the binding goes first, which
+// closes the monitor, and only then are the work records handed back to the
+// chat session. So there is never a moment when both could write. A partial
+// rollback — monitor closed, records still sealed — is reported as something to
+// retry rather than as done, and repeating the call is safe.
+//
+// Nothing is deleted. The tasks, their turns and the accepted instructions stay
+// exactly where they are: the records were never moved, so turning the monitor
+// off leaves the same history the panel was showing.
+func (e *Engine) DisableMonitor(ctx context.Context, userID int64) (MonitorOff, error) {
+	conv, err := e.store.Conversation(ctx, userID)
+	if err != nil {
+		return MonitorOff{}, err
+	}
+	parent := conv.platformSessionID
+	if parent == "" {
+		return MonitorOff{}, ErrNoConversation
+	}
+	status, raw, err := e.platform.Do(ctx, http.MethodDelete, monitorBase(parent)+"/pair", nil)
+	if err != nil {
+		return MonitorOff{}, fmt.Errorf("%w: %v", ErrPairUnknown, err)
+	}
+	e.forgetPair(parent)
+	switch status {
+	case http.StatusOK:
+		var view struct {
+			Writer struct {
+				Writer string `json:"writer"`
+				Holder string `json:"holder"`
+			} `json:"writer"`
+		}
+		_ = json.Unmarshal(raw, &view)
+		return MonitorOff{Off: true, Was: view.Writer.Holder}, nil
+	case http.StatusAccepted:
+		// The monitor is closed — it cannot write any more — but the records
+		// were not handed back. Say so plainly: this is not "off" yet.
+		return MonitorOff{Retry: true,
+			Note: "모니터는 닫혔지만 작업 기록이 아직 모니터에 봉인돼 있습니다. 다시 시도하면 마무리됩니다."}, nil
+	case http.StatusNotFound:
+		// There was no pair. Turning off what is already off is not an error.
+		return MonitorOff{Off: true}, nil
+	case http.StatusUnauthorized, http.StatusForbidden:
+		return MonitorOff{}, fmt.Errorf("%w: the platform refused this backend's identity (%d)",
+			ErrPairRefused, status)
+	case http.StatusNotImplemented:
+		// A control plane without the route: there is nothing bound either.
+		return MonitorOff{Off: true}, nil
+	default:
+		return MonitorOff{}, fmt.Errorf("%w: the platform answered %d", ErrPairUnknown, status)
+	}
 }

@@ -72,3 +72,27 @@ func GetChatMonitor(engine *chat.Engine) http.HandlerFunc {
 		writeJSON(w, http.StatusOK, setup)
 	}
 }
+
+// DeleteChatMonitor turns the monitor off. It is the rollback the platform runs
+// in order — the monitor is closed before the work records are handed back — so
+// this route only reports which of the two happened. Repeating it is safe, and
+// a half-done rollback answers 202 with `retry` rather than claiming success.
+func DeleteChatMonitor(engine *chat.Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			http.Error(w, "no user in context", http.StatusInternalServerError)
+			return
+		}
+		off, err := engine.DisableMonitor(r.Context(), u.ID)
+		if err != nil {
+			monitorError(w, err)
+			return
+		}
+		if off.Retry {
+			writeJSON(w, http.StatusAccepted, off)
+			return
+		}
+		writeJSON(w, http.StatusOK, off)
+	}
+}

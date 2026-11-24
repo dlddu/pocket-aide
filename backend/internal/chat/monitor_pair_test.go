@@ -374,6 +374,10 @@ type setupPlatform struct {
 	creates  []string
 	writes   []string
 	nextID   int
+	// deletes counts rollbacks, and offReply lets a test make the platform
+	// answer a half-done one.
+	deletes  []string
+	offReply int
 }
 
 func (p *setupPlatform) Do(_ context.Context, method, path string, body []byte) (int, []byte, error) {
@@ -395,6 +399,37 @@ func (p *setupPlatform) Do(_ context.Context, method, path string, body []byte) 
 	case method == http.MethodPost && strings.HasSuffix(path, "/write"):
 		p.writes = append(p.writes, path+" "+string(body))
 		return http.StatusOK, []byte(`{}`), nil
+	case method == http.MethodDelete && strings.HasSuffix(path, "/monitor/pair"):
+		p.deletes = append(p.deletes, path)
+		parent := strings.TrimPrefix(path, "/sessions/")
+		parent, _, _ = strings.Cut(parent, "/")
+		if p.offReply == http.StatusForbidden || p.offReply == http.StatusInternalServerError {
+			return p.offReply, []byte("refused"), nil
+		}
+		if p.offReply == http.StatusAccepted {
+			// Half done: the monitor is closed, the records are still sealed.
+			raw, _ := json.Marshal(map[string]any{"unbound": true,
+				"note": "the records are still sealed to it"})
+			return http.StatusAccepted, raw, nil
+		}
+		held := ""
+		kept := p.sessions[:0]
+		for _, s := range p.sessions {
+			if s["monitorFor"] == parent {
+				held, _ = s["id"].(string)
+				// The platform unbinds the pair; the monitor session itself is
+				// left alone, and so is every record.
+				s = map[string]any{"id": s["id"], "name": s["name"], "state": s["state"]}
+			}
+			kept = append(kept, s)
+		}
+		p.sessions = kept
+		if held == "" {
+			return http.StatusNotFound, []byte("this session has no monitor"), nil
+		}
+		raw, _ := json.Marshal(map[string]any{"unbound": true,
+			"writer": map[string]any{"writer": "session", "holder": held}})
+		return http.StatusOK, raw, nil
 	case strings.HasSuffix(path, "/monitor/pair"):
 		parent := strings.TrimPrefix(path, "/sessions/")
 		parent, _, _ = strings.Cut(parent, "/")
@@ -528,5 +563,110 @@ func TestEnableMonitorNeedsAConversation(t *testing.T) {
 	}
 	if len(p.creates) != 0 {
 		t.Fatalf("creates = %v, want none", p.creates)
+	}
+}
+
+// Turning the monitor off from the normal path: the platform runs the rollback
+// in order and this reports which half happened. Nothing is deleted — the work
+// records were never moved, so the conversation keeps the same history — and
+// repeating the call is safe.
+func TestDisableMonitorRollsBackAndIsSafeToRepeat(t *testing.T) {
+	p := &setupPlatform{sessions: []map[string]any{{"id": "chat-1", "name": "chat", "state": "active"}}}
+	engine := setupEngine(t, p, "chat-1")
+	ctx := t.Context()
+	on, err := engine.EnableMonitor(ctx, 1)
+	if err != nil || on.SessionID == "" {
+		t.Fatalf("enable = %+v %v", on, err)
+	}
+
+	off, err := engine.DisableMonitor(ctx, 1)
+	if err != nil {
+		t.Fatalf("disable: %v", err)
+	}
+	if !off.Off || off.Retry {
+		t.Fatalf("disable = %+v, want it off", off)
+	}
+	if off.Was != on.SessionID {
+		t.Fatalf("the person was not told which monitor was turned off: %+v", off)
+	}
+	if len(p.deletes) != 1 {
+		t.Fatalf("rollbacks = %v, want exactly one", p.deletes)
+	}
+	// The conversation reads its own work records again, and the monitor
+	// session itself was not deleted by this.
+	status, err := engine.MonitorStatus(ctx, 1)
+	if err != nil || status.SessionID != "" {
+		t.Fatalf("status after the rollback = %+v %v", status, err)
+	}
+	found := false
+	for _, s := range p.sessions {
+		if s["id"] == on.SessionID {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("the rollback deleted the monitor session")
+	}
+
+	// Again, with nothing bound: not an error, and no second rollback claim.
+	again, err := engine.DisableMonitor(ctx, 1)
+	if err != nil || !again.Off {
+		t.Fatalf("repeat = %+v %v", again, err)
+	}
+
+	// And turning it back on afterwards works, which is what makes this a
+	// rollback rather than a one-way door.
+	back, err := engine.EnableMonitor(ctx, 1)
+	if err != nil || back.SessionID == "" {
+		t.Fatalf("re-enable = %+v %v", back, err)
+	}
+}
+
+// A rollback the platform could only half do is reported as something to
+// retry, never as done: in that state nothing writes the records, which is the
+// safe half to be stuck in, and calling again finishes it.
+func TestDisableMonitorReportsAHalfDoneRollbackForRetry(t *testing.T) {
+	p := &setupPlatform{sessions: []map[string]any{{"id": "chat-1", "name": "chat", "state": "active"}}}
+	engine := setupEngine(t, p, "chat-1")
+	ctx := t.Context()
+	if _, err := engine.EnableMonitor(ctx, 1); err != nil {
+		t.Fatal(err)
+	}
+	p.offReply = http.StatusAccepted
+	off, err := engine.DisableMonitor(ctx, 1)
+	if err != nil {
+		t.Fatalf("disable: %v", err)
+	}
+	if off.Off || !off.Retry || off.Note == "" {
+		t.Fatalf("a half-done rollback = %+v, want retry with a reason", off)
+	}
+	// The retry finishes it.
+	p.offReply = 0
+	done, err := engine.DisableMonitor(ctx, 1)
+	if err != nil || !done.Off {
+		t.Fatalf("retry = %+v %v", done, err)
+	}
+	if len(p.deletes) != 2 {
+		t.Fatalf("rollback calls = %v, want the retry to have gone through", p.deletes)
+	}
+}
+
+// A refused or unreadable rollback is an error the person is told about, not a
+// quiet "it is off now" — because a pair that is still bound still owns the
+// work records.
+func TestDisableMonitorDoesNotClaimSuccessOnAnUnclearAnswer(t *testing.T) {
+	p := &setupPlatform{sessions: []map[string]any{{"id": "chat-1", "name": "chat", "state": "active"}}}
+	engine := setupEngine(t, p, "chat-1")
+	ctx := t.Context()
+	if _, err := engine.EnableMonitor(ctx, 1); err != nil {
+		t.Fatal(err)
+	}
+	p.offReply = http.StatusForbidden
+	if _, err := engine.DisableMonitor(ctx, 1); !errors.Is(err, chat.ErrPairRefused) {
+		t.Fatalf("a refused rollback = %v, want ErrPairRefused", err)
+	}
+	p.offReply = http.StatusInternalServerError
+	if _, err := engine.DisableMonitor(ctx, 1); !errors.Is(err, chat.ErrPairUnknown) {
+		t.Fatalf("an unreadable rollback = %v, want ErrPairUnknown", err)
 	}
 }
