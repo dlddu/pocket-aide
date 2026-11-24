@@ -131,19 +131,9 @@ type TaskList struct {
 	// SessionID is the platform session these tasks were read from. The app
 	// keeps it so a page that arrives after the conversation moved to another
 	// session is discarded instead of shown under the new one.
-	SessionID string `json:"session_id"`
-	// Monitor is the pair this list came from, when the chat session has one.
-	// The app shows the monitor's state beside the work so "quiet" and "not
-	// running" are different things on screen.
-	Monitor *MonitorPair `json:"monitor,omitempty"`
-	// Source is "slot" for a live read of the monitor's records and
-	// "published" for the state it last published; AsOf is the time of that
-	// publication. The app shows AsOf so a panel opened while the monitor is
-	// away is never mistaken for live.
-	Source string         `json:"source,omitempty"`
-	AsOf   string         `json:"as_of,omitempty"`
-	Tasks  []Task         `json:"tasks"`
-	Counts map[string]int `json:"counts"`
+	SessionID string         `json:"session_id"`
+	Tasks     []Task         `json:"tasks"`
+	Counts    map[string]int `json:"counts"`
 	// Truncated says the walk stopped at its page bound with more to come, so
 	// the panel can say the list is partial instead of implying it is whole.
 	Truncated bool `json:"truncated"`
@@ -153,9 +143,7 @@ type TaskList struct {
 // It is decoded into the fields the panel reads and no others — a struct that
 // mirrored the whole platform shape would quietly grow fields nothing renders.
 type workTaskPage struct {
-	Source string `json:"source"`
-	AsOf   string `json:"asOf"`
-	Tasks  []struct {
+	Tasks []struct {
 		Task struct {
 			ID                 string  `json:"id"`
 			Title              string  `json:"title"`
@@ -189,22 +177,10 @@ func (e *Engine) Tasks(ctx context.Context, userID int64) (TaskList, error) {
 	if conv.platformSessionID == "" {
 		return emptyTaskList(""), nil
 	}
-	// A paired chat session shows its monitor's work through the platform's
-	// backend-facing surface, which answers even while the monitor is frozen —
-	// from the state the monitor published, with the time it published it.
-	prefix, pair, err := e.workPrefix(ctx, conv.platformSessionID)
-	if err != nil {
-		return TaskList{}, err
-	}
-	list, err := e.tasksOf(ctx, prefix, conv.platformSessionID)
-	if err != nil {
-		return TaskList{}, err
-	}
-	list.Monitor = &pair
-	return list, nil
+	return e.tasksOf(ctx, conv.platformSessionID)
 }
 
-func (e *Engine) tasksOf(ctx context.Context, prefix, sessionID string) (TaskList, error) {
+func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error) {
 	out := emptyTaskList(sessionID)
 	seen := map[string]bool{}
 	cursor := ""
@@ -215,12 +191,9 @@ func (e *Engine) tasksOf(ctx context.Context, prefix, sessionID string) (TaskLis
 			out.Truncated = true
 			break
 		}
-		decoded, err := e.workTaskPage(ctx, prefix, cursor)
+		decoded, err := e.workTaskPage(ctx, sessionID, cursor)
 		if err != nil {
 			return TaskList{}, err
-		}
-		if page == 0 {
-			out.Source, out.AsOf = decoded.Source, decoded.AsOf
 		}
 		for _, row := range decoded.Tasks {
 			// Keyset pages are not a snapshot, and a retried page can repeat a
@@ -281,13 +254,13 @@ func (e *Engine) tasksOf(ctx context.Context, prefix, sessionID string) (TaskLis
 	return out, nil
 }
 
-func (e *Engine) workTaskPage(ctx context.Context, prefix, cursor string) (workTaskPage, error) {
+func (e *Engine) workTaskPage(ctx context.Context, sessionID, cursor string) (workTaskPage, error) {
 	query := url.Values{}
 	query.Set("limit", fmt.Sprint(workPageLimit))
 	if cursor != "" {
 		query.Set("after_id", cursor)
 	}
-	path := prefix + "/work/tasks?" + query.Encode()
+	path := "/sessions/" + url.PathEscape(sessionID) + "/work/tasks?" + query.Encode()
 	status, raw, err := e.platform.Do(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return workTaskPage{}, fmt.Errorf("read work tasks: %w", err)
