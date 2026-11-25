@@ -68,7 +68,7 @@ class ChatViewModelTest {
         val state = vm.state.value
         assertEquals(1, state.messages.size)
         assertTrue(state.isReplying)
-        assertFalse(state.canSend)
+        assertTrue(state.canSend)
 
         server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"), """{"content":"쓰는 중","started_at":1}""")))
         vm.load()
@@ -77,6 +77,50 @@ class ChatViewModelTest {
         vm.load()
         assertNull(vm.state.value.pending)
         assertTrue(vm.state.value.canSend)
+    }
+
+    // PRD-1 AC1 (2026-11-09 개정): a message sent while a reply is in progress
+    // is held instead of failing, and can be cancelled before it is sent.
+    @Test
+    fun sendWhileBusyQueuesInsteadOfFailing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"id":"q1","content":"다음","queued_at":5}}"""))
+
+        assertTrue(vm.performSend("다음"))
+        assertEquals("/api/chat/messages", server.takeRequest().path)
+        assertEquals("다음", vm.state.value.queued?.content)
+        assertEquals("q1", vm.state.value.queued?.id)
+        assertFalse(vm.state.value.canSend)
+
+        server.enqueue(MockResponse().setResponseCode(204))
+        vm.performCancelQueued()
+
+        val request = server.takeRequest()
+        // The cancel names the message on screen, so one that arrives after
+        // it went out cannot drop whatever took its place.
+        assertEquals("/api/chat/queue?id=q1", request.path)
+        assertEquals("DELETE", request.method)
+        assertNull(vm.state.value.queued)
+        assertTrue(vm.state.value.canSend)
+    }
+
+    @Test
+    fun cancelQueuedSwallowsAlreadyDispatched() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"queued":{"id":"q1","content":"다음","queued_at":5}}"""))
+        vm.performSend("다음")
+
+        server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":"no message queued"}"""))
+        vm.performCancelQueued()
+
+        assertNull(vm.state.value.queued)
+        assertNull(vm.state.value.error)
     }
 
     @Test

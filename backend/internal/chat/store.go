@@ -190,6 +190,101 @@ func (s *Store) AppendMessage(ctx context.Context, userID, sessionID int64, role
 	return m, nil
 }
 
+// QueuedMessage is a message held for after the turn in progress — the
+// store-backed twin of Engine's in-memory Pending, durable so a restart
+// between the busy check and the write does not lose it.
+type QueuedMessage struct {
+	// ID names this queued message for its whole life, so a cancel can say
+	// which message it means: by the time the tap arrives the one the screen
+	// showed may already have gone out and a newer one taken its place.
+	ID       string `json:"id"`
+	Content  string `json:"content"`
+	QueuedAt int64  `json:"queued_at"`
+}
+
+// GetQueued returns the message queued behind the session's turn in
+// progress, if any.
+func (s *Store) GetQueued(ctx context.Context, userID, sessionID int64) (*QueuedMessage, error) {
+	var id, content sql.NullString
+	var queuedAt sql.NullInt64
+	err := s.db.QueryRowContext(ctx,
+		`SELECT queued_id, queued_content, queued_at FROM chat_sessions WHERE id = ? AND user_id = ?`, sessionID, userID,
+	).Scan(&id, &content, &queuedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get queued message: %w", err)
+	}
+	if !content.Valid || content.String == "" {
+		return nil, nil
+	}
+	return &QueuedMessage{ID: id.String, Content: content.String, QueuedAt: queuedAt.Int64}, nil
+}
+
+// SetQueued holds content for after the session's turn in progress ends. It
+// also puts a taken message back when the dispatch that took it failed, in
+// which case id and queuedAt are the ones it already had.
+func (s *Store) SetQueued(ctx context.Context, userID, sessionID int64, id, content string, queuedAt int64) (QueuedMessage, error) {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE chat_sessions SET queued_id = ?, queued_content = ?, queued_at = ? WHERE id = ? AND user_id = ?`,
+		id, content, queuedAt, sessionID, userID)
+	if err != nil {
+		return QueuedMessage{}, fmt.Errorf("set queued message: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return QueuedMessage{}, ErrNotFound
+	}
+	return QueuedMessage{ID: id, Content: content, QueuedAt: queuedAt}, nil
+}
+
+// ClearQueued cancels the queued message with id, reporting whether that
+// message was the one still waiting. A different id (or none) leaves the
+// row alone, so a cancel never drops a message the user has not seen.
+func (s *Store) ClearQueued(ctx context.Context, userID, sessionID int64, id string) (bool, error) {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE chat_sessions SET queued_id = NULL, queued_content = NULL, queued_at = NULL
+		 WHERE id = ? AND user_id = ? AND queued_content IS NOT NULL AND queued_id = ?`, sessionID, userID, id)
+	if err != nil {
+		return false, fmt.Errorf("clear queued message: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return n > 0, nil
+}
+
+// TakeQueued atomically returns and clears the queued message, if any, so a
+// concurrent cancel and drain can never both act on the same message.
+func (s *Store) TakeQueued(ctx context.Context, userID, sessionID int64) (*QueuedMessage, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	var id, content sql.NullString
+	var queuedAt sql.NullInt64
+	err = tx.QueryRowContext(ctx,
+		`SELECT queued_id, queued_content, queued_at FROM chat_sessions WHERE id = ? AND user_id = ?`, sessionID, userID,
+	).Scan(&id, &content, &queuedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get queued message: %w", err)
+	}
+	if !content.Valid || content.String == "" {
+		return nil, nil
+	}
+	if _, err := tx.ExecContext(ctx,
+		`UPDATE chat_sessions SET queued_id = NULL, queued_content = NULL, queued_at = NULL WHERE id = ? AND user_id = ?`,
+		sessionID, userID); err != nil {
+		return nil, fmt.Errorf("clear queued message: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
+	return &QueuedMessage{ID: id.String, Content: content.String, QueuedAt: queuedAt.Int64}, nil
+}
+
 func deriveTitle(content string) string {
 	t := strings.Join(strings.Fields(content), " ")
 	r := []rune(t)

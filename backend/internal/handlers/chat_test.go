@@ -27,6 +27,10 @@ type chatPlatform struct {
 	status     int    // forced status for every call when non-zero
 	statusBody string // body sent with the forced status
 	refresh    int
+	// workStatus forces the read-only work task route's status; work is the
+	// page it answers otherwise.
+	workStatus int
+	work       string
 }
 
 func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +63,13 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t := p.transcript[id]
 		offset := int(body["offset"].(float64))
 		_ = json.NewEncoder(w).Encode(map[string]any{"payload": t[min(offset, len(t)):], "nextOffset": len(t)})
+	case strings.Contains(path, "/work/tasks"):
+		if p.workStatus != 0 {
+			w.WriteHeader(p.workStatus)
+			_, _ = w.Write([]byte(`{"code":"x","error":"no"}`))
+			return
+		}
+		_, _ = w.Write([]byte(p.work))
 	case strings.HasSuffix(path, "/plugins/refresh"):
 		if p.refresh != 0 {
 			w.WriteHeader(p.refresh)
@@ -80,7 +91,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1'), (2, 'u2')`); err != nil {
 		t.Fatalf("seed users: %v", err)
 	}
-	platform := &chatPlatform{transcript: map[string]string{}}
+	platform := &chatPlatform{transcript: map[string]string{}, work: `{"tasks":[],"next_cursor":""}`}
 	srv := httptest.NewServer(platform)
 	t.Cleanup(srv.Close)
 	store := chat.New(conn)
@@ -88,7 +99,9 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	t.Cleanup(engine.Wait)
 	r := chi.NewRouter()
 	r.Get("/api/chat", handlers.GetChat(store, engine, chat.NewPresence()))
+	r.Get("/api/chat/tasks", handlers.GetChatTasks(engine))
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
+	r.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))
 	return r, platform, engine
 }
@@ -119,6 +132,10 @@ type chatView struct {
 	Pending *struct {
 		Content string `json:"content"`
 	} `json:"pending"`
+	Queued *struct {
+		ID      string `json:"id"`
+		Content string `json:"content"`
+	} `json:"queued"`
 }
 
 func getChat(t *testing.T, router http.Handler, userID int64) chatView {
@@ -152,6 +169,22 @@ func TestChat_SendThenPoll(t *testing.T) {
 	}
 	if other := getChat(t, router, 2); len(other.Messages) != 0 {
 		t.Fatalf("user 2 sees %+v", other.Messages)
+	}
+}
+
+// PRD-1 AC1 (2026-11-09 개정): cancelling with nothing queued is a 404, and
+// GET /api/chat reports no queued message while idle. The id says which
+// message the cancel means, so a cancel without one is a 400.
+func TestChat_CancelQueuedWithNothingQueued(t *testing.T) {
+	router, _, _ := newChatRouter(t)
+	if v := getChat(t, router, 1); v.Queued != nil {
+		t.Fatalf("fresh chat queued = %+v, want nil", v.Queued)
+	}
+	if rec := chatDo(t, router, http.MethodDelete, "/api/chat/queue?id=whatever", nil, 1); rec.Code != http.StatusNotFound {
+		t.Fatalf("cancel with nothing queued = %d %s", rec.Code, rec.Body)
+	}
+	if rec := chatDo(t, router, http.MethodDelete, "/api/chat/queue", nil, 1); rec.Code != http.StatusBadRequest {
+		t.Fatalf("cancel without an id = %d %s", rec.Code, rec.Body)
 	}
 }
 

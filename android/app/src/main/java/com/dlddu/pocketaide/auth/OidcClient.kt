@@ -4,6 +4,7 @@ import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.AuthConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -86,7 +87,8 @@ class OidcClient(
             if (current != null && current.accessToken != tokenBeforeWait) return@withLock current
             val refreshToken = current?.refreshToken ?: throw OidcException.NoRefreshToken()
             val bundle = try {
-                exchangeRefreshToken(refreshToken)
+                val tokenEndpoint = refreshTokenEndpoint()
+                withContext(NonCancellable) { exchangeRefreshToken(tokenEndpoint, refreshToken) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -100,19 +102,23 @@ class OidcClient(
         }
     }
 
-    private suspend fun exchangeRefreshToken(refreshToken: String): TokenBundle {
+    private suspend fun refreshTokenEndpoint(): TokenEndpoint {
         val cfg = api.authConfig()
-        val discovery = fetchDiscovery(cfg.issuer)
-        return exchange(
-            discovery.tokenEndpoint,
+        return TokenEndpoint(fetchDiscovery(cfg.issuer).tokenEndpoint, cfg.clientId)
+    }
+
+    private suspend fun exchangeRefreshToken(endpoint: TokenEndpoint, refreshToken: String): TokenBundle =
+        exchange(
+            endpoint.url,
             mapOf(
                 "grant_type" to "refresh_token",
                 "refresh_token" to refreshToken,
-                "client_id" to cfg.clientId,
+                "client_id" to endpoint.clientId,
             ),
             fallbackRefreshToken = refreshToken,
         )
-    }
+
+    private data class TokenEndpoint(val url: String, val clientId: String)
 
     private fun signOutReason(error: Exception): SignOutReason = when {
         error is OidcException.TokenExchange && error.status > 0 ->
