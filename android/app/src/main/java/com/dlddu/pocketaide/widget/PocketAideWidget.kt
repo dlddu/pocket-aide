@@ -97,6 +97,8 @@ private fun WidgetContent(entry: PocketAideWidgetEntry, fontScale: Float) {
         HorizontalRule()
         AffirmationSection(entry.affirmation)
         HorizontalRule()
+        MailSection(entry.mail)
+        HorizontalRule()
         NotificationSection(entry.notifications)
         HorizontalRule()
         ScratchpadSection(entry.scratchpad)
@@ -263,6 +265,19 @@ private fun ScratchpadSection(state: WidgetScratchpadState) {
         } else {
             Notice(area, WidgetCopy.scratchpadText(state), maxLines = 1)
         }
+    }
+}
+
+@Composable
+private fun MailSection(state: WidgetMailState) {
+    val area = Area.System
+    Row(
+        GlanceModifier
+            .fillMaxWidth()
+            .padding(top = DesignTokens.Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SectionLabel(area, WidgetCopy.mailLabel(state))
     }
 }
 
