@@ -937,6 +937,40 @@ func TestEngine_CatchUpJudgesEachTurnByItsOwnStatus(t *testing.T) {
 	}
 }
 
+// The status that decides a turn is the one on the end marker carrying the seq
+// that turn's input marker opened. An end marker for another seq — a parent
+// turn's, or one from a turn this follower never saw open — says nothing about
+// this turn: it must neither close it early nor lend it its status.
+func TestEngine_AnotherTurnsEndMarkerDoesNotCloseThisTurn(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	seedCodexSession(t, store, platform,
+		marker("input", 1, " at=x")+"one\n"+marker("output", 1, "")+"one "+
+			marker("end", 9, " status=timeout at=x")+"answer\n"+
+			marker("end", 1, " status=ok at=x"))
+	if _, err := engine.Send(context.Background(), 1, "next"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	msgs := messages(t, store, 1)
+	var caught *chat.Message
+	for i := range msgs {
+		if msgs[i].Role == chat.RoleAssistant && msgs[i].Content != "re: next" {
+			caught = &msgs[i]
+			break
+		}
+	}
+	if caught == nil {
+		t.Fatalf("the seeded turn was not caught up: %v", transcriptOf(msgs))
+	}
+	// "one" alone would mean the foreign marker ended the turn where it sat.
+	if caught.Content != "one answer" {
+		t.Fatalf("reply = %q, want %q — a foreign end marker closed the turn early", caught.Content, "one answer")
+	}
+	if caught.Interrupted {
+		t.Fatal("the turn took another turn's timeout status")
+	}
+}
+
 // A catch-up that finds finished turns ahead of a still-running one has to
 // consume them before handing that turn off. Otherwise the hand-off's own
 // failure leaves the offset where it was, and the next catch-up stores every
