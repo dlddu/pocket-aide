@@ -37,6 +37,19 @@ type fakePlatform struct {
 	steerStatus int
 	// steered is every mid-turn message the platform was handed, in order.
 	steered []string
+	// endStatus is the status= field of a turn's end marker. The platform
+	// writes ok · timeout · canceled · error there (session-platform
+	// claudeTurnStatus); newFakePlatform starts at ok.
+	endStatus string
+	// noEndStatus writes the end marker with no status= at all, as a platform
+	// older than the field did — and as old stored history was framed.
+	noEndStatus bool
+	// silentReply makes a turn end without having written any output.
+	silentReply bool
+	// readsOK, when > 0, is how many reads answer 200 before every later one
+	// answers 500 — a follow that loses the transcript part way through.
+	readsOK int
+	reads   int
 }
 
 type fakeSession struct {
@@ -49,7 +62,16 @@ type fakeSession struct {
 }
 
 func newFakePlatform() *fakePlatform {
-	return &fakePlatform{sessions: map[string]*fakeSession{}}
+	return &fakePlatform{sessions: map[string]*fakeSession{}, endStatus: "ok"}
+}
+
+// endMarker is how this platform closes a turn: with the status it was told to
+// report, or — for noEndStatus — the way a platform with no status field did.
+func (f *fakePlatform) endMarker(seq int) string {
+	if f.noEndStatus {
+		return marker("end", seq, " at=x")
+	}
+	return marker("end", seq, " status="+f.endStatus+" at=x")
 }
 
 func marker(kind string, seq int, extra string) string {
@@ -115,7 +137,11 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 		reply := func() {
 			f.mu.Lock()
 			defer f.mu.Unlock()
-			s.transcript = append(s.transcript, "re: "+req["payload"]+"\n"+marker("end", seq, " status=ok at=x")...)
+			out := "re: " + req["payload"] + "\n"
+			if f.silentReply {
+				out = ""
+			}
+			s.transcript = append(s.transcript, out+f.endMarker(seq)...)
 		}
 		if f.hold != nil {
 			hold := f.hold
@@ -128,6 +154,10 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 		s, ok := f.sessions[parts[1]]
 		if !ok {
 			return http.StatusNotFound, nil, nil
+		}
+		f.reads++
+		if f.readsOK > 0 && f.reads > f.readsOK {
+			return http.StatusInternalServerError, nil, nil
 		}
 		var req struct {
 			Offset int64 `json:"offset"`
@@ -734,4 +764,328 @@ func TestEngine_QueuesWhenThePlatformHasNoSteerPath(t *testing.T) {
 		t.Fatalf("history = %q", got)
 	}
 	_ = store
+}
+
+// The texts the engine stores for a turn that produced nothing. Repeated here
+// rather than exported: a change to either one is a change to what the user
+// reads, and this is the test that says so.
+const (
+	emptyReplyText  = "(응답이 비어 있습니다)"
+	brokenReplyText = "응답을 끝까지 받지 못했습니다. 잠시 뒤 다시 시도해 주세요."
+	// The paragraph an interrupted partial answer ends with, and how it joins
+	// the text the turn did produce.
+	interruptedNoteText = "중단됨"
+	interruptedJoin     = "\n\n" + interruptedNoteText
+)
+
+// seedCodexSession gives user 1 a conversation already bound to a platform
+// session whose transcript holds exactly transcript, unread from offset 0 —
+// the state a reconnecting or restarted server finds. Its turn counter starts
+// past the seeded seqs so a later prompt cannot reuse one of them.
+func seedCodexSession(t *testing.T, store *chat.Store, platform *fakePlatform, transcript string) string {
+	t.Helper()
+	ctx := context.Background()
+	conv, err := store.Conversation(ctx, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	platform.mu.Lock()
+	platform.created++
+	id := fmt.Sprintf("cx%d", platform.created)
+	platform.sessions[id] = &fakeSession{
+		name:       "pocket-aide-chat-1",
+		workload:   "codex-chat",
+		createdAt:  "2026-11-06T00:00:01Z",
+		transcript: []byte(transcript),
+		turns:      9,
+	}
+	platform.mu.Unlock()
+	if err := store.SetPlatform(ctx, 1, conv.ID, id, 0); err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
+func (f *fakePlatform) setReadsOK(n int) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.readsOK = n
+}
+
+func (f *fakePlatform) appendTranscript(id, text string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.sessions[id].transcript = append(f.sessions[id].transcript, text...)
+}
+
+func lastReply(t *testing.T, msgs []chat.Message) chat.Message {
+	t.Helper()
+	for i := len(msgs) - 1; i >= 0; i-- {
+		if msgs[i].Role == chat.RoleAssistant {
+			return msgs[i]
+		}
+	}
+	t.Fatal("no reply stored")
+	return chat.Message{}
+}
+
+func countReplies(msgs []chat.Message, content string) int {
+	n := 0
+	for _, m := range msgs {
+		if m.Role == chat.RoleAssistant && m.Content == content {
+			n++
+		}
+	}
+	return n
+}
+
+// A turn session-platform ends with a status other than ok is not an answer.
+// Every byte it did produce is kept, and the note is appended as its own
+// paragraph: the apps that predate Message.Interrupted draw content alone, so
+// the user would otherwise read a cut-off turn as a whole answer.
+func TestEngine_InterruptedTurnKeepsItsPartialAnswerAndSaysSo(t *testing.T) {
+	for _, status := range []string{"error", "timeout", "canceled", "something-new"} {
+		t.Run(status, func(t *testing.T) {
+			store, engine, platform := newEngine(t)
+			platform.endStatus = status
+			if _, err := engine.Send(context.Background(), 1, "hi"); err != nil {
+				t.Fatal(err)
+			}
+			engine.Wait()
+			got := lastReply(t, messages(t, store, 1))
+			if got.Content != "re: hi"+interruptedJoin {
+				t.Fatalf("reply = %q, want the partial answer then the note", got.Content)
+			}
+			if !got.Interrupted {
+				t.Fatalf("reply for a %q turn is not marked interrupted", status)
+			}
+		})
+	}
+}
+
+// The mark is a paragraph of its own, and only a paragraph of its own counts
+// as one already there. An answer whose prose happens to end in the word is
+// ordinary text and still gets its own mark; a body already carrying the
+// paragraph keeps exactly one.
+func TestEngine_InterruptedNoteIsItsOwnLastParagraph(t *testing.T) {
+	cases := []struct {
+		name string
+		body string // what the turn produced, before the engine judges it
+		want string // the content stored for it
+	}{{
+		name: "prose ending in the word still gets its own paragraph",
+		body: "다운로드가 중단됨",
+		want: "다운로드가 중단됨" + interruptedJoin,
+	}, {
+		name: "the paragraph is not stacked a second time",
+		body: "받은 만큼" + interruptedJoin,
+		want: "받은 만큼" + interruptedJoin,
+	}, {
+		name: "a body that is only the paragraph stays one paragraph",
+		body: interruptedNoteText,
+		want: interruptedNoteText,
+	}, {
+		name: "a line break alone does not make it a paragraph",
+		body: "받은 만큼\n" + interruptedNoteText,
+		want: "받은 만큼\n" + interruptedNoteText + interruptedJoin,
+	}}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			store, engine, platform := newEngine(t)
+			seedCodexSession(t, store, platform,
+				marker("input", 1, " at=x")+"one\n"+
+					marker("output", 1, "")+tc.body+"\n"+
+					marker("end", 1, " status=error at=x"))
+			if _, err := engine.Send(context.Background(), 1, "next"); err != nil {
+				t.Fatal(err)
+			}
+			engine.Wait()
+			msgs := messages(t, store, 1)
+			if n := countReplies(msgs, tc.want); n != 1 {
+				t.Fatalf("stored %d replies equal to %q: %v", n, tc.want, transcriptOf(msgs))
+			}
+		})
+	}
+}
+
+// An interrupted turn that wrote nothing must not borrow the text of a turn
+// that finished empty — that text claims the session answered.
+func TestEngine_EmptyFailedTurnIsNotPresentedAsAnAnswer(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.endStatus = "error"
+	platform.silentReply = true
+	if _, err := engine.Send(context.Background(), 1, "hi"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	got := lastReply(t, messages(t, store, 1))
+	if got.Content != brokenReplyText || !got.Interrupted {
+		t.Fatalf("empty failed turn = %q interrupted=%v, want %q interrupted", got.Content, got.Interrupted, brokenReplyText)
+	}
+}
+
+// A turn that ran to its end with no output is still a finished turn: it says
+// the answer was empty and is not marked interrupted.
+func TestEngine_EmptyFinishedTurnStaysAnEmptyAnswer(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.silentReply = true
+	if _, err := engine.Send(context.Background(), 1, "hi"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	got := lastReply(t, messages(t, store, 1))
+	if got.Content != emptyReplyText || got.Interrupted {
+		t.Fatalf("empty finished turn = %q interrupted=%v, want %q not interrupted", got.Content, got.Interrupted, emptyReplyText)
+	}
+}
+
+// Turns framed by a platform that wrote no status= — and the history it left
+// behind — ran to their end. Reading a missing status as an interruption would
+// mark every one of those replies as broken.
+func TestEngine_EndMarkerWithoutStatusIsAFinishedTurn(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	platform.noEndStatus = true
+	if _, err := engine.Send(context.Background(), 1, "hi"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	got := lastReply(t, messages(t, store, 1))
+	if got.Content != "re: hi" || got.Interrupted {
+		t.Fatalf("legacy-marker turn = %q interrupted=%v", got.Content, got.Interrupted)
+	}
+}
+
+// Turns read out of the transcript after the fact get the same judgement as
+// the ones followed live: the status on each turn's own end marker decides.
+func TestEngine_CatchUpJudgesEachTurnByItsOwnStatus(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	seedCodexSession(t, store, platform,
+		marker("input", 1, " at=x")+"one\n"+marker("output", 1, "")+"one answer\n"+
+			marker("end", 1, " status=ok at=x")+
+			marker("input", 2, " at=x")+"two\n"+marker("output", 2, "")+"two answer\n"+
+			marker("end", 2, " status=timeout at=x"))
+	if _, err := engine.Send(context.Background(), 1, "next"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	msgs := messages(t, store, 1)
+	var caught []chat.Message
+	for _, m := range msgs {
+		// Turn 2 timed out, so its text carries the note; turn 1's does not.
+		if m.Role == chat.RoleAssistant && (m.Content == "one answer" || m.Content == "two answer"+interruptedJoin) {
+			caught = append(caught, m)
+		}
+	}
+	if len(caught) != 2 {
+		t.Fatalf("caught-up replies = %v", transcriptOf(msgs))
+	}
+	if caught[0].Interrupted {
+		t.Fatal("the ok turn was marked interrupted")
+	}
+	if !caught[1].Interrupted {
+		t.Fatal("the timeout turn was not marked interrupted")
+	}
+}
+
+// The status that decides a turn is the one on the end marker carrying the seq
+// that turn's input marker opened. An end marker for another seq — a parent
+// turn's, or one from a turn this follower never saw open — says nothing about
+// this turn: it must neither close it early nor lend it its status.
+func TestEngine_AnotherTurnsEndMarkerDoesNotCloseThisTurn(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	seedCodexSession(t, store, platform,
+		marker("input", 1, " at=x")+"one\n"+marker("output", 1, "")+"one "+
+			marker("end", 9, " status=timeout at=x")+"answer\n"+
+			marker("end", 1, " status=ok at=x"))
+	if _, err := engine.Send(context.Background(), 1, "next"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	msgs := messages(t, store, 1)
+	var caught *chat.Message
+	for i := range msgs {
+		if msgs[i].Role == chat.RoleAssistant && msgs[i].Content != "re: next" {
+			caught = &msgs[i]
+			break
+		}
+	}
+	if caught == nil {
+		t.Fatalf("the seeded turn was not caught up: %v", transcriptOf(msgs))
+	}
+	// "one" alone would mean the foreign marker ended the turn where it sat.
+	if caught.Content != "one answer" {
+		t.Fatalf("reply = %q, want %q — a foreign end marker closed the turn early", caught.Content, "one answer")
+	}
+	if caught.Interrupted {
+		t.Fatal("the turn took another turn's timeout status")
+	}
+}
+
+// A catch-up that finds finished turns ahead of a still-running one has to
+// consume them before handing that turn off. Otherwise the hand-off's own
+// failure leaves the offset where it was, and the next catch-up stores every
+// one of those finished turns a second time.
+func TestEngine_CatchUpStoresAFinishedTurnOnceWhenTheHandOffFails(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	running := marker("input", 2, " at=x") + "two\n" + marker("output", 2, "") + "partial\n"
+	id := seedCodexSession(t, store, platform,
+		marker("input", 1, " at=x")+"one\n"+marker("output", 1, "")+"one answer\n"+
+			marker("end", 1, " status=ok at=x")+running)
+	// Only the catch-up's own read succeeds; the handed-off follow loses the
+	// transcript on its first one.
+	platform.setReadsOK(1)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "next"); !errors.Is(err, chat.ErrBusy) {
+		t.Fatalf("send while an earlier turn runs = %v, want ErrBusy", err)
+	}
+	engine.Wait()
+
+	platform.setReadsOK(0)
+	if _, err := engine.Send(ctx, 1, "next"); !errors.Is(err, chat.ErrBusy) {
+		t.Fatalf("second send = %v, want ErrBusy — turn 2 is still running", err)
+	}
+	// Let the second hand-off finish so nothing is left polling.
+	platform.appendTranscript(id, marker("end", 2, " status=error at=x"))
+	engine.Wait()
+
+	msgs := messages(t, store, 1)
+	if n := countReplies(msgs, "one answer"); n != 1 {
+		t.Fatalf("the finished turn was stored %d times: %v", n, transcriptOf(msgs))
+	}
+	if got := lastReply(t, msgs); got.Content != "partial"+interruptedJoin || !got.Interrupted {
+		t.Fatalf("turn 2 = %q interrupted=%v, want the partial marked interrupted", got.Content, got.Interrupted)
+	}
+}
+
+// A turn this server gave up on is consumed up to where it stopped reading.
+// Reconnecting then does not attribute those same bytes a second time, and the
+// offset is still a turn boundary for everything after it.
+func TestEngine_AbandonedTurnIsNotStoredAgainAfterReconnect(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	seedCodexSession(t, store, platform,
+		marker("input", 1, " at=x")+"hi\n"+marker("output", 1, "")+"partial answer\n")
+	// The catch-up read and the follow's first read land; the follow's next
+	// one does not, so it gives up holding a partial answer.
+	platform.setReadsOK(2)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "next"); !errors.Is(err, chat.ErrBusy) {
+		t.Fatalf("send while the lost turn runs = %v, want ErrBusy", err)
+	}
+	engine.Wait()
+	if got := lastReply(t, messages(t, store, 1)); got.Content != "partial answer"+interruptedJoin || !got.Interrupted {
+		t.Fatalf("abandoned turn = %q interrupted=%v", got.Content, got.Interrupted)
+	}
+
+	platform.setReadsOK(0)
+	if _, err := engine.Send(ctx, 1, "after"); err != nil {
+		t.Fatalf("send after the abandoned turn = %v, want the new turn to go out", err)
+	}
+	engine.Wait()
+	msgs := messages(t, store, 1)
+	if n := countReplies(msgs, "partial answer"+interruptedJoin); n != 1 {
+		t.Fatalf("the abandoned turn was stored %d times: %v", n, transcriptOf(msgs))
+	}
+	if got := lastReply(t, msgs); got.Content != "re: after" || got.Interrupted {
+		t.Fatalf("the new turn = %q interrupted=%v", got.Content, got.Interrupted)
+	}
 }

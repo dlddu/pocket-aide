@@ -35,12 +35,30 @@ const (
 	// chatPlugin is the marketplace bundle whose skills the chat session runs
 	// with. The platform installs only what the create request names — it has
 	// no default for codex-chat since session-platform AC-A5 (2026-11-14).
-	chatPlugin     = "codex-session"
-	turnSentinel   = 0x1e
-	turnLead       = "session-platform "
+	chatPlugin   = "codex-session"
+	turnSentinel = 0x1e
+	turnLead     = "session-platform "
+	// turnStatusOK is the one status= value on an end marker that means the
+	// turn ran to its end (session-platform claudeTurnStatus: ok · timeout ·
+	// canceled · error). Every other value, and a turn whose end marker never
+	// came, is a reply the user must not read as the session's answer.
+	turnStatusOK   = "ok"
 	defaultPoll    = 700 * time.Millisecond
 	defaultTimeout = 40 * time.Minute
 	emptyReply     = "(응답이 비어 있습니다)"
+	// brokenReply stands in when an interrupted turn produced nothing at all.
+	// An empty failure has to read as a failure: the text for an empty but
+	// finished turn would claim the session answered with nothing.
+	brokenReply = "응답을 끝까지 받지 못했습니다. 잠시 뒤 다시 시도해 주세요."
+	// interruptedNote closes a partial answer that stopped short. The apps that
+	// predate Message.Interrupted draw content and nothing else, so a turn's
+	// own mark is the only place the user can see it was cut off.
+	interruptedNote = "중단됨"
+	// interruptedTail is the note as a paragraph of its own. It is the only
+	// form this server ever writes, which is what makes it safe to read back:
+	// an answer whose own prose ends in the word ("다운로드가 중단됨") is not a
+	// marked answer, and still gets a mark of its own.
+	interruptedTail = "\n\n" + interruptedNote
 	// steerApplied is session-platform's answer when the running turn took a
 	// mid-turn message (AC-J9); anything else means it did not.
 	steerApplied = "applied"
@@ -247,20 +265,21 @@ func (e *Engine) Send(ctx context.Context, userID int64, content string) (Messag
 func (e *Engine) finishTurn(ctx context.Context, userID, convID int64, sessionID string, offset int64) {
 	f := &turnFollower{}
 	next, err := e.follow(ctx, sessionID, offset, f, func(text string) { e.appendPending(userID, text) })
-	reply := strings.TrimSpace(f.reply.String())
-	switch {
-	case err != nil && reply == "":
-		reply = "응답을 끝까지 받지 못했습니다. 잠시 뒤 다시 시도해 주세요."
-	case err != nil:
-		reply += "\n\n(응답이 중간에 끊겼습니다)"
-	case reply == "":
-		reply = emptyReply
-	}
+	reply, interrupted := turnReply(f, err)
 	save := context.WithoutCancel(ctx)
-	if _, saveErr := e.store.AppendMessage(save, userID, convID, RoleAssistant, reply); saveErr != nil {
+	if _, saveErr := e.store.AppendReply(save, userID, convID, reply, interrupted); saveErr != nil {
 		e.logger.Error("chat: save codex reply", "user", userID, "err", saveErr)
 	}
 	if err != nil {
+		// The bytes this reply was made of are consumed even though the turn
+		// has no end marker: a later catch-up reading them again would store
+		// the same turn a second time. f.base is where the follow stopped,
+		// inside that turn, and a catch-up from there looks for the next input
+		// marker — so the abandoned turn is neither re-attributed nor able to
+		// shift the offsets of the turns after it.
+		if saveErr := e.store.SetPlatform(save, userID, convID, sessionID, f.base); saveErr != nil {
+			e.logger.Error("chat: save transcript offset", "user", userID, "err", saveErr)
+		}
 		e.logger.Warn("chat: codex turn did not finish", "user", userID, "session", sessionID, "err", err)
 		return
 	}
@@ -519,6 +538,16 @@ func (e *Engine) catchUp(ctx context.Context, userID, convID int64, sessionID st
 		if !done {
 			// Still running: follow it from where it started.
 			turnStart := f.startedAt
+			// The turns stored above are consumed before the hand-off, not
+			// after it. The background follow can end in an error, which
+			// leaves the offset where that follow found it — and the next
+			// catch-up would then read these finished turns again and store
+			// every one of them a second time.
+			if turnStart != offset {
+				if err := e.store.SetPlatform(ctx, userID, convID, sessionID, turnStart); err != nil {
+					return offset, err
+				}
+			}
 			e.running.Add(1)
 			go func() {
 				defer e.running.Done()
@@ -527,13 +556,12 @@ func (e *Engine) catchUp(ctx context.Context, userID, convID int64, sessionID st
 				defer cancel()
 				e.finishTurn(turnCtx, userID, convID, sessionID, turnStart)
 			}()
-			return offset, errBusyHandedOff
+			return turnStart, errBusyHandedOff
 		}
-		reply := strings.TrimSpace(f.reply.String())
-		if reply == "" {
-			reply = emptyReply
-		}
-		if _, err := e.store.AppendMessage(ctx, userID, convID, RoleAssistant, reply); err != nil {
+		// Read out of the transcript rather than followed live, but the same
+		// turn either way: history and the live path get one rule.
+		reply, interrupted := turnReply(f, nil)
+		if _, err := e.store.AppendReply(ctx, userID, convID, reply, interrupted); err != nil {
 			return offset, err
 		}
 		data = data[f.end-pos:]
@@ -717,7 +745,13 @@ type turnFollower struct {
 	base      int64 // transcript offset of buf[0]
 	startedAt int64 // offset of the turn's input marker
 	end       int64 // offset just past the end marker
-	reply     strings.Builder
+	// status is the status= field of the end marker that closed this turn,
+	// taken only from the marker carrying the seq the input marker opened —
+	// another turn's end says nothing about this one. Empty when the turn has
+	// not ended, and also when it ended on a platform old enough to write no
+	// status at all.
+	status string
+	reply  strings.Builder
 }
 
 func (f *turnFollower) started() bool { return f.stage > 0 }
@@ -740,7 +774,7 @@ func (f *turnFollower) feed(p []byte, emit func(string)) bool {
 			return false
 		}
 		markerAt := f.base + int64(i)
-		kind, seq := parseMarker(string(f.buf[i+1 : i+nl]))
+		kind, seq, status := parseMarker(string(f.buf[i+1 : i+nl]))
 		f.consume(i + nl + 1)
 		switch {
 		case f.stage == 0 && kind == "input":
@@ -748,7 +782,7 @@ func (f *turnFollower) feed(p []byte, emit func(string)) bool {
 		case f.stage == 1 && kind == "output" && seq == f.seq:
 			f.stage = 2
 		case f.stage == 2 && kind == "end" && seq == f.seq:
-			f.stage, f.end = 3, f.base
+			f.stage, f.end, f.status = 3, f.base, status
 		}
 	}
 	return true
@@ -769,19 +803,57 @@ func (f *turnFollower) consume(n int) {
 	f.base += int64(n)
 }
 
-func parseMarker(header string) (kind, seq string) {
+func parseMarker(header string) (kind, seq, status string) {
 	if !strings.HasPrefix(header, turnLead) {
-		return "", ""
+		return "", "", ""
 	}
 	fields := strings.Fields(strings.TrimPrefix(header, turnLead))
 	if len(fields) == 0 {
-		return "", ""
+		return "", "", ""
 	}
 	kind = fields[0]
 	for _, field := range fields[1:] {
 		if v, ok := strings.CutPrefix(field, "seq="); ok {
 			seq = v
 		}
+		if v, ok := strings.CutPrefix(field, "status="); ok {
+			status = v
+		}
 	}
-	return kind, seq
+	return kind, seq, status
+}
+
+// turnReply is what one turn becomes in the history. followErr is set when
+// this server stopped following before the turn's end marker arrived — a
+// read that failed, or the turn timing out on our side.
+//
+// An interrupted turn keeps every byte it received and says so twice: in
+// Message.Interrupted for readers that model the state, and in a trailing
+// interruptedNote paragraph for the apps that draw content and nothing else.
+func turnReply(f *turnFollower, followErr error) (string, bool) {
+	partial := strings.TrimSpace(f.reply.String())
+	// A turn with no status= ended on a platform that wrote none, which only
+	// ever framed turns that ran to the end — so does old stored history.
+	finished := followErr == nil && (f.status == "" || f.status == turnStatusOK)
+	switch {
+	case finished && partial == "":
+		return emptyReply, false
+	case finished:
+		return partial, false
+	case partial == "":
+		return brokenReply, true
+	default:
+		return noteInterrupted(partial), true
+	}
+}
+
+// noteInterrupted marks a partial answer as cut short without rewriting what
+// arrived before it. Only a note standing as the last paragraph counts as one
+// already there, so a turn judged twice keeps the single mark it has while an
+// answer whose prose merely ends in the word still gets its own.
+func noteInterrupted(partial string) string {
+	if partial == interruptedNote || strings.HasSuffix(partial, interruptedTail) {
+		return partial
+	}
+	return partial + interruptedTail
 }

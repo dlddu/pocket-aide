@@ -108,6 +108,7 @@ erDiagram
 | `role` | TEXT | NO |  |
 | `content` | TEXT | NO |  |
 | `created_at` | INTEGER | NO |  |
+| `interrupted` | INTEGER | NO |  |
 
 | 인덱스 | 컬럼 | UNIQUE | 조건 |
 | --- | --- | --- | --- |
