@@ -50,6 +50,15 @@ const (
 	// An empty failure has to read as a failure: the text for an empty but
 	// finished turn would claim the session answered with nothing.
 	brokenReply = "응답을 끝까지 받지 못했습니다. 잠시 뒤 다시 시도해 주세요."
+	// interruptedNote closes a partial answer that stopped short. The apps that
+	// predate Message.Interrupted draw content and nothing else, so a turn's
+	// own mark is the only place the user can see it was cut off.
+	interruptedNote = "중단됨"
+	// interruptedTail is the note as a paragraph of its own. It is the only
+	// form this server ever writes, which is what makes it safe to read back:
+	// an answer whose own prose ends in the word ("다운로드가 중단됨") is not a
+	// marked answer, and still gets a mark of its own.
+	interruptedTail = "\n\n" + interruptedNote
 	// steerApplied is session-platform's answer when the running turn took a
 	// mid-turn message (AC-J9); anything else means it did not.
 	steerApplied = "applied"
@@ -818,9 +827,9 @@ func parseMarker(header string) (kind, seq, status string) {
 // this server stopped following before the turn's end marker arrived — a
 // read that failed, or the turn timing out on our side.
 //
-// The interrupted reply keeps the partial answer exactly as it came: saying so
-// is the message's job (Message.Interrupted), not the text's, so the apps can
-// mark it without the stored answer having been rewritten.
+// An interrupted turn keeps every byte it received and says so twice: in
+// Message.Interrupted for readers that model the state, and in a trailing
+// interruptedNote paragraph for the apps that draw content and nothing else.
 func turnReply(f *turnFollower, followErr error) (string, bool) {
 	partial := strings.TrimSpace(f.reply.String())
 	// A turn with no status= ended on a platform that wrote none, which only
@@ -834,6 +843,17 @@ func turnReply(f *turnFollower, followErr error) (string, bool) {
 	case partial == "":
 		return brokenReply, true
 	default:
-		return partial, true
+		return noteInterrupted(partial), true
 	}
+}
+
+// noteInterrupted marks a partial answer as cut short without rewriting what
+// arrived before it. Only a note standing as the last paragraph counts as one
+// already there, so a turn judged twice keeps the single mark it has while an
+// answer whose prose merely ends in the word still gets its own.
+func noteInterrupted(partial string) string {
+	if partial == interruptedNote || strings.HasSuffix(partial, interruptedTail) {
+		return partial
+	}
+	return partial + interruptedTail
 }

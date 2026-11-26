@@ -772,6 +772,10 @@ func TestEngine_QueuesWhenThePlatformHasNoSteerPath(t *testing.T) {
 const (
 	emptyReplyText  = "(응답이 비어 있습니다)"
 	brokenReplyText = "응답을 끝까지 받지 못했습니다. 잠시 뒤 다시 시도해 주세요."
+	// The paragraph an interrupted partial answer ends with, and how it joins
+	// the text the turn did produce.
+	interruptedNoteText = "중단됨"
+	interruptedJoin     = "\n\n" + interruptedNoteText
 )
 
 // seedCodexSession gives user 1 a conversation already bound to a platform
@@ -836,9 +840,9 @@ func countReplies(msgs []chat.Message, content string) int {
 }
 
 // A turn session-platform ends with a status other than ok is not an answer.
-// The partial output is kept exactly as it came — the interruption is the
-// message's own mark, so neither the apps nor the next reader has to guess it
-// out of the text.
+// Every byte it did produce is kept, and the note is appended as its own
+// paragraph: the apps that predate Message.Interrupted draw content alone, so
+// the user would otherwise read a cut-off turn as a whole answer.
 func TestEngine_InterruptedTurnKeepsItsPartialAnswerAndSaysSo(t *testing.T) {
 	for _, status := range []string{"error", "timeout", "canceled", "something-new"} {
 		t.Run(status, func(t *testing.T) {
@@ -849,11 +853,56 @@ func TestEngine_InterruptedTurnKeepsItsPartialAnswerAndSaysSo(t *testing.T) {
 			}
 			engine.Wait()
 			got := lastReply(t, messages(t, store, 1))
-			if got.Content != "re: hi" {
-				t.Fatalf("reply = %q, want the partial answer as it came", got.Content)
+			if got.Content != "re: hi"+interruptedJoin {
+				t.Fatalf("reply = %q, want the partial answer then the note", got.Content)
 			}
 			if !got.Interrupted {
 				t.Fatalf("reply for a %q turn is not marked interrupted", status)
+			}
+		})
+	}
+}
+
+// The mark is a paragraph of its own, and only a paragraph of its own counts
+// as one already there. An answer whose prose happens to end in the word is
+// ordinary text and still gets its own mark; a body already carrying the
+// paragraph keeps exactly one.
+func TestEngine_InterruptedNoteIsItsOwnLastParagraph(t *testing.T) {
+	cases := []struct {
+		name string
+		body string // what the turn produced, before the engine judges it
+		want string // the content stored for it
+	}{{
+		name: "prose ending in the word still gets its own paragraph",
+		body: "다운로드가 중단됨",
+		want: "다운로드가 중단됨" + interruptedJoin,
+	}, {
+		name: "the paragraph is not stacked a second time",
+		body: "받은 만큼" + interruptedJoin,
+		want: "받은 만큼" + interruptedJoin,
+	}, {
+		name: "a body that is only the paragraph stays one paragraph",
+		body: interruptedNoteText,
+		want: interruptedNoteText,
+	}, {
+		name: "a line break alone does not make it a paragraph",
+		body: "받은 만큼\n" + interruptedNoteText,
+		want: "받은 만큼\n" + interruptedNoteText + interruptedJoin,
+	}}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			store, engine, platform := newEngine(t)
+			seedCodexSession(t, store, platform,
+				marker("input", 1, " at=x")+"one\n"+
+					marker("output", 1, "")+tc.body+"\n"+
+					marker("end", 1, " status=error at=x"))
+			if _, err := engine.Send(context.Background(), 1, "next"); err != nil {
+				t.Fatal(err)
+			}
+			engine.Wait()
+			msgs := messages(t, store, 1)
+			if n := countReplies(msgs, tc.want); n != 1 {
+				t.Fatalf("stored %d replies equal to %q: %v", n, tc.want, transcriptOf(msgs))
 			}
 		})
 	}
@@ -922,7 +971,8 @@ func TestEngine_CatchUpJudgesEachTurnByItsOwnStatus(t *testing.T) {
 	msgs := messages(t, store, 1)
 	var caught []chat.Message
 	for _, m := range msgs {
-		if m.Role == chat.RoleAssistant && (m.Content == "one answer" || m.Content == "two answer") {
+		// Turn 2 timed out, so its text carries the note; turn 1's does not.
+		if m.Role == chat.RoleAssistant && (m.Content == "one answer" || m.Content == "two answer"+interruptedJoin) {
 			caught = append(caught, m)
 		}
 	}
@@ -1002,7 +1052,7 @@ func TestEngine_CatchUpStoresAFinishedTurnOnceWhenTheHandOffFails(t *testing.T) 
 	if n := countReplies(msgs, "one answer"); n != 1 {
 		t.Fatalf("the finished turn was stored %d times: %v", n, transcriptOf(msgs))
 	}
-	if got := lastReply(t, msgs); got.Content != "partial" || !got.Interrupted {
+	if got := lastReply(t, msgs); got.Content != "partial"+interruptedJoin || !got.Interrupted {
 		t.Fatalf("turn 2 = %q interrupted=%v, want the partial marked interrupted", got.Content, got.Interrupted)
 	}
 }
@@ -1022,7 +1072,7 @@ func TestEngine_AbandonedTurnIsNotStoredAgainAfterReconnect(t *testing.T) {
 		t.Fatalf("send while the lost turn runs = %v, want ErrBusy", err)
 	}
 	engine.Wait()
-	if got := lastReply(t, messages(t, store, 1)); got.Content != "partial answer" || !got.Interrupted {
+	if got := lastReply(t, messages(t, store, 1)); got.Content != "partial answer"+interruptedJoin || !got.Interrupted {
 		t.Fatalf("abandoned turn = %q interrupted=%v", got.Content, got.Interrupted)
 	}
 
@@ -1032,7 +1082,7 @@ func TestEngine_AbandonedTurnIsNotStoredAgainAfterReconnect(t *testing.T) {
 	}
 	engine.Wait()
 	msgs := messages(t, store, 1)
-	if n := countReplies(msgs, "partial answer"); n != 1 {
+	if n := countReplies(msgs, "partial answer"+interruptedJoin); n != 1 {
 		t.Fatalf("the abandoned turn was stored %d times: %v", n, transcriptOf(msgs))
 	}
 	if got := lastReply(t, msgs); got.Content != "re: after" || got.Interrupted {
