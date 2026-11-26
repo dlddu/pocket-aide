@@ -22,6 +22,7 @@ data class ChatUiState(
     val hasLoaded: Boolean = false,
     val isSending: Boolean = false,
     val isRefreshing: Boolean = false,
+    val isSyncing: Boolean = false,
     val notice: String? = null,
     val error: ChatError? = null,
 ) {
@@ -31,6 +32,9 @@ data class ChatUiState(
     // decides), so only an already-queued message blocks the composer.
     val canSend: Boolean get() = hasLoaded && !isSending && queued == null && !isRefreshing
     val canRefresh: Boolean get() = hasLoaded && !isSending && !isReplying && !isRefreshing && messages.isNotEmpty()
+    // A plain re-read of the conversation, so it stays available even while a
+    // reply is in progress or sending — only guarded against itself (rapid taps).
+    val canSync: Boolean get() = hasLoaded && !isSyncing
 }
 
 /**
@@ -142,6 +146,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     fun refreshPlugins() {
         viewModelScope.launch { performRefreshPlugins() }
+    }
+
+    fun sync() {
+        viewModelScope.launch { performSync() }
     }
 
     fun dismissNotice() {
@@ -307,6 +315,22 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             throw e
         } catch (e: Exception) {
             _state.update { it.copy(hasLoaded = true, error = ChatError.from(e)) }
+        }
+    }
+
+    // Pulls the conversation right away instead of waiting for the next poll
+    // tick — for history the server added while the tab wasn't visible. The
+    // background poll loop keeps calling load() on its own schedule the whole
+    // time; both calls are plain reads that each replace state with the
+    // server's current truth, so running at the same time is harmless.
+    internal suspend fun performSync(): Boolean {
+        if (!_state.value.canSync) return false
+        _state.update { it.copy(isSyncing = true) }
+        try {
+            load()
+            return true
+        } finally {
+            _state.update { it.copy(isSyncing = false) }
         }
     }
 

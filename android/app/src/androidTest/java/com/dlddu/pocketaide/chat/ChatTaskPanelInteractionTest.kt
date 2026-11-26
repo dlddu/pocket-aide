@@ -101,6 +101,7 @@ class ChatTaskPanelInteractionTest {
                     draft = "",
                     onDraftChange = {},
                     onSend = {},
+                    onSync = {},
                     onRefresh = {},
                     onDismissNotice = {},
                     onCancelQueued = {},

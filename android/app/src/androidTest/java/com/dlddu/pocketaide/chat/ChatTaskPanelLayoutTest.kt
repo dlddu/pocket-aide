@@ -54,6 +54,7 @@ class ChatTaskPanelLayoutTest {
                     draft = "",
                     onDraftChange = {},
                     onSend = {},
+                    onSync = {},
                     onRefresh = {},
                     onDismissNotice = {},
                     onCancelQueued = {},

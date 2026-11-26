@@ -10,6 +10,7 @@ final class ChatViewModel: ObservableObject {
     @Published private(set) var hasLoaded = false
     @Published private(set) var isSending = false
     @Published private(set) var isRefreshing = false
+    @Published private(set) var isSyncing = false
     @Published var notice: String?
     @Published private(set) var error: ChatError?
 
@@ -31,6 +32,10 @@ final class ChatViewModel: ObservableObject {
     // decides), so only an already-queued message blocks the composer.
     var canSend: Bool { hasLoaded && !isSending && queued == nil && !isRefreshing }
     var canRefresh: Bool { hasLoaded && !isSending && !isReplying && !isRefreshing && !messages.isEmpty }
+    // A plain re-read of the conversation, so it stays available even while a
+    // reply is in progress, queued or sending — only guarded against itself
+    // (rapid taps).
+    var canSync: Bool { hasLoaded && !isSyncing }
 
     func pollWhileVisible() async {
         while !Task.isCancelled {
@@ -80,6 +85,20 @@ final class ChatViewModel: ObservableObject {
             self.error = ChatError(error)
             return false
         }
+    }
+
+    // Pulls the conversation right away instead of waiting for the next poll
+    // tick — for history the server added while the tab wasn't visible. The
+    // background poll loop keeps calling load() on its own schedule the whole
+    // time; both calls are plain reads that each replace state with the
+    // server's current truth, so running at the same time is harmless.
+    @discardableResult
+    func sync() async -> Bool {
+        guard canSync else { return false }
+        isSyncing = true
+        defer { isSyncing = false }
+        await load()
+        return true
     }
 
     /// Drops the message waiting for after the reply in progress. A 404
