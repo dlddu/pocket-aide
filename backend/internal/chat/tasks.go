@@ -106,16 +106,20 @@ type Task struct {
 	ChoiceTurnID int64 `json:"choice_turn_id,omitempty"`
 }
 
-// TaskWaiting is the open turn on a task: what the session is asking, and
-// whether anybody has picked it up. Running is a turn the parent has started
-// and not finished; otherwise nobody has taken it yet.
+// TaskWaiting is the open turn on a task: what was asked, what the session is
+// asking back, and whether anybody has picked it up. Running is a turn the
+// parent has started and not finished; otherwise nobody has taken it yet.
 //
-// The words the person sent are not here. They are that turn's own request and
-// travel with the task's exchanges, which the pane reads from the turns route
-// only when somebody opens them — carrying a message body on every row of
-// every poll sent the panel text nothing drew.
+// Request stays in this answer. The detail pane reads the words again with the
+// task's exchanges — that turn's own request — and draws them from there, so
+// nothing this route sends is what the pane renders. But this is the shape the
+// route has always answered with, and a field is only ours to drop once we know
+// what reads it; a client we cannot see is not the same as no client. Dropping
+// it would save a message body per waiting task per poll and break anybody who
+// reads it, which is the wrong trade for a route that is otherwise this small.
 type TaskWaiting struct {
-	TurnID int64 `json:"turn_id"`
+	TurnID  int64  `json:"turn_id"`
+	Request string `json:"request,omitempty"`
 	// Question is what the session is asking about this task, which is the
 	// nearest thing the agreed records have to "why this is stuck". The ledger
 	// carried a free-text reason and next action in its session relations;
@@ -235,10 +239,9 @@ func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error
 				// has yet. This is the platform's own definition of an open
 				// turn, applied to the one turn this page carries.
 				if turn.Request != nil && turn.EndedAt == nil {
-					// The request decides *that* a turn is open; its words are
-					// read with the exchanges, so they are not copied here.
 					task.Waiting = &TaskWaiting{
 						TurnID:   turn.ID,
+						Request:  strings.TrimSpace(derefString(turn.Request)),
 						Question: strings.TrimSpace(derefString(turn.Question)),
 						Running:  turn.StartedAt != nil,
 					}

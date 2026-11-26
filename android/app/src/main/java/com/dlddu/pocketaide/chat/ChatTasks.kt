@@ -48,23 +48,24 @@ data class ChatTask(
 )
 
 /**
- * The open turn on a task: what the session is asking back, and whether
- * anybody has picked it up. [running] is a turn the parent has started and not
- * finished; otherwise nobody has taken it yet.
+ * The open turn on a task: what was asked, what the session is asking back,
+ * and whether anybody has picked it up. [running] is a turn the parent has
+ * started and not finished; otherwise nobody has taken it yet.
  *
  * This replaced the ledger's request counts. A person's words are the task's
  * next turn now, so "something is waiting" is "its latest turn has not ended"
  * rather than a tally of rows beside the task — and there is no request
  * lifecycle to poll, because the turn ending is what settles it.
  *
- * The words the person sent are not here. They are that turn's own request and
- * are read with the exchanges, which the pane reads only when somebody opens
- * them — carrying them on every row of every poll sent a message body nothing
- * drew.
+ * [request] is still what the route answers, and so still read here. The pane
+ * draws the words from the task's exchanges instead — that turn's own request,
+ * read only when somebody opens them — so nothing on screen depends on this
+ * copy. It is kept because the field is the route's shape, not the pane's.
  */
 @Serializable
 data class ChatTaskWaiting(
     @SerialName("turn_id") val turnId: Long = 0,
+    val request: String = "",
     val question: String = "",
     val running: Boolean = false,
 )

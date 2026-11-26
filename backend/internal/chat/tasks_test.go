@@ -293,8 +293,8 @@ func TestTasks_WaitingComesFromTheLatestTurn(t *testing.T) {
 	}
 	// The question is what the session is actually asking — the nearest thing
 	// the agreed records have to the ledger's free-text reason.
-	if w.Question != "어디까지 할까요?" {
-		t.Fatalf("waiting = %+v, want the question", w)
+	if w.Question != "어디까지 할까요?" || w.Request != "이거 해 줘" {
+		t.Fatalf("waiting = %+v, want the words and the question", w)
 	}
 	if r := taskByID(t, list, "t-running").Waiting; r == nil || !r.Running {
 		t.Fatalf("running = %+v, want the turn marked taken", r)
