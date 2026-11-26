@@ -44,6 +44,7 @@ class ChatTaskPanelInteractionTest {
     private var stores = 0
     private var turnLoads = 0
     private var turnMores = 0
+    private var turnRetries = 0
 
     private val blocked = ChatTask(
         id = "t-blocked",
@@ -52,7 +53,7 @@ class ChatTaskPanelInteractionTest {
         completionCriteria = "CI 가 초록이면 끝",
         // 「묻는 것」은 세션이 실제로 물은 question 이다 — 원장의 자유문 사유와
         // 다음 행동은 부모의 기장이었고 사람이 읽는 것이 아니었다.
-        waiting = ChatTaskWaiting(turnId = 5, request = "이거 해 줘", question = "CI 가 막혔다"),
+        waiting = ChatTaskWaiting(turnId = 5, question = "CI 가 막혔다"),
     )
 
     private val ledger = ChatTasksUiState(
@@ -95,6 +96,9 @@ class ChatTaskPanelInteractionTest {
                 // 선택지 id 가 아니라 그것이 제시된 turn 이다.
                 var pickTurn by remember { mutableStateOf(0L) }
                 var pickText by remember { mutableStateOf("") }
+                // 이력 영역의 접힘도 화면이 쥐는 그대로 둔다: 상세에 들어갈
+                // 때와 다른 작업으로 바꿀 때 접힌다.
+                var turnsOpen by remember { mutableStateOf(false) }
                 ChatPanes(
                     state = chat,
                     tasks = tasks,
@@ -117,8 +121,12 @@ class ChatTaskPanelInteractionTest {
                         openId = it.id
                         // 다른 작업에 쓰던 말이 따라오지 않는다.
                         request = ""
+                        turnsOpen = false
                     },
-                    onCloseTask = { openId = null },
+                    onCloseTask = {
+                        openId = null
+                        turnsOpen = false
+                    },
                     taskRequest = taskRequest,
                     requestDraft = request,
                     onRequestDraftChange = {
@@ -134,7 +142,10 @@ class ChatTaskPanelInteractionTest {
                         pickText = it.requestText
                     },
                     turns = turns,
+                    turnsOpen = turnsOpen,
+                    onToggleTurns = { turnsOpen = !turnsOpen },
                     onLoadTurns = { turnLoads++ },
+                    onRetryTurns = { turnRetries++ },
                     onLoadMoreTurns = { turnMores++ },
                     onStoreRequest = {
                         stores++
@@ -372,7 +383,7 @@ class ChatTaskPanelInteractionTest {
             ledger.copy(
                 tasks = ledger.tasks.map {
                     if (it.id == "t-blocked") {
-                        it.copy(waiting = ChatTaskWaiting(turnId = 9, request = "이거 해 줘", question = "어디까지?"))
+                        it.copy(waiting = ChatTaskWaiting(turnId = 9, question = "어디까지?"))
                     } else {
                         it
                     }
@@ -480,6 +491,72 @@ class ChatTaskPanelInteractionTest {
         compose.onNodeWithTag("chat.tasks.detail.error").assertTextContains("선택지", substring = true)
         compose.onNodeWithTag("chat.tasks.detail.field").assertTextContains("내가 쓴 요청", substring = true)
         compose.onNodeWithText("다시 저장하기").assertIsDisplayed()
+    }
+
+    // ── 이력은 맨 아래, 접힌 채로 ───────────────────────────────────────────
+
+    // 실제 진입점으로 한 작업에 들어간다: 이력은 **맨 아래에 접혀** 있고 조회가
+    // 0이며, 묻는 것과 보낼 문장·요청 칸은 이미 화면에 있다. 상세에 들어가는
+    // 일이 긴 대화를 읽어 오는 일이 되지 않는다.
+    @Test
+    fun steppingIntoATaskReadsNoExchangeAndStillShowsWhatIsBeingAsked() {
+        start(turns = ChatTaskTurnsUiState())
+        openBlocked()
+
+        assertEquals("상세 진입만으로는 이력을 읽지 않는다", 0, turnLoads)
+        compose.onNodeWithTag("chat.tasks.detail.question").assertTextContains("CI 가 막혔다", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.criteria").assertTextContains("CI 가 초록이면 끝", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.field").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.store").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.loading").assertCountEquals(0)
+    }
+
+    // 요청을 저장해도 이력은 읽지 않는다 — 저장은 그 작업의 다음 턴이 되고,
+    // 접힌 영역은 접힌 채다.
+    @Test
+    fun storingARequestReadsNoExchange() {
+        start(turns = ChatTaskTurnsUiState())
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("이거 해 줘")
+        compose.waitForIdle()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
+        compose.waitForIdle()
+
+        assertEquals(1, stores)
+        assertEquals("저장은 이력 조회가 아니다", 0, turnLoads)
+    }
+
+    // 펼치면 그 작업의 이력만 한 번 읽는다.
+    @Test
+    fun theFirstOpenReadsTheOpenTasksExchangeOnce() {
+        start(turns = ChatTaskTurnsUiState())
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").performClick()
+        compose.waitForIdle()
+        assertEquals(1, turnLoads)
+    }
+
+    // 작업을 바꾸면 이력은 다시 접힌다 — 앞 작업에서 펼쳐 둔 것이 다음 작업에
+    // 따라와 그 작업의 이력을 멋대로 읽지 않는다.
+    @Test
+    fun switchingTasksClosesTheExchangeAgain() {
+        start(turns = ChatTaskTurnsUiState())
+        openBlocked()
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").performClick()
+        compose.waitForIdle()
+        val afterFirstOpen = turnLoads
+
+        compose.onNodeWithTag("chat.tasks.detail.back").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("검토 대기").performClick()
+        compose.waitForIdle()
+
+        assertEquals("다른 작업은 접힌 채로 열린다", afterFirstOpen, turnLoads)
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.empty").assertCountEquals(0)
     }
 
     /** 막힌 작업에 선택지 하나를 올려 둔 원장. */

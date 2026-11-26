@@ -74,11 +74,21 @@ data class ChatTasksUiState(
  * Loading, empty, a page and a failure are separate on purpose: an empty list
  * means this task has had no exchange yet, and a failure must not look like
  * that.
+ *
+ * Nothing in here is read until somebody opens the exchanges. The pane's
+ * other fields — what the task is for, what is being asked, what there is to
+ * say back — come from the task list the panel already polls, so a pane whose
+ * exchanges are closed holds this at its default and has asked for nothing.
+ *
+ * [signal] is what the task list said about the task's exchanges when this
+ * page was read. Re-opening a page whose signal still matches reads nothing;
+ * a signal that moved is an exchange that happened, and the page is read
+ * again.
  */
 data class ChatTaskTurnsUiState(
     val taskId: String = "",
-    val task: ChatTaskTurnTask = ChatTaskTurnTask(),
     val taskVersion: Long = 0,
+    val signal: ChatTaskHistorySignal = ChatTaskHistorySignal.none,
     val turns: List<ChatTaskTurn> = emptyList(),
     val nextCursor: Long = 0,
     val isLoading: Boolean = false,
@@ -90,6 +100,14 @@ data class ChatTaskTurnsUiState(
 
     /** The choices the latest turn offers, which are the only current ones. */
     val offered: List<ChatTaskTurnChoice> get() = turns.lastOrNull()?.choices ?: emptyList()
+
+    /**
+     * Whether this already holds [taskId]'s exchanges as of [want], so opening
+     * them again reads nothing. A failure is not holding them: somebody who
+     * opens the section again is asking for another try.
+     */
+    fun holds(taskId: String, want: ChatTaskHistorySignal): Boolean =
+        this.taskId == taskId && signal == want && error == null && (hasLoaded || isLoading)
 }
 
 data class ChatTaskRequestUiState(
@@ -116,6 +134,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
     private var taskReadSeq = 0L
+
+    // turnsReadSeq does the same for the exchanges, which are read per task and
+    // only when somebody opens them. Switching tasks or closing the pane moves
+    // it, so a page that was still in the air lands nowhere instead of
+    // appearing under whichever task is open by then.
+    private var turnsReadSeq = 0L
 
     suspend fun pollWhileVisible() {
         while (coroutineContext.isActive) {
@@ -204,33 +228,91 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
-    fun loadTaskTurns(taskId: String) {
-        viewModelScope.launch { performTaskTurns(taskId, more = false) }
+    /**
+     * Reads [task]'s exchanges, and only when the pane does not already hold
+     * them. Called when somebody opens the section and whenever the panel's
+     * poll says something happened on the task whose section is open — so a
+     * closed section reads nothing, the first open reads one page of that one
+     * task, and opening it again after nothing changed reads nothing.
+     *
+     * The "nothing changed" answer comes from the task list the panel already
+     * polls ([ChatTaskHistorySignal]), so nothing is asked of the session to
+     * find out whether something is worth asking for.
+     */
+    fun loadTaskTurns(task: ChatTask) {
+        viewModelScope.launch { openTaskTurns(task) }
+    }
+
+    /**
+     * Opening them, as one suspending step so it can be driven without a main
+     * looper. True when a page was actually read — false is "the pane already
+     * holds this", which is the answer that costs nothing.
+     */
+    internal suspend fun openTaskTurns(task: ChatTask): Boolean {
+        val want = ChatTaskHistorySignal.of(task)
+        if (_taskTurns.value.holds(task.id, want)) return false
+        return performTaskTurns(task.id, want, more = false)
+    }
+
+    /** Reads this task's exchanges again, whatever the pane is holding — the retry. */
+    fun reloadTaskTurns(task: ChatTask) {
+        viewModelScope.launch { performTaskTurns(task.id, ChatTaskHistorySignal.of(task), more = false) }
     }
 
     fun loadMoreTaskTurns() {
         val state = _taskTurns.value
         if (!state.hasMore || state.isLoading) return
-        viewModelScope.launch { performTaskTurns(state.taskId, more = true) }
+        viewModelScope.launch { performTaskTurns(state.taskId, state.signal, more = true) }
     }
 
-    /** Forgets the turns once that task's pane is closed. */
+    /**
+     * Forgets the exchanges once that task's pane is closed, and gives up on a
+     * page still in the air — the next pane opens with nothing read, which is
+     * what it shows.
+     */
     fun clearTaskTurns() {
+        turnsReadSeq++
         _taskTurns.value = ChatTaskTurnsUiState()
     }
 
-    internal suspend fun performTaskTurns(taskId: String, more: Boolean): Boolean {
+    internal suspend fun performTaskTurns(
+        taskId: String,
+        signal: ChatTaskHistorySignal,
+        more: Boolean,
+    ): Boolean {
         val current = _taskTurns.value
-        if (current.isLoading) return false
+        // Paging is same-task and additive, so a second one while the first is
+        // in flight would append the same page twice. A first page for another
+        // task is not blocked: it supersedes, and the older read's reply is
+        // dropped by the sequence below.
+        if (more && current.isLoading) return false
+        if (!more && current.isLoading && current.taskId == taskId && current.signal == signal) return false
+        val mine = ++turnsReadSeq
         val after = if (more && current.taskId == taskId) current.nextCursor else 0
         val kept = if (more && current.taskId == taskId) current.turns else emptyList()
-        _taskTurns.value = current.copy(taskId = taskId, turns = kept, isLoading = true, error = null)
+        _taskTurns.value = current.copy(
+            taskId = taskId,
+            signal = signal,
+            turns = kept,
+            // A first page is page one: the previous read's cursor is not this
+            // read's, and keeping it would offer "더 보기" for a page nobody has.
+            nextCursor = if (more) current.nextCursor else 0,
+            isLoading = true,
+            // A first page that never arrives leaves the pane unread rather
+            // than holding an empty history it never read.
+            hasLoaded = more,
+            error = null,
+        )
         return try {
             val page = api.chatTaskTurns(taskId, after, CHAT_TASK_TURNS_PAGE)
+            // A page that lost its race belongs to a task the pane has left, or
+            // to a pane that is closed. Showing it would put one task's
+            // exchanges under another's name.
+            if (mine != turnsReadSeq) return false
             _taskTurns.value = ChatTaskTurnsUiState(
                 taskId = taskId,
-                task = page.task,
                 taskVersion = page.taskVersion,
+                signal = signal,
                 // Pages arrive oldest first and are appended in that order, so
                 // the pane reads top to bottom as it happened.
                 turns = kept + page.turns,
@@ -241,6 +323,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            if (mine != turnsReadSeq) return false
             // The platform's four answers stay four different things: a task
             // this slot does not have, a session with no live pod, a
             // deployment that keeps no work records, and anything else. None

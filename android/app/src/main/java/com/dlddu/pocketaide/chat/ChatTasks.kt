@@ -29,7 +29,8 @@ data class ChatTask(
     val description: String = "",
     @SerialName("completion_criteria") val completionCriteria: String = "",
     // How many exchanges this task has had, so the row can say it has history
-    // without being opened.
+    // without being opened — and so the detail pane can tell whether the
+    // exchanges it already read are still current without reading them again.
     @SerialName("turns_total") val turnsTotal: Long = 0,
     // Whether this task was carried over from the retired ledger. The panel
     // uses it to avoid presenting a carried-over task as one written here.
@@ -47,19 +48,23 @@ data class ChatTask(
 )
 
 /**
- * The open turn on a task: what was asked, what the session is asking back,
- * and whether anybody has picked it up. [running] is a turn the parent has
- * started and not finished; otherwise nobody has taken it yet.
+ * The open turn on a task: what the session is asking back, and whether
+ * anybody has picked it up. [running] is a turn the parent has started and not
+ * finished; otherwise nobody has taken it yet.
  *
  * This replaced the ledger's request counts. A person's words are the task's
  * next turn now, so "something is waiting" is "its latest turn has not ended"
  * rather than a tally of rows beside the task — and there is no request
  * lifecycle to poll, because the turn ending is what settles it.
+ *
+ * The words the person sent are not here. They are that turn's own request and
+ * are read with the exchanges, which the pane reads only when somebody opens
+ * them — carrying them on every row of every poll sent a message body nothing
+ * drew.
  */
 @Serializable
 data class ChatTaskWaiting(
     @SerialName("turn_id") val turnId: Long = 0,
-    val request: String = "",
     val question: String = "",
     val running: Boolean = false,
 )
@@ -159,6 +164,44 @@ data class ChatTaskFilter(
 
 /** Which of the three "nothing to show" answers the panel owes the user. */
 enum class ChatTaskEmptiness { NO_TASKS, FILTERED, COMPLETED_HIDDEN }
+
+/**
+ * What the task list already says about a task's exchanges, as one value.
+ *
+ * The detail pane reads the exchanges themselves only when somebody opens
+ * them, so it needs a cheap way to tell "the page I am holding is still the
+ * current one" from "something happened and I should read again". Every field
+ * here is one the panel's own poll already carries, so comparing them costs no
+ * request at all — the panel is the signal, and no second one is invented.
+ *
+ * What each field catches: [turnsTotal] a new exchange, [latestTurnId] and
+ * [running] the open one being taken up, [status] the task moving, and
+ * [choiceTurnId] the session offering different sentences. A turn finishing
+ * drops the open turn, which moves [latestTurnId] too.
+ *
+ * [none] is what a pane holding nothing has. Its [turnsTotal] is -1 so it can
+ * never equal a real task's — a task with no exchanges yet has 0, and reading
+ * "already current" from that would leave the pane empty for good.
+ */
+data class ChatTaskHistorySignal(
+    val turnsTotal: Long = -1,
+    val latestTurnId: Long = 0,
+    val running: Boolean = false,
+    val status: String = "",
+    val choiceTurnId: Long = 0,
+) {
+    companion object {
+        val none = ChatTaskHistorySignal()
+
+        fun of(task: ChatTask): ChatTaskHistorySignal = ChatTaskHistorySignal(
+            turnsTotal = task.turnsTotal,
+            latestTurnId = task.waiting?.turnId ?: 0,
+            running = task.waiting?.running ?: false,
+            status = task.status,
+            choiceTurnId = task.choiceTurnId,
+        )
+    }
+}
 
 /**
  * The turn a stored request became.

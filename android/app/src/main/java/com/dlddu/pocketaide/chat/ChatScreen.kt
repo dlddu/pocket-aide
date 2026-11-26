@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -120,6 +121,12 @@ fun ChatScreen(api: ApiClient) {
     var filterStatus by rememberSaveable { mutableStateOf<String?>(null) }
     var hideCompleted by rememberSaveable { mutableStateOf(false) }
     var openTaskId by rememberSaveable { mutableStateOf<String?>(null) }
+    // Whether the open task's exchanges are open. It is not saved across a
+    // fold or a rotation on purpose: reopening them is one tap, and restoring
+    // them open would read a long exchange that nobody asked for again. Closed
+    // is also what stepping into a task and switching tasks give, which is set
+    // beside the draft below.
+    var turnsOpen by remember { mutableStateOf(false) }
     // The request being written is its own draft, separate from the chat
     // composer's — storing one never touches the other. The key beside it is
     // this draft's identity on the ledger: the backend stores one row per key,
@@ -158,6 +165,7 @@ fun ChatScreen(api: ApiClient) {
             requestKey = newTaskRequestKey()
             requestChoiceTurnId = 0L
             requestChoiceText = ""
+            turnsOpen = false
             viewModel.dismissTaskRequest()
             viewModel.clearTaskTurns()
         }
@@ -197,10 +205,17 @@ fun ChatScreen(api: ApiClient) {
             requestKey = newTaskRequestKey()
             requestChoiceTurnId = 0L
             requestChoiceText = ""
+            // And with its exchanges closed, so stepping into a task reads
+            // none of them — what is being asked is what the person came for.
+            // Switching from another task closes them for the same reason, and
+            // drops the page that was read for that other task.
+            turnsOpen = false
             viewModel.dismissTaskRequest()
+            viewModel.clearTaskTurns()
         },
         onCloseTask = {
             openTaskId = null
+            turnsOpen = false
             viewModel.dismissTaskRequest()
             viewModel.clearTaskTurns()
         },
@@ -226,7 +241,14 @@ fun ChatScreen(api: ApiClient) {
             requestChoiceText = choice.requestText
         },
         turns = taskTurns,
-        onLoadTurns = { openTask?.let { viewModel.loadTaskTurns(it.id) } },
+        turnsOpen = turnsOpen,
+        onToggleTurns = { turnsOpen = !turnsOpen },
+        // Reads one page of this one task's exchanges, and only when the pane
+        // is not already holding them — the view model compares the task row's
+        // own exchange signal, so reopening after nothing happened asks for
+        // nothing. Retry is the one that reads regardless.
+        onLoadTurns = { openTask?.let { viewModel.loadTaskTurns(it) } },
+        onRetryTurns = { openTask?.let { viewModel.reloadTaskTurns(it) } },
         onLoadMoreTurns = viewModel::loadMoreTaskTurns,
         // The draft is cleared only once the backend has stored the request,
         // and the next request gets a new key then; a failure leaves both as
@@ -295,7 +317,12 @@ internal fun ChatPanes(
     onRequestDraftChange: (String) -> Unit,
     onChoicePicked: (ChatTaskChoice) -> Unit,
     turns: ChatTaskTurnsUiState,
+    // Whether the open task's exchanges are open. Closed is where a task
+    // starts, and closed means nothing of them has been read.
+    turnsOpen: Boolean,
+    onToggleTurns: () -> Unit,
     onLoadTurns: () -> Unit,
+    onRetryTurns: () -> Unit,
     onLoadMoreTurns: () -> Unit,
     onStoreRequest: () -> Unit,
 ) {
@@ -363,7 +390,10 @@ internal fun ChatPanes(
                             onChoicePicked = onChoicePicked,
                             request = taskRequest,
                             turns = turns,
+                            turnsOpen = turnsOpen,
+                            onToggleTurns = onToggleTurns,
                             onLoadTurns = onLoadTurns,
+                            onRetryTurns = onRetryTurns,
                             onLoadMoreTurns = onLoadMoreTurns,
                             // No reply gate: the request becomes the task's next
                             // turn, not part of the reply being written.

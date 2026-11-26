@@ -20,7 +20,9 @@ type tasksBody struct {
 		TurnsTotal         int64  `json:"turns_total"`
 		Migrated           bool   `json:"migrated"`
 		Waiting            *struct {
-			TurnID   int64  `json:"turn_id"`
+			TurnID int64 `json:"turn_id"`
+			// Request is kept here although the response no longer carries it:
+			// decoding it is how the test can say it is *absent*.
 			Request  string `json:"request"`
 			Question string `json:"question"`
 			Running  bool   `json:"running"`
@@ -109,6 +111,13 @@ func TestGetChatTasks_ServesTheWorkPage(t *testing.T) {
 	// turn they were offered on — which is what a pick is checked against.
 	if got.Waiting == nil || got.Waiting.TurnID != 7 || got.Waiting.Question != "어디까지 할까요?" {
 		t.Fatalf("waiting = %+v", got.Waiting)
+	}
+	// The words the person sent are not in this answer, although the platform
+	// page carries them. They are that turn's own request and are read with the
+	// task's exchanges, which the detail pane calls only when somebody opens
+	// them — the panel polls this route every few seconds and drew none of it.
+	if got.Waiting.Request != "" {
+		t.Fatalf("the task list carried a message body nothing draws: %q", got.Waiting.Request)
 	}
 	if len(got.Choices) != 1 || got.ChoiceTurnID != 7 {
 		t.Fatalf("choices = %+v turn=%d", got.Choices, got.ChoiceTurnID)

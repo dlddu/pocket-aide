@@ -76,7 +76,10 @@ class ChatTaskPanelLayoutTest {
                     onRequestDraftChange = {},
                     onChoicePicked = {},
                     turns = ChatTaskTurnsUiState(),
+                    turnsOpen = false,
+                    onToggleTurns = {},
                     onLoadTurns = {},
+                    onRetryTurns = {},
                     onLoadMoreTurns = {},
                     onStoreRequest = {},
                 )
