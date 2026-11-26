@@ -36,11 +36,19 @@ type Session struct {
 }
 
 // Message is one row of chat_messages.
+//
+// Interrupted marks a reply the codex session did not finish — the platform
+// ended its turn with a status other than ok, or this server lost the follow.
+// Content is then the answer as far as it got, unrewritten, and the apps say
+// it was interrupted instead of showing it as the session's answer. Rows from
+// before the column default to false, which is what every reply the old code
+// stored claimed to be.
 type Message struct {
-	ID        int64  `json:"id"`
-	Role      Role   `json:"role"`
-	Content   string `json:"content"`
-	CreatedAt int64  `json:"created_at"`
+	ID          int64  `json:"id"`
+	Role        Role   `json:"role"`
+	Content     string `json:"content"`
+	CreatedAt   int64  `json:"created_at"`
+	Interrupted bool   `json:"interrupted"`
 }
 
 // Store is the user-scoped facade.
@@ -122,7 +130,7 @@ func (s *Store) Messages(ctx context.Context, userID, sessionID int64, limit int
 		return nil, err
 	}
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, role, content, created_at FROM chat_messages WHERE session_id = ? ORDER BY id`, sessionID)
+		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? ORDER BY id`, sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("list chat messages: %w", err)
 	}
@@ -130,7 +138,7 @@ func (s *Store) Messages(ctx context.Context, userID, sessionID int64, limit int
 	out := []Message{}
 	for rows.Next() {
 		var m Message
-		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.CreatedAt, &m.Interrupted); err != nil {
 			return nil, fmt.Errorf("scan chat message: %w", err)
 		}
 		out = append(out, m)
@@ -144,9 +152,24 @@ func (s *Store) Messages(ctx context.Context, userID, sessionID int64, limit int
 	return out, nil
 }
 
+const messageColumns = `id, role, content, created_at, interrupted`
+
 // AppendMessage stores a message in a session owned by userID and bumps the
 // session's activity time. The first user message also becomes the title.
 func (s *Store) AppendMessage(ctx context.Context, userID, sessionID int64, role Role, content string) (Message, error) {
+	return s.appendMessage(ctx, userID, sessionID, role, content, false)
+}
+
+// AppendReply stores a codex reply, saying whether the turn behind it was
+// interrupted. Separate from AppendMessage so a caller that has no turn — a
+// user's own message — cannot accidentally claim one way or the other.
+func (s *Store) AppendReply(ctx context.Context, userID, sessionID int64, content string, interrupted bool) (Message, error) {
+	return s.appendMessage(ctx, userID, sessionID, RoleAssistant, content, interrupted)
+}
+
+func (s *Store) appendMessage(
+	ctx context.Context, userID, sessionID int64, role Role, content string, interrupted bool,
+) (Message, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return Message{}, fmt.Errorf("begin: %w", err)
@@ -163,7 +186,8 @@ func (s *Store) AppendMessage(ctx context.Context, userID, sessionID int64, role
 		return Message{}, fmt.Errorf("lookup chat session: %w", err)
 	}
 	res, err := tx.ExecContext(ctx,
-		`INSERT INTO chat_messages (session_id, role, content) VALUES (?, ?, ?)`, sessionID, string(role), content)
+		`INSERT INTO chat_messages (session_id, role, content, interrupted) VALUES (?, ?, ?, ?)`,
+		sessionID, string(role), content, interrupted)
 	if err != nil {
 		return Message{}, fmt.Errorf("insert chat message: %w", err)
 	}
@@ -180,8 +204,8 @@ func (s *Store) AppendMessage(ctx context.Context, userID, sessionID int64, role
 	}
 	var m Message
 	if err := tx.QueryRowContext(ctx,
-		`SELECT id, role, content, created_at FROM chat_messages WHERE id = ?`, id,
-	).Scan(&m.ID, &m.Role, &m.Content, &m.CreatedAt); err != nil {
+		`SELECT `+messageColumns+` FROM chat_messages WHERE id = ?`, id,
+	).Scan(&m.ID, &m.Role, &m.Content, &m.CreatedAt, &m.Interrupted); err != nil {
 		return Message{}, fmt.Errorf("reload chat message: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
