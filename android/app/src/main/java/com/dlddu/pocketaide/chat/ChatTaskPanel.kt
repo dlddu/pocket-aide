@@ -124,12 +124,15 @@ private fun EmptyNote(empty: ChatTaskEmptiness, filter: ChatTaskFilter, onFilter
             "전체 보기" to filter.copy(status = null),
         )
 
-        // The rows are completed and hidden — they are still in the ledger, so
+        // The rows are finished and hidden — they are still in the ledger, so
         // this says so and offers to show them rather than looking like none.
-        ChatTaskEmptiness.COMPLETED_HIDDEN -> Triple(
-            "chat.tasks.empty.completedHidden",
-            "완료한 작업을 숨기고 있어요. 지워진 것은 아니에요.",
-            "완료 표시하기" to filter.copy(hideCompleted = false),
+        // "끝난" rather than "완료한", because cancelled rows are hidden by the
+        // same toggle and calling them completed would be the one claim the
+        // panel must not make.
+        ChatTaskEmptiness.FINISHED_HIDDEN -> Triple(
+            "chat.tasks.empty.finishedHidden",
+            "끝난 작업을 숨기고 있어요. 지워진 것은 아니에요.",
+            "끝난 작업 표시하기" to filter.copy(hideFinished = false),
         )
     }
     PanelCentre {
@@ -214,11 +217,12 @@ private fun PanelHeader(
                 }
             }
         }
-        // Offered while the ledger has completed work, and while the hide is on
-        // even if it has none — a choice the user cannot see is a choice they
-        // cannot undo.
-        if ((state.counts[ChatTaskStatus.COMPLETED] ?: 0) > 0 || filter.hideCompleted) {
-            HideCompletedToggle(filter.hideCompleted) { onFilterChange(filter.copy(hideCompleted = it)) }
+        // Offered while the ledger has work that has ended either way, and while
+        // the hide is on even if it has none — a choice the user cannot see is a
+        // choice they cannot undo.
+        val finishedCount = ChatTaskStatus.finished.sumOf { state.counts[it] ?: 0 }
+        if (finishedCount > 0 || filter.hideFinished) {
+            HideFinishedToggle(filter.hideFinished) { onFilterChange(filter.copy(hideFinished = it)) }
         }
         if (state.truncated) {
             // A prefix must not read as the whole ledger.
@@ -268,16 +272,18 @@ private fun StatusPill(
 }
 
 /**
- * Hides or shows completed work. Display only — the label says so, because a
- * control next to a task list could otherwise read as finishing or removing
- * something.
+ * Hides or shows the work that has ended — completed and cancelled together.
+ * Display only — the label says so, because a control next to a task list could
+ * otherwise read as finishing or removing something. It does not name either
+ * ending, so hiding a cancelled row never calls it done; the status pills still
+ * count the two apart and bring either back on its own.
  */
 @Composable
-private fun HideCompletedToggle(hidden: Boolean, onChange: (Boolean) -> Unit) {
+private fun HideFinishedToggle(hidden: Boolean, onChange: (Boolean) -> Unit) {
     val ink = DesignTokens.Colors.ink(PANEL_AREA)
     val shape = RoundedCornerShape(DesignTokens.Radius.chip)
     Text(
-        if (hidden) "완료 표시하기" else "완료 숨기기",
+        if (hidden) "끝난 작업 표시하기" else "끝난 작업 숨기기",
         style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
         color = ink.copy(alpha = if (hidden) 1f else MUTED_OPACITY),
         modifier = Modifier
@@ -285,7 +291,7 @@ private fun HideCompletedToggle(hidden: Boolean, onChange: (Boolean) -> Unit) {
             .border(CHIP_BORDER, DesignTokens.Colors.rule(PANEL_AREA), shape)
             .toggleable(value = hidden, role = Role.Switch) { onChange(it) }
             .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
-            .testTag("chat.tasks.hideCompleted"),
+            .testTag("chat.tasks.hideFinished"),
     )
 }
 

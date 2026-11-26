@@ -118,7 +118,7 @@ fun ChatScreen(api: ApiClient) {
     // way for the same reason: a fold or a rotation must not silently widen a
     // narrowed list or close a task the user was working on.
     var filterStatus by rememberSaveable { mutableStateOf<String?>(null) }
-    var hideCompleted by rememberSaveable { mutableStateOf(false) }
+    var hideFinished by rememberSaveable { mutableStateOf(false) }
     var openTaskId by rememberSaveable { mutableStateOf<String?>(null) }
     // The request being written is its own draft, separate from the chat
     // composer's — storing one never touches the other. The key beside it is
@@ -182,10 +182,10 @@ fun ChatScreen(api: ApiClient) {
             }
         },
         taskListState = taskList,
-        filter = ChatTaskFilter(filterStatus, hideCompleted),
+        filter = ChatTaskFilter(filterStatus, hideFinished),
         onFilterChange = {
             filterStatus = it.status
-            hideCompleted = it.hideCompleted
+            hideFinished = it.hideFinished
         },
         openTask = openTask,
         onOpenTask = { task ->

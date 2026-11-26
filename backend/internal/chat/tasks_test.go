@@ -230,7 +230,7 @@ func TestTasks_CarryTheAgreedModelAndWalkEveryPage(t *testing.T) {
 	// Every status is a key even at zero, so the panel's filter chips do not
 	// have to decide between "no such status" and "none of these".
 	for _, s := range []string{chat.TaskStatusPlanned, chat.TaskStatusReview,
-		chat.TaskStatusCompleted, chat.TaskStatusUnknown} {
+		chat.TaskStatusCompleted, chat.TaskStatusCancelled, chat.TaskStatusUnknown} {
 		if _, ok := list.Counts[s]; !ok {
 			t.Fatalf("counts = %v, want %s present at zero", list.Counts, s)
 		}
@@ -470,6 +470,46 @@ func TestTasks_UnknownStatusIsNotGuessed(t *testing.T) {
 	}
 	if taskByID(t, list, "t3").Status != chat.TaskStatusUnknown {
 		t.Fatalf("an empty status = %+v", list.Tasks)
+	}
+}
+
+// Cancelled is carried through as itself. Only the explicit word converts —
+// nothing near it does, and nothing is folded into completed, because the panel
+// hides the two together and would otherwise be reporting abandoned work as
+// delivered.
+func TestTasks_CancelledIsItsOwnStatusAndOnlyTheExplicitWordConverts(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{
+		row("t1", "cancelled"), row("t2", "  CANCELLED  "), row("t3", "canceled"),
+		row("t4", "cancelling"), row("t5", "completed"),
+	}
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if taskByID(t, list, "t1").Status != chat.TaskStatusCancelled {
+		t.Fatalf("an explicit cancellation was not carried: %+v", list.Tasks)
+	}
+	// Case and padding are the platform's to write however it likes.
+	if taskByID(t, list, "t2").Status != chat.TaskStatusCancelled {
+		t.Fatalf("a padded cancellation was not normalised: %+v", list.Tasks)
+	}
+	// Neither the one-l American spelling nor the in-progress word is the
+	// agreed status, and guessing either would put a task in an ending it was
+	// never written into.
+	for _, id := range []string{"t3", "t4"} {
+		if got := taskByID(t, list, id).Status; got != chat.TaskStatusUnknown {
+			t.Fatalf("%s status = %q, want unknown rather than a guessed cancellation", id, got)
+		}
+	}
+	if taskByID(t, list, "t5").Status != chat.TaskStatusCompleted {
+		t.Fatalf("completed was not left alone: %+v", list.Tasks)
+	}
+	// The two endings are counted apart, which is what lets the panel offer
+	// either one back after hiding both.
+	if list.Counts[chat.TaskStatusCancelled] != 2 || list.Counts[chat.TaskStatusCompleted] != 1 {
+		t.Fatalf("counts = %v, want cancelled and completed counted separately", list.Counts)
 	}
 }
 

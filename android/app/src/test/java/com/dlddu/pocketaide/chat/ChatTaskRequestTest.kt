@@ -60,7 +60,7 @@ class ChatTaskRequestTest {
     private fun tasksJson(tasks: String = "", sessionId: String = "cx1", counts: String = "{}") =
         """{"session_id":"$sessionId","tasks":[$tasks],"counts":$counts,"truncated":false}"""
 
-    // ── 보는 방식: 칩 필터와 완료 숨김 ───────────────────────────────────────
+    // ── 보는 방식: 칩 필터와 끝난 작업 숨김 ──────────────────────────────────
 
     private val ledger = listOf(
         task("t1", ChatTaskStatus.BLOCKED),
@@ -68,43 +68,66 @@ class ChatTaskRequestTest {
         task("t3", ChatTaskStatus.RUNNING),
         task("t4", ChatTaskStatus.COMPLETED),
         task("t5", ChatTaskStatus.COMPLETED),
+        task("t6", ChatTaskStatus.CANCELLED),
     )
 
-    // 두 선택은 함께 걸린다 — 칩이 상태를 좁히고 완료 숨김이 그 안에서 또
+    // 두 선택은 함께 걸린다 — 칩이 상태를 좁히고 끝난 작업 숨김이 그 안에서 또
     // 덜어낸다. 어느 쪽도 다른 쪽을 대신 풀어 주지 않는다.
     @Test
     fun theChipAndTheHideCombineInsteadOfReplacingEachOther() {
         assertEquals(
-            listOf("t1", "t2", "t3", "t4", "t5"),
+            listOf("t1", "t2", "t3", "t4", "t5", "t6"),
             ChatTaskFilter().select(ledger).map { it.id },
         )
         assertEquals(
             listOf("t2"),
             ChatTaskFilter(status = ChatTaskStatus.REVIEW).select(ledger).map { it.id },
         )
+        // 숨김은 완료와 취소를 함께 덜어낸다 — 둘 다 끝난 일이다.
         assertEquals(
             listOf("t1", "t2", "t3"),
-            ChatTaskFilter(hideCompleted = true).select(ledger).map { it.id },
+            ChatTaskFilter(hideFinished = true).select(ledger).map { it.id },
         )
-        // 검토 칩 + 완료 숨김: 검토는 완료가 아니므로 숨김이 더 덜어낼 것이 없다.
+        // 검토 칩 + 숨김: 검토는 끝난 일이 아니므로 숨김이 더 덜어낼 것이 없다.
         assertEquals(
             listOf("t2"),
-            ChatTaskFilter(ChatTaskStatus.REVIEW, hideCompleted = true).select(ledger).map { it.id },
+            ChatTaskFilter(ChatTaskStatus.REVIEW, hideFinished = true).select(ledger).map { it.id },
         )
-        // 완료 칩 + 완료 숨김: 서로 어긋나는 선택이고, 결과는 빈 목록이다.
-        assertTrue(ChatTaskFilter(ChatTaskStatus.COMPLETED, hideCompleted = true).select(ledger).isEmpty())
+        // 완료 칩 + 숨김: 서로 어긋나는 선택이고, 결과는 빈 목록이다.
+        assertTrue(ChatTaskFilter(ChatTaskStatus.COMPLETED, hideFinished = true).select(ledger).isEmpty())
+        // 취소 칩 + 숨김도 같다 — 취소는 완료의 다른 이름이 아니지만 끝난 일이다.
+        assertTrue(ChatTaskFilter(ChatTaskStatus.CANCELLED, hideFinished = true).select(ledger).isEmpty())
     }
 
-    // 고른 칩을 다시 누르면 전체로 돌아간다 — 완료 숨김은 그대로 남는다.
+    // 취소는 완료와 섞이지 않는다 — 각 칩은 자기 상태의 행만 가져온다. 숨김을
+    // 걸지 않으면 취소한 일도 그대로 원장에 보인다.
+    @Test
+    fun cancelledIsItsOwnChipAndNotFoldedIntoCompleted() {
+        assertEquals(
+            listOf("t4", "t5"),
+            ChatTaskFilter(status = ChatTaskStatus.COMPLETED).select(ledger).map { it.id },
+        )
+        assertEquals(
+            listOf("t6"),
+            ChatTaskFilter(status = ChatTaskStatus.CANCELLED).select(ledger).map { it.id },
+        )
+        assertEquals("취소", ChatTaskStatus.label(ChatTaskStatus.CANCELLED))
+        assertTrue(ChatTaskStatus.isFinished(ChatTaskStatus.CANCELLED))
+        assertTrue(ChatTaskStatus.isFinished(ChatTaskStatus.COMPLETED))
+        assertFalse("취소는 사람이 손쓸 일로 올라오지 않는다", ChatTaskStatus.needsAttention(ChatTaskStatus.CANCELLED))
+        assertFalse(ChatTaskStatus.isFinished(ChatTaskStatus.RUNNING))
+    }
+
+    // 고른 칩을 다시 누르면 전체로 돌아간다 — 끝난 작업 숨김은 그대로 남는다.
     @Test
     fun tappingTheChosenChipAgainGoesBackToAllAndLeavesTheHideAlone() {
-        val chosen = ChatTaskFilter(hideCompleted = true).toggled(ChatTaskStatus.BLOCKED)
+        val chosen = ChatTaskFilter(hideFinished = true).toggled(ChatTaskStatus.BLOCKED)
         assertEquals(ChatTaskStatus.BLOCKED, chosen.status)
-        assertTrue(chosen.hideCompleted)
+        assertTrue(chosen.hideFinished)
 
         val back = chosen.toggled(ChatTaskStatus.BLOCKED)
         assertNull(back.status)
-        assertTrue("완료 숨김은 칩과 다른 선택이므로 함께 풀리지 않는다", back.hideCompleted)
+        assertTrue("끝난 작업 숨김은 칩과 다른 선택이므로 함께 풀리지 않는다", back.hideFinished)
 
         val other = chosen.toggled(ChatTaskStatus.REVIEW)
         assertEquals(ChatTaskStatus.REVIEW, other.status)
@@ -122,20 +145,29 @@ class ChatTaskRequestTest {
             ChatTaskEmptiness.FILTERED,
             ChatTaskFilter(ChatTaskStatus.PLANNED).emptiness(ledger),
         )
-        // 완료를 숨겨서 비었다. 완료 칩까지 함께 걸린 경우도 같은 이유다 —
+        // 끝난 일을 숨겨서 비었다. 완료 칩까지 함께 걸린 경우도 같은 이유다 —
         // 행은 원장에 그대로 있다.
         assertEquals(
-            ChatTaskEmptiness.COMPLETED_HIDDEN,
-            ChatTaskFilter(ChatTaskStatus.COMPLETED, hideCompleted = true).emptiness(ledger),
+            ChatTaskEmptiness.FINISHED_HIDDEN,
+            ChatTaskFilter(ChatTaskStatus.COMPLETED, hideFinished = true).emptiness(ledger),
         )
         assertEquals(
-            ChatTaskEmptiness.COMPLETED_HIDDEN,
-            ChatTaskFilter(hideCompleted = true).emptiness(ledger.filter { it.status == ChatTaskStatus.COMPLETED }),
+            ChatTaskEmptiness.FINISHED_HIDDEN,
+            ChatTaskFilter(hideFinished = true).emptiness(ledger.filter { it.status == ChatTaskStatus.COMPLETED }),
         )
-        // 없는 상태 + 완료 숨김은 숨김 탓이 아니다.
+        // 취소만 남은 원장을 숨긴 경우도 같다 — 「없다」가 아니라 「숨겼다」.
+        assertEquals(
+            ChatTaskEmptiness.FINISHED_HIDDEN,
+            ChatTaskFilter(ChatTaskStatus.CANCELLED, hideFinished = true).emptiness(ledger),
+        )
+        assertEquals(
+            ChatTaskEmptiness.FINISHED_HIDDEN,
+            ChatTaskFilter(hideFinished = true).emptiness(ledger.filter { it.status == ChatTaskStatus.CANCELLED }),
+        )
+        // 없는 상태 + 끝난 작업 숨김은 숨김 탓이 아니다.
         assertEquals(
             ChatTaskEmptiness.FILTERED,
-            ChatTaskFilter(ChatTaskStatus.PLANNED, hideCompleted = true).emptiness(ledger),
+            ChatTaskFilter(ChatTaskStatus.PLANNED, hideFinished = true).emptiness(ledger),
         )
     }
 

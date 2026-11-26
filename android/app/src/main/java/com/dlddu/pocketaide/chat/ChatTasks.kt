@@ -102,10 +102,30 @@ object ChatTaskStatus {
     const val RUNNING = "running"
     const val PLANNED = "planned"
     const val COMPLETED = "completed"
+
+    /**
+     * Work that was called off and will not be finished.
+     *
+     * It is shown apart from [COMPLETED] rather than folded into it, because
+     * the two answer different questions — completed means the completion
+     * criteria were met — and a row that cannot tell them apart presents
+     * abandoned work as delivered.
+     */
+    const val CANCELLED = "cancelled"
     const val UNKNOWN = "unknown"
 
-    /** Display order: what needs a person first, then what waits, then done. */
-    val order = listOf(BLOCKED, REVIEW, RUNNING, PLANNED, COMPLETED, UNKNOWN)
+    /**
+     * Display order: what needs a person first, then what waits, then the two
+     * a task ends at — delivered before called off.
+     */
+    val order = listOf(BLOCKED, REVIEW, RUNNING, PLANNED, COMPLETED, CANCELLED, UNKNOWN)
+
+    /**
+     * The statuses a task is finished at, whichever way it went. The panel
+     * hides them together, so the group is named once here instead of being
+     * spelled out at each place that asks "is this done".
+     */
+    val finished = listOf(COMPLETED, CANCELLED)
 
     fun label(status: String): String = when (status) {
         BLOCKED -> "차단"
@@ -113,29 +133,40 @@ object ChatTaskStatus {
         RUNNING -> "진행"
         PLANNED -> "예정"
         COMPLETED -> "완료"
+        CANCELLED -> "취소"
         else -> "알 수 없음"
     }
 
     /** Whether this status is one a person is expected to act on. */
     fun needsAttention(status: String): Boolean = status == BLOCKED || status == REVIEW
+
+    /** Whether the task has stopped here. Not "was delivered" — that is [COMPLETED] alone. */
+    fun isFinished(status: String): Boolean = status in finished
 }
 
 /**
  * What the panel is showing of the ledger. A display choice only: picking a
- * status or hiding completed work changes no ledger row, sends nothing and
+ * status or hiding finished work changes no ledger row, sends nothing and
  * deletes nothing — it narrows what is drawn and nothing else.
  */
 data class ChatTaskFilter(
     // null means every status; the panel's "전체" pill.
     val status: String? = null,
-    val hideCompleted: Boolean = false,
+    /**
+     * Hides the work that has stopped — delivered **and** called off together.
+     * One toggle rather than two, because what a person is clearing away is
+     * "things I no longer have to look at", and a cancelled task is as finished
+     * as a completed one. Why they were hidden is still answerable: the status
+     * pills count them separately and bring either back on its own.
+     */
+    val hideFinished: Boolean = false,
 ) {
     /** The rows this choice draws, in the order the ledger gave them. */
     fun select(tasks: List<ChatTask>): List<ChatTask> = tasks.filter { shows(it) }
 
     fun shows(task: ChatTask): Boolean {
         if (status != null && task.status != status) return false
-        return !(hideCompleted && task.status == ChatTaskStatus.COMPLETED)
+        return !(hideFinished && ChatTaskStatus.isFinished(task.status))
     }
 
     /** Picking the status already picked goes back to 전체, so a pill is its own way out. */
@@ -150,15 +181,15 @@ data class ChatTaskFilter(
     fun emptiness(tasks: List<ChatTask>): ChatTaskEmptiness? {
         if (tasks.isEmpty()) return ChatTaskEmptiness.NO_TASKS
         if (select(tasks).isNotEmpty()) return null
-        // Rows of the chosen status exist, so hiding completed work is what
+        // Rows of the chosen status exist, so hiding finished work is what
         // emptied the list; otherwise the session simply has none of this status.
         val ofStatus = tasks.filter { status == null || it.status == status }
-        return if (ofStatus.isEmpty()) ChatTaskEmptiness.FILTERED else ChatTaskEmptiness.COMPLETED_HIDDEN
+        return if (ofStatus.isEmpty()) ChatTaskEmptiness.FILTERED else ChatTaskEmptiness.FINISHED_HIDDEN
     }
 }
 
 /** Which of the three "nothing to show" answers the panel owes the user. */
-enum class ChatTaskEmptiness { NO_TASKS, FILTERED, COMPLETED_HIDDEN }
+enum class ChatTaskEmptiness { NO_TASKS, FILTERED, FINISHED_HIDDEN }
 
 /**
  * The turn a stored request became.

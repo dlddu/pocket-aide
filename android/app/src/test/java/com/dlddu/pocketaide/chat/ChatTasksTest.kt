@@ -11,6 +11,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -185,11 +186,30 @@ class ChatTasksTest {
         assertFalse(ChatTaskStatus.needsAttention(ChatTaskStatus.COMPLETED))
     }
 
-    // Display order puts what needs a person first.
+    // Cancelled gets its own word. The one thing the panel must never do is
+    // read a called-off task as a delivered one, so the two labels are checked
+    // against each other rather than only against themselves.
+    @Test
+    fun cancelledIsLabelledApartFromCompleted() {
+        assertEquals("취소", ChatTaskStatus.label(ChatTaskStatus.CANCELLED))
+        assertEquals("완료", ChatTaskStatus.label(ChatTaskStatus.COMPLETED))
+        assertNotEquals(
+            ChatTaskStatus.label(ChatTaskStatus.CANCELLED),
+            ChatTaskStatus.label(ChatTaskStatus.COMPLETED),
+        )
+        // 끝난 것으로 묶이는 둘, 그리고 그 둘만.
+        assertEquals(
+            listOf(ChatTaskStatus.COMPLETED, ChatTaskStatus.CANCELLED),
+            ChatTaskStatus.finished,
+        )
+    }
+
+    // Display order puts what needs a person first, and the two endings last —
+    // delivered before called off.
     @Test
     fun displayOrderPutsAttentionFirst() {
         assertEquals(
-            listOf("blocked", "review", "running", "planned", "completed", "unknown"),
+            listOf("blocked", "review", "running", "planned", "completed", "cancelled", "unknown"),
             ChatTaskStatus.order,
         )
     }

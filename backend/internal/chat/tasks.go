@@ -39,14 +39,20 @@ const (
 	TaskStatusBlocked   = "blocked"
 	TaskStatusReview    = "review"
 	TaskStatusCompleted = "completed"
+	// TaskStatusCancelled is work that was called off and will not be
+	// finished. It is not a flavour of completed: completed says the completion
+	// criteria were met, and a panel that showed the two as one would count
+	// abandoned work as delivered.
+	TaskStatusCancelled = "cancelled"
 	TaskStatusUnknown   = "unknown"
 )
 
 // taskStatuses is the display order the panel counts in: what needs a person
-// first, then what is merely waiting, then what is done.
+// first, then what is merely waiting, then the two a task ends at — delivered
+// before called off, because that is the order a person asks about them.
 var taskStatuses = []string{
 	TaskStatusBlocked, TaskStatusReview, TaskStatusRunning,
-	TaskStatusPlanned, TaskStatusCompleted, TaskStatusUnknown,
+	TaskStatusPlanned, TaskStatusCompleted, TaskStatusCancelled, TaskStatusUnknown,
 }
 
 // ErrTasksUnsupported means this conversation's session keeps no work records —
