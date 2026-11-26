@@ -455,7 +455,15 @@ private fun Turns(
             Modifier
                 .fillMaxWidth()
                 .clickable(role = Role.Button, onClick = onToggle)
-                .semantics { contentDescription = if (open) "주고받은 내용 접기" else "주고받은 내용 펼치기" }
+                // The handle is one button, so its own description is what gets
+                // announced and the number beside it would not be — the count
+                // is said here too, or somebody listening would hear "펼치기"
+                // and not how much there is to open. A task with no exchange
+                // says no number, here as on screen.
+                .semantics {
+                    val what = if (task.turnsTotal > 0) "주고받은 내용 ${task.turnsTotal}개" else "주고받은 내용"
+                    contentDescription = if (open) "$what 접기" else "$what 펼치기"
+                }
                 .testTag("chat.tasks.detail.turns.toggle"),
             horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,

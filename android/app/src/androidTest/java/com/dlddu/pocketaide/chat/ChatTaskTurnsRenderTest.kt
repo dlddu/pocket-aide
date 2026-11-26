@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -324,7 +325,13 @@ class ChatTaskTurnsRenderTest {
         // 영역과 여는 손잡이는 있고, 몇 개인지는 작업 행이 이미 말해 준다 —
         // 그 숫자를 보여 주느라 이력을 읽지는 않는다.
         compose.onNodeWithTag("chat.tasks.detail.turns.toggle").assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.turns.count").assertTextEquals("12")
+        // 손잡이는 버튼 하나라 자식 의미가 그것으로 합쳐진다. 그려진 숫자는
+        // 합치기 전 트리에서 보고, 들리는 쪽은 손잡이의 설명에서 본다 — 눈으로
+        // 읽는 수와 귀로 듣는 수가 같아야 한다.
+        compose.onNodeWithTag("chat.tasks.detail.turns.count", useUnmergedTree = true)
+            .assertTextEquals("12")
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle")
+            .assertContentDescriptionEquals("주고받은 내용 12개 펼치기")
 
         assertEquals("접힌 채로는 조회가 0이다", 0, turnLoads)
         // 접힌 영역 안에는 아무 상태도 그리지 않는다 — 로딩도, 빈 상태도,
