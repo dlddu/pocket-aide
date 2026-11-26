@@ -288,19 +288,28 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         if (more && current.isLoading) return false
         if (!more && current.isLoading && current.taskId == taskId && current.signal == signal) return false
         val mine = ++turnsReadSeq
-        val after = if (more && current.taskId == taskId) current.nextCursor else 0
-        val kept = if (more && current.taskId == taskId) current.turns else emptyList()
+        val sameTask = current.taskId == taskId
+        val after = if (more && sameTask) current.nextCursor else 0
+        val kept = if (more && sameTask) current.turns else emptyList()
+        // What is already on screen stays there until the new page replaces it.
+        // A re-read happens while somebody is reading — a turn arrived on the
+        // task whose section is open — and blanking a long exchange to a
+        // spinner would take away what they were reading to announce that
+        // there is now more of it. Another task's page is not kept: that one is
+        // not this task's to show.
+        val shown = if (sameTask) current.turns else emptyList()
         _taskTurns.value = current.copy(
             taskId = taskId,
             signal = signal,
-            turns = kept,
+            turns = shown,
             // A first page is page one: the previous read's cursor is not this
             // read's, and keeping it would offer "더 보기" for a page nobody has.
             nextCursor = if (more) current.nextCursor else 0,
             isLoading = true,
             // A first page that never arrives leaves the pane unread rather
-            // than holding an empty history it never read.
-            hasLoaded = more,
+            // than holding an empty history it never read — unless something is
+            // still on screen from the read before it, which *was* read.
+            hasLoaded = more || shown.isNotEmpty(),
             error = null,
         )
         return try {

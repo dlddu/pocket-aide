@@ -168,6 +168,54 @@ class ChatTaskTurnsLazyTest {
         assertEquals("작업이 움직이면 다시 읽는다", 4, server.requestCount)
     }
 
+    // 다시 읽는 동안 읽던 것이 화면에서 사라지지 않는다. 다시 읽기는 **펼친
+    // 채로 읽고 있을 때** 일어나는 일이므로(그 작업에 턴이 하나 생겼다), 읽고
+    // 있던 긴 이력을 스피너로 비우고 「더 생겼다」를 알리는 것은 읽던 것을
+    // 빼앗는 일이다. 새 페이지가 닿으면 그때 바뀐다.
+    @Test
+    fun aRereadKeepsWhatIsOnScreenUntilTheNewPageArrives() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(page("t1", 1, "이거 해 줘"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 1)), more = false)
+        assertEquals(listOf(1L), vm.taskTurns.value.turns.map { it.id })
+
+        server.enqueue(page("t1", 2, "그다음도 해 줘").setBodyDelay(200, TimeUnit.MILLISECONDS))
+        val reread = launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.openTaskTurns(task("t1", turnsTotal = 2))
+        }
+        assertTrue("다시 읽는 중이다", vm.taskTurns.value.isLoading)
+        assertEquals(
+            "다시 읽는 동안에도 읽던 이력이 그대로 있다",
+            listOf(1L),
+            vm.taskTurns.value.turns.map { it.id },
+        )
+        assertFalse("읽은 적 없는 화면으로 돌아가지 않는다", vm.taskTurns.value.isEmpty)
+        reread.join()
+
+        // 닿으면 그 페이지가 화면이 된다.
+        assertEquals(listOf(2L), vm.taskTurns.value.turns.map { it.id })
+        assertEquals(2, server.requestCount)
+    }
+
+    // 다른 작업으로 바뀔 때는 쥐고 있던 페이지를 들고 가지 않는다 — 앞 작업의
+    // 이력이 한순간이라도 뒤 작업의 제목 아래 있어서는 안 된다.
+    @Test
+    fun switchingTasksDoesNotCarryThePreviousPageIntoTheNewOne() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(page("t1", 1, "이거 해 줘"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1")), more = false)
+        assertEquals(listOf(1L), vm.taskTurns.value.turns.map { it.id })
+
+        server.enqueue(page("t2", 2, "저거 해 줘").setBodyDelay(200, TimeUnit.MILLISECONDS))
+        val next = launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.openTaskTurns(task("t2"))
+        }
+        assertEquals("t2", vm.taskTurns.value.taskId)
+        assertTrue("앞 작업의 턴을 들고 가지 않는다", vm.taskTurns.value.turns.isEmpty())
+        next.join()
+        assertEquals(listOf(2L), vm.taskTurns.value.turns.map { it.id })
+    }
+
     // 접힌 동안 폴링이 돌아도 읽지 않는다: 신호가 바뀌어도 펼쳐져 있지 않으면
     // 아무도 요구하지 않기 때문이다 — 요구하는 길은 화면의 펼침 하나다.
     @Test
