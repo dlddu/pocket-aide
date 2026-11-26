@@ -63,12 +63,14 @@ class ChatTaskPanelInteractionTest {
             ChatTask(id = "t-running", title = "도는 작업", status = ChatTaskStatus.RUNNING),
             ChatTask(id = "t-done1", title = "끝난 작업 1", status = ChatTaskStatus.COMPLETED),
             ChatTask(id = "t-done2", title = "끝난 작업 2", status = ChatTaskStatus.COMPLETED),
+            ChatTask(id = "t-cancelled", title = "그만둔 작업", status = ChatTaskStatus.CANCELLED),
         ),
         counts = mapOf(
             ChatTaskStatus.BLOCKED to 1,
             ChatTaskStatus.REVIEW to 1,
             ChatTaskStatus.RUNNING to 1,
             ChatTaskStatus.COMPLETED to 2,
+            ChatTaskStatus.CANCELLED to 1,
         ),
         hasLoaded = true,
     )
@@ -159,45 +161,84 @@ class ChatTaskPanelInteractionTest {
 
     // ── 목록을 좁히는 두 가지 ───────────────────────────────────────────────
 
-    // 칩과 완료 숨김은 함께 걸린다 — 한쪽을 쓰는 동안 다른 쪽이 풀리지 않는다.
+    // 칩과 끝난 작업 숨김은 함께 걸린다 — 한쪽을 쓰는 동안 다른 쪽이 풀리지
+    // 않는다. 숨김은 완료와 취소를 한 번에 덜어낸다.
     @Test
-    fun aStatusChipAndHidingCompletedNarrowTheListTogether() {
+    fun aStatusChipAndHidingFinishedNarrowTheListTogether() {
         start()
-        assertEquals("원장의 다섯 줄", 5, rows())
+        assertEquals("원장의 여섯 줄", 6, rows())
 
-        compose.onNodeWithTag("chat.tasks.hideCompleted").performClick()
+        compose.onNodeWithTag("chat.tasks.hideFinished").performClick()
         compose.waitForIdle()
-        assertEquals("완료 두 줄이 빠진다", 3, rows())
+        assertEquals("완료 두 줄과 취소 한 줄이 빠진다", 3, rows())
 
         compose.onNodeWithTag("chat.tasks.filter.review").performClick()
         compose.waitForIdle()
         assertEquals("검토 한 줄만 남는다", 1, rows())
         compose.onNodeWithText("검토 대기").assertIsDisplayed()
 
-        // 고른 칩을 다시 누르면 전체로 돌아가되, 완료 숨김은 그대로다.
+        // 고른 칩을 다시 누르면 전체로 돌아가되, 끝난 작업 숨김은 그대로다.
         compose.onNodeWithTag("chat.tasks.filter.review").performClick()
         compose.waitForIdle()
         assertEquals(3, rows())
     }
 
+    // 취소는 자기 칩을 갖는다 — 완료 칩에 섞여 들어가지 않고, 숨김을 걸지
+    // 않으면 원장에 그대로 보인다.
+    @Test
+    fun cancelledWorkHasItsOwnChipAndIsNotCountedAsCompleted() {
+        start()
+
+        compose.onNodeWithTag("chat.tasks.filter.cancelled").performClick()
+        compose.waitForIdle()
+        assertEquals("취소 한 줄만 남는다", 1, rows())
+        compose.onNodeWithText("그만둔 작업").assertIsDisplayed()
+
+        compose.onNodeWithTag("chat.tasks.filter.completed").performClick()
+        compose.waitForIdle()
+        assertEquals("완료 칩은 취소를 데려오지 않는다", 2, rows())
+        compose.onNodeWithText("끝난 작업 1").assertIsDisplayed()
+    }
+
     // 숨겨서 비었을 때는 일이 사라진 것이 아니라고 말하고, 한 번에 되돌린다.
     @Test
-    fun hidingCompletedWorkSaysItIsStillThereAndOffersTheWayBack() {
+    fun hidingFinishedWorkSaysItIsStillThereAndOffersTheWayBack() {
         start(
             ledger.copy(
                 tasks = ledger.tasks.filter { it.status == ChatTaskStatus.COMPLETED },
                 counts = mapOf(ChatTaskStatus.COMPLETED to 2),
             ),
         )
-        compose.onNodeWithTag("chat.tasks.hideCompleted").performClick()
+        compose.onNodeWithTag("chat.tasks.hideFinished").performClick()
         compose.waitForIdle()
 
-        compose.onNodeWithTag("chat.tasks.empty.completedHidden").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.empty.finishedHidden").assertIsDisplayed()
         assertEquals(0, rows())
 
         compose.onNodeWithTag("chat.tasks.empty.undo").performClick()
         compose.waitForIdle()
         assertEquals("되돌리면 그대로 있다", 2, rows())
+    }
+
+    // 취소만 남은 원장을 숨겨도 같은 말을 한다 — 「없다」가 아니라 「숨겼다」.
+    // 취소한 일을 지워진 것으로 보이게 하면 안 되는 자리다.
+    @Test
+    fun hidingAnAllCancelledLedgerStillSaysTheRowsAreThere() {
+        start(
+            ledger.copy(
+                tasks = ledger.tasks.filter { it.status == ChatTaskStatus.CANCELLED },
+                counts = mapOf(ChatTaskStatus.CANCELLED to 1),
+            ),
+        )
+        compose.onNodeWithTag("chat.tasks.hideFinished").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("chat.tasks.empty.finishedHidden").assertIsDisplayed()
+        assertEquals(0, rows())
+
+        compose.onNodeWithTag("chat.tasks.empty.undo").performClick()
+        compose.waitForIdle()
+        assertEquals("되돌리면 그대로 있다", 1, rows())
     }
 
     // 고른 상태의 줄이 없어서 비었을 때는 숨김 탓으로 돌리지 않는다. 목록이
@@ -211,11 +252,11 @@ class ChatTaskPanelInteractionTest {
         compose.waitForIdle()
 
         compose.onNodeWithTag("chat.tasks.empty.filtered").assertIsDisplayed()
-        compose.onAllNodesWithTag("chat.tasks.empty.completedHidden").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.empty.finishedHidden").assertCountEquals(0)
 
         compose.onNodeWithTag("chat.tasks.empty.undo").performClick()
         compose.waitForIdle()
-        assertEquals(5, rows())
+        assertEquals(6, rows())
     }
 
     // ── 한 작업으로 들어가기 ────────────────────────────────────────────────
