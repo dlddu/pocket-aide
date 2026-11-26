@@ -559,6 +559,89 @@ class ChatTaskPanelInteractionTest {
         compose.onAllNodesWithTag("chat.tasks.detail.turns.empty").assertCountEquals(0)
     }
 
+    // ── 선택지 위의, 그 선택지를 올린 턴 ───────────────────────────────────
+
+    /** 상세에 보이는 노드의 위쪽 좌표. 위아래 순서를 좌표로 확인한다. */
+    private fun topOf(tag: String): Float =
+        compose.onNodeWithTag(tag).getUnclippedBoundsInRoot().top.value
+
+    // 실제 넓은 창에서 한 작업에 들어간다. 이력은 접혀 있고, 선택지 **바로
+    // 위**에 그 선택지를 올린 턴의 보낸 요청 → 설명 → 질문이 그 순서로 보인다.
+    //
+    // 이 픽스처의 열린 턴(waiting)은 일부러 다른 질문을 들고 있다 — 화면에
+    // 보이는 질문은 선택지를 올린 그 턴의 것이어야 하고, 두 개가 함께 보이거나
+    // 열린 턴의 것으로 대체되어서는 안 된다.
+    @Test
+    fun aCollapsedDetailShowsTheOfferingTurnAboveItsChoices() {
+        start(withChoice(), turns = ChatTaskTurnsUiState())
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.request")
+            .assertTextContains("CI 가 왜 빨간지 봐 줘", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.explanation")
+            .assertTextContains("의존성 해석에서 멈췄어요", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.question")
+            .assertTextContains("재실행만 할까요", substring = true)
+
+        val request = topOf("chat.tasks.detail.choiceTurn.request")
+        val explanation = topOf("chat.tasks.detail.choiceTurn.explanation")
+        val question = topOf("chat.tasks.detail.choiceTurn.question")
+        val choice = topOf("chat.tasks.detail.choice")
+        assertTrue("보낸 요청 → 설명: $request < $explanation", request < explanation)
+        assertTrue("설명 → 질문: $explanation < $question", explanation < question)
+        assertTrue("질문 → 선택지: $question < $choice", question < choice)
+        assertTrue("선택지 → 요청 칸", choice < topOf("chat.tasks.detail.field"))
+
+        // 질문은 한 번만 보인다: 위의 「묻는 것」 칸은 그 자리를 비켜 준다.
+        compose.onAllNodesWithTag("chat.tasks.detail.question").assertCountEquals(0)
+        // 그리고 열린 턴의 질문이 그 자리에 올라오지 않는다.
+        compose.onAllNodesWithText("CI 가 막혔다").assertCountEquals(0)
+        // 이 셋은 작업 목록이 들고 온 것이라, 보여 주는 데 이력 조회가 0이다.
+        // 이력은 여전히 맨 아래에 접혀 있다(스크롤 밖일 수 있어 존재로 본다 —
+        // 접힘 자체는 위의 이력 시험들이 따로 고정한다).
+        assertEquals("접힌 이력은 읽지 않는다", 0, turnLoads)
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").assertExists()
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.loading").assertCountEquals(0)
+    }
+
+    // 묶음이 떠 있어도 자유 입력과 저장은 그대로다 — 고르지 않고 직접 쓰는 길이
+    // 막히지 않는다.
+    @Test
+    fun aFreeRequestStillStoresWithTheOfferingTurnOnScreen() {
+        start(withChoice(), turns = ChatTaskTurnsUiState())
+        openBlocked()
+
+        compose.onNodeWithTag("chat.tasks.detail.field").performTextInput("직접 쓴 요청")
+        compose.waitForIdle()
+        compose.onNodeWithTag("chat.tasks.detail.store").performClick()
+        compose.waitForIdle()
+
+        assertEquals(1, stores)
+        assertEquals("직접 쓴 말에는 출처가 없다", 0L, sentPick)
+        assertEquals("저장은 이력 조회가 아니다", 0, turnLoads)
+    }
+
+    // 선택지가 없는 작업으로 바꾸면 묶음은 함께 사라지고 「묻는 것」 칸이 전처럼
+    // 돌아온다 — 앞 작업의 턴이 쓴 말이 다음 작업에 남지 않는다.
+    @Test
+    fun switchingToATaskWithoutChoicesDropsTheOfferingTurn() {
+        start(withChoice(), turns = ChatTaskTurnsUiState())
+        openBlocked()
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn").assertIsDisplayed()
+
+        compose.onNodeWithTag("chat.tasks.detail.back").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("검토 대기").performClick()
+        compose.waitForIdle()
+
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn").assertCountEquals(0)
+        compose.onAllNodesWithText("CI 가 왜 빨간지 봐 줘").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.question")
+            .assertTextContains("원장에 적혀 있지 않아요.", substring = true)
+        compose.onNodeWithTag("chat.tasks.detail.noChoices").assertIsDisplayed()
+    }
+
     /** 막힌 작업에 선택지 하나를 올려 둔 원장. */
     private fun withChoice(): ChatTasksUiState = ledger.copy(
         tasks = ledger.tasks.map {
@@ -573,6 +656,14 @@ class ChatTaskPanelInteractionTest {
                     // 선택지가 제시된 turn. 픽은 이것을 들고 가고, 플랫폼은 이
                     // turn 이 아직 작업의 최신인지로 낡음을 판정한다.
                     choiceTurnId = 3L,
+                    // 그 **같은 turn** 이 한 말. 선택지 위에 올라가는 세 가지는
+                    // 여기서만 오고, 열린 턴(waiting)이나 이력의 마지막 턴에서
+                    // 오지 않는다 — 이 픽스처의 waiting 은 일부러 다른 말이다.
+                    choiceTurn = ChatTaskChoiceTurn(
+                        request = "CI 가 왜 빨간지 봐 줘",
+                        explanation = "계측 잡이 의존성 해석에서 멈췄어요.",
+                        question = "재실행만 할까요, 고칠까요?",
+                    ),
                 )
             } else {
                 it

@@ -63,6 +63,13 @@ private const val REQUEST_MAX_LINES = 6
  * carry none. The pane adds no judgement of its own and states nothing the
  * records do not.
  *
+ * When the session has sentences on offer, the turn that offered them says its
+ * own piece directly above them (see [ChoiceTurn]): the request that went, the
+ * explanation of what came back, and the question the sentences answer. Those
+ * come from that turn, on the same task row as the choices, which is why they
+ * are on screen before anybody opens the exchanges and why they can never be
+ * some other turn's words.
+ *
  * The task's exchanges *are* its history: the separate ledger history that
  * used to sit at the bottom is gone with the ledger it read (platform AC-N10),
  * because a past management event was never a turn and showing one as a turn
@@ -128,13 +135,27 @@ fun ChatTaskDetailPane(
             // says "not recorded" rather than showing a blank.
             Field("무엇을 · 왜", task.description, "chat.tasks.detail.description")
             Field("완료 기준", task.completionCriteria, "chat.tasks.detail.criteria")
+            // The turn whose sentences are on offer, when there are any. It is
+            // read from the task row beside the choices themselves, so it is
+            // that turn's words and not whichever turn happens to be open or
+            // last.
+            val offering = task.choiceTurn?.takeIf { task.choices.isNotEmpty() && it.hasAny }
             // What the session is asking, which is the nearest thing the
             // agreed records have to the ledger's free-text reason and next
             // action — those were the parent's own bookkeeping and never part
             // of what a person reads.
-            Field("묻는 것", task.waiting?.question.orEmpty(), "chat.tasks.detail.question")
+            //
+            // It moves next to the choices when the offering turn asked one,
+            // because that is the question those sentences answer and one
+            // question read twice in two places is a person wondering which of
+            // them is being asked. When the offering turn asked none — and on
+            // a task with no choices at all — this stays exactly where it was.
+            if (offering?.question.isNullOrBlank()) {
+                Field("묻는 것", task.waiting?.question.orEmpty(), "chat.tasks.detail.question")
+            }
             task.waiting?.let { Waiting(it) }
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+            offering?.let { ChoiceTurn(it) }
             Choices(task.choices, onChoicePicked)
             RequestField(
                 draft = draft,
@@ -240,6 +261,54 @@ private fun Field(label: String, value: String, tag: String) {
 }
 
 /**
+ * The turn the offered sentences belong to, in its own frame directly above
+ * them: what was sent, what came back as the parent tells it, and the question
+ * those sentences answer — in that order, because that is the order it
+ * happened in and the question is what the buttons under it are answers to.
+ *
+ * It is here because the sentences alone are not a conversation. A person
+ * opening a task sees "전부 반영해 줘" and has to know what was asked, what came
+ * of it and what is being asked now before any of the buttons means anything —
+ * and the exchanges that hold all of it start closed, deliberately, at the
+ * bottom of the pane.
+ *
+ * These are [ChatTask.choiceTurn]'s own words, read with the choices from the
+ * same turn of the same task row. Not the last turn of a history page, not the
+ * open turn below: those can be a different turn, and one turn's words over
+ * another turn's choices would tell somebody they are answering something they
+ * are not. A part the records do not have is left out rather than filled in
+ * from a turn that does have it.
+ *
+ * It is framed and labelled as one turn's words so it is not read as three more
+ * fields of the task itself.
+ */
+@Composable
+private fun ChoiceTurn(turn: ChatTaskChoiceTurn) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    val shape = RoundedCornerShape(DesignTokens.Radius.card)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(DesignTokens.Colors.ink(DETAIL_AREA).copy(alpha = QUOTE_OPACITY))
+            .border(RULE, DesignTokens.Colors.rule(DETAIL_AREA), shape)
+            .padding(DesignTokens.Spacing.md)
+            .testTag("chat.tasks.detail.choiceTurn"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+    ) {
+        Text(
+            "이 선택지를 올린 턴",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs, FontWeight.Bold),
+            color = ink.copy(alpha = MUTED_OPACITY),
+            modifier = Modifier.testTag("chat.tasks.detail.choiceTurn.label"),
+        )
+        TurnPart("보낸 요청", turn.request, "chat.tasks.detail.choiceTurn.request")
+        TurnPart("설명", turn.explanation, "chat.tasks.detail.choiceTurn.explanation")
+        TurnPart("질문", turn.question, "chat.tasks.detail.choiceTurn.question")
+    }
+}
+
+/**
  * What the session itself offers to say about this task.
  *
  * The app writes none of these: they are the sentences the session wrote
@@ -300,7 +369,10 @@ private fun Waiting(waiting: ChatTaskWaiting) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
         Text(
-            "보낸 요청",
+            // Says it is the state of the open turn, not the words of one. The
+            // words now have a place of their own above the choices, and two
+            // things under one label is a person reading a status as a request.
+            "보낸 요청의 상태",
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
         )

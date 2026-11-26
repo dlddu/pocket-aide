@@ -45,7 +45,38 @@ data class ChatTask(
     // The turn [choices] were offered on. It goes back with a pick, and the
     // platform refuses one from a turn the task has moved past.
     @SerialName("choice_turn_id") val choiceTurnId: Long = 0,
+    // What that same turn said, so the pane can put the words the choices
+    // answer directly above them. Null when the session offers no choices, and
+    // null from a backend that does not send it yet — the pane then falls back
+    // to what it showed before rather than losing the question.
+    @SerialName("choice_turn") val choiceTurn: ChatTaskChoiceTurn? = null,
 )
+
+/**
+ * What the turn that offered [ChatTask.choices] said: the words that were sent,
+ * the parent's account of what came back, and the question those choices are
+ * answers to.
+ *
+ * It comes from the same read of the same turn as the choices and
+ * [ChatTask.choiceTurnId], so the sentences on screen and the words above them
+ * cannot be two different turns. The app never fills a blank one from
+ * elsewhere: a field the records do not have is left out, because a turn that
+ * only asked is the ordinary case and borrowing another turn's words would put
+ * them in this turn's mouth.
+ *
+ * There is no response here on purpose. The session's verbatim answer is the
+ * long part, it is already there when somebody opens the exchanges, and it is
+ * not what a person needs in order to read the question in front of them.
+ */
+@Serializable
+data class ChatTaskChoiceTurn(
+    val request: String = "",
+    val explanation: String = "",
+    val question: String = "",
+) {
+    /** Whether the records gave this turn anything to show above its choices. */
+    val hasAny: Boolean get() = request.isNotBlank() || explanation.isNotBlank() || question.isNotBlank()
+}
 
 /**
  * The open turn on a task: what was asked, what the session is asking back,

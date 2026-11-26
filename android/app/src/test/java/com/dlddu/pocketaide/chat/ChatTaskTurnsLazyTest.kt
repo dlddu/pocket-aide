@@ -81,7 +81,9 @@ class ChatTaskTurnsLazyTest {
                 """{"session_id":"cx1","tasks":[{"id":"t1","title":"작업","status":"blocked",""" +
                     """"description":"무엇을 why","completion_criteria":"머지되면 끝","turns_total":9,""" +
                     """"waiting":{"turn_id":7,"question":"어디까지?"},""" +
-                    """"choices":[{"label":"전부","request_text":"전부 해 줘"}],"choice_turn_id":7}],""" +
+                    """"choices":[{"label":"전부","request_text":"전부 해 줘"}],"choice_turn_id":7,""" +
+                    """"choice_turn":{"request":"리뷰 반영해 줘","explanation":"절반 했어요.",""" +
+                    """"question":"어디까지?"}}],""" +
                     """"counts":{"blocked":1},"truncated":false}""",
             ),
         )
@@ -96,6 +98,11 @@ class ChatTaskTurnsLazyTest {
         assertEquals(1, row.choices.size)
         assertEquals(7L, row.choiceTurnId)
         assertEquals(9L, row.turnsTotal)
+        // 선택지 위에 올릴 그 턴의 세 가지도 이 한 번의 목록으로 왔다 — 보낸
+        // 요청·설명·질문. 이력 라우트도, 두 번째 읽기도 없다.
+        assertEquals("리뷰 반영해 줘", row.choiceTurn?.request)
+        assertEquals("절반 했어요.", row.choiceTurn?.explanation)
+        assertEquals("어디까지?", row.choiceTurn?.question)
         // 그리고 아직 읽은 이력이 없다 — 나간 요청은 목록 하나뿐이다.
         assertEquals(listOf("/api/chat/tasks"), paths())
         assertEquals(ChatTaskTurnsUiState(), vm.taskTurns.value)

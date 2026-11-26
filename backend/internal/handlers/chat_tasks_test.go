@@ -30,6 +30,16 @@ type tasksBody struct {
 			RequestText string `json:"request_text"`
 		} `json:"choices"`
 		ChoiceTurnID int64 `json:"choice_turn_id"`
+		// What the turn that offered those choices said, which the pane shows
+		// directly above them. There is no response here on purpose — the
+		// session's verbatim answer is the long field and belongs to the
+		// exchanges, which are read only when somebody opens them.
+		ChoiceTurn *struct {
+			Request     string `json:"request"`
+			Explanation string `json:"explanation"`
+			Question    string `json:"question"`
+			Response    string `json:"response"`
+		} `json:"choice_turn"`
 	} `json:"tasks"`
 	Counts    map[string]int `json:"counts"`
 	Truncated bool           `json:"truncated"`
@@ -86,6 +96,7 @@ func TestGetChatTasks_ServesTheWorkPage(t *testing.T) {
         "description":"무엇을 why","completion_criteria":"머지되면 끝"},
        "turns_total":2,"migrated":true,
        "latest_turn":{"id":7,"request":"이거 해 줘","question":"어디까지 할까요?",
+         "explanation":"앞의 절반까지 했어요.","response":"세션이 스스로 쓴 아주 긴 원문 답",
          "choices":[{"label":"전부","request_text":"전부 해 줘"}],
          "started_at":null,"ended_at":null}}
     ],"next_cursor":""}`
@@ -119,6 +130,22 @@ func TestGetChatTasks_ServesTheWorkPage(t *testing.T) {
 	}
 	if len(got.Choices) != 1 || got.ChoiceTurnID != 7 {
 		t.Fatalf("choices = %+v turn=%d", got.Choices, got.ChoiceTurnID)
+	}
+	// The words the choices answer come down with them, from that same turn, so
+	// the pane can put them above the choices without reading the task's
+	// exchanges — which start closed at the bottom of the pane on purpose.
+	if got.ChoiceTurn == nil {
+		t.Fatal("the turn that offered the choices sent none of its own words")
+	}
+	if got.ChoiceTurn.Request != "이거 해 줘" || got.ChoiceTurn.Explanation != "앞의 절반까지 했어요." ||
+		got.ChoiceTurn.Question != "어디까지 할까요?" {
+		t.Fatalf("choice_turn = %+v", got.ChoiceTurn)
+	}
+	// The session's own long answer is not in it, and is nowhere else in the
+	// payload either: the panel polls this route, and the answer belongs to the
+	// exchanges a person opens.
+	if got.ChoiceTurn.Response != "" {
+		t.Fatalf("the choice turn carried the session's verbatim answer: %q", got.ChoiceTurn.Response)
 	}
 	if body.SessionID == "" {
 		t.Fatal("the answer must name the session it read")

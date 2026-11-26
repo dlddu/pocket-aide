@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -38,6 +39,11 @@ import org.junit.runner.RunWith
 // 그리고 이력 영역이 맨 아래에 접혀 시작하는 지금은 다섯째를 함께 본다: 접힌
 // 채로는 아무것도 읽지 않고, 첫 펼침에 그 작업의 것만 한 번 읽고, 긴 대화여도
 // 답할 자리가 화면 밖으로 밀려나지 않는지.
+//
+// 이력이 접혀 있으므로 선택지만 덜렁 보이면 사람은 무엇에 답하는지 모른다 —
+// 그래서 여섯째를 본다: **그 선택지를 올린 턴**의 보낸 요청 → 설명 → 질문이
+// 선택지 바로 위에 그 순서로 보이고, 질문이 두 군데에 보이지 않고, 적히지 않은
+// 칸을 **다른 턴에서 채우지 않는지**.
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 class ChatTaskTurnsRenderTest {
@@ -423,6 +429,135 @@ class ChatTaskTurnsRenderTest {
         compose.onAllNodesWithTag("chat.tasks.detail.turn.1.request").assertCountEquals(0)
         compose.onAllNodesWithTag("chat.tasks.detail.turns.empty").assertCountEquals(0)
         compose.onNodeWithTag("chat.tasks.detail.turns.loading").assertExists()
+    }
+
+    // ── 선택지를 올린 턴의 말 ───────────────────────────────────────────────
+
+    /** 선택지를 올린 그 턴이 한 말. 셋 다 적혀 있는 평범한 경우. */
+    private val offering = ChatTaskChoiceTurn(
+        request = "리뷰 코멘트 반영해 줘",
+        explanation = "필수 3건은 반영했고 2건은 의견이 갈려요.",
+        question = "남은 2건은 어떻게 할까요?",
+    )
+
+    private fun topOf(tag: String): Float =
+        compose.onNodeWithTag(tag).getUnclippedBoundsInRoot().top.value
+
+    // 선택지 **바로 위**에 그 선택지를 올린 턴의 보낸 요청 → 설명 → 질문이
+    // 이 순서로 보인다. 그리고 이력은 접힌 채다 — 이 셋은 패널이 이미 폴링하는
+    // 작업 행이 들고 오므로, 보여 주기 위해 이력을 한 줄도 읽지 않는다.
+    @Test
+    fun theOfferingTurnsWordsSitAboveItsChoicesInOrder() {
+        start(
+            ChatTaskTurnsUiState(),
+            choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
+            task = task.copy(
+                choiceTurn = offering,
+                waiting = ChatTaskWaiting(turnId = 9, question = "남은 2건은 어떻게 할까요?"),
+            ),
+            open = false,
+        )
+
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.request")
+            .assertTextEquals("리뷰 코멘트 반영해 줘")
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.explanation")
+            .assertTextEquals("필수 3건은 반영했고 2건은 의견이 갈려요.")
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.question")
+            .assertTextEquals("남은 2건은 어떻게 할까요?")
+
+        // 위에서 아래로 그 순서, 그리고 선택지가 바로 아래다.
+        val request = topOf("chat.tasks.detail.choiceTurn.request")
+        val explanation = topOf("chat.tasks.detail.choiceTurn.explanation")
+        val question = topOf("chat.tasks.detail.choiceTurn.question")
+        val choice = topOf("chat.tasks.detail.choice")
+        assertTrue("보낸 요청이 설명 위: $request < $explanation", request < explanation)
+        assertTrue("설명이 질문 위: $explanation < $question", explanation < question)
+        assertTrue("질문이 선택지 위: $question < $choice", question < choice)
+        // 그 묶음 전체가 선택지 위에서 끝난다 — 사이에 다른 영역이 끼지 않는다.
+        val block = compose.onNodeWithTag("chat.tasks.detail.choiceTurn").getUnclippedBoundsInRoot()
+        assertTrue("묶음이 선택지 위에서 닫힌다: $block / $choice", block.bottom.value <= choice)
+        // 요청 칸과 저장은 그 아래 그대로다.
+        assertTrue(choice < topOf("chat.tasks.detail.field"))
+
+        // 질문은 한 군데에만 보인다 — 위의 「묻는 것」 칸으로 두 번 읽히지 않는다.
+        compose.onAllNodesWithTag("chat.tasks.detail.question").assertCountEquals(0)
+        assertEquals("접힌 채로 이 셋을 보여 주는 데 이력 조회는 0이다", 0, turnLoads)
+    }
+
+    // 선택지를 올린 턴이 말하지 않은 칸은 **다른 턴에서 채우지 않는다**. 열린
+    // 턴에 다른 말이 적혀 있어도, 이력의 마지막 턴이 셋을 다 들고 있어도, 이
+    // 자리는 그 턴의 것만 보인다.
+    @Test
+    fun aPartTheOfferingTurnDoesNotHaveIsNotFilledFromAnotherTurn() {
+        start(
+            // 이력을 펼쳐 둔다: 다른 턴들은 보낸 요청·설명·질문을 다 들고 있다.
+            ChatTaskTurnsUiState(taskId = "t1", turns = listOf(finished, asking), hasLoaded = true),
+            choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
+            task = task.copy(
+                // 선택지를 올린 턴은 질문만 했다.
+                choiceTurn = ChatTaskChoiceTurn(question = "남은 2건은 어떻게 할까요?"),
+                // 그리고 열린 턴에는 다른 말이 적혀 있다.
+                waiting = ChatTaskWaiting(
+                    turnId = 99,
+                    request = "열린 턴의 다른 요청",
+                    question = "열린 턴의 다른 질문",
+                ),
+            ),
+        )
+
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.question")
+            .assertTextEquals("남은 2건은 어떻게 할까요?")
+        // 적히지 않은 둘은 빈 줄로도, 남의 말로도 그리지 않는다.
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn.request").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn.explanation").assertCountEquals(0)
+        compose.onAllNodesWithText("열린 턴의 다른 요청").assertCountEquals(0)
+        compose.onAllNodesWithText("열린 턴의 다른 질문").assertCountEquals(0)
+        // 이력의 마지막 턴이 쓴 질문이 이 자리에 올라오지도 않는다.
+        compose.onNodeWithTag("chat.tasks.detail.turn.2.question").assertTextEquals("어디까지 반영할까요?")
+        compose.onAllNodesWithTag("chat.tasks.detail.question").assertCountEquals(0)
+    }
+
+    // 선택지가 없으면 올릴 말도 없다 — 묶음은 그려지지 않고, 「묻는 것」 칸과
+    // 자유 입력은 전과 똑같이 남는다.
+    @Test
+    fun withoutChoicesThereIsNoBundleAndTheQuestionStaysWhereItWas() {
+        start(
+            ChatTaskTurnsUiState(),
+            task = task.copy(
+                // 선택지가 없어도 칸이 내려올 수 있다. 그려지지 않는 것은
+                // 선택지가 없다는 사실이 결정한다.
+                choiceTurn = offering,
+                waiting = ChatTaskWaiting(turnId = 9, question = "CI 가 막혔다"),
+            ),
+            open = false,
+        )
+
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.question").assertTextEquals("CI 가 막혔다")
+        compose.onNodeWithTag("chat.tasks.detail.noChoices").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.field").assertIsDisplayed()
+    }
+
+    // 선택지를 올린 턴이 **아무 말도 적지 않았으면** 묶음은 비지 않고 아예
+    // 없다. 그 경우 질문은 전처럼 「묻는 것」 칸에 남는다 — 이 칸을 아직
+    // 보내지 않는 구버전 백엔드에서 질문을 잃지 않는 길이기도 하다.
+    @Test
+    fun anEmptyBundleFallsBackToTheQuestionFieldRatherThanLosingIt() {
+        start(
+            ChatTaskTurnsUiState(),
+            choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
+            task = task.copy(
+                choiceTurn = null,
+                waiting = ChatTaskWaiting(turnId = 9, question = "남은 2건은 어떻게 할까요?"),
+            ),
+            open = false,
+        )
+
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.question")
+            .assertTextEquals("남은 2건은 어떻게 할까요?")
+        compose.onAllNodesWithTag("chat.tasks.detail.choice").assertCountEquals(1)
     }
 
     // 추천 선택을 누르면 **요청 칸이 채워질 뿐** 저장도 실행도 하지 않는다 —
