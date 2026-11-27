@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/dlddu/pocket-aide/backend/internal/auth"
@@ -19,6 +22,11 @@ const maxChatMessageBytes = 16 * 1024
 // Only the chat screen polls this route, and only while it is visible, so the
 // read doubles as the presence signal (PRD-1 AC8). Recorded before the store
 // is read: a DB failure does not mean the user stopped looking.
+//
+// ?after=<message id> returns only the messages after it, and If-None-Match
+// with the last ETag gets an empty 304 — one conversation grows without end
+// and the apps poll it every 1.5 s during a reply, so a full read per poll
+// cost gigabytes a day of mobile data (PRD-1 AC1, 2026-11-27 개정).
 func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -27,12 +35,22 @@ func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) ht
 			return
 		}
 		presence.Touch(u.ID)
+		after, ok := chatAfterParam(r)
+		if !ok {
+			http.Error(w, "after must be a non-negative message id", http.StatusBadRequest)
+			return
+		}
 		conv, err := store.Conversation(r.Context(), u.ID)
 		if err != nil {
 			http.Error(w, "get failed", http.StatusInternalServerError)
 			return
 		}
-		messages, err := store.Messages(r.Context(), u.ID, conv.ID, 0)
+		var messages []chat.Message
+		if after > 0 {
+			messages, err = store.MessagesAfter(r.Context(), u.ID, conv.ID, after)
+		} else {
+			messages, err = store.Messages(r.Context(), u.ID, conv.ID, 0)
+		}
 		if err != nil {
 			http.Error(w, "get failed", http.StatusInternalServerError)
 			return
@@ -47,13 +65,58 @@ func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) ht
 		if queued != nil {
 			engine.ResumeQueued(r.Context(), u.ID, conv.ID)
 		}
-		writeJSON(w, http.StatusOK, map[string]any{
+		writeJSONWithETag(w, r, map[string]any{
 			"conversation": conv,
 			"messages":     messages,
 			"pending":      engine.Pending(u.ID),
 			"queued":       queued,
 		})
 	}
+}
+
+func chatAfterParam(r *http.Request) (int64, bool) {
+	raw := r.URL.Query().Get("after")
+	if raw == "" {
+		return 0, true
+	}
+	n, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || n < 0 {
+		return 0, false
+	}
+	return n, true
+}
+
+// writeJSONWithETag tags the body with a hash of itself, so the tag changes
+// exactly when the response would, and answers a matching If-None-Match with
+// an empty 304. no-cache keeps clients from reusing a stored copy without
+// asking — the conversation can change on every poll.
+func writeJSONWithETag(w http.ResponseWriter, r *http.Request, v any) {
+	body, err := json.Marshal(v)
+	if err != nil {
+		http.Error(w, "encode failed", http.StatusInternalServerError)
+		return
+	}
+	sum := sha256.Sum256(body)
+	etag := `"` + hex.EncodeToString(sum[:16]) + `"`
+	w.Header().Set("ETag", etag)
+	w.Header().Set("Cache-Control", "private, no-cache")
+	if etagMatches(r.Header.Get("If-None-Match"), etag) {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(append(body, '\n'))
+}
+
+func etagMatches(header, etag string) bool {
+	for _, candidate := range strings.Split(header, ",") {
+		candidate = strings.TrimPrefix(strings.TrimSpace(candidate), "W/")
+		if candidate == etag || candidate == "*" {
+			return true
+		}
+	}
+	return false
 }
 
 type chatMessagePayload struct {

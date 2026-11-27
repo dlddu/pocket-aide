@@ -28,6 +28,17 @@ public struct ChatMessage: Codable, Hashable, Identifiable, Sendable {
     public var isMine: Bool { role == "user" }
 }
 
+public extension Array where Element == ChatMessage {
+    /// These messages and `newer` together, each id once, oldest first.
+    func merging(_ newer: [ChatMessage]) -> [ChatMessage] {
+        var byID: [Int64: ChatMessage] = [:]
+        for message in self + newer {
+            byID[message.id] = message
+        }
+        return byID.values.sorted { $0.id < $1.id }
+    }
+}
+
 public struct ChatPending: Codable, Hashable, Sendable {
     public let content: String
     public let startedAt: Int64
@@ -183,6 +194,11 @@ struct ChatEmptyPayload: Encodable {}
 public extension APIClient {
     func chat() async throws -> ChatThread {
         try await get("/api/chat", authenticated: true)
+    }
+
+    /// Only the messages after `afterID`, or `.notModified` when nothing changed since `etag`.
+    func chat(after afterID: Int64, ifNoneMatch etag: String?) async throws -> ConditionalResponse<ChatThread> {
+        try await getConditional("/api/chat?after=\(afterID)", ifNoneMatch: etag, authenticated: true)
     }
 
     /// Always safe to call whether or not a reply is in progress: the

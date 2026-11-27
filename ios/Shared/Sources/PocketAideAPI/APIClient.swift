@@ -29,6 +29,14 @@ public struct DeviceTokenRegistration: Encodable, Sendable {
     }
 }
 
+/// The answer to a conditional GET.
+public enum ConditionalResponse<T> {
+    case notModified
+    case fresh(T, etag: String?)
+}
+
+extension ConditionalResponse: Sendable where T: Sendable {}
+
 public enum APIError: Error, CustomStringConvertible {
     case badStatus(Int, String)
     case decoding(Error)
@@ -120,6 +128,30 @@ public final class APIClient: @unchecked Sendable {
         return try decodeResponse(T.self, from: data)
     }
 
+    /// A GET that answers `.notModified` when the server's copy still matches `etag`.
+    public func getConditional<T: Decodable>(
+        _ path: String,
+        ifNoneMatch etag: String?,
+        authenticated: Bool = true,
+        decodeAs: T.Type = T.self
+    ) async throws -> ConditionalResponse<T> {
+        if authenticated {
+            await refreshIfExpired()
+        }
+        let (data, http) = try await performSend(
+            method: "GET",
+            path: path,
+            body: Optional<Empty>.none,
+            authenticated: authenticated,
+            ifNoneMatch: etag,
+            didRetryAfterRefresh: false
+        )
+        if http.statusCode == 304 {
+            return .notModified
+        }
+        return .fresh(try decodeResponse(T.self, from: data), etag: http.value(forHTTPHeaderField: "ETag"))
+    }
+
     public func post<Input: Encodable, Output: Decodable>(
         _ path: String,
         body: Input,
@@ -168,8 +200,9 @@ public final class APIClient: @unchecked Sendable {
             path: path,
             body: body,
             authenticated: authenticated,
+            ifNoneMatch: nil,
             didRetryAfterRefresh: false
-        )
+        ).0
     }
 
     private func performSend<Input: Encodable>(
@@ -177,10 +210,17 @@ public final class APIClient: @unchecked Sendable {
         path: String,
         body: Input?,
         authenticated: Bool,
+        ifNoneMatch: String?,
         didRetryAfterRefresh: Bool
-    ) async throws -> Data {
+    ) async throws -> (Data, HTTPURLResponse) {
         var req = URLRequest(url: APIClient.url(baseURL, path))
         req.httpMethod = method
+        if let ifNoneMatch {
+            // URLSession answers a conditional request from its own cache and
+            // hides the 304 unless the cache is bypassed.
+            req.cachePolicy = .reloadIgnoringLocalCacheData
+            req.setValue(ifNoneMatch, forHTTPHeaderField: "If-None-Match")
+        }
         if authenticated, let token = try tokenStore.load()?.accessToken {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
@@ -212,13 +252,17 @@ public final class APIClient: @unchecked Sendable {
                 path: path,
                 body: body,
                 authenticated: authenticated,
+                ifNoneMatch: ifNoneMatch,
                 didRetryAfterRefresh: true
             )
+        }
+        if ifNoneMatch != nil, http.statusCode == 304 {
+            return (data, http)
         }
         guard (200..<300).contains(http.statusCode) else {
             throw APIError.badStatus(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
-        return data
+        return (data, http)
     }
 
     private func refreshIfExpired() async {
