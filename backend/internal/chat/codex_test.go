@@ -225,8 +225,6 @@ func transcriptOf(msgs []chat.Message) string {
 	return b.String()
 }
 
-// PRD-1 AC1·AC4: the first message opens the user's codex session; every
-// reply is read out of that one session's transcript, turn by turn.
 func TestEngine_OneCodexSessionPerUser(t *testing.T) {
 	store, engine, platform := newEngine(t)
 	ctx := context.Background()
@@ -256,7 +254,6 @@ func TestEngine_OneCodexSessionPerUser(t *testing.T) {
 		t.Error("nothing should be pending after the turns ended")
 	}
 
-	// Another user gets a session of their own.
 	if _, err := engine.Send(ctx, 2, "hi"); err != nil {
 		t.Fatal(err)
 	}
@@ -289,9 +286,6 @@ func TestEngine_OneTurnAtATimeAndPendingReply(t *testing.T) {
 	}
 }
 
-// PRD-1 AC1 (2026-11-09 개정): a message that arrives while a reply is in
-// progress waits instead of failing, and is sent right after that reply
-// ends. Only one waits at a time.
 func TestEngine_QueuesAMessageSentWhileBusyAndDrainsItAfter(t *testing.T) {
 	store, engine, platform := newEngine(t)
 	platform.hold = make(chan struct{})
@@ -324,7 +318,6 @@ func TestEngine_QueuesAMessageSentWhileBusyAndDrainsItAfter(t *testing.T) {
 	}
 }
 
-// A queued message cancelled before its turn starts is never sent.
 func TestEngine_CancelsAQueuedMessage(t *testing.T) {
 	store, engine, platform := newEngine(t)
 	platform.hold = make(chan struct{})
@@ -360,7 +353,6 @@ func TestEngine_CancelQueuedWithNothingQueued(t *testing.T) {
 	}
 }
 
-// A platform session that disappeared is replaced by a new one.
 func TestEngine_RecreatesAMissingSession(t *testing.T) {
 	store, engine, platform := newEngine(t)
 	ctx := context.Background()
@@ -566,7 +558,6 @@ func TestEngine_CancelWithAStaleIDLeavesTheNewerMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	id := convID(t, store, 1)
-	// The turn ended and took it, and the user queued another behind the next.
 	if _, err := store.TakeQueued(ctx, 1, id); err != nil {
 		t.Fatal(err)
 	}
@@ -628,8 +619,6 @@ func TestEngine_KeepsAQueuedMessageWhenTheDispatchFails(t *testing.T) {
 	}
 }
 
-// One user's queue is not another's: a cancel or a resume for user 2 never
-// touches user 1's waiting message.
 func TestEngine_QueuedMessagesAreIsolatedPerUser(t *testing.T) {
 	store, engine, platform := newEngine(t)
 	ctx := context.Background()
@@ -664,9 +653,6 @@ func TestEngine_QueuedMessagesAreIsolatedPerUser(t *testing.T) {
 	_ = platform
 }
 
-// PRD-1 AC1 · session-platform AC-J9: a message sent while a reply is in
-// progress goes into that reply when the platform takes it — it reads as a
-// sent message, not as one still waiting.
 func TestEngine_SteersIntoTheRunningTurn(t *testing.T) {
 	store, engine, platform := newEngine(t)
 	platform.hold = make(chan struct{})
@@ -738,7 +724,6 @@ func TestEngine_FallsBackToTheQueueWhenSteeringIsRefused(t *testing.T) {
 
 	close(platform.hold)
 	engine.Wait()
-	// It went out as its own turn once the first one ended.
 	if got := transcriptOf(messages(t, store, 1)); got != "user:slow|assistant:re: slow|user:second|assistant:re: second|" {
 		t.Fatalf("history = %q", got)
 	}
