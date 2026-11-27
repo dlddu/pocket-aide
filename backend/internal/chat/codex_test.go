@@ -50,6 +50,12 @@ type fakePlatform struct {
 	// answers 500 — a follow that loses the transcript part way through.
 	readsOK int
 	reads   int
+	// boundedReads counts the transcript reads whose context carried a
+	// deadline, and firstBound is how far out the first of them was. This is
+	// where an overall limit on receiving a reply shows up: the follow does
+	// nothing but read, so a limit on the follow is a deadline on its reads.
+	boundedReads int
+	firstBound   time.Duration
 }
 
 type fakeSession struct {
@@ -78,7 +84,7 @@ func marker(kind string, seq int, extra string) string {
 	return fmt.Sprintf("\x1esession-platform %s seq=%d%s\n", kind, seq, extra)
 }
 
-func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (int, []byte, error) {
+func (f *fakePlatform) Do(ctx context.Context, method, path string, body []byte) (int, []byte, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	parts := strings.Split(strings.TrimPrefix(path, "/sessions"), "/")
@@ -156,6 +162,12 @@ func (f *fakePlatform) Do(_ context.Context, method, path string, body []byte) (
 			return http.StatusNotFound, nil, nil
 		}
 		f.reads++
+		if deadline, ok := ctx.Deadline(); ok {
+			if f.boundedReads == 0 {
+				f.firstBound = time.Until(deadline)
+			}
+			f.boundedReads++
+		}
 		if f.readsOK > 0 && f.reads > f.readsOK {
 			return http.StatusInternalServerError, nil, nil
 		}
@@ -818,6 +830,14 @@ func (f *fakePlatform) appendTranscript(id, text string) {
 	f.sessions[id].transcript = append(f.sessions[id].transcript, text...)
 }
 
+// readBound is how many transcript reads were given a deadline, and how far
+// out the first one was.
+func (f *fakePlatform) readBound() (int, time.Duration) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.boundedReads, f.firstBound
+}
+
 func lastReply(t *testing.T, msgs []chat.Message) chat.Message {
 	t.Helper()
 	for i := len(msgs) - 1; i >= 0; i-- {
@@ -1087,5 +1107,138 @@ func TestEngine_AbandonedTurnIsNotStoredAgainAfterReconnect(t *testing.T) {
 	}
 	if got := lastReply(t, msgs); got.Content != "re: after" || got.Interrupted {
 		t.Fatalf("the new turn = %q interrupted=%v", got.Content, got.Interrupted)
+	}
+}
+
+// endsTheTurn hands back fn and registers it as a cleanup, so a test that
+// leaves a turn running on purpose ends it at the point it means to — and ends
+// it anyway if an assertion fails first. A follow has no limit of its own now,
+// so a turn left running is a test that never returns. Register these after
+// the engine, whose own cleanup waits for the follow: cleanups run last-first.
+func endsTheTurn(t *testing.T, fn func()) func() {
+	t.Helper()
+	var once sync.Once
+	run := func() { once.Do(fn) }
+	t.Cleanup(run)
+	return run
+}
+
+// holdReplies keeps every turn the platform takes in progress until the
+// returned release is called.
+func holdReplies(t *testing.T, platform *fakePlatform) func() {
+	t.Helper()
+	hold := make(chan struct{})
+	platform.hold = hold
+	return endsTheTurn(t, func() { close(hold) })
+}
+
+// awaitReads waits for the follow in progress to have polled the transcript n
+// times, so the turn is observed while it is genuinely still running. The wait
+// is the short boundary that stands in for a long turn: a follow under an
+// overall limit carries that limit on its very first read, whatever it is.
+func awaitReads(t *testing.T, platform *fakePlatform, n int) {
+	t.Helper()
+	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); {
+		platform.mu.Lock()
+		reads := platform.reads
+		platform.mu.Unlock()
+		if reads >= n {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("the transcript was not read %d times while the turn ran", n)
+}
+
+// Receiving a reply has no overall limit (2026-11-27 결정). Following a turn
+// was capped at 40 minutes, and reaching the cap stored whatever had arrived
+// as an interrupted answer — so a session still working past it had its answer
+// replaced by a cut-off one, and the real answer, arriving later, was dropped
+// on an abandoned turn. A turn now runs as long as the platform takes.
+//
+// The three places a follow starts each get this check: a new send, a turn
+// picked up again on reconnect, and a queued message resumed by a poll.
+func TestEngine_FollowingANewTurnHasNoOverallLimit(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	release := holdReplies(t, platform)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "hi"); err != nil {
+		t.Fatal(err)
+	}
+	awaitReads(t, platform, 3)
+	if n, within := platform.readBound(); n > 0 {
+		t.Fatalf("%d reads of a running turn were given a deadline (the first %s out), want a follow with no limit of its own", n, within)
+	}
+
+	// The answer the platform finally writes is the one the user gets, once.
+	release()
+	engine.Wait()
+	msgs := messages(t, store, 1)
+	if got := lastReply(t, msgs); got.Content != "re: hi" || got.Interrupted {
+		t.Fatalf("the long turn = %q interrupted=%v, want its normal answer", got.Content, got.Interrupted)
+	}
+	if n := countReplies(msgs, "re: hi"); n != 1 {
+		t.Fatalf("the answer was stored %d times: %v", n, transcriptOf(msgs))
+	}
+}
+
+func TestEngine_FollowingAReconnectedTurnHasNoOverallLimit(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	// A turn still running when this server lost track of it: the next send
+	// hands it to a background follow and the caller is told it is busy.
+	id := seedCodexSession(t, store, platform,
+		marker("input", 1, " at=x")+"hi\n"+marker("output", 1, "")+"partial")
+	answer := endsTheTurn(t, func() {
+		platform.appendTranscript(id, " answer\n"+marker("end", 1, " status=ok at=x"))
+	})
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "next"); !errors.Is(err, chat.ErrBusy) {
+		t.Fatalf("send while the reconnected turn runs = %v, want ErrBusy", err)
+	}
+	awaitReads(t, platform, 3)
+	if n, within := platform.readBound(); n > 0 {
+		t.Fatalf("%d reads of a reconnected turn were given a deadline (the first %s out), want a follow with no limit of its own", n, within)
+	}
+
+	answer()
+	engine.Wait()
+	msgs := messages(t, store, 1)
+	if got := lastReply(t, msgs); got.Content != "partial answer" || got.Interrupted {
+		t.Fatalf("the reconnected turn = %q interrupted=%v, want its whole answer", got.Content, got.Interrupted)
+	}
+	if n := countReplies(msgs, "partial answer"); n != 1 {
+		t.Fatalf("the answer was stored %d times: %v", n, transcriptOf(msgs))
+	}
+}
+
+func TestEngine_FollowingAResumedQueuedTurnHasNoOverallLimit(t *testing.T) {
+	store, engine, platform := newEngine(t)
+	ctx := context.Background()
+	if _, err := engine.Send(ctx, 1, "first"); err != nil {
+		t.Fatal(err)
+	}
+	engine.Wait()
+	// What a restart mid-reply leaves: a waiting message with no turn behind
+	// it. The apps' poll resumes it, and that turn is followed the same way.
+	id := convID(t, store, 1)
+	if _, err := store.SetQueued(ctx, 1, id, "q-1", "left over", 5); err != nil {
+		t.Fatal(err)
+	}
+	resumed := restart(t, store, platform)
+	release := holdReplies(t, platform)
+	resumed.ResumeQueued(ctx, 1, id)
+	awaitReads(t, platform, 3)
+	if n, within := platform.readBound(); n > 0 {
+		t.Fatalf("%d reads of a resumed turn were given a deadline (the first %s out), want a follow with no limit of its own", n, within)
+	}
+
+	release()
+	resumed.Wait()
+	msgs := messages(t, store, 1)
+	if got := lastReply(t, msgs); got.Content != "re: left over" || got.Interrupted {
+		t.Fatalf("the resumed turn = %q interrupted=%v, want its normal answer", got.Content, got.Interrupted)
+	}
+	if n := countReplies(msgs, "re: left over"); n != 1 {
+		t.Fatalf("the answer was stored %d times: %v", n, transcriptOf(msgs))
 	}
 }
