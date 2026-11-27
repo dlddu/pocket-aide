@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
+import com.dlddu.pocketaide.api.Conditional
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -112,6 +113,11 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     private val _taskTurns = MutableStateFlow(ChatTaskTurnsUiState())
     val taskTurns: StateFlow<ChatTaskTurnsUiState> = _taskTurns.asStateFlow()
+
+    // The newest message id a read has delivered — not one appended by send,
+    // which could be newer than a reply the polls have not fetched yet.
+    private var cursor: Long? = null
+    private var etag: String? = null
 
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
@@ -298,18 +304,29 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
-    internal suspend fun load() {
+    /**
+     * A poll fetches only what came after the last read, and nothing at all
+     * when the server answers 304; [full] re-reads the whole conversation.
+     */
+    internal suspend fun load(full: Boolean = false) {
         try {
-            val view = api.chat()
+            val after = cursor
+            val known = _state.value.conversation?.id
+            if (full || after == null || known == null) {
+                loadAll()
+            } else {
+                when (val reply = api.chat(after, etag)) {
+                    Conditional.NotModified -> Unit
+                    is Conditional.Fresh -> if (reply.value.conversation.id == known) {
+                        applyView(reply.value, merging = true)
+                        etag = reply.etag
+                    } else {
+                        loadAll()
+                    }
+                }
+            }
             _state.update {
-                it.copy(
-                    conversation = view.conversation,
-                    messages = view.messages,
-                    pending = view.pending,
-                    queued = view.queued,
-                    hasLoaded = true,
-                    error = if (it.error == ChatError.UNREACHABLE) null else it.error,
-                )
+                it.copy(hasLoaded = true, error = if (it.error == ChatError.UNREACHABLE) null else it.error)
             }
         } catch (e: CancellationException) {
             throw e
@@ -318,16 +335,33 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
-    // Pulls the conversation right away instead of waiting for the next poll
-    // tick — for history the server added while the tab wasn't visible. The
-    // background poll loop keeps calling load() on its own schedule the whole
-    // time; both calls are plain reads that each replace state with the
-    // server's current truth, so running at the same time is harmless.
+    private suspend fun loadAll() {
+        applyView(api.chat(), merging = false)
+        etag = null
+    }
+
+    private fun applyView(view: ChatView, merging: Boolean) {
+        _state.update {
+            it.copy(
+                conversation = view.conversation,
+                messages = if (merging) it.messages.merging(view.messages) else view.messages,
+                pending = view.pending,
+                queued = view.queued,
+            )
+        }
+        val newest = view.messages.lastOrNull()?.id ?: 0L
+        cursor = if (merging) maxOf(cursor ?: 0L, newest) else newest
+    }
+
+    // Pulls the whole conversation right away instead of waiting for the next
+    // poll tick. The background poll loop keeps calling load() on its own
+    // schedule the whole time; running both at once is harmless because a
+    // poll only merges messages by id into what the full read set.
     internal suspend fun performSync(): Boolean {
         if (!_state.value.canSync) return false
         _state.update { it.copy(isSyncing = true) }
         try {
-            load()
+            load(full = true)
             return true
         } finally {
             _state.update { it.copy(isSyncing = false) }

@@ -18,6 +18,10 @@ final class ChatViewModel: ObservableObject {
     static let idlePollNanos: UInt64 = 15_000_000_000
 
     private var api: APIClient?
+    // The newest message id a read has delivered — not one appended by send(),
+    // which could be newer than a reply the polls have not fetched yet.
+    private var cursor: Int64?
+    private var etag: String?
 
     init(api: APIClient?) {
         self.api = api
@@ -44,14 +48,24 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    func load() async {
+    /// A poll fetches only what came after the last read, and nothing at all
+    /// when the server answers 304; `full` re-reads the whole conversation.
+    func load(full: Bool = false) async {
         guard let api else { return }
         do {
-            let view = try await api.chat()
-            conversation = view.conversation
-            messages = view.messages
-            pending = view.pending
-            queued = view.queued
+            if !full, let cursor, let known = conversation?.id {
+                switch try await api.chat(after: cursor, ifNoneMatch: etag) {
+                case .notModified:
+                    break
+                case .fresh(let view, let tag) where view.conversation.id == known:
+                    applyView(view, merging: true)
+                    etag = tag
+                case .fresh:
+                    try await loadAll(api)
+                }
+            } else {
+                try await loadAll(api)
+            }
             hasLoaded = true
             if error == .unreachable { error = nil }
         } catch is CancellationError {
@@ -59,6 +73,21 @@ final class ChatViewModel: ObservableObject {
             hasLoaded = true
             self.error = ChatError(error)
         }
+    }
+
+    private func loadAll(_ api: APIClient) async throws {
+        let view = try await api.chat()
+        applyView(view, merging: false)
+        etag = nil
+    }
+
+    private func applyView(_ view: ChatThread, merging: Bool) {
+        conversation = view.conversation
+        messages = merging ? messages.merging(view.messages) : view.messages
+        pending = view.pending
+        queued = view.queued
+        let newest = view.messages.last?.id ?? 0
+        cursor = merging ? max(cursor ?? 0, newest) : newest
     }
 
     func send(_ content: String) async -> Bool {
@@ -87,17 +116,16 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    // Pulls the conversation right away instead of waiting for the next poll
-    // tick — for history the server added while the tab wasn't visible. The
-    // background poll loop keeps calling load() on its own schedule the whole
-    // time; both calls are plain reads that each replace state with the
-    // server's current truth, so running at the same time is harmless.
+    // Pulls the whole conversation right away instead of waiting for the next
+    // poll tick. The background poll loop keeps calling load() on its own
+    // schedule the whole time; running both at once is harmless because a
+    // poll only merges messages by id into what the full read set.
     @discardableResult
     func sync() async -> Bool {
         guard canSync else { return false }
         isSyncing = true
         defer { isSyncing = false }
-        await load()
+        await load(full: true)
         return true
     }
 

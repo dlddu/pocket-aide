@@ -2,6 +2,7 @@ package com.dlddu.pocketaide.chat
 
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
+import com.dlddu.pocketaide.api.Conditional
 import com.dlddu.pocketaide.api.isAuthPoolExhausted
 import java.net.URLEncoder
 import kotlinx.serialization.SerialName
@@ -145,6 +146,14 @@ private fun chatLinkEnd(text: String, match: IntRange): Int {
 }
 
 suspend fun ApiClient.chat(): ChatView = get("/api/chat", ChatView.serializer())
+
+/** Only the messages after [afterId], or [Conditional.NotModified] when nothing changed since [etag]. */
+suspend fun ApiClient.chat(afterId: Long, etag: String?): Conditional<ChatView> =
+    getConditional("/api/chat?after=$afterId", ChatView.serializer(), etag)
+
+/** These messages and [newer] together, each id once, oldest first. */
+fun List<ChatMessage>.merging(newer: List<ChatMessage>): List<ChatMessage> =
+    (this + newer).associateBy { it.id }.values.sortedBy { it.id }
 
 /** Always safe to call whether or not a reply is in progress: the server
  * sends at once when it can, and otherwise holds the message to send right

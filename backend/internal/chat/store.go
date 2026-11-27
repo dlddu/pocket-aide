@@ -131,6 +131,27 @@ func (s *Store) Messages(ctx context.Context, userID, sessionID int64, limit int
 	}
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? ORDER BY id`, sessionID)
+	out, err := scanMessages(rows, err)
+	if err != nil {
+		return nil, err
+	}
+	if limit > 0 && len(out) > limit {
+		out = out[len(out)-limit:]
+	}
+	return out, nil
+}
+
+// MessagesAfter returns a session's messages whose id is greater than afterID, oldest first.
+func (s *Store) MessagesAfter(ctx context.Context, userID, sessionID, afterID int64) ([]Message, error) {
+	if _, err := s.GetSession(ctx, userID, sessionID); err != nil {
+		return nil, err
+	}
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? AND id > ? ORDER BY id`, sessionID, afterID)
+	return scanMessages(rows, err)
+}
+
+func scanMessages(rows *sql.Rows, err error) ([]Message, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list chat messages: %w", err)
 	}
@@ -145,9 +166,6 @@ func (s *Store) Messages(ctx context.Context, userID, sessionID int64, limit int
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
-	}
-	if limit > 0 && len(out) > limit {
-		out = out[len(out)-limit:]
 	}
 	return out, nil
 }

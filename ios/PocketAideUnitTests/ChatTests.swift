@@ -14,6 +14,19 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(thread.pending?.content, "쓰는 중")
     }
 
+    // PRD-1 AC1 (2026-11-27 개정): a poll's newer messages join the ones on
+    // screen — the one send() already appended is not shown twice, and a reply
+    // with a smaller id lands before it.
+    func testMergingNewerMessagesKeepsEachIDOnceInOrder() throws {
+        func messages(_ json: String) throws -> [ChatMessage] {
+            try JSONDecoder().decode([ChatMessage].self, from: Data(json.utf8))
+        }
+        let onScreen = try messages(#"[{"id":1,"role":"user","content":"a","created_at":1},{"id":4,"role":"user","content":"d","created_at":4}]"#)
+        let polled = try messages(#"[{"id":3,"role":"assistant","content":"c","created_at":3},{"id":4,"role":"user","content":"d","created_at":4}]"#)
+        XCTAssertEqual(onScreen.merging(polled).map(\.id), [1, 3, 4])
+        XCTAssertEqual(onScreen.merging([]).map(\.id), [1, 4])
+    }
+
     func testDecodesAnIdleConversation() throws {
         let json = #"{"conversation":{"id":7,"title":"","created_at":1,"updated_at":1},"messages":[],"pending":null}"#
         let thread = try JSONDecoder().decode(ChatThread.self, from: Data(json.utf8))
