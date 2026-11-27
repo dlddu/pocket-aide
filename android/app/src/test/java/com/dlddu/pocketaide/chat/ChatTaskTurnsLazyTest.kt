@@ -6,8 +6,10 @@ import com.dlddu.pocketaide.auth.TokenBundle
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -270,8 +272,20 @@ class ChatTaskTurnsLazyTest {
     @Test
     fun aLateAnswerForTheTaskWeLeftIsDropped() = runTest {
         val vm = ChatViewModel(api())
-        server.enqueue(page("t1", 1, "앞 작업의 말").setBodyDelay(300, TimeUnit.MILLISECONDS))
-        server.enqueue(page("t2", 2, "뒤 작업의 말"))
+        // 경로를 보고 답한다 — 꽂아 둔 순서로 답하면 **도착 순서**에 매달린다.
+        // 앞 작업의 호출은 UNDISPATCHED 로 떠도 실제 쓰기는 IO 디스패처에서
+        // 비동기로 일어나므로, 뒤 작업의 요청이 먼저 닿아 앞 작업의 느린 답을
+        // 받아 가는 일이 실제로 생긴다(2026-11-26 CI 에서 한 번 깨졌다). 어느
+        // 쪽이 먼저 닿아도 자기 작업의 페이지를 받게 해 두면, 이 시험이 보려는
+        // 것 — **상태가 적용되는 순서** — 만 남는다.
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse =
+                if (request.path.orEmpty().contains("/tasks/t1/")) {
+                    page("t1", 1, "앞 작업의 말").setBodyDelay(300, TimeUnit.MILLISECONDS)
+                } else {
+                    page("t2", 2, "뒤 작업의 말")
+                }
+        }
 
         val slow = launch(start = CoroutineStart.UNDISPATCHED) {
             vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1")), more = false)
