@@ -1,11 +1,13 @@
 ---
 type: mockup-structure-map
-last_updated: 2026-11-04
+last_updated: 2026-11-27
 ---
 
 > **2026-11-04 — 안드로이드(Compose) 기준 재작성의 세 번째 슬라이스.** 렌더링 소스가 `android/` 로 옮겨간 뒤에도 이 표는 `ios/**/*.swift` 를 가리켰다.
 > 첫 슬라이스(`rct_20261104-0003`)가 `screen-affirmations-priority-edit` 한 화면을, 둘째(`rct_20261104-0004`)가 `screen-affirmations`(다짐 탭 — 목록·빈 상태·불러오는 중 세 프레임)를, 이번 슬라이스(`rct_20261104-0005`)가 `screen-scratchpad`(임시공간 탭 — 목록·빈 상태·불러오는 중·오류 네 프레임)를 안드로이드 기준으로 다시 세웠다.
 > 나머지 네 화면(`screen-routines`·`screen-todo-personal`·`screen-todo-work`·`screen-approval`)의 iOS 표는 안드로이드 구현을 판정하지 못하므로 이 파일에서 걷어냈다(옛 판은 git 이력 — `a0381a8` 시점). 화면별로 같은 방식으로 다시 세우는 일이 남은 작업이다.
+>
+> **2026-11-27 — 안드로이드 기준 재작성의 다섯째 슬라이스.** 이번 슬라이스(`rct_20261106-0002`)가 `screen-device-name`(기기 이름 시트 — 첫 등록(모델명 기본값) · 이름을 비웠을 때(저장 비활성) 두 프레임)을 안드로이드 기준으로 세웠다.
 
 # 구조·수치 ↔ 구현 대응표
 
@@ -18,7 +20,7 @@ last_updated: 2026-11-04
 
 ## 대조 범위
 
-화면 단위로 늘려 간다. 지금 표에 있는 화면은 **4개**다 — 나머지 `화면`·`부분` 행(`_impl-map.md`)은 아직 구조·수치 대조표가 없다(남은 기준 4 drift).
+화면 단위로 늘려 간다. 지금 표에 있는 화면은 **5개**다 — 나머지 `화면`·`부분` 행(`_impl-map.md`)은 아직 구조·수치 대조표가 없다(남은 기준 4 drift).
 화면마다 표 E·M·S 한 벌을 두고, 아래 검산의 `SCREENS` 목록이 화면별 목업 파일·영역·요소 하위 트리의 루트(`roots`)·정방향 대상 파일을 정한다.
 
 | 목업 | 구현 파일 | 범위 |
@@ -27,6 +29,7 @@ last_updated: 2026-11-04
 | `screen-affirmations` | `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` (+ 그 화면이 쓰는 `designsystem/components/ScreenHeader.kt`·`Card.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 다짐 탭 본체 — 헤더(영역 라벨·제목·추가 버튼)·스크롤 본문(히어로 카드·목록 헤더·정렬 칩·목록 행·스와이프 삭제 패널·범례)과 빈 상태·불러오는 중 두 프레임의 안내·진행 카드. 상태바·하단 탭 바와 시트(`PriorityEditSheet.kt` — 위 행)는 범위 밖 |
 | `screen-scratchpad` | `android/app/src/main/java/com/dlddu/pocketaide/scratchpad/ScratchpadScreen.kt` (+ 그 화면이 쓰는 `designsystem/components/ScreenHeader.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 임시공간 탭 본체 — 헤더(영역 라벨·미분류 배지·제목·부제·새 메모 버튼)·스크롤 본문(일자 머리·메모 카드·분류 이동 칩·스와이프 삭제 패널)과 빈 상태·불러오는 중·오류 세 프레임의 안내·진행 표시·오류 줄. 상태바·하단 탭 바, 「더 보기」 목록 프레임(`ui/RootScreen.kt` 의 `MoreList`), 추가 시트(`ScratchpadAddSheet.kt` — 목업 없음)와 우선순위 시트(`PriorityEditSheet.kt` — 첫 슬라이스)는 범위 밖 |
 | `screen-todo-work` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` (+ 그 화면이 쓰는 `todos/TodoRowParts.kt`·`todos/TodoAreaStyle.kt`·`todos/TodoRowMeta.kt` 와 `designsystem/components/ScreenHeader.kt`·`SwipeToDelete.kt`·`AreaLabel.kt`) | 회사 투두 탭 본체 — 영역 띠·헤더(영역 점·라벨·제목·요약 줄·추가 버튼)·검색 필드·스크롤 본문(섹션 머리·행·체크·메타 줄·스와이프 삭제 패널·분리 안내 상자)과 빈 상태·불러오는 중·오류 세 프레임의 안내·진행 표시·오류 줄. 개인 전용 자리(기한 필터 칩·우선순위 태그·달력 글리프)와 `screen-todo-personal`, 상태바·하단 탭 바, 편집 시트(`TodoEditSheet.kt` — 목업 없음)는 범위 밖 |
+| `screen-device-name` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` (+ 그 화면이 쓰는 `designsystem/components/Sheet.kt`·`Card.kt`·`PlainTextField.kt`) | 기기 이름 시트 본체 — 핸들·제목·설명·카드 안 한 줄 입력(첫 프레임은 기기 모델명 기본값 · 둘째 프레임은 비었을 때 placeholder)·1차 액션(저장)·2차 액션(건너뛰기). 시트 아래 탭 화면과 시트를 띄우는 쪽(`ui/RootScreen.kt`)은 범위 밖 |
 
 ## 판독 규약
 
@@ -59,6 +62,7 @@ last_updated: 2026-11-04
 남은 구조·수치 drift(`screen-affirmations`): 표 M `불일치` 11행 · `목업 대기` 3행, 표 S `불일치` 1행.
 남은 구조·수치 drift(`screen-scratchpad`): 표 M `불일치` 24행 · `목업 대기` 1행, 표 S `불일치` 2행.
 남은 구조·수치 drift(`screen-todo-work`): 표 M `불일치` 23행 · `목업 대기` 0행, 표 S `불일치` 2행.
+남은 구조·수치 drift(`screen-device-name`): 표 M `불일치` 1행 · `목업 대기` 0행, 표 S `불일치` 0행.
 
 | 화면 | 표 | 판정 | 행 수 |
 |---|---|---|---|
@@ -95,6 +99,15 @@ last_updated: 2026-11-04
 | `screen-todo-work` | S | 불일치 | 2 |
 | `screen-todo-work` | S | 목업 대기 | 1 |
 | `screen-todo-work` | S | 허용 | 1 |
+| `screen-device-name` | M | 일치 | 47 |
+| `screen-device-name` | M | 기본값 일치 | 0 |
+| `screen-device-name` | M | 불일치 | 1 |
+| `screen-device-name` | M | 허용 | 6 |
+| `screen-device-name` | M | 목업 대기 | 0 |
+| `screen-device-name` | S | 일치 | 11 |
+| `screen-device-name` | S | 불일치 | 0 |
+| `screen-device-name` | S | 목업 대기 | 0 |
+| `screen-device-name` | S | 허용 | 0 |
 
 ## 표 E — 요소 (`screen-affirmations-priority-edit`) · 26행
 
@@ -933,6 +946,106 @@ last_updated: 2026-11-04
 | 14 | 오류 줄 | `<!-- 오류 줄` | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `state.errorMessage?.let { message ->` | 일치 | 목록 맨 위(섹션·안내 줄 앞)에 오류 한 줄 — 오류 문자열이 있을 때만 |
 | 15 | 당겨서 새로고침 | — | `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` | `PullToRefreshBox(` | 목업 대기 | 목록을 아래로 당겨 새로고침하는 표시(`PullToRefreshBox`)는 구현만 그리고 목업 어느 프레임에도 없다 |
 
+## 표 E — 요소 (`screen-device-name`) · 17행
+
+| 요소 | 목업 선택 인용 |
+|---|---|
+| Backdrop | `absolute inset-0 bg-[#221F33]/45 z-20` |
+| Sheet | `absolute bottom-0 inset-x-0 bg-[var(--sheet)] text-[var(--sheet-ink)] z-40` |
+| Handle 여백 | `pt-2.5 pb-1.5 flex justify-center` |
+| Handle 막대 | `style=width:36px;height:4px;border-radius:9999px;background:var(--sheet-rule)` |
+| Sheet 본문 | `px-6 flex flex-col gap-4` |
+| SheetHeader | `pt-2` |
+| 제목 | `text-[18px] font-bold tracking-tight` |
+| 설명 | `text-[13px] mt-1 text-[var(--sheet-ink)]/60 leading-snug` |
+| 입력 카드 | `bg-white rounded-2xl border border-[var(--sheet-rule)] p-4` |
+| 입력 행 | `text-[15px] flex items-center` |
+| 캐럿(텍스트 뒤) | `inline-block w-[1.5px] h-[18px] bg-[var(--sheet-accent)] ml-0.5` |
+| SheetActions | `pt-2 pb-8 flex flex-col gap-1` |
+| 저장 버튼 | `w-full rounded-full bg-[var(--sheet-ink)] text-[var(--sheet)] py-3.5 text-[15px] font-bold` |
+| 건너뛰기 버튼 | `w-full py-2 text-[13px] text-[var(--sheet-ink)]/55` |
+| 캐럿(placeholder 앞) | `inline-block w-[1.5px] h-[18px] bg-[var(--sheet-accent)] mr-0.5` |
+| placeholder | `text-[var(--sheet-ink)]/45` |
+| 저장 버튼(비활성) | `w-full rounded-full bg-[var(--sheet-ink)] text-[var(--sheet)] py-3.5 text-[15px] font-bold opacity-50` |
+
+## 표 M — 수치 (`screen-device-name`) · 54행
+
+| 요소 | 목업 인용 | 목업 값 | 구현 파일 | 구현 인용 | 구현 값 | 판정 | 근거 |
+|---|---|---|---|---|---|---|---|
+| Backdrop | `bg-[#221F33]/45` | #221F33/0.45 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `scrimColor = DesignTokens.Colors.ink(area).copy(alpha = BACKDROP_OPACITY)` · `private const val BACKDROP_OPACITY = 0.45f` | #221F33/0.45 | 일치 | `ModalBottomSheet` 스크림 — 영역 ink 45% |
+| Sheet | `bg-[var(--sheet)]` | #EEEDF5 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `containerColor = DesignTokens.Colors.surface(area)` | #EEEDF5 | 일치 | 시트 배경 = 영역 surface(§1.11 PR 모니터 라이트) |
+| Sheet | `border-radius:24px 24px 0 0` | 24 24 0 0 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `shape = RoundedCornerShape(topStart = DesignTokens.Radius.cardLarge, topEnd = DesignTokens.Radius.cardLarge)` | 24 24 0 0 | 일치 | 위쪽 두 모서리만 24 — 아래 두 모서리는 인자를 주지 않아 0 |
+| Sheet | `text-[var(--sheet-ink)]` | #221F33 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `contentColor = DesignTokens.Colors.ink(area)` | #221F33 | 일치 | 시트 본문 기본 텍스트 색 = 영역 ink |
+| Handle 여백 | `pt-2.5` | 10 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.padding(top = HANDLE_TOP, bottom = HANDLE_BOTTOM)` · `private val HANDLE_TOP = 10.dp` | 10 | 일치 | Handle 위 여백 |
+| Handle 여백 | `pb-1.5` | 6 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.padding(top = HANDLE_TOP, bottom = HANDLE_BOTTOM)` · `private val HANDLE_BOTTOM = 6.dp` | 6 | 일치 | Handle 아래 여백 |
+| Handle 막대 | `width:36px` | 36 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.size(width = HANDLE_WIDTH, height = HANDLE_HEIGHT)` · `private val HANDLE_WIDTH = 36.dp` | 36 | 일치 | 막대 너비 |
+| Handle 막대 | `height:4px` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.size(width = HANDLE_WIDTH, height = HANDLE_HEIGHT)` · `private val HANDLE_HEIGHT = 4.dp` | 4 | 일치 | 막대 높이 |
+| Handle 막대 | `border-radius:9999px` | 9999 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.clip(CircleShape) .background(DesignTokens.Colors.rule(area))` | 9999 | 일치 | 막대 라운드 — `CircleShape`(완전 둥근 모서리) |
+| Handle 막대 | `background:var(--sheet-rule)` | #D8D5E4 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.background(DesignTokens.Colors.rule(area))` | #D8D5E4 | 일치 | 막대 색 = 영역 rule |
+| Sheet 본문 | `px-6` | 24 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.padding(horizontal = SheetDefaults.horizontalPadding)` · `val horizontalPadding: Dp = DesignTokens.Spacing.xxl` | 24 | 일치 | 시트 좌우 여백 |
+| Sheet 본문 | `gap-4` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.lg)` | 16 | 일치 | 시트 스택 간격 = `Spacing.lg` |
+| SheetHeader | `pt-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `Modifier.padding(top = SheetDefaults.titleTopPadding)` · `val titleTopPadding: Dp = DesignTokens.Spacing.sm` | 8 | 일치 | 제목 위 여백 |
+| 제목 | `text-[18px]` | 18 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `style = DesignTokens.Typography.style(SheetDefaults.titleSize, FontWeight.Bold).copy(letterSpacing = TITLE_TRACKING)` · `val titleSize = 18.sp` | 18 | 일치 | 시트 제목 크기 |
+| 제목 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `style = DesignTokens.Typography.style(SheetDefaults.titleSize, FontWeight.Bold).copy(letterSpacing = TITLE_TRACKING)` | bold | 일치 | 시트 제목 굵기 |
+| 제목 | `tracking-tight` | -0.025em | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `.copy(letterSpacing = TITLE_TRACKING)` · `private val TITLE_TRACKING = (-0.5).sp` | -0.5 | 일치 | 제목 자간 — −0.025em × 18 = −0.45, 0.1sp 단위로 −0.5 |
+| 설명 | `text-[13px]` | 13 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodySm).copy(lineHeight = DESCRIPTION_LINE_HEIGHT)` | 13 | 일치 | 설명 크기 = `Typography.bodySm` |
+| 설명 | `mt-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `verticalArrangement = Arrangement.spacedBy(DESCRIPTION_GAP)` · `private val DESCRIPTION_GAP = DesignTokens.Spacing.xs` | 4 | 일치 | 제목 ↔ 설명 간격 = `Spacing.xs` |
+| 설명 | `text-[var(--sheet-ink)]/60` | #221F33/0.6 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `color = ink.copy(alpha = 0.6f)` · `val ink = DesignTokens.Colors.ink(area)` | #221F33/0.6 | 일치 | 설명 색 = 영역 ink 60% |
+| 설명 | `leading-snug` | 1.375 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `.copy(lineHeight = DESCRIPTION_LINE_HEIGHT)` · `private val DESCRIPTION_LINE_HEIGHT = 1.375.em` | 1.375 | 일치 | 설명 줄 높이 = 글자 크기의 1.375배 |
+| 입력 카드 | `bg-white` | #FFFFFF | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | `.background(DesignTokens.Colors.card(area))` | #FFFFFF | 일치 | 카드 배경 = 영역 card |
+| 입력 카드 | `rounded-2xl` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | `val shape = RoundedCornerShape(padding.radius)` · `Medium(DesignTokens.Spacing.lg, DesignTokens.Radius.card)` | 16 | 일치 | 카드 라운드 — `CardPadding.Medium` 의 radius |
+| 입력 카드 | `border` | 1 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | `width = if (emphasized) EMPHASIZED_BORDER_WIDTH else BORDER_WIDTH` · `private val BORDER_WIDTH = 1.dp` | 1 | 일치 | 보더 두께(강조 아님) |
+| 입력 카드 | `border-[var(--sheet-rule)]` | #D8D5E4 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | `color = if (emphasized) DesignTokens.Colors.accent(area) else DesignTokens.Colors.rule(area)` | #D8D5E4 | 일치 | 보더 색 = 영역 rule(강조 아님) |
+| 입력 카드 | `p-4` | 16 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | `Card(area = area, padding = CardPadding.Medium, modifier = Modifier.fillMaxWidth())` · `Medium(DesignTokens.Spacing.lg, DesignTokens.Radius.card)` · `.padding(padding.value)` | 16 | 일치 | 카드 안쪽 여백 = `CardPadding.Medium` |
+| 입력 행 | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `textStyle = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg)` | 15 | 일치 | 입력 글자 크기 = `Typography.bodyLg` |
+| 캐럿(텍스트 뒤) | `bg-[var(--sheet-accent)]` | #5B4DB8 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/PlainTextField.kt` · `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `cursorBrush = SolidColor(cursorColor)` · `cursorColor = DesignTokens.Colors.accent(area)` | #5B4DB8 | 일치 | 캐럿 색 = 영역 accent(목업 `--sheet-accent`) |
+| 캐럿(텍스트 뒤) | `w-[1.5px]` | 1.5 | — | — | — | 허용 S13 | 구현(`BasicTextField` 기본 커서)이 커서 폭 수식을 갖고 있지 않다 — Compose 커서 폭은 플랫폼 고정 |
+| 캐럿(텍스트 뒤) | `h-[18px]` | 18 | — | — | — | 허용 S13 | 구현이 커서 높이 수식을 갖고 있지 않다 — Compose 커서 높이는 글자 줄 높이를 따라 정해진다 |
+| 캐럿(텍스트 뒤) | `ml-0.5` | 2 | — | — | — | 허용 S13 | 캐럿 앞 여백 — Compose 커서는 텍스트 바로 뒤에 그려 여백 인자가 없다 |
+| SheetActions | `pt-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `Modifier.padding(top = DesignTokens.Spacing.sm, bottom = ACTIONS_BOTTOM)` | 8 | 일치 | 액션 묶음 위 여백 = `Spacing.sm` |
+| SheetActions | `pb-8` | 32 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `Modifier.padding(top = DesignTokens.Spacing.sm, bottom = ACTIONS_BOTTOM)` · `private val ACTIONS_BOTTOM = DesignTokens.Spacing.xxl + DesignTokens.Spacing.sm` | 24+8 | 불일치 | 액션 아래 여백 = `Spacing.xxl`(24) + `Spacing.sm`(8) = 32 — 값은 목업과 같지만 단일 수식이 아닌 합이다 |
+| SheetActions | `gap-1` | 4 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `verticalArrangement = Arrangement.spacedBy(ACTIONS_GAP)` · `private val ACTIONS_GAP = DesignTokens.Spacing.xs` | 4 | 일치 | 액션 간격 = `Spacing.xs` |
+| 저장 버튼 | `bg-[var(--sheet-ink)]` | #221F33 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.background(DesignTokens.Colors.ink(area))` | #221F33 | 일치 | 1차 액션 배경 = 영역 ink |
+| 저장 버튼 | `text-[var(--sheet)]` | #EEEDF5 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `color = DesignTokens.Colors.surface(area)` | #EEEDF5 | 일치 | 1차 액션 라벨 색 = 영역 surface |
+| 저장 버튼 | `rounded-full` | full | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.clip(CircleShape)` | full | 일치 | 1차 액션 라운드 — `CircleShape` |
+| 저장 버튼 | `py-3.5` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.padding(vertical = ACTION_VERTICAL_PADDING)` · `private val ACTION_VERTICAL_PADDING = 14.dp` | 14 | 일치 | 1차 액션 상하 안쪽 여백 |
+| 저장 버튼 | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, FontWeight.Bold)` | 15 | 일치 | 1차 액션 라벨 크기 = `Typography.bodyLg` |
+| 저장 버튼 | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, FontWeight.Bold)` | bold | 일치 | 1차 액션 라벨 굵기 |
+| 건너뛰기 버튼 | `py-2` | 8 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.padding(vertical = verticalPadding)` · `val cancelVerticalPadding: Dp = DesignTokens.Spacing.sm` | 8 | 일치 | 2차 액션 상하 여백 = `Spacing.sm` |
+| 건너뛰기 버튼 | `text-[13px]` | 13 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodySm)` | 13 | 일치 | 2차 액션 라벨 크기 = `Typography.bodySm` |
+| 건너뛰기 버튼 | `text-[var(--sheet-ink)]/55` | #221F33/0.55 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `color = DesignTokens.Colors.ink(area).copy(alpha = 0.55f)` | #221F33/0.55 | 일치 | 2차 액션 라벨 색 = 영역 ink 55% |
+| 캐럿(placeholder 앞) | `bg-[var(--sheet-accent)]` | #5B4DB8 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/PlainTextField.kt` · `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `cursorBrush = SolidColor(cursorColor)` · `cursorColor = DesignTokens.Colors.accent(area)` | #5B4DB8 | 일치 | 캐럿 색 = 영역 accent(목업 `--sheet-accent`) |
+| 캐럿(placeholder 앞) | `w-[1.5px]` | 1.5 | — | — | — | 허용 S13 | 구현(`BasicTextField` 기본 커서)이 커서 폭 수식을 갖고 있지 않다 — Compose 커서 폭은 플랫폼 고정 |
+| 캐럿(placeholder 앞) | `h-[18px]` | 18 | — | — | — | 허용 S13 | 구현이 커서 높이 수식을 갖고 있지 않다 — Compose 커서 높이는 글자 줄 높이를 따라 정해진다 |
+| 캐럿(placeholder 앞) | `mr-0.5` | 2 | — | — | — | 허용 S13 | 캐럿 뒤 여백 — Compose 커서는 텍스트와 이어 그려 여백 인자가 없다 |
+| placeholder | `text-[var(--sheet-ink)]/45` | #221F33/0.45 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `placeholderColor = ink.copy(alpha = 0.45f)` · `val ink = DesignTokens.Colors.ink(area)` | #221F33/0.45 | 일치 | placeholder 색 = 영역 ink 45% |
+| 저장 버튼(비활성) | `bg-[var(--sheet-ink)]` | #221F33 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.background(DesignTokens.Colors.ink(area))` | #221F33 | 일치 | 1차 액션 배경 = 영역 ink |
+| 저장 버튼(비활성) | `text-[var(--sheet)]` | #EEEDF5 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `color = DesignTokens.Colors.surface(area)` | #EEEDF5 | 일치 | 1차 액션 라벨 색 = 영역 surface |
+| 저장 버튼(비활성) | `rounded-full` | full | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.clip(CircleShape)` | full | 일치 | 1차 액션 라운드 — `CircleShape` |
+| 저장 버튼(비활성) | `py-3.5` | 14 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.padding(vertical = ACTION_VERTICAL_PADDING)` · `private val ACTION_VERTICAL_PADDING = 14.dp` | 14 | 일치 | 1차 액션 상하 안쪽 여백 |
+| 저장 버튼(비활성) | `text-[15px]` | 15 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, FontWeight.Bold)` | 15 | 일치 | 1차 액션 라벨 크기 = `Typography.bodyLg` |
+| 저장 버튼(비활성) | `font-bold` | bold | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `style = DesignTokens.Typography.style(DesignTokens.Typography.bodyLg, FontWeight.Bold)` | bold | 일치 | 1차 액션 라벨 굵기 |
+| 저장 버튼(비활성) | `opacity-50` | 0.5 | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `.alpha(if (enabled) 1f else DISABLED_OPACITY)` · `private const val DISABLED_OPACITY = 0.5f` | 0.5 | 일치 | 이름이 비면 저장 1차 액션이 50% 불투명도로 비활성 |
+
+## 표 S — 요소 순서·유무 (`screen-device-name`) · 11행
+
+행 순서가 목업 시트의 위 → 아래 순서다.
+
+| # | 목업 요소 | 목업 인용 | 구현 파일 | 구현 인용 | 판정 | 근거 |
+|---|---|---|---|---|---|---|
+| 1 | Backdrop | `<div class="absolute inset-0 bg-[#221F33]/45 z-20">` | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `scrimColor = DesignTokens.Colors.ink(area).copy(alpha = BACKDROP_OPACITY)` | 일치 | `ModalBottomSheet` 스크림이 시트 뒤 화면 전체(창)를 덮는다 |
+| 2 | Sheet | `<div class="absolute bottom-0 inset-x-0 bg-[var(--sheet)] text-[var(--sheet-ink)] z-40"` | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `ModalBottomSheet(` | 일치 | 목업 시트는 탭 화면 위를 덮고 화면 바닥에 붙는다. 구현은 `ModalBottomSheet` 가 별도 창으로 떠 화면 바닥에 붙는다 |
+| 3 | Handle | `<!-- Handle -->` | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `dragHandle = { Handle(area) }` | 일치 | 시트 맨 위(`dragHandle` 슬롯) |
+| 4 | 제목 | `<h2 class="text-[18px] font-bold tracking-tight">` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `"이 기기 이름",` | 일치 | SheetHeader 첫 자식 |
+| 5 | 설명 | `<p class="text-[13px] mt-1 text-[var(--sheet-ink)]/60 leading-snug">` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `"푸시를 받는 기기를 구분하는 이름이에요.",` | 일치 | 제목 아래 |
+| 6 | 입력 카드 | `<div class="bg-white rounded-2xl border border-[var(--sheet-rule)] p-4">` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` · `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Card.kt` | `Card(area = area, padding = CardPadding.Medium, modifier = Modifier.fillMaxWidth())` | 일치 | 설명 아래, 카드 하나 |
+| 7 | 입력 필드 | `<div class="text-[15px] flex items-center">` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `PlainTextField(` | 일치 | 카드 안, 한 줄 입력(첫 프레임은 기기 모델명 기본값 · 둘째 프레임은 비었을 때 placeholder) |
+| 8 | SheetActions | `<div class="pt-2 pb-8 flex flex-col gap-1">` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `Modifier.padding(top = DesignTokens.Spacing.sm, bottom = ACTIONS_BOTTOM)` | 일치 | 입력 카드 아래 액션 묶음 |
+| 9 | 저장(1차 액션) | `저장` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `label = "저장",` | 일치 | 전폭 채움 1차 액션 |
+| 10 | 건너뛰기(2차 액션) | `건너뛰기` | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `SheetCancelButton(` | 일치 | 글자만 있는 2차 액션, 맨 아래 |
+| 11 | 시트 바닥 자리 | `<div class="absolute bottom-0 inset-x-0 bg-[var(--sheet)]` | `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/Sheet.kt` | `ModalBottomSheet(` | 일치 | 시트는 화면 바닥에 붙고 그 위가 입력 카드·액션 |
+
+
 ## 검산
 
 레포 루트에서 실행한다. 출력이 `ok` 한 줄이면 표가 현재 목업·구현·허용목록과 맞다.
@@ -974,6 +1087,11 @@ SCREENS = [
              (D + "designsystem/components/ScreenHeader.kt", None, None),
              (D + "designsystem/components/SwipeToDelete.kt", None, None),
              (D + "designsystem/components/AreaLabel.kt", None, None)]},
+    # Sheet.kt·Card.kt 는 이 화면이 쓰지 않는 상수(destructive stroke·강조 보더·여백 프리셋)가 있어
+    # 정방향 대상에서 뺀다 — 이 화면의 시트·카드 수치는 역방향(목업 → 구현) 행이 전수 대조한다.
+    {"slug": "screen-device-name", "area": "PrMonitor", "roots": ["style=border-radius:24px 24px 0 0"], "backdrop": "bg-[#221F33]/45",
+     "fwd": [(D + "ui/DeviceNameSheet.kt", None, None),
+             (D + "designsystem/components/PlainTextField.kt", None, None)]},
 ]
 part = lambda h: text.split(f"## {h}", 1)[1].split("\n## ", 1)[0]
 cells = lambda body: [[c.strip() for c in r.strip("|").split(" | ")] for r in re.findall(r"^\| .*\|$", body, re.M)[1:]]
