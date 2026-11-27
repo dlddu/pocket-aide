@@ -35,3 +35,19 @@
 | `ExternalNotificationsViewModel.swift` 56 | 개작 후 「The notification a push tap names, which may not be in the loaded page.」 | 위 개작 사유 — id 조회 경로가 존재하는 이유 |
 | `ExternalNotificationsViewModel.swift` 70 | 「Opening the detail is what counts as seeing a notification (PRD-12 AC17).」 | 「언제 읽음으로 치는가」는 코드에서 안 읽히는 제품 규칙이다 — 지우면 목록 노출·스크롤 등에서 읽음 처리를 추가하는 변경이 들어간다. 같은 사실의 정본으로 이 자리만 남긴다 |
 | `ExternalNotifications.swift` 3 · 58 · 99 · 142 | `ExternalNotification` · `ExternalNotificationsPage` · `ExternalNotificationFormatting` · `WidgetNotifications` doc | public 선언의 한 줄 doc(doc 수준) |
+
+## 2026-11-27 증분 — AI 채팅 codex 전환(#392)이 이 범위의 주석을 바꿨다
+
+- **task**: `tbm_pocket-aide-comment-necessity` / `rct_20261106-0001`
+- **기준 커밋**: `72d7539`
+- **범위**: 원장 `—` 행 1개 — `backend/internal/k8sauth/tokenreview.go` 9줄. 앞선 패스(2026-10-28)가 판정한 범위와 같은 파일이라 새 패스 파일을 만들지 않고 이 절을 더한다.
+- **결과**: L 9 → 9줄(제거 0줄 · 유지 9줄). 비주석 변경은 없다.
+
+## 유지
+
+| 자리(`72d7539` 기준) | 주석 | 필요 사유 |
+| --- | --- | --- |
+| `tokenreview.go` 1 · 65 · 73 · 100 · 123 | 패키지 doc · exported 선언의 한 줄 doc | doc 수준(첫 문장만 있고 본문 없음) — 앞선 패스와 같은 사유. 사유를 따로 대지 않는다 |
+| `tokenreview.go` 39 · 68 | 「Token returns this server's own credential for the TokenReview call; it is re-read per call because kubelet rotates it.」 | 호출마다 다시 읽는 이유(kubelet 이 토큰을 갱신) — 지우면 캐싱을 넣는 사람이 만료 토큰 버그를 낸다 |
+| `tokenreview.go` 242 | 「UnmarshalJSON accepts both forms RFC 7519 allows for "aud": a string or an array of strings.」 | 외부 규격(RFC 7519)의 두 형태를 모두 받는 이유 — 지우면 한 형태만 받게 단순화해 일부 클러스터의 토큰이 거부된다 |
+| `tokenreview.go` 263 | 「peekClaims reads the unverified payload only to skip TokenReview for tokens that cannot pass it; TokenReview is the verification.」 | 검증 안 된 payload 를 읽는 함수라는 경고 — 결과를 신뢰 판단에 쓰면 인증 우회가 된다 |

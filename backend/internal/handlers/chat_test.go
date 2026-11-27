@@ -152,8 +152,6 @@ func getChat(t *testing.T, router http.Handler, userID int64) chatView {
 	return v
 }
 
-// PRD-1 AC1·AC4: a message is accepted at once (202) and its reply appears
-// in the one conversation; each user sees only their own.
 func TestChat_SendThenPoll(t *testing.T) {
 	router, _, engine := newChatRouter(t)
 	if v := getChat(t, router, 1); len(v.Messages) != 0 || v.Pending != nil || v.Conversation.ID == 0 {
@@ -173,9 +171,6 @@ func TestChat_SendThenPoll(t *testing.T) {
 	}
 }
 
-// PRD-1 AC1 (2026-11-27 개정): ?after returns only the newer messages, a
-// repeat with the last ETag is an empty 304, and a change in the conversation
-// changes the tag.
 func TestChat_IncrementalReadAndETag(t *testing.T) {
 	router, _, engine := newChatRouter(t)
 	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "하나"}, 1)
@@ -234,9 +229,6 @@ func TestChat_AfterMustBeAMessageID(t *testing.T) {
 	}
 }
 
-// PRD-1 AC1 (2026-11-09 개정): cancelling with nothing queued is a 404, and
-// GET /api/chat reports no queued message while idle. The id says which
-// message the cancel means, so a cancel without one is a 400.
 func TestChat_CancelQueuedWithNothingQueued(t *testing.T) {
 	router, _, _ := newChatRouter(t)
 	if v := getChat(t, router, 1); v.Queued != nil {
