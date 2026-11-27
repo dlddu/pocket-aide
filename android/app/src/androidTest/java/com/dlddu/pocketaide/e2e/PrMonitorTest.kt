@@ -36,7 +36,7 @@ class PrMonitorTest : E2eTest() {
         Shade.clearAppNotifications()
         Fcm.deliver(push)
         Shade.tap(pushTitle)
-        compose.waitUntil(20_000) { compose.isSelected("tab.More") && compose.exists("prmonitor.screen") }
+        compose.waitUntil(20_000) { compose.isSelected("tab.PrMonitor") && compose.exists("prmonitor.screen") }
         assertTrue("The pushed event's group should be highlighted", PrMonitor.waitForLabel(compose, fixtureGroup, "방금 진입", 15_000))
         assertTrue("The pushed event's row should be listed", PrMonitor.labels(compose, fixtureGroup).contains(fixtureTitle))
         if (PrMonitor.badge(compose, fixtureGroup) != "모두 확인") {

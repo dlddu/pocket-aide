@@ -312,7 +312,7 @@ fun ComposeTestRule.scrollTo(tag: String) {
 }
 
 fun ComposeTestRule.openTab(tab: String) {
-    if (tab == "PrMonitor") openMore(tab) else tap("tab.$tab")
+    tap("tab.$tab")
 }
 
 fun ComposeTestRule.openMore(tab: String) {
