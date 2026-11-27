@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -169,6 +170,67 @@ func TestChat_SendThenPoll(t *testing.T) {
 	}
 	if other := getChat(t, router, 2); len(other.Messages) != 0 {
 		t.Fatalf("user 2 sees %+v", other.Messages)
+	}
+}
+
+// PRD-1 AC1 (2026-11-27 개정): ?after returns only the newer messages, a
+// repeat with the last ETag is an empty 304, and a change in the conversation
+// changes the tag.
+func TestChat_IncrementalReadAndETag(t *testing.T) {
+	router, _, engine := newChatRouter(t)
+	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "하나"}, 1)
+	engine.Wait()
+
+	full := chatDo(t, router, http.MethodGet, "/api/chat", nil, 1)
+	var all struct {
+		Messages []struct {
+			ID int64 `json:"id"`
+		} `json:"messages"`
+	}
+	if err := json.Unmarshal(full.Body.Bytes(), &all); err != nil || len(all.Messages) != 2 {
+		t.Fatalf("full read = %s (%v)", full.Body, err)
+	}
+	last := all.Messages[1].ID
+	afterLast := "/api/chat?after=" + strconv.FormatInt(last, 10)
+
+	rec := chatDo(t, router, http.MethodGet, afterLast, nil, 1)
+	var v chatView
+	if err := json.Unmarshal(rec.Body.Bytes(), &v); err != nil || rec.Code != http.StatusOK || len(v.Messages) != 0 || v.Conversation.ID == 0 {
+		t.Fatalf("after last = %d %s", rec.Code, rec.Body)
+	}
+	etag := rec.Header().Get("ETag")
+	if etag == "" || rec.Header().Get("Cache-Control") != "private, no-cache" {
+		t.Fatalf("headers = %v", rec.Header())
+	}
+
+	req := authedRequest(http.MethodGet, afterLast, nil, 1)
+	req.Header.Set("If-None-Match", etag)
+	notModified := httptest.NewRecorder()
+	router.ServeHTTP(notModified, req)
+	if notModified.Code != http.StatusNotModified || notModified.Body.Len() != 0 || notModified.Header().Get("ETag") != etag {
+		t.Fatalf("conditional repeat = %d %q %v", notModified.Code, notModified.Body, notModified.Header())
+	}
+
+	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "둘"}, 1)
+	engine.Wait()
+	req = authedRequest(http.MethodGet, afterLast, nil, 1)
+	req.Header.Set("If-None-Match", etag)
+	changed := httptest.NewRecorder()
+	router.ServeHTTP(changed, req)
+	if err := json.Unmarshal(changed.Body.Bytes(), &v); err != nil || changed.Code != http.StatusOK || changed.Header().Get("ETag") == etag {
+		t.Fatalf("after change = %d %s", changed.Code, changed.Body)
+	}
+	if len(v.Messages) != 2 || v.Messages[0].Content != "둘" || v.Messages[1].Content != "re: 둘" {
+		t.Fatalf("only the newer messages = %+v", v.Messages)
+	}
+}
+
+func TestChat_AfterMustBeAMessageID(t *testing.T) {
+	router, _, _ := newChatRouter(t)
+	for _, q := range []string{"abc", "-1", "1.5"} {
+		if rec := chatDo(t, router, http.MethodGet, "/api/chat?after="+q, nil, 1); rec.Code != http.StatusBadRequest {
+			t.Fatalf("after=%s = %d", q, rec.Code)
+		}
 	}
 }
 

@@ -52,6 +52,62 @@ class ChatViewModelTest {
         assertTrue(state.canRefresh)
     }
 
+    // PRD-1 AC1 (2026-11-27 개정): after the first read a poll asks only for
+    // what came after the newest message it has, repeats the last ETag, and a
+    // 304 leaves the screen as it was.
+    @Test
+    fun pollsReadOnlyNewerMessagesAndHonourNotModified() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        assertEquals("/api/chat", server.takeRequest().path)
+
+        server.enqueue(MockResponse().setHeader("ETag", "\"e1\"").setBody(chatJson(message(2, "assistant", "답"))))
+        vm.load()
+        val incremental = server.takeRequest()
+        assertEquals("/api/chat?after=1", incremental.path)
+        assertNull(incremental.getHeader("If-None-Match"))
+        assertEquals(listOf("질문", "답"), vm.state.value.messages.map { it.content })
+
+        server.enqueue(MockResponse().setResponseCode(304).setHeader("ETag", "\"e1\""))
+        vm.load()
+        val conditional = server.takeRequest()
+        assertEquals("/api/chat?after=2", conditional.path)
+        assertEquals("\"e1\"", conditional.getHeader("If-None-Match"))
+        assertEquals(listOf("질문", "답"), vm.state.value.messages.map { it.content })
+        assertNull(vm.state.value.error)
+
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문") + "," + message(2, "assistant", "답"))))
+        assertTrue(vm.performSync())
+        val full = server.takeRequest()
+        assertEquals("/api/chat", full.path)
+        assertNull(full.getHeader("If-None-Match"))
+    }
+
+    @Test
+    fun aDifferentConversationIsReadInFull() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "옛 대화"))))
+        vm.load()
+        server.takeRequest()
+
+        val other = """{"conversation":{"id":8,"title":"새","created_at":3,"updated_at":3},"messages":[${message(5, "user", "새 대화")}],"pending":null}"""
+        server.enqueue(MockResponse().setBody(other))
+        server.enqueue(MockResponse().setBody(other))
+        vm.load()
+        assertEquals("/api/chat?after=1", server.takeRequest().path)
+        assertEquals("/api/chat", server.takeRequest().path)
+        assertEquals(8L, vm.state.value.conversation?.id)
+        assertEquals(listOf("새 대화"), vm.state.value.messages.map { it.content })
+    }
+
+    @Test
+    fun mergingKeepsEachMessageOnceInIdOrder() {
+        val onScreen = listOf(ChatMessage(1, "user", "a"), ChatMessage(4, "user", "d"))
+        val polled = listOf(ChatMessage(3, "assistant", "c"), ChatMessage(4, "user", "d"))
+        assertEquals(listOf(1L, 3L, 4L), onScreen.merging(polled).map { it.id })
+    }
+
     @Test
     fun sendPostsTrimmedContentAndWaitsForTheReply() = runTest {
         val vm = ChatViewModel(api())

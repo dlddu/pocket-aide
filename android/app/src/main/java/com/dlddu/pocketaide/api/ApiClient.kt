@@ -25,6 +25,12 @@ sealed class ApiException(message: String, cause: Throwable? = null) : Exception
     class Transport(cause: Throwable) : ApiException("transport: ${cause.message}", cause)
 }
 
+/** The answer to a conditional GET. */
+sealed interface Conditional<out T> {
+    data object NotModified : Conditional<Nothing>
+    data class Fresh<T>(val value: T, val etag: String?) : Conditional<T>
+}
+
 /** The backend's code for a 503 whose cause is exhausted session login slots, not a disabled platform. */
 const val AUTH_POOL_EXHAUSTED = "auth_pool_exhausted"
 
@@ -64,6 +70,19 @@ class ApiClient(
 
     suspend fun <T> get(path: String, response: KSerializer<T>, authenticated: Boolean = true): T =
         decode(response, send("GET", path, null, authenticated))
+
+    /** A GET that answers [Conditional.NotModified] when the server's copy still matches [etag]. */
+    suspend fun <T> getConditional(
+        path: String,
+        response: KSerializer<T>,
+        etag: String?,
+        authenticated: Boolean = true,
+    ): Conditional<T> {
+        if (authenticated) refreshIfExpired()
+        val reply = perform("GET", path, null, authenticated, retriedAfterRefresh = false, ifNoneMatch = etag)
+        if (reply.status == 304) return Conditional.NotModified
+        return Conditional.Fresh(decode(response, reply.text), reply.etag)
+    }
 
     suspend fun <I, O> post(
         path: String,
@@ -121,8 +140,10 @@ class ApiClient(
 
     private suspend fun send(method: String, path: String, body: RequestBody?, authenticated: Boolean): String {
         if (authenticated) refreshIfExpired()
-        return perform(method, path, body, authenticated, retriedAfterRefresh = false)
+        return perform(method, path, body, authenticated, retriedAfterRefresh = false).text
     }
+
+    private class Reply(val status: Int, val text: String, val etag: String?)
 
     private suspend fun perform(
         method: String,
@@ -130,18 +151,24 @@ class ApiClient(
         body: RequestBody?,
         authenticated: Boolean,
         retriedAfterRefresh: Boolean,
-    ): String {
+        ifNoneMatch: String? = null,
+    ): Reply {
         val builder = Request.Builder().url(url(path)).method(method, body)
         if (authenticated) {
             tokenStore.load()?.accessToken?.let { builder.header("Authorization", "Bearer $it") }
         }
-        val (status, text) = withContext(Dispatchers.IO) {
+        ifNoneMatch?.let { builder.header("If-None-Match", it) }
+        val reply = withContext(Dispatchers.IO) {
             try {
-                http.newCall(builder.build()).execute().use { it.code to (it.body?.string() ?: "") }
+                http.newCall(builder.build()).execute().use {
+                    Reply(it.code, it.body?.string() ?: "", it.header("ETag"))
+                }
             } catch (e: IOException) {
                 throw ApiException.Transport(e)
             }
         }
+        val status = reply.status
+        val text = reply.text
         val refresher = tokenRefresher
         if (authenticated && status == 401 && !retriedAfterRefresh && refresher != null &&
             tokenStore.load()?.refreshToken != null
@@ -152,11 +179,12 @@ class ApiClient(
                 if (e !is CancellationException) reportUnauthorized(method, path, text)
                 throw ApiException.BadStatus(status, text, cause = e)
             }
-            return perform(method, path, body, authenticated, retriedAfterRefresh = true)
+            return perform(method, path, body, authenticated, retriedAfterRefresh = true, ifNoneMatch = ifNoneMatch)
         }
         if (authenticated && status == 401) reportUnauthorized(method, path, text)
+        if (ifNoneMatch != null && status == 304) return reply
         if (status !in 200..299) throw ApiException.BadStatus(status, text)
-        return text
+        return reply
     }
 
     private fun reportUnauthorized(method: String, path: String, body: String) {
