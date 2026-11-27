@@ -126,10 +126,10 @@ last_updated: 2026-11-06
   - `approval-settings`, `approval-key-issue-sheet`, `approval-sa-register-sheet`: 자동 응답 모드 설정(AC9)·호출자 키 발급·폐기(AC13·AC14)·SA 호출자 등록(AC15)은 여정 문서 §1이 승인 요청을 받기 전의 설정으로 이 여정 밖이라 명시했다. 헤더 설정 버튼은 그려 두되 연결하지 않는다. 원본은 screen-approval.html.
   - `approval-detail/session-title-fallback`, `approval-detail/no-agent-reason`: 세션 제목이 비었을 때 「제목 없음 · <세션 id 앞 8자>」 문구, `sessionId`·`reason`이 없어 세션 행·에이전트 설명 섹션을 숨기는 변형은 같은 상세 화면의 데이터 변형이다. 구조(행·섹션 위치)는 채워진 모습으로 그렸고 문구·생략 규칙은 PRD-12 AC6가 SSOT다.
   - `approval-list/pull-to-refresh`: 당겨서 새로고침·포그라운드 복귀 갱신(AC5)은 제스처이고 화면 구성이 달라지지 않아 그리지 않는다. 불러오는 중 상태(`loading`)만 그렸다.
-- **원본 화면 mockup**: 없음 (PRD-12 승인 탭 화면 mockup 미작성 — 이 여정 mockup이 승인 화면의 첫 그림)
+- **원본 화면 mockup**: screen-approval
 - **사용 디자인 시스템**:
   - 패턴: `시스템 통합 — 잠금 화면` (§6.1), `영역 화면` (§1), `리스트 + 섹션` (§3)
-  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `AreaStrip`, `AreaLabel`, `ScreenHeader`, `TabBar`, `TabBarItem`
+  - 컴포넌트: `IPhoneFrame`, `StatusBar`, `DynamicIsland`, `HomeIndicator`, `AreaStrip`, `AreaLabel`, `ScreenHeader`, `IconCircleButton`, `TabBar`, `TabBarItem`
   - 토큰: §1.11 PR 모니터 팔레트 차용(승인 화면 — §1.11 제약 개정) + 상태 시그널(forest·destructive), §2 중립, §3.1 sans/mono, §7 탭바(PRD-12 하단 노출 구성)
   - 디자인 시스템 밖 값: 잠금 화면 벽지·알림 카드·알림 액션·잠금 해제 시트·확인 다이얼로그(§1.8/§6.1 iOS 컨벤션 차용), 승인 탭 아이콘(shield-check 형태 인라인 SVG), 탭 배지(iOS 시스템 빨강 대신 §1.11 강조색), 요청 상세·카운트다운·결정 버튼 레이아웃(components/patterns에 승인 화면 항목 없음 — 승인 탭 화면 mockup 작성 시 정식화)
 - **공개 경로**: `journeys/JRN-approval-push-to-decision/`
@@ -142,7 +142,7 @@ last_updated: 2026-11-06
 - **화면 = 기기 프레임(`.frame`) 하나, 그 위에 뜨는 시트·다이얼로그·토스트·잠금 해제 패널은 각각 별개 화면**이다. 프레임과 오버레이 모두 `class="screen"`과 `data-screen`을 갖는다.
 - **같은 화면은 단계·여정이 달라도 같은 식별자**다(예: 잠금 화면은 `lock-screen`, PR 모니터 이력은 `pr-monitor-history`, 승인 상세는 `approval-detail`). 상태는 식별자에 넣지 않고 기존 `data-state`로 표현한다.
 - 식별자는 소문자 kebab-case이며 한 단계·상태에서 동시에 보이는 화면 집합이 위 각 여정의 「단계별 화면」 목록과 같아야 한다.
-- 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 `JRN-ci-push-to-ack`의 헤더 시트 버튼·시트).
+- 여정 밖 행동을 담은 요소는 `data-offpath`로 표시한다(현재 `JRN-ci-push-to-ack`의 헤더 시트 버튼·시트, `JRN-approval-push-to-decision`의 헤더 이력·설정 버튼).
 - 근거(여정 문서 단계의 시스템 응답·AC·구현 화면) 대비 아직 그리지 않은 화면·상태의 대조(화면 완전성 (i)-3·4)는 이 규약 도입과 별개로 후속 task에서 이어서 한다. `JRN-ci-push-to-ack`은 대조를 마쳐 누락을 그리거나 「의도적 제외」로 등재했다. `JRN-affirmation-daily-exposure`·`JRN-approval-push-to-decision`도 대조를 마쳤다.
 
 ## 디자인 시스템 매핑
