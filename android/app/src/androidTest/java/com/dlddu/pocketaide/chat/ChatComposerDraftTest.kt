@@ -62,9 +62,21 @@ class ChatComposerDraftTest {
         start()
 
         compose.onNodeWithTag("chat.composer.field").performTextInput("쓰다 만 메시지")
+        // 누른 글자가 곧바로 칸에 보이는 것까지 본다 — 초안을 뷰모델로 옮기면서
+        // 입력이 한 번 돌아 나오는 길이 됐으므로, 그 되돌림이 늦거나 끊기면
+        // 글자가 사라지거나 거꾸로 들어간다.
+        compose.onNodeWithTag("chat.composer.field").assertTextContains("쓰다 만 메시지")
+
         leaveAndComeBack()
 
         compose.onNodeWithTag("chat.composer.field").assertTextContains("쓰다 만 메시지")
+        // 돌아온 칸은 읽기 전용 복원이 아니라 계속 쓰는 칸이다. 들어가는 자리를
+        // 단정하지는 않는다 — 다시 그려진 칸의 커서는 글 끝이 아니라 맨 앞이고,
+        // 실제로는 사용자가 칸을 눌러 커서를 두고 쓴다(AC11 이 커서 자리를
+        // 보장하지 않는 이유).
+        compose.onNodeWithTag("chat.composer.field").performTextInput("이어서")
+        compose.onNodeWithTag("chat.composer.field").assertTextContains("쓰다 만 메시지")
+        compose.onNodeWithTag("chat.composer.field").assertTextContains("이어서")
     }
 
     @Test
