@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * What a person needs in order to review one task, in one small answer
- * (PRD-AI채팅 AC11).
+ * (PRD-AI채팅 AC10, 검토 자료).
  *
  * A task in review is opened to decide something, and that takes the pull
  * requests the work produced, what has already been settled, and what is still
@@ -17,11 +17,15 @@ import kotlinx.serialization.Serializable
  * that answer. Nothing here reads the exchanges, and nothing in the task list
  * does either.
  *
- * The one thing it cannot carry is an alternative's advantages and drawbacks.
- * The agreed turn has no field for them ([tradeoffsRecorded] is how the backend
- * says so), and the app does not manufacture them: a parent's `explanation` is
- * its account of a result, not a decision, and a choice's label is the words on
- * a button, not a trade-off.
+ * The agreed turn has no column for "this was decided" and none for an
+ * alternative's advantages and drawbacks, and that schema is not the app's to
+ * extend. So the backend reads those two out of what the author *marked* in the
+ * turn's own `response` or the parent's `explanation`, and nowhere else —
+ * [tradeoffsRecorded] and [decisionsRecorded] say whether anything was found.
+ * The app manufactures neither: a parent's `explanation` is its account of a
+ * result, not a decision, and a choice's label is the words on a button, not a
+ * trade-off. A request that repeats an offered sentence is not a press and not
+ * an acceptance.
  */
 @Serializable
 data class ChatTaskMaterials(
@@ -33,16 +37,20 @@ data class ChatTaskMaterials(
     // What the work produced, newest sighting first. One entry per distinct
     // thing, however many turns named it.
     val artifacts: List<ChatTaskArtifact> = emptyList(),
-    // The sentences the session offered that came back as the next turn's
-    // request. These are decisions the records hold, not readings of prose.
+    // The alternatives an author weighed, each with the advantages and
+    // drawbacks they wrote for it, newest statement first.
+    val tradeoffs: List<ChatTaskTradeoff> = emptyList(),
+    // What an author recorded as settled, in their own words.
     val decisions: List<ChatTaskDecision> = emptyList(),
     // What the task's latest turn is still asking. An earlier question with
     // turns after it is history, and is deliberately not here.
     val open: List<ChatTaskOpenPoint> = emptyList(),
-    // False always, and read rather than assumed: it is what lets the screen
-    // say *why* there are no advantages and drawbacks instead of leaving a
-    // silence that reads as "there were none".
+    // Whether any alternative's advantages and drawbacks were found written
+    // down. Read rather than assumed: it is what lets the screen say *why* it
+    // shows none instead of leaving a silence that reads as "there were none".
     @SerialName("tradeoffs_recorded") val tradeoffsRecorded: Boolean = false,
+    // The same for settled points, for the same reason.
+    @SerialName("decisions_recorded") val decisionsRecorded: Boolean = false,
     // The newest turn these materials account for.
     @SerialName("folded_through") val foldedThrough: Long = 0,
     // The fold stopped at its page bound, so this is a prefix. Saying so keeps
@@ -50,7 +58,8 @@ data class ChatTaskMaterials(
     val truncated: Boolean = false,
 ) {
     /** Whether the records gave this task anything at all to review. */
-    val hasAny: Boolean get() = artifacts.isNotEmpty() || decisions.isNotEmpty() || open.isNotEmpty()
+    val hasAny: Boolean get() =
+        artifacts.isNotEmpty() || tradeoffs.isNotEmpty() || decisions.isNotEmpty() || open.isNotEmpty()
 }
 
 /**
@@ -90,20 +99,38 @@ data class ChatTaskArtifact(
 }
 
 /**
- * One sentence that was offered and then sent — a decision the records hold.
+ * One settled point, in the author's own words.
  *
- * [label] is the words the button showed, which is what a person read before
- * picking it, and [text] is what was actually sent. [offeredOnTurnId] is the
- * turn that asked and [turnId] the turn that answered, because a decision is
- * the pair and not just the answer.
+ * [text] is verbatim — nothing summarises it. [turnId] and [source] are where
+ * it was written, so a reader can open that exchange and read the whole thing
+ * rather than taking this line's word for it.
  */
 @Serializable
 data class ChatTaskDecision(
-    @SerialName("turn_id") val turnId: Long = 0,
-    @SerialName("offered_on_turn_id") val offeredOnTurnId: Long = 0,
-    val label: String = "",
     val text: String = "",
+    @SerialName("turn_id") val turnId: Long = 0,
+    val source: String = "",
 )
+
+/**
+ * One alternative as its author weighed it.
+ *
+ * [pros] and [cons] are their own words. An empty one means that side was not
+ * written, and the screen says so for that side rather than leaving a blank
+ * that reads as "no drawbacks". [alternative] is the name the author gave the
+ * option, which is what makes two of these comparable.
+ */
+@Serializable
+data class ChatTaskTradeoff(
+    val alternative: String = "",
+    val pros: List<String> = emptyList(),
+    val cons: List<String> = emptyList(),
+    @SerialName("turn_id") val turnId: Long = 0,
+    val source: String = "",
+) {
+    /** Whether the author wrote both sides of this one. */
+    val bothSides: Boolean get() = pros.isNotEmpty() && cons.isNotEmpty()
+}
 
 /**
  * Something the task's latest turn is still asking: the question, and the

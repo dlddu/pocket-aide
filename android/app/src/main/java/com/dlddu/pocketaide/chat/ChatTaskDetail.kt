@@ -277,7 +277,7 @@ private fun Field(label: String, value: String, tag: String) {
 
 /**
  * What there is to review on this task, in one place near the top of the pane
- * (PRD-AI채팅 AC11).
+ * (PRD-AI채팅 AC10, 검토 자료).
  *
  * Three different things, each under its own heading and each read from where
  * it is actually recorded:
@@ -360,28 +360,9 @@ private fun ReviewMaterials(
 
             else -> {
                 Artifacts(materials.artifacts, onOpenArtifact)
+                Tradeoffs(materials.tradeoffs)
                 Decisions(materials.decisions)
                 OpenPoints(materials.open)
-                // Said once, under its own heading, so somebody looking for the
-                // trade-offs learns that the records do not keep them rather
-                // than concluding there were none.
-                if (!materials.tradeoffsRecorded) {
-                    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
-                        Text(
-                            "대안별 장단점",
-                            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-                            color = ink.copy(alpha = MUTED_OPACITY),
-                        )
-                        Text(
-                            "작업 기록에는 대안의 장점·단점을 적는 칸이 없어요. " +
-                                "선택지 문구를 장단점으로 보여 주지는 않아요.",
-                            style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
-                            color = ink.copy(alpha = MUTED_OPACITY),
-                            modifier = Modifier.alpha(MUTED_OPACITY)
-                                .testTag("chat.tasks.detail.materials.noTradeoffs"),
-                        )
-                    }
-                }
                 if (materials.truncated) {
                     Note(
                         "기록이 길어 일부만 모았어요. 전체는 아래 「주고받은 내용」에 있어요.",
@@ -467,25 +448,129 @@ private fun Artifacts(artifacts: List<ChatTaskArtifact>, onOpen: (ChatTaskArtifa
 }
 
 /**
- * What has already been decided: a sentence the session offered that came back
- * as the next turn's request.
+ * The alternatives somebody weighed, each with the advantages and drawbacks
+ * *they wrote* — the one place on this screen where two options can be compared
+ * side by side.
  *
- * Only that. A decision shown here was taken by somebody picking words they
- * read, which is why the words are shown — and why a parent's explanation,
- * however much it reads like a conclusion, is not in this list.
+ * Each row is one alternative under its own name, with 「장점」 and 「단점」 as
+ * their own labelled lines. They are told apart by those labels rather than by
+ * colour: the pane labels every other field the same way, and the status colours
+ * this design system has mean a run passed or failed, which is not what an
+ * advantage is.
+ *
+ * A side the author did not write says **단점 미기록** for that side. That is
+ * not the same as "no drawbacks", and leaving the line blank would read as the
+ * second — a claim the records do not make. The source turn is on every row, so
+ * a reader can open that exchange and read the whole thing.
+ *
+ * When nothing was marked at all, this says so and says *why*, because silence
+ * here reads as "there were no trade-offs".
+ */
+@Composable
+private fun Tradeoffs(tradeoffs: List<ChatTaskTradeoff>) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
+        Text(
+            "대안별 장단점",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        if (tradeoffs.isEmpty()) {
+            Text(
+                "기록에 대안별 장점·단점이 적혀 있지 않아요. " +
+                    "선택지 문구나 설명을 장단점으로 보여 주지는 않아요.",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.alpha(MUTED_OPACITY)
+                    .testTag("chat.tasks.detail.materials.noTradeoffs"),
+            )
+            return@Column
+        }
+        tradeoffs.forEachIndexed { index, entry ->
+            val shape = RoundedCornerShape(DesignTokens.Radius.card)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(shape)
+                    .background(DesignTokens.Colors.card(DETAIL_AREA))
+                    .border(RULE, DesignTokens.Colors.rule(DETAIL_AREA), shape)
+                    .padding(DesignTokens.Spacing.md)
+                    .testTag("chat.tasks.detail.materials.tradeoff.$index"),
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+            ) {
+                Text(
+                    entry.alternative,
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.body, FontWeight.Bold),
+                    color = ink,
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.tradeoff.$index.alternative"),
+                )
+                TradeoffSide("장점", entry.pros, "chat.tasks.detail.materials.tradeoff.$index.pros")
+                TradeoffSide("단점", entry.cons, "chat.tasks.detail.materials.tradeoff.$index.cons")
+                Text(
+                    "출처 · 턴 ${entry.turnId}${sourceSuffix(entry.source)}",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                    color = ink.copy(alpha = MUTED_OPACITY),
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.tradeoff.$index.source"),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * One side of one alternative. A side with nothing recorded says so under its
+ * own label — the reader learns that this side was not written, rather than
+ * reading an empty space as "none".
+ */
+@Composable
+private fun TradeoffSide(label: String, values: List<String>, tag: String) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
+        Text(
+            label,
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        if (values.isEmpty()) {
+            Text(
+                "$label 미기록",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.alpha(MUTED_OPACITY).testTag("$tag.missing"),
+            )
+            return@Column
+        }
+        values.forEachIndexed { at, value ->
+            Text(
+                "· $value",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+                color = ink,
+                modifier = Modifier.testTag("$tag.$at"),
+            )
+        }
+    }
+}
+
+/**
+ * What has been settled, as the author recorded it under a 「결정 사항」 marker.
+ *
+ * Only that. A parent's explanation, however much it reads like a conclusion,
+ * is not in this list — and neither is a request that happens to repeat an
+ * offered sentence, which is not evidence anybody pressed the button and not an
+ * acceptance of anything.
  */
 @Composable
 private fun Decisions(decisions: List<ChatTaskDecision>) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
         Text(
-            "이미 고른 것",
+            "이미 결정된 것",
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
         )
         if (decisions.isEmpty()) {
             Text(
-                "기록에 고른 선택지가 없어요. 설명을 결정으로 보여 주지는 않아요.",
+                "기록에 「결정 사항」으로 적힌 것이 없어요. 설명을 결정으로 보여 주지는 않아요.",
                 style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
                 color = ink.copy(alpha = MUTED_OPACITY),
                 modifier = Modifier.alpha(MUTED_OPACITY).testTag("chat.tasks.detail.materials.noDecisions"),
@@ -498,20 +583,31 @@ private fun Decisions(decisions: List<ChatTaskDecision>) {
                 verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
             ) {
                 Text(
-                    decision.label.ifBlank { decision.text },
+                    decision.text,
                     style = DesignTokens.Typography.style(DesignTokens.Typography.body),
                     color = ink,
-                    modifier = Modifier.testTag("chat.tasks.detail.materials.decision.$index.label"),
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.decision.$index.text"),
                 )
                 Text(
-                    "보낸 문장 · ${decision.text}",
+                    "출처 · 턴 ${decision.turnId}${sourceSuffix(decision.source)}",
                     style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
                     color = ink.copy(alpha = MUTED_OPACITY),
-                    modifier = Modifier.testTag("chat.tasks.detail.materials.decision.$index.text"),
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.decision.$index.source"),
                 )
             }
         }
     }
+}
+
+/**
+ * Which field of the source turn said it, when the records name one. An
+ * unknown field adds nothing rather than guessing — the turn alone is still a
+ * place a reader can go.
+ */
+private fun sourceSuffix(source: String): String = when (source) {
+    "response" -> " · 세션의 답"
+    "explanation" -> " · 설명"
+    else -> ""
 }
 
 /**

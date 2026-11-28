@@ -24,7 +24,7 @@ type PRTitles interface {
 }
 
 // GetChatTaskMaterials handles GET /api/chat/tasks/{taskID}/materials: what a
-// person needs in order to review one task (PRD-AI채팅 AC11).
+// person needs in order to review one task (PRD-AI채팅 AC10, 검토 자료).
 //
 // Read-only, one task, and asked for when somebody opens that task. It is
 // deliberately not folded into the task list: the list is polled while the

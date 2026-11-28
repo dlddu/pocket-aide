@@ -75,11 +75,17 @@ type materialsView struct {
 		Number int    `json:"number"`
 		TurnID int64  `json:"turn_id"`
 	} `json:"artifacts"`
+	Tradeoffs []struct {
+		Alternative string   `json:"alternative"`
+		Pros        []string `json:"pros"`
+		Cons        []string `json:"cons"`
+		TurnID      int64    `json:"turn_id"`
+		Source      string   `json:"source"`
+	} `json:"tradeoffs"`
 	Decisions []struct {
-		TurnID          int64  `json:"turn_id"`
-		OfferedOnTurnID int64  `json:"offered_on_turn_id"`
-		Label           string `json:"label"`
-		Text            string `json:"text"`
+		Text   string `json:"text"`
+		TurnID int64  `json:"turn_id"`
+		Source string `json:"source"`
 	} `json:"decisions"`
 	Open []struct {
 		TurnID   int64  `json:"turn_id"`
@@ -90,6 +96,7 @@ type materialsView struct {
 		} `json:"choices"`
 	} `json:"open"`
 	TradeoffsRecorded bool  `json:"tradeoffs_recorded"`
+	DecisionsRecorded bool  `json:"decisions_recorded"`
 	FoldedThrough     int64 `json:"folded_through"`
 	Truncated         bool  `json:"truncated"`
 }
@@ -100,8 +107,10 @@ const materialsTurnsPage = `{
   "task_id": "t1", "task_version": 7,
   "task": {"id": "t1", "title": "검토 대상", "status": "review", "version": 7},
   "turns": [
-    {"id": 1, "request": "구현해 줘", "response": "다 했습니다",
-     "explanation": "두 PR 로 올렸어요", "question": "둘 다 머지할까요?",
+    {"id": 1, "request": "구현해 줘",
+     "response": "| 대안 | 장점 | 단점 |\n| --- | --- | --- |\n| 둘 다 머지 | 한 번에 끝난다 | 되돌리기 어렵다 |\n| 백엔드만 | 안전하다 | 앱이 늦는다 |\n",
+     "explanation": "두 PR 로 올렸어요.\n\n## 결정 사항\n- 백엔드를 먼저 머지한다\n",
+     "question": "둘 다 머지할까요?",
      "choices": [{"label": "둘 다 머지", "request_text": "둘 다 머지해 주세요"}],
      "artifacts": ["https://github.com/dlddu/pocket-aide/pull/425",
                    "https://github.com/dlddu/pocket-aide/pull/426",
@@ -192,11 +201,34 @@ func TestChatTaskMaterialsKeepsDecidedAndOpenApart(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	if len(view.Decisions) != 1 || view.Decisions[0].Label != "둘 다 머지" {
-		t.Fatalf("decisions = %+v, want the pick that was sent", view.Decisions)
+	// Decided: what the author recorded under 「결정 사항」, with its source.
+	if !view.DecisionsRecorded || len(view.Decisions) != 1 {
+		t.Fatalf("decisions = %+v, want the one recorded under the marker", view.Decisions)
 	}
-	if view.Decisions[0].TurnID != 2 || view.Decisions[0].OfferedOnTurnID != 1 {
-		t.Errorf("decision turns = %+v", view.Decisions[0])
+	if view.Decisions[0].Text != "백엔드를 먼저 머지한다" {
+		t.Errorf("decision = %+v", view.Decisions[0])
+	}
+	if view.Decisions[0].TurnID != 1 || view.Decisions[0].Source != "explanation" {
+		t.Errorf("decision provenance = %+v", view.Decisions[0])
+	}
+	// Turn 2's request repeats an offered sentence word for word; that is not
+	// evidence of a press and not an acceptance, so it is not a decision.
+	for _, d := range view.Decisions {
+		if strings.Contains(d.Text, "둘 다 머지해 주세요") {
+			t.Errorf("an echoed sentence reached the route as a decision: %+v", d)
+		}
+	}
+	// Both alternatives arrive over the wire with their own two sides.
+	if !view.TradeoffsRecorded || len(view.Tradeoffs) != 2 {
+		t.Fatalf("tradeoffs = %+v, want both rows of the table", view.Tradeoffs)
+	}
+	for _, tr := range view.Tradeoffs {
+		if len(tr.Pros) == 0 || len(tr.Cons) == 0 {
+			t.Errorf("alternative %q lost a side over the wire: %+v", tr.Alternative, tr)
+		}
+		if tr.TurnID != 1 || tr.Source != "response" {
+			t.Errorf("alternative %q provenance = turn %d %q", tr.Alternative, tr.TurnID, tr.Source)
+		}
 	}
 	if len(view.Open) != 1 || view.Open[0].TurnID != 3 {
 		t.Fatalf("open = %+v, want only the latest turn's", view.Open)
@@ -206,9 +238,6 @@ func TestChatTaskMaterialsKeepsDecidedAndOpenApart(t *testing.T) {
 	}
 	if len(view.Open[0].Choices) != 1 || view.Open[0].Choices[0].RequestText != "앱만 고쳐 주세요" {
 		t.Errorf("open choices = %+v, want the sentence to send verbatim", view.Open[0].Choices)
-	}
-	if view.TradeoffsRecorded {
-		t.Error("the agreed turn keeps no advantages and drawbacks")
 	}
 	if view.FoldedThrough != 3 {
 		t.Errorf("foldedThrough = %d, want 3", view.FoldedThrough)
@@ -229,7 +258,7 @@ func TestChatTaskMaterialsAnswersEmptyForATaskWithNoTurns(t *testing.T) {
 	// Empty arrays rather than nulls, so the app draws "none recorded" without
 	// having to tell a missing field from an empty one.
 	body := rec.Body.String()
-	for _, want := range []string{`"artifacts":[]`, `"decisions":[]`, `"open":[]`} {
+	for _, want := range []string{`"artifacts":[]`, `"tradeoffs":[]`, `"decisions":[]`, `"open":[]`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("body %s is missing %s", body, want)
 		}

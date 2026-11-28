@@ -10,6 +10,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -57,15 +58,21 @@ class ChatTaskMaterialsTest {
             "repo":"dlddu/pocket-aide","number":425,"turn_id":1},
            {"ref":"pull/42","turn_id":1}
          ],
+         "tradeoffs":[
+           {"alternative":"백엔드에서 접기","pros":["모바일이 이력을 받지 않는다","작업당 1회로 끝난다"],
+            "cons":["서버 메모리를 쓴다"],"turn_id":1,"source":"response"},
+           {"alternative":"앱에서 접기","pros":["서버 상태가 없다"],
+            "cons":[],"turn_id":1,"source":"response"}
+         ],
          "decisions":[
-           {"turn_id":2,"offered_on_turn_id":1,"label":"둘 다 머지",
-            "text":"둘 다 머지해 주세요"}
+           {"text":"접기는 백엔드에서 한다","turn_id":1,"source":"explanation"}
          ],
          "open":[
            {"turn_id":3,"question":"어느 쪽을 고칠까요?",
             "choices":[{"label":"앱만","request_text":"앱만 고쳐 주세요"}]}
          ],
-         "tradeoffs_recorded":false,"folded_through":3,"truncated":false}
+         "tradeoffs_recorded":true,"decisions_recorded":true,
+         "folded_through":3,"truncated":false}
     """.trimIndent()
 
     @Test
@@ -115,16 +122,16 @@ class ChatTaskMaterialsTest {
     }
 
     @Test
-    fun decidedAndStillOpenAreDifferentListsAndTradeoffsAreUnrecorded() = runTest {
+    fun decidedAndStillOpenAreDifferentLists() = runTest {
         server.enqueue(json(reviewed))
         val materials = api().chatTaskMaterials("t1")
 
+        assertTrue(materials.decisionsRecorded)
         assertEquals(1, materials.decisions.size)
         val decided = materials.decisions.single()
-        assertEquals("둘 다 머지", decided.label)
-        assertEquals("둘 다 머지해 주세요", decided.text)
-        assertEquals(2L, decided.turnId)
-        assertEquals(1L, decided.offeredOnTurnId)
+        assertEquals("접기는 백엔드에서 한다", decided.text)
+        assertEquals(1L, decided.turnId)
+        assertEquals("explanation", decided.source)
 
         assertEquals(1, materials.open.size)
         val open = materials.open.single()
@@ -137,9 +144,68 @@ class ChatTaskMaterialsTest {
         // The decided turn is not the open turn: a question that was answered is
         // not offered again as something to decide.
         assertFalse(materials.open.any { it.turnId == decided.turnId })
-        // The records keep no advantages and drawbacks, and the answer says so
-        // rather than leaving a silence that reads as "there were none".
+    }
+
+    // The positive case as the app reads it: two alternatives, each with the
+    // sides their author wrote, comparable side by side and each naming the turn
+    // it came from.
+    @Test
+    fun twoAlternativesArriveWithTheirOwnSidesAndTheirSourceTurn() = runTest {
+        server.enqueue(json(reviewed))
+        val materials = api().chatTaskMaterials("t1")
+
+        assertTrue(materials.tradeoffsRecorded)
+        assertEquals(2, materials.tradeoffs.size)
+        val backend = materials.tradeoffs.first { it.alternative == "백엔드에서 접기" }
+        val app = materials.tradeoffs.first { it.alternative == "앱에서 접기" }
+
+        assertEquals(listOf("모바일이 이력을 받지 않는다", "작업당 1회로 끝난다"), backend.pros)
+        assertEquals(listOf("서버 메모리를 쓴다"), backend.cons)
+        assertTrue(backend.bothSides)
+
+        // The second one's drawback was never written, so that side stays empty
+        // and the screen says 미기록 for it rather than showing a blank that
+        // reads as "no drawbacks".
+        assertEquals(listOf("서버 상태가 없다"), app.pros)
+        assertTrue(app.cons.isEmpty())
+        assertFalse(app.bothSides)
+
+        // Different on both sides — that is what makes them worth comparing.
+        assertNotEquals(backend.pros, app.pros)
+        // And both say where they were recorded.
+        for (entry in materials.tradeoffs) {
+            assertEquals(1L, entry.turnId)
+            assertEquals("response", entry.source)
+        }
+    }
+
+    // The negative case: a backend that found nothing marked sends empty lists
+    // and both flags false, and the app reads that as "not recorded" rather
+    // than inventing anything from prose or buttons.
+    @Test
+    fun nothingMarkedReadsAsUnrecordedRatherThanAsNone() = runTest {
+        server.enqueue(
+            json(
+                """{"task_id":"t1","session_id":"worker-1","artifacts":[],
+                   "tradeoffs":[],"decisions":[],
+                   "open":[{"turn_id":1,"question":"A 로 할까요?",
+                            "choices":[{"label":"A 로 간다 (빠름)","request_text":"A 로 해 주세요"}]}],
+                   "tradeoffs_recorded":false,"decisions_recorded":false,
+                   "folded_through":1,"truncated":false}""",
+            ),
+        )
+        val materials = api().chatTaskMaterials("t1")
+
         assertFalse(materials.tradeoffsRecorded)
+        assertFalse(materials.decisionsRecorded)
+        assertTrue(materials.tradeoffs.isEmpty())
+        assertTrue(materials.decisions.isEmpty())
+        // The open question and its button are still there — a button is a
+        // sentence to send, and it is not read as an advantage.
+        assertEquals(1, materials.open.size)
+        assertEquals("A 로 해 주세요", materials.open.single().choices.single().requestText)
+        // There is still something to review, so the pane is not "empty".
+        assertTrue(materials.hasAny)
     }
 
     @Test
@@ -147,7 +213,8 @@ class ChatTaskMaterialsTest {
         server.enqueue(
             json(
                 """{"task_id":"t9","session_id":"worker-1","artifacts":[],
-                   "decisions":[],"open":[],"tradeoffs_recorded":false,
+                   "tradeoffs":[],"decisions":[],"open":[],
+                   "tradeoffs_recorded":false,"decisions_recorded":false,
                    "folded_through":0,"truncated":false}""",
             ),
         )
@@ -155,6 +222,7 @@ class ChatTaskMaterialsTest {
 
         assertFalse(materials.hasAny)
         assertTrue(materials.artifacts.isEmpty())
+        assertTrue(materials.tradeoffs.isEmpty())
         assertTrue(materials.decisions.isEmpty())
         assertTrue(materials.open.isEmpty())
     }
