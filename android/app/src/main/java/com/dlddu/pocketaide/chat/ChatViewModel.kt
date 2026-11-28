@@ -262,6 +262,13 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
      * task, so the pane shows the choices that hold now rather than the ones it
      * was refused on. Neither path touches the draft — the caller clears it only
      * on [onStored].
+     *
+     * A store re-reads the list too. The ledger moves on a stored request — a
+     * task that was waiting on this person is received as "예정" in the same
+     * commit that stored it — and that status belongs to the server, so it is
+     * read rather than guessed at here. Without the re-read the panel would keep
+     * saying "검토" until the next poll came round; with a local edit instead, a
+     * late reply could show a status the ledger never had.
      */
     internal suspend fun runTaskRequest(
         task: ChatTask,
@@ -273,6 +280,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     ) {
         if (performTaskRequest(task, requestID, request, choiceTurnId)) {
             onStored()
+            loadTasks()
             return
         }
         if (_taskRequest.value.error == ChatTaskRequestError.STALE_CHOICE) {

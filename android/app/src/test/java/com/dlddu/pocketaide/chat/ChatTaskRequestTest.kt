@@ -434,12 +434,14 @@ class ChatTaskRequestTest {
         assertEquals(9L, reread.choiceTurnId)
     }
 
-    // 저장에 성공하면 초안을 지우는 쪽만 돌고, 작업을 다시 읽지 않는다 —
-    // 성공과 거부가 같은 모습이 되지 않는다.
+    // 저장에 성공하면 초안을 지우는 쪽만 돌고, 출처만 떨어뜨리는 쪽은 돌지
+    // 않는다 — 성공과 거부가 같은 모습이 되지 않는다. 목록은 저장 뒤에 다시
+    // 읽는다(원장이 움직이므로 — 아래 접수 테스트들).
     @Test
     fun aStoredRequestRunsOnlyTheStoredCallback() = runTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("진행해 줘")))
+        server.enqueue(MockResponse().setBody(tasksJson(tasks = taskJson("t-42", "planned"))))
         var storedRan = false
         var staleRan = false
 
@@ -447,7 +449,94 @@ class ChatTaskRequestTest {
 
         assertTrue(storedRan)
         assertFalse(staleRan)
-        assertEquals(1, server.requestCount)
+        assertEquals("저장 하나와 그 뒤의 재조회 하나", 2, server.requestCount)
+        assertEquals("/api/chat/tasks/t-42/requests", server.takeRequest().path)
+        assertEquals("/api/chat/tasks", server.takeRequest().path)
+    }
+
+    // ── 접수: 검토를 기다리던 작업이 「예정」으로 보인다 ──────────────────────
+
+    // 사용자가 검토 상태의 작업에 요청을 보내면, 플랫폼이 그것을 저장한 같은
+    // 커밋에서 그 작업을 「예정」으로 접수한다. 앱이 하는 일은 **다시 읽는
+    // 것**이다 — 상태를 스스로 고치지 않으므로 화면에 뜨는 값은 언제나 서버가
+    // 답한 값이다.
+    @Test
+    fun aRequestSentFromReviewShowsThePlannedStatusTheServerAnswers() = runTest {
+        val vm = ChatViewModel(api())
+        // 먼저 패널에 검토 작업이 하나 있다.
+        server.enqueue(MockResponse().setBody(tasksJson(tasks = taskJson("t-42", "review"))))
+        vm.loadTasks()
+        assertEquals(ChatTaskStatus.REVIEW, vm.tasks.value.tasks.single().status)
+        assertEquals("검토", ChatTaskStatus.label(vm.tasks.value.tasks.single().status))
+
+        server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("이 선택지로 해 주세요")))
+        server.enqueue(
+            MockResponse().setBody(
+                tasksJson(tasks = taskJson("t-42", "planned"), counts = """{"planned":1}"""),
+            ),
+        )
+        vm.runTaskRequest(task(id = "t-42"), "app-1", "이 선택지로 해 주세요", 0L, {})
+
+        val received = vm.tasks.value.tasks.single()
+        assertEquals(ChatTaskStatus.PLANNED, received.status)
+        assertEquals("예정", ChatTaskStatus.label(received.status))
+        assertEquals(mapOf("planned" to 1), vm.tasks.value.counts)
+        // 「예정」은 접수 대기이고 착수가 아니다 — 손댈 것으로 올려 세우지 않는다.
+        assertFalse(ChatTaskStatus.needsAttention(received.status))
+    }
+
+    // 앱은 상태를 스스로 옮기지 않는다. 저장은 성공했지만 서버가 여전히
+    // 「검토」를 답하면 화면도 「검토」다 — 플랫폼이 접수하지 않은 전이를 앱이
+    // 지어내지 않는다.
+    @Test
+    fun theAppDoesNotMoveTheStatusItself() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("한마디 남길게요")))
+        server.enqueue(MockResponse().setBody(tasksJson(tasks = taskJson("t-42", "review"))))
+
+        vm.runTaskRequest(task(id = "t-42"), "app-1", "한마디 남길게요", 0L, {})
+
+        assertEquals(ChatTaskStatus.REVIEW, vm.tasks.value.tasks.single().status)
+        assertNull(vm.tasks.value.error)
+        // 저장 자체는 성공으로 남는다 — 상태가 안 움직인 것과는 별개다.
+        assertEquals("한마디 남길게요", vm.taskRequest.value.stored?.request)
+    }
+
+    // 늦은 응답이 앞선 상태를 덮지 않는다. 저장하는 사이에 모니터가 그 작업을
+    // 인수해 「진행」·「완료」가 되었으면, 저장 뒤의 재조회는 그 값을 그대로
+    // 보인다 — 「예정」으로 되돌리지 않는다.
+    @Test
+    fun aStoreDoesNotPullAnAlreadyTakenTaskBackToPlanned() = runTest {
+        for ((status, label) in listOf("running" to "진행", "completed" to "완료")) {
+            val vm = ChatViewModel(api())
+            server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("이어서 해 주세요")))
+            server.enqueue(MockResponse().setBody(tasksJson(tasks = taskJson("t-42", status))))
+
+            vm.runTaskRequest(task(id = "t-42"), "app-1", "이어서 해 주세요", 0L, {})
+
+            val shown = vm.tasks.value.tasks.single()
+            assertEquals(status, shown.status)
+            assertEquals(label, ChatTaskStatus.label(shown.status))
+        }
+    }
+
+    // 저장 뒤의 재조회가 실패해도 저장은 저장이다 — 앱이 상태를 지어내지
+    // 않으므로 목록은 읽을 수 없다고 말하고, 요청이 저장됐다는 사실은 남는다.
+    @Test
+    fun aFailedReReadDoesNotInventAStatusNorUnsayTheStore() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setResponseCode(201).setBody(storedJson("이어서 해 주세요")))
+        server.enqueue(MockResponse().setResponseCode(502).setBody("""{"error":"no"}"""))
+        var storedRan = false
+
+        vm.runTaskRequest(task(id = "t-42"), "app-1", "이어서 해 주세요", 0L, { storedRan = true })
+
+        assertTrue("저장은 성공했다", storedRan)
+        assertEquals("이어서 해 주세요", vm.taskRequest.value.stored?.request)
+        assertNull("저장이 실패로 뒤집히지 않는다", vm.taskRequest.value.error)
+        // 읽을 수 없는 목록을 「예정」이 된 목록으로 꾸미지 않는다.
+        assertTrue(vm.tasks.value.tasks.isEmpty())
+        assertEquals(ChatTaskError.UNREACHABLE, vm.tasks.value.error)
     }
 
     // 선택지로 채운 초안을 사람이 **고치면** 그것은 더 이상 세션의 문장이
