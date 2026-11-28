@@ -317,6 +317,9 @@ mockup에서 실제 사용된 사이즈만 등재한다. 새로운 사이즈가 
 | 8 | 승인 | shield-check | §1.11 PR 모니터 영역 강조 차용 (인디고) |
 | 9 | 세션 | terminal | §1.11 PR 모니터 영역 강조 차용 (인디고) |
 | 10 | 알림 기록 | bell | §1.11 PR 모니터 영역 강조 차용 (인디고) |
+| 11 | 커밋 상태 | git-branch (`arrow.triangle.branch` · `AccountTree`) | §1.11 PR 모니터 영역 강조 차용 (인디고) |
+
+**하단 노출 개정 (2026-11-09, PR #397 「Android/iOS 채팅과 PR 모니터 탭 위치 교환」)**: 채팅 탭(1)과 PR 모니터 탭(7)이 자리를 바꿨다. 하단 노출은 다짐 · 채팅 · 승인 · 세션 · 더 보기, 「더 보기」 안은 PR 모니터 · 임시공간 · 개인 · 회사 · 루틴 · 알림 기록 · 커밋 상태(7칸)다. 아래 2026-10-23 개정의 노출 순서를 이 순서가 대체한다 — 채팅 화면은 이제 「채팅」 탭을, PR 모니터 화면은 「더 보기」 탭을 활성으로 그린다. 근거는 구현 선언이다: `RootTab.kt` 의 `BOTTOM_TABS = listOf(Affirmations, Chat, Approval, Sessions, More)` · `MORE_TABS = listOf(PrMonitor, Scratchpad, Personal, Work, Routines, Notifications, CommitStatus)` 와 iOS `RootView.swift` `signedInTabs` 의 `Tab` 선언 순서가 같다. 적용 시점은 PR #397(`swap-pr-monitor-chat-tabs-publish`) 머지 — 2026-11-08T22:54:37Z, KST 2026-11-09. 채팅 아이콘은 Android `Icons.AutoMirrored.Outlined.Chat` · iOS `bubble.left.and.bubble.right` 로 위 표의 message bubble 키를 그대로 쓴다(활성 시 채움). 탭 ID·화면 내용·배지·딥링크 매핑은 바뀌지 않았다. 화면 mockup(탭 바가 있는 12화면) · 다크 갤러리 `mockupData` 사본 · 여정 mockup `JRN-approval-push-to-decision` 은 2026-11-28 에 이 구성으로 맞췄다.
 
 **「더 보기」 추가 (PRD-12 AC17, 2026-10-27)**: 알림 기록 탭(10)을 「더 보기」 안 루틴 다음에 둔다. 하단 노출은 바뀌지 않는다. 알림 기록 화면은 「더 보기」 탭을 활성으로 그린다(`screen-external-notifications`).
 

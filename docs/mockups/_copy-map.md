@@ -46,7 +46,7 @@ last_updated: 2026-11-09
 | A | 기준 4 | 5 |
 | A | 구현 대기 | 5 |
 | A | 목업 대기 | 22 |
-| B | 일치 | 275 |
+| B | 일치 | 279 |
 | B | 외부 | 129 |
 | B | 예시 데이터 | 202 |
 | B | 목업 전용 | 170 |
@@ -344,11 +344,11 @@ last_updated: 2026-11-09
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `저장` | 일치 | `screen-device-name` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | `건너뛰기` | 일치 | `screen-device-name` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `다짐` | 일치 | `screen-affirmations` 에 같은 텍스트 |
-| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `PR 모니터` | 일치 | `screen-affirmations` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `PR 모니터` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `승인` | 일치 | `screen-affirmations` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `세션` | 일치 | `screen-affirmations` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `더 보기` | 일치 | `screen-affirmations` 에 같은 텍스트 |
-| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `채팅` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
+| `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `채팅` | 일치 | `screen-affirmations` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `임시공간` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `개인` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | `회사` | 일치 | `screen-scratchpad` 에 같은 텍스트 |
@@ -360,7 +360,7 @@ last_updated: 2026-11-09
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | `${UpcomingEvents.startLabel(event, entry.date)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetHeaderLayout.kt` | `${UpcomingEvents.startLabel(event, now)} ${event.title}` | 데이터 | 보간·서식만 있는 리터럴(정적 문구 없음) — 런타임 값의 서식이라 대조할 카피가 없다 |
 
-## 표 B — 역방향 (목업 텍스트 → 구현) · 815행
+## 표 B — 역방향 (목업 텍스트 → 구현) · 819행
 
 | 목업 | 텍스트 | 판정 | 근거 |
 |---|---|---|---|
@@ -391,7 +391,7 @@ last_updated: 2026-11-09
 | `screen-affirmations` | `자주 노출` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `보통` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `가끔` | 일치 | `AffirmationsScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
-| `screen-affirmations` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
@@ -408,7 +408,7 @@ last_updated: 2026-11-09
 | `screen-affirmations-priority-edit` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations-priority-edit` | `자주 읽어줘야 할 것` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | 대응 파일이 아닌 Kotlin 파일 `AffirmationsScreen.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-affirmations-priority-edit` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-affirmations-priority-edit` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-affirmations-priority-edit` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations-priority-edit` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations-priority-edit` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-affirmations-priority-edit` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
@@ -455,7 +455,7 @@ last_updated: 2026-11-09
 | `screen-approval` | `세션 sp-7 의 git push --force 허용` | 예시 데이터 | 요청 요약 |
 | `screen-approval` | `session-platform agent · 어제 18:02` | 예시 데이터 | 요청자 · 시각 — 서식은 `ApprovalFormatting.requestTime`(오늘 `HH:mm` · 어제 「어제 HH:mm」 · 그 전 `MM/dd HH:mm`) |
 | `screen-approval` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
-| `screen-approval` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-approval` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `세션` | 일치 | `ApprovalDetailScreen.kt`·`RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-approval` | `요청 상세` | 목업 전용 | 프레임 밖 캡션(프레임 이름) |
@@ -591,7 +591,7 @@ last_updated: 2026-11-09
 | `screen-chat-text` | `음성 모드로 전환` | 미구현 영역 | 음성 모드(AC2)가 아직 없다 — 그 자리는 보내기 버튼(`_deviations.md` S11) |
 | `screen-chat-text` | `음성 버튼을 눌러 핸즈프리 대화 모드로 전환` | 미구현 영역 | 음성 모드(AC2)가 아직 없다(`_deviations.md` S11) |
 | `screen-chat-text` | `다짐` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
-| `screen-chat-text` | `PR 모니터` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
+| `screen-chat-text` | `채팅` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
 | `screen-chat-text` | `승인` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
 | `screen-chat-text` | `세션` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
 | `screen-chat-text` | `더 보기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴(탭 라벨) |
@@ -604,7 +604,7 @@ last_updated: 2026-11-09
 | `screen-device-name` | `다짐` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
 | `screen-device-name` | `자주 읽어줘야 할 것` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` | 대응 파일이 아닌 Kotlin 파일 `AffirmationsScreen.kt` 의 리터럴 — 시트 아래 배경 화면 |
 | `screen-device-name` | `완벽보다 완료. 일단 보내고 나중에 다듬자.` | 예시 데이터 | 다짐 문장(사용자 데이터) |
-| `screen-device-name` | `PR 모니터` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
+| `screen-device-name` | `채팅` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
 | `screen-device-name` | `승인` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
 | `screen-device-name` | `세션` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
 | `screen-device-name` | `더 보기` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 대응 파일이 아닌 Kotlin 파일 `RootTab.kt` 의 리터럴 — 시트 아래 배경 화면 |
@@ -677,6 +677,7 @@ last_updated: 2026-11-09
 | `screen-external-notifications` | `개인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-external-notifications` | `회사` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-external-notifications` | `루틴` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-external-notifications` | `커밋 상태` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `← 모든 목업` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `/` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
 | `screen-pr-monitor-history` | `13 · PR 모니터링 이력` | 목업 전용 | 갤러리 크롬(목업 목록 링크·번호 제목) |
@@ -768,6 +769,7 @@ last_updated: 2026-11-09
 | `screen-pr-monitor-history` | `"모두 확인"` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `으로만 처리됩니다.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리 「N.B.」·「AC11 · AC12 · AC13.」) — 앱 화면 요소가 아니다 |
 | `screen-pr-monitor-history` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-pr-monitor-history` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-pr-monitor-history` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
@@ -848,7 +850,7 @@ last_updated: 2026-11-09
 | `screen-routines` | `4월 7일` | 예시 데이터 | 30일 히트맵 시작일(날짜 데이터) |
 | `screen-routines` | `오늘 · 60%` | 일치 | `RoutineHistoryRange.kt`·`RoutinesScreen.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
-| `screen-routines` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-routines` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-routines` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
@@ -935,6 +937,8 @@ last_updated: 2026-11-09
 | `screen-scratchpad` | `개인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-scratchpad` | `회사` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-scratchpad` | `루틴` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `알림 기록` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-scratchpad` | `커밋 상태` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-scratchpad` | `임시공간 배지는 정리하지 않은 항목 수입니다. 위젯에서도 볼 수 있습니다.` | 구현 대기 | 「더 보기」 목록 아래 안내 문구 — 구현의 앱 안 「더 보기」 목록(`RootScreen.kt`)에 꼬리말이 없다 |
 | `screen-scratchpad` | `PRD-4 · AC1 숏컷 자동 수집(주황 점), AC3 메타데이터(시각·입력 방식·STT 결과), AC4 분류 이동(→ 칩), AC5 미분류 카운트 배지(12 — 임시공간이 「더 보기」로 옮겨져 「더 보기」 목록의 임시공간 항목에 표시, 위젯 PRD-8 AC9로 보완)` | 목업 전용 | 프레임 밖 캡션(PRD·AC 주석) |
 | `screen-sessions` | `← 모든 목업` | 목업 전용 | 갤러리 크롬·프레임 캡션·상태바 |
@@ -961,7 +965,7 @@ last_updated: 2026-11-09
 | `screen-sessions` | `MiniMax Code · platform-default` | 예시 데이터 | 타입 줄 `$name · $model`(`Sessions.kt`)의 서식 + 예시 값 |
 | `screen-sessions` | `아카이브 2일 전 · 3.1 MB · 환경 반납됨` | 외부 `android/app/src/main/java/com/dlddu/pocketaide/sessions/Sessions.kt` | 대응 파일이 아닌 Kotlin 파일 `Sessions.kt` 의 리터럴(공용 문구·도메인 모델의 표시 이름·위젯 문구 등) |
 | `screen-sessions` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
-| `screen-sessions` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-sessions` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-sessions` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
@@ -1056,7 +1060,7 @@ last_updated: 2026-11-09
 | `screen-todo-personal` | `세탁기 세제 주문` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `친구한테 책 빌려달라고 답장` | 예시 데이터 | 할 일 제목(사용자 데이터) |
 | `screen-todo-personal` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
-| `screen-todo-personal` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-personal` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-personal` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
@@ -1103,7 +1107,7 @@ last_updated: 2026-11-09
 | `screen-todo-work` | `N.B.` | 목업 전용 | 프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다 |
 | `screen-todo-work` | `개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.` | 목업 전용 | 프레임 안 설계 주석 박스 — 위와 같음 |
 | `screen-todo-work` | `다짐` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
-| `screen-todo-work` | `PR 모니터` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
+| `screen-todo-work` | `채팅` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-work` | `승인` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-work` | `세션` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
 | `screen-todo-work` | `더 보기` | 일치 | `RootTab.kt` 리터럴(또는 보간으로 나뉜 정적 조각)과 같다 |
