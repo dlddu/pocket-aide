@@ -119,6 +119,12 @@ class ChatTaskTurnsRenderTest {
                     onLoadTurns = { turnLoads++ },
                     onRetryTurns = { turnRetries++ },
                     onLoadMoreTurns = { turnMores++ },
+                    // 이 테스트가 고정하는 것은 턴 렌더링이다. 검토 자료는
+                    // 읽은 빈 상태로 둬서 그 영역의 빈 표시가 함께 그려진다.
+                    materials = ChatTaskMaterialsUiState(hasLoaded = true),
+                    onLoadMaterials = {},
+                    onRetryMaterials = {},
+                    onOpenArtifact = {},
                     onBack = {},
                 )
             }
@@ -151,6 +157,12 @@ class ChatTaskTurnsRenderTest {
                     onLoadTurns = { turnLoads++ },
                     onRetryTurns = { turnRetries++ },
                     onLoadMoreTurns = { turnMores++ },
+                    // 이 테스트가 고정하는 것은 턴 렌더링이다. 검토 자료는
+                    // 읽은 빈 상태로 둬서 그 영역의 빈 표시가 함께 그려진다.
+                    materials = ChatTaskMaterialsUiState(hasLoaded = true),
+                    onLoadMaterials = {},
+                    onRetryMaterials = {},
+                    onOpenArtifact = {},
                     onBack = {},
                 )
             }
