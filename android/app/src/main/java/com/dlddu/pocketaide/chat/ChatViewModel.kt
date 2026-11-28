@@ -26,6 +26,14 @@ data class ChatUiState(
     val isSyncing: Boolean = false,
     val notice: String? = null,
     val error: ChatError? = null,
+    // Whether the session answering this conversation is on (PRD-1 AC12), and
+    // the turn-on's own in-flight flag and failure — kept apart from the
+    // conversation's so a failed status read never looks like a failed send,
+    // and neither hides the other. Null is "not read yet", which the screen
+    // draws as nothing rather than as "세션 없음".
+    val sessionPower: ChatSessionPower? = null,
+    val isPoweringOn: Boolean = false,
+    val powerError: ChatPowerError? = null,
 ) {
     val isReplying: Boolean get() = pending != null
 
@@ -36,6 +44,12 @@ data class ChatUiState(
     // A plain re-read of the conversation, so it stays available even while a
     // reply is in progress or sending — only guarded against itself (rapid taps).
     val canSync: Boolean get() = hasLoaded && !isSyncing
+
+    /**
+     * Only an archived session is turned on from here, and only one tap at a
+     * time (PRD-1 AC12).
+     */
+    val canPowerOn: Boolean get() = sessionPower?.powerState?.canPowerOn == true && !isPoweringOn
 }
 
 /**
@@ -119,7 +133,12 @@ data class ChatTaskRequestUiState(
     val error: ChatTaskRequestError? = null,
 )
 
-class ChatViewModel(private val api: ApiClient) : ViewModel() {
+class ChatViewModel(
+    private val api: ApiClient,
+    // The clock the session-state refresh window is measured against. Injected
+    // so a test can move time instead of waiting a minute for it.
+    private val now: () -> Long = { System.currentTimeMillis() },
+) : ViewModel() {
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
@@ -144,6 +163,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     // pending/queued would put the screen back to a state it has already left.
     private var readSeq = 0L
 
+    // When the session's state was last read, so the poll loop can refresh it
+    // on its own slower schedule. Cleared by anything that changes the state —
+    // a send restores an archived session (AC4) — so the next poll reads it
+    // again rather than showing what was true before.
+    private var powerReadAt: Long? = null
+
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
     private var taskReadSeq = 0L
@@ -157,6 +182,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     suspend fun pollWhileVisible() {
         while (coroutineContext.isActive) {
             load()
+            loadSessionPower()
             delay(if (_state.value.isReplying) REPLY_POLL_MILLIS else IDLE_POLL_MILLIS)
         }
     }
@@ -187,6 +213,15 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     fun sync() {
         viewModelScope.launch { performSync() }
+    }
+
+    /** Reads the session's state now, whatever the refresh window says — the chip's own retry. */
+    fun reloadSessionPower() {
+        viewModelScope.launch { loadSessionPower(force = true) }
+    }
+
+    fun powerOn() {
+        viewModelScope.launch { performPowerOn() }
     }
 
     fun dismissNotice() {
@@ -489,6 +524,51 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
+    /**
+     * Reads whether this conversation's session is on, at most once every
+     * [POWER_REFRESH_MILLIS] unless [force] says somebody asked for it now —
+     * the chip's own retry, and right after a turn-on. A failure is kept in
+     * `powerError` and the last state is left on screen: a chip blanked by a
+     * network blip reads as "no session", which is a different fact.
+     */
+    internal suspend fun loadSessionPower(force: Boolean = false) {
+        val read = powerReadAt
+        if (!force && read != null && now() - read < POWER_REFRESH_MILLIS) return
+        try {
+            val power = api.chatSessionPower()
+            powerReadAt = now()
+            _state.update { it.copy(sessionPower = power, powerError = null) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(powerError = ChatPowerError.from(e)) }
+        }
+    }
+
+    /**
+     * Turns this conversation's session back on. The same session comes back —
+     * the backend restores the one its own row names — so the conversation
+     * carries on in it and no second session appears (PRD-1 AC12 · AC4).
+     */
+    internal suspend fun performPowerOn() {
+        if (!_state.value.canPowerOn) return
+        _state.update { it.copy(isPoweringOn = true, powerError = null, notice = null) }
+        try {
+            val power = api.powerOnChatSession()
+            // An accepted turn-on whose state never came back is not a state to
+            // sit on: the next poll reads it again rather than leaving the chip
+            // on "알 수 없음" for the whole refresh window.
+            powerReadAt = if (power.powerState == ChatSessionPowerState.UNKNOWN) null else now()
+            _state.update { it.copy(sessionPower = power, notice = power.powerOnNotice) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(powerError = ChatPowerError.from(e)) }
+        } finally {
+            _state.update { it.copy(isPoweringOn = false) }
+        }
+    }
+
     internal suspend fun loadTasks() {
         val mine = ++taskReadSeq
         try {
@@ -535,6 +615,9 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                 }
                 is ChatSendOutcome.Queued -> _state.update { it.copy(queued = outcome.queued) }
             }
+            // A send opens the session, or restores an archived one (AC4), so
+            // whatever the chip was showing is no longer what is true.
+            powerReadAt = null
             return true
         } catch (e: CancellationException) {
             throw e
@@ -593,6 +676,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
         const val REPLY_POLL_MILLIS = 1_500L
         const val IDLE_POLL_MILLIS = 15_000L
+
+        // How stale the session's state may get while the screen is open. The
+        // state changes on the platform's own schedule (a 60 minute idle
+        // freeze), not with the conversation, so it is read far less often than
+        // the messages — one read a minute per open screen, not one per poll.
+        const val POWER_REFRESH_MILLIS = 60_000L
 
         // The ledger moves with a turn, so the panel reads more often while a
         // reply is coming and rarely otherwise. It is slower than the chat's

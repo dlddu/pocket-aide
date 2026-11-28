@@ -78,7 +78,9 @@ import com.dlddu.pocketaide.designsystem.components.PlainTextField
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
 // two actions sync the conversation on demand and refresh plugin skills (one
 // conversation, no "new chat"), and the composer's round button sends (voice
-// mode is not built yet).
+// mode is not built yet). Under the header rule is the one thing the mockup
+// does not draw: whether the session answering this conversation is on, with
+// the way to turn it back on (PRD-1 AC12 · 허용목록 S13).
 private val CHAT_AREA = Area.AiChat
 private val HEADER_BUTTON_SIZE = 36.dp
 private val HEADER_ICON_SIZE = 16.dp
@@ -181,6 +183,8 @@ fun ChatScreen(api: ApiClient) {
         onRefresh = viewModel::refreshPlugins,
         onDismissNotice = viewModel::dismissNotice,
         onCancelQueued = viewModel::cancelQueued,
+        onPowerOn = viewModel::powerOn,
+        onRetrySessionPower = viewModel::reloadSessionPower,
         listState = messageList,
         panelOpen = panelOpen,
         onTogglePanel = { panelOpen = !panelOpen },
@@ -298,6 +302,11 @@ internal fun ChatPanes(
     onRefresh: () -> Unit,
     onDismissNotice: () -> Unit,
     onCancelQueued: () -> Unit,
+    // The session's on/off actions. They default to nothing so a test that
+    // drives the panes for the task panel's sake does not have to wire them —
+    // the screen itself always passes them.
+    onPowerOn: () -> Unit = {},
+    onRetrySessionPower: () -> Unit = {},
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean,
     onTogglePanel: () -> Unit,
@@ -353,6 +362,8 @@ internal fun ChatPanes(
                 onRefresh = onRefresh,
                 onDismissNotice = onDismissNotice,
                 onCancelQueued = onCancelQueued,
+                onPowerOn = onPowerOn,
+                onRetrySessionPower = onRetrySessionPower,
                 listState = listState,
                 // The toggle belongs to the wide layout only; a narrow window
                 // has no second pane to open.
@@ -425,6 +436,8 @@ private fun Conversation(
     onRefresh: () -> Unit,
     onDismissNotice: () -> Unit,
     onCancelQueued: () -> Unit,
+    onPowerOn: () -> Unit,
+    onRetrySessionPower: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean?,
     onTogglePanel: () -> Unit,
@@ -433,6 +446,7 @@ private fun Conversation(
     Column(modifier.fillMaxHeight().testTag("chat.messages.pane")) {
         Header(state, onSync = onSync, onRefresh = onRefresh, panelOpen = panelOpen, onTogglePanel = onTogglePanel)
         Box(Modifier.fillMaxWidth().height(RULE_WIDTH).background(DesignTokens.Colors.rule(CHAT_AREA)))
+        SessionPowerStrip(state, onPowerOn = onPowerOn, onRetry = onRetrySessionPower)
         state.notice?.let {
             Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = onDismissNotice)
         }
@@ -504,6 +518,89 @@ private fun Header(
                 description = "스킬 새로고침",
                 tag = "chat.refresh.button",
                 onClick = onRefresh,
+            )
+        }
+    }
+}
+
+/**
+ * Whether the session answering this conversation is on, and the way to turn it
+ * back on when it is not (PRD-1 AC12). It sits under the header rule rather
+ * than in the header's round buttons: it is a state first — the button appears
+ * only for an archived session, which is the one case there is something to
+ * turn on (허용목록 S13).
+ *
+ * Nothing is drawn until the first read answers, so the strip never says
+ * 「세션 없음」 about a session it has not asked about yet.
+ */
+@Composable
+private fun SessionPowerStrip(state: ChatUiState, onPowerOn: () -> Unit, onRetry: () -> Unit) {
+    val power = state.sessionPower ?: return
+    val ink = DesignTokens.Colors.ink(CHAT_AREA)
+    val failed = state.powerError != null
+    val stateColor = when (power.powerState) {
+        ChatSessionPowerState.ON -> DesignTokens.StatusColors.success()
+        ChatSessionPowerState.OFF -> DesignTokens.Colors.accent(CHAT_AREA)
+        ChatSessionPowerState.UNKNOWN -> DesignTokens.StatusColors.inProgress()
+        else -> ink.copy(alpha = MUTED_OPACITY)
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.sm)
+            .testTag("chat.session.state"),
+        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(DOT_SIZE).clip(CircleShape).background(stateColor))
+        Column(Modifier.weight(1f)) {
+            Text(
+                power.powerState.label,
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold),
+                color = stateColor,
+                modifier = Modifier.testTag("chat.session.label"),
+            )
+            Text(
+                state.powerError?.message ?: power.detail(),
+                style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                color = if (failed) DesignTokens.StatusColors.failure() else ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.testTag("chat.session.detail"),
+            )
+        }
+        if (failed) {
+            SessionPowerAction("다시 확인", isLoading = false, tag = "chat.session.retry", onClick = onRetry)
+        } else if (power.powerState.canPowerOn) {
+            SessionPowerAction(
+                "켜기",
+                isLoading = state.isPoweringOn,
+                tag = "chat.session.power",
+                onClick = onPowerOn,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SessionPowerAction(label: String, isLoading: Boolean, tag: String, onClick: () -> Unit) {
+    val ink = DesignTokens.Colors.ink(CHAT_AREA)
+    Box(
+        Modifier
+            .clip(CircleShape)
+            .background(DesignTokens.Colors.card(CHAT_AREA))
+            .border(RULE_WIDTH, DesignTokens.Colors.rule(CHAT_AREA), CircleShape)
+            .clickable(enabled = !isLoading, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = label }
+            .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+            .testTag(tag),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(color = ink, strokeWidth = SPINNER_STROKE, modifier = Modifier.size(SPINNER_SIZE))
+        } else {
+            Text(
+                label,
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm, FontWeight.SemiBold),
+                color = ink.copy(alpha = CHIP_TEXT_OPACITY),
             )
         }
     }

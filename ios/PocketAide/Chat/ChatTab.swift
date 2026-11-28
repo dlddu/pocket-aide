@@ -5,7 +5,9 @@ import SwiftUI
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
 // two actions sync the conversation on demand and refresh plugin skills (one
 // conversation, no "new chat"), and the composer's round button sends (voice
-// mode is not built yet).
+// mode is not built yet). Under the header rule is the one thing the mockup
+// does not draw: whether the session answering this conversation is on, with
+// the way to turn it back on (PRD-1 AC12 · 허용목록 S13).
 struct ChatTab: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
@@ -37,6 +39,7 @@ struct ChatTab: View {
                 }
             }
             Rectangle().fill(DesignTokens.Color.rule(area)).frame(height: 1)
+            sessionPowerStrip
             if let notice = viewModel.notice {
                 banner(notice, color: DesignTokens.Color.ink(area), identifier: "chat.notice")
                     .onTapGesture { viewModel.notice = nil }
@@ -105,6 +108,87 @@ struct ChatTab: View {
         .opacity(enabled ? 1 : 0.4)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    /// Whether the session answering this conversation is on, and the way to
+    /// turn it back on when it is not (PRD-1 AC12). It sits under the header
+    /// rule rather than in the header's round buttons: it is a state first —
+    /// the button appears only for an archived session, which is the one case
+    /// there is something to turn on.
+    ///
+    /// Nothing is drawn until the first read answers, so the strip never says
+    /// "세션 없음" about a session it has not asked about yet.
+    @ViewBuilder
+    private var sessionPowerStrip: some View {
+        if let power = viewModel.sessionPower {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                Circle()
+                    .fill(powerColor(power.power))
+                    .frame(width: 6, height: 6)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(power.power.label)
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
+                        .foregroundStyle(powerColor(power.power))
+                    Text(viewModel.powerError?.message ?? power.detail())
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.caption2xs))
+                        .foregroundStyle(
+                            viewModel.powerError == nil
+                                ? DesignTokens.Color.ink(area).opacity(Self.mutedOpacity)
+                                : DesignTokens.StatusColor.failure
+                        )
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                if viewModel.powerError != nil {
+                    powerActionButton("다시 확인", identifier: "chat.session.retry", isLoading: false) {
+                        Task { await viewModel.loadSessionPower(force: true) }
+                    }
+                } else if power.power.canPowerOn {
+                    powerActionButton("켜기", identifier: "chat.session.power", isLoading: viewModel.isPoweringOn) {
+                        Task { await viewModel.powerOn() }
+                    }
+                }
+            }
+            .padding(.horizontal, DesignTokens.Spacing.xl)
+            .padding(.vertical, DesignTokens.Spacing.sm)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("chat.session.state")
+        }
+    }
+
+    private func powerColor(_ state: ChatSessionPowerState) -> Color {
+        switch state {
+        case .on: return DesignTokens.StatusColor.success
+        case .off: return DesignTokens.Color.accent(area)
+        case .absent, .gone: return DesignTokens.Color.ink(area).opacity(Self.mutedOpacity)
+        case .unknown: return DesignTokens.StatusColor.inProgress
+        }
+    }
+
+    private func powerActionButton(
+        _ title: String,
+        identifier: String,
+        isLoading: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Group {
+                if isLoading {
+                    ProgressView().tint(DesignTokens.Color.ink(area))
+                } else {
+                    Text(title)
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm, weight: .semibold))
+                }
+            }
+            .foregroundStyle(DesignTokens.Color.ink(area))
+            .padding(.horizontal, DesignTokens.Spacing.md)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(Capsule().fill(DesignTokens.Color.card(area)))
+            .overlay(Capsule().stroke(DesignTokens.Color.rule(area), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(isLoading)
+        .accessibilityIdentifier(identifier)
     }
 
     private func banner(_ text: String, color: Color, identifier: String) -> some View {
