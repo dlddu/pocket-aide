@@ -42,10 +42,9 @@ const (
 	// turn ran to its end (session-platform claudeTurnStatus: ok · timeout ·
 	// canceled · error). Every other value, and a turn whose end marker never
 	// came, is a reply the user must not read as the session's answer.
-	turnStatusOK   = "ok"
-	defaultPoll    = 700 * time.Millisecond
-	defaultTimeout = 40 * time.Minute
-	emptyReply     = "(응답이 비어 있습니다)"
+	turnStatusOK = "ok"
+	defaultPoll  = 700 * time.Millisecond
+	emptyReply   = "(응답이 비어 있습니다)"
 	// brokenReply stands in when an interrupted turn produced nothing at all.
 	// An empty failure has to read as a failure: the text for an empty but
 	// finished turn would claim the session answered with nothing.
@@ -117,7 +116,6 @@ type Engine struct {
 	platform Platform
 	logger   *slog.Logger
 	poll     time.Duration
-	timeout  time.Duration
 	now      func() time.Time
 
 	mu    sync.Mutex
@@ -135,7 +133,7 @@ func NewEngine(store *Store, platform Platform, logger *slog.Logger) *Engine {
 	}
 	return &Engine{
 		store: store, platform: platform, logger: logger,
-		poll: defaultPoll, timeout: defaultTimeout, now: time.Now,
+		poll: defaultPoll, now: time.Now,
 		turns: map[int64]*Pending{}, retryAfter: map[int64]time.Time{},
 	}
 }
@@ -148,6 +146,23 @@ func (e *Engine) WithPoll(d time.Duration) *Engine {
 
 // Wait blocks until every background turn has finished.
 func (e *Engine) Wait() { e.running.Wait() }
+
+// turnContext is what a background follow runs under. It is detached from the
+// request that started the turn, because the reply outlives that HTTP call,
+// and it carries no deadline of its own: a turn takes as long as the session
+// takes to answer it, and this server must not declare an answer cut short
+// while the platform is still writing it (PRD-1 AC1). Receiving a reply had a
+// 40 minute limit until 2026-11-27, which is exactly that mistake — a session
+// still working past it had the text it had produced stored as an interrupted
+// answer, and the rest of the answer thrown away.
+//
+// What does end a follow is unchanged: the platform's own word on the turn (an
+// end marker whose status is not ok — canceled, error, the platform's own
+// timeout), or a transcript read that fails, each read bounded by the platform
+// client's per-request timeout.
+func turnContext(ctx context.Context) context.Context {
+	return context.WithoutCancel(ctx)
+}
 
 // Pending returns the reply in progress for userID, if any.
 func (e *Engine) Pending(userID int64) *Pending {
@@ -255,9 +270,7 @@ func (e *Engine) Send(ctx context.Context, userID int64, content string) (Messag
 	go func() {
 		defer e.running.Done()
 		defer e.release(userID)
-		turnCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), e.timeout)
-		defer cancel()
-		e.finishTurn(turnCtx, userID, conv.ID, sessionID, offset)
+		e.finishTurn(turnContext(ctx), userID, conv.ID, sessionID, offset)
 	}()
 	return msg, nil
 }
@@ -427,9 +440,7 @@ func (e *Engine) ResumeQueued(ctx context.Context, userID, convID int64) {
 	go func() {
 		defer e.running.Done()
 		defer e.release(userID)
-		turnCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), e.timeout)
-		defer cancel()
-		e.drainQueued(turnCtx, userID, convID)
+		e.drainQueued(turnContext(ctx), userID, convID)
 	}()
 }
 
@@ -552,9 +563,7 @@ func (e *Engine) catchUp(ctx context.Context, userID, convID int64, sessionID st
 			go func() {
 				defer e.running.Done()
 				defer e.release(userID)
-				turnCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), e.timeout)
-				defer cancel()
-				e.finishTurn(turnCtx, userID, convID, sessionID, turnStart)
+				e.finishTurn(turnContext(ctx), userID, convID, sessionID, turnStart)
 			}()
 			return turnStart, errBusyHandedOff
 		}
@@ -824,8 +833,9 @@ func parseMarker(header string) (kind, seq, status string) {
 }
 
 // turnReply is what one turn becomes in the history. followErr is set when
-// this server stopped following before the turn's end marker arrived — a
-// read that failed, or the turn timing out on our side.
+// this server stopped following before the turn's end marker arrived — a read
+// that failed. A turn merely running long is not one of those: the follow has
+// no deadline of its own (turnContext).
 //
 // An interrupted turn keeps every byte it received and says so twice: in
 // Message.Interrupted for readers that model the state, and in a trailing
