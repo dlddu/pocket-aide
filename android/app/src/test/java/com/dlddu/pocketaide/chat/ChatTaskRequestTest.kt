@@ -63,7 +63,7 @@ class ChatTaskRequestTest {
     // ── 보는 방식: 칩 필터와 완료 숨김 ───────────────────────────────────────
 
     private val ledger = listOf(
-        task("t1", ChatTaskStatus.BLOCKED),
+        task("t1", ChatTaskStatus.PLANNED),
         task("t2", ChatTaskStatus.REVIEW),
         task("t3", ChatTaskStatus.RUNNING),
         task("t4", ChatTaskStatus.COMPLETED),
@@ -98,11 +98,11 @@ class ChatTaskRequestTest {
     // 고른 칩을 다시 누르면 전체로 돌아간다 — 완료 숨김은 그대로 남는다.
     @Test
     fun tappingTheChosenChipAgainGoesBackToAllAndLeavesTheHideAlone() {
-        val chosen = ChatTaskFilter(hideCompleted = true).toggled(ChatTaskStatus.BLOCKED)
-        assertEquals(ChatTaskStatus.BLOCKED, chosen.status)
+        val chosen = ChatTaskFilter(hideCompleted = true).toggled(ChatTaskStatus.PLANNED)
+        assertEquals(ChatTaskStatus.PLANNED, chosen.status)
         assertTrue(chosen.hideCompleted)
 
-        val back = chosen.toggled(ChatTaskStatus.BLOCKED)
+        val back = chosen.toggled(ChatTaskStatus.PLANNED)
         assertNull(back.status)
         assertTrue("완료 숨김은 칩과 다른 선택이므로 함께 풀리지 않는다", back.hideCompleted)
 
@@ -120,7 +120,7 @@ class ChatTaskRequestTest {
         // 원장에 없는 상태를 골랐다 — 숨김과는 무관하다.
         assertEquals(
             ChatTaskEmptiness.FILTERED,
-            ChatTaskFilter(ChatTaskStatus.PLANNED).emptiness(ledger),
+            ChatTaskFilter(ChatTaskStatus.UNKNOWN).emptiness(ledger),
         )
         // 완료를 숨겨서 비었다. 완료 칩까지 함께 걸린 경우도 같은 이유다 —
         // 행은 원장에 그대로 있다.
@@ -135,7 +135,7 @@ class ChatTaskRequestTest {
         // 없는 상태 + 완료 숨김은 숨김 탓이 아니다.
         assertEquals(
             ChatTaskEmptiness.FILTERED,
-            ChatTaskFilter(ChatTaskStatus.PLANNED, hideCompleted = true).emptiness(ledger),
+            ChatTaskFilter(ChatTaskStatus.UNKNOWN, hideCompleted = true).emptiness(ledger),
         )
     }
 

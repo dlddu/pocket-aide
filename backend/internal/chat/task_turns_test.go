@@ -106,7 +106,11 @@ func TestTaskTurns_CarryTheAgreedModelToTheApp(t *testing.T) {
 	if page.TaskID != "t1" || page.TaskVersion != 3 {
 		t.Fatalf("page = %+v", page)
 	}
-	if page.Task.Title != "옮겨 온 작업" || page.Task.Status != "blocked" {
+	// The fixture is an authentic migrated record, so it holds the records'
+	// older name for "the person's to decide". The pane gets the one status the
+	// panel it was opened from has — otherwise a task would carry one status in
+	// the list and another in its own detail.
+	if page.Task.Title != "옮겨 온 작업" || page.Task.Status != chat.TaskStatusReview {
 		t.Fatalf("task = %+v", page.Task)
 	}
 	// A migrated task never recorded a description: null reaches the app as

@@ -30,22 +30,42 @@ const (
 	workMaxPages = 50
 )
 
-// TaskStatus values the work records allow. Anything else — including a status
-// a newer platform starts writing — is reported as TaskStatusUnknown so the
-// panel can show it without guessing.
+// TaskStatus values this route answers with. They are the work records' own
+// domain with one fold: there is a single status for "this is the person's to
+// decide", and it is TaskStatusReview. Anything outside the domain — including
+// a status a newer platform starts writing — is reported as TaskStatusUnknown
+// so the panel can show it without guessing, and is never folded into a
+// judgment status it has no evidence for.
 const (
 	TaskStatusPlanned   = "planned"
 	TaskStatusRunning   = "running"
-	TaskStatusBlocked   = "blocked"
 	TaskStatusReview    = "review"
 	TaskStatusCompleted = "completed"
 	TaskStatusUnknown   = "unknown"
 )
 
+// taskStatusBlocked is the records' other name for a task waiting on a person:
+// the prerequisite it needs is an approval, a permission or a decision only the
+// person can give, which is TaskStatusReview said twice. Two names meant two
+// chips and two counts for one judgment, so this route answers the one.
+//
+// It is read, not retired. The upstream domain still holds it
+// (dlddu/session-platform `docs/session-ledger.md` — the agreed shape's status
+// domain is "the ledger's own domain unchanged", and a status outside the
+// domain is refused rather than clamped), so every record written before the
+// fold keeps this value and a writer that has not caught up keeps producing it.
+// Reading it as anything but review would lose work a person was already shown
+// as theirs to act on.
+//
+// It is deliberately not one of the statuses above: nothing downstream can
+// build a count, a chip or a filter from it, because after normaliseStatus no
+// task carries it.
+const taskStatusBlocked = "blocked"
+
 // taskStatuses is the display order the panel counts in: what needs a person
 // first, then what is merely waiting, then what is done.
 var taskStatuses = []string{
-	TaskStatusBlocked, TaskStatusReview, TaskStatusRunning,
+	TaskStatusReview, TaskStatusRunning,
 	TaskStatusPlanned, TaskStatusCompleted, TaskStatusUnknown,
 }
 
@@ -348,8 +368,15 @@ func emptyTaskList(sessionID string) TaskList {
 	return TaskList{SessionID: sessionID, Tasks: []Task{}, Counts: counts}
 }
 
+// normaliseStatus is the one place a work record's status becomes the status
+// this route answers with. Every read goes through it — the task list and a
+// task's own turn page alike — so a second route cannot answer with a status
+// the first one folded away.
 func normaliseStatus(raw string) string {
 	candidate := strings.ToLower(strings.TrimSpace(raw))
+	if candidate == taskStatusBlocked {
+		return TaskStatusReview
+	}
 	for _, s := range taskStatuses {
 		if candidate == s {
 			return s

@@ -5,8 +5,10 @@
 > 남은 판단이 없고 정책에 따른 재시도가 도는 동안은 **‘진행’에 두고** 모니터가 근거와 다음 행동을 원장에 적는다.
 >
 > **적용 범위**: 이 문서의 상태도·상태표·범례·화면 도표·필터·fixture·시나리오와 기대값 전부. 이 문서는 그 목표
-> 모델을 기준으로 쓴다. **구현은 아직 이 모델이 아니다** — 현행 코드가 읽는 값과 보이는 칩은 아래
-> 「[현행 구현과의 차이](#현행-구현과의-차이)」 한 절에만 적고, 그 변경이 배포·마이그레이션됐다고 쓰지 않는다.
+> 모델을 기준으로 쓴다. **앱이 읽고 보이는 쪽은 이 모델이다** — 백엔드가 읽기 한 자리에서 원장의 `blocked` 를
+> `review` 로 접고 앱이 다섯 값만 그린다(pocket-aide#441, **열려 있다**). 상위 원장이 여섯째 값을 **보낼 수 있다는
+> 호환**은 그것과 별개이고, 둘의 범위는 아래 「[현행 구현과 상위 계약 호환](#현행-구현과-상위-계약-호환)」 한 절에만
+> 적는다. 상위 플랫폼·writer 쪽 변경이나 머지·배포·마이그레이션이 됐다고 이 문서가 쓰지 않는다.
 
 이 문서가 검증하는 그림이다. 주어는 셋이다 — **사용자**, **부모 채팅**(사람과 말하는 레인), **모니터**(작업을 움직이는 레인).
 이 운영 구성에서 **작업 status 를 쓰는 것은 모니터 하나**이고, 부모 채팅과 앱은 그것을 읽기만 한다.
@@ -60,18 +62,32 @@ stateDiagram-v2
 **부모 채팅은 원장을 직접 고치지 않는다** — 두 경로 모두 기록은 모니터가 쓴다. 앱이 저장 성공을 「요청 저장됨 · 부모 확인 대기」로
 말할 때의 「부모」는 **관리 세션**을 뜻하고, 사람과 말하는 부모 채팅 레인이 상태를 쓴다는 뜻이 아니다(아래 `parent` 용어 구분).
 
-**바로 가기**: [현행 구현과의 차이](#현행-구현과의-차이) · [세 주체가 하는 일](#세-주체가-하는-일) · [상태 값과 라벨](#상태-값과-라벨) · [전이별 근거](#전이별-근거) · [패널 화면 상태](#패널-화면-상태) · [테스트 시나리오](#테스트-시나리오)
+**바로 가기**: [현행 구현과 상위 계약 호환](#현행-구현과-상위-계약-호환) · [세 주체가 하는 일](#세-주체가-하는-일) · [상태 값과 라벨](#상태-값과-라벨) · [전이별 근거](#전이별-근거) · [패널 화면 상태](#패널-화면-상태) · [테스트 시나리오](#테스트-시나리오)
 
-## 현행 구현과의 차이
+## 현행 구현과 상위 계약 호환
 
-현행 백엔드·앱은 상태 값을 **여섯 개**(`planned`·`running`·`blocked`·`review`·`completed`·`unknown`) 읽고,
-`blocked` 가 적힌 작업을 「차단」 칩·배지로 보인다(`backend/internal/chat/tasks.go`·`ChatTasks.kt`). 위 목표 모델은
-그 자리를 `review` 하나로 모은다. **그 변경은 아직 구현되지도, 배포·마이그레이션되지도 않았다** — 코드가
-`blocked` 를 아는 값으로 읽는 동안 원장에 그 값이 남아 있으면 화면은 지금처럼 「차단」으로 보인다. 그런 **예전
-기록의 원인·근거 설명은 그대로 읽는다**(작업의 「무엇을 · 왜」와 그 턴의 설명·질문).
+**앱이 보이는 값은 다섯이다.** 백엔드가 읽기 한 자리(`normaliseStatus`)에서 원장의 `blocked` 를 `review` 로 접어
+작업 목록·`counts`·작업 턴 라우트가 모두 `planned`·`running`·`review`·`completed`·`unknown` 으로만 답하고
+(`backend/internal/chat/tasks.go`·`task_turns.go`), 안드로이드가 같은 규칙으로 서버 응답과 **기기에 저장된 필터**를
+접는다(`ChatTasks.kt`). 그래서 **별도 「차단」 칩·배지·개수가 없고** 같은 판단이 두 칩으로 갈리지 않는다. 이 구현은
+pocket-aide#441 이고 **아직 열려 있다** — 머지·배포·마이그레이션이 됐다고 이 문서가 쓰지 않는다.
 
-이 절이 현행 사실을 적는 유일한 자리다. 아래의 상태표·범례·화면 도표·필터·fixture·시나리오와 기대값은 모두
-**목표 모델**을 기준으로 쓰며, 「차단」을 이름만 바꾼 하위 상태·필터·두 번째 라벨로 되살리지 않는다.
+**상위 원장의 상태 도메인은 그대로 여섯이다.** `dlddu/session-platform` `docs/session-ledger.md` 는 도메인을
+`planned`·`running`·`blocked`·`review`·`completed`·`unknown` 으로 두고(「the ledger's own domain unchanged」) 도메인
+밖 상태는 거부하며, 상태 이름을 바꾸는 마이그레이션은 사용자가 이미 본 작업을 옮기는 일이라고 적어 둔다. 그래서
+**옛 기록과 아직 그 이름으로 쓰는 writer 의 응답은 `blocked` 를 계속 보낼 수 있다** — 접기는 그 값을 지우는 것이
+아니라 **읽어서** 하나로 보이는 것이다. 상위 플랫폼·writer 스킬 쪽 통합 변경과 그 운영 반영은 이 저장소의 PR·
+테스트로 확인되는 범위가 아니므로, 이 문서는 그 진행 상태를 적지 않는다.
+
+**접는 값은 `blocked` 하나다.** 기다리는 일은 사용자에게 물을 것이 없으므로 접히지 않는다 — 아직 작업 세션에
+맡기지 않은 일(승인된 슬롯이 나기를 기다리는 것도 여기)은 `planned`, 이미 도는 일은 `running` 에 남는다. 다섯 값도
+`blocked` 도 아닌 값은 `review` 가 아니라 `unknown` 이다(근거 없이 사용자의 결정이 필요하다고 말하지 않는다).
+**예전 기록의 원인·근거 설명은 그대로 읽고**(작업의 「무엇을 · 왜」·완료 기준과 그 턴의 설명·질문), 칩·「완료
+숨기기」·개수·빈 목록 세 가지 이유·잘림 문구는 전과 같다. 이 접기가 모으는 것은 **읽는 쪽의 표시**뿐이다.
+
+이 절이 **상위 계약의 도메인과 이 저장소가 보이는 값의 범위 차이**를 적는 유일한 자리다. 아래의 상태표·범례·화면
+도표·필터·fixture·시나리오와 기대값은 모두 **목표 모델**을 기준으로 쓰며, 「차단」을 이름만 바꾼 하위 상태·필터·
+두 번째 라벨로 되살리지 않는다.
 
 ## 검증 대상 AC
 - AC10: 작업 패널 — 보는 방식과, 원장에 남기는 요청 (PRD-1: `prd-ai-chat.md`)
@@ -85,7 +101,8 @@ stateDiagram-v2
 ## 작성 기준
 - 시나리오는 **사용자가 관찰할 수 있는 결과** 단위로 쓴다. 코드 레벨 테스트는 각 시나리오의
   「관련 코드 테스트」에 참고로만 적으며, 시나리오의 검증을 대신하지 않는다.
-- 「구현 상태」는 작성 시점(2026-11-28, main `ca0e9ea`) 코드를 **읽어** 적었다. 앱이나 운영 원장에서 전이를 실행해
+- 「구현 상태」는 작성 시점(2026-11-28, main `ca0e9ea`) 코드를 **읽어** 적었고, 상태 값·정규화·칩에 관한 항목은
+  이 정정 시점에 pocket-aide#441 `799bd76` 를 다시 읽어 고쳤다. 앱이나 운영 원장에서 전이를 실행해
   확인한 것이 아니다 — 실행으로 확인한 범위는 「관련 코드 테스트」가 가리키는 자동 테스트까지다.
 - 작업 패널은 **안드로이드에만 있다**. iOS(`ios/PocketAide/`)에는 패널 구현이 없으므로 이 문서의 화면 시나리오는
   안드로이드에서 관찰한다. 백엔드 경로(`GET /api/chat/tasks`)는 두 앱과 무관하게 돌아간다.
@@ -93,7 +110,7 @@ stateDiagram-v2
   모두 `android/app/src/main/java/com/dlddu/pocketaide/chat/` 아래에 있다.
 - **상태 값과 라벨은 실제 값이다** — `planned`·`running`·`review`·`completed`·`unknown` 과 「예정」·「진행」·
   「검토」·「완료」·「알 수 없음」, 그리고 「…」로 인용한 화면 문구는 코드·계약에서 그대로 옮긴 것이다. 목표 모델이
-  쓰지 않는 `blocked`·「차단」은 위 「현행 구현과의 차이」에만 나온다.
+  쓰지 않는 `blocked`·「차단」은 위 「현행 구현과 상위 계약 호환」에만 나온다.
   반면 작업 제목·ID(`예시-권한` …)와 건수는 시나리오를 돌리기 위한 **fixture** 이고 제품의 값이 아니다.
   fixture 는 **실 사용자의 대화나 운영 원장에 적용하지 않는다** — 읽는 사람이 상황을 재구성하기 위한 가정이다.
 - 원장은 pocket-aide 의 DB에 없다. 이 대화를 맡은 `dlddu/session-platform` 세션의 슬롯 SQLite(`sp_work_tasks`·`sp_work_turns`)에
@@ -130,7 +147,7 @@ stateDiagram-v2
 
 | 무엇의 상태 | 값 | 어디에 있나 |
 |---|---|---|
-| **작업 status** (이 문서의 대상) | 목표 모델: `planned`·`running`·`review`·`completed`·`unknown` | 슬롯 SQLite `sp_work_tasks.status` — 모니터가 쓰고 앱이 읽는다. 현행 코드가 읽는 값은 여섯 개다(「현행 구현과의 차이」) |
+| **작업 status** (이 문서의 대상) | 목표 모델: `planned`·`running`·`review`·`completed`·`unknown` | 슬롯 SQLite `sp_work_tasks.status` — 모니터가 쓰고 앱이 읽는다. 앱이 답하고 보이는 값은 이 다섯이고, 상위 원장 도메인은 `blocked` 를 포함해 여섯이다(「현행 구현과 상위 계약 호환」) |
 | **모니터 실행상태** | `desired_state`·`observed_state`·`operation`·`generation`, `schedule_lost` 등 | 작업·세션과 **분리된** monitor 레코드. 작업 status 가 아니며 패널에 나오지 않는다 |
 | **턴·세션 실행상태** | 턴: `queued`·`running`·`done`(`lane_answer`) / 세션: 실행 중·대기·아카이브됨 | 턴과 세션의 수명주기다. 패널에서는 「읽을 수 없는 원장」(시나리오 6)으로만 드러난다 |
 
@@ -170,7 +187,7 @@ stateDiagram-v2
 
 | | 누가 정하나 | 이 레포에서 테스트할 수 있나 |
 |---|---|---|
-| 상태 **값의 집합**(여섯 개)과 그 밖의 값이 `unknown` 이 되는 것 | 플랫폼 계약 + 백엔드 `normaliseStatus` | **그렇다** — 시나리오 2 |
+| 앱이 답하는 **값의 집합**(다섯 개)과, 원장의 `blocked` 가 `review` 로·그 밖의 값이 `unknown` 이 되는 것 | 플랫폼 계약(도메인 여섯) + 백엔드 `normaliseStatus`(읽어서 다섯으로) | **그렇다** — 시나리오 2 |
 | 그 값이 패널에서 어떤 라벨·순서·강조로 보이는지 | 이 레포(안드로이드 `ChatTasks.kt`·`ChatTaskPanel.kt`) | **그렇다** — 시나리오 1·5 |
 | 사용자가 고른 칩·완료 숨김이 원장을 바꾸지 않는 것 | 이 레포(`ChatTaskFilter`) | **그렇다** — 시나리오 3·4 |
 | 읽을 수 없는 원장이 「작업 없음」으로 보이지 않는 것 | 백엔드 상태 코드 + 앱의 분기 | **그렇다** — 시나리오 6 |
@@ -322,7 +339,7 @@ AC10 의 나머지 — 모니터가 쓴 **선택지**(`stale_choice` 거부·초
   `backend/internal/chat/tasks_test.go` — `TestTasks_CarryTheAgreedModelAndWalkEveryPage`
 
 
-### 시나리오 2: 여섯 중 하나가 아닌 상태는 「알 수 없음」으로 보이고, 추측되지 않는다
+### 시나리오 2: 아는 값이 아닌 상태는 「알 수 없음」으로 보이고, 추측되지 않는다
 - **사전 조건**: 원장에 작업 네 건이 있고 `status` 가 각각 `REVIEW`(대문자)·` running `(앞뒤 공백)·`deploying`·
   빈 문자열이다(fixture — 플랫폼이 쓸 수 있는 모양을 흉내 낸 값이고, 실 원장에 적용하지 않는다).
 - **실행 단계**:
@@ -338,11 +355,14 @@ AC10 의 나머지 — 모니터가 쓴 **선택지**(`stale_choice` 거부·초
   - 4단계: 「알 수 없음」 두 줄은 그대로 남는다(완료가 아니다).
   - 이 결과는 세 주체의 행동이 아니라 **백엔드의 정규화**로 생긴다 — 모니터가 「알 수 없음」을 고른 것이 아니다.
 - **검증 AC**: AC10
-- **구현 상태**: 구현됨 — `normaliseStatus` 가 소문자·트림 후 여섯 값과 맞춰 보고 아니면 `unknown` 을 돌려주며
-  (`backend/internal/chat/tasks.go`), 앱의 `ChatTaskStatus.label` 은 아는 다섯 값만 번역하고 나머지를
-  「알 수 없음」으로 적는다. `unknown` 은 `needsAttention` 이 아니고 숨김 대상도 아니다.
-- **관련 코드 테스트**: `backend/internal/chat/tasks_test.go` — `TestTasks_UnknownStatusIsNotGuessed`,
-  `android/app/src/test/java/com/dlddu/pocketaide/chat/ChatTasksTest.kt` — `anUnknownStatusIsLabelledNotGuessed`
+- **구현 상태**: 구현됨 — `normaliseStatus` 가 소문자·트림 후 원장의 `blocked` 를 `review` 로 접고 아는 다섯 값과
+  맞춰 보고 어느 것도 아니면 `unknown` 을 돌려주며(`backend/internal/chat/tasks.go`), 앱의
+  `ChatTaskStatus.label` 은 그 다섯 값만 번역하고 나머지를 「알 수 없음」으로 적는다. `unknown` 은
+  `needsAttention` 이 아니고 숨김 대상도 아니다. 접는 값은 `blocked` 하나여서 `planned`·`running` 은 그대로 지난다.
+- **관련 코드 테스트**: `backend/internal/chat/tasks_test.go` — `TestTasks_UnknownStatusIsNotGuessed`·
+  `TestTasks_OnlyBlockedFolds`·`TestTasks_BlockedAndReviewAreOneJudgmentStatus`,
+  `android/app/src/test/java/com/dlddu/pocketaide/chat/ChatTasksTest.kt` — `anUnknownStatusIsLabelledNotGuessed`·
+  `onlyTheLedgersOtherNameForAJudgmentFolds`·`waitingWorkIsNotDrawnAsSomethingToDecide`
 
 
 ### 시나리오 3: 사용자가 칩과 완료 숨김을 함께 걸어도 원장은 바뀌지 않는다
@@ -432,8 +452,8 @@ AC10 의 나머지 — 모니터가 쓴 **선택지**(`stale_choice` 거부·초
   상태가 「손댈 것」이거나 둘 중 하나가 적혀 있을 때만 그려지고 값이 비면 「미기록」을 붙인다
   (`ChatTaskPanel.kt` `Note`; 「묻는 것」은 열린 턴의 `waiting.question`, 「완료 기준」은 작업의
   `completion_criteria`). 반면 **권한 부족을 `review` 하나로 모으는 것과 1·6·7단계의 기록·확인은 모니터 쪽
-  운영**이라 이 레포에서 만들 수 없고, 관측은 다음 조회가 가져오는 값으로만 한다. 현행 코드와의 차이는
-  「현행 구현과의 차이」 절을 따른다.
+  운영**이라 이 레포에서 만들 수 없고, 관측은 다음 조회가 가져오는 값으로만 한다. 상위 계약 도메인과 앱이
+  보이는 값의 범위 차이는 「현행 구현과 상위 계약 호환」 절을 따른다.
 - **관련 코드 테스트**: `android/app/src/test/java/com/dlddu/pocketaide/chat/ChatTasksTest.kt` —
   `loadShowsTheLedgerWithStatusStageAndNote`, `backend/internal/chat/tasks_test.go` —
   `TestTasks_WaitingComesFromTheLatestTurn`·`TestTasks_OfferedChoicesCarryTheirTurn`,

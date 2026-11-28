@@ -58,7 +58,9 @@ class ChatTaskTurnsRenderTest {
     private val task = ChatTask(
         id = "t1",
         title = "옮겨 온 작업",
-        status = ChatTaskStatus.BLOCKED,
+        // 옮겨 온 기록은 원장의 옛 이름으로 적혀 있고, 화면에는 사람이 판단할
+        // 상태 하나(검토)로 선다.
+        status = ChatTaskStatus.normalise("blocked"),
     )
 
     private val finished = ChatTaskTurn(

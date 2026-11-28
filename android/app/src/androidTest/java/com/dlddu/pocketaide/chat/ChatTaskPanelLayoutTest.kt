@@ -38,8 +38,10 @@ class ChatTaskPanelLayoutTest {
     private val tasks = mutableStateOf(
         ChatTasksUiState(
             sessionId = "cx1",
-            tasks = listOf(ChatTask(id = "t1", title = "막힌 작업", status = ChatTaskStatus.BLOCKED)),
-            counts = mapOf(ChatTaskStatus.BLOCKED to 1),
+            // 원장의 옛 이름(`blocked`)으로 적힌 기록. 사람이 판단할 상태는
+            // 하나뿐이므로 배지도 칩도 검토 하나로 선다.
+            tasks = listOf(ChatTask(id = "t1", title = "막힌 작업", status = ChatTaskStatus.normalise("blocked"))),
+            counts = mapOf(ChatTaskStatus.REVIEW to 1),
             hasLoaded = true,
         ),
     )
@@ -145,14 +147,17 @@ class ChatTaskPanelLayoutTest {
     }
 
     @Test
-    fun theBlockedTaskShowsItsStatusInTheWideLayout() {
+    fun theTaskWaitingOnAPersonShowsOneReviewStatusInTheWideLayout() {
         start(800.dp)
         // 작업 카드는 눌러서 상세로 들어가는 버튼이 되었고, 그래서 자손의
         // 의미를 자기에게 합친다(MergeDescendants) — 배지는 합쳐진 트리에 자기
         // 노드가 없으므로 합치지 않은 트리에서 본다.
-        compose.onNodeWithTag("chat.tasks.item.status.blocked", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.item.status.review", useUnmergedTree = true).assertIsDisplayed()
         // 상태별 개수는 그 상태로 좁히는 칩이 들고 있다.
-        compose.onNodeWithTag("chat.tasks.filter.blocked").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.filter.review").assertIsDisplayed()
+        // 같은 판단에 칩·배지가 둘이면 같은 일이 두 자리에서 세어진다.
+        compose.onAllNodesWithTagCount("chat.tasks.item.status.blocked", 0)
+        compose.onAllNodesWithTagCount("chat.tasks.filter.blocked", 0)
     }
 
     @Test

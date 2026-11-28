@@ -46,10 +46,13 @@ class ChatTaskPanelInteractionTest {
     private var turnMores = 0
     private var turnRetries = 0
 
+    // 원장의 옛 이름(`blocked`)으로 적힌 기록. 사람이 판단할 상태는 하나뿐이라
+    // 화면에는 검토로만 서고, 같은 칩·같은 배지 아래에서 「검토 대기」와 함께
+    // 세어진다 — 같은 판단을 두 칩으로 쪼개지 않는다.
     private val blocked = ChatTask(
         id = "t-blocked",
         title = "막힌 작업",
-        status = ChatTaskStatus.BLOCKED,
+        status = ChatTaskStatus.normalise("blocked"),
         completionCriteria = "CI 가 초록이면 끝",
         // 「묻는 것」은 세션이 실제로 물은 question 이다 — 원장의 자유문 사유와
         // 다음 행동은 부모의 기장이었고 사람이 읽는 것이 아니었다.
@@ -66,8 +69,7 @@ class ChatTaskPanelInteractionTest {
             ChatTask(id = "t-done2", title = "끝난 작업 2", status = ChatTaskStatus.COMPLETED),
         ),
         counts = mapOf(
-            ChatTaskStatus.BLOCKED to 1,
-            ChatTaskStatus.REVIEW to 1,
+            ChatTaskStatus.REVIEW to 2,
             ChatTaskStatus.RUNNING to 1,
             ChatTaskStatus.COMPLETED to 2,
         ),
@@ -83,12 +85,15 @@ class ChatTaskPanelInteractionTest {
         chat: ChatUiState = ChatUiState(hasLoaded = true),
         taskRequest: ChatTaskRequestUiState = ChatTaskRequestUiState(),
         turns: ChatTaskTurnsUiState = ChatTaskTurnsUiState(taskId = "t-blocked", hasLoaded = true),
+        // 화면이 복원하는 그 자리의 보는 방식. 기기에 저장된 값은 마지막으로
+        // 돌았던 빌드가 쓴 것이므로, 이 칸으로 그 복원을 그대로 세운다.
+        filter: ChatTaskFilter = ChatTaskFilter(),
     ) {
         compose.setContent {
             // 넓은 창이면서 상태 칩이 한 줄에 다 들어오는 폭 — 칩이 가로
             // 스크롤 밖으로 밀려나면 누를 수 없어 테스트가 레이아웃 탓에 깨진다.
             DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(1200.dp, 900.dp))) {
-                var filter by remember { mutableStateOf(ChatTaskFilter()) }
+                var chosen by remember { mutableStateOf(filter) }
                 var openId by remember { mutableStateOf<String?>(null) }
                 var request by remember { mutableStateOf("") }
                 // 화면이 쓰는 그 규칙을 그대로 둔다(`chatTaskPickHolds`): 고른
@@ -114,8 +119,8 @@ class ChatTaskPanelInteractionTest {
                     onTogglePanel = {},
                     pollTasks = {},
                     taskListState = rememberLazyListState(),
-                    filter = filter,
-                    onFilterChange = { filter = it },
+                    filter = chosen,
+                    onFilterChange = { chosen = it },
                     openTask = tasks.tasks.firstOrNull { it.id == openId },
                     onOpenTask = {
                         openId = it.id
@@ -187,13 +192,40 @@ class ChatTaskPanelInteractionTest {
 
         compose.onNodeWithTag("chat.tasks.filter.review").performClick()
         compose.waitForIdle()
-        assertEquals("검토 한 줄만 남는다", 1, rows())
+        // 사람이 판단할 일은 칩 하나가 모두 모은다 — 옛 이름으로 적힌 줄도
+        // 같은 칩에 들어오므로, 따로 누를 칩을 찾을 일이 없다.
+        assertEquals("검토 두 줄이 남는다", 2, rows())
         compose.onNodeWithText("검토 대기").assertIsDisplayed()
+        compose.onNodeWithText("막힌 작업").assertIsDisplayed()
+        // 같은 판단에 칩이 둘이면 개수가 갈라진다. 옛 이름의 칩은 없다.
+        compose.onAllNodesWithTag("chat.tasks.filter.blocked").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.filter.review").assertTextContains("검토 2", substring = true)
 
         // 고른 칩을 다시 누르면 전체로 돌아가되, 완료 숨김은 그대로다.
         compose.onNodeWithTag("chat.tasks.filter.review").performClick()
         compose.waitForIdle()
         assertEquals(3, rows())
+    }
+
+    /**
+     * 기기에 「차단」을 고른 채로 저장된 필터가 돌아와도 그 일은 보인다 —
+     * 지금 화면의 검토 칩이 고른 것으로 서고, 줄이 사라지지 않는다. 그대로
+     * 두면 누를 칩이 없는 상태로 목록이 좁혀져 일이 없어진 것처럼 보인다.
+     */
+    @Test
+    fun aFilterSavedUnderTheOldNameComesBackAsTheReviewChip() {
+        start(filter = ChatTaskFilter(ChatTaskStatus.normaliseFilter("blocked")))
+
+        assertEquals("저장된 좁힘이 그대로 걸린다", 2, rows())
+        compose.onNodeWithText("막힌 작업").assertIsDisplayed()
+        compose.onNodeWithText("검토 대기").assertIsDisplayed()
+        compose.onAllNodesWithTag("chat.tasks.empty.filtered").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.filter.blocked").assertCountEquals(0)
+
+        // 돌아온 칩을 눌러 전체로 넓힐 수 있다 — 되돌릴 길이 있는 좁힘이다.
+        compose.onNodeWithTag("chat.tasks.filter.review").performClick()
+        compose.waitForIdle()
+        assertEquals(5, rows())
     }
 
     // 숨겨서 비었을 때는 일이 사라진 것이 아니라고 말하고, 한 번에 되돌린다.
