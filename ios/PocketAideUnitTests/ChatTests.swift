@@ -109,4 +109,71 @@ final class ChatLinkTests: XCTestCase {
     func testIgnoresTextWithoutAddresses() {
         XCTAssertEqual(links("no links here, just https:// and words"), [])
     }
+
+    // PRD-1 AC11: the conversation says which session answers it, which is what
+    // the confirmation names — and an answer from before that field existed
+    // decodes as "no session yet" rather than failing.
+    func testDecodesTheSessionAnsweringTheConversation() throws {
+        let named = #"{"conversation":{"id":7,"title":"q","session_id":"cx1"},"messages":[],"pending":null}"#
+        XCTAssertEqual(try JSONDecoder().decode(ChatThread.self, from: Data(named.utf8)).conversation.sessionID, "cx1")
+
+        let absent = #"{"conversation":{"id":7,"title":"q"},"messages":[],"pending":null}"#
+        XCTAssertEqual(try JSONDecoder().decode(ChatThread.self, from: Data(absent.utf8)).conversation.sessionID, "")
+    }
+
+    // The result is read back from the platform, so the archived case says the
+    // environment is handed back and names when and how big — and the accepted
+    // case says only that, without claiming the environment is already back.
+    func testArchiveResultSaysArchivedOrOnlyAccepted() throws {
+        let archived = try JSONDecoder().decode(
+            ChatArchiveResult.self,
+            from: Data(#"{"session_id":"cx1","state":"snapshot","archived":true,"checkpoint":{"createdAt":"2026-11-28T06:00:00Z","sizeBytes":2048}}"#.utf8)
+        )
+        XCTAssertEqual(archived.sessionID, "cx1")
+        XCTAssertEqual(archived.state, "snapshot")
+        XCTAssertTrue(archived.archived)
+        XCTAssertEqual(archived.checkpoint?.sizeBytes, 2048)
+        XCTAssertTrue(archived.notice.contains("아카이브됐어요"))
+        // The conversation is not what was handed back.
+        XCTAssertTrue(archived.notice.contains("복원"))
+
+        let accepted = try JSONDecoder().decode(ChatArchiveResult.self, from: Data(#"{"session_id":"cx1","archived":false}"#.utf8))
+        XCTAssertFalse(accepted.archived)
+        XCTAssertTrue(accepted.notice.contains("요청했어요"))
+        XCTAssertFalse(accepted.notice.contains("아카이브됐어요"))
+    }
+
+    // Each refusal the app explains differently is read by code, because two
+    // share 409 and two share 503.
+    func testArchiveRefusalsAreToldApartByCode() {
+        let cases: [(Int, String, ChatArchiveError)] = [
+            (409, #"{"code":"chat_archive_no_session"}"#, .noSession),
+            (409, #"{"code":"chat_archive_session_changed"}"#, .sessionChanged),
+            (409, #"{"code":"chat_archive_queued"}"#, .queued),
+            (409, #"{"code":"chat_archive_busy"}"#, .busy),
+            (404, #"{"code":"chat_archive_session_gone"}"#, .gone),
+            (503, #"{"code":"chat_archive_disabled"}"#, .disabled),
+            (503, #"{"error":"auth pool exhausted","code":"auth_pool_exhausted"}"#, .slotsBusy),
+            (503, #"{"error":"down"}"#, .unreachable),
+            (500, #"{"error":"nope"}"#, .failed),
+        ]
+        for (status, body, want) in cases {
+            XCTAssertEqual(ChatArchiveError(APIError.badStatus(status, body)), want, "\(status) \(body)")
+        }
+
+        // The gate being off must not be told as a loss (PRD-11 AC8).
+        XCTAssertTrue(ChatArchiveError.disabled.message.contains("사라지지 않아요"))
+        // Only the two that mean the screen's session is stale re-read.
+        for refusal in [ChatArchiveError.sessionChanged, .gone] {
+            XCTAssertTrue(refusal.rereadsConversation, "\(refusal)")
+        }
+        for refusal in [ChatArchiveError.noSession, .queued, .busy, .disabled, .slotsBusy, .unreachable, .failed] {
+            XCTAssertFalse(refusal.rereadsConversation, "\(refusal)")
+        }
+    }
+
+    func testArchivePayloadNamesTheSession() throws {
+        let raw = try JSONEncoder().encode(ChatArchivePayload(sessionID: "cx1"))
+        XCTAssertEqual(String(data: raw, encoding: .utf8), #"{"session_id":"cx1"}"#)
+    }
 }

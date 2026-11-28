@@ -3,15 +3,20 @@ import PocketAideAPI
 import SwiftUI
 
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
-// two actions sync the conversation on demand and refresh plugin skills (one
-// conversation, no "new chat"), and the composer's round button sends (voice
-// mode is not built yet).
+// three actions sync the conversation on demand, refresh plugin skills (one
+// conversation, no "new chat") and archive the session answering it, and the
+// composer's round button sends (voice mode is not built yet).
 struct ChatTab: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = ChatViewModel(api: nil)
     @State private var draft = ""
     @State private var followsLatest = true
+    // The session the confirmation was drawn for. Held rather than read again
+    // when the person confirms: drawing the confirmation and tapping it are two
+    // steps, and if another session took over the conversation in between the
+    // server must refuse rather than archive the one that took over (AC11).
+    @State private var archiveTarget: String?
 
     private let area: DesignTokens.Area = .aiChat
     private static let bottomAnchor = "chat.messages.bottom"
@@ -34,6 +39,7 @@ struct ChatTab: View {
                 HStack(spacing: DesignTokens.Spacing.sm) {
                     syncButton
                     refreshButton
+                    archiveButton
                 }
             }
             Rectangle().fill(DesignTokens.Color.rule(area)).frame(height: 1)
@@ -44,10 +50,43 @@ struct ChatTab: View {
             if let error = viewModel.error {
                 banner(error.message, color: DesignTokens.StatusColor.failure, identifier: "chat.error")
             }
+            // Its own banner, dismissable: an archive that did not happen is
+            // about the action the person just took, not about the conversation
+            // being broken — and 「아카이브 꺼짐」 is not a failure at all
+            // (PRD-11 AC8).
+            if let archiveError = viewModel.archiveError {
+                banner(
+                    archiveError.message,
+                    color: archiveError == .disabled ? DesignTokens.Color.ink(area) : DesignTokens.StatusColor.failure,
+                    identifier: "chat.archive.error"
+                )
+                .onTapGesture { viewModel.archiveError = nil }
+            }
             messageList
             composer
         }
         .background(DesignTokens.Color.surface(area).ignoresSafeArea())
+        // Asks before handing the environment back (PRD-1 AC11). It says what
+        // goes and what stays: the environment is returned, and the
+        // conversation is not — the next message restores this very session and
+        // carries on (AC4). It is not the sessions tab's delete, so it does not
+        // borrow its words about something that cannot be undone.
+        .confirmationDialog(
+            "이 대화를 맡은 세션을 아카이브할까요?",
+            isPresented: Binding(get: { archiveTarget != nil }, set: { if !$0 { archiveTarget = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("아카이브") {
+                guard let target = archiveTarget else { return }
+                archiveTarget = nil
+                Task { await viewModel.archive(sessionID: target) }
+            }
+            .accessibilityIdentifier("chat.archive.confirm")
+            Button("취소", role: .cancel) { archiveTarget = nil }
+                .accessibilityIdentifier("chat.archive.cancel")
+        } message: {
+            Text("환경을 반납하고 작업 내용은 보관해요. 대화 기록은 그대로이고, 다음 메시지를 보내면 이 세션이 복원되어 이어져요.")
+        }
         .task(id: scenePhase) {
             viewModel.replaceAPI(auth.api)
             guard scenePhase == .active else { return }
@@ -76,6 +115,25 @@ struct ChatTab: View {
             accessibilityIdentifier: "chat.refresh.button"
         ) {
             Task { await viewModel.refreshPlugins() }
+        }
+    }
+
+    // Disabled until a session answers this conversation (before the first
+    // message there is nothing to hand back) and while the server would refuse
+    // anyway. A tap only opens the confirmation, and the loading state covers
+    // the archive itself — so repeated taps while one is in flight send
+    // nothing (PRD-1 AC11).
+    private var archiveButton: some View {
+        headerIconButton(
+            systemImage: "archivebox",
+            isLoading: viewModel.isArchiving,
+            enabled: viewModel.canArchive,
+            accessibilityLabel: "이 대화를 맡은 세션 아카이브",
+            accessibilityIdentifier: "chat.archive.button"
+        ) {
+            let session = viewModel.sessionID
+            guard !session.isEmpty else { return }
+            archiveTarget = session
         }
     }
 

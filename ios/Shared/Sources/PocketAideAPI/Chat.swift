@@ -7,10 +7,27 @@ import Foundation
 public struct ChatConversation: Codable, Hashable, Sendable {
     public let id: Int64
     public let title: String
+    /// The codex session answering this conversation, empty until the first
+    /// message opens one. The screen names it when it archives (PRD-1 AC11),
+    /// so the archive cannot land on a session that took over since.
+    public let sessionID: String
 
-    public init(id: Int64, title: String) {
+    enum CodingKeys: String, CodingKey {
+        case id, title
+        case sessionID = "session_id"
+    }
+
+    public init(id: Int64, title: String, sessionID: String = "") {
         self.id = id
         self.title = title
+        self.sessionID = sessionID
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int64.self, forKey: .id)
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        sessionID = try container.decodeIfPresent(String.self, forKey: .sessionID) ?? ""
     }
 }
 
@@ -225,4 +242,5 @@ public extension APIClient {
     func refreshChatPlugins() async throws -> ChatPluginRefresh {
         try await post("/api/chat/refresh-plugins", body: ChatEmptyPayload(), authenticated: true)
     }
+
 }

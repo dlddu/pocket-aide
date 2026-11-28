@@ -56,6 +56,20 @@ type fakePlatform struct {
 	// nothing but read, so a limit on the follow is a deadline on its reads.
 	boundedReads int
 	firstBound   time.Duration
+	// snapshotStatus is the status an archive request answers; 0 = 200. Its
+	// body is snapshotBody, which the 503 cases need — the platform tells
+	// "archiving is off" and "no login slots left" apart by body alone.
+	snapshotStatus int
+	snapshotBody   string
+	// snapshots is every session the engine asked to archive, in order, so a
+	// test can show whose session an archive reached.
+	snapshots []string
+	// snapshotHold, when set, makes an archive wait for it before answering.
+	snapshotHold chan struct{}
+	// getStatus is the status a session record read answers; 0 = 200. gets is
+	// every session whose record was read.
+	getStatus int
+	gets      []string
 }
 
 type fakeSession struct {
@@ -65,6 +79,9 @@ type fakeSession struct {
 	transcript     []byte
 	turns          int
 	prompts        []string
+	// archived is the platform's own state after a snapshot. There is no
+	// in-between: the record reads snapshot or it does not.
+	archived bool
 }
 
 func newFakePlatform() *fakePlatform {
@@ -180,6 +197,45 @@ func (f *fakePlatform) Do(ctx context.Context, method, path string, body []byte)
 		}
 		raw, _ := json.Marshal(map[string]any{"payload": string(s.transcript[req.Offset:]), "nextOffset": len(s.transcript)})
 		return http.StatusOK, raw, nil
+	case method == http.MethodPost && len(parts) == 3 && parts[2] == "snapshot":
+		s, ok := f.sessions[parts[1]]
+		if !ok {
+			return http.StatusNotFound, nil, nil
+		}
+		f.snapshots = append(f.snapshots, parts[1])
+		// Held with the lock dropped, so a test can look at the engine while
+		// the archive is still in flight — which is the only moment the hold
+		// it took is observable.
+		if f.snapshotHold != nil {
+			hold := f.snapshotHold
+			f.mu.Unlock()
+			<-hold
+			f.mu.Lock()
+		}
+		if f.snapshotStatus != 0 {
+			return f.snapshotStatus, []byte(f.snapshotBody), nil
+		}
+		s.archived = true
+		return http.StatusOK, []byte(`{}`), nil
+	case method == http.MethodGet && len(parts) == 2 && parts[1] != "":
+		s, ok := f.sessions[parts[1]]
+		if !ok {
+			return http.StatusNotFound, nil, nil
+		}
+		f.gets = append(f.gets, parts[1])
+		if f.getStatus != 0 {
+			return f.getStatus, nil, nil
+		}
+		out := map[string]any{
+			"id": parts[1], "name": s.name, "workloadType": s.workload,
+			"createdAt": s.createdAt, "state": "active",
+		}
+		if s.archived {
+			out["state"] = "snapshot"
+			out["checkpoint"] = map[string]any{"createdAt": "2026-11-28T06:00:00Z", "sizeBytes": 2048}
+		}
+		raw, _ := json.Marshal(out)
+		return http.StatusOK, raw, nil
 	case len(parts) == 4 && parts[2] == "plugins" && parts[3] == "refresh":
 		if _, ok := f.sessions[parts[1]]; !ok {
 			return http.StatusNotFound, nil, nil
@@ -197,6 +253,23 @@ func (f *fakePlatform) session(id string) *fakeSession {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return f.sessions[id]
+}
+
+// archiveCalls is the sessions asked to archive so far, copied under the lock
+// so a test can watch it while an archive is in flight.
+func (f *fakePlatform) archiveCalls() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]string(nil), f.snapshots...)
+}
+
+// readCount is how many transcript reads happened. An archive must add none:
+// the platform's read restores a session that was just archived (PRD-11
+// 「출력 전송 방식」).
+func (f *fakePlatform) readCount() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.reads
 }
 
 func newEngine(t *testing.T) (*chat.Store, *chat.Engine, *fakePlatform) {

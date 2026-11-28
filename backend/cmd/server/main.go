@@ -213,6 +213,7 @@ func main() {
 		p.Post("/api/chat/tasks/{taskID}/requests", handlers.PostChatTaskRequest(chatEngine))
 		p.Get("/api/chat/tasks/{taskID}/turns", handlers.GetChatTaskTurns(chatEngine))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
+		p.Post("/api/chat/archive", handlers.ArchiveChatSession(chatEngine))
 		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))
 		p.Get("/api/sessions", handlers.ListSessions(sessionsPlatform))
 		p.Post("/api/sessions", handlers.CreateSession(sessionsPlatform))

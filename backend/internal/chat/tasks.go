@@ -217,10 +217,10 @@ func (e *Engine) Tasks(ctx context.Context, userID int64) (TaskList, error) {
 	if err != nil {
 		return TaskList{}, err
 	}
-	if conv.platformSessionID == "" {
+	if conv.PlatformSessionID == "" {
 		return emptyTaskList(""), nil
 	}
-	return e.tasksOf(ctx, conv.platformSessionID)
+	return e.tasksOf(ctx, conv.PlatformSessionID)
 }
 
 func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error) {

@@ -27,13 +27,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,9 +79,9 @@ import com.dlddu.pocketaide.designsystem.components.AreaLabel
 import com.dlddu.pocketaide.designsystem.components.PlainTextField
 
 // docs/mockups/screen-chat-text.html — header, bubbles, composer. The header's
-// two actions sync the conversation on demand and refresh plugin skills (one
-// conversation, no "new chat"), and the composer's round button sends (voice
-// mode is not built yet).
+// three actions sync the conversation on demand, refresh plugin skills (one
+// conversation, no "new chat") and archive the session answering it, and the
+// composer's round button sends (voice mode is not built yet).
 private val CHAT_AREA = Area.AiChat
 private val HEADER_BUTTON_SIZE = 36.dp
 private val HEADER_ICON_SIZE = 16.dp
@@ -148,6 +151,13 @@ fun ChatScreen(api: ApiClient) {
     // collapsing the panel and stepping into a task and back.
     val messageList = rememberLazyListState()
     val taskList = rememberLazyListState()
+    // The session the confirmation was drawn for. Held rather than read again
+    // when the person confirms: drawing the confirmation and tapping it are two
+    // steps, and if another session took over the conversation in between the
+    // server must refuse rather than archive the one that took over (AC11).
+    // Not saved across a fold or a rotation — a confirmation nobody is looking
+    // at any more is one the person should be shown again.
+    var archiveTarget by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.pollWhileVisible() }
@@ -179,7 +189,11 @@ fun ChatScreen(api: ApiClient) {
         onSend = { viewModel.send(draft) { draft = "" } },
         onSync = viewModel::sync,
         onRefresh = viewModel::refreshPlugins,
+        // The tap only asks; nothing is handed back until the confirmation is
+        // answered. The session it names is the one on screen right now.
+        onArchiveRequested = { state.sessionId.takeIf { it.isNotEmpty() }?.let { archiveTarget = it } },
         onDismissNotice = viewModel::dismissNotice,
+        onDismissArchiveError = viewModel::dismissArchiveError,
         onCancelQueued = viewModel::cancelQueued,
         listState = messageList,
         panelOpen = panelOpen,
@@ -277,6 +291,56 @@ fun ChatScreen(api: ApiClient) {
             }
         },
     )
+
+    archiveTarget?.let { target ->
+        ArchiveConfirmDialog(
+            onDismiss = { archiveTarget = null },
+            onConfirm = {
+                archiveTarget = null
+                viewModel.archive(target)
+            },
+        )
+    }
+}
+
+/**
+ * Asks before handing the environment back (PRD-1 AC11).
+ *
+ * It says what goes and what stays: the environment is returned, and the
+ * conversation is not — the next message restores this very session and
+ * carries on (AC4). It is not the sessions tab's delete, so it does not
+ * borrow its words about something that cannot be undone.
+ */
+@Composable
+private fun ArchiveConfirmDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    val ink = DesignTokens.Colors.ink(CHAT_AREA)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = DesignTokens.Colors.surface(CHAT_AREA),
+        titleContentColor = ink,
+        textContentColor = ink.copy(alpha = CHIP_TEXT_OPACITY),
+        title = { Text("이 대화를 맡은 세션을 아카이브할까요?") },
+        text = {
+            Text(
+                "환경을 반납하고 작업 내용은 보관해요. 대화 기록은 그대로이고, " +
+                    "다음 메시지를 보내면 이 세션이 복원되어 이어져요.",
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                modifier = Modifier.testTag("chat.archive.confirm"),
+            ) {
+                Text("아카이브", color = DesignTokens.Colors.accent(CHAT_AREA))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("chat.archive.cancel")) {
+                Text("취소", color = ink.copy(alpha = CHIP_TEXT_OPACITY))
+            }
+        },
+        modifier = Modifier.testTag("chat.archive.confirm.dialog"),
+    )
 }
 
 /**
@@ -296,7 +360,11 @@ internal fun ChatPanes(
     onSend: () -> Unit,
     onSync: () -> Unit,
     onRefresh: () -> Unit,
+    // Asks for the confirmation; the archive itself happens only once it is
+    // answered (PRD-1 AC11).
+    onArchiveRequested: () -> Unit,
     onDismissNotice: () -> Unit,
+    onDismissArchiveError: () -> Unit,
     onCancelQueued: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean,
@@ -351,7 +419,9 @@ internal fun ChatPanes(
                 onSend = onSend,
                 onSync = onSync,
                 onRefresh = onRefresh,
+                onArchiveRequested = onArchiveRequested,
                 onDismissNotice = onDismissNotice,
+                onDismissArchiveError = onDismissArchiveError,
                 onCancelQueued = onCancelQueued,
                 listState = listState,
                 // The toggle belongs to the wide layout only; a narrow window
@@ -423,7 +493,9 @@ private fun Conversation(
     onSend: () -> Unit,
     onSync: () -> Unit,
     onRefresh: () -> Unit,
+    onArchiveRequested: () -> Unit,
     onDismissNotice: () -> Unit,
+    onDismissArchiveError: () -> Unit,
     onCancelQueued: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean?,
@@ -431,12 +503,30 @@ private fun Conversation(
     modifier: Modifier,
 ) {
     Column(modifier.fillMaxHeight().testTag("chat.messages.pane")) {
-        Header(state, onSync = onSync, onRefresh = onRefresh, panelOpen = panelOpen, onTogglePanel = onTogglePanel)
+        Header(
+            state,
+            onSync = onSync,
+            onRefresh = onRefresh,
+            onArchiveRequested = onArchiveRequested,
+            panelOpen = panelOpen,
+            onTogglePanel = onTogglePanel,
+        )
         Box(Modifier.fillMaxWidth().height(RULE_WIDTH).background(DesignTokens.Colors.rule(CHAT_AREA)))
         state.notice?.let {
             Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = onDismissNotice)
         }
         state.error?.let { Banner(it.message, DesignTokens.StatusColors.failure(), tag = "chat.error", onDismiss = null) }
+        // Its own banner, dismissable: an archive that did not happen is about
+        // the action the person just took, not about the conversation being
+        // broken — and 「아카이브 꺼짐」 is not a failure at all (PRD-11 AC8).
+        state.archiveError?.let {
+            Banner(
+                it.message,
+                if (it == ChatArchiveError.DISABLED) DesignTokens.Colors.ink(CHAT_AREA) else DesignTokens.StatusColors.failure(),
+                tag = "chat.archive.error",
+                onDismiss = onDismissArchiveError,
+            )
+        }
         Messages(state, Modifier.weight(1f), listState, onCancelQueued = onCancelQueued)
         Composer(draft = draft, onDraftChange = onDraftChange, state = state, onSend = onSend)
     }
@@ -447,6 +537,7 @@ private fun Header(
     state: ChatUiState,
     onSync: () -> Unit,
     onRefresh: () -> Unit,
+    onArchiveRequested: () -> Unit,
     // panelOpen is null in a narrow window, which has no second pane to open,
     // so no toggle is drawn there at all.
     panelOpen: Boolean? = null,
@@ -486,8 +577,8 @@ private fun Header(
         if (panelOpen != null) {
             PanelToggle(panelOpen, onTogglePanel, Modifier.padding(end = DesignTokens.Spacing.sm))
         }
-        // 동기화·스킬 새로고침 두 아이콘 버튼을 간격으로 묶는다
-        // (docs/design-system/components.md ScreenHeader action 슬롯).
+        // 동기화·스킬 새로고침·세션 아카이브 아이콘 버튼을 간격으로 묶는다
+        // (docs/design-system/components.md ScreenHeader action 슬롯, 허용 S10).
         Row(horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
             HeaderIconButton(
                 enabled = state.canSync,
@@ -504,6 +595,19 @@ private fun Header(
                 description = "스킬 새로고침",
                 tag = "chat.refresh.button",
                 onClick = onRefresh,
+            )
+            // Disabled until a session answers this conversation (before the
+            // first message there is nothing to hand back) and while the server
+            // would refuse anyway. A tap only opens the confirmation, and the
+            // loading state covers the archive itself — so repeated taps while
+            // one is in flight send nothing (PRD-1 AC11).
+            HeaderIconButton(
+                enabled = state.canArchive,
+                isLoading = state.isArchiving,
+                icon = Icons.Outlined.Archive,
+                description = "이 대화를 맡은 세션 아카이브",
+                tag = "chat.archive.button",
+                onClick = onArchiveRequested,
             )
         }
     }

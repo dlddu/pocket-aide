@@ -32,6 +32,13 @@ type chatPlatform struct {
 	// page it answers otherwise.
 	workStatus int
 	work       string
+	// snapshot forces the archive route's status (0 = 200) and snapshotBody is
+	// the body it sends with it — the 503s are told apart by body alone.
+	snapshot     int
+	snapshotBody string
+	// archived is which sessions read as archived now, which is what the
+	// engine re-reads rather than assuming from its own request.
+	archived map[string]bool
 }
 
 func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +78,22 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_, _ = w.Write([]byte(p.work))
+	case strings.HasSuffix(path, "/snapshot"):
+		if p.snapshot != 0 {
+			w.WriteHeader(p.snapshot)
+			_, _ = w.Write([]byte(p.snapshotBody))
+			return
+		}
+		p.archived[strings.Split(path, "/")[2]] = true
+		_, _ = w.Write([]byte(`{}`))
+	case r.Method == http.MethodGet && strings.HasPrefix(path, "/sessions/") && strings.Count(path, "/") == 2:
+		id := strings.Split(path, "/")[2]
+		out := map[string]any{"id": id, "state": "active"}
+		if p.archived[id] {
+			out["state"] = "snapshot"
+			out["checkpoint"] = map[string]any{"createdAt": "2026-11-28T06:00:00Z", "sizeBytes": 2048}
+		}
+		_ = json.NewEncoder(w).Encode(out)
 	case strings.HasSuffix(path, "/plugins/refresh"):
 		if p.refresh != 0 {
 			w.WriteHeader(p.refresh)
@@ -92,7 +115,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	if _, err := conn.Exec(`INSERT INTO users (id, oidc_sub) VALUES (1, 'u1'), (2, 'u2')`); err != nil {
 		t.Fatalf("seed users: %v", err)
 	}
-	platform := &chatPlatform{transcript: map[string]string{}, work: `{"tasks":[],"next_cursor":""}`}
+	platform := &chatPlatform{transcript: map[string]string{}, work: `{"tasks":[],"next_cursor":""}`, archived: map[string]bool{}}
 	srv := httptest.NewServer(platform)
 	t.Cleanup(srv.Close)
 	store := chat.New(conn)
@@ -104,6 +127,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
 	r.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))
+	r.Post("/api/chat/archive", handlers.ArchiveChatSession(engine))
 	return r, platform, engine
 }
 
@@ -125,6 +149,9 @@ type chatView struct {
 	Conversation struct {
 		ID    int64  `json:"id"`
 		Title string `json:"title"`
+		// The session answering this conversation, which is what an action on
+		// it names so it cannot land on one that took over since (PRD-1 AC11).
+		SessionID string `json:"session_id"`
 	} `json:"conversation"`
 	Messages []struct {
 		Role    string `json:"role"`
@@ -323,5 +350,131 @@ func TestChat_RefreshPlugins(t *testing.T) {
 	platform.mu.Unlock()
 	if rec := chatDo(t, router, http.MethodPost, "/api/chat/refresh-plugins", nil, 1); rec.Code != http.StatusConflict {
 		t.Fatalf("refresh during a turn = %d", rec.Code)
+	}
+}
+
+// archiveChat taps the chat tab's archive the way the apps do: naming the
+// session the person was shown in the confirmation.
+func archiveChat(t *testing.T, router http.Handler, sessionID string, userID int64) *httptest.ResponseRecorder {
+	t.Helper()
+	return chatDo(t, router, http.MethodPost, "/api/chat/archive", map[string]string{"session_id": sessionID}, userID)
+}
+
+// PRD-1 AC11: the archive hands back the environment of the one session
+// answering the caller's conversation, and says what became of it by reading
+// the session back. The conversation and its history stay.
+func TestChat_ArchiveTheSessionAnsweringTheConversation(t *testing.T) {
+	router, _, engine := newChatRouter(t)
+	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "안녕"}, 1)
+	engine.Wait()
+
+	// The apps learn which session to name from the conversation itself.
+	session := getChat(t, router, 1).Conversation.SessionID
+	if session == "" {
+		t.Fatal("the conversation must say which session answers it")
+	}
+
+	rec := archiveChat(t, router, session, 1)
+	body := rec.Body.String()
+	if rec.Code != http.StatusOK {
+		t.Fatalf("archive = %d %s", rec.Code, body)
+	}
+	for _, want := range []string{`"archived":true`, `"state":"snapshot"`, `"session_id":"` + session + `"`, `"createdAt":"2026-11-28T06:00:00Z"`} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("archive body = %s, want %s", body, want)
+		}
+	}
+
+	// Nothing of the conversation is thrown away, and it still points at the
+	// same session, so the next message restores it (PRD-1 AC4).
+	v := getChat(t, router, 1)
+	if len(v.Messages) != 2 || v.Conversation.SessionID != session {
+		t.Fatalf("chat after an archive = %+v, want the history and the session kept", v)
+	}
+}
+
+// Each refusal the app explains differently gets its own code.
+func TestChat_ArchiveRefusals(t *testing.T) {
+	router, platform, engine := newChatRouter(t)
+
+	// Before the first message there is no session to archive.
+	rec := archiveChat(t, router, "cx1", 1)
+	if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), `"code":"chat_archive_no_session"`) {
+		t.Fatalf("archive before the first message = %d %s", rec.Code, rec.Body)
+	}
+
+	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "hi"}, 1)
+	engine.Wait()
+	session := getChat(t, router, 1).Conversation.SessionID
+
+	// The server will not archive "whatever is current" on the caller's behalf.
+	for _, body := range []any{map[string]string{"session_id": ""}, map[string]string{"session_id": "   "}} {
+		rec := chatDo(t, router, http.MethodPost, "/api/chat/archive", body, 1)
+		if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"code":"chat_archive_session_unnamed"`) {
+			t.Fatalf("archive with %v = %d %s", body, rec.Code, rec.Body)
+		}
+	}
+
+	// A session that took over between the confirmation and the tap.
+	rec = archiveChat(t, router, "cx-stale", 1)
+	if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), `"code":"chat_archive_session_changed"`) {
+		t.Fatalf("archive naming a stale session = %d %s", rec.Code, rec.Body)
+	}
+
+	// The platform no longer has it: nothing archived and nothing lost.
+	platform.mu.Lock()
+	platform.snapshot = http.StatusNotFound
+	platform.mu.Unlock()
+	rec = archiveChat(t, router, session, 1)
+	if rec.Code != http.StatusNotFound || !strings.Contains(rec.Body.String(), `"code":"chat_archive_session_gone"`) {
+		t.Fatalf("archive of a gone session = %d %s", rec.Code, rec.Body)
+	}
+
+	// The archive gate being off is a state to explain, not a failure — and
+	// not the platform running out of login slots (PRD-11 AC8·AC11).
+	platform.mu.Lock()
+	platform.snapshot = http.StatusServiceUnavailable
+	platform.snapshotBody = `{"error":"archive disabled"}`
+	platform.mu.Unlock()
+	rec = archiveChat(t, router, session, 1)
+	if rec.Code != http.StatusServiceUnavailable || !strings.Contains(rec.Body.String(), `"code":"chat_archive_disabled"`) {
+		t.Fatalf("archive with the gate off = %d %s", rec.Code, rec.Body)
+	}
+
+	platform.mu.Lock()
+	platform.snapshotBody = `{"error":"auth pool exhausted for codex-chat"}`
+	platform.mu.Unlock()
+	rec = archiveChat(t, router, session, 1)
+	if rec.Code != http.StatusServiceUnavailable || !strings.Contains(rec.Body.String(), `"code":"auth_pool_exhausted"`) {
+		t.Fatalf("archive with no login slots = %d %s, want auth_pool_exhausted", rec.Code, rec.Body)
+	}
+
+	// A body that is not an archive request at all.
+	rec = chatDo(t, router, http.MethodPost, "/api/chat/archive", nil, 1)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"code":"chat_archive_session_unnamed"`) {
+		t.Fatalf("archive with no body = %d %s", rec.Code, rec.Body)
+	}
+}
+
+// The session is derived from the signed in user's own conversation, so one
+// user's tap cannot archive another's session.
+func TestChat_ArchiveStaysWithTheSignedInUser(t *testing.T) {
+	router, _, engine := newChatRouter(t)
+	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "mine"}, 1)
+	engine.Wait()
+	chatDo(t, router, http.MethodPost, "/api/chat/messages", map[string]string{"content": "theirs"}, 2)
+	engine.Wait()
+	first := getChat(t, router, 1).Conversation.SessionID
+	second := getChat(t, router, 2).Conversation.SessionID
+	if first == "" || first == second {
+		t.Fatalf("users must not share a session: %q and %q", first, second)
+	}
+
+	rec := archiveChat(t, router, first, 2)
+	if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), `"code":"chat_archive_session_changed"`) {
+		t.Fatalf("user 2 archiving user 1's session = %d %s", rec.Code, rec.Body)
+	}
+	if v := getChat(t, router, 1); len(v.Messages) != 2 || v.Conversation.SessionID != first {
+		t.Fatalf("user 1's chat = %+v, want it untouched", v)
 	}
 }

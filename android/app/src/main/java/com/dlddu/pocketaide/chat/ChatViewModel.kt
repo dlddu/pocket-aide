@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.api.Conditional
+import com.dlddu.pocketaide.sessions.AgentSessionFormatting
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,10 +25,18 @@ data class ChatUiState(
     val isSending: Boolean = false,
     val isRefreshing: Boolean = false,
     val isSyncing: Boolean = false,
+    val isArchiving: Boolean = false,
     val notice: String? = null,
     val error: ChatError? = null,
+    val archiveError: ChatArchiveError? = null,
 ) {
     val isReplying: Boolean get() = pending != null
+
+    /**
+     * The session answering this conversation, which is what an archive names
+     * (PRD-1 AC11). Empty until the first message opens one.
+     */
+    val sessionId: String get() = conversation?.sessionId ?: ""
 
     // Sending while a reply is in progress queues instead of failing (server
     // decides), so only an already-queued message blocks the composer.
@@ -36,6 +45,16 @@ data class ChatUiState(
     // A plain re-read of the conversation, so it stays available even while a
     // reply is in progress or sending — only guarded against itself (rapid taps).
     val canSync: Boolean get() = hasLoaded && !isSyncing
+
+    /**
+     * Whether there is a session to hand back. Off before the first message
+     * opens one, and off for the states the server refuses anyway — a reply in
+     * progress or a message waiting, either of which would restore the session
+     * right after it was archived (PRD-1 AC11).
+     */
+    val canArchive: Boolean
+        get() = hasLoaded && sessionId.isNotEmpty() && !isArchiving &&
+            !isSending && !isReplying && queued == null
 }
 
 /**
@@ -189,8 +208,25 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         viewModelScope.launch { performSync() }
     }
 
+    /**
+     * Hands back the environment of [sessionId] — the session the confirmation
+     * named (PRD-1 AC11).
+     *
+     * The id comes from the confirmation rather than from the state as it is
+     * now: drawing the confirmation and tapping it are two steps, and if
+     * another session took over the conversation in between, the server
+     * refuses rather than archiving the one that took over.
+     */
+    fun archive(sessionId: String) {
+        viewModelScope.launch { performArchive(sessionId) }
+    }
+
     fun dismissNotice() {
         _state.update { it.copy(notice = null) }
+    }
+
+    fun dismissArchiveError() {
+        _state.update { it.copy(archiveError = null) }
     }
 
     /**
@@ -582,6 +618,36 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
+    /**
+     * The archive itself, as one suspending step so it can be driven without a
+     * main looper. True only when the platform took the request.
+     *
+     * The conversation is re-read afterwards either way: on success because the
+     * history and the session it points at are untouched and the screen should
+     * show that (PRD-1 AC4), and on the two refusals that mean the screen's
+     * idea of the session is stale. Nothing here touches the draft — a refusal
+     * must not cost the words somebody is in the middle of writing.
+     */
+    internal suspend fun performArchive(sessionId: String): Boolean {
+        if (sessionId.isEmpty() || !_state.value.canArchive) return false
+        _state.update { it.copy(isArchiving = true, archiveError = null, notice = null, error = null) }
+        try {
+            val result = api.archiveChatSession(sessionId)
+            _state.update { it.copy(notice = archiveNotice(result)) }
+            load()
+            return true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            val failure = ChatArchiveError.from(e)
+            _state.update { it.copy(archiveError = failure) }
+            if (failure.rereadsConversation) load()
+            return false
+        } finally {
+            _state.update { it.copy(isArchiving = false) }
+        }
+    }
+
     companion object {
         // What one stored request may carry. The backend and the ledger bound
         // it too; this is the app saying so before the hop.
@@ -599,6 +665,23 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         // own poll because a task list changes in steps, not words.
         const val TASKS_REPLY_POLL_MILLIS = 3_000L
         const val TASKS_IDLE_POLL_MILLIS = 20_000L
+
+        /**
+         * What became of the session, said from what the server read back —
+         * never from what the tap hoped for. A platform that took the request
+         * without the record reading archived yet gets the weaker sentence:
+         * the request is in, and the environment is not claimed to be back.
+         */
+        fun archiveNotice(result: ChatArchiveResult): String {
+            if (!result.archived) {
+                return "아카이브를 요청했어요. 환경 반납은 잠시 뒤 상태로 확인해 주세요. 대화는 그대로예요."
+            }
+            val size = AgentSessionFormatting.size(result.checkpoint?.sizeBytes)
+            val taken = AgentSessionFormatting.relative(result.checkpoint?.createdAt)
+            val detail = listOfNotNull(taken.takeIf { it != "—" }, size).joinToString(" · ")
+            val suffix = if (detail.isEmpty()) "" else " ($detail)"
+            return "아카이브됐어요 — 환경을 반납했어요$suffix. 대화는 그대로이고, 다음 메시지가 이 세션을 복원해요."
+        }
 
         fun refreshNotice(result: ChatPluginRefresh): String = when {
             result.state == "unconfigured" -> "이 대화에는 새로 받을 스킬이 없어요."
