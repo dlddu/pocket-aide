@@ -22,6 +22,12 @@ final class ChatViewModel: ObservableObject {
     // which could be newer than a reply the polls have not fetched yet.
     private var cursor: Int64?
     private var etag: String?
+    // readSeq orders the conversation's reads. The poll loop and the sync
+    // button both call load(), so two reads are in the air whenever somebody
+    // taps while a poll is out; a reply that is no longer the newest read's is
+    // dropped rather than applied, because its pending/queued would put the
+    // screen back to a state it has already left.
+    private var readSeq: Int64 = 0
 
     init(api: APIClient?) {
         self.api = api
@@ -48,35 +54,48 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    /// A poll fetches only what came after the last read, and nothing at all
-    /// when the server answers 304; `full` re-reads the whole conversation.
-    func load(full: Bool = false) async {
+    /// Reads the conversation: only what came after the last read, and nothing
+    /// at all when the server answers 304. The whole conversation is read when
+    /// there is no read to continue from — before the first one, and whenever an
+    /// answer turns out to be a different conversation than the one on screen,
+    /// whose ids this cursor says nothing about.
+    func load() async {
         guard let api else { return }
+        readSeq += 1
+        let mine = readSeq
         do {
-            if !full, let cursor, let known = conversation?.id {
+            if let cursor, let known = conversation?.id {
                 switch try await api.chat(after: cursor, ifNoneMatch: etag) {
+                // Nothing changed, so nothing is applied — in particular the
+                // messages on screen are not replaced by the empty body.
                 case .notModified:
                     break
                 case .fresh(let view, let tag) where view.conversation.id == known:
+                    guard mine == readSeq else { return }
                     applyView(view, merging: true)
                     etag = tag
                 case .fresh:
-                    try await loadAll(api)
+                    try await loadAll(api, mine)
                 }
             } else {
-                try await loadAll(api)
+                try await loadAll(api, mine)
             }
+            guard mine == readSeq else { return }
             hasLoaded = true
             if error == .unreachable { error = nil }
         } catch is CancellationError {
         } catch {
+            // A superseded read's failure is not the screen's: a newer read has
+            // answered, and its outcome is the one the screen is showing.
+            guard mine == readSeq else { return }
             hasLoaded = true
             self.error = ChatError(error)
         }
     }
 
-    private func loadAll(_ api: APIClient) async throws {
+    private func loadAll(_ api: APIClient, _ mine: Int64) async throws {
         let view = try await api.chat()
+        guard mine == readSeq else { return }
         applyView(view, merging: false)
         etag = nil
     }
@@ -116,16 +135,18 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    // Pulls the whole conversation right away instead of waiting for the next
-    // poll tick. The background poll loop keeps calling load() on its own
-    // schedule the whole time; running both at once is harmless because a
-    // poll only merges messages by id into what the full read set.
+    // Reads right away instead of waiting for the next poll tick, and reads the
+    // same way a poll does: what came after the last read. A tap is therefore
+    // the cost of one poll rather than of the whole conversation, which on a
+    // long one was megabytes (PRD-AI채팅.AC1, 2026-11-28 개정). The background
+    // poll loop keeps calling load() on its own schedule the whole time; the
+    // two overlapping is what readSeq is for.
     @discardableResult
     func sync() async -> Bool {
         guard canSync else { return false }
         isSyncing = true
         defer { isSyncing = false }
-        await load(full: true)
+        await load()
         return true
     }
 

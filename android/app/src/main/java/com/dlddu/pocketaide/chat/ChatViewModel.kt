@@ -137,6 +137,13 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     private var cursor: Long? = null
     private var etag: String? = null
 
+    // readSeq orders the conversation's reads the way taskReadSeq orders the
+    // panel's. The poll loop and the sync button both call load(), so two reads
+    // are in the air whenever somebody taps while a poll is out; a reply that is
+    // no longer the newest read's is dropped rather than applied, because its
+    // pending/queued would put the screen back to a state it has already left.
+    private var readSeq = 0L
+
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
     private var taskReadSeq = 0L
@@ -397,38 +404,51 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     }
 
     /**
-     * A poll fetches only what came after the last read, and nothing at all
-     * when the server answers 304; [full] re-reads the whole conversation.
+     * Reads the conversation: only what came after the last read, and nothing
+     * at all when the server answers 304. The whole conversation is read when
+     * there is no read to continue from — before the first one, and whenever an
+     * answer turns out to be a different conversation than the one on screen,
+     * whose ids this cursor says nothing about.
      */
-    internal suspend fun load(full: Boolean = false) {
+    internal suspend fun load() {
+        val mine = ++readSeq
         try {
             val after = cursor
             val known = _state.value.conversation?.id
-            if (full || after == null || known == null) {
-                loadAll()
+            if (after == null || known == null) {
+                loadAll(mine)
             } else {
                 when (val reply = api.chat(after, etag)) {
+                    // Nothing changed, so nothing is applied — in particular the
+                    // messages on screen are not replaced by the empty body.
                     Conditional.NotModified -> Unit
-                    is Conditional.Fresh -> if (reply.value.conversation.id == known) {
-                        applyView(reply.value, merging = true)
-                        etag = reply.etag
-                    } else {
-                        loadAll()
-                    }
+                    is Conditional.Fresh ->
+                        if (reply.value.conversation.id != known) {
+                            loadAll(mine)
+                        } else if (mine == readSeq) {
+                            applyView(reply.value, merging = true)
+                            etag = reply.etag
+                        }
                 }
             }
+            if (mine != readSeq) return
             _state.update {
                 it.copy(hasLoaded = true, error = if (it.error == ChatError.UNREACHABLE) null else it.error)
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            // A superseded read's failure is not the screen's: a newer read has
+            // answered, and its outcome is the one the screen is showing.
+            if (mine != readSeq) return
             _state.update { it.copy(hasLoaded = true, error = ChatError.from(e)) }
         }
     }
 
-    private suspend fun loadAll() {
-        applyView(api.chat(), merging = false)
+    private suspend fun loadAll(mine: Long) {
+        val view = api.chat()
+        if (mine != readSeq) return
+        applyView(view, merging = false)
         etag = null
     }
 
@@ -445,15 +465,17 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         cursor = if (merging) maxOf(cursor ?: 0L, newest) else newest
     }
 
-    // Pulls the whole conversation right away instead of waiting for the next
-    // poll tick. The background poll loop keeps calling load() on its own
-    // schedule the whole time; running both at once is harmless because a
-    // poll only merges messages by id into what the full read set.
+    // Reads right away instead of waiting for the next poll tick, and reads the
+    // same way a poll does: what came after the last read. A tap is therefore
+    // the cost of one poll rather than of the whole conversation, which on a
+    // long one was megabytes (PRD-AI채팅.AC1, 2026-11-28 개정). The background
+    // poll loop keeps calling load() on its own schedule the whole time; the
+    // two overlapping is what readSeq is for.
     internal suspend fun performSync(): Boolean {
         if (!_state.value.canSync) return false
         _state.update { it.copy(isSyncing = true) }
         try {
-            load(full = true)
+            load()
             return true
         } finally {
             _state.update { it.copy(isSyncing = false) }
