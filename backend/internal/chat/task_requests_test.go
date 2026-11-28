@@ -20,6 +20,10 @@ import (
 // message routes.
 type requestPlatform struct {
 	tasks map[string]map[string]bool // platform session id -> task ids it holds
+	// relay is the handover the platform reports for a task that was waiting on
+	// a person's judgement, keyed by task id. Absent is the platform having had
+	// nothing to hand over, which is most tasks and every unpaired session.
+	relay map[string]map[string]any
 	// latestTurn is each task's newest turn id. It is the one fact a pick is
 	// checked against: the ledger's (choice id, basis version) pair is gone,
 	// and what makes a pick current is the turn it was offered on still being
@@ -44,6 +48,7 @@ func newRequestPlatform() *requestPlatform {
 	return &requestPlatform{
 		tasks: map[string]map[string]bool{}, stored: map[string]storedRequest{},
 		latestTurn: map[string]int64{}, picked: map[string]int64{},
+		relay: map[string]map[string]any{},
 	}
 }
 
@@ -75,7 +80,7 @@ func (p *requestPlatform) Do(_ context.Context, method, path string, body []byte
 			return http.StatusConflict,
 				[]byte(`{"code":"conflict","error":"request id already used with different content"}`), nil
 		}
-		return http.StatusOK, requestBody(existing, true), nil
+		return http.StatusOK, requestBody(existing, true, p.relay[existing.TaskID]), nil
 	}
 	if !p.tasks[session][taskID] {
 		return http.StatusNotFound, []byte(`{"code":"not_found","error":"task not found"}`), nil
@@ -95,17 +100,21 @@ func (p *requestPlatform) Do(_ context.Context, method, path string, body []byte
 	}
 	p.stored[in.ID] = stored
 	p.order = append(p.order, in.ID)
-	return http.StatusCreated, requestBody(stored, false), nil
+	return http.StatusCreated, requestBody(stored, false, p.relay[taskID]), nil
 }
 
-func requestBody(s storedRequest, replayed bool) []byte {
-	out, _ := json.Marshal(map[string]any{
+func requestBody(s storedRequest, replayed bool, relay map[string]any) []byte {
+	answer := map[string]any{
 		"turn": map[string]any{
 			"id": s.TurnID, "request": s.Text, "requested_at": "2026-11-20T00:00:00Z",
 			"choices": []any{}, "artifacts": []any{}, "origin": "app_request",
 		},
 		"replayed": replayed,
-	})
+	}
+	if relay != nil {
+		answer["relay"] = relay
+	}
+	out, _ := json.Marshal(answer)
 	return out
 }
 
@@ -295,5 +304,76 @@ func TestCreateTaskRequest_NeedsASession(t *testing.T) {
 	}
 	if len(platform.calls) != 0 {
 		t.Fatalf("the platform was called for a conversation with no session: %v", platform.calls)
+	}
+}
+
+// The handover to the monitor is relayed as the platform reported it, and its
+// absence is not a failure.
+//
+// Three facts have to stay apart for the app to be able to say three different
+// things: the request is stored (there is an answer), the monitor has it
+// (accepted), and the work is done (which only the turn's end says, and which
+// no answer here claims).
+func TestCreateTaskRequest_RelaysTheHandoverToTheMonitor(t *testing.T) {
+	store, engine, platform := requestEngine(t)
+	ctx := context.Background()
+	bindSession(t, store, 1, "sess-1")
+	platform.tasks["sess-1"] = map[string]bool{"t-review": true, "t-running": true}
+
+	// A task that was waiting for this person: the platform hands it over.
+	platform.relay["t-review"] = map[string]any{"state": "accepted", "attempts": 1}
+	stored, err := engine.CreateTaskRequest(ctx, 1, "t-review", "req-1", "네, 그렇게 해 주세요", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Relay == nil {
+		t.Fatal("the handover was dropped")
+	}
+	if stored.Relay.State != chat.TaskRequestRelayAccepted || stored.Relay.Attempts != 1 {
+		t.Fatalf("the handover = %+v", stored.Relay)
+	}
+
+	// A resend learns about the handover that was already made, not a second one.
+	again, err := engine.CreateTaskRequest(ctx, 1, "t-review", "req-1", "네, 그렇게 해 주세요", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !again.Replayed || again.Relay == nil || again.Relay.State != chat.TaskRequestRelayAccepted {
+		t.Fatalf("the resend = replayed %v relay %+v", again.Replayed, again.Relay)
+	}
+
+	// Recorded and not delivered is its own answer: the app says "later", and
+	// the request is stored all the same.
+	platform.relay["t-review"] = map[string]any{"state": "pending", "attempts": 2}
+	pending, err := engine.CreateTaskRequest(ctx, 1, "t-review", "req-2", "한 번 더", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pending.Relay == nil || pending.Relay.State != chat.TaskRequestRelayPending || pending.Relay.Attempts != 2 {
+		t.Fatalf("a pending handover = %+v", pending.Relay)
+	}
+
+	// Nobody was waiting on this one, so there was nothing to hand over. The
+	// request is still stored, and the absence must not read as a failure.
+	ordinary, err := engine.CreateTaskRequest(ctx, 1, "t-running", "req-3", "참고로", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ordinary.Relay != nil {
+		t.Fatalf("a task nobody was waiting on reported a handover: %+v", ordinary.Relay)
+	}
+	if ordinary.Turn.ID == 0 {
+		t.Fatal("the request was not stored")
+	}
+
+	// A word this app has no sentence for is dropped rather than shown. The
+	// app's three cases are exhaustive by construction, not by hope.
+	platform.relay["t-running"] = map[string]any{"state": "half-delivered", "attempts": 1}
+	unknown, err := engine.CreateTaskRequest(ctx, 1, "t-running", "req-4", "또 참고로", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if unknown.Relay != nil {
+		t.Fatalf("an unknown handover state reached the app: %+v", unknown.Relay)
 	}
 }

@@ -26,6 +26,14 @@ import (
 // lifecycle to poll — the turn is the record, and whether it has been dealt
 // with is whether that turn has ended. Nothing here writes a task field and
 // nothing here starts a turn of the session's own.
+//
+// One thing did change about what the answer can say (platform AC-N14). A task
+// that is waiting for the person's judgement is one the session's monitor has
+// stopped looking at, so a request on it used to lie in the records until that
+// monitor's next scheduled pass. The platform now hands it over the moment it
+// lands, and says whether that worked — which is the third thing this file
+// relays and the only new one: stored, handed over, and (still only from the
+// turn) done.
 
 const (
 	// TaskRequestTextMax bounds one request's words. Smaller than the slot's
@@ -75,7 +83,49 @@ var workRecordID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 type TaskRequestStored struct {
 	Turn     TaskTurn `json:"turn"`
 	Replayed bool     `json:"replayed"`
+	// Relay is what the platform did about the monitor that was waiting on
+	// this answer, and it is present only when there was something to do: a
+	// request on a task that was waiting for a person's judgement is handed to
+	// the session's own monitor lane at once, because that lane had stopped
+	// looking at the task for exactly that reason.
+	//
+	// Absent means no handover was due — an ordinary request on a task nobody
+	// was waiting on, or a session whose platform does not run the pair. The
+	// app must not show absence as a failure: the request is stored either way,
+	// and the difference is only whether somebody was told now or will find it
+	// on their next pass.
+	Relay *TaskRequestRelay `json:"relay,omitempty"`
 }
+
+// TaskRequestRelay is that handover's outcome, relayed from the platform
+// unchanged. It carries no receipt — the platform's receipt names a run of a
+// conversation inside the session's pod, which is nothing the app can use or
+// should hold.
+//
+// Three things stay separate here on purpose, because the person's next move
+// differs for each: the request is stored (there is an answer at all), the
+// monitor has been given it (Accepted), and the work is done (which only the
+// turn ending says — ChatTaskTurnRef.settled). Collapsing them tells somebody
+// their request has been dealt with when it has only been filed.
+type TaskRequestRelay struct {
+	// State is "accepted" when the monitor took it — straight away if that
+	// conversation was idle, behind its current turn if it was busy — or
+	// "pending" when the platform recorded the handover and could not reach
+	// it. Pending is not lost: the record is on the session's own storage and
+	// the monitor's standing round reads the same turn.
+	State string `json:"state"`
+	// Attempts is how many times the platform has handed this over, so a
+	// second delivery after a lost acknowledgement is distinguishable from a
+	// first one.
+	Attempts int64 `json:"attempts"`
+}
+
+// The two states a handover is reported in. Keep in sync with the platform
+// (session-platform control-plane/internal/session/work.go).
+const (
+	TaskRequestRelayAccepted = "accepted"
+	TaskRequestRelayPending  = "pending"
+)
 
 // CreateTaskRequest stores one request on taskID of the work records belonging
 // to the session that answers userID's own conversation.
@@ -143,6 +193,16 @@ func (e *Engine) CreateTaskRequest(
 		// The platform answers 200 for a replay and 201 for a first store; the
 		// body says so too, and the status is what the app can rely on.
 		answer.Replayed = answer.Replayed || status == http.StatusOK
+		// A handover state this app has no sentence for is dropped rather than
+		// passed on. The app's three cases are meant to be exhaustive, and a
+		// fourth word arriving from a newer platform would otherwise reach a
+		// screen that can only show it as the absence of a handover anyway —
+		// which is what dropping it says, without inventing a meaning.
+		if answer.Relay != nil &&
+			answer.Relay.State != TaskRequestRelayAccepted &&
+			answer.Relay.State != TaskRequestRelayPending {
+			answer.Relay = nil
+		}
 		return answer, nil
 	case http.StatusNotFound:
 		// Either the session is gone or the task is not among its records. Both

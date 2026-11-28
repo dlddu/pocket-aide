@@ -267,7 +267,45 @@ data class ChatTaskRequestStored(
     // True when this id had already stored the same words: the app's retry of
     // an answer it never saw, not a second request.
     val replayed: Boolean = false,
+    // What became of telling the monitor, when there was something to tell.
+    // Null is "nothing to tell" — an ordinary task nobody was waiting on, or a
+    // session whose platform does not run a separate monitor — and is never a
+    // failure: the request is stored in every case.
+    val relay: ChatTaskRequestRelay? = null,
 )
+
+/**
+ * The handover to the monitor that was waiting on this answer.
+ *
+ * A task waiting for the person's judgement is one the monitor has stopped
+ * looking at, so pressing 요청 등록 on it used to leave the words sitting in the
+ * records until that monitor's next pass. The platform now tells it at once,
+ * and this says whether that landed — which is a different fact from both
+ * "stored" and "done", and the pane says all three differently.
+ */
+@Serializable
+data class ChatTaskRequestRelay(
+    val state: String = "",
+    val attempts: Long = 0,
+) {
+    /** The monitor has it: running now if it was free, queued if it was busy. */
+    val accepted: Boolean get() = state == ACCEPTED
+
+    /**
+     * Recorded and not delivered. Not lost — it is kept on the session's own
+     * storage and the monitor's standing round reads the same turn — so the
+     * sentence for this is "later", never "failed".
+     */
+    val pending: Boolean get() = state == PENDING
+
+    /** A second delivery, after one whose acknowledgement went missing. */
+    val redelivered: Boolean get() = attempts > 1
+
+    companion object {
+        const val ACCEPTED = "accepted"
+        const val PENDING = "pending"
+    }
+}
 
 /**
  * Why a request could not be stored. Each is a different sentence because the
@@ -308,6 +346,44 @@ enum class ChatTaskRequestError(val message: String) {
  * into the message, so nothing is sent that the person did not write.
  */
 fun chatTaskRequestText(request: String): String = request.trim()
+
+/**
+ * What the pane says once a request is stored.
+ *
+ * Three facts, never collapsed: the request is stored, the monitor has been
+ * given it, and the work is done. Only the first two can be said here — the
+ * third is the turn ending, which this answer cannot know — so every sentence
+ * stops short of it on purpose. A handover that has not landed says "later",
+ * not "failed": the record is kept and the monitor's own round reads the same
+ * turn.
+ */
+fun chatTaskRequestNote(replayed: Boolean, relay: ChatTaskRequestRelay?): String {
+    val stored = if (replayed) "이미 저장된 요청이에요" else "요청 저장됨"
+    return when {
+        relay == null -> "$stored · 모니터가 다음 확인 때 접수해요"
+        relay.accepted && relay.redelivered ->
+            "$stored · 모니터에 다시 전달했어요(앞 전달의 회신이 유실됐어요) · 처리됐다는 뜻은 아니에요"
+        relay.accepted -> "$stored · 모니터에 전달했어요 · 처리됐다는 뜻은 아니에요"
+        relay.pending -> "$stored · 모니터에 아직 닿지 못했어요. 기록은 남았고 다음 확인 때 읽혀요"
+        else -> "$stored · 모니터가 다음 확인 때 접수해요"
+    }
+}
+
+/**
+ * What the pane says before anything is stored, which differs by what the task
+ * is waiting on.
+ *
+ * A task waiting for the person is one the monitor has stopped looking at, so
+ * registering a request on it is the thing that gets it going again — and the
+ * person should know that rather than being told to wait for a pass that was
+ * never going to come on its own. Every other task is found on that pass, and
+ * saying otherwise would promise something the platform does not do.
+ */
+fun chatTaskRequestHint(status: String): String = if (ChatTaskStatus.needsAttention(status)) {
+    "등록하면 이 작업의 기록에 남고, 이 작업을 기다리던 모니터에게 바로 알려요. 대화로는 보내지 않아요."
+} else {
+    "등록하면 이 작업의 기록에 남고, 모니터가 다음 확인 때 접수해요. 대화로는 보내지 않아요."
+}
 
 /**
  * Whether a draft still carries the pick it was filled from.

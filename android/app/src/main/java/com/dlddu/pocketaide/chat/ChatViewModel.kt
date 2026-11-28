@@ -148,6 +148,10 @@ data class ChatTaskRequestUiState(
     val isStoring: Boolean = false,
     val stored: ChatTaskTurnRef? = null,
     val replayed: Boolean = false,
+    // What became of telling the monitor, when there was something to tell.
+    // Null is "nothing to tell", which the pane says as neither success nor
+    // failure of a handover — because there was none.
+    val relay: ChatTaskRequestRelay? = null,
     val error: ChatTaskRequestError? = null,
 )
 
@@ -479,7 +483,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     /** Clears the last request's outcome once the panel has shown it. */
     fun dismissTaskRequest() {
-        _taskRequest.update { it.copy(stored = null, replayed = false, error = null) }
+        _taskRequest.update { it.copy(stored = null, replayed = false, relay = null, error = null) }
     }
 
     internal suspend fun performTaskRequest(
@@ -511,6 +515,7 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                 taskId = task.id,
                 stored = stored.turn,
                 replayed = stored.replayed,
+                relay = stored.relay,
             )
             return true
         } catch (e: CancellationException) {
