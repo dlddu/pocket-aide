@@ -23,6 +23,7 @@ fun PlainTextField(
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    cursorColor: Color = textColor,
 ) {
     BasicTextField(
         value = value,
@@ -33,7 +34,7 @@ fun PlainTextField(
         singleLine = singleLine,
         maxLines = maxLines,
         minLines = minLines,
-        cursorBrush = SolidColor(textColor),
+        cursorBrush = SolidColor(cursorColor),
         decorationBox = { inner ->
             Box {
                 if (value.isEmpty()) {

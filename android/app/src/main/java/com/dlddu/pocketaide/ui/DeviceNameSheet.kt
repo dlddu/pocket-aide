@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.dlddu.pocketaide.designsystem.Area
 import com.dlddu.pocketaide.designsystem.DesignTokens
 import com.dlddu.pocketaide.designsystem.components.Card
@@ -29,6 +31,8 @@ import com.dlddu.pocketaide.push.DeviceName
 private val ACTIONS_GAP = DesignTokens.Spacing.xs
 private val ACTIONS_BOTTOM = DesignTokens.Spacing.xxl + DesignTokens.Spacing.sm
 private val DESCRIPTION_GAP = DesignTokens.Spacing.xs
+private val TITLE_TRACKING = (-0.5).sp
+private val DESCRIPTION_LINE_HEIGHT = 1.375.em
 
 @Composable
 fun DeviceNameSheet(initial: String, onSave: (String) -> Unit, onSkip: () -> Unit) {
@@ -48,13 +52,13 @@ fun DeviceNameSheet(initial: String, onSave: (String) -> Unit, onSkip: () -> Uni
             ) {
                 Text(
                     "이 기기 이름",
-                    style = DesignTokens.Typography.style(SheetDefaults.titleSize, FontWeight.Bold),
+                    style = DesignTokens.Typography.style(SheetDefaults.titleSize, FontWeight.Bold).copy(letterSpacing = TITLE_TRACKING),
                     color = ink,
                     modifier = Modifier.testTag("device.name.sheet.title"),
                 )
                 Text(
                     "푸시를 받는 기기를 구분하는 이름이에요.",
-                    style = DesignTokens.Typography.style(DesignTokens.Typography.bodySm),
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.bodySm).copy(lineHeight = DESCRIPTION_LINE_HEIGHT),
                     color = ink.copy(alpha = 0.6f),
                 )
             }
@@ -68,6 +72,7 @@ fun DeviceNameSheet(initial: String, onSave: (String) -> Unit, onSkip: () -> Uni
                     placeholderColor = ink.copy(alpha = 0.45f),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    cursorColor = DesignTokens.Colors.accent(area),
                     modifier = Modifier.fillMaxWidth().testTag("device.name.sheet.field"),
                 )
             }
