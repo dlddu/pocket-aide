@@ -107,6 +107,10 @@ fun ChatTaskDetailPane(
     onLoadTurns: () -> Unit,
     onRetryTurns: () -> Unit,
     onLoadMoreTurns: () -> Unit,
+    materials: ChatTaskMaterialsUiState,
+    onLoadMaterials: () -> Unit,
+    onRetryMaterials: () -> Unit,
+    onOpenArtifact: (ChatTaskArtifact) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -135,6 +139,17 @@ fun ChatTaskDetailPane(
             // says "not recorded" rather than showing a blank.
             Field("무엇을 · 왜", task.description, "chat.tasks.detail.description")
             Field("완료 기준", task.completionCriteria, "chat.tasks.detail.criteria")
+            // The materials for reviewing this task, read once for this task
+            // when the pane opens. They are up here because a task in review is
+            // opened to decide something, and the exchanges that hold the same
+            // facts at length stay closed at the bottom.
+            ReviewMaterials(
+                task = task,
+                state = materials,
+                onLoad = onLoadMaterials,
+                onRetry = onRetryMaterials,
+                onOpenArtifact = onOpenArtifact,
+            )
             // The turn whose sentences are on offer, when there are any. It is
             // read from the task row beside the choices themselves, so it is
             // that turn's words and not whichever turn happens to be open or
@@ -257,6 +272,297 @@ private fun Field(label: String, value: String, tag: String) {
                 .then(if (recorded) Modifier else Modifier.alpha(MUTED_OPACITY))
                 .testTag(tag),
         )
+    }
+}
+
+/**
+ * What there is to review on this task, in one place near the top of the pane
+ * (PRD-AI채팅 AC11).
+ *
+ * Three different things, each under its own heading and each read from where
+ * it is actually recorded:
+ *
+ *  - **연결된 PR** — what the work produced, across the task's whole history
+ *    rather than its latest exchange. A task whose newest turn is "수정해 주세요"
+ *    is exactly the case this exists for: the pull requests under review were
+ *    produced three turns ago, and a screen that showed only the latest turn
+ *    would show none of them. The same pull request named on several turns is
+ *    one row here, because it is one pull request.
+ *  - **이미 고른 것** — the sentences the session offered that came back as the
+ *    next turn's request. That is a decision the records hold.
+ *  - **아직 묻고 있는 것** — what the *latest* turn is asking. An earlier
+ *    question that has turns after it is history, and is not offered here as
+ *    something to decide.
+ *
+ * What it will not do is show a fourth: an alternative's advantages and
+ * drawbacks. The agreed turn has no field for them, so this says they are not
+ * recorded rather than reading them out of something else — a parent's
+ * explanation is its account of a result, not a decision somebody took, and the
+ * words on a choice button are a sentence to send, not a trade-off. Saying
+ * nothing at all would read as "there were no trade-offs", which is a different
+ * claim and not one the records make.
+ *
+ * None of it costs the task list anything. It is one read for the one task
+ * somebody opened, triggered by the same signal the exchanges use, so the list
+ * — and a panel of any number of rows — reads no history at all.
+ */
+@Composable
+private fun ReviewMaterials(
+    task: ChatTask,
+    state: ChatTaskMaterialsUiState,
+    onLoad: () -> Unit,
+    onRetry: () -> Unit,
+    onOpenArtifact: (ChatTaskArtifact) -> Unit,
+) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    // Reading starts here: on opening the task, and again when the panel's own
+    // poll says this task's exchanges moved.
+    LaunchedEffect(task.id, ChatTaskHistorySignal.of(task)) { onLoad() }
+    // An answer belongs to the task it was read for. Switching tasks quickly
+    // leaves the previous task's answer in state for an instant, and drawing it
+    // under this title would put one task's pull requests under another's name.
+    val mine = state.taskId == task.id
+    val materials = if (mine) state.materials else ChatTaskMaterials()
+    Column(
+        Modifier.fillMaxWidth().testTag("chat.tasks.detail.materials"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
+    ) {
+        Text(
+            "검토 자료",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs, FontWeight.Bold),
+            color = ink.copy(alpha = MUTED_OPACITY),
+            modifier = Modifier.testTag("chat.tasks.detail.materials.label"),
+        )
+        when {
+            !mine || (state.isLoading && !state.hasLoaded) -> CircularProgressIndicator(
+                color = ink.copy(alpha = MUTED_OPACITY),
+                strokeWidth = SPINNER_STROKE,
+                modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.materials.loading"),
+            )
+
+            state.error != null -> {
+                // Why it could not be read, which is never "this task produced
+                // nothing" — the records are still on the slot.
+                Note(state.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.materials.error")
+                val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+                Text(
+                    "다시 시도",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                    color = DesignTokens.Colors.accent(DETAIL_AREA),
+                    modifier = Modifier
+                        .clip(shape)
+                        .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
+                        .clickable(role = Role.Button, onClick = onRetry)
+                        .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+                        .testTag("chat.tasks.detail.materials.retry"),
+                )
+            }
+
+            else -> {
+                Artifacts(materials.artifacts, onOpenArtifact)
+                Decisions(materials.decisions)
+                OpenPoints(materials.open)
+                // Said once, under its own heading, so somebody looking for the
+                // trade-offs learns that the records do not keep them rather
+                // than concluding there were none.
+                if (!materials.tradeoffsRecorded) {
+                    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
+                        Text(
+                            "대안별 장단점",
+                            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                            color = ink.copy(alpha = MUTED_OPACITY),
+                        )
+                        Text(
+                            "작업 기록에는 대안의 장점·단점을 적는 칸이 없어요. " +
+                                "선택지 문구를 장단점으로 보여 주지는 않아요.",
+                            style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                            color = ink.copy(alpha = MUTED_OPACITY),
+                            modifier = Modifier.alpha(MUTED_OPACITY)
+                                .testTag("chat.tasks.detail.materials.noTradeoffs"),
+                        )
+                    }
+                }
+                if (materials.truncated) {
+                    Note(
+                        "기록이 길어 일부만 모았어요. 전체는 아래 「주고받은 내용」에 있어요.",
+                        ink.copy(alpha = MUTED_OPACITY),
+                        "chat.tasks.detail.materials.truncated",
+                    )
+                }
+            }
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+}
+
+/**
+ * The pull requests and other artifacts the work produced, newest first.
+ *
+ * A row shows the recorded title when one is recorded and the identifier when
+ * none is — never a title made up from a number, because the same number is a
+ * different pull request in every repository. A row with an address is a tap
+ * that opens it; one without is the identifier the records hold, and says so
+ * instead of being a tap that goes nowhere.
+ */
+@Composable
+private fun Artifacts(artifacts: List<ChatTaskArtifact>, onOpen: (ChatTaskArtifact) -> Unit) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
+        Text(
+            "연결된 PR · 산출물",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        if (artifacts.isEmpty()) {
+            Text(
+                "이 작업 기록에 적힌 산출물이 없어요.",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.alpha(MUTED_OPACITY).testTag("chat.tasks.detail.materials.noArtifacts"),
+            )
+            return@Column
+        }
+        artifacts.forEachIndexed { index, artifact ->
+            val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(shape)
+                    .background(DesignTokens.Colors.card(DETAIL_AREA))
+                    .border(RULE, DesignTokens.Colors.rule(DETAIL_AREA), shape)
+                    .then(
+                        if (artifact.openable) {
+                            Modifier.clickable(role = Role.Button) { onOpen(artifact) }
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.sm)
+                    .testTag("chat.tasks.detail.materials.artifact.$index"),
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+            ) {
+                Text(
+                    artifact.label,
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+                    color = if (artifact.openable) DesignTokens.Colors.accent(DETAIL_AREA) else ink,
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.artifact.$index.label"),
+                )
+                // The second line is what the first one is not: the identifier
+                // under a title, or the plain statement that there is nothing
+                // to open. Either way nothing on this row is a guess.
+                Text(
+                    when {
+                        artifact.titled && artifact.repo.isNotBlank() && artifact.number > 0 ->
+                            "${artifact.repo}#${artifact.number}"
+                        artifact.openable -> artifact.ref
+                        else -> "링크가 적혀 있지 않아 열 수 없어요 · 기록된 식별자"
+                    },
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                    color = ink.copy(alpha = MUTED_OPACITY),
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.artifact.$index.ref"),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * What has already been decided: a sentence the session offered that came back
+ * as the next turn's request.
+ *
+ * Only that. A decision shown here was taken by somebody picking words they
+ * read, which is why the words are shown — and why a parent's explanation,
+ * however much it reads like a conclusion, is not in this list.
+ */
+@Composable
+private fun Decisions(decisions: List<ChatTaskDecision>) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
+        Text(
+            "이미 고른 것",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        if (decisions.isEmpty()) {
+            Text(
+                "기록에 고른 선택지가 없어요. 설명을 결정으로 보여 주지는 않아요.",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.alpha(MUTED_OPACITY).testTag("chat.tasks.detail.materials.noDecisions"),
+            )
+            return@Column
+        }
+        decisions.forEachIndexed { index, decision ->
+            Column(
+                Modifier.fillMaxWidth().testTag("chat.tasks.detail.materials.decision.$index"),
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+            ) {
+                Text(
+                    decision.label.ifBlank { decision.text },
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+                    color = ink,
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.decision.$index.label"),
+                )
+                Text(
+                    "보낸 문장 · ${decision.text}",
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                    color = ink.copy(alpha = MUTED_OPACITY),
+                    modifier = Modifier.testTag("chat.tasks.detail.materials.decision.$index.text"),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * What is still being asked, from the task's latest turn.
+ *
+ * The sentences are listed as what was offered, not as buttons: the buttons
+ * that act are further down the pane beside the request field, and two sets of
+ * them would be two places to answer the same question.
+ */
+@Composable
+private fun OpenPoints(points: List<ChatTaskOpenPoint>) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm)) {
+        Text(
+            "아직 판단이 필요한 것",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+            color = ink.copy(alpha = MUTED_OPACITY),
+        )
+        if (points.isEmpty()) {
+            Text(
+                "기록에 아직 묻고 있는 것이 없어요.",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.alpha(MUTED_OPACITY).testTag("chat.tasks.detail.materials.noOpen"),
+            )
+            return@Column
+        }
+        points.forEachIndexed { index, point ->
+            Column(
+                Modifier.fillMaxWidth().testTag("chat.tasks.detail.materials.open.$index"),
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+            ) {
+                if (point.question.isNotBlank()) {
+                    Text(
+                        point.question,
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.body),
+                        color = ink,
+                        modifier = Modifier.testTag("chat.tasks.detail.materials.open.$index.question"),
+                    )
+                }
+                point.choices.forEachIndexed { at, choice ->
+                    Text(
+                        "· ${choice.label}",
+                        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                        color = ink.copy(alpha = MUTED_OPACITY),
+                        modifier = Modifier
+                            .testTag("chat.tasks.detail.materials.open.$index.choice.$at"),
+                    )
+                }
+            }
+        }
     }
 }
 

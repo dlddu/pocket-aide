@@ -30,6 +30,7 @@
 | Q-18 | `update notification_history \| eq(id, user_id) \| - \| -` | PK(notification_history) | `backend/internal/notificationhistory/store.go::Store::Acknowledge` |
 | Q-19 | `insert notification_history \| - \| - \| -` | — | `backend/internal/notificationhistory/store.go::Store::InsertBatchTx` |
 | Q-20 | `select notification_history \| eq(id, user_id) \| - \| -` | PK(notification_history) | `backend/internal/notificationhistory/store.go::Store::Get` |
+| Q-106 | `select notification_history \| eq(pr_number, repo_full_name, user_id) \| - \| order(id desc)` | idx_notif_history_user_acked | `backend/internal/notificationhistory/store.go::Store::PRTitle` |
 | Q-21 | `select user_notification_settings \| eq(user_id) \| - \| -` | PK(user_notification_settings) | `backend/internal/notificationsettings/store.go::Store::Get` |
 | Q-22 | `upsert user_notification_settings \| eq(user_id) \| - \| -` | — | `backend/internal/notificationsettings/store.go::Store::Update` |
 | Q-23 | `select routines \| eq(user_id) \| - \| order(id asc)` | idx_routines_user_id | `backend/internal/routines/store.go::load` |
