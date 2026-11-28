@@ -60,6 +60,7 @@ targets:
       testTargets:
         - PocketAideTests
         - PocketAideUnitTests
+        - PocketAideAppTests
       gatherCoverageData: true
       commandLineArguments:
         "-com.apple.CoreData.ConcurrencyDebug 1": false
@@ -145,3 +146,28 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.UnitTests
         INFOPLIST_FILE: PocketAideUnitTests/Info.plist
+
+  # The app's own models, tested as themselves. PocketAideUnitTests links only
+  # the shared package, so nothing there can reach a view model that lives in
+  # the app target — and a race between a send and a poll is the view model's
+  # behaviour, not the package's. This target is hosted by the app so
+  # `@testable import PocketAide` works, and it is separate from
+  # PocketAideUnitTests on purpose: that bundle needs no host app, and giving it
+  # one would change how every test already in it runs.
+  PocketAideAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: PocketAideAppTests
+    dependencies:
+      - target: PocketAide
+      - package: PocketAideShared
+        product: PocketAideAPI
+      - package: PocketAideShared
+        product: PocketAideStorage
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dlddu.PocketAide.AppTests
+        INFOPLIST_FILE: PocketAideAppTests/Info.plist
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/PocketAide.app/PocketAide
+        BUNDLE_LOADER: $(TEST_HOST)

@@ -121,6 +121,7 @@
 | 2026-09-29 | `ios/PocketAide/PRMonitor/PRMonitorHistoryRow.swift`, `ios/PocketAide/PRMonitor/PRMonitorView.swift` | 12 | `7f66d46d2454` | 완료 | 필요성 판정 — 제거 58줄 · 유지 12줄(개작 2블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-11-04 | `ios/PocketAide/Sessions/SessionDetailView.swift` | 3 | `9e0793f3dfec` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
 | 2026-09-29 | `ios/PocketAide/Todos/TodoEditSheet.swift`, `ios/PocketAide/Todos/TodoListView.swift` | 6 | `1413f9b4c157` | 완료 | 필요성 판정 — 제거 0줄 · 유지 6줄 — [상세](passes/2026-09-29-ci-backend-ios.md) |
+| 2026-11-28 | `ios/PocketAideAppTests/ChatSendRaceTests.swift` | 67 | `5bf36538f07d` | — | 등재 — 2026-11-28 신규 파일(실제 앱 ChatViewModel 의 지연 보내기 응답 경쟁 회귀 — URLProtocol 로 POST 를 세워 순서를 정하는 가짜 전송 포함, PRD-AI채팅.AC1 완료 기준 5). 필요성 판정 대기. |
 | 2026-09-29 | `ios/PocketAideTests/AffirmationsUITests.swift`, `ios/PocketAideTests/LoginUITests.swift`, `ios/PocketAideTests/UITestAuth.swift` | 33 | `66ff5e1c3e54` | 완료 | 필요성 판정 — 제거 48줄 · 유지 33줄(개작 1블록 포함) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-10-10 | `ios/PocketAideTests/PRMonitorUITests.swift` | 24 | `c90c4afdfcc1` | 완료 | 필요성 판정 — 제거 10줄 · 유지 21줄(개작 1블록 포함) · 2026-10-10 증분 유지 1줄 · 개작 2블록(푸시 준비 신호) — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-11-04 | `ios/PocketAideTests/SessionsPlatformUnreachableUITests.swift`, `ios/PocketAideTests/SessionsUITestSupport.swift` | 3 | `4007169aa7bd` | 완료 | 필요성 판정 — 제거 1줄 · 유지 3줄 — [상세](passes/2026-11-04-mail-api-sessions-detail.md) |
@@ -137,6 +138,7 @@
 | 2026-10-01 | `ios/Shared/Sources/PocketAideAPI/Scratchpad.swift` | 3 | `7dbfb751ae6b` | 완료 | 필요성 판정 — 제거 0줄 · 유지 3줄 — [상세](passes/2026-10-01-scratchpad.md) |
 | 2026-10-15 | `ios/Shared/Sources/PocketAideAuth/OIDCClient.swift` | 7 | `ff85dec4c2e9` | 완료 | 필요성 판정 — 제거 0줄 · 유지 4줄 · 2026-10-15 증분 유지 3줄(앱·위젯 동시 갱신) — [상세](passes/2026-09-29-ci-backend-ios.md) |
 | 2026-09-29 | `ios/fastlane/Fastfile` | 1 | `e7198c27c7fd` | 완료 | 필요성 판정 — 제거 6줄 · 유지 1줄(개작 1블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
+| 2026-11-28 | `ios/project.yml` | 7 | `9bb25f3defbf` | — | 등재 — 2026-11-28 앱 모델을 링크하는 테스트 타깃(PocketAideAppTests)을 PocketAideUnitTests 와 따로 둔 이유를 적은 주석이 이 파일의 첫 주석이다. 필요성 판정 대기. |
 | 2026-11-03 | `k8s/configmap.yaml`, `k8s/deployment.yaml`, `k8s/kustomization.yaml`, `k8s/secret.yaml` | 17 | `c32d3ee03266` | 완료 | 필요성 판정 — 제거 26줄 · 유지 13줄(개작 4블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) · 2026-11-03 증분 제거 2줄 · 유지 4줄(개작 1블록 포함) — [상세](passes/2026-09-29-api-k8s-harness.md) |
 | 2026-10-09 | `scripts/ci/ios_test_shards.py` | 2 | `c60d84630c62` | 완료 | 필요성 판정 — 제거 0줄 · 유지 2줄 — [상세](passes/2026-10-04-ci-workflows-pr-monitor.md) |
 | 2026-10-28 | `tools/journey-mockup-harness/check.mjs` | 3 | `1b2b6f9a788a` | 완료 | 필요성 판정 — 제거 26줄 · 유지 3줄(개작 2블록 포함) · 2026-10-28 증분 제거 3줄(5(i) 규칙 번호 주석 — README 표 재진술) — [상세](passes/2026-09-29-api-k8s-harness.md) |
