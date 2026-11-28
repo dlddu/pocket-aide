@@ -13,9 +13,21 @@ final class ChatViewModel: ObservableObject {
     @Published private(set) var isSyncing = false
     @Published var notice: String?
     @Published private(set) var error: ChatError?
+    // Whether the session answering this conversation is on (PRD-1 AC12), and
+    // the turn-on's own in-flight flag and failure — kept apart from the
+    // conversation's so a failed status read never looks like a failed send,
+    // and neither hides the other.
+    @Published private(set) var sessionPower: ChatSessionPower?
+    @Published private(set) var isPoweringOn = false
+    @Published private(set) var powerError: ChatPowerError?
 
     static let replyPollNanos: UInt64 = 1_500_000_000
     static let idlePollNanos: UInt64 = 15_000_000_000
+    /// How stale the session's state may get while the screen is open. The
+    /// state changes on the platform's own schedule (a 60 minute idle freeze),
+    /// not with the conversation, so it is read far less often than the
+    /// messages — one read a minute per open screen rather than one per poll.
+    static let powerRefreshSeconds: TimeInterval = 60
 
     private var api: APIClient?
     // The newest message id a read has delivered — not one appended by send(),
@@ -28,6 +40,11 @@ final class ChatViewModel: ObservableObject {
     // dropped rather than applied, because its pending/queued would put the
     // screen back to a state it has already left.
     private var readSeq: Int64 = 0
+    // When the session's state was last read, so the poll loop can refresh it
+    // on its own slower schedule. Cleared by anything that changes the state —
+    // a send restores an archived session (AC4) — so the next poll reads it
+    // again rather than showing what was true before.
+    private var powerReadAt: Date?
 
     init(api: APIClient?) {
         self.api = api
@@ -46,10 +63,14 @@ final class ChatViewModel: ObservableObject {
     // reply is in progress, queued or sending — only guarded against itself
     // (rapid taps).
     var canSync: Bool { hasLoaded && !isSyncing }
+    /// Only an archived session is turned on from here, and only one tap at a
+    /// time (PRD-1 AC12).
+    var canPowerOn: Bool { sessionPower?.power.canPowerOn == true && !isPoweringOn }
 
     func pollWhileVisible() async {
         while !Task.isCancelled {
             await load()
+            await loadSessionPower()
             try? await Task.sleep(nanoseconds: isReplying ? Self.replyPollNanos : Self.idlePollNanos)
         }
     }
@@ -135,6 +156,9 @@ final class ChatViewModel: ObservableObject {
             case .queued(let held):
                 queued = held
             }
+            // A send opens the session, or restores an archived one (AC4), so
+            // whatever the chip was showing is no longer what is true.
+            powerReadAt = nil
             return true
         } catch {
             self.error = ChatError(error)
@@ -172,6 +196,49 @@ final class ChatViewModel: ObservableObject {
             }
         }
         queued = nil
+    }
+
+    /// Reads whether this conversation's session is on, at most once every
+    /// `powerRefreshSeconds` unless `force` says somebody asked for it now —
+    /// the chip's own retry, and right after a turn-on. A failure is kept in
+    /// `powerError` and the last state is left on screen: a chip blanked by a
+    /// network blip reads as "no session", which is a different fact.
+    func loadSessionPower(force: Bool = false) async {
+        guard let api else { return }
+        if !force, let read = powerReadAt, Date().timeIntervalSince(read) < Self.powerRefreshSeconds {
+            return
+        }
+        do {
+            sessionPower = try await api.chatSessionPower()
+            powerReadAt = Date()
+            powerError = nil
+        } catch is CancellationError {
+        } catch {
+            powerError = ChatPowerError(error)
+        }
+    }
+
+    /// Turns this conversation's session back on. The same session comes back
+    /// — the server restores the one its own row names — so the conversation
+    /// carries on in it and no second session appears (PRD-1 AC12 · AC4).
+    func powerOn() async {
+        guard let api, canPowerOn else { return }
+        isPoweringOn = true
+        powerError = nil
+        notice = nil
+        defer { isPoweringOn = false }
+        do {
+            let result = try await api.powerOnChatSession()
+            sessionPower = result
+            // An accepted turn-on whose state never came back is not a state
+            // to sit on: the next poll reads it again rather than leaving the
+            // chip on "알 수 없음" for the whole refresh window.
+            powerReadAt = result.power == .unknown ? nil : Date()
+            notice = result.powerOnNotice
+        } catch is CancellationError {
+        } catch {
+            powerError = ChatPowerError(error)
+        }
     }
 
     func refreshPlugins() async {
