@@ -11,8 +11,10 @@ final class ChatViewModel: ObservableObject {
     @Published private(set) var isSending = false
     @Published private(set) var isRefreshing = false
     @Published private(set) var isSyncing = false
+    @Published private(set) var isArchiving = false
     @Published var notice: String?
     @Published private(set) var error: ChatError?
+    @Published var archiveError: ChatArchiveError?
 
     static let replyPollNanos: UInt64 = 1_500_000_000
     static let idlePollNanos: UInt64 = 15_000_000_000
@@ -46,6 +48,18 @@ final class ChatViewModel: ObservableObject {
     // reply is in progress, queued or sending — only guarded against itself
     // (rapid taps).
     var canSync: Bool { hasLoaded && !isSyncing }
+
+    /// The session answering this conversation, which is what an archive names
+    /// (PRD-1 AC11). Empty until the first message opens one.
+    var sessionID: String { conversation?.sessionID ?? "" }
+
+    /// Whether there is a session to hand back. Off before the first message
+    /// opens one, and off for the states the server refuses anyway — a reply in
+    /// progress or a message waiting, either of which would restore the session
+    /// right after it was archived (PRD-1 AC11).
+    var canArchive: Bool {
+        hasLoaded && !sessionID.isEmpty && !isArchiving && !isSending && !isReplying && queued == nil
+    }
 
     func pollWhileVisible() async {
         while !Task.isCancelled {
@@ -184,6 +198,39 @@ final class ChatViewModel: ObservableObject {
             notice = try await api.refreshChatPlugins().notice
         } catch {
             self.error = ChatError(error, refreshing: true)
+        }
+    }
+
+    /// Hands back the environment of `sessionID` — the session the confirmation
+    /// named (PRD-1 AC11).
+    ///
+    /// The id comes from the confirmation rather than from the state as it is
+    /// now: drawing the confirmation and tapping it are two steps, and if
+    /// another session took over the conversation in between, the server
+    /// refuses rather than archiving the one that took over.
+    ///
+    /// The conversation is re-read afterwards either way: on success because
+    /// the history and the session it points at are untouched and the screen
+    /// should show that (PRD-1 AC4), and on the two refusals that mean the
+    /// screen's idea of the session is stale. Nothing here touches the draft —
+    /// a refusal must not cost the words somebody is in the middle of writing.
+    @discardableResult
+    func archive(sessionID: String) async -> Bool {
+        guard let api, !sessionID.isEmpty, canArchive else { return false }
+        isArchiving = true
+        error = nil
+        notice = nil
+        archiveError = nil
+        defer { isArchiving = false }
+        do {
+            notice = try await api.archiveChatSession(sessionID: sessionID).notice
+            await load()
+            return true
+        } catch {
+            let failure = ChatArchiveError(error)
+            archiveError = failure
+            if failure.rereadsConversation { await load() }
+            return false
         }
     }
 }
