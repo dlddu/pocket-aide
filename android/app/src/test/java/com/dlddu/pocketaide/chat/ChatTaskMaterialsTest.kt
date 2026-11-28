@@ -1,6 +1,7 @@
 package com.dlddu.pocketaide.chat
 
 import com.dlddu.pocketaide.api.ApiClient
+import com.dlddu.pocketaide.api.ApiException
 import com.dlddu.pocketaide.auth.InMemoryTokenStore
 import com.dlddu.pocketaide.auth.TokenBundle
 import kotlinx.coroutines.test.runTest
@@ -68,7 +69,7 @@ class ChatTaskMaterialsTest {
     """.trimIndent()
 
     @Test
-    fun `the pull requests of earlier turns arrive with the task's materials`() = runTest {
+    fun thePullRequestsOfEarlierTurnsArriveWithTheTasksMaterials() = runTest {
         server.enqueue(json(reviewed))
         val materials = api().chatTaskMaterials("t1")
 
@@ -83,7 +84,7 @@ class ChatTaskMaterialsTest {
     }
 
     @Test
-    fun `a recorded title is shown and a missing one falls back to the identifier`() = runTest {
+    fun aRecordedTitleIsShownAndAMissingOneFallsBackToTheIdentifier() = runTest {
         server.enqueue(json(reviewed))
         val artifacts = api().chatTaskMaterials("t1").artifacts
 
@@ -101,7 +102,7 @@ class ChatTaskMaterialsTest {
     }
 
     @Test
-    fun `a ref with no address is not a tap and names no repository`() = runTest {
+    fun aRefWithNoAddressIsNotATapAndNamesNoRepository() = runTest {
         server.enqueue(json(reviewed))
         val bare = api().chatTaskMaterials("t1").artifacts.first { it.ref == "pull/42" }
 
@@ -114,7 +115,7 @@ class ChatTaskMaterialsTest {
     }
 
     @Test
-    fun `decided and still-open are different lists, and trade-offs are unrecorded`() = runTest {
+    fun decidedAndStillOpenAreDifferentListsAndTradeoffsAreUnrecorded() = runTest {
         server.enqueue(json(reviewed))
         val materials = api().chatTaskMaterials("t1")
 
@@ -142,7 +143,7 @@ class ChatTaskMaterialsTest {
     }
 
     @Test
-    fun `a task with nothing recorded reads as empty rather than as unread`() = runTest {
+    fun aTaskWithNothingRecordedReadsAsEmptyRatherThanAsUnread() = runTest {
         server.enqueue(
             json(
                 """{"task_id":"t9","session_id":"worker-1","artifacts":[],
@@ -161,29 +162,29 @@ class ChatTaskMaterialsTest {
     // The four refusals stay four different sentences, and none of them says
     // the task produced nothing.
     @Test
-    fun `each refusal keeps its own sentence`() {
+    fun eachRefusalKeepsItsOwnSentence() {
         assertEquals(
             ChatTaskMaterialsError.NOT_FOUND,
             ChatTaskMaterialsError.from(
-                com.dlddu.pocketaide.api.ApiException.BadStatus(404, ""),
+                ApiException.BadStatus(404, ""),
             ),
         )
         assertEquals(
             ChatTaskMaterialsError.UNAVAILABLE,
             ChatTaskMaterialsError.from(
-                com.dlddu.pocketaide.api.ApiException.BadStatus(409, ""),
+                ApiException.BadStatus(409, ""),
             ),
         )
         assertEquals(
             ChatTaskMaterialsError.UNSUPPORTED,
             ChatTaskMaterialsError.from(
-                com.dlddu.pocketaide.api.ApiException.BadStatus(501, ""),
+                ApiException.BadStatus(501, ""),
             ),
         )
         assertEquals(
             ChatTaskMaterialsError.UNREACHABLE,
             ChatTaskMaterialsError.from(
-                com.dlddu.pocketaide.api.ApiException.BadStatus(500, ""),
+                ApiException.BadStatus(500, ""),
             ),
         )
         // Four different sentences, because the person's next move differs in
@@ -196,7 +197,7 @@ class ChatTaskMaterialsTest {
     // ones it knows, and a backend that does not send this route's newer fields
     // at all must still decode.
     @Test
-    fun `unknown and missing fields both decode`() = runTest {
+    fun unknownAndMissingFieldsBothDecode() = runTest {
         server.enqueue(
             json(
                 """{"task_id":"t1","artifacts":[{"ref":"pull/1","turn_id":2,

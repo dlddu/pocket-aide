@@ -187,8 +187,11 @@ func (e *Engine) TaskMaterials(ctx context.Context, userID int64, taskID string)
 	if err != nil {
 		return out, err
 	}
-	out.Artifacts = fold.artifacts
-	out.Decisions = fold.decisions
+	// Copied out of the fold, because the fold is shared: the caller adds
+	// recorded titles to these entries, and writing into the slice the cache
+	// holds would be a write to memory another request may be cloning.
+	out.Artifacts = append(out.Artifacts, fold.artifacts...)
+	out.Decisions = append(out.Decisions, fold.decisions...)
 	out.Open = openPointsOf(fold.tail)
 	out.FoldedThrough = fold.through
 	out.Truncated = fold.truncated
@@ -206,6 +209,10 @@ func (e *Engine) foldTaskTurns(ctx context.Context, sessionID, taskID string) (m
 	// answer — wasted work in a case that does not happen, rather than a lock
 	// held across a network call.
 	fold := e.materialsFoldFor(sessionID, taskID)
+	// Re-decided by this run rather than carried: a fold that stopped at the
+	// bound last time and reaches the end this time has gathered everything,
+	// and saying it is still partial would understate what is on screen.
+	fold.truncated = false
 	for page := 0; ; page++ {
 		if page == materialsFoldMaxPages {
 			fold.truncated = true
