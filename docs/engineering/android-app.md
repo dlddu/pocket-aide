@@ -16,7 +16,7 @@
 - **스택**: Kotlin, Jetpack Compose(Material3), kotlinx.serialization, OkHttp, coroutines/StateFlow. DI 프레임워크 없이 `AppContainer` 하나가 의존을 묶는다.
 - **iOS와의 대응**: 화면·뷰모델·API 확장은 iOS 파일 단위로 옮긴다(`ios/PocketAide/Todos/*` → `android/.../todos/*`). 한국어 카피·API 경로·JSON 형태·접근성 식별자(`testTag`)는 iOS와 같다.
 - **디자인 시스템**: 색은 iOS 에셋 카탈로그(`ios/Shared/Sources/DesignSystem/Resources/Colors.xcassets`)에서 생성한 `designsystem/GeneratedPalettes.kt`를 쓴다. 스페이싱·라운드·타이포 크기는 `DesignTokens.kt`가 iOS `Tokens.swift`와 같은 값으로 노출한다. 토큰 변경은 `../design-system/tokens.md` → iOS 에셋 → 생성 파일 순서로 반영한다.
-- **탭 구성**: `../design-system/tokens.md` §7의 하단 노출(다짐 · 채팅 · 승인 · 세션 · 더 보기)과 「더 보기」 안 순서(PR 모니터 · 임시공간 · 개인 · 회사 · 루틴 · 알림 기록 · 커밋 상태)를 따른다(2026-11-09 개정 · PR #397).
+- **탭 구성**: `../design-system/tokens.md` §7의 하단 노출(다짐 · PR 모니터 · 승인 · 세션 · 더 보기)과 「더 보기」 안 순서(채팅 · 임시공간 · 개인 · 회사 · 루틴 · 알림 기록)를 따른다.
 
 ## 2. 인증
 
