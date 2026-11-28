@@ -554,6 +554,7 @@ class ChatViewModelTest {
         // and it leaves the words alone.
         server.enqueue(MockResponse().setBody(chatJson(message(1, "assistant", "답"))))
         vm.load()
+        server.takeRequest()
         assertEquals("첫 줄\n둘째 줄 ", vm.draft.value.text)
 
         server.enqueue(MockResponse().setResponseCode(202).setBody("""{"message":${message(2, "user", "첫 줄")}}"""))

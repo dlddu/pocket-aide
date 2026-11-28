@@ -75,8 +75,8 @@ class ChatComposerDraftTest {
         // 실제로는 사용자가 칸을 눌러 커서를 두고 쓴다(AC11 이 커서 자리를
         // 보장하지 않는 이유).
         compose.onNodeWithTag("chat.composer.field").performTextInput("이어서")
-        compose.onNodeWithTag("chat.composer.field").assertTextContains("쓰다 만 메시지")
-        compose.onNodeWithTag("chat.composer.field").assertTextContains("이어서")
+        compose.onNodeWithTag("chat.composer.field").assertTextContains("쓰다 만 메시지", substring = true)
+        compose.onNodeWithTag("chat.composer.field").assertTextContains("이어서", substring = true)
     }
 
     @Test
