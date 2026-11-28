@@ -57,7 +57,7 @@ class ChatTaskTurnsLazyTest {
         id: String = "t1",
         turnsTotal: Long = 3,
         waiting: ChatTaskWaiting? = null,
-        status: String = ChatTaskStatus.BLOCKED,
+        status: String = ChatTaskStatus.RUNNING,
         choiceTurnId: Long = 0,
     ) = ChatTask(
         id = id,

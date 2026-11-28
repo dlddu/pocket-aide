@@ -78,8 +78,13 @@ func TestGetChatTasks_NoSessionIsAnEmptyList(t *testing.T) {
 	if len(body.Tasks) != 0 || body.SessionID != "" || body.Truncated {
 		t.Fatalf("body = %+v", body)
 	}
-	if body.Counts["blocked"] != 0 || len(body.Counts) == 0 {
+	if body.Counts["review"] != 0 || len(body.Counts) == 0 {
 		t.Fatalf("counts = %v", body.Counts)
+	}
+	// Work that is the person's to decide has one name on the wire. A second
+	// key for the same judgment would give the panel a chip it cannot filter to.
+	if _, ok := body.Counts["blocked"]; ok {
+		t.Fatalf("counts = %v, want no blocked key", body.Counts)
 	}
 }
 
@@ -110,7 +115,9 @@ func TestGetChatTasks_ServesTheWorkPage(t *testing.T) {
 		t.Fatalf("tasks = %+v", body.Tasks)
 	}
 	got := body.Tasks[0]
-	if got.Status != "blocked" || got.Description != "무엇을 why" || got.CompletionCriteria != "머지되면 끝" {
+	// The platform page is written with the records' older name for the same
+	// judgment; the route answers the one status the panel draws a chip for.
+	if got.Status != "review" || got.Description != "무엇을 why" || got.CompletionCriteria != "머지되면 끝" {
 		t.Fatalf("the agreed task fields did not reach the panel: %+v", got)
 	}
 	if got.TurnsTotal != 2 || !got.Migrated {

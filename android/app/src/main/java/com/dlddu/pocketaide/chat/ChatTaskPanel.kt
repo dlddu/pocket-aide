@@ -340,12 +340,11 @@ private fun TaskCard(task: ChatTask, onSelect: (ChatTask) -> Unit) {
                 modifier = Modifier.testTag("chat.tasks.item.description"),
             )
         }
-        // A blocked or reviewing task is the one a person has to act on, so its
-        // reason and next action are spelled out — and when the ledger recorded
-        // neither, the panel says so instead of leaving a blank.
-        // What the session is asking, and what it would take to be done. The
-        // ledger's free-text reason and next action were the parent's own
-        // bookkeeping; these are the records a person actually reads.
+        // A task under review is the one a person has to act on, so what the
+        // session is asking and what it would take to be done are spelled out —
+        // and when the records hold neither, the panel says so instead of
+        // leaving a blank. The ledger's free-text reason and next action were
+        // the parent's own bookkeeping; these are what a person actually reads.
         if (ChatTaskStatus.needsAttention(task.status) ||
             task.waiting?.question?.isNotBlank() == true || task.completionCriteria.isNotBlank()
         ) {
@@ -355,7 +354,7 @@ private fun TaskCard(task: ChatTask, onSelect: (ChatTask) -> Unit) {
     }
 }
 
-/** Where one task stands. Blocked and review carry the area's accent, because they are the two a person is meant to act on. */
+/** Where one task stands. Review carries the area's accent, because it is the one a person is meant to act on. */
 @Composable
 internal fun StatusBadge(status: String, tag: String = "chat.tasks.item.status.$status") {
     val ink = DesignTokens.Colors.ink(PANEL_AREA)

@@ -131,21 +131,61 @@ data class ChatTaskList(
     // The backend could not walk the whole ledger, so this is a prefix. Saying
     // so keeps a partial list from reading as "this is all the work".
     val truncated: Boolean = false,
-)
+) {
+    /**
+     * The same list with every status one this version draws, and the counts
+     * added up under those names.
+     *
+     * The backend folds the ledger's two names for a judgment already, so this
+     * is for the answer of a pod that has not rolled yet — and for a newer one
+     * that starts counting a status this build has no chip for. Both are the
+     * same mistake if left alone: a count under a name nothing is drawn for,
+     * which makes the chips disagree with the list and with each other.
+     *
+     * Counts are remapped rather than recounted from [tasks]: they are the
+     * whole ledger's, including the tail a truncated walk never sent, so
+     * counting the rows on hand would quietly shrink them. Keys that fold
+     * together are summed, so the total still matches what the ledger holds.
+     * Every drawn status keeps a key at zero, which is what lets the panel tell
+     * "none of this status" from "no such status".
+     */
+    fun normalised(): ChatTaskList {
+        val folded = ChatTaskStatus.order.associateWith { 0 }.toMutableMap()
+        counts.forEach { (status, count) ->
+            val key = ChatTaskStatus.normalise(status)
+            folded[key] = (folded[key] ?: 0) + count
+        }
+        return copy(
+            tasks = tasks.map { it.copy(status = ChatTaskStatus.normalise(it.status)) },
+            counts = folded,
+        )
+    }
+}
 
 object ChatTaskStatus {
-    const val BLOCKED = "blocked"
     const val REVIEW = "review"
     const val RUNNING = "running"
     const val PLANNED = "planned"
     const val COMPLETED = "completed"
     const val UNKNOWN = "unknown"
 
+    /**
+     * The ledger's other name for work that is the person's to decide, which is
+     * [REVIEW] said twice: a task whose missing prerequisite is an approval, a
+     * permission or a decision only the person can give. Records written before
+     * the two became one status still hold it, a backend pod that has not rolled
+     * yet still sends it, and a phone can still have it saved as the status it
+     * was last filtering by — so it is read here and answered as [REVIEW].
+     *
+     * It is not in [order] and has no label on purpose: there is one chip for
+     * one judgment, and a second one would split the same work into two counts.
+     */
+    private const val LEGACY_BLOCKED = "blocked"
+
     /** Display order: what needs a person first, then what waits, then done. */
-    val order = listOf(BLOCKED, REVIEW, RUNNING, PLANNED, COMPLETED, UNKNOWN)
+    val order = listOf(REVIEW, RUNNING, PLANNED, COMPLETED, UNKNOWN)
 
     fun label(status: String): String = when (status) {
-        BLOCKED -> "차단"
         REVIEW -> "검토"
         RUNNING -> "진행"
         PLANNED -> "예정"
@@ -154,7 +194,39 @@ object ChatTaskStatus {
     }
 
     /** Whether this status is one a person is expected to act on. */
-    fun needsAttention(status: String): Boolean = status == BLOCKED || status == REVIEW
+    fun needsAttention(status: String): Boolean = status == REVIEW
+
+    /**
+     * One task status as this version draws it. The backend already folds the
+     * ledger's two names into one, so this is for the answer of a pod that has
+     * not rolled yet: without it the same task would be counted under a chip
+     * the panel no longer has and so be drawn nowhere.
+     *
+     * Only [LEGACY_BLOCKED] folds. A status this version does not know is
+     * [UNKNOWN], never a judgment — telling somebody a decision is theirs on no
+     * evidence is worse than saying the record is not understood here.
+     */
+    fun normalise(status: String): String {
+        val candidate = status.trim().lowercase()
+        if (candidate == LEGACY_BLOCKED) return REVIEW
+        return if (candidate in order) candidate else UNKNOWN
+    }
+
+    /**
+     * A saved status to filter by, as this version can draw it: [REVIEW] for
+     * either of the ledger's two names for a judgment, and null — 전체 — for a
+     * status this version has no chip for.
+     *
+     * A phone keeps the chip it was last filtering by across a rotation, a
+     * fold and a process death. Left alone, a saved `blocked` would narrow the
+     * list to a status no task carries any more and no chip can be pressed to
+     * undo, so the panel would look empty with the work still there.
+     */
+    fun normaliseFilter(status: String?): String? {
+        val candidate = status?.trim()?.lowercase() ?: return null
+        if (candidate == LEGACY_BLOCKED) return REVIEW
+        return candidate.takeIf { it in order }
+    }
 }
 
 /**
@@ -345,7 +417,14 @@ enum class ChatTaskError(val message: String) {
     }
 }
 
-suspend fun ApiClient.chatTasks(): ChatTaskList = get("/api/chat/tasks", ChatTaskList.serializer())
+/**
+ * The task list, with every status folded to one this version draws
+ * ([ChatTaskList.normalised]). The fold is here rather than in the panel so
+ * there is one door the statuses come through: a screen, a count and a saved
+ * filter cannot then disagree about what a record means.
+ */
+suspend fun ApiClient.chatTasks(): ChatTaskList =
+    get("/api/chat/tasks", ChatTaskList.serializer()).normalised()
 
 /**
  * Stores one request on [taskId], where it becomes that task's next turn. [id]

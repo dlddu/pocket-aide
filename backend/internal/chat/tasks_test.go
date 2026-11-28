@@ -181,6 +181,13 @@ func bindSession(t *testing.T, store *chat.Store, userID int64, sessionID string
 
 func str(s string) *string { return &s }
 
+// legacyBlockedStatus is what a work record written before "blocked" and
+// "review" became one judgment status holds, and what a writer that has not
+// caught up still produces. The package exports no constant for it on purpose
+// — nothing may build a count or a chip from it — so the tests that stand for
+// an old record spell the wire value out.
+const legacyBlockedStatus = "blocked"
+
 func row(id, status string) workRow {
 	return workRow{ID: id, Title: "작업 " + id, Status: status}
 }
@@ -212,7 +219,8 @@ func TestTasks_CarryTheAgreedModelAndWalkEveryPage(t *testing.T) {
 	rows[0].CompletionCriteria = str("머지되면 끝")
 	rows[0].TurnsTotal = 3
 	rows[0].Migrated = true
-	rows[1].Status = chat.TaskStatusBlocked
+	// A record written before the fold. It is a review task to the panel.
+	rows[1].Status = legacyBlockedStatus
 	platform.rows["sess-1"] = rows
 
 	list, err := engine.Tasks(context.Background(), 1)
@@ -234,13 +242,13 @@ func TestTasks_CarryTheAgreedModelAndWalkEveryPage(t *testing.T) {
 	if first.TurnsTotal != 3 || !first.Migrated {
 		t.Fatalf("task = %+v, want the turn count and the carried-over flag", first)
 	}
-	if list.Counts[chat.TaskStatusBlocked] != 1 || list.Counts[chat.TaskStatusRunning] != 149 {
+	if list.Counts[chat.TaskStatusReview] != 1 || list.Counts[chat.TaskStatusRunning] != 149 {
 		t.Fatalf("counts = %v", list.Counts)
 	}
 	// Every status is a key even at zero, so the panel's filter chips do not
 	// have to decide between "no such status" and "none of these".
 	for _, s := range []string{chat.TaskStatusPlanned, chat.TaskStatusReview,
-		chat.TaskStatusCompleted, chat.TaskStatusUnknown} {
+		chat.TaskStatusCompleted, chat.TaskStatusUnknown, chat.TaskStatusRunning} {
 		if _, ok := list.Counts[s]; !ok {
 			t.Fatalf("counts = %v, want %s present at zero", list.Counts, s)
 		}
@@ -281,7 +289,7 @@ func TestTasks_DeduplicatesByTaskID(t *testing.T) {
 func TestTasks_WaitingComesFromTheLatestTurn(t *testing.T) {
 	store, engine, platform := workEngine(t)
 	bindSession(t, store, 1, "sess-1")
-	waiting := row("t-waiting", chat.TaskStatusBlocked)
+	waiting := row("t-waiting", chat.TaskStatusReview)
 	waiting.Latest = &workLatest{ID: 7, Request: str("이거 해 줘"), Question: str("어디까지 할까요?")}
 	running := row("t-running", chat.TaskStatusRunning)
 	running.Latest = &workLatest{ID: 8, Request: str("저것도"), StartedAt: str("2026-11-20T00:00:00Z")}
@@ -377,7 +385,7 @@ func TestTasks_ChoiceTurnWordsComeFromTheTurnThatOfferedThem(t *testing.T) {
 	}
 	// A turn that offered sentences without saying anything itself. Nothing to
 	// draw is not an empty frame.
-	mute := row("t-mute", chat.TaskStatusBlocked)
+	mute := row("t-mute", chat.TaskStatusReview)
 	mute.Latest = &workLatest{
 		ID: 50, Request: str("   "), Explanation: str(""),
 		Choices: []chat.TaskChoice{{Label: "그대로", RequestText: "그대로 진행해 줘"}},
@@ -616,5 +624,109 @@ func TestTasks_NoMonitoringRowsArriveAsTasks(t *testing.T) {
 	}
 	if len(list.Tasks) != 2 {
 		t.Fatalf("tasks = %+v, want both — the platform sends no monitoring rows here", list.Tasks)
+	}
+}
+
+// There is one status for work that is the person's to decide. A record the
+// platform still writes as "blocked" and one written as "review" are the same
+// status to the panel, counted once under one name, so the panel has one chip
+// to press rather than two that mean the same thing.
+func TestTasks_BlockedAndReviewAreOneJudgmentStatus(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	old := row("t-old", legacyBlockedStatus)
+	old.CompletionCriteria = str("권한이 생기면 끝")
+	old.Latest = &workLatest{ID: 7, Request: str("권한을 줘"), Question: str("이 저장소 읽기를 열어 줄까요?")}
+	platform.rows["sess-1"] = []workRow{
+		old,
+		row("t-new", chat.TaskStatusReview),
+		row("t-running", chat.TaskStatusRunning),
+	}
+
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{"t-old", "t-new"} {
+		if got := taskByID(t, list, id).Status; got != chat.TaskStatusReview {
+			t.Fatalf("%s status = %q, want the one judgment status %q", id, got, chat.TaskStatusReview)
+		}
+	}
+	if list.Counts[chat.TaskStatusReview] != 2 || list.Counts[chat.TaskStatusRunning] != 1 {
+		t.Fatalf("counts = %v, want both judgment records under review once each", list.Counts)
+	}
+	// No second key for the same judgment: a panel that read one would draw a
+	// chip nothing can be filtered to, and the two counts would not add up to
+	// the list.
+	if _, ok := list.Counts[legacyBlockedStatus]; ok {
+		t.Fatalf("counts = %v, want no %q key", list.Counts, legacyBlockedStatus)
+	}
+	total := 0
+	for _, n := range list.Counts {
+		total += n
+	}
+	if total != len(list.Tasks) {
+		t.Fatalf("counts %v sum to %d, want one count per task (%d)", list.Counts, total, len(list.Tasks))
+	}
+	// Why the old record was the person's is still on it. Folding the name
+	// must not cost the evidence a person reads to act.
+	carried := taskByID(t, list, "t-old")
+	if carried.CompletionCriteria != "권한이 생기면 끝" ||
+		carried.Waiting == nil || carried.Waiting.Question != "이 저장소 읽기를 열어 줄까요?" {
+		t.Fatalf("the old record lost what it was waiting on: %+v", carried)
+	}
+}
+
+// The fold is exactly one value wide. A status the records do not have is still
+// unknown — reading it as review would tell a person a decision is theirs on no
+// evidence at all — and case and padding are the platform's own column, not a
+// different status.
+func TestTasks_OnlyBlockedFolds(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{
+		row("t-pad", "  BLOCKED  "),
+		row("t-future", "awaiting_something"),
+		row("t-empty", ""),
+	}
+
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := taskByID(t, list, "t-pad").Status; got != chat.TaskStatusReview {
+		t.Fatalf("padded status = %q, want %q", got, chat.TaskStatusReview)
+	}
+	for _, id := range []string{"t-future", "t-empty"} {
+		if got := taskByID(t, list, id).Status; got != chat.TaskStatusUnknown {
+			t.Fatalf("%s status = %q, want %q — an unknown status is not a decision", id, got, chat.TaskStatusUnknown)
+		}
+	}
+	if list.Counts[chat.TaskStatusReview] != 1 || list.Counts[chat.TaskStatusUnknown] != 2 {
+		t.Fatalf("counts = %v", list.Counts)
+	}
+}
+
+// A retried page can repeat a row, and across a writer upgrade the two
+// sightings can disagree on the name of the same judgment. The task is one row
+// either way, under the one status — neither duplicated nor flipped by whichever
+// sighting came last.
+func TestTasks_ARepeatedRowUnderBothNamesIsOneReviewTask(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	platform.rows["sess-1"] = []workRow{
+		row("t-same", legacyBlockedStatus),
+		row("t-same", chat.TaskStatusReview),
+	}
+
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list.Tasks) != 1 || list.Tasks[0].Status != chat.TaskStatusReview {
+		t.Fatalf("tasks = %+v, want one review task", list.Tasks)
+	}
+	if list.Counts[chat.TaskStatusReview] != 1 {
+		t.Fatalf("counts = %v, want the repeat counted once", list.Counts)
 	}
 }

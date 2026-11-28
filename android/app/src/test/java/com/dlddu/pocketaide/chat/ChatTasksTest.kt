@@ -68,8 +68,8 @@ class ChatTasksTest {
         server.enqueue(
             MockResponse().setBody(
                 tasksJson(
-                    tasks = task("t1", "blocked", question = "CI 가 막혔다", turns = 2),
-                    counts = """{"blocked":1,"running":0}""",
+                    tasks = task("t1", "review", question = "CI 가 막혔다", turns = 2),
+                    counts = """{"review":1,"running":0}""",
                 ),
             ),
         )
@@ -84,7 +84,7 @@ class ChatTasksTest {
         assertFalse(state.isEmpty)
         assertEquals("cx1", state.sessionId)
         val task = state.tasks.single()
-        assertEquals(ChatTaskStatus.BLOCKED, task.status)
+        assertEquals(ChatTaskStatus.REVIEW, task.status)
         // The two fields the ledger page had nowhere to put.
         assertEquals("무엇을 why", task.description)
         assertEquals("머지되면 끝", task.completionCriteria)
@@ -92,7 +92,70 @@ class ChatTasksTest {
         // beside it.
         assertEquals("CI 가 막혔다", task.waiting?.question)
         assertEquals(7L, task.waiting?.turnId)
-        assertEquals(1, state.counts["blocked"])
+        assertEquals(1, state.counts["review"])
+    }
+
+    /**
+     * A backend pod that has not rolled yet still answers with the ledger's
+     * older name for the same judgment. The app reads it as the one status it
+     * draws, so the task appears under the 검토 chip and is counted there —
+     * instead of being filed under a chip this build does not have and so drawn
+     * nowhere.
+     */
+    @Test
+    fun anOlderBackendsBlockedIsTheOneReviewStatus() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setBody(
+                tasksJson(
+                    tasks = task("t-old", "blocked", question = "권한을 열어 줄까요?") + "," +
+                        task("t-new", "review") + "," + task("t-run", "running"),
+                    counts = """{"blocked":2,"review":3,"running":1,"planned":0,"completed":0,"unknown":0}""",
+                ),
+            ),
+        )
+
+        vm.loadTasks()
+        server.takeRequest()
+
+        val state = vm.tasks.value
+        assertEquals(
+            listOf(ChatTaskStatus.REVIEW, ChatTaskStatus.REVIEW, ChatTaskStatus.RUNNING),
+            state.tasks.map { it.status },
+        )
+        // What the old record was waiting on is still readable — folding the
+        // name must not cost the evidence a person acts on.
+        assertEquals("권한을 열어 줄까요?", state.tasks.first().waiting?.question)
+        // The two counts add up under the one name, and the retired one is gone
+        // so no chip can be drawn for it.
+        assertEquals(5, state.counts[ChatTaskStatus.REVIEW])
+        assertFalse(state.counts.containsKey("blocked"))
+        // Every drawn status still has a key, which is what tells "none of this
+        // status" from "no such status" apart.
+        assertEquals(ChatTaskStatus.order.toSet(), state.counts.keys)
+    }
+
+    /**
+     * A count under a status this build has no chip for is added to 알 수 없음
+     * rather than dropped. Dropping it would make the chips add up to less than
+     * the ledger holds, which reads as work having gone away.
+     */
+    @Test
+    fun aCountThisBuildCannotDrawBecomesUnknownRatherThanVanishing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setBody(
+                tasksJson(tasks = task("t1", "review"), counts = """{"review":1,"deploying":4}"""),
+            ),
+        )
+
+        vm.loadTasks()
+        server.takeRequest()
+
+        val counts = vm.tasks.value.counts
+        assertEquals(1, counts[ChatTaskStatus.REVIEW])
+        assertEquals(4, counts[ChatTaskStatus.UNKNOWN])
+        assertEquals(5, counts.values.sum())
     }
 
     // 선택지를 올린 그 턴의 세 가지(보낸 요청·설명·질문)가 목록 응답으로
@@ -221,21 +284,73 @@ class ChatTasksTest {
     // A status the app does not know is shown as unknown rather than guessed.
     @Test
     fun anUnknownStatusIsLabelledNotGuessed() {
-        assertEquals("차단", ChatTaskStatus.label(ChatTaskStatus.BLOCKED))
         assertEquals("검토", ChatTaskStatus.label(ChatTaskStatus.REVIEW))
         assertEquals("알 수 없음", ChatTaskStatus.label("deploying"))
-        assertTrue(ChatTaskStatus.needsAttention(ChatTaskStatus.BLOCKED))
         assertTrue(ChatTaskStatus.needsAttention(ChatTaskStatus.REVIEW))
         assertFalse(ChatTaskStatus.needsAttention(ChatTaskStatus.RUNNING))
         assertFalse(ChatTaskStatus.needsAttention(ChatTaskStatus.COMPLETED))
     }
 
-    // Display order puts what needs a person first.
+    // Display order puts what needs a person first. There is one such status.
     @Test
     fun displayOrderPutsAttentionFirst() {
         assertEquals(
-            listOf("blocked", "review", "running", "planned", "completed", "unknown"),
+            listOf("review", "running", "planned", "completed", "unknown"),
             ChatTaskStatus.order,
         )
+        assertEquals(1, ChatTaskStatus.order.count { ChatTaskStatus.needsAttention(it) })
+    }
+
+    /**
+     * The fold is exactly one value wide, and it is case- and padding-proof
+     * because that is the platform's own column rather than a different status.
+     * A status this build does not know stays 알 수 없음: telling somebody a
+     * decision is theirs on no evidence is worse than saying so.
+     */
+    @Test
+    fun onlyTheLedgersOtherNameForAJudgmentFolds() {
+        assertEquals(ChatTaskStatus.REVIEW, ChatTaskStatus.normalise("blocked"))
+        assertEquals(ChatTaskStatus.REVIEW, ChatTaskStatus.normalise("  BLOCKED  "))
+        assertEquals(ChatTaskStatus.REVIEW, ChatTaskStatus.normalise("review"))
+        assertEquals(ChatTaskStatus.RUNNING, ChatTaskStatus.normalise("running"))
+        assertEquals(ChatTaskStatus.UNKNOWN, ChatTaskStatus.normalise("deploying"))
+        assertEquals(ChatTaskStatus.UNKNOWN, ChatTaskStatus.normalise(""))
+    }
+
+    /**
+     * A phone keeps the chip it was filtering by across a rotation, a fold and
+     * a process death, and that value was written by whichever build last ran.
+     * A saved 차단 comes back as 검토 — the same work, the chip that is on
+     * screen — and a saved status this build has no chip for falls back to 전체
+     * rather than narrowing the list with no way to widen it again.
+     */
+    @Test
+    fun aSavedFilterFromAnotherBuildComesBackAsAChipThatIsOnScreen() {
+        assertEquals(ChatTaskStatus.REVIEW, ChatTaskStatus.normaliseFilter("blocked"))
+        assertEquals(ChatTaskStatus.REVIEW, ChatTaskStatus.normaliseFilter("review"))
+        assertEquals(ChatTaskStatus.UNKNOWN, ChatTaskStatus.normaliseFilter("unknown"))
+        assertNull(ChatTaskStatus.normaliseFilter(null))
+        assertNull("a status with no chip cannot be undone on screen", ChatTaskStatus.normaliseFilter("deploying"))
+    }
+
+    /**
+     * The saved filter and the folded list agree, so a phone restored with 차단
+     * saved shows that work under 검토 instead of an empty list with the rows
+     * still there.
+     */
+    @Test
+    fun aRestoredBlockedFilterSelectsTheSameWorkUnderReview() {
+        val tasks = listOf(
+            ChatTask(id = "t-old", status = ChatTaskStatus.normalise("blocked")),
+            ChatTask(id = "t-run", status = ChatTaskStatus.RUNNING),
+        )
+        val restored = ChatTaskFilter(ChatTaskStatus.normaliseFilter("blocked"))
+
+        assertEquals(ChatTaskStatus.REVIEW, restored.status)
+        assertEquals(listOf("t-old"), restored.select(tasks).map { it.id })
+        assertNull(restored.emptiness(tasks))
+        // Pressing the chip it came back as still goes to 전체, so the restored
+        // narrowing has a way out.
+        assertNull(restored.toggled(ChatTaskStatus.REVIEW).status)
     }
 }

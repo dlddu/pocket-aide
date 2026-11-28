@@ -194,7 +194,11 @@ fun ChatScreen(api: ApiClient) {
             }
         },
         taskListState = taskList,
-        filter = ChatTaskFilter(filterStatus, hideCompleted),
+        // The saved status is read through the fold, because what a phone has
+        // saved was written by whichever build last ran here: a status this one
+        // no longer draws a chip for would narrow the list with no chip to
+        // press to widen it again.
+        filter = ChatTaskFilter(ChatTaskStatus.normaliseFilter(filterStatus), hideCompleted),
         onFilterChange = {
             filterStatus = it.status
             hideCompleted = it.hideCompleted

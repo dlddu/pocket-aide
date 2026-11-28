@@ -132,6 +132,10 @@ func (e *Engine) TaskTurns(
 		if out.Turns == nil {
 			out.Turns = []TaskTurn{}
 		}
+		// The same fold the list route applies, from the same one place: a task
+		// opened from the panel must not be shown under a status the list it was
+		// opened from does not have.
+		out.Task.Status = normaliseStatus(out.Task.Status)
 		return out, nil
 	case http.StatusNotFound:
 		// The task is not on this slot, or this platform has no work route at
