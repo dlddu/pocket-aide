@@ -27,6 +27,72 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(onScreen.merging([]).map(\.id), [1, 4])
     }
 
+    // PRD-AI채팅.AC1 (2026-11-28 개정): a first read brings back the newest page
+    // and says that the conversation goes on before it, with the cursor to ask
+    // for that page by.
+    func testDecodesTheNewestPageWithItsBackwardCursor() throws {
+        let json = #"""
+        {"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},
+         "messages":[{"id":11,"role":"user","content":"열한째","created_at":11}],
+         "pending":null,"has_more":true,"prev_cursor":11}
+        """#
+        let thread = try JSONDecoder().decode(ChatThread.self, from: Data(json.utf8))
+        XCTAssertEqual(thread.hasMore, true)
+        XCTAssertEqual(thread.prevCursor, 11)
+    }
+
+    // An incremental read carries neither field, and a page with nothing before
+    // it carries neither either — both read as "no page to offer" rather than
+    // as a cursor of zero.
+    func testAReadWithoutABackwardCursorSaysSo() throws {
+        let incremental = #"""
+        {"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},
+         "messages":[],"pending":null}
+        """#
+        let thread = try JSONDecoder().decode(ChatThread.self, from: Data(incremental.utf8))
+        XCTAssertNil(thread.hasMore)
+        XCTAssertNil(thread.prevCursor)
+        XCTAssertEqual(thread.hasMore ?? false, false)
+        XCTAssertEqual(thread.prevCursor ?? 0, 0)
+    }
+
+    // AC2: the previous page is its own answer — messages and a cursor, with no
+    // reply in progress and no waiting message to overwrite what is on screen.
+    func testDecodesAPageOfThePast() throws {
+        let json = #"""
+        {"messages":[{"id":9,"role":"user","content":"아홉째","created_at":9},
+                     {"id":10,"role":"assistant","content":"열째","created_at":10}],
+         "has_more":true,"prev_cursor":9}
+        """#
+        let page = try JSONDecoder().decode(ChatMessagePage.self, from: Data(json.utf8))
+        XCTAssertEqual(page.messages.map(\.id), [9, 10])
+        XCTAssertEqual(page.hasMore, true)
+        XCTAssertEqual(page.prevCursor, 9)
+
+        let start = try JSONDecoder().decode(
+            ChatMessagePage.self,
+            from: Data(#"{"messages":[{"id":1,"role":"user","content":"첫째","created_at":1}]}"#.utf8)
+        )
+        XCTAssertEqual(start.hasMore, nil)
+    }
+
+    // AC2 · AC5: a page of the past goes in front of what is held, in order —
+    // and applying the same page again (the retry of a read whose answer never
+    // arrived) leaves the conversation exactly once.
+    func testAPageOfThePastGoesInFrontAndSurvivesARetry() throws {
+        func messages(_ json: String) throws -> [ChatMessage] {
+            try JSONDecoder().decode([ChatMessage].self, from: Data(json.utf8))
+        }
+        let held = try messages(#"[{"id":11,"role":"user","content":"열한째","created_at":11}]"#)
+        let older = try messages(#"[{"id":9,"role":"user","content":"아홉째","created_at":9},{"id":10,"role":"assistant","content":"열째","created_at":10}]"#)
+        XCTAssertEqual(held.merging(older).map(\.id), [9, 10, 11])
+        XCTAssertEqual(held.merging(older).merging(older).map(\.id), [9, 10, 11])
+        // And a reply arriving meanwhile keeps its place at the end: its id is
+        // above everything held, wherever it is merged in.
+        let arrived = try messages(#"[{"id":12,"role":"assistant","content":"열둘째","created_at":12}]"#)
+        XCTAssertEqual(held.merging(arrived).merging(older).map(\.id), [9, 10, 11, 12])
+    }
+
     func testDecodesAnIdleConversation() throws {
         let json = #"{"conversation":{"id":7,"title":"","created_at":1,"updated_at":1},"messages":[],"pending":null}"#
         let thread = try JSONDecoder().decode(ChatThread.self, from: Data(json.utf8))

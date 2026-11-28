@@ -130,12 +130,26 @@ struct ChatTab: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                        // Drawn from what can actually be read rather than from
+                        // hasOlder alone, so there is no handle for a page
+                        // nobody can ask for; a read in flight and a read that
+                        // failed keep it there, as the spinner and the retry.
+                        if viewModel.canLoadOlder || viewModel.isLoadingOlder || viewModel.olderError != nil {
+                            olderPage
+                        }
                         ForEach(viewModel.messages) { message in
-                            if message.isMine {
-                                myBubble(message.content)
-                            } else {
-                                aiBubble(message.content, pending: false)
+                            Group {
+                                if message.isMine {
+                                    myBubble(message.content)
+                                } else {
+                                    aiBubble(message.content, pending: false)
+                                }
                             }
+                            // Each bubble is addressable by its message, so a
+                            // prepended page can put the one being read back
+                            // where it was (AC1 2026-11-28 개정 · AC9 「앞선
+                            // 메시지도 제자리에 있다」).
+                            .id(message.id)
                         }
                         if let pending = viewModel.pending {
                             aiBubble(pending.content, pending: true)
@@ -159,7 +173,19 @@ struct ChatTab: View {
                         followsLatest = false
                     }
                 }
-                .onChange(of: viewModel.messages.count) { _, _ in follow(proxy) }
+                // A page of the past arriving is the one change of the list
+                // that must not follow the end: somebody scrolled back to read,
+                // and the messages that went in above theirs would otherwise
+                // carry the list away from what they were reading. Putting the
+                // message that was at the top back at the top is what keeps
+                // their place, since the content above it is new and taller.
+                .onChange(of: viewModel.messages.count) { _, _ in
+                    if let anchor = viewModel.consumePrependAnchor() {
+                        proxy.scrollTo(anchor, anchor: .top)
+                    } else {
+                        follow(proxy)
+                    }
+                }
                 .onChange(of: viewModel.pending) { _, _ in follow(proxy) }
                 // A message held for after the reply is the newest thing on
                 // screen, so following the end (AC9) covers it too.
@@ -167,6 +193,51 @@ struct ChatTab: View {
                 .onAppear { follow(proxy) }
             }
         }
+    }
+
+    /// The top of the list: reading the conversation's past one page at a time.
+    ///
+    /// Fetching, failed (tap to try again) and "there is more" are three
+    /// different things, and none of them takes the conversation off the screen
+    /// — a read of the past that fails leaves exactly what was being read.
+    @ViewBuilder
+    private var olderPage: some View {
+        HStack {
+            Spacer()
+            if viewModel.isLoadingOlder {
+                ProgressView()
+                    .tint(DesignTokens.Color.ink(area).opacity(Self.mutedOpacity))
+                    .accessibilityIdentifier("chat.older.loading")
+            } else if let failure = viewModel.olderError {
+                VStack(spacing: DesignTokens.Spacing.xs) {
+                    Text(failure.message)
+                        .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                        .foregroundStyle(DesignTokens.StatusColor.failure)
+                        .accessibilityIdentifier("chat.older.error")
+                    olderPageButton("다시 시도", identifier: "chat.older.retry")
+                }
+            } else {
+                olderPageButton("이전 대화 더 보기", identifier: "chat.older.more")
+            }
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func olderPageButton(_ label: String, identifier: String) -> some View {
+        Button {
+            Task { await viewModel.loadOlder() }
+        } label: {
+            Text(label)
+                .font(DesignTokens.Typography.font(size: DesignTokens.Typography.captionSm))
+                .foregroundStyle(DesignTokens.Color.ink(area).opacity(0.75))
+                .padding(.horizontal, DesignTokens.Spacing.md)
+                .padding(.vertical, DesignTokens.Spacing.xs)
+                .background(Capsule().fill(DesignTokens.Color.card(area)))
+                .overlay(Capsule().stroke(DesignTokens.Color.rule(area), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
     }
 
     /// Keeps the end of a streaming reply in view — instantly, because a reply

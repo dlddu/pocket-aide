@@ -27,6 +27,14 @@ const maxChatMessageBytes = 16 * 1024
 // with the last ETag gets an empty 304 — one conversation grows without end
 // and the apps poll it every 1.5 s during a reply, so a full read per poll
 // cost gigabytes a day of mobile data (PRD-1 AC1, 2026-11-27 개정).
+//
+// Without ?after this is the conversation's *newest page* — ?limit=<n> names
+// its size — and never the whole conversation (PRD-1 AC1, 2026-11-28 개정).
+// `has_more`/`prev_cursor` then say whether there is a page before it and what
+// to ask for it by, which GET /api/chat/messages answers. An ?after read
+// leaves both out: it is about what arrived since the last read and says
+// nothing about the far past, so a reader must not take its silence there for
+// "the conversation starts here".
 func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, ok := auth.FromContext(r.Context())
@@ -35,9 +43,14 @@ func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) ht
 			return
 		}
 		presence.Touch(u.ID)
-		after, ok := chatAfterParam(r)
+		after, ok := chatIDParam(r, "after")
 		if !ok {
 			http.Error(w, "after must be a non-negative message id", http.StatusBadRequest)
+			return
+		}
+		limit, ok := chatLimitParam(r)
+		if !ok {
+			http.Error(w, chatLimitError, http.StatusBadRequest)
 			return
 		}
 		conv, err := store.Conversation(r.Context(), u.ID)
@@ -45,11 +58,11 @@ func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) ht
 			http.Error(w, "get failed", http.StatusInternalServerError)
 			return
 		}
-		var messages []chat.Message
+		var page chat.MessagePage
 		if after > 0 {
-			messages, err = store.MessagesAfter(r.Context(), u.ID, conv.ID, after)
+			page.Messages, err = store.MessagesAfter(r.Context(), u.ID, conv.ID, after, limit)
 		} else {
-			messages, err = store.Messages(r.Context(), u.ID, conv.ID, 0)
+			page, err = store.LatestMessages(r.Context(), u.ID, conv.ID, limit)
 		}
 		if err != nil {
 			http.Error(w, "get failed", http.StatusInternalServerError)
@@ -65,22 +78,87 @@ func GetChat(store *chat.Store, engine *chat.Engine, presence *chat.Presence) ht
 		if queued != nil {
 			engine.ResumeQueued(r.Context(), u.ID, conv.ID)
 		}
-		writeJSONWithETag(w, r, map[string]any{
+		view := map[string]any{
 			"conversation": conv,
-			"messages":     messages,
+			"messages":     page.Messages,
 			"pending":      engine.Pending(u.ID),
 			"queued":       queued,
-		})
+		}
+		if page.HasMore {
+			view["has_more"] = true
+			view["prev_cursor"] = page.PrevCursor
+		}
+		writeJSONWithETag(w, r, view)
 	}
 }
 
-func chatAfterParam(r *http.Request) (int64, bool) {
-	raw := r.URL.Query().Get("after")
+// GetChatMessages handles GET /api/chat/messages?before=<id>: the page of the
+// current conversation right before <id>, oldest first, ?limit=<n> long
+// (PRD-1 AC1, 2026-11-28 개정).
+//
+// Apart from GET /api/chat on purpose. That route is the conversation as it
+// stands — its newest page, the reply being written, the message waiting — and
+// reading it is itself the signal that the user is looking (AC8). This one is
+// the past, fetched because somebody scrolled back to it. Keeping them apart
+// means a page of the past carries no pending/queued to overwrite what the
+// screen is showing, cannot nudge the waiting message the way a poll does, and
+// a read of it is not mistaken for presence.
+//
+// The conversation is the caller's own, so no reader can name someone else's.
+func GetChatMessages(store *chat.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			http.Error(w, "no user in context", http.StatusInternalServerError)
+			return
+		}
+		before, ok := chatIDParam(r, "before")
+		if !ok || before <= 0 {
+			http.Error(w, "before must be a message id", http.StatusBadRequest)
+			return
+		}
+		limit, ok := chatLimitParam(r)
+		if !ok {
+			http.Error(w, chatLimitError, http.StatusBadRequest)
+			return
+		}
+		conv, err := store.Conversation(r.Context(), u.ID)
+		if err != nil {
+			http.Error(w, "get failed", http.StatusInternalServerError)
+			return
+		}
+		page, err := store.MessagesBefore(r.Context(), u.ID, conv.ID, before, limit)
+		if err != nil {
+			http.Error(w, "get failed", http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, page)
+	}
+}
+
+func chatIDParam(r *http.Request, name string) (int64, bool) {
+	raw := r.URL.Query().Get(name)
 	if raw == "" {
 		return 0, true
 	}
 	n, err := strconv.ParseInt(raw, 10, 64)
 	if err != nil || n < 0 {
+		return 0, false
+	}
+	return n, true
+}
+
+const chatLimitError = "limit must be a number from 1 to 200"
+
+// chatLimitParam reads the page size a read asks for. Absent is not an error
+// and not "everything": the store's own page is what an unnamed size gets.
+func chatLimitParam(r *http.Request) (int, bool) {
+	raw := strings.TrimSpace(r.URL.Query().Get("limit"))
+	if raw == "" {
+		return 0, true
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n < 1 || n > chat.MessagePageLimitMax {
 		return 0, false
 	}
 	return n, true

@@ -94,8 +94,9 @@
 | Q-93 | `update chat_sessions \| eq(id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::appendMessage` |
 | Q-94 | `insert chat_messages \| - \| - \| -` | — | `backend/internal/chat/store.go::Store::appendMessage` |
 | Q-95 | `select chat_messages \| eq(id) \| - \| -` | PK(chat_messages) | `backend/internal/chat/store.go::Store::appendMessage` |
-| Q-96 | `select chat_messages \| eq(session_id) \| - \| order(id asc)` | idx_chat_messages_session | `backend/internal/chat/store.go::Store::Messages` |
+| Q-107 | `select chat_messages \| eq(session_id) \| - \| order(id desc)` | idx_chat_messages_session | `backend/internal/chat/store.go::Store::LatestMessages` |
 | Q-105 | `select chat_messages \| eq(session_id) \| range(id) \| order(id asc)` | idx_chat_messages_session | `backend/internal/chat/store.go::Store::MessagesAfter` |
+| Q-108 | `select chat_messages \| eq(session_id) \| range(id) \| order(id desc)` | idx_chat_messages_session | `backend/internal/chat/store.go::Store::MessagesBefore` |
 | Q-97 | `update chat_sessions \| eq(id, user_id) \| - \| -` | PK(chat_sessions) | `backend/internal/chat/store.go::Store::SetPlatform`, `backend/internal/chat/store.go::Store::SetQueued`, `backend/internal/chat/store.go::Store::TakeQueued` |
 | Q-98 | `insert commit_status_requests \| - \| - \| -` | — | `backend/internal/commitstatus/store.go::Store::Create` |
 | Q-99 | `select approval_caller_keys,commit_status_requests \| eq(approval_caller_keys.id=commit_status_requests.caller_key_id, commit_status_requests.id, commit_status_requests.user_id) \| - \| -` | approval_caller_keys: PK(approval_caller_keys); commit_status_requests: PK(commit_status_requests) | `backend/internal/commitstatus/store.go::Store::Get` |

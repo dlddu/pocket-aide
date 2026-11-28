@@ -101,6 +101,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	r := chi.NewRouter()
 	r.Get("/api/chat", handlers.GetChat(store, engine, chat.NewPresence()))
 	r.Get("/api/chat/tasks", handlers.GetChatTasks(engine))
+	r.Get("/api/chat/messages", handlers.GetChatMessages(store))
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
 	r.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))

@@ -47,12 +47,31 @@ data class ChatQueued(
     @SerialName("queued_at") val queuedAt: Long = 0,
 )
 
+/**
+ * The conversation as the server answers it — one page of it, never all of it.
+ *
+ * [hasMore] and [prevCursor] belong to the newest page only: they say that the
+ * conversation goes on before this page and what to ask for it by. An
+ * incremental read (`?after=`) leaves them out, because what came after the
+ * last read says nothing about the far past — so they are read on a first page
+ * and ignored on a merge.
+ */
 @Serializable
 data class ChatView(
     val conversation: ChatConversation,
     val messages: List<ChatMessage> = emptyList(),
     val pending: ChatPending? = null,
     val queued: ChatQueued? = null,
+    @SerialName("has_more") val hasMore: Boolean = false,
+    @SerialName("prev_cursor") val prevCursor: Long = 0,
+)
+
+/** One page of the conversation's past, oldest first. */
+@Serializable
+data class ChatMessagePage(
+    val messages: List<ChatMessage> = emptyList(),
+    @SerialName("has_more") val hasMore: Boolean = false,
+    @SerialName("prev_cursor") val prevCursor: Long = 0,
 )
 
 /** A send either went out at once or, with a reply already in progress, is
@@ -145,11 +164,28 @@ private fun chatLinkEnd(text: String, match: IntRange): Int {
     return end
 }
 
-suspend fun ApiClient.chat(): ChatView = get("/api/chat", ChatView.serializer())
+/**
+ * The newest [limit] messages of the conversation, with what is in progress on
+ * it. This is what opening the screen reads — one page, not the conversation,
+ * which on a long one was megabytes (PRD-AI채팅.AC1, 2026-11-28 개정).
+ */
+suspend fun ApiClient.chatLatest(limit: Int): ChatView =
+    get("/api/chat?limit=$limit", ChatView.serializer())
 
 /** Only the messages after [afterId], or [Conditional.NotModified] when nothing changed since [etag]. */
-suspend fun ApiClient.chat(afterId: Long, etag: String?): Conditional<ChatView> =
+suspend fun ApiClient.chatAfter(afterId: Long, etag: String?): Conditional<ChatView> =
     getConditional("/api/chat?after=$afterId", ChatView.serializer(), etag)
+
+/**
+ * The page of the conversation right before [beforeId], oldest first — what
+ * «이전 대화 더 보기» reads.
+ *
+ * Its own route, so a page of the past carries no reply in progress and no
+ * waiting message: prepending history must not touch what the screen is
+ * showing of either.
+ */
+suspend fun ApiClient.chatMessagesBefore(beforeId: Long, limit: Int): ChatMessagePage =
+    get("/api/chat/messages?before=$beforeId&limit=$limit", ChatMessagePage.serializer())
 
 /** These messages and [newer] together, each id once, oldest first. */
 fun List<ChatMessage>.merging(newer: List<ChatMessage>): List<ChatMessage> =
