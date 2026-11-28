@@ -94,7 +94,14 @@ final class ChatViewModel: ObservableObject {
     }
 
     private func loadAll(_ api: APIClient, _ mine: Int64) async throws {
+        // Checked before the request, not only after it: a superseded read that
+        // was answered with another conversation would otherwise fall back to
+        // reading that whole conversation — megabytes on a long one — just to
+        // throw the answer away. The newest read is already reading it.
+        guard mine == readSeq else { return }
         let view = try await api.chat()
+        // Checked again: the newest read can change while this one is in the
+        // air, and then this answer is not the screen's to apply.
         guard mine == readSeq else { return }
         applyView(view, merging: false)
         etag = nil
