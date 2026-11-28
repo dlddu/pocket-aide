@@ -80,6 +80,33 @@ final class ChatTests: XCTestCase {
     }
 }
 
+// PRD-AI채팅.AC11: 보내기 전의 입력이 탭을 오가도 남는 근거는 그것을 들고 있는
+// 자리와, 그 자리가 어느 대화의 것인지를 가리는 이 규칙이다.
+final class ChatDraftTests: XCTestCase {
+    func testKeepsWhatWasTypedVerbatim() {
+        let draft = ChatDraft(conversationID: 7, text: "첫 줄\n둘째 줄 ")
+        XCTAssertEqual(draft.belonging(to: 7).text, "첫 줄\n둘째 줄 ")
+    }
+
+    func testWordsWrittenBeforeAConversationWasKnownAreAdoptedByIt() {
+        let draft = ChatDraft(text: "먼저 쓴 말").belonging(to: 7)
+        XCTAssertEqual(draft.conversationID, 7)
+        XCTAssertEqual(draft.text, "먼저 쓴 말")
+    }
+
+    func testAnotherConversationDoesNotInheritTheWords() {
+        let draft = ChatDraft(conversationID: 7, text: "옛 대화에 쓰던 말").belonging(to: 8)
+        XCTAssertEqual(draft.conversationID, 8)
+        XCTAssertEqual(draft.text, "")
+    }
+
+    func testAFieldEmptiedByHandStaysEmpty() {
+        var draft = ChatDraft(conversationID: 7, text: "지울 말")
+        draft.text = ""
+        XCTAssertEqual(draft.belonging(to: 7).text, "")
+    }
+}
+
 final class ChatLinkTests: XCTestCase {
     private func links(_ text: String) -> [String] {
         chatLinkRanges(in: text).map { String(text[$0]) }

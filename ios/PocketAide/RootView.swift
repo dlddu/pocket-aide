@@ -17,6 +17,11 @@ struct RootView: View {
     @StateObject private var scratchpad: ScratchpadViewModel
     @StateObject private var approvals: ApprovalsViewModel
     @StateObject private var commitStatuses: CommitStatusRequestsViewModel
+    // The chat tab's own model is held here for the same reason as these: a
+    // tab's view can go away, and the message being written must not go with
+    // it (PRD-AI채팅.AC11). It stays idle until the tab appears — the tab's own
+    // task is what hands it the API client and starts the polling.
+    @StateObject private var chat: ChatViewModel
 
     private static let approvalBadgeAppearance: Void = {
         let badge = UIColor { traits in
@@ -50,6 +55,7 @@ struct RootView: View {
         _scratchpad = StateObject(wrappedValue: ScratchpadViewModel(api: nil))
         _approvals = StateObject(wrappedValue: ApprovalsViewModel(api: nil))
         _commitStatuses = StateObject(wrappedValue: CommitStatusRequestsViewModel(api: nil))
+        _chat = StateObject(wrappedValue: ChatViewModel(api: nil))
     }
 
     var body: some View {
@@ -117,7 +123,7 @@ struct RootView: View {
                 AffirmationsView()
             }
             Tab("채팅", systemImage: "bubble.left.and.bubble.right", value: RootTab.chat) {
-                ChatTab()
+                ChatTab(viewModel: chat)
             }
             Tab("승인", systemImage: "checkmark.shield", value: RootTab.approval) {
                 ApprovalsView(viewModel: approvals, openedApprovalID: $openedApprovalID)

@@ -79,6 +79,35 @@ public struct ChatThread: Codable, Sendable {
     public let queued: ChatQueued?
 }
 
+/// The message being written but not sent, and the conversation it was written
+/// in.
+///
+/// It is held beside the conversation rather than by the chat tab's view so
+/// that leaving the tab does not take the words with it. Nothing of this
+/// reaches disk: coming back within the app is what it is for, and a restart
+/// starts empty.
+public struct ChatDraft: Hashable, Sendable {
+    /// What keeps two conversations' drafts apart. `nil` is a draft written
+    /// before any conversation was known, which the first one read adopts; any
+    /// *other* conversation arriving means these words were written somewhere
+    /// else, and they are dropped rather than shown under it.
+    public let conversationID: Int64?
+    public var text: String
+
+    public init(conversationID: Int64? = nil, text: String = "") {
+        self.conversationID = conversationID
+        self.text = text
+    }
+
+    public func belonging(to conversationID: Int64) -> ChatDraft {
+        guard let owner = self.conversationID else {
+            return ChatDraft(conversationID: conversationID, text: text)
+        }
+        if owner == conversationID { return self }
+        return ChatDraft(conversationID: conversationID)
+    }
+}
+
 /// A send either went out at once or, with a reply already in progress, is
 /// held to go right after (PRD-1 AC1, 2026-11-09 개정).
 public enum ChatSendOutcome: Sendable {

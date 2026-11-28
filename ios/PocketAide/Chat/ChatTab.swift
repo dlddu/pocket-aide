@@ -9,8 +9,9 @@ import SwiftUI
 struct ChatTab: View {
     @EnvironmentObject private var auth: AppAuthCoordinator
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var viewModel = ChatViewModel(api: nil)
-    @State private var draft = ""
+    // Held by the root rather than by this view, because the unsent draft it
+    // carries has to outlive leaving the tab (PRD-AI채팅.AC11).
+    @ObservedObject var viewModel: ChatViewModel
     @State private var followsLatest = true
 
     private let area: DesignTokens.Area = .aiChat
@@ -338,10 +339,10 @@ struct ChatTab: View {
     }
 
     private var composer: some View {
-        let canSend = viewModel.canSend && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let canSend = viewModel.canSend && !viewModel.draft.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return VStack(spacing: DesignTokens.Spacing.xs) {
             HStack(alignment: .bottom, spacing: DesignTokens.Spacing.sm) {
-                TextField("메시지를 입력하세요", text: $draft, axis: .vertical)
+                TextField("메시지를 입력하세요", text: $viewModel.draft.text, axis: .vertical)
                     .textInputAutocapitalization(.sentences)
                     .font(DesignTokens.Typography.font(size: DesignTokens.Typography.bodyLg))
                     .lineLimit(1...6)
@@ -357,10 +358,7 @@ struct ChatTab: View {
                     )
                     .accessibilityIdentifier("chat.composer.field")
                 Button {
-                    let text = draft
-                    Task {
-                        if await viewModel.send(text) { draft = "" }
-                    }
+                    Task { await viewModel.sendDraft() }
                 } label: {
                     Group {
                         if viewModel.isSending {
