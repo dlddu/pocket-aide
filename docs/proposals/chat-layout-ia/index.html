@@ -696,15 +696,44 @@ function render() {
   let inner = "";
 
   if (w === "wide") {
-    const right = S.panelOpen
-      ? `<div class="pane-rule" aria-hidden="true"></div><div class="pane">${
+    // 넓은 폭에서도 세 안은 서로 다르게 갈라진다.
+    //  A — 대화가 주 창, 오른쪽은 목록에서 상세로 한 단계 들어간다(현재 구현과 같은 모습).
+    //  B — 모드 전환이 폭과 무관하다. 「작업」 모드에서는 목록|상세가 분할을 통째로 차지하고 대화는 물러난다.
+    //  C — 입력창이 붙박인 채, 오른쪽은 목록을 건너뛰고 레일 + 상세로 바로 간다.
+    const convPane = (hint) => `<div class="pane">
+        ${chatHeader({ panelToggle:true })}${messages()}${composer(hint)}</div>`;
+    const rule = `<div class="pane-rule" aria-hidden="true"></div>`;
+
+    if (sc === "B") {
+      const onConv = S.nav === "conv";
+      const seg = `<div class="seg" role="tablist" aria-label="채팅 탭 안의 모드">
+          <button class="seg-btn" role="tab" aria-selected="${onConv}" data-act="seg" data-v="conv">대화</button>
+          <button class="seg-btn" role="tab" aria-selected="${!onConv}" data-act="seg" data-v="list">작업 ${attnTasks().length ? "· " + attnTasks().length : ""}</button>
+        </div>`;
+      const body = onConv
+        ? `${messages()}${composer("「작업」으로 가면 대화는 물러나요 — 초안은 보관돼요")}`
+        : `<div class="panes">
+             <div class="pane">${ledger({})}</div>${rule}
+             <div class="pane">${S.nav === "detail" && task(S.openId)
+               ? detail(task(S.openId), { backLabel:"작업 목록" })
+               : `<div class="ledger"><div class="ledger-body"><div class="task-note unrec" style="text-align:center;padding:32px 0">왼쪽에서 작업을 고르면 여기에서 읽어요.</div></div></div>`}</div>
+           </div>`;
+      const kept = !onConv && S.draft.trim()
+        ? `<div class="turns-state" style="padding:8px 20px;border-top:1px solid var(--rule)">쓴 글 보관 중 · ${S.draft.trim().length}자 — 「대화」로 돌아가면 그대로 있어요</div>` : "";
+      inner = `${chatHeader({})}${seg}${body}${kept}`;
+    } else if (sc === "C") {
+      const right = S.panelOpen ? `${rule}<div class="pane">
+          ${railRow()}
+          ${S.nav === "list"
+            ? ledger({})
+            : detail(task(S.openId) || TASKS[0], { backLabel:"전체 작업" })}</div>` : "";
+      inner = `<div class="panes">${convPane("입력창은 늘 왼쪽에 — 오른쪽이 바뀌어도 초안은 그대로예요")}${right}</div>`;
+    } else {
+      const right = S.panelOpen ? `${rule}<div class="pane">${
           S.nav === "detail" && task(S.openId) ? detail(task(S.openId), { backLabel:"작업 목록" }) : ledger({})
-        }</div>`
-      : "";
-    const leftRail = sc === "C" && !S.panelOpen ? railRow() : "";
-    inner = `<div class="panes"><div class="pane">
-        ${chatHeader({ panelToggle:true })}${leftRail}${messages()}${composer("넓은 폭 · 분할 1:1 — 접어도 초안과 스크롤은 유지돼요")}
-      </div>${right}</div>`;
+        }</div>` : "";
+      inner = `<div class="panes">${convPane("넓은 폭 · 분할 1:1 — 접어도 초안과 스크롤은 유지돼요")}${right}</div>`;
+    }
   } else if (sc === "A") {
     const sheet = (w === "narrow" && S.nav !== "conv") ? `
       <div class="scrim" aria-hidden="true"></div>
@@ -804,7 +833,12 @@ document.addEventListener("click", (e) => {
     S.width = v;
     if (v === "base") S.nav = "conv";
     else if (v === "narrow") { S.nav = S.scheme === "C" ? "detail" : "list"; if (S.scheme === "C") { S.openId = attnTasks()[0].id; resetTask(); } }
-    else { S.panelOpen = true; S.nav = S.nav === "detail" ? "detail" : "list"; }
+    else {
+      // 넓은 폭의 출발점도 안마다 다르다: C 는 목록을 건너뛰고 상세에서 시작한다.
+      S.panelOpen = true;
+      if (S.scheme === "C") { S.openId = S.openId || attnTasks()[0].id; S.nav = "detail"; }
+      else S.nav = S.nav === "detail" ? "detail" : "list";
+    }
     render(); return;
   }
   if (act === "open-ledger") { S.width = "narrow"; S.nav = "list"; render(); return; }
