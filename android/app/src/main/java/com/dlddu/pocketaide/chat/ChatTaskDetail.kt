@@ -176,6 +176,7 @@ fun ChatTaskDetailPane(
                 draft = draft,
                 onDraftChange = onDraftChange,
                 request = if (mine) request else ChatTaskRequestUiState(),
+                status = task.status,
                 onStore = onStore,
             )
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
@@ -790,15 +791,22 @@ private fun Waiting(waiting: ChatTaskWaiting) {
 /**
  * The request itself: free text and one store.
  *
- * Storing writes the words to this task's ledger row and nothing else — no
- * message, no turn — so it is available while a reply is being written. A
- * refusal keeps what was typed so the same words can be stored again.
+ * Storing writes the words to this task as its next exchange and nothing else —
+ * no message in the conversation — so it is available while a reply is being
+ * written. A refusal keeps what was typed so the same words can be stored
+ * again.
+ *
+ * [status] decides only what is promised before the tap: a task waiting for the
+ * person is one the monitor stopped looking at, so registering is what gets it
+ * going, and the hint says that instead of pointing at a pass that was not
+ * coming.
  */
 @Composable
 private fun RequestField(
     draft: String,
     onDraftChange: (String) -> Unit,
     request: ChatTaskRequestUiState,
+    status: String,
     onStore: () -> Unit,
 ) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
@@ -857,20 +865,17 @@ private fun RequestField(
         }
         // Saved, refused, or nothing yet — three different sentences, and a
         // refusal never clears what was typed. "Saved" is deliberately not
-        // "done": the session has not seen it yet.
+        // "done", and "handed over" is not "done" either: only the exchange
+        // ending is that, and this answer cannot know it.
         when {
             request.error != null -> Note(request.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.error")
             request.stored != null -> Note(
-                if (request.replayed) {
-                    "이미 저장된 요청이에요 · 부모 확인 대기"
-                } else {
-                    "요청 저장됨 · 부모 확인 대기"
-                },
+                chatTaskRequestNote(request.replayed, request.relay),
                 ink.copy(alpha = MUTED_OPACITY),
                 "chat.tasks.detail.stored",
             )
             else -> Note(
-                "등록하면 이 작업의 원장에 남고, 부모가 다음 확인 때 접수해요. 대화로는 보내지 않아요.",
+                chatTaskRequestHint(status),
                 ink.copy(alpha = MUTED_OPACITY),
                 "chat.tasks.detail.hint",
             )

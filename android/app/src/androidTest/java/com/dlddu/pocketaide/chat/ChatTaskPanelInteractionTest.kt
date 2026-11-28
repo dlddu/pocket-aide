@@ -377,8 +377,47 @@ class ChatTaskPanelInteractionTest {
         openBlocked()
 
         compose.onNodeWithTag("chat.tasks.detail.stored").assertIsDisplayed()
-        compose.onNodeWithText("요청 저장됨 · 부모 확인 대기").assertIsDisplayed()
+        compose.onNodeWithText("요청 저장됨 · 모니터가 다음 확인 때 접수해요").assertIsDisplayed()
         compose.onAllNodesWithText("처리됨").assertCountEquals(0)
+    }
+
+    // 모니터가 받았다는 것도 처리됐다는 뜻이 아니다. 세 사실 중 패인이 말할 수
+    // 있는 것은 저장과 접수뿐이고, 화면이 그 선을 직접 긋는다.
+    @Test
+    fun theStoredNoteSaysHandedOverWithoutSayingDone() {
+        start(
+            taskRequest = ChatTaskRequestUiState(
+                taskId = "t-blocked",
+                stored = ChatTaskTurnRef(id = 11, request = "요청"),
+                relay = ChatTaskRequestRelay(state = ChatTaskRequestRelay.ACCEPTED, attempts = 1),
+            ),
+        )
+        openBlocked()
+
+        val note = compose.onNodeWithTag("chat.tasks.detail.stored")
+        note.assertIsDisplayed()
+        note.assertTextContains("모니터에 전달했어요", substring = true)
+        note.assertTextContains("처리됐다는 뜻은 아니에요", substring = true)
+        compose.onAllNodesWithText("처리됨").assertCountEquals(0)
+    }
+
+    // 닿지 못한 전달은 유실이 아니라 「다음 확인 때」다. 기록은 남았고 모니터의
+    // 정기 회차가 같은 턴을 읽으므로, 실패로 읽히는 말을 쓰지 않는다.
+    @Test
+    fun theStoredNoteSaysLaterRatherThanFailedForAnUndeliveredHandover() {
+        start(
+            taskRequest = ChatTaskRequestUiState(
+                taskId = "t-blocked",
+                stored = ChatTaskTurnRef(id = 11, request = "요청"),
+                relay = ChatTaskRequestRelay(state = ChatTaskRequestRelay.PENDING, attempts = 1),
+            ),
+        )
+        openBlocked()
+
+        val note = compose.onNodeWithTag("chat.tasks.detail.stored")
+        note.assertIsDisplayed()
+        note.assertTextContains("다음 확인 때", substring = true)
+        compose.onAllNodesWithText("실패", substring = true).assertCountEquals(0)
     }
 
     // 대기 중인 요청 수는 원장이 센 것을 그대로 보여 준다.
