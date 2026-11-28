@@ -831,11 +831,22 @@ func (f *fakePlatform) appendTranscript(id, text string) {
 }
 
 // readBound is how many transcript reads were given a deadline, and how far
-// out the first one was.
+// out the first one was — counted since the last forgetReads.
 func (f *fakePlatform) readBound() (int, time.Duration) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return f.boundedReads, f.firstBound
+}
+
+// forgetReads starts the read counters over, so a test that follows a second
+// turn measures that turn and not the one before it. The counters belong to
+// the fake, not to a turn: an earlier turn's reads would otherwise satisfy
+// awaitReads on their own and readBound would answer for a turn that has not
+// read anything yet.
+func (f *fakePlatform) forgetReads() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.reads, f.boundedReads, f.firstBound = 0, 0, 0
 }
 
 func lastReply(t *testing.T, msgs []chat.Message) chat.Message {
@@ -1226,6 +1237,11 @@ func TestEngine_FollowingAResumedQueuedTurnHasNoOverallLimit(t *testing.T) {
 	}
 	resumed := restart(t, store, platform)
 	release := holdReplies(t, platform)
+	// Only the resumed turn is under test, and the first send above already
+	// read the transcript: without this the reads waited for and the deadlines
+	// checked could be that send's, and a limit put back on this turn alone
+	// would go unseen.
+	platform.forgetReads()
 	resumed.ResumeQueued(ctx, 1, id)
 	awaitReads(t, platform, 3)
 	if n, within := platform.readBound(); n > 0 {
