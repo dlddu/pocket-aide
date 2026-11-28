@@ -123,32 +123,108 @@ func (s *Store) GetSession(ctx context.Context, userID, id int64) (Session, erro
 	return out, nil
 }
 
-// Messages returns a session's messages oldest first. A limit > 0 keeps only
-// the most recent limit messages (still oldest first).
-func (s *Store) Messages(ctx context.Context, userID, sessionID int64, limit int) ([]Message, error) {
-	if _, err := s.GetSession(ctx, userID, sessionID); err != nil {
-		return nil, err
-	}
-	rows, err := s.db.QueryContext(ctx,
-		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? ORDER BY id`, sessionID)
-	out, err := scanMessages(rows, err)
-	if err != nil {
-		return nil, err
-	}
-	if limit > 0 && len(out) > limit {
-		out = out[len(out)-limit:]
-	}
-	return out, nil
+// MessagePage is one page of a conversation, oldest first — the shape every
+// read of the messages answers in.
+//
+// HasMore is whether the conversation has messages before the page's first
+// one, and PrevCursor is the id to ask for that page by. They are left out
+// when there is nothing before the page, so a reader that has reached the
+// start of the conversation is told so rather than offered another read.
+type MessagePage struct {
+	Messages   []Message `json:"messages"`
+	HasMore    bool      `json:"has_more,omitempty"`
+	PrevCursor int64     `json:"prev_cursor,omitempty"`
 }
 
-// MessagesAfter returns a session's messages whose id is greater than afterID, oldest first.
-func (s *Store) MessagesAfter(ctx context.Context, userID, sessionID, afterID int64) ([]Message, error) {
+// MessagePageLimit is the page a read gets when it names no size, and
+// MessagePageLimitMax is the largest it may name.
+//
+// The chat tab is one conversation that only grows (AC4), so there is no read
+// of it that is not a page: a whole-conversation read cost more with every
+// turn and was megabytes on a long one (PRD-AI채팅.AC1, 2026-11-28 개정).
+const (
+	MessagePageLimit    = 50
+	MessagePageLimitMax = 200
+)
+
+// LatestMessages returns the newest page of a session's messages, oldest
+// first — what a screen opening on the conversation shows.
+func (s *Store) LatestMessages(ctx context.Context, userID, sessionID int64, limit int) (MessagePage, error) {
+	if _, err := s.GetSession(ctx, userID, sessionID); err != nil {
+		return MessagePage{}, err
+	}
+	limit = messagePageLimit(limit)
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? ORDER BY id DESC LIMIT ?`,
+		sessionID, limit+1)
+	newestFirst, err := scanMessages(rows, err)
+	if err != nil {
+		return MessagePage{}, err
+	}
+	return pageOf(newestFirst, limit), nil
+}
+
+// MessagesBefore returns the page of a session's messages right before
+// beforeID, oldest first — the page a reader scrolling back asks for next.
+func (s *Store) MessagesBefore(ctx context.Context, userID, sessionID, beforeID int64, limit int) (MessagePage, error) {
+	if _, err := s.GetSession(ctx, userID, sessionID); err != nil {
+		return MessagePage{}, err
+	}
+	limit = messagePageLimit(limit)
+	rows, err := s.db.QueryContext(ctx,
+		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? AND id < ? ORDER BY id DESC LIMIT ?`,
+		sessionID, beforeID, limit+1)
+	newestFirst, err := scanMessages(rows, err)
+	if err != nil {
+		return MessagePage{}, err
+	}
+	return pageOf(newestFirst, limit), nil
+}
+
+// MessagesAfter returns a session's messages whose id is greater than afterID,
+// oldest first, at most one page of them.
+//
+// The page carries no HasMore: what is left over here is *newer* than the
+// page, and the reader finds it by continuing from the page's last id on its
+// next read — the same cursor it already keeps. Saying "there is more" in a
+// field that means "more before this" would point the wrong way.
+func (s *Store) MessagesAfter(ctx context.Context, userID, sessionID, afterID int64, limit int) ([]Message, error) {
 	if _, err := s.GetSession(ctx, userID, sessionID); err != nil {
 		return nil, err
 	}
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? AND id > ? ORDER BY id`, sessionID, afterID)
+		`SELECT `+messageColumns+` FROM chat_messages WHERE session_id = ? AND id > ? ORDER BY id LIMIT ?`,
+		sessionID, afterID, messagePageLimit(limit))
 	return scanMessages(rows, err)
+}
+
+func messagePageLimit(limit int) int {
+	switch {
+	case limit <= 0:
+		return MessagePageLimit
+	case limit > MessagePageLimitMax:
+		return MessagePageLimitMax
+	default:
+		return limit
+	}
+}
+
+// pageOf turns the rows of a page read — newest first, one more than the page
+// holds — into the page itself. That one extra row is how the DB answers
+// "is there more before this" in the same read, instead of a second count
+// over a conversation that only grows.
+func pageOf(newestFirst []Message, limit int) MessagePage {
+	page := MessagePage{Messages: []Message{}, HasMore: len(newestFirst) > limit}
+	if page.HasMore {
+		newestFirst = newestFirst[:limit]
+	}
+	for i := len(newestFirst) - 1; i >= 0; i-- {
+		page.Messages = append(page.Messages, newestFirst[i])
+	}
+	if page.HasMore {
+		page.PrevCursor = page.Messages[0].ID
+	}
+	return page
 }
 
 func scanMessages(rows *sql.Rows, err error) ([]Message, error) {

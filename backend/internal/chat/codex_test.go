@@ -222,11 +222,11 @@ func messages(t *testing.T, store *chat.Store, userID int64) []chat.Message {
 	if err != nil {
 		t.Fatal(err)
 	}
-	out, err := store.Messages(context.Background(), userID, conv.ID, 0)
+	page, err := store.LatestMessages(context.Background(), userID, conv.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return out
+	return page.Messages
 }
 
 func transcriptOf(msgs []chat.Message) string {

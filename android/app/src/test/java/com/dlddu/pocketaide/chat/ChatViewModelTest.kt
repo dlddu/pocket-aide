@@ -38,11 +38,27 @@ class ChatViewModelTest {
         return ApiClient(server.url("/").toString(), store, clock = { now })
     }
 
+    // What a first read asks for: one page of the conversation, never all of it
+    // (PRD-AI채팅.AC1, 2026-11-28 개정).
+    private val firstPage = "/api/chat?limit=${ChatViewModel.CHAT_PAGE}"
+
     private fun message(id: Long, role: String, content: String) =
         """{"id":$id,"role":"$role","content":"$content","created_at":1}"""
 
-    private fun chatJson(messages: String = "", pending: String = "null", queued: String = "null") =
-        """{"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},"messages":[$messages],"pending":$pending,"queued":$queued}"""
+    private fun chatJson(
+        messages: String = "",
+        pending: String = "null",
+        queued: String = "null",
+        page: String = "",
+    ) =
+        """{"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},""" +
+            """"messages":[$messages],"pending":$pending,"queued":$queued$page}"""
+
+    /** The part of a newest-page answer that says the conversation goes on before it. */
+    private fun older(prevCursor: Long) = ""","has_more":true,"prev_cursor":$prevCursor"""
+
+    private fun pageJson(messages: String = "", page: String = "") =
+        """{"messages":[$messages]$page}"""
 
     @Test
     fun loadShowsTheConversation() = runTest {
@@ -51,7 +67,7 @@ class ChatViewModelTest {
 
         vm.load()
 
-        assertEquals("/api/chat", server.takeRequest().path)
+        assertEquals(firstPage, server.takeRequest().path)
         val state = vm.state.value
         assertTrue(state.hasLoaded)
         assertEquals("첫 질문", state.conversation?.title)
@@ -68,7 +84,7 @@ class ChatViewModelTest {
         val vm = ChatViewModel(api())
         server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
         vm.load()
-        assertEquals("/api/chat", server.takeRequest().path)
+        assertEquals(firstPage, server.takeRequest().path)
 
         server.enqueue(MockResponse().setHeader("ETag", "\"e1\"").setBody(chatJson(message(2, "assistant", "답"))))
         vm.load()
@@ -98,7 +114,7 @@ class ChatViewModelTest {
         server.enqueue(MockResponse().setBody(other))
         vm.load()
         assertEquals("/api/chat?after=1", server.takeRequest().path)
-        assertEquals("/api/chat", server.takeRequest().path)
+        assertEquals(firstPage, server.takeRequest().path)
         assertEquals(8L, vm.state.value.conversation?.id)
         assertEquals(listOf("새 대화"), vm.state.value.messages.map { it.content })
     }
@@ -336,7 +352,7 @@ class ChatViewModelTest {
 
         assertEquals("/api/chat?after=1", server.takeRequest().path)
         val full = server.takeRequest()
-        assertEquals("/api/chat", full.path)
+        assertEquals(firstPage, full.path)
         assertNull(full.getHeader("If-None-Match"))
         assertEquals(8L, vm.state.value.conversation?.id)
         // 옛 대화의 메시지는 새 대화에 섞이지 않는다.
@@ -436,7 +452,7 @@ class ChatViewModelTest {
         // 초기 A 전체 읽기 — 아래 요청 셈과는 별도다.
         server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "옛 대화"))))
         vm.load()
-        assertEquals("/api/chat", server.takeRequest().path)
+        assertEquals(firstPage, server.takeRequest().path)
 
         val conversationB = """{"conversation":{"id":8,"title":"새","created_at":3,"updated_at":3},"messages":[${message(5, "user", "새 대화")}],"pending":null,"queued":null}"""
         val paths = CopyOnWriteArrayList<String>()
@@ -471,7 +487,7 @@ class ChatViewModelTest {
         stale.join()
 
         assertEquals("두 증분 읽기는 같은 A 커서로 나간다", 2, paths.count { it == "/api/chat?after=1" })
-        assertEquals("구 응답이 추가 전체 읽기를 시작했다", 1, paths.count { it == "/api/chat" })
+        assertEquals("구 응답이 추가 전체 읽기를 시작했다", 1, paths.count { it == firstPage })
         assertEquals(3, paths.size)
         assertEquals(8L, vm.state.value.conversation?.id)
         assertEquals(listOf("새 대화"), vm.state.value.messages.map { it.content })
@@ -534,5 +550,199 @@ class ChatViewModelTest {
     fun refreshNoticeWording() {
         assertEquals("스킬이 이미 최신이에요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "ready")))
         assertEquals("이 대화에는 새로 받을 스킬이 없어요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "unconfigured")))
+    }
+
+    // PRD-AI채팅.AC1 (2026-11-28 개정): entering the conversation reads one
+    // page of it and says that there is more before it.
+    @Test
+    fun enteringReadsOnePageAndSaysTheConversationGoesOnBeforeIt() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setBody(
+                chatJson(message(11, "user", "열한째") + "," + message(12, "assistant", "열둘째"), page = older(11)),
+            ),
+        )
+
+        vm.load()
+
+        assertEquals(firstPage, server.takeRequest().path)
+        val state = vm.state.value
+        assertEquals(listOf(11L, 12L), state.messages.map { it.id })
+        assertTrue(state.hasOlder)
+        assertEquals(11L, state.olderCursor)
+        assertTrue(state.canLoadOlder)
+    }
+
+    // A conversation whose first page is all of it offers no read back.
+    @Test
+    fun aConversationThatFitsInOnePageOffersNoReadBack() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "하나"))))
+
+        vm.load()
+
+        server.takeRequest()
+        assertFalse(vm.state.value.hasOlder)
+        assertFalse(vm.state.value.canLoadOlder)
+        assertFalse(vm.performLoadOlder())
+        assertEquals(0, server.requestCount - 1)
+    }
+
+    // AC2: the previous page is asked for by cursor and goes in front of what
+    // is held, each message once and in order.
+    @Test
+    fun theOlderPageIsPrependedInOrder() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(11, "user", "열한째"), page = older(11))))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(
+            MockResponse().setBody(
+                pageJson(
+                    message(9, "user", "아홉째") + "," + message(10, "assistant", "열째",),
+                    page = older(9),
+                ),
+            ),
+        )
+        assertTrue(vm.performLoadOlder())
+
+        assertEquals(
+            "/api/chat/messages?before=11&limit=${ChatViewModel.CHAT_PAGE}",
+            server.takeRequest().path,
+        )
+        val state = vm.state.value
+        assertEquals(listOf(9L, 10L, 11L), state.messages.map { it.id })
+        assertTrue(state.hasOlder)
+        assertEquals(9L, state.olderCursor)
+        assertFalse(state.isLoadingOlder)
+    }
+
+    // Reading back to the start of the conversation stops offering more.
+    @Test
+    fun readingBackToTheStartStopsOffering() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(3, "user", "셋째"), page = older(3))))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(MockResponse().setBody(pageJson(message(1, "user", "첫째") + "," + message(2, "assistant", "둘째"))))
+        assertTrue(vm.performLoadOlder())
+        server.takeRequest()
+
+        assertEquals(listOf(1L, 2L, 3L), vm.state.value.messages.map { it.id })
+        assertFalse(vm.state.value.hasOlder)
+        assertEquals(0L, vm.state.value.olderCursor)
+        assertFalse(vm.state.value.canLoadOlder)
+    }
+
+    // AC5: the same page read twice — the retry of a read whose answer never
+    // arrived — leaves the conversation exactly once, in order.
+    @Test
+    fun aRetriedOlderPageDoesNotDuplicateOrReorder() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(11, "user", "열한째"), page = older(11))))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(MockResponse().setResponseCode(503))
+        assertFalse(vm.performLoadOlder())
+        server.takeRequest()
+        // The failure is the read's: the conversation and the cursor are as
+        // they were, so the same tap retries the same page.
+        assertEquals(listOf(11L), vm.state.value.messages.map { it.id })
+        assertEquals(11L, vm.state.value.olderCursor)
+        assertNotNull(vm.state.value.olderError)
+        assertNull(vm.state.value.error)
+        assertTrue(vm.state.value.canLoadOlder)
+
+        val page = pageJson(message(9, "user", "아홉째") + "," + message(10, "assistant", "열째"), page = older(9))
+        server.enqueue(MockResponse().setBody(page))
+        assertTrue(vm.performLoadOlder())
+        server.takeRequest()
+        server.enqueue(MockResponse().setBody(page))
+        assertFalse(vm.performLoadOlder())
+
+        assertEquals(listOf(9L, 10L, 11L), vm.state.value.messages.map { it.id })
+        assertNull(vm.state.value.olderError)
+    }
+
+    // AC5: a reply landing while the past is being read keeps its place at the
+    // end, and the page keeps its place at the front — no gap, nothing twice.
+    @Test
+    fun aMessageArrivingDuringAReadBackDoesNotDisturbTheOrder() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(11, "user", "열한째"), page = older(11))))
+        vm.load()
+        server.takeRequest()
+
+        // The poll brings the reply in while the read back is on its way.
+        server.enqueue(MockResponse().setBody(chatJson(message(12, "assistant", "열둘째"))))
+        vm.load()
+        assertEquals("/api/chat?after=11", server.takeRequest().path)
+        // An increment says nothing about the far past, so it must not take
+        // «이전 대화 더 보기» away.
+        assertTrue(vm.state.value.hasOlder)
+        assertEquals(11L, vm.state.value.olderCursor)
+
+        server.enqueue(MockResponse().setBody(pageJson(message(10, "assistant", "열째"), page = older(10))))
+        assertTrue(vm.performLoadOlder())
+        server.takeRequest()
+
+        assertEquals(listOf(10L, 11L, 12L), vm.state.value.messages.map { it.id })
+    }
+
+    // A second tap while the first page is still in the air reads nothing: a
+    // read back is additive, so two of them would append the same page twice.
+    @Test
+    fun asecondTapWhileAPageIsInTheAirReadsNothing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(11, "user", "열한째"), page = older(11))))
+        vm.load()
+        server.takeRequest()
+
+        val release = CountDownLatch(1)
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                release.await(5, TimeUnit.SECONDS)
+                return MockResponse().setBody(pageJson(message(10, "assistant", "열째")))
+            }
+        }
+        val first = launch(start = CoroutineStart.UNDISPATCHED) { vm.performLoadOlder() }
+        assertTrue(vm.state.value.isLoadingOlder)
+        assertFalse(vm.state.value.canLoadOlder)
+        assertFalse(vm.performLoadOlder())
+        release.countDown()
+        first.join()
+
+        assertEquals(listOf(10L, 11L), vm.state.value.messages.map { it.id })
+        assertEquals(2, server.requestCount)
+    }
+
+    // The conversation turning out to be another one starts over: the older
+    // pages read belonged to the conversation that is no longer on screen.
+    @Test
+    fun aDifferentConversationDropsThePagesReadOfTheOldOne() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(11, "user", "옛 대화"), page = older(11))))
+        vm.load()
+        server.takeRequest()
+        server.enqueue(MockResponse().setBody(pageJson(message(10, "assistant", "옛 대화의 앞"), page = older(10))))
+        assertTrue(vm.performLoadOlder())
+        server.takeRequest()
+        assertEquals(2, vm.state.value.messages.size)
+
+        val other = """{"conversation":{"id":8,"title":"새","created_at":3,"updated_at":3},"messages":[${message(5, "user", "새 대화")}],"pending":null}"""
+        server.enqueue(MockResponse().setBody(other))
+        server.enqueue(MockResponse().setBody(other))
+        vm.load()
+        server.takeRequest()
+        server.takeRequest()
+
+        val state = vm.state.value
+        assertEquals(listOf(5L), state.messages.map { it.id })
+        assertFalse(state.hasOlder)
+        assertEquals(0L, state.olderCursor)
+        assertNull(state.olderError)
     }
 }

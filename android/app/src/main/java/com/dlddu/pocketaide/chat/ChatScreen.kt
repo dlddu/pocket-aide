@@ -185,6 +185,7 @@ fun ChatScreen(api: ApiClient) {
         onRefresh = viewModel::refreshPlugins,
         onDismissNotice = viewModel::dismissNotice,
         onCancelQueued = viewModel::cancelQueued,
+        onLoadOlder = viewModel::loadOlder,
         listState = messageList,
         panelOpen = panelOpen,
         onTogglePanel = { panelOpen = !panelOpen },
@@ -311,6 +312,7 @@ internal fun ChatPanes(
     onRefresh: () -> Unit,
     onDismissNotice: () -> Unit,
     onCancelQueued: () -> Unit,
+    onLoadOlder: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean,
     onTogglePanel: () -> Unit,
@@ -373,6 +375,7 @@ internal fun ChatPanes(
                 onRefresh = onRefresh,
                 onDismissNotice = onDismissNotice,
                 onCancelQueued = onCancelQueued,
+                onLoadOlder = onLoadOlder,
                 listState = listState,
                 // The toggle belongs to the wide layout only; a narrow window
                 // has no second pane to open.
@@ -454,6 +457,7 @@ private fun Conversation(
     onRefresh: () -> Unit,
     onDismissNotice: () -> Unit,
     onCancelQueued: () -> Unit,
+    onLoadOlder: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean?,
     onTogglePanel: () -> Unit,
@@ -466,7 +470,13 @@ private fun Conversation(
             Banner(it, DesignTokens.Colors.ink(CHAT_AREA), tag = "chat.notice", onDismiss = onDismissNotice)
         }
         state.error?.let { Banner(it.message, DesignTokens.StatusColors.failure(), tag = "chat.error", onDismiss = null) }
-        Messages(state, Modifier.weight(1f), listState, onCancelQueued = onCancelQueued)
+        Messages(
+            state,
+            Modifier.weight(1f),
+            listState,
+            onCancelQueued = onCancelQueued,
+            onLoadOlder = onLoadOlder,
+        )
         Composer(draft = draft, onDraftChange = onDraftChange, state = state, onSend = onSend)
     }
 }
@@ -612,13 +622,22 @@ internal fun Messages(
     // layout changing — folding, unfolding, or collapsing the task panel.
     listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
     onCancelQueued: () -> Unit = {},
+    onLoadOlder: () -> Unit = {},
 ) {
     // The queued bubble is one more item, so following the list end (AC9)
     // reaches it too — a message held for after the reply is the newest thing
     // on screen and must not sit below the fold.
-    val count = state.messages.size + (if (state.isReplying) 1 else 0) + (if (state.queued != null) 1 else 0)
-    FollowLatestMessage(listState, count, state.pending?.content)
-    if (state.hasLoaded && count == 0) {
+    val bubbles = state.messages.size + (if (state.isReplying) 1 else 0) + (if (state.queued != null) 1 else 0)
+    // The row that reads the conversation's past sits at the top of the list,
+    // where the past is. It is an item like any other, so following the end has
+    // to count it — the end is the list's last index, not the last bubble.
+    //
+    // Drawn from what can actually be read rather than from hasOlder alone, so
+    // there is no handle for a page nobody can ask for; a read in flight and a
+    // read that failed keep it there, as the spinner and the retry.
+    val readsBack = state.canLoadOlder || state.isLoadingOlder || state.olderError != null
+    FollowLatestMessage(listState, bubbles + (if (readsBack) 1 else 0), state.pending?.content)
+    if (state.hasLoaded && bubbles == 0) {
         Box(modifier.fillMaxWidth().padding(DesignTokens.Spacing.xl), contentAlignment = Alignment.Center) {
             Text(
                 "무엇이든 물어보세요. 첫 메시지를 보내면 ChatGPT 로그인 안내가 이 대화에 나와요.",
@@ -640,6 +659,13 @@ internal fun Messages(
                 vertical = DesignTokens.Spacing.lg,
             ),
         ) {
+            // Keyed, like the bubbles below it, so prepending a page does not
+            // move what somebody is reading: the list finds the item it was
+            // anchored on by its key and keeps it where it was (AC1 2026-11-28
+            // 개정 · AC9 「앞선 메시지도 제자리에 있다」).
+            if (readsBack) {
+                item(key = "older") { OlderPage(state, onLoadOlder) }
+            }
             items(state.messages, key = { it.id }) { message ->
                 if (message.isMine) {
                     MyBubble(message.content, Modifier.widthIn(max = width * ME_MAX_FRACTION))
@@ -657,6 +683,42 @@ internal fun Messages(
                     QueuedBubble(queued.content, onCancelQueued, Modifier.widthIn(max = width * ME_MAX_FRACTION))
                 }
             }
+        }
+    }
+}
+
+/**
+ * The top of the list: reading the conversation's past one page at a time.
+ *
+ * Fetching, failed (tap to try again) and «there is more» are three different
+ * things, and none of them takes the conversation off the screen — a read of
+ * the past that fails leaves exactly what was being read.
+ */
+@Composable
+private fun OlderPage(state: ChatUiState, onLoadOlder: () -> Unit) {
+    val ink = DesignTokens.Colors.ink(CHAT_AREA)
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        when {
+            state.isLoadingOlder -> CircularProgressIndicator(
+                color = ink.copy(alpha = MUTED_OPACITY),
+                strokeWidth = SPINNER_STROKE,
+                modifier = Modifier.size(SPINNER_SIZE).testTag("chat.older.loading"),
+            )
+
+            state.olderError != null -> Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs),
+            ) {
+                Text(
+                    state.olderError.message,
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+                    color = DesignTokens.StatusColors.failure(),
+                    modifier = Modifier.testTag("chat.older.error"),
+                )
+                Chip("다시 시도", tag = "chat.older.retry", onClick = onLoadOlder)
+            }
+
+            else -> Chip("이전 대화 더 보기", tag = "chat.older.more", onClick = onLoadOlder)
         }
     }
 }

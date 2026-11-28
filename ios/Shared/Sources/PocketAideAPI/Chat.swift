@@ -30,6 +30,12 @@ public struct ChatMessage: Codable, Hashable, Identifiable, Sendable {
 
 public extension Array where Element == ChatMessage {
     /// These messages and `newer` together, each id once, oldest first.
+    ///
+    /// Merging by id is what makes a page read safe to apply twice: a previous
+    /// page is bounded by a cursor, so the retry of a read whose answer never
+    /// arrived is the same page, and applying it again changes nothing. It is
+    /// also what keeps the order right whichever direction a page came from —
+    /// older in front, newer at the end.
     func merging(_ newer: [ChatMessage]) -> [ChatMessage] {
         var byID: [Int64: ChatMessage] = [:]
         for message in self + newer {
@@ -72,11 +78,39 @@ public struct ChatQueued: Codable, Hashable, Sendable {
     }
 }
 
+/// The conversation as the server answers it — one page of it, never all of it.
+///
+/// `hasMore` and `prevCursor` belong to the newest page only: they say that the
+/// conversation goes on before this page and what to ask for it by. An
+/// incremental read (`?after=`) leaves them out, because what came after the
+/// last read says nothing about the far past — so they are read on a first page
+/// and ignored on a merge.
 public struct ChatThread: Codable, Sendable {
     public let conversation: ChatConversation
     public let messages: [ChatMessage]
     public let pending: ChatPending?
     public let queued: ChatQueued?
+    public let hasMore: Bool?
+    public let prevCursor: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case conversation, messages, pending, queued
+        case hasMore = "has_more"
+        case prevCursor = "prev_cursor"
+    }
+}
+
+/// One page of the conversation's past, oldest first.
+public struct ChatMessagePage: Codable, Sendable {
+    public let messages: [ChatMessage]
+    public let hasMore: Bool?
+    public let prevCursor: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case messages
+        case hasMore = "has_more"
+        case prevCursor = "prev_cursor"
+    }
 }
 
 /// A send either went out at once or, with a reply already in progress, is
@@ -192,13 +226,27 @@ struct ChatSendResponse: Decodable {
 struct ChatEmptyPayload: Encodable {}
 
 public extension APIClient {
-    func chat() async throws -> ChatThread {
-        try await get("/api/chat", authenticated: true)
+    /// The newest `limit` messages of the conversation, with what is in
+    /// progress on it. This is what opening the screen reads — one page, not
+    /// the conversation, which on a long one was megabytes
+    /// (PRD-AI채팅.AC1, 2026-11-28 개정).
+    func chatLatest(limit: Int) async throws -> ChatThread {
+        try await get("/api/chat?limit=\(limit)", authenticated: true)
     }
 
     /// Only the messages after `afterID`, or `.notModified` when nothing changed since `etag`.
     func chat(after afterID: Int64, ifNoneMatch etag: String?) async throws -> ConditionalResponse<ChatThread> {
         try await getConditional("/api/chat?after=\(afterID)", ifNoneMatch: etag, authenticated: true)
+    }
+
+    /// The page of the conversation right before `beforeID`, oldest first —
+    /// what 「이전 대화 더 보기」 reads.
+    ///
+    /// Its own route, so a page of the past carries no reply in progress and no
+    /// waiting message: prepending history must not touch what the screen is
+    /// showing of either.
+    func chatMessages(before beforeID: Int64, limit: Int) async throws -> ChatMessagePage {
+        try await get("/api/chat/messages?before=\(beforeID)&limit=\(limit)", authenticated: true)
     }
 
     /// Always safe to call whether or not a reply is in progress: the

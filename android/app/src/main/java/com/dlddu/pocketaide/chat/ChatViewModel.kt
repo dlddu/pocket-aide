@@ -15,6 +15,22 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
 
+/**
+ * The conversation as the screen holds it: one page of it to start with, and
+ * whatever older pages the user has asked for since.
+ *
+ * [hasOlder] and [olderCursor] come from the newest page the server answered —
+ * whether the conversation goes on before what is held, and the id to ask for
+ * that page by. An incremental read does not touch them: it carries no word
+ * about the far past, and taking its silence for «the conversation starts
+ * here» would take «이전 대화 더 보기» away from somebody who has not reached
+ * the start.
+ *
+ * [olderError] is kept apart from [error] because the two are about different
+ * things: one read failed to fetch the past, which leaves what is on screen
+ * exactly as it was and is retried by tapping again; the other is the
+ * conversation itself failing to read.
+ */
 data class ChatUiState(
     val conversation: ChatConversation? = null,
     val messages: List<ChatMessage> = emptyList(),
@@ -24,6 +40,10 @@ data class ChatUiState(
     val isSending: Boolean = false,
     val isRefreshing: Boolean = false,
     val isSyncing: Boolean = false,
+    val hasOlder: Boolean = false,
+    val olderCursor: Long = 0,
+    val isLoadingOlder: Boolean = false,
+    val olderError: ChatError? = null,
     val notice: String? = null,
     val error: ChatError? = null,
 ) {
@@ -36,6 +56,11 @@ data class ChatUiState(
     // A plain re-read of the conversation, so it stays available even while a
     // reply is in progress or sending — only guarded against itself (rapid taps).
     val canSync: Boolean get() = hasLoaded && !isSyncing
+
+    // Reading the past is guarded only against itself: a page before the
+    // oldest message held does not change with a reply coming in, so there is
+    // no reason to make somebody wait for one to finish before reading back.
+    val canLoadOlder: Boolean get() = hasOlder && olderCursor > 0 && !isLoadingOlder
 }
 
 /**
@@ -193,6 +218,11 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     // it, so a page that was still in the air lands nowhere instead of
     // appearing under whichever task is open by then.
     private var turnsReadSeq = 0L
+
+    // olderReadSeq orders the reads of the conversation's past. A first page
+    // moves it too, so a page of the past that was in the air when the
+    // conversation was replaced is not prepended to the new one.
+    private var olderReadSeq = 0L
 
     suspend fun pollWhileVisible() {
         while (coroutineContext.isActive) {
@@ -523,10 +553,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
 
     /**
      * Reads the conversation: only what came after the last read, and nothing
-     * at all when the server answers 304. The whole conversation is read when
-     * there is no read to continue from — before the first one, and whenever an
-     * answer turns out to be a different conversation than the one on screen,
-     * whose ids this cursor says nothing about.
+     * at all when the server answers 304. Its newest page is read when there is
+     * no read to continue from — before the first one, and whenever an answer
+     * turns out to be a different conversation than the one on screen, whose
+     * ids this cursor says nothing about.
      */
     internal suspend fun load() {
         val mine = ++readSeq
@@ -534,15 +564,15 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             val after = cursor
             val known = _state.value.conversation?.id
             if (after == null || known == null) {
-                loadAll(mine)
+                loadFirstPage(mine)
             } else {
-                when (val reply = api.chat(after, etag)) {
+                when (val reply = api.chatAfter(after, etag)) {
                     // Nothing changed, so nothing is applied — in particular the
                     // messages on screen are not replaced by the empty body.
                     Conditional.NotModified -> Unit
                     is Conditional.Fresh ->
                         if (reply.value.conversation.id != known) {
-                            loadAll(mine)
+                            loadFirstPage(mine)
                         } else if (mine == readSeq) {
                             applyView(reply.value, merging = true)
                             etag = reply.etag
@@ -563,13 +593,21 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
-    private suspend fun loadAll(mine: Long) {
+    /**
+     * The conversation's newest page, which is where the screen starts and
+     * where it starts over when the conversation turns out to be another one.
+     *
+     * Starting over drops the older pages that were read: they belong to the
+     * conversation that is no longer on screen, and the page just read says
+     * from scratch how far back this one goes.
+     */
+    private suspend fun loadFirstPage(mine: Long) {
         // Checked before the request, not only after it: a superseded read that
         // was answered with another conversation would otherwise fall back to
-        // reading that whole conversation — megabytes on a long one — just to
-        // throw the answer away. The newest read is already reading it.
+        // reading that conversation's page just to throw the answer away. The
+        // newest read is already reading it.
         if (mine != readSeq) return
-        val view = api.chat()
+        val view = api.chatLatest(CHAT_PAGE)
         // Checked again: the newest read can change while this one is in the
         // air, and then this answer is not the screen's to apply.
         if (mine != readSeq) return
@@ -584,10 +622,74 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                 messages = if (merging) it.messages.merging(view.messages) else view.messages,
                 pending = view.pending,
                 queued = view.queued,
+                // How far back the conversation goes is the first page's word,
+                // never an increment's — see ChatUiState.hasOlder. A first
+                // page also ends whatever read of the past was in the air and
+                // clears its failure: that read was about the conversation
+                // being replaced.
+                hasOlder = if (merging) it.hasOlder else view.hasMore,
+                olderCursor = if (merging) it.olderCursor else view.prevCursor,
+                isLoadingOlder = if (merging) it.isLoadingOlder else false,
+                olderError = if (merging) it.olderError else null,
             )
         }
         val newest = view.messages.lastOrNull()?.id ?: 0L
         cursor = if (merging) maxOf(cursor ?: 0L, newest) else newest
+        if (!merging) olderReadSeq++
+    }
+
+    /** Reads the page before the oldest message held and puts it in front of them. */
+    fun loadOlder() {
+        viewModelScope.launch { performLoadOlder() }
+    }
+
+    /**
+     * Reading back one page, as one suspending step so it can be driven without
+     * a main looper. True when a page was read.
+     *
+     * The page is bounded by a cursor, which is a message id, so it is the same
+     * page no matter what arrives in the conversation meanwhile — a reply
+     * landing mid-read gets an id above everything held and comes down the
+     * poll's `?after` read instead. Merging by id on top of that leaves no room
+     * for a gap, a repeat, or a reordering: the retry of a page whose answer
+     * never arrived is the same page, and applying it twice is applying it once.
+     */
+    internal suspend fun performLoadOlder(): Boolean {
+        val state = _state.value
+        if (!state.canLoadOlder) return false
+        val mine = ++olderReadSeq
+        val from = state.olderCursor
+        // What is on screen stays on screen while the past is fetched: this
+        // read is somebody asking for *more*, not for what they have to be
+        // taken away and given back.
+        _state.update { it.copy(isLoadingOlder = true, olderError = null) }
+        return try {
+            val page = api.chatMessagesBefore(from, CHAT_PAGE)
+            // A page that lost its race belongs to a conversation the screen
+            // has left, or to a cursor it has already read past.
+            if (mine != olderReadSeq) return false
+            _state.update {
+                it.copy(
+                    messages = it.messages.merging(page.messages),
+                    hasOlder = page.hasMore,
+                    // Keep the cursor that was read from when the answer
+                    // carries none — an empty page before a cursor that still
+                    // promised more would otherwise leave nothing to retry.
+                    olderCursor = if (page.hasMore) page.prevCursor else 0,
+                    isLoadingOlder = false,
+                )
+            }
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (mine != olderReadSeq) return false
+            // The failure is the read's, not the conversation's: the messages,
+            // the reply in progress and the cursor all stay as they are, so the
+            // same tap retries the same page.
+            _state.update { it.copy(isLoadingOlder = false, olderError = ChatError.from(e)) }
+            false
+        }
     }
 
     // Reads right away instead of waiting for the next poll tick, and reads the
@@ -708,6 +810,12 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         // One history page: small enough that the first page is quick and the
         // rest is one tap away.
         const val CHAT_TASK_TURNS_PAGE = 20
+
+        // One page of the conversation. Enough that opening the screen shows
+        // more than fits on it — so the first thing somebody does is read, not
+        // fetch — and small enough that it is a page rather than the history
+        // (PRD-AI채팅.AC1, 2026-11-28 개정). The backend caps it at 200.
+        const val CHAT_PAGE = 30
 
         const val REPLY_POLL_MILLIS = 1_500L
         const val IDLE_POLL_MILLIS = 15_000L
