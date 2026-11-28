@@ -183,6 +183,10 @@ class ChatTaskTurnsTest {
             404 to ChatTaskTurnsError.NOT_FOUND,
             409 to ChatTaskTurnsError.UNAVAILABLE,
             501 to ChatTaskTurnsError.UNSUPPORTED,
+            // A session whose records are readable but not yet from the newest
+            // end. Its own sentence: trying again later works, which is not
+            // what "this session keeps no work records" says.
+            502 to ChatTaskTurnsError.OUTDATED,
             500 to ChatTaskTurnsError.UNREACHABLE,
         )) {
             server.enqueue(MockResponse().setResponseCode(status).setBody("""{"error":"x"}"""))
