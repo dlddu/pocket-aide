@@ -55,6 +55,29 @@ data class ChatView(
     val queued: ChatQueued? = null,
 )
 
+/**
+ * The message being written but not sent, and the conversation it was written
+ * in.
+ *
+ * It is held beside the conversation rather than by the screen so that leaving
+ * the chat tab — which takes the screen out of composition entirely, there
+ * being no saved-state holder around the tab switch — does not take the words
+ * with it. Nothing of this reaches disk: coming back within the app is what it
+ * is for, and a restart starts empty.
+ *
+ * [conversationId] is what keeps two conversations' drafts apart. Null is a
+ * draft written before any conversation was known, which the first one read
+ * adopts; any *other* conversation arriving means these words were written
+ * somewhere else, and they are dropped rather than shown under it.
+ */
+data class ChatDraft(val conversationId: Long? = null, val text: String = "") {
+    fun belongingTo(conversationId: Long): ChatDraft = when (this.conversationId) {
+        conversationId -> this
+        null -> copy(conversationId = conversationId)
+        else -> ChatDraft(conversationId = conversationId)
+    }
+}
+
 /** A send either went out at once or, with a reply already in progress, is
  * held to go right after (PRD-1 AC1, 2026-11-09 개정). */
 sealed class ChatSendOutcome {

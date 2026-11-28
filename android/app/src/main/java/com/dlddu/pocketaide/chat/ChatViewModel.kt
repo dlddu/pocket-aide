@@ -167,6 +167,14 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
     private val _taskMaterials = MutableStateFlow(ChatTaskMaterialsUiState())
     val taskMaterials: StateFlow<ChatTaskMaterialsUiState> = _taskMaterials.asStateFlow()
 
+    // The composer's unsent words. They live here, not on the screen, because
+    // this view model outlives the chat tab's composable and the screen does
+    // not (PRD-AI채팅.AC11). It is the task panel's request draft's opposite
+    // number and never the same storage: one is per task, this one is per
+    // conversation.
+    private val _draft = MutableStateFlow(ChatDraft())
+    val draft: StateFlow<ChatDraft> = _draft.asStateFlow()
+
     // The newest message id a read has delivered — not one appended by send,
     // which could be newer than a reply the polls have not fetched yet.
     private var cursor: Long? = null
@@ -213,8 +221,28 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         }
     }
 
-    fun send(content: String, onSent: () -> Unit) {
-        viewModelScope.launch { if (performSend(content)) onSent() }
+    /** Takes down what is being written, exactly as typed — newlines and all. */
+    fun editDraft(text: String) {
+        _draft.update { it.copy(text = text) }
+    }
+
+    fun send() {
+        viewModelScope.launch { performSendingDraft() }
+    }
+
+    /**
+     * Sends what is in the composer and clears it only once the backend has
+     * taken it, so a failure leaves the words to retry.
+     *
+     * Only the words that went out are cleared: the field stays editable while
+     * a send is in flight, and clearing outright would swallow whatever was
+     * typed in the meantime.
+     */
+    internal suspend fun performSendingDraft(): Boolean {
+        val sent = _draft.value.text
+        if (!performSend(sent)) return false
+        _draft.update { if (it.text == sent) it.copy(text = "") else it }
+        return true
     }
 
     fun cancelQueued() {
@@ -586,6 +614,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
                 queued = view.queued,
             )
         }
+        // Which conversation the unsent words belong to is settled here, where
+        // the conversation itself arrives — a read that turns out to be another
+        // conversation drops them instead of offering them under it.
+        _draft.update { it.belongingTo(view.conversation.id) }
         val newest = view.messages.lastOrNull()?.id ?: 0L
         cursor = if (merging) maxOf(cursor ?: 0L, newest) else newest
     }

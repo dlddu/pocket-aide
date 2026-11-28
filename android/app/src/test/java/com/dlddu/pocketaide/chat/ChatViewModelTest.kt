@@ -535,4 +535,106 @@ class ChatViewModelTest {
         assertEquals("스킬이 이미 최신이에요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "ready")))
         assertEquals("이 대화에는 새로 받을 스킬이 없어요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "unconfigured")))
     }
+
+    // PRD-AI채팅.AC11: the unsent message is the view model's, so a trip to
+    // another tab — which takes the screen out of composition — comes back to
+    // it. Verbatim is the whole point: a line break the person typed is theirs.
+    @Test
+    fun theDraftIsKeptVerbatimAndClearedOnlyBySendingIt() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+
+        vm.editDraft("첫 줄\n둘째 줄 ")
+        assertEquals("첫 줄\n둘째 줄 ", vm.draft.value.text)
+        assertEquals(7L, vm.draft.value.conversationId)
+
+        // Re-reading the same conversation is what coming back to the tab does,
+        // and it leaves the words alone.
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "assistant", "답"))))
+        vm.load()
+        server.takeRequest()
+        assertEquals("첫 줄\n둘째 줄 ", vm.draft.value.text)
+
+        server.enqueue(MockResponse().setResponseCode(202).setBody("""{"message":${message(2, "user", "첫 줄")}}"""))
+        assertTrue(vm.performSendingDraft())
+        assertEquals("/api/chat/messages", server.takeRequest().path)
+        assertEquals("", vm.draft.value.text)
+    }
+
+    @Test
+    fun aFailedSendLeavesTheWordsToRetryAndEmptyingTheFieldSticks() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        server.takeRequest()
+
+        vm.editDraft("보낼 말")
+        server.enqueue(MockResponse().setResponseCode(503))
+        assertFalse(vm.performSendingDraft())
+        server.takeRequest()
+        assertEquals("보낼 말", vm.draft.value.text)
+
+        // Cleared by hand is a draft of nothing, not an absent draft — nothing
+        // may put the old words back.
+        vm.editDraft("")
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        assertEquals("", vm.draft.value.text)
+    }
+
+    @Test
+    fun theDraftIsNotCarriedIntoAnotherConversation() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "옛 대화"))))
+        vm.load()
+        server.takeRequest()
+        vm.editDraft("옛 대화에 쓰던 말")
+
+        val other = """{"conversation":{"id":8,"title":"새","created_at":3,"updated_at":3},"messages":[],"pending":null}"""
+        server.enqueue(MockResponse().setBody(other))
+        server.enqueue(MockResponse().setBody(other))
+        vm.load()
+
+        assertEquals(8L, vm.state.value.conversation?.id)
+        assertEquals("", vm.draft.value.text)
+        assertEquals(8L, vm.draft.value.conversationId)
+    }
+
+    /**
+     * Words typed before the first read have no conversation yet; the first one
+     * read adopts them rather than throwing away what was already written.
+     */
+    @Test
+    fun wordsWrittenBeforeTheConversationWasKnownAreAdoptedByIt() = runTest {
+        val vm = ChatViewModel(api())
+        vm.editDraft("먼저 쓴 말")
+        assertNull(vm.draft.value.conversationId)
+
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+
+        assertEquals("먼저 쓴 말", vm.draft.value.text)
+        assertEquals(7L, vm.draft.value.conversationId)
+    }
+
+    // PRD-AI채팅.AC11: holding the words and handing them back is not sending
+    // them. Nothing but the person's own tap on 보내기 posts a message.
+    @Test
+    fun keepingAndRestoringTheDraftSendsNothing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+        vm.editDraft("보내지 않을 말")
+        server.enqueue(MockResponse().setBody(chatJson()))
+        vm.load()
+
+        assertEquals("보내지 않을 말", vm.draft.value.text)
+        assertEquals(2, server.requestCount)
+        repeat(2) {
+            val request = server.takeRequest()
+            assertEquals("GET", request.method)
+        }
+    }
 }

@@ -13,6 +13,11 @@ final class ChatViewModel: ObservableObject {
     @Published private(set) var isSyncing = false
     @Published var notice: String?
     @Published private(set) var error: ChatError?
+    // The composer's unsent words, which the field writes straight into. They
+    // live here, not in the tab's view, because this view model outlives the
+    // view (PRD-AI채팅.AC11). Only `text` is writable — which conversation the
+    // words belong to is settled by a read, in `applyView`.
+    @Published var draft = ChatDraft()
 
     static let replyPollNanos: UInt64 = 1_500_000_000
     static let idlePollNanos: UInt64 = 15_000_000_000
@@ -112,8 +117,26 @@ final class ChatViewModel: ObservableObject {
         messages = merging ? messages.merging(view.messages) : view.messages
         pending = view.pending
         queued = view.queued
+        // Which conversation the unsent words belong to is settled here, where
+        // the conversation itself arrives — a read that turns out to be another
+        // conversation drops them instead of offering them under it.
+        draft = draft.belonging(to: view.conversation.id)
         let newest = view.messages.last?.id ?? 0
         cursor = merging ? max(cursor ?? 0, newest) : newest
+    }
+
+    /// Sends what is in the composer and clears it only once the backend has
+    /// taken it, so a failure leaves the words to retry.
+    ///
+    /// Only the words that went out are cleared: the field stays editable while
+    /// a send is in flight, and clearing outright would swallow whatever was
+    /// typed in the meantime.
+    @discardableResult
+    func sendDraft() async -> Bool {
+        let sent = draft.text
+        guard await send(sent) else { return false }
+        if draft.text == sent { draft.text = "" }
+        return true
     }
 
     func send(_ content: String) async -> Bool {

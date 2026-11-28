@@ -111,11 +111,13 @@ fun ChatScreen(api: ApiClient) {
     val taskRequest by viewModel.taskRequest.collectAsStateWithLifecycle()
     val taskTurns by viewModel.taskTurns.collectAsStateWithLifecycle()
     val taskMaterials by viewModel.taskMaterials.collectAsStateWithLifecycle()
+    val draft by viewModel.draft.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
-    // The draft and the panel's open/closed choice survive a fold, a rotation
-    // and a trip through the back stack, so neither is lost by the layout
-    // changing under the user.
-    var draft by rememberSaveable { mutableStateOf("") }
+    // The panel's open/closed choice survives a fold, a rotation and a trip
+    // through the back stack, so it is not lost by the layout changing under
+    // the user. The composer's draft outlives more than that — leaving the tab
+    // takes this whole screen out of composition — so it is kept by the view
+    // model instead (PRD-AI채팅.AC11).
     var panelOpen by rememberSaveable { mutableStateOf(true) }
     // How the panel is being looked at, and which task is open, kept the same
     // way for the same reason: a fold or a rotation must not silently widen a
@@ -178,9 +180,9 @@ fun ChatScreen(api: ApiClient) {
     ChatPanes(
         state = state,
         tasks = tasks,
-        draft = draft,
-        onDraftChange = { draft = it },
-        onSend = { viewModel.send(draft) { draft = "" } },
+        draft = draft.text,
+        onDraftChange = viewModel::editDraft,
+        onSend = viewModel::send,
         onSync = viewModel::sync,
         onRefresh = viewModel::refreshPlugins,
         onDismissNotice = viewModel::dismissNotice,
