@@ -18,6 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -423,6 +424,59 @@ class ChatViewModelTest {
         val next = server.takeRequest()
         assertEquals("/api/chat?after=2", next.path)
         assertEquals("\"fresh\"", next.getHeader("If-None-Match"))
+    }
+
+    // 버려진 읽기는 **아무 요청도 새로 시작하지 않는다**. 겹친 두 증분 읽기가
+    // 모두 「대화가 바뀌었다」는 답을 받으면 둘 다 전체 조회로 폴백하려 하는데,
+    // 전체 조회는 긴 대화에서 수 MB 다 — 최신 읽기의 한 번만 나가고, 뒤늦게
+    // 풀린 구 읽기는 결과를 버리는 데 그치지 않고 요청 자체를 내지 않아야 한다.
+    @Test
+    fun aSupersededReadThatLandsOnAnotherConversationStartsNoFullRead() = runTest {
+        val vm = ChatViewModel(api())
+        // 초기 A 전체 읽기 — 아래 요청 셈과는 별도다.
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "옛 대화"))))
+        vm.load()
+        assertEquals("/api/chat", server.takeRequest().path)
+
+        val conversationB = """{"conversation":{"id":8,"title":"새","created_at":3,"updated_at":3},"messages":[${message(5, "user", "새 대화")}],"pending":null,"queued":null}"""
+        val paths = CopyOnWriteArrayList<String>()
+        val firstArrived = CountDownLatch(1)
+        val releaseStale = CountDownLatch(1)
+        val arrivals = AtomicInteger()
+        // 어떤 요청이든 B 로 전환된 답을 준다. 먼저 닿은 읽기(버튼)의 답만
+        // 최신 읽기가 B 전체를 끝낸 뒤로 미뤄, 도착이 아니라 **적용 순서**를
+        // 고정한다 — 시간에 기대지 않는다.
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val n = arrivals.incrementAndGet()
+                paths += request.path.orEmpty()
+                if (n == 1) {
+                    firstArrived.countDown()
+                    releaseStale.await(5, TimeUnit.SECONDS)
+                }
+                return MockResponse().setBody(conversationB)
+            }
+        }
+
+        val stale = launch(start = CoroutineStart.UNDISPATCHED) { vm.performSync() }
+        assertTrue("구 읽기가 먼저 서버에 닿아야 한다", firstArrived.await(5, TimeUnit.SECONDS))
+        // 최신 읽기: 같은 A 커서로 증분 → B 로 전환 → B 전체 1회.
+        vm.load()
+
+        assertEquals(8L, vm.state.value.conversation?.id)
+        assertEquals(listOf("새 대화"), vm.state.value.messages.map { it.content })
+
+        // 구 읽기가 끝까지 돌기를 기다린다 — 추가 요청을 냈다면 이 사이에 나간다.
+        releaseStale.countDown()
+        stale.join()
+
+        assertEquals("두 증분 읽기는 같은 A 커서로 나간다", 2, paths.count { it == "/api/chat?after=1" })
+        assertEquals("구 응답이 추가 전체 읽기를 시작했다", 1, paths.count { it == "/api/chat" })
+        assertEquals(3, paths.size)
+        assertEquals(8L, vm.state.value.conversation?.id)
+        assertEquals(listOf("새 대화"), vm.state.value.messages.map { it.content })
+        assertNull(vm.state.value.pending)
+        assertFalse(vm.state.value.isSyncing)
     }
 
     @Test
