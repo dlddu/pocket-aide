@@ -153,6 +153,21 @@ func (p *powerPlatform) counts() (reads, writes, created int) {
 	return p.reads, p.writes, p.created
 }
 
+// fail makes `GET /sessions/{id}` answer with this status instead of the
+// record, and failSwitch does the same for the restore. Both go through the
+// mutex: a background follow may still be reading this fake.
+func (p *powerPlatform) fail(status int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.getStatus = status
+}
+
+func (p *powerPlatform) failSwitch(status int, body string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.switchStatus, p.switchBody = status, body
+}
+
 // forget drops a session the way the platform does when it is deleted or its
 // record is lost — every later call about it answers 404.
 func (p *powerPlatform) forget(id string) {
@@ -309,7 +324,7 @@ func TestEngine_SessionPowerOfASessionThePlatformNoLongerHas(t *testing.T) {
 func TestEngine_SessionPowerRelaysAFailedRead(t *testing.T) {
 	_, engine, platform := newPowerEngine(t)
 	openSession(t, engine, platform, 1)
-	platform.getStatus = http.StatusInternalServerError
+	platform.fail(http.StatusInternalServerError)
 	if _, err := engine.SessionPowerOf(context.Background(), 1); err == nil {
 		t.Fatal("a refused status read answered as a state")
 	}
@@ -402,7 +417,7 @@ func TestEngine_PowerOnWhileThePlatformHoldsTheSession(t *testing.T) {
 	_, engine, platform := newPowerEngine(t)
 	id := openSession(t, engine, platform, 1)
 	platform.archive(id)
-	platform.switchStatus = http.StatusConflict
+	platform.failSwitch(http.StatusConflict, "")
 	if _, err := engine.PowerOnSession(context.Background(), 1); !errors.Is(err, chat.ErrPowerBusy) {
 		t.Fatalf("err = %v, want ErrPowerBusy", err)
 	}
@@ -414,15 +429,14 @@ func TestEngine_PowerOnWithNoLoginSlotFree(t *testing.T) {
 	_, engine, platform := newPowerEngine(t)
 	id := openSession(t, engine, platform, 1)
 	platform.archive(id)
-	platform.switchStatus = http.StatusServiceUnavailable
-	platform.switchBody = `{"error":"auth pool exhausted for codex-chat"}`
+	platform.failSwitch(http.StatusServiceUnavailable, `{"error":"auth pool exhausted for codex-chat"}`)
 	_, err := engine.PowerOnSession(context.Background(), 1)
 	var platformErr *chat.PlatformError
 	if !errors.As(err, &platformErr) || !platformErr.AuthPoolExhausted {
 		t.Fatalf("err = %v, want a platform error marked auth pool exhausted", err)
 	}
 
-	platform.switchBody = `{"error":"control plane is down"}`
+	platform.failSwitch(http.StatusServiceUnavailable, `{"error":"control plane is down"}`)
 	_, err = engine.PowerOnSession(context.Background(), 1)
 	if !errors.As(err, &platformErr) || platformErr.AuthPoolExhausted {
 		t.Fatalf("err = %v, want a plain 503 platform error", err)
@@ -436,8 +450,7 @@ func TestEngine_PowerOnReportsAcceptedWhenTheStateCannotBeReadBack(t *testing.T)
 	_, engine, platform := newPowerEngine(t)
 	id := openSession(t, engine, platform, 1)
 	platform.archive(id)
-	platform.switchBody = "not json"
-	platform.switchStatus = http.StatusAccepted
+	platform.failSwitch(http.StatusAccepted, "not json")
 
 	power, err := engine.PowerOnSession(context.Background(), 1)
 	if err != nil {
@@ -453,7 +466,7 @@ func TestEngine_PowerOnReportsAcceptedWhenTheStateCannotBeReadBack(t *testing.T)
 	}
 
 	// With the record unreadable too, there is no state to claim.
-	platform.getStatus = http.StatusInternalServerError
+	platform.fail(http.StatusInternalServerError)
 	power, err = engine.PowerOnSession(context.Background(), 1)
 	if err == nil && power.Power != chat.PowerUnknown {
 		t.Fatalf("power = %+v err = %v, want unknown or a relayed failure", power, err)

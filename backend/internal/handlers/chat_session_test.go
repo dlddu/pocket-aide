@@ -101,6 +101,22 @@ func (p *chatPowerPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// fail makes every later call answer with this status and body. It goes
+// through the mutex because the server reads these fields on its own
+// goroutine while the test is still setting them up.
+func (p *chatPowerPlatform) fail(status int, body string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.status, p.body = status, body
+}
+
+// failSwitch does the same for the restore alone, leaving the record readable.
+func (p *chatPowerPlatform) failSwitch(status int, body string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.switchStatus, p.switchBody = status, body
+}
+
 func (p *chatPowerPlatform) archive(id string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -274,7 +290,7 @@ func TestChat_PowerOnRefusals(t *testing.T) {
 	t.Run("platform busy with the session", func(t *testing.T) {
 		router, platform := newChatPowerRouter(t)
 		platform.archive(openChatSession(t, router, platform, 1))
-		platform.switchStatus = http.StatusConflict
+		platform.failSwitch(http.StatusConflict, "")
 		power := chatPower(t, router, http.MethodPost, "/api/chat/session/power", 1, http.StatusConflict)
 		if power.Code != "chat_power_busy" {
 			t.Fatalf("code = %q", power.Code)
@@ -283,8 +299,7 @@ func TestChat_PowerOnRefusals(t *testing.T) {
 	t.Run("no login slot free", func(t *testing.T) {
 		router, platform := newChatPowerRouter(t)
 		platform.archive(openChatSession(t, router, platform, 1))
-		platform.switchStatus = http.StatusServiceUnavailable
-		platform.switchBody = `{"error":"auth pool exhausted for codex-chat"}`
+		platform.failSwitch(http.StatusServiceUnavailable, `{"error":"auth pool exhausted for codex-chat"}`)
 		power := chatPower(t, router, http.MethodPost, "/api/chat/session/power", 1, http.StatusServiceUnavailable)
 		if power.Code != sessions.ErrorCodeAuthPoolExhausted {
 			t.Fatalf("code = %q, want %q", power.Code, sessions.ErrorCodeAuthPoolExhausted)
@@ -293,8 +308,7 @@ func TestChat_PowerOnRefusals(t *testing.T) {
 	t.Run("platform unreachable", func(t *testing.T) {
 		router, platform := newChatPowerRouter(t)
 		platform.archive(openChatSession(t, router, platform, 1))
-		platform.switchStatus = http.StatusServiceUnavailable
-		platform.switchBody = `{"error":"control plane is down"}`
+		platform.failSwitch(http.StatusServiceUnavailable, `{"error":"control plane is down"}`)
 		// A restore has no feature gate of its own, so this must not borrow the
 		// sessions tab's "archiving is disabled here" wording (PRD-11 AC11).
 		rec := chatDo(t, router, http.MethodPost, "/api/chat/session/power", map[string]any{}, 1)
@@ -305,7 +319,7 @@ func TestChat_PowerOnRefusals(t *testing.T) {
 	t.Run("status read refused", func(t *testing.T) {
 		router, platform := newChatPowerRouter(t)
 		openChatSession(t, router, platform, 1)
-		platform.status = http.StatusInternalServerError
+		platform.fail(http.StatusInternalServerError, "")
 		if rec := chatDo(t, router, http.MethodGet, "/api/chat/session", nil, 1); rec.Code == http.StatusOK {
 			t.Fatalf("a refused status read answered 200: %s", rec.Body)
 		}
