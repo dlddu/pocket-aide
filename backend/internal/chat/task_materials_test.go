@@ -648,3 +648,44 @@ func TestTaskMaterialsRefusesBeforeReadingWhenThereIsNothingToRead(t *testing.T)
 		t.Errorf("calls = %v, want none", platform.calls)
 	}
 }
+
+// A sentence that merely begins with a side's label is prose, not a marked
+// side. 「장점이 많다」 reading as the label 장점 with the value 「이 많다」 is the
+// kind of near-miss that would look plausible on screen and say something the
+// author did not.
+func TestTaskMaterialsDoesNotReadAWordStartingWithALabelAsThatSide(t *testing.T) {
+	store, engine, platform := materialsEngine(t)
+	bindSession(t, store, 1, "worker-1")
+	platform.page("worker-1", "t1", 0, `{
+	  "task_id": "t1", "turns": [
+	    {"id": 1, "request": "비교",
+	     "explanation": "## 대안별 장단점\n- 지금 하기\n  - 장점이 많다고 들었다\n  - 단점: 테스트를 못 돌린다\n",
+	     "artifacts": [], "choices": [],
+	     "requested_at": "2026-11-20T00:00:00Z", "ended_at": "2026-11-20T01:00:00Z"}
+	  ]
+	}`)
+
+	got, err := engine.TaskMaterials(context.Background(), 1, "t1")
+	if err != nil {
+		t.Fatalf("materials: %v", err)
+	}
+	if len(got.Tradeoffs) != 1 {
+		t.Fatalf("tradeoffs = %+v", got.Tradeoffs)
+	}
+	entry := got.Tradeoffs[0]
+	// The real labelled side was read.
+	if len(entry.Cons) != 1 || entry.Cons[0] != "테스트를 못 돌린다" {
+		t.Errorf("cons = %+v", entry.Cons)
+	}
+	// The sentence was not, and it did not become a pro with a mangled value.
+	if len(entry.Pros) != 0 {
+		t.Errorf("pros = %+v, want none: 「장점이 많다고 들었다」 is a sentence", entry.Pros)
+	}
+	// It also did not get read as a second alternative's name under its own row
+	// with no sides, which flush() drops.
+	for _, tr := range got.Tradeoffs {
+		if strings.Contains(tr.Alternative, "장점이") {
+			t.Errorf("a sentence became an alternative: %+v", tr)
+		}
+	}
+}

@@ -200,18 +200,24 @@ func tradeoffsOfSection(lines []string, turnID int64, source string) []TaskTrade
 		if item == "" {
 			continue
 		}
-		if label, value, ok := labelled(item, proLabels); ok {
+		if _, value, ok := labelled(item, proLabels); ok {
 			if current != nil && value != "" {
 				current.Pros = append(current.Pros, value)
 			}
-			_ = label
 			continue
 		}
-		if label, value, ok := labelled(item, conLabels); ok {
+		if _, value, ok := labelled(item, conLabels); ok {
 			if current != nil && value != "" {
 				current.Cons = append(current.Cons, value)
 			}
-			_ = label
+			continue
+		}
+		// A line that begins with a side's word but is not a well-formed label
+		// is prose inside the section — 「장점이 많다고 들었다」. It is not a side,
+		// and it is emphatically not the name of a new alternative: reading it
+		// as one would invent an option the author never offered and hand it
+		// whatever sides came next.
+		if startsWithSideWord(item) {
 			continue
 		}
 		// Not a side, so it names the next alternative.
@@ -226,26 +232,46 @@ func tradeoffsOfSection(lines []string, turnID int64, source string) []TaskTrade
 	return out
 }
 
+// startsWithSideWord is whether this line opens with 장점/단점 or one of their
+// synonyms, however it continues. It is the guard that keeps a sentence
+// beginning with one of those words from being read as an alternative.
+func startsWithSideWord(item string) bool {
+	for _, label := range append(append([]string{}, proLabels...), conLabels...) {
+		if len(item) >= len(label) && strings.EqualFold(item[:len(label)], label) {
+			return true
+		}
+	}
+	return false
+}
+
 // labelled splits `장점: 빠르다` or `장점 — 빠르다` into its label and value.
-// The label has to start the line: a sentence that mentions 장점 in the middle
-// is prose, not a marked side.
+//
+// The label has to start the line *and* be followed by a separator, a space, or
+// nothing. That second half matters: without it 「장점이 많다」 would parse as
+// the label 장점 with the value 「이 많다」, which is a sentence being read as a
+// marked side. A word that merely begins with the label is prose.
 func labelled(item string, labels []string) (string, string, bool) {
 	for _, label := range labels {
 		if len(item) < len(label) || !strings.EqualFold(item[:len(label)], label) {
 			continue
 		}
-		rest := strings.TrimSpace(item[len(label):])
+		after := item[len(label):]
+		if after == "" {
+			return label, "", true
+		}
+		trimmed := strings.TrimLeft(after, " \t")
+		spaced := trimmed != after
 		for _, sep := range []string{":", "：", "—", "-", "–", "="} {
-			if strings.HasPrefix(rest, sep) {
-				return label, strings.TrimSpace(strings.TrimPrefix(rest, sep)), true
+			if strings.HasPrefix(trimmed, sep) {
+				return label, strings.TrimSpace(strings.TrimPrefix(trimmed, sep)), true
 			}
 		}
-		// `장점` on its own line labels what follows on the same line after a
-		// space, and nothing else.
-		if rest != "" {
-			return label, rest, true
+		if spaced {
+			return label, strings.TrimSpace(trimmed), true
 		}
-		return label, "", true
+		// Prefix-matched but not a label. No other label can match either, and
+		// trying them is harmless.
+		continue
 	}
 	return "", "", false
 }

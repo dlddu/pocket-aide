@@ -232,15 +232,20 @@ class ChatTaskMaterialsRenderTest {
     fun theEarlierPullRequestsStayOnScreenBehindAShortFollowUp() {
         start(recorded)
 
-        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.0.label")
-            .performScrollTo().assertTextEquals("dlddu/pocket-aide#430")
-        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.1.label")
+        // 열 수 있는 줄은 카드 전체가 버튼이라 `clickable` 이 자손 의미를
+        // 합친다(MergeDescendants) — 합쳐진 트리에서는 자식 testTag 가 사라지므로
+        // 줄 안쪽은 `useUnmergedTree = true` 로 봐야 한다. 스크롤은 합쳐진 트리에
+        // 있는 줄 자체로 한다.
+        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.0").performScrollTo()
+        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.0.label", useUnmergedTree = true)
+            .assertTextEquals("dlddu/pocket-aide#430")
+        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.1.label", useUnmergedTree = true)
             .assertTextEquals("주고받은 내용을 펼칠 때 읽는다")
         // 주소가 적혀 있지 않은 산출물은 식별자로 보이고, 눌러도 아무 데로
         // 가지 않는다.
-        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.2.label")
+        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.2.label", useUnmergedTree = true)
             .assertTextEquals("pull/42")
-        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.2.ref")
+        compose.onNodeWithTag("chat.tasks.detail.materials.artifact.2.ref", useUnmergedTree = true)
             .assertTextContains("열 수 없어요", substring = true)
         compose.onNodeWithTag("chat.tasks.detail.materials.artifact.2").performClick()
         assertEquals(null, opened)
