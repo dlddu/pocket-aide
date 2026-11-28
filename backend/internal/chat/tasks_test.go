@@ -47,12 +47,13 @@ type workRow struct {
 }
 
 type workLatest struct {
-	ID        int64
-	Request   *string
-	Question  *string
-	Choices   []chat.TaskChoice
-	StartedAt *string
-	EndedAt   *string
+	ID          int64
+	Request     *string
+	Explanation *string
+	Question    *string
+	Choices     []chat.TaskChoice
+	StartedAt   *string
+	EndedAt     *string
 }
 
 func newWorkPlatform() *workPlatform {
@@ -78,13 +79,19 @@ func (p *workPlatform) Do(_ context.Context, method, path string, _ []byte) (int
 	}
 	after := values.Get("after_id")
 
+	// The platform's page carries the whole latest turn, so the fixture does
+	// too — including the long response, which is exactly the field the panel
+	// must not start shipping to the app.
 	type outTurn struct {
-		ID        int64             `json:"id"`
-		Request   *string           `json:"request"`
-		Question  *string           `json:"question"`
-		Choices   []chat.TaskChoice `json:"choices"`
-		StartedAt *string           `json:"started_at"`
-		EndedAt   *string           `json:"ended_at"`
+		ID          int64             `json:"id"`
+		Request     *string           `json:"request"`
+		Instruction *string           `json:"instruction"`
+		Response    *string           `json:"response"`
+		Explanation *string           `json:"explanation"`
+		Question    *string           `json:"question"`
+		Choices     []chat.TaskChoice `json:"choices"`
+		StartedAt   *string           `json:"started_at"`
+		EndedAt     *string           `json:"ended_at"`
 	}
 	type outTask struct {
 		ID                 string  `json:"id"`
@@ -122,7 +129,10 @@ func (p *workPlatform) Do(_ context.Context, method, path string, _ []byte) (int
 		}
 		if row.Latest != nil {
 			out.LatestTurn = &outTurn{
-				ID: row.Latest.ID, Request: row.Latest.Request, Question: row.Latest.Question,
+				ID: row.Latest.ID, Request: row.Latest.Request,
+				Instruction: str("세션에 전달한 지시 " + row.ID),
+				Response:    str(strings.Repeat("세션이 스스로 쓴 아주 긴 원문 답 ", 200)),
+				Explanation: row.Latest.Explanation, Question: row.Latest.Question,
 				Choices: row.Latest.Choices, StartedAt: row.Latest.StartedAt, EndedAt: row.Latest.EndedAt,
 			}
 		}
@@ -342,6 +352,123 @@ func TestTasks_OfferedChoicesCarryTheirTurn(t *testing.T) {
 	// choices would let a screen send a pick nothing offered.
 	if bareTask := taskByID(t, list, "t-bare"); len(bareTask.Choices) != 0 || bareTask.ChoiceTurnID != 0 {
 		t.Fatalf("a turn with no choices = %+v", bareTask)
+	}
+}
+
+// The words shown above a set of choices are the words of the turn that
+// offered them, projected from the page the panel already reads — no second
+// call, no history page, and never another turn's.
+//
+// A choice means nothing on its own: a person reading "전부 반영해 줘" needs the
+// request that went, what came of it, and what is being asked. The exchanges
+// that hold all three start closed at the bottom of the pane, so the panel's
+// own poll has to carry them.
+func TestTasks_ChoiceTurnWordsComeFromTheTurnThatOfferedThem(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	// A turn that offered sentences and said all three things, with the
+	// padding the platform's own column can carry.
+	offered := row("t-offer", chat.TaskStatusReview)
+	offered.Latest = &workLatest{
+		ID: 42, Request: str("  리뷰 반영해 줘  "),
+		Explanation: str("  필수 코멘트 3건을 반영했고 2건은 의견이 갈려요.  "),
+		Question:    str("  남은 2건은 어떻게 할까요?  "),
+		Choices:     []chat.TaskChoice{{Label: "전부", RequestText: "둘 다 반영해 줘"}},
+	}
+	// A turn that offered sentences without saying anything itself. Nothing to
+	// draw is not an empty frame.
+	mute := row("t-mute", chat.TaskStatusBlocked)
+	mute.Latest = &workLatest{
+		ID: 50, Request: str("   "), Explanation: str(""),
+		Choices: []chat.TaskChoice{{Label: "그대로", RequestText: "그대로 진행해 줘"}},
+	}
+	// A turn that said plenty and offered nothing. Its words have nothing on
+	// screen to sit above, so they are not sent as a choice turn.
+	quiet := row("t-quiet", chat.TaskStatusRunning)
+	quiet.Latest = &workLatest{ID: 60, Request: str("이거 해 줘"), Question: str("되나요?")}
+	platform.rows["sess-1"] = []workRow{offered, mute, quiet}
+
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := taskByID(t, list, "t-offer")
+	if got.ChoiceTurn == nil {
+		t.Fatal("the turn that offered the choices said nothing to the pane")
+	}
+	// The same turn as the choices, and its own three words.
+	if got.ChoiceTurnID != 42 {
+		t.Fatalf("choice_turn_id = %d", got.ChoiceTurnID)
+	}
+	if got.ChoiceTurn.Request != "리뷰 반영해 줘" {
+		t.Fatalf("request = %q", got.ChoiceTurn.Request)
+	}
+	if got.ChoiceTurn.Explanation != "필수 코멘트 3건을 반영했고 2건은 의견이 갈려요." {
+		t.Fatalf("explanation = %q", got.ChoiceTurn.Explanation)
+	}
+	if got.ChoiceTurn.Question != "남은 2건은 어떻게 할까요?" {
+		t.Fatalf("question = %q", got.ChoiceTurn.Question)
+	}
+	if muted := taskByID(t, list, "t-mute"); muted.ChoiceTurn != nil {
+		t.Fatalf("a turn with nothing to say sent an empty frame: %+v", muted.ChoiceTurn)
+	}
+	if q := taskByID(t, list, "t-quiet"); q.ChoiceTurn != nil {
+		t.Fatalf("words with no choices under them were sent anyway: %+v", q.ChoiceTurn)
+	}
+	// One page, which is the one the panel polls anyway. Reading these three
+	// words must not cost a turns route or a second task read.
+	for _, path := range platform.paths {
+		if strings.Contains(path, "/turns") {
+			t.Fatalf("the panel read a task's turns to show the words above its choices: %v", platform.paths)
+		}
+	}
+	// And the session's verbatim answer stays out of the answer entirely: it is
+	// the long field, it is on screen when somebody opens the exchanges, and
+	// shipping it per poll per task is what this projection exists to avoid.
+	encoded, err := json.Marshal(list)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(encoded), "세션이 스스로 쓴 아주 긴 원문 답") {
+		t.Fatal("the task list carried the session's verbatim response")
+	}
+	if strings.Contains(string(encoded), "세션에 전달한 지시") {
+		t.Fatal("the task list carried the instruction, which nothing on the pane shows")
+	}
+}
+
+// A turn can be finished and still be the one offering sentences. Nothing is
+// then "waiting", and the words above the choices must come from that turn all
+// the same — the pane used to have only the open turn to read them from, so a
+// finished one left a person choosing with the question blank.
+func TestTasks_ChoiceTurnSurvivesAFinishedTurn(t *testing.T) {
+	store, engine, platform := workEngine(t)
+	bindSession(t, store, 1, "sess-1")
+	done := row("t-done", chat.TaskStatusReview)
+	done.Latest = &workLatest{
+		ID: 77, Request: str("고쳐 줘"), Question: str("이대로 머지할까요?"),
+		Explanation: str("고쳤고 CI 는 초록이에요."),
+		Choices:     []chat.TaskChoice{{Label: "머지", RequestText: "머지해 줘"}},
+		StartedAt:   str("2026-11-26T00:00:00Z"), EndedAt: str("2026-11-26T00:10:00Z"),
+	}
+	platform.rows["sess-1"] = []workRow{done}
+
+	list, err := engine.Tasks(context.Background(), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := taskByID(t, list, "t-done")
+	// Nothing is waiting — the turn ended.
+	if got.Waiting != nil {
+		t.Fatalf("a finished turn is shown as waiting: %+v", got.Waiting)
+	}
+	// And the choices still carry their turn's own words.
+	if got.ChoiceTurn == nil || got.ChoiceTurn.Question != "이대로 머지할까요?" {
+		t.Fatalf("choice turn = %+v", got.ChoiceTurn)
+	}
+	if got.ChoiceTurn.Explanation != "고쳤고 CI 는 초록이에요." || got.ChoiceTurn.Request != "고쳐 줘" {
+		t.Fatalf("choice turn = %+v", got.ChoiceTurn)
 	}
 }
 

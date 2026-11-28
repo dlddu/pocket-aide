@@ -17,7 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -55,16 +57,30 @@ private const val REQUEST_MAX_LINES = 6
 /**
  * One work task, and the ways to ask about it.
  *
- * Everything above the request field is read straight from the records the
- * panel last read — the status, what the task is for, how it will be known to
- * be done, what the session is asking, and the exchanges so far — each marked
- * 미기록 when the records carry none. The pane adds no judgement of its own and
- * states nothing the records do not.
+ * Everything above the request field is read straight from the task row the
+ * panel last polled — the status, what the task is for, how it will be known to
+ * be done, and what the session is asking — each marked 미기록 when the records
+ * carry none. The pane adds no judgement of its own and states nothing the
+ * records do not.
+ *
+ * When the session has sentences on offer, the turn that offered them says its
+ * own piece directly above them (see [ChoiceTurn]): the request that went, the
+ * explanation of what came back, and the question the sentences answer. Those
+ * come from that turn, on the same task row as the choices, which is why they
+ * are on screen before anybody opens the exchanges and why they can never be
+ * some other turn's words.
  *
  * The task's exchanges *are* its history: the separate ledger history that
  * used to sit at the bottom is gone with the ledger it read (platform AC-N10),
  * because a past management event was never a turn and showing one as a turn
  * would put words in a person's mouth.
+ *
+ * Those exchanges are the last thing on the pane and start closed. A task that
+ * has run for a while has a long one, and a person opening a task is almost
+ * always there to answer what is being asked — so what is being asked and the
+ * ways to answer it come first, and nothing of the exchanges is asked of the
+ * session until somebody opens them. Everything the pane shows while they are
+ * closed comes from the task list the panel already polls.
  *
  * Everything below the field stores one request, which becomes this task's next
  * turn. The suggestions fill the field rather than store, so what a button
@@ -86,7 +102,10 @@ fun ChatTaskDetailPane(
     request: ChatTaskRequestUiState,
     onStore: () -> Unit,
     turns: ChatTaskTurnsUiState,
+    turnsOpen: Boolean,
+    onToggleTurns: () -> Unit,
     onLoadTurns: () -> Unit,
+    onRetryTurns: () -> Unit,
     onLoadMoreTurns: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -108,26 +127,54 @@ fun ChatTaskDetailPane(
                 .padding(horizontal = DesignTokens.Spacing.xl, vertical = DesignTokens.Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
         ) {
-            // What the task is for and how it will be known to be done. The
-            // older ledger shape had no column for either, so a carried-over
-            // task says "not recorded" rather than showing a blank.
-            NullableField("무엇을 · 왜", turns.task.description, "chat.tasks.detail.description")
-            NullableField("완료 기준", turns.task.completionCriteria, "chat.tasks.detail.criteria")
+            // What the task is for and how it will be known to be done. Both
+            // come from the task row the panel polls rather than from the
+            // exchanges, so they are on screen before anybody opens those —
+            // and they stay as fresh as the panel's own reads. The older
+            // ledger shape had no column for either, so a carried-over task
+            // says "not recorded" rather than showing a blank.
+            Field("무엇을 · 왜", task.description, "chat.tasks.detail.description")
+            Field("완료 기준", task.completionCriteria, "chat.tasks.detail.criteria")
+            // The turn whose sentences are on offer, when there are any. It is
+            // read from the task row beside the choices themselves, so it is
+            // that turn's words and not whichever turn happens to be open or
+            // last.
+            val offering = task.choiceTurn?.takeIf { task.choices.isNotEmpty() && it.hasAny }
             // What the session is asking, which is the nearest thing the
             // agreed records have to the ledger's free-text reason and next
             // action — those were the parent's own bookkeeping and never part
             // of what a person reads.
-            Field("묻는 것", task.waiting?.question.orEmpty(), "chat.tasks.detail.question")
+            //
+            // It moves next to the choices when the offering turn asked one,
+            // because that is the question those sentences answer and one
+            // question read twice in two places is a person wondering which of
+            // them is being asked. When the offering turn asked none — and on
+            // a task with no choices at all — this stays exactly where it was.
+            if (offering?.question.isNullOrBlank()) {
+                Field("묻는 것", task.waiting?.question.orEmpty(), "chat.tasks.detail.question")
+            }
             task.waiting?.let { Waiting(it) }
             Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
-            Turns(task.id, turns, onLoadTurns, onLoadMoreTurns)
-            Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+            offering?.let { ChoiceTurn(it) }
             Choices(task.choices, onChoicePicked)
             RequestField(
                 draft = draft,
                 onDraftChange = onDraftChange,
                 request = if (mine) request else ChatTaskRequestUiState(),
                 onStore = onStore,
+            )
+            Box(Modifier.fillMaxWidth().height(RULE).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+            // Last, and closed until asked for: a long exchange must not push
+            // what is being asked off the screen, and a closed one is read
+            // from nowhere.
+            Turns(
+                task = task,
+                open = turnsOpen,
+                onToggle = onToggleTurns,
+                turns = turns,
+                onLoad = onLoadTurns,
+                onRetry = onRetryTurns,
+                onLoadMore = onLoadMoreTurns,
             )
         }
     }
@@ -214,6 +261,54 @@ private fun Field(label: String, value: String, tag: String) {
 }
 
 /**
+ * The turn the offered sentences belong to, in its own frame directly above
+ * them: what was sent, what came back as the parent tells it, and the question
+ * those sentences answer — in that order, because that is the order it
+ * happened in and the question is what the buttons under it are answers to.
+ *
+ * It is here because the sentences alone are not a conversation. A person
+ * opening a task sees "전부 반영해 줘" and has to know what was asked, what came
+ * of it and what is being asked now before any of the buttons means anything —
+ * and the exchanges that hold all of it start closed, deliberately, at the
+ * bottom of the pane.
+ *
+ * These are [ChatTask.choiceTurn]'s own words, read with the choices from the
+ * same turn of the same task row. Not the last turn of a history page, not the
+ * open turn below: those can be a different turn, and one turn's words over
+ * another turn's choices would tell somebody they are answering something they
+ * are not. A part the records do not have is left out rather than filled in
+ * from a turn that does have it.
+ *
+ * It is framed and labelled as one turn's words so it is not read as three more
+ * fields of the task itself.
+ */
+@Composable
+private fun ChoiceTurn(turn: ChatTaskChoiceTurn) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    val shape = RoundedCornerShape(DesignTokens.Radius.card)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(DesignTokens.Colors.ink(DETAIL_AREA).copy(alpha = QUOTE_OPACITY))
+            .border(RULE, DesignTokens.Colors.rule(DETAIL_AREA), shape)
+            .padding(DesignTokens.Spacing.md)
+            .testTag("chat.tasks.detail.choiceTurn"),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+    ) {
+        Text(
+            "이 선택지를 올린 턴",
+            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs, FontWeight.Bold),
+            color = ink.copy(alpha = MUTED_OPACITY),
+            modifier = Modifier.testTag("chat.tasks.detail.choiceTurn.label"),
+        )
+        TurnPart("보낸 요청", turn.request, "chat.tasks.detail.choiceTurn.request")
+        TurnPart("설명", turn.explanation, "chat.tasks.detail.choiceTurn.explanation")
+        TurnPart("질문", turn.question, "chat.tasks.detail.choiceTurn.question")
+    }
+}
+
+/**
  * What the session itself offers to say about this task.
  *
  * The app writes none of these: they are the sentences the session wrote
@@ -274,7 +369,10 @@ private fun Waiting(waiting: ChatTaskWaiting) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
     Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs)) {
         Text(
-            "보낸 요청",
+            // Says it is the state of the open turn, not the words of one. The
+            // words now have a place of their own above the choices, and two
+            // things under one label is a person reading a status as a request.
+            "보낸 요청의 상태",
             style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
             color = ink.copy(alpha = MUTED_OPACITY),
         )
@@ -390,46 +488,124 @@ private fun Note(text: String, color: androidx.compose.ui.graphics.Color, tag: S
 
 
 /**
- * A field the agreed records may genuinely not have recorded.
- *
- * null is not an empty string here: a task carried over from a ledger that
- * never kept the field has nothing to show, and saying so is more honest than
- * a blank line a person would read as the answer.
- */
-@Composable
-private fun NullableField(label: String, value: String?, tag: String) {
-    Field(label, value ?: "", tag)
-}
-
-/**
- * One task's turns, oldest first — the work itself.
+ * One task's turns, oldest first — the work itself, and the last thing on the
+ * pane.
  *
  * Each turn is shown as the exchange it was: the person's words, the
  * instruction that went to the session doing the work, that session's own
  * answer, and the parent's explanation of it, each labelled so none of them is
  * read as another. The parent's summary is never shown as the session's words.
+ *
+ * It starts closed, and closed means *not read*: the page is asked for when
+ * somebody opens it and never before, so stepping into a task — or polling it,
+ * or storing a request on it — asks the session for no exchange at all. The
+ * header says how many there are without reading any, because the task row the
+ * panel already polls carries the count.
+ *
+ * While it is open, the panel's own poll is what says something happened:
+ * [onLoad] runs again when the task row's exchange signal moves, so a turn
+ * that arrives while somebody is reading shows up. Opening it again after
+ * nothing changed reads nothing — [ChatViewModel.loadTaskTurns] holds that
+ * decision, so the pane asks once per thing worth asking about.
  */
 @Composable
 private fun Turns(
-    taskID: String,
+    task: ChatTask,
+    open: Boolean,
+    onToggle: () -> Unit,
     turns: ChatTaskTurnsUiState,
     onLoad: () -> Unit,
+    onRetry: () -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val ink = DesignTokens.Colors.ink(DETAIL_AREA)
-    // The first page is read when this task's pane opens, and again when the
-    // pane switches to another task.
-    LaunchedEffect(taskID) { onLoad() }
     Column(
         Modifier.fillMaxWidth().testTag("chat.tasks.detail.turns"),
         verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
     ) {
-        Text(
-            "주고받은 내용",
-            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-            color = ink.copy(alpha = MUTED_OPACITY),
-        )
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClick = onToggle)
+                // The handle is one button, so its own description is what gets
+                // announced and the number beside it would not be — the count
+                // is said here too, or somebody listening would hear "펼치기"
+                // and not how much there is to open. A task with no exchange
+                // says no number, here as on screen.
+                .semantics {
+                    val what = if (task.turnsTotal > 0) "주고받은 내용 ${task.turnsTotal}개" else "주고받은 내용"
+                    contentDescription = if (open) "$what 접기" else "$what 펼치기"
+                }
+                .testTag("chat.tasks.detail.turns.toggle"),
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "주고받은 내용",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.weight(1f),
+            )
+            // The count is the task row's own, so it is on screen without any
+            // exchange being read. A task with none says nothing here rather
+            // than "0".
+            if (task.turnsTotal > 0) {
+                Text(
+                    task.turnsTotal.toString(),
+                    style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                    color = ink.copy(alpha = MUTED_OPACITY),
+                    modifier = Modifier.testTag("chat.tasks.detail.turns.count"),
+                )
+            }
+            Icon(
+                if (open) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                contentDescription = null,
+                tint = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.size(BACK_ICON_SIZE),
+            )
+        }
+        // Nothing below the header exists while it is closed — no card is
+        // composed, so nothing of the exchanges had to be read to draw one.
+        if (open) {
+            // Reading starts here and only here: on opening, and again when
+            // the panel's poll says this task's exchanges moved. Closing the
+            // section leaves this branch and cancels the effect, so nothing is
+            // in flight behind a closed header.
+            LaunchedEffect(task.id, ChatTaskHistorySignal.of(task)) { onLoad() }
+            OpenTurns(task.id, turns, onRetry, onLoadMore)
+        }
+    }
+}
+
+/**
+ * The exchanges once somebody has opened them: the page, or the one honest
+ * answer about why there is none to draw.
+ *
+ * A page belongs to the task it was read for. Switching tasks quickly leaves
+ * the previous task's page in state for an instant, and drawing it under this
+ * title would put one task's work under another's name — so a page that is not
+ * [taskID]'s is treated as one that has not arrived.
+ */
+@Composable
+private fun OpenTurns(
+    taskID: String,
+    turns: ChatTaskTurnsUiState,
+    onRetry: () -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val ink = DesignTokens.Colors.ink(DETAIL_AREA)
+    val mine = turns.taskId == taskID
+    Column(
+        Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md),
+    ) {
         when {
+            !mine -> CircularProgressIndicator(
+                color = ink.copy(alpha = MUTED_OPACITY),
+                strokeWidth = SPINNER_STROKE,
+                modifier = Modifier.size(SPINNER_SIZE).testTag("chat.tasks.detail.turns.loading"),
+            )
+
             turns.error != null -> {
                 Note(turns.error.message, DesignTokens.StatusColors.failure(), "chat.tasks.detail.turns.error")
                 val shape = RoundedCornerShape(DesignTokens.Radius.chip)
@@ -440,7 +616,7 @@ private fun Turns(
                     modifier = Modifier
                         .clip(shape)
                         .border(RULE, DesignTokens.Colors.accent(DETAIL_AREA), shape)
-                        .clickable(role = Role.Button, onClick = onLoad)
+                        .clickable(role = Role.Button, onClick = onRetry)
                         .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
                         .testTag("chat.tasks.detail.turns.retry"),
                 )

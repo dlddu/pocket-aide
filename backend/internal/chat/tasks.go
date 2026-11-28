@@ -79,7 +79,10 @@ type Task struct {
 	Description        string `json:"description,omitempty"`
 	CompletionCriteria string `json:"completion_criteria,omitempty"`
 	// TurnsTotal is how many exchanges this task has had, so the panel can
-	// show that a task has history without opening it.
+	// show that a task has history without opening it — and so the detail pane
+	// can tell whether the page it already read is still the current one
+	// without reading it again. The exchanges themselves are a route of their
+	// own, which the pane calls only when somebody opens them.
 	TurnsTotal int64 `json:"turns_total"`
 	// Migrated says this task came from the ledger the platform retired. The
 	// panel uses it to avoid presenting a carried-over task as one written
@@ -101,11 +104,44 @@ type Task struct {
 	// one fact that decides currency, and a version carried beside a choice id
 	// was a second way of saying it that could disagree with the first.
 	ChoiceTurnID int64 `json:"choice_turn_id,omitempty"`
+	// ChoiceTurn is what that same turn said, so the pane can show the words
+	// the choices answer directly above them. Absent when it offers no choices
+	// — there is then nothing on screen for it to belong to.
+	ChoiceTurn *TaskChoiceTurn `json:"choice_turn,omitempty"`
 }
 
-// TaskWaiting is the open turn on a task: what was asked, and whether anybody
-// has picked it up. Running is a turn the parent has started and not finished;
-// otherwise nobody has taken it yet.
+// TaskChoiceTurn is the three things the turn that offered Choices said: the
+// words that were sent, the parent's account of what came back, and the
+// question the choices are answers to.
+//
+// It is projected from the very turn Choices and ChoiceTurnID come from, in one
+// place, so what is shown above a set of choices cannot be some other turn's
+// words. Nothing here is read with a second call: the turn the page already
+// carries is the whole source, so a pane with the exchanges closed shows these
+// without one line of the task's history being read.
+//
+// It deliberately carries no response: the session's verbatim answer is long,
+// is already on screen when somebody opens the exchanges, and is not what a
+// person needs to understand the question in front of them. An empty field is
+// one the records do not have, and the pane leaves it out rather than filling
+// it from another turn.
+type TaskChoiceTurn struct {
+	Request     string `json:"request,omitempty"`
+	Explanation string `json:"explanation,omitempty"`
+	Question    string `json:"question,omitempty"`
+}
+
+// TaskWaiting is the open turn on a task: what was asked, what the session is
+// asking back, and whether anybody has picked it up. Running is a turn the
+// parent has started and not finished; otherwise nobody has taken it yet.
+//
+// Request stays in this answer. The detail pane reads the words again with the
+// task's exchanges — that turn's own request — and draws them from there, so
+// nothing this route sends is what the pane renders. But this is the shape the
+// route has always answered with, and a field is only ours to drop once we know
+// what reads it; a client we cannot see is not the same as no client. Dropping
+// it would save a message body per waiting task per poll and break anybody who
+// reads it, which is the wrong trade for a route that is otherwise this small.
 type TaskWaiting struct {
 	TurnID  int64  `json:"turn_id"`
 	Request string `json:"request,omitempty"`
@@ -153,12 +189,19 @@ type workTaskPage struct {
 		} `json:"task"`
 		TurnsTotal int64 `json:"turns_total"`
 		LatestTurn *struct {
-			ID        int64        `json:"id"`
-			Request   *string      `json:"request"`
-			Question  *string      `json:"question"`
-			Choices   []TaskChoice `json:"choices"`
-			StartedAt *string      `json:"started_at"`
-			EndedAt   *string      `json:"ended_at"`
+			ID      int64   `json:"id"`
+			Request *string `json:"request"`
+			// Explanation is the parent's own account of what came back on this
+			// turn, which the pane shows above the choices the same turn
+			// offered. The platform already sends it on this page, so reading
+			// it costs nothing more than decoding it — the alternative was a
+			// second call per open task for words the page was carrying all
+			// along.
+			Explanation *string      `json:"explanation"`
+			Question    *string      `json:"question"`
+			Choices     []TaskChoice `json:"choices"`
+			StartedAt   *string      `json:"started_at"`
+			EndedAt     *string      `json:"ended_at"`
 		} `json:"latest_turn"`
 		Migrated bool `json:"migrated"`
 	} `json:"tasks"`
@@ -222,6 +265,15 @@ func (e *Engine) tasksOf(ctx context.Context, sessionID string) (TaskList, error
 				if len(turn.Choices) > 0 {
 					task.Choices = turn.Choices
 					task.ChoiceTurnID = turn.ID
+					// What that turn said travels with them, from this one
+					// read of this one turn. Deciding it anywhere else — the
+					// open turn below, the last row of a history page — could
+					// put one turn's words over another turn's choices.
+					task.ChoiceTurn = choiceTurnOf(
+						derefString(turn.Request),
+						derefString(turn.Explanation),
+						derefString(turn.Question),
+					)
 				}
 				// A turn with words and no end is one somebody still owes an
 				// answer. Started means the parent took it; otherwise nobody
@@ -304,6 +356,22 @@ func normaliseStatus(raw string) string {
 		}
 	}
 	return TaskStatusUnknown
+}
+
+// choiceTurnOf is the turn's three words as the pane needs them, or nil when
+// the records have none of them — a turn can offer sentences without having
+// said anything itself, and an object of three empty strings would tell the app
+// there is something to draw.
+func choiceTurnOf(request, explanation, question string) *TaskChoiceTurn {
+	out := TaskChoiceTurn{
+		Request:     strings.TrimSpace(request),
+		Explanation: strings.TrimSpace(explanation),
+		Question:    strings.TrimSpace(question),
+	}
+	if out == (TaskChoiceTurn{}) {
+		return nil
+	}
+	return &out
 }
 
 // derefString is "not recorded" read as the empty string. The platform sends

@@ -95,6 +95,51 @@ class ChatTasksTest {
         assertEquals(1, state.counts["blocked"])
     }
 
+    // 선택지를 올린 그 턴의 세 가지(보낸 요청·설명·질문)가 목록 응답으로
+    // 함께 온다. 셋뿐인 것은 의도다 — 세션의 원문 답은 긴 쪽이고, 그것은
+    // 사람이 「주고받은 내용」을 펼칠 때 읽는다.
+    //
+    // 그리고 이 칸이 없는 **구버전 백엔드**의 응답도 그대로 읽힌다: 없으면
+    // null 이고, 화면은 전에 보여 주던 것으로 돌아간다(질문을 잃지 않는다).
+    @Test
+    fun theChoiceTurnsWordsArriveWithTheListAndAnOlderBackendStillParses() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(
+            MockResponse().setBody(
+                tasksJson(
+                    tasks = """{"id":"t1","title":"작업","status":"review","turns_total":4,""" +
+                        """"waiting":{"turn_id":9,"request":"이거 해 줘","question":"어디까지?"},""" +
+                        """"choices":[{"label":"전부","request_text":"전부 해 줘"}],"choice_turn_id":9,""" +
+                        """"choice_turn":{"request":"리뷰 반영해 줘","explanation":"필수 3건 반영했어요.",""" +
+                        """"question":"남은 2건은요?","response":"백엔드가 보내지 않는 긴 원문"},""" +
+                        // 같은 응답의 다른 작업: 이 칸이 없는 작업은 null 이다.
+                        """"migrated":false},{"id":"t2","title":"선택지 없음","status":"running"}""",
+                ),
+            ),
+        )
+
+        vm.loadTasks()
+
+        val offered = vm.tasks.value.tasks.first { it.id == "t1" }
+        assertEquals("리뷰 반영해 줘", offered.choiceTurn?.request)
+        assertEquals("필수 3건 반영했어요.", offered.choiceTurn?.explanation)
+        assertEquals("남은 2건은요?", offered.choiceTurn?.question)
+        assertTrue(offered.choiceTurn!!.hasAny)
+        // 그 턴의 열린 요청(waiting)과는 다른 칸이다 — 서로를 대신하지 않는다.
+        assertEquals("이거 해 줘", offered.waiting?.request)
+        // 선택지를 올리지 않은 작업은 올릴 말도 없다.
+        assertNull(vm.tasks.value.tasks.first { it.id == "t2" }.choiceTurn)
+    }
+
+    // 세 칸이 모두 비어 있으면 그릴 것이 없다 — 빈 틀을 띄우지 않기 위해
+    // 화면이 묻는 바로 그 값이다.
+    @Test
+    fun aChoiceTurnWithNothingInItHasNothingToShow() {
+        assertFalse(ChatTaskChoiceTurn().hasAny)
+        assertFalse(ChatTaskChoiceTurn(request = "   ").hasAny)
+        assertTrue(ChatTaskChoiceTurn(question = "되나요?").hasAny)
+    }
+
     // An empty ledger is its own state: the session really has no tasks.
     @Test
     fun anEmptyLedgerIsTheEmptyState() = runTest {

@@ -7,11 +7,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -20,6 +23,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +35,15 @@ import org.junit.runner.RunWith
 // 네 가지를 본다: (1) 각 부분이 자기 라벨로 **구분되어** 보이는지, (2) 세션의
 // 원문과 부모의 설명이 섞이지 않는지, (3) 기록되지 않은 부분이 빈칸으로
 // 보이지 않는지, (4) 옮겨온 작업의 옛 이력이 턴과 **구분 보존**되는지.
+//
+// 그리고 이력 영역이 맨 아래에 접혀 시작하는 지금은 다섯째를 함께 본다: 접힌
+// 채로는 아무것도 읽지 않고, 첫 펼침에 그 작업의 것만 한 번 읽고, 긴 대화여도
+// 답할 자리가 화면 밖으로 밀려나지 않는지.
+//
+// 이력이 접혀 있으므로 선택지만 덜렁 보이면 사람은 무엇에 답하는지 모른다 —
+// 그래서 여섯째를 본다: **그 선택지를 올린 턴**의 보낸 요청 → 설명 → 질문이
+// 선택지 바로 위에 그 순서로 보이고, 질문이 두 군데에 보이지 않고, 적히지 않은
+// 칸을 **다른 턴에서 채우지 않는지**.
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
 class ChatTaskTurnsRenderTest {
@@ -39,6 +52,7 @@ class ChatTaskTurnsRenderTest {
 
     private var turnLoads = 0
     private var turnMores = 0
+    private var turnRetries = 0
     private var picked: ChatTaskChoice? = null
 
     private val task = ChatTask(
@@ -69,9 +83,16 @@ class ChatTaskTurnsRenderTest {
         origin = ChatTaskTurn.ORIGIN_APP,
     )
 
+    /**
+     * 상세 창을 띄우고, 「주고받은 내용」을 펼친 상태로 둔다. 이력 영역은 제품
+     * 기본이 접힘이므로, 그려지는 모습을 묻는 시험은 **펼치고 나서** 묻는다 —
+     * 펼침 자체가 무엇을 읽는지는 아래 접힘·펼침 시험들이 따로 고정한다.
+     */
     private fun start(
         turns: ChatTaskTurnsUiState,
         choices: List<ChatTaskChoice> = emptyList(),
+        task: ChatTask = this.task,
+        open: Boolean = true,
     ) {
         compose.setContent {
             // 상세 창은 스크롤한다. 짧은 창에서는 타임라인이 화면 밖에 남아
@@ -81,6 +102,7 @@ class ChatTaskTurnsRenderTest {
                 // remember: 기억하지 않으면 재구성마다 새 상태가 생겨 초안이
                 // 사라지고, 「고른 문장이 칸에 들어갔는지」를 물을 수 없다.
                 var draft by remember { mutableStateOf("") }
+                var turnsOpen by remember { mutableStateOf(open) }
                 ChatTaskDetailPane(
                     task = task.copy(choices = choices),
                     draft = draft,
@@ -92,7 +114,10 @@ class ChatTaskTurnsRenderTest {
                     request = ChatTaskRequestUiState(),
                     onStore = {},
                     turns = turns,
+                    turnsOpen = turnsOpen,
+                    onToggleTurns = { turnsOpen = !turnsOpen },
                     onLoadTurns = { turnLoads++ },
+                    onRetryTurns = { turnRetries++ },
                     onLoadMoreTurns = { turnMores++ },
                     onBack = {},
                 )
@@ -108,10 +133,11 @@ class ChatTaskTurnsRenderTest {
      * 닿을 수 있는가」를 한 번도 묻지 않게 되어 제품 쪽 스크롤 결함을 가릴 수
      * 있다. 그래서 좁고 낮은 창에서 스크롤해 닿는 것을 따로 고정한다.
      */
-    private fun startOnAPhone(turns: ChatTaskTurnsUiState) {
+    private fun startOnAPhone(turns: ChatTaskTurnsUiState, open: Boolean = true) {
         compose.setContent {
             DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(411.dp, 731.dp))) {
                 var draft by remember { mutableStateOf("") }
+                var turnsOpen by remember { mutableStateOf(open) }
                 ChatTaskDetailPane(
                     task = task,
                     draft = draft,
@@ -120,7 +146,10 @@ class ChatTaskTurnsRenderTest {
                     request = ChatTaskRequestUiState(),
                     onStore = {},
                     turns = turns,
+                    turnsOpen = turnsOpen,
+                    onToggleTurns = { turnsOpen = !turnsOpen },
                     onLoadTurns = { turnLoads++ },
+                    onRetryTurns = { turnRetries++ },
                     onLoadMoreTurns = { turnMores++ },
                     onBack = {},
                 )
@@ -136,7 +165,6 @@ class ChatTaskTurnsRenderTest {
         startOnAPhone(
             ChatTaskTurnsUiState(
                 taskId = "t1",
-                task = ChatTaskTurnTask(id = "t1", title = "옮겨 온 작업"),
                 turns = listOf(finished, asking),
                 hasLoaded = true,
             ),
@@ -172,7 +200,6 @@ class ChatTaskTurnsRenderTest {
         start(
             ChatTaskTurnsUiState(
                 taskId = "t1",
-                task = ChatTaskTurnTask(id = "t1", title = "옮겨 온 작업", description = null, completionCriteria = null),
                 turns = listOf(finished, asking),
                 hasLoaded = true,
             ),
@@ -222,31 +249,32 @@ class ChatTaskTurnsRenderTest {
     fun aTaskWithNoTurnsSaysSo() {
         start(ChatTaskTurnsUiState(taskId = "t1", hasLoaded = true))
         compose.onNodeWithTag("chat.tasks.detail.turns.empty").assertIsDisplayed()
-        assertEquals("첫 페이지는 창이 열릴 때 읽는다", 1, turnLoads)
+        assertEquals("펼쳤으니 첫 페이지를 한 번 읽는다", 1, turnLoads)
     }
 
-    // 작업의 무엇을·왜와 완료 기준이 보이고, 기록이 없으면 없다고 말한다.
+    // 작업의 무엇을·왜와 완료 기준은 **작업 레코드**에서 보인다 — 이력을 한 줄도
+    // 읽지 않은 접힌 화면에서도 적혀 있는 대로 보여야 하므로, 턴 응답이 아니라
+    // 패널이 이미 폴링하는 그 작업 행에서 읽는다.
     @Test
     fun theAgreedTaskFieldsAreShownAndNullSaysSo() {
         start(
-            ChatTaskTurnsUiState(
-                taskId = "t1",
-                task = ChatTaskTurnTask(
-                    id = "t1", title = "새 작업",
-                    description = "무엇을 why", completionCriteria = "머지되면 끝",
-                ),
-                hasLoaded = true,
+            ChatTaskTurnsUiState(),
+            task = task.copy(
+                id = "t1", title = "새 작업",
+                description = "무엇을 why", completionCriteria = "머지되면 끝",
             ),
+            open = false,
         )
         compose.onNodeWithTag("chat.tasks.detail.description").assertTextEquals("무엇을 why")
         compose.onNodeWithTag("chat.tasks.detail.criteria").assertTextEquals("머지되면 끝")
+        assertEquals("접힌 채로는 이력을 한 번도 읽지 않는다", 0, turnLoads)
     }
 
-    // 옮겨온 작업은 이 둘을 기록한 적이 없다. null 은 빈칸이 아니라 「적혀 있지
-    // 않다」로 보여야 한다 — 빈칸은 사람이 답으로 읽는다.
+    // 옮겨온 작업은 이 둘을 기록한 적이 없다. 적혀 있지 않은 것은 빈칸이 아니라
+    // 「적혀 있지 않다」로 보여야 한다 — 빈칸은 사람이 답으로 읽는다.
     @Test
     fun aFieldTheRecordsNeverHadSaysSoRatherThanShowingABlank() {
-        start(ChatTaskTurnsUiState(taskId = "t1", task = ChatTaskTurnTask(id = "t1"), hasLoaded = true))
+        start(ChatTaskTurnsUiState(), task = task.copy(description = "", completionCriteria = ""), open = false)
         compose.onNodeWithTag("chat.tasks.detail.description").assertTextEquals("원장에 적혀 있지 않아요.")
         compose.onNodeWithTag("chat.tasks.detail.criteria").assertTextEquals("원장에 적혀 있지 않아요.")
     }
@@ -289,6 +317,247 @@ class ChatTaskTurnsRenderTest {
         val before = turnMores
         compose.onNodeWithTag("chat.tasks.detail.turns.more").performClick()
         assertEquals(before + 1, turnMores)
+    }
+
+    // ── 접힘·펼침 ──────────────────────────────────────────────────────────
+
+    // 상세에 들어왔을 때의 기본 모습: 「주고받은 내용」은 **맨 아래에 접혀**
+    // 있고, 접혔다는 것은 **한 줄도 읽지 않았다**는 뜻이다. 카드가 하나도
+    // 그려지지 않으므로 파싱할 것도, 기다릴 것도 없다.
+    @Test
+    fun theExchangesStartClosedAndClosedMeansNothingWasRead() {
+        start(ChatTaskTurnsUiState(), task = task.copy(turnsTotal = 12), open = false)
+
+        // 영역과 여는 손잡이는 있고, 몇 개인지는 작업 행이 이미 말해 준다 —
+        // 그 숫자를 보여 주느라 이력을 읽지는 않는다.
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").assertIsDisplayed()
+        // 손잡이는 버튼 하나라 자식 의미가 그것으로 합쳐진다. 그려진 숫자는
+        // 합치기 전 트리에서 보고, 들리는 쪽은 손잡이의 설명에서 본다 — 눈으로
+        // 읽는 수와 귀로 듣는 수가 같아야 한다.
+        compose.onNodeWithTag("chat.tasks.detail.turns.count", useUnmergedTree = true)
+            .assertTextEquals("12")
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle")
+            .assertContentDescriptionEquals("주고받은 내용 12개 펼치기")
+
+        assertEquals("접힌 채로는 조회가 0이다", 0, turnLoads)
+        // 접힌 영역 안에는 아무 상태도 그리지 않는다 — 로딩도, 빈 상태도,
+        // 카드도 없다.
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.loading").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.empty").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.turn.1.request").assertCountEquals(0)
+    }
+
+    // 첫 펼침에 **한 번** 읽고, 접으면 그린 것이 사라진다. 다시 접었다 펴도
+    // 읽기를 되풀이하지 않는 것은 뷰모델이 쥔 판단이라 여기서는 「펼침 1회 ≠
+    // 매 재구성마다 1회」까지를 고정한다.
+    @Test
+    fun openingItReadsOnceAndClosingItDrawsNothing() {
+        start(ChatTaskTurnsUiState(taskId = "t1", turns = listOf(finished), hasLoaded = true), open = false)
+        assertEquals(0, turnLoads)
+
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").performClick()
+        compose.waitForIdle()
+        assertEquals("펼치면 그 작업의 이력만 한 번 읽는다", 1, turnLoads)
+        compose.onNodeWithTag("chat.tasks.detail.turn.1.request").performScrollTo().assertIsDisplayed()
+
+        compose.onNodeWithTag("chat.tasks.detail.turns.toggle").performClick()
+        compose.waitForIdle()
+        compose.onAllNodesWithTag("chat.tasks.detail.turn.1.request").assertCountEquals(0)
+        assertEquals("접는 것은 읽는 일이 아니다", 1, turnLoads)
+    }
+
+    // 긴 대화여도 **액션이 먼저**다: 묻는 것·보낼 문장·요청 칸·저장은 휴대폰
+    // 창에서 스크롤 없이 보이고, 이력 영역은 그 아래에 있다. 이력이 위에 있던
+    // 전에는 턴이 쌓일수록 답할 자리가 화면 밖으로 밀려났다.
+    @Test
+    fun aLongExchangeDoesNotPushTheActionsOffTheScreen() {
+        val many = (1..40).map { n ->
+            ChatTaskTurn(
+                id = n.toLong(),
+                request = "요청 " + n,
+                response = "세션이 쓴 긴 답 " + n,
+                explanation = "설명 " + n,
+                requestedAt = "2026-11-19T00:00:00Z",
+            )
+        }
+        startOnAPhone(ChatTaskTurnsUiState(taskId = "t1", turns = many, hasLoaded = true))
+
+        compose.onNodeWithTag("chat.tasks.detail.question").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.field").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.store").assertIsDisplayed()
+        // 그리고 이력은 그 아래다 — 펼쳐 둔 상태에서도 순서가 바뀌지 않는다.
+        val store = compose.onNodeWithTag("chat.tasks.detail.store").getUnclippedBoundsInRoot()
+        val header = compose.onNodeWithTag("chat.tasks.detail.turns.toggle").getUnclippedBoundsInRoot()
+        assertTrue(
+            "이력 영역이 저장 버튼 위에 있다: store=$store header=$header",
+            header.top.value >= store.bottom.value,
+        )
+    }
+
+    // 읽지 못했으면 그렇게 말하고, 「다시 시도」는 **쥐고 있는 것과 무관하게**
+    // 다시 읽는 길이다 — 평소의 펼침은 읽지 않아도 되는 때를 가리지만, 실패
+    // 뒤의 재시도는 가리지 않는다.
+    @Test
+    fun aFailureOffersARetryThatReadsAgain() {
+        start(
+            ChatTaskTurnsUiState(
+                taskId = "t1",
+                hasLoaded = true,
+                error = ChatTaskTurnsError.UNAVAILABLE,
+            ),
+        )
+        compose.onNodeWithTag("chat.tasks.detail.turns.error")
+            .assertTextEquals(ChatTaskTurnsError.UNAVAILABLE.message)
+        // 실패는 「이 작업에 주고받은 내용이 없다」로 보이지 않는다.
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.empty").assertCountEquals(0)
+
+        compose.onNodeWithTag("chat.tasks.detail.turns.retry").performScrollTo().performClick()
+        assertEquals(1, turnRetries)
+    }
+
+    // 다른 작업의 페이지를 이 작업의 제목 아래에 그리지 않는다 — 빠르게 작업을
+    // 바꾸면 앞 작업의 페이지가 한순간 상태에 남아 있다.
+    @Test
+    fun anotherTasksPageIsNotDrawnUnderThisTask() {
+        start(
+            ChatTaskTurnsUiState(
+                taskId = "t-other",
+                turns = listOf(finished, asking),
+                hasLoaded = true,
+            ),
+        )
+        compose.onAllNodesWithTag("chat.tasks.detail.turn.1.request").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.turns.empty").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.turns.loading").assertExists()
+    }
+
+    // ── 선택지를 올린 턴의 말 ───────────────────────────────────────────────
+
+    /** 선택지를 올린 그 턴이 한 말. 셋 다 적혀 있는 평범한 경우. */
+    private val offering = ChatTaskChoiceTurn(
+        request = "리뷰 코멘트 반영해 줘",
+        explanation = "필수 3건은 반영했고 2건은 의견이 갈려요.",
+        question = "남은 2건은 어떻게 할까요?",
+    )
+
+    private fun topOf(tag: String): Float =
+        compose.onNodeWithTag(tag).getUnclippedBoundsInRoot().top.value
+
+    // 선택지 **바로 위**에 그 선택지를 올린 턴의 보낸 요청 → 설명 → 질문이
+    // 이 순서로 보인다. 그리고 이력은 접힌 채다 — 이 셋은 패널이 이미 폴링하는
+    // 작업 행이 들고 오므로, 보여 주기 위해 이력을 한 줄도 읽지 않는다.
+    @Test
+    fun theOfferingTurnsWordsSitAboveItsChoicesInOrder() {
+        start(
+            ChatTaskTurnsUiState(),
+            choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
+            task = task.copy(
+                choiceTurn = offering,
+                waiting = ChatTaskWaiting(turnId = 9, question = "남은 2건은 어떻게 할까요?"),
+            ),
+            open = false,
+        )
+
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.request")
+            .assertTextEquals("리뷰 코멘트 반영해 줘")
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.explanation")
+            .assertTextEquals("필수 3건은 반영했고 2건은 의견이 갈려요.")
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.question")
+            .assertTextEquals("남은 2건은 어떻게 할까요?")
+
+        // 위에서 아래로 그 순서, 그리고 선택지가 바로 아래다.
+        val request = topOf("chat.tasks.detail.choiceTurn.request")
+        val explanation = topOf("chat.tasks.detail.choiceTurn.explanation")
+        val question = topOf("chat.tasks.detail.choiceTurn.question")
+        val choice = topOf("chat.tasks.detail.choice")
+        assertTrue("보낸 요청이 설명 위: $request < $explanation", request < explanation)
+        assertTrue("설명이 질문 위: $explanation < $question", explanation < question)
+        assertTrue("질문이 선택지 위: $question < $choice", question < choice)
+        // 그 묶음 전체가 선택지 위에서 끝난다 — 사이에 다른 영역이 끼지 않는다.
+        val block = compose.onNodeWithTag("chat.tasks.detail.choiceTurn").getUnclippedBoundsInRoot()
+        assertTrue("묶음이 선택지 위에서 닫힌다: $block / $choice", block.bottom.value <= choice)
+        // 요청 칸과 저장은 그 아래 그대로다.
+        assertTrue(choice < topOf("chat.tasks.detail.field"))
+
+        // 질문은 한 군데에만 보인다 — 위의 「묻는 것」 칸으로 두 번 읽히지 않는다.
+        compose.onAllNodesWithTag("chat.tasks.detail.question").assertCountEquals(0)
+        assertEquals("접힌 채로 이 셋을 보여 주는 데 이력 조회는 0이다", 0, turnLoads)
+    }
+
+    // 선택지를 올린 턴이 말하지 않은 칸은 **다른 턴에서 채우지 않는다**. 열린
+    // 턴에 다른 말이 적혀 있어도, 이력의 마지막 턴이 셋을 다 들고 있어도, 이
+    // 자리는 그 턴의 것만 보인다.
+    @Test
+    fun aPartTheOfferingTurnDoesNotHaveIsNotFilledFromAnotherTurn() {
+        start(
+            // 이력을 펼쳐 둔다: 다른 턴들은 보낸 요청·설명·질문을 다 들고 있다.
+            ChatTaskTurnsUiState(taskId = "t1", turns = listOf(finished, asking), hasLoaded = true),
+            choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
+            task = task.copy(
+                // 선택지를 올린 턴은 질문만 했다.
+                choiceTurn = ChatTaskChoiceTurn(question = "남은 2건은 어떻게 할까요?"),
+                // 그리고 열린 턴에는 다른 말이 적혀 있다.
+                waiting = ChatTaskWaiting(
+                    turnId = 99,
+                    request = "열린 턴의 다른 요청",
+                    question = "열린 턴의 다른 질문",
+                ),
+            ),
+        )
+
+        compose.onNodeWithTag("chat.tasks.detail.choiceTurn.question")
+            .assertTextEquals("남은 2건은 어떻게 할까요?")
+        // 적히지 않은 둘은 빈 줄로도, 남의 말로도 그리지 않는다.
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn.request").assertCountEquals(0)
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn.explanation").assertCountEquals(0)
+        compose.onAllNodesWithText("열린 턴의 다른 요청").assertCountEquals(0)
+        compose.onAllNodesWithText("열린 턴의 다른 질문").assertCountEquals(0)
+        // 이력의 마지막 턴이 쓴 질문이 이 자리에 올라오지도 않는다.
+        compose.onNodeWithTag("chat.tasks.detail.turn.2.question").assertTextEquals("어디까지 반영할까요?")
+        compose.onAllNodesWithTag("chat.tasks.detail.question").assertCountEquals(0)
+    }
+
+    // 선택지가 없으면 올릴 말도 없다 — 묶음은 그려지지 않고, 「묻는 것」 칸과
+    // 자유 입력은 전과 똑같이 남는다.
+    @Test
+    fun withoutChoicesThereIsNoBundleAndTheQuestionStaysWhereItWas() {
+        start(
+            ChatTaskTurnsUiState(),
+            task = task.copy(
+                // 선택지가 없어도 칸이 내려올 수 있다. 그려지지 않는 것은
+                // 선택지가 없다는 사실이 결정한다.
+                choiceTurn = offering,
+                waiting = ChatTaskWaiting(turnId = 9, question = "CI 가 막혔다"),
+            ),
+            open = false,
+        )
+
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.question").assertTextEquals("CI 가 막혔다")
+        compose.onNodeWithTag("chat.tasks.detail.noChoices").assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.field").assertIsDisplayed()
+    }
+
+    // 선택지를 올린 턴이 **아무 말도 적지 않았으면** 묶음은 비지 않고 아예
+    // 없다. 그 경우 질문은 전처럼 「묻는 것」 칸에 남는다 — 이 칸을 아직
+    // 보내지 않는 구버전 백엔드에서 질문을 잃지 않는 길이기도 하다.
+    @Test
+    fun anEmptyBundleFallsBackToTheQuestionFieldRatherThanLosingIt() {
+        start(
+            ChatTaskTurnsUiState(),
+            choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
+            task = task.copy(
+                choiceTurn = null,
+                waiting = ChatTaskWaiting(turnId = 9, question = "남은 2건은 어떻게 할까요?"),
+            ),
+            open = false,
+        )
+
+        compose.onAllNodesWithTag("chat.tasks.detail.choiceTurn").assertCountEquals(0)
+        compose.onNodeWithTag("chat.tasks.detail.question")
+            .assertTextEquals("남은 2건은 어떻게 할까요?")
+        compose.onAllNodesWithTag("chat.tasks.detail.choice").assertCountEquals(1)
     }
 
     // 추천 선택을 누르면 **요청 칸이 채워질 뿐** 저장도 실행도 하지 않는다 —
