@@ -8,6 +8,7 @@ object WidgetCopy {
     const val AFFIRMATION_LABEL = "오늘의 다짐"
     const val NOTIFICATION_LABEL = "PocketAide 알림"
     const val SCRATCHPAD_LABEL = "임시 공간"
+    const val MAIL_LABEL = "메일"
 
     const val NEEDS_LOGIN = "앱에서 로그인이 필요해요."
     const val RETRY_LATER = "잠시 후 다시 시도할게요."
@@ -56,4 +57,10 @@ object WidgetCopy {
 
     fun scratchpadHasItems(state: WidgetScratchpadState): Boolean =
         state is WidgetScratchpadState.Loaded && state.unclassified > 0
+
+    fun mailLabel(state: WidgetMailState): String = when (state) {
+        is WidgetMailState.Loaded -> "$MAIL_LABEL · ${state.unread} 미확인"
+        WidgetMailState.NeedsLogin -> NEEDS_LOGIN
+        WidgetMailState.Error -> RETRY_LATER
+    }
 }

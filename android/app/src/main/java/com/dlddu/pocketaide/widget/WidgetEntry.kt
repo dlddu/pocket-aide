@@ -40,6 +40,12 @@ sealed interface WidgetScratchpadState {
     data object Error : WidgetScratchpadState
 }
 
+sealed interface WidgetMailState {
+    data class Loaded(val unread: Int) : WidgetMailState
+    data object NeedsLogin : WidgetMailState
+    data object Error : WidgetMailState
+}
+
 data class PocketAideWidgetEntry(
     val date: Instant,
     val affirmation: WidgetAffirmationState,
@@ -47,4 +53,5 @@ data class PocketAideWidgetEntry(
     val weather: WidgetWeatherState,
     val notifications: WidgetNotificationState,
     val scratchpad: WidgetScratchpadState,
+    val mail: WidgetMailState,
 )

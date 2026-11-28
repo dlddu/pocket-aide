@@ -129,6 +129,7 @@ last_updated: 2026-11-16
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeepLinkRouter.kt` | 비렌더링 | — | 딥링크 수신 — 날씨·탭·푸시 도착지 진입점 처리 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/DeviceNameSheet.kt` | 화면 | `screen-device-name` | 기기 이름 시트 전체 — `DeviceNameSheet`(제목·설명·한 줄 입력·저장/건너뛰기). 시트 아래 탭 화면은 해당 행, 시트를 띄우는 쪽은 `ui/RootScreen.kt` 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/LoginScreen.kt` | 목업 없음 | — | 로그인 화면 — 대응 화면 목업이 없다 |
+| `android/app/src/main/java/com/dlddu/pocketaide/mail/Mail.kt` | 비렌더링 | — | 메일 도메인 — IMAP 계정·미확인 메일 목록 조회 호출(`/api/mail/messages`) |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootTab.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 탭 정의 — `RootTab` 열거형의 탭 라벨(다짐·PR 모니터·승인·세션·더 보기·채팅·임시공간·개인·회사·루틴·알림 기록)·아이콘·영역(`Area`) 매핑과 하단 5칸(`BOTTOM_TABS`)·더 보기 6칸(`MORE_TABS`) 구분. 탭 바를 그리는 쪽은 `ui/RootScreen.kt` 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/ui/RootScreen.kt` | 부분 | `screen-affirmations`, `screen-affirmations-priority-edit`, `screen-approval`, `screen-pr-monitor-history`, `screen-routines`, `screen-scratchpad`, `screen-todo-personal`, `screen-todo-work`, `screen-sessions`, `screen-external-notifications` | 하단 탭 바(`RootNavigationBar` — 하단 5칸 다짐·채팅·승인·세션·더 보기, 목업별 활성 탭은 `ui/RootTab.kt` 행)·더 보기 목록(`MoreList`)·푸시 권한 거부 배너. 각 탭 화면 본체는 해당 행 |
 | `android/app/src/main/java/com/dlddu/pocketaide/weather/Weather.kt` | 비렌더링 | — | 날씨 도메인 — 예보 파싱·표기 |
@@ -138,7 +139,7 @@ last_updated: 2026-11-16
 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherScreen.kt` | 목업 없음 | — | 앱 내 날씨 시트(위젯 날씨 슬라이스 진입) — 대응 화면 목업이 없다 |
 | `android/app/src/main/java/com/dlddu/pocketaide/weather/WeatherViewModel.kt` | 비렌더링 | — | 날씨 시트의 예보 조회·위치·지명 상태 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/CalendarEvents.kt` | 비렌더링 | — | 위젯 캘린더 스냅샷 — 일정 조회와 권한 상태 |
-| `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 화면 | `screen-widget` | 위젯 본체(Large·중간 크기) — 슬라이스 배치·구분선·배경과 다짐·일정·알림·날씨·임시공간 슬라이스(`WeatherSection`·`CalendarSection`·`AffirmationSection`·`NotificationSection`·`ScratchpadSection` 이 모두 이 파일에 있다). 홈 화면 벽지·앱 아이콘 등 위젯 밖은 안드로이드 시스템 UI |
+| `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidget.kt` | 화면 | `screen-widget` | 위젯 본체(Large·중간 크기) — 슬라이스 배치·구분선·배경과 다짐·일정·알림·날씨·메일·임시공간 슬라이스(`WeatherSection`·`CalendarSection`·`AffirmationSection`·`MailSection`·`NotificationSection`·`ScratchpadSection` 이 모두 이 파일에 있다). 홈 화면 벽지·앱 아이콘 등 위젯 밖은 안드로이드 시스템 UI |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/PocketAideWidgetLoader.kt` | 비렌더링 | — | 위젯 데이터 로드 — 조회·직렬화·배치 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/UpcomingEvents.kt` | 비렌더링 | — | 다가오는 일정 파싱·표기 |
 | `android/app/src/main/java/com/dlddu/pocketaide/widget/WidgetColors.kt` | 토큰 | — | `tokens.md` §1.8 위젯 보조 토큰 — 위젯 표면·구분선·영역 ink/accent 의 라이트/다크 값 |

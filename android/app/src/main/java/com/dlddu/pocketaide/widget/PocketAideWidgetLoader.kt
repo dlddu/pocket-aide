@@ -6,6 +6,7 @@ import com.dlddu.pocketaide.affirmations.Affirmation
 import com.dlddu.pocketaide.affirmations.listAffirmations
 import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.api.ApiException
+import com.dlddu.pocketaide.mail.listMailMessages
 import com.dlddu.pocketaide.notifications.ExternalNotificationFormatting
 import com.dlddu.pocketaide.notifications.externalNotifications
 import com.dlddu.pocketaide.scratchpad.listScratchpad
@@ -31,6 +32,7 @@ class PocketAideWidgetLoader(context: Context) {
         val notifications = async { fetch(client) { externalNotifications(limit = ExternalNotificationFormatting.PAGE_SIZE) } }
         val scratchpad = async { fetch(client) { listScratchpad().size } }
         val weather = async { fetchWeather(now) }
+        val mail = async { fetch(client) { listMailMessages().items.size } }
         val calendar = async(Dispatchers.IO) { CalendarSnapshot.load(appContext, now) }
         PocketAideWidgetEntry(
             date = now,
@@ -46,6 +48,11 @@ class PocketAideWidgetLoader(context: Context) {
                 is Fetch.Success -> WidgetScratchpadState.Loaded(result.value)
                 Fetch.NeedsLogin -> WidgetScratchpadState.NeedsLogin
                 Fetch.Error -> WidgetScratchpadState.Error
+            },
+            mail = when (val result = mail.await()) {
+                is Fetch.Success -> WidgetMailState.Loaded(result.value)
+                Fetch.NeedsLogin -> WidgetMailState.NeedsLogin
+                Fetch.Error -> WidgetMailState.Error
             },
         )
     }

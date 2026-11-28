@@ -21,6 +21,7 @@ class WidgetHeaderLayoutTest {
         weather = weather,
         notifications = WidgetNotificationState.Error,
         scratchpad = WidgetScratchpadState.Error,
+        mail = WidgetMailState.Error,
     )
 
     private fun calendar(vararg events: UpcomingEvent, more: Int = 0) =
