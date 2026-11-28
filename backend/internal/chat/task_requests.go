@@ -45,6 +45,14 @@ var (
 	// ErrTaskNotFound is a task this session's records do not have — one that
 	// has since been deleted, or an id the panel no longer shows.
 	ErrTaskNotFound = errors.New("that task is not among this session's work records")
+	// ErrTaskTurnsOrderUnsupported is a slot that cannot serve the newest-first
+	// page the pane reads: it predates the parameter and answered the oldest
+	// turns instead. It is its own answer rather than one of the four above,
+	// because the records are there and readable — only not from the end the
+	// pane needs — and saying "this session keeps no work records" would be a
+	// different and untrue thing.
+	ErrTaskTurnsOrderUnsupported = errors.New(
+		"this chat session cannot read a task's turns newest first yet")
 	// ErrTaskRequestConflict is the request id already used for different words.
 	// A retry of the same words is not an error; different words under a used id
 	// is, because it would otherwise silently replace what the person asked.

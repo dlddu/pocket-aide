@@ -79,27 +79,54 @@ type TaskTurnTask struct {
 	UpdatedAt          *string `json:"updated_at"`
 }
 
+// TaskTurnCursor says which page of a task's turns to read, and from which end.
+//
+// The pane shows the latest exchange at the top, so it reads Newest pages: the
+// first one with no bound at all, then older ones from the cursor the page
+// before it gave. Ascending is still what the fold behind the review materials
+// walks, and is the zero value here so that path is unchanged.
+type TaskTurnCursor struct {
+	// After is an exclusive lower bound on the oldest-first page.
+	After int64
+	// Newest asks for the newest-first page. Before is then an exclusive upper
+	// bound and zero is "from this task's newest turn", which is how the pane
+	// gets the latest page without reading the history to find where it starts.
+	Newest bool
+	Before int64
+}
+
 // TaskTurnPage is the detail pane's payload.
 type TaskTurnPage struct {
 	TaskID      string       `json:"task_id"`
 	TaskVersion int64        `json:"task_version"`
 	Task        TaskTurnTask `json:"task"`
 	Turns       []TaskTurn   `json:"turns"`
-	NextCursor  int64        `json:"next_cursor,omitempty"`
+	// NextCursor continues the page in the direction it was read: older turns
+	// on a newest-first page, newer ones on an oldest-first one.
+	NextCursor int64 `json:"next_cursor,omitempty"`
+	// Order is "desc" on a newest-first page. It is checked rather than
+	// assumed: a slot that predates the parameter ignores it and answers the
+	// oldest page, and a pane that read that page as if it were reversed would
+	// put the task's first exchange where its latest belongs and then page in
+	// a circle.
+	Order string `json:"order,omitempty"`
 }
+
+// TaskTurnOrderDesc is what a newest-first page says it is.
+const TaskTurnOrderDesc = "desc"
 
 // TaskTurns reads one page of a task's turns from the platform session
 // answering userID's conversation. The session is taken from the user's own
 // row, so a caller cannot name someone else's.
 func (e *Engine) TaskTurns(
-	ctx context.Context, userID int64, taskID string, afterTurnID int64, limit int,
+	ctx context.Context, userID int64, taskID string, cursor TaskTurnCursor, limit int,
 ) (TaskTurnPage, error) {
 	out := TaskTurnPage{Turns: []TaskTurn{}}
 	if !workRecordID.MatchString(taskID) {
 		return out, fmt.Errorf("%w: task id must be 1..128 letters, digits, _ or -", ErrTaskRequestInvalid)
 	}
-	if afterTurnID < 0 || limit < 0 || limit > TaskTurnPageLimitMax {
-		return out, fmt.Errorf("%w: after_turn_id and limit must be in range", ErrTaskRequestInvalid)
+	if cursor.After < 0 || cursor.Before < 0 || limit < 0 || limit > TaskTurnPageLimitMax {
+		return out, fmt.Errorf("%w: the cursor and limit must be in range", ErrTaskRequestInvalid)
 	}
 	conv, err := e.store.Conversation(ctx, userID)
 	if err != nil {
@@ -109,8 +136,13 @@ func (e *Engine) TaskTurns(
 		return out, ErrNoConversation
 	}
 	query := url.Values{}
-	if afterTurnID > 0 {
-		query.Set("after_turn_id", strconv.FormatInt(afterTurnID, 10))
+	switch {
+	case cursor.Newest:
+		// Set even when it is zero: on the platform's route the parameter's
+		// presence is what asks for the newest-first page.
+		query.Set("before_turn_id", strconv.FormatInt(cursor.Before, 10))
+	case cursor.After > 0:
+		query.Set("after_turn_id", strconv.FormatInt(cursor.After, 10))
 	}
 	if limit > 0 {
 		query.Set("limit", strconv.Itoa(limit))
@@ -131,6 +163,14 @@ func (e *Engine) TaskTurns(
 		}
 		if out.Turns == nil {
 			out.Turns = []TaskTurn{}
+		}
+		if cursor.Newest && out.Order != TaskTurnOrderDesc {
+			// The slot answered a page, but not the one that was asked for: it
+			// does not have the parameter and served the oldest turns. Handing
+			// that back would have the pane show the task's first exchange as
+			// its latest and then page in a circle, so it is refused as a
+			// contract the session cannot serve yet.
+			return TaskTurnPage{Turns: []TaskTurn{}}, ErrTaskTurnsOrderUnsupported
 		}
 		return out, nil
 	case http.StatusNotFound:

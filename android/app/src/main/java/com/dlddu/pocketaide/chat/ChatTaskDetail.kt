@@ -1038,6 +1038,11 @@ private fun OpenTurns(
             )
 
             else -> {
+                // Newest first, which is the order the page arrives in: the
+                // latest exchange is at the top of the section, and "이전 내용
+                // 더 보기" underneath adds older ones below it. Each exchange
+                // stays one card, so a request and the answer to it are read
+                // together even though the cards themselves run backwards.
                 turns.turns.forEach { TurnCard(it) }
                 if (turns.hasMore) {
                     val shape = RoundedCornerShape(DesignTokens.Radius.chip)

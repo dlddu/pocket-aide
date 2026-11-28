@@ -117,26 +117,42 @@ class ChatTaskTurnsTest {
         assertTrue("turn 이 없는 작업은 빈 목록이고 오류가 아니다", page.turns.isEmpty())
     }
 
+    // The pane shows the latest exchange first, so the bound it sends is an
+    // upper one and it goes on the query even when it is zero: the parameter's
+    // presence is what asks for the newest page, and a request without it
+    // would be answered with the task's oldest exchanges.
     @Test
     fun theCursorAndPageSizeGoToThePlatform() = runTest {
         server.enqueue(json("""{"task_id":"t1","task_version":1,"task":{"id":"t1"},"turns":[],"next_cursor":7}"""))
         val page = api().chatTaskTurns("t1", 4, 2)
         assertEquals(7L, page.nextCursor)
         val asked = server.takeRequest().path ?: ""
-        assertTrue(asked, asked.contains("after_turn_id=4"))
+        assertTrue(asked, asked.contains("before_turn_id=4"))
+        assertFalse(asked, asked.contains("after_turn_id"))
         assertTrue(asked, asked.contains("limit=2"))
         assertTrue(asked, asked.startsWith("/api/chat/tasks/t1/turns"))
     }
 
+    @Test
+    fun theFirstPageAsksForTheNewestEndRatherThanNoBoundAtAll() = runTest {
+        server.enqueue(json("""{"task_id":"t1","task_version":1,"task":{"id":"t1"},"turns":[]}"""))
+        api().chatTaskTurns("t1", 0, 20)
+        val asked = server.takeRequest().path ?: ""
+        assertTrue(asked, asked.contains("before_turn_id=0"))
+    }
+
     // Only the latest turn's choices are current, which is why a pick is sent
     // as the next turn's request rather than against a turn already answered.
+    // Only the latest turn's choices are current. The turns are newest first,
+    // so the latest one is at the head of the list — reading the tail would
+    // offer the sentences of the task's *first* exchange.
     @Test
     fun onlyTheLatestTurnOffersChoices() {
         val state = ChatTaskTurnsUiState(
             taskId = "t1",
             turns = listOf(
-                ChatTaskTurn(id = 1, choices = listOf(ChatTaskTurnChoice("낡은", "낡은 문장"))),
                 ChatTaskTurn(id = 2, choices = listOf(ChatTaskTurnChoice("지금", "지금 문장"))),
+                ChatTaskTurn(id = 1, choices = listOf(ChatTaskTurnChoice("낡은", "낡은 문장"))),
             ),
             hasLoaded = true,
         )

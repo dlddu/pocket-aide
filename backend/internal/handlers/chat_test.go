@@ -32,6 +32,9 @@ type chatPlatform struct {
 	// page it answers otherwise.
 	workStatus int
 	work       string
+	// workQueries is every query string the work routes were asked with, so a
+	// test can show what the app's page request became on the way out.
+	workQueries []string
 }
 
 func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +68,7 @@ func (p *chatPlatform) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		offset := int(body["offset"].(float64))
 		_ = json.NewEncoder(w).Encode(map[string]any{"payload": t[min(offset, len(t)):], "nextOffset": len(t)})
 	case strings.Contains(path, "/work/tasks"):
+		p.workQueries = append(p.workQueries, r.URL.RawQuery)
 		if p.workStatus != 0 {
 			w.WriteHeader(p.workStatus)
 			_, _ = w.Write([]byte(`{"code":"x","error":"no"}`))
@@ -101,6 +105,7 @@ func newChatRouter(t *testing.T) (http.Handler, *chatPlatform, *chat.Engine) {
 	r := chi.NewRouter()
 	r.Get("/api/chat", handlers.GetChat(store, engine, chat.NewPresence()))
 	r.Get("/api/chat/tasks", handlers.GetChatTasks(engine))
+	r.Get("/api/chat/tasks/{taskID}/turns", handlers.GetChatTaskTurns(engine))
 	r.Post("/api/chat/messages", handlers.SendChatMessage(engine))
 	r.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(engine))
 	r.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(engine))

@@ -99,7 +99,7 @@ func TestTaskTurns_CarryTheAgreedModelToTheApp(t *testing.T) {
 	bindSession(t, store, 1, "cx1")
 	platform.pages["cx1/t1"] = migratedTurnsPage
 
-	page, err := engine.TaskTurns(context.Background(), 1, "t1", 0, 0)
+	page, err := engine.TaskTurns(context.Background(), 1, "t1", chat.TaskTurnCursor{}, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +165,7 @@ func TestTaskTurns_FreshTaskHasItsFieldsAndNoTurns(t *testing.T) {
 	bindSession(t, store, 1, "cx1")
 	platform.pages["cx1/t2"] = freshTurnsPage
 
-	page, err := engine.TaskTurns(context.Background(), 1, "t2", 0, 0)
+	page, err := engine.TaskTurns(context.Background(), 1, "t2", chat.TaskTurnCursor{}, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ func TestTaskTurns_ScopedToTheCallersOwnSession(t *testing.T) {
 	bindSession(t, store, 2, "cx2")
 	platform.pages["cx1/t1"] = migratedTurnsPage
 
-	if _, err := engine.TaskTurns(context.Background(), 2, "t1", 0, 0); !errors.Is(err, chat.ErrTaskNotFound) {
+	if _, err := engine.TaskTurns(context.Background(), 2, "t1", chat.TaskTurnCursor{}, 0); !errors.Is(err, chat.ErrTaskNotFound) {
 		t.Fatalf("another user's task = %v, want ErrTaskNotFound", err)
 	}
 	for _, call := range platform.calls {
@@ -199,7 +199,7 @@ func TestTaskTurns_ScopedToTheCallersOwnSession(t *testing.T) {
 			}
 		}
 	}
-	if _, err := engine.TaskTurns(context.Background(), 3, "t1", 0, 0); err == nil {
+	if _, err := engine.TaskTurns(context.Background(), 3, "t1", chat.TaskTurnCursor{}, 0); err == nil {
 		t.Fatal("a user with no conversation read turns")
 	}
 }
@@ -222,7 +222,7 @@ func TestTaskTurns_PlatformAnswersAreNotFlattenedIntoEmpty(t *testing.T) {
 		platform.pages["cx1/t1"] = migratedTurnsPage
 		platform.status = tc.status
 		platform.body = `{"code":"x","error":"y"}`
-		page, err := engine.TaskTurns(context.Background(), 1, "t1", 0, 0)
+		page, err := engine.TaskTurns(context.Background(), 1, "t1", chat.TaskTurnCursor{}, 0)
 		if !errors.Is(err, tc.want) {
 			t.Fatalf("status %d = %v, want %v", tc.status, err, tc.want)
 		}
@@ -240,16 +240,17 @@ func TestTaskTurns_RefusesABadPageRequest(t *testing.T) {
 
 	for _, bad := range []struct {
 		taskID string
-		after  int64
+		cursor chat.TaskTurnCursor
 		limit  int
 	}{
-		{"", 0, 0},
-		{"../escape", 0, 0},
-		{"t1", -1, 0},
-		{"t1", 0, 101},
-		{"t1", 0, -1},
+		{"", chat.TaskTurnCursor{}, 0},
+		{"../escape", chat.TaskTurnCursor{}, 0},
+		{"t1", chat.TaskTurnCursor{After: -1}, 0},
+		{"t1", chat.TaskTurnCursor{Newest: true, Before: -1}, 0},
+		{"t1", chat.TaskTurnCursor{}, 101},
+		{"t1", chat.TaskTurnCursor{}, -1},
 	} {
-		if _, err := engine.TaskTurns(context.Background(), 1, bad.taskID, bad.after, bad.limit); !errors.Is(err, chat.ErrTaskRequestInvalid) {
+		if _, err := engine.TaskTurns(context.Background(), 1, bad.taskID, bad.cursor, bad.limit); !errors.Is(err, chat.ErrTaskRequestInvalid) {
 			t.Fatalf("%+v = %v, want ErrTaskRequestInvalid", bad, err)
 		}
 	}
@@ -272,7 +273,7 @@ func TestTaskTurns_PagesWithTheCursor(t *testing.T) {
 	encoded, _ := json.Marshal(page)
 	platform.pages["cx1/t1"] = string(encoded)
 
-	got, err := engine.TaskTurns(context.Background(), 1, "t1", 4, 2)
+	got, err := engine.TaskTurns(context.Background(), 1, "t1", chat.TaskTurnCursor{After: 4}, 2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,5 +284,93 @@ func TestTaskTurns_PagesWithTheCursor(t *testing.T) {
 		!strings.Contains(platform.calls[0], "after_turn_id=4") ||
 		!strings.Contains(platform.calls[0], "limit=2") {
 		t.Fatalf("calls = %v", platform.calls)
+	}
+}
+
+// The pane reads the latest exchanges first, so the cursor it sends is an upper
+// bound and the parameter goes on the platform's query even when it is zero —
+// on that route the parameter's presence is what asks for the newest-first
+// page, and a request without it is answered with the task's oldest turns.
+func TestTaskTurns_NewestFirstAsksTheOtherEndAndCarriesTheOrderBack(t *testing.T) {
+	store, engine, platform := turnEngine(t)
+	bindSession(t, store, 1, "cx1")
+	page := map[string]any{
+		"task_id": "t1", "task_version": 3,
+		"task":        map[string]any{"id": "t1", "title": "t", "status": "blocked", "version": 3},
+		"turns":       []any{map[string]any{"id": 9}, map[string]any{"id": 7}},
+		"next_cursor": 7,
+		"order":       "desc",
+	}
+	encoded, _ := json.Marshal(page)
+	platform.pages["cx1/t1"] = string(encoded)
+
+	// The first read has no bound: zero still goes on the query.
+	got, err := engine.TaskTurns(context.Background(), 1, "t1", chat.TaskTurnCursor{Newest: true}, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Order != chat.TaskTurnOrderDesc || got.NextCursor != 7 {
+		t.Fatalf("page = %+v", got)
+	}
+	if len(platform.calls) != 1 || !strings.Contains(platform.calls[0], "before_turn_id=0") {
+		t.Fatalf("calls = %v", platform.calls)
+	}
+	if strings.Contains(platform.calls[0], "after_turn_id") {
+		t.Fatalf("a newest-first read named the other end too: %v", platform.calls)
+	}
+
+	// Paging back sends the bound it was given, and only that one.
+	platform.calls = nil
+	if _, err := engine.TaskTurns(
+		context.Background(), 1, "t1", chat.TaskTurnCursor{Newest: true, Before: 7}, 2,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if len(platform.calls) != 1 || !strings.Contains(platform.calls[0], "before_turn_id=7") {
+		t.Fatalf("calls = %v", platform.calls)
+	}
+
+	// The oldest-first read is unchanged, and says nothing about order — this
+	// is the page the review-material fold walks.
+	platform.calls = nil
+	delete(page, "order")
+	encoded, _ = json.Marshal(page)
+	platform.pages["cx1/t1"] = string(encoded)
+	plain, err := engine.TaskTurns(context.Background(), 1, "t1", chat.TaskTurnCursor{After: 4}, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plain.Order != "" {
+		t.Fatalf("an oldest-first page claimed an order: %+v", plain)
+	}
+	if len(platform.calls) != 1 || !strings.Contains(platform.calls[0], "after_turn_id=4") ||
+		strings.Contains(platform.calls[0], "before_turn_id") {
+		t.Fatalf("calls = %v", platform.calls)
+	}
+}
+
+// A slot that does not have the parameter ignores it and answers the oldest
+// turns. Handing that page to the pane would show the task's first exchange as
+// its latest and then page in a circle, so it is its own refusal — and not one
+// of the four that say the records cannot be read, because they can be.
+func TestTaskTurns_APageThatIsNotNewestFirstIsRefusedRatherThanShown(t *testing.T) {
+	store, engine, platform := turnEngine(t)
+	bindSession(t, store, 1, "cx1")
+	// The same page the old route serves: turns, a cursor, and no order.
+	platform.pages["cx1/t1"] = migratedTurnsPage
+
+	got, err := engine.TaskTurns(context.Background(), 1, "t1", chat.TaskTurnCursor{Newest: true}, 0)
+	if !errors.Is(err, chat.ErrTaskTurnsOrderUnsupported) {
+		t.Fatalf("err = %v, want ErrTaskTurnsOrderUnsupported", err)
+	}
+	if len(got.Turns) != 0 {
+		t.Fatalf("a refused page still carried turns: %+v", got)
+	}
+	for _, other := range []error{
+		chat.ErrTaskNotFound, chat.ErrTaskRequestUnavailable, chat.ErrTaskRequestUnsupported,
+	} {
+		if errors.Is(err, other) {
+			t.Fatalf("the refusal collapsed into %v", other)
+		}
 	}
 }
