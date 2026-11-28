@@ -1,6 +1,6 @@
 ---
 type: mockup-deviations
-last_updated: 2026-11-06
+last_updated: 2026-11-24
 ---
 
 # 허용목록 (문서화된 목업 이탈)
@@ -27,7 +27,7 @@ last_updated: 2026-11-06
   보조 텍스트는 슬롯 체계에 없어 구현은 `ink(...).opacity(...)` 로 그린다.
 - **렌더 영향**: 있음(하단 탭 바). `system` 영역을 쓰는 구현은 `ui/RootScreen.kt`(하단 탭 바 배경 `surface`·선택 탭 글자 `ink`·비선택 탭 글자 `ink` 50%·더 보기 목록 배경 `surface`·제목 `ink`)·
   `ui/RootTab.kt`(「더 보기」 탭의 영역 매핑)·`designsystem/PocketAideTheme.kt`(테마 팔레트)·`keyboard/KeyboardStyle.kt`(키보드 버튼 글자 `card`)다.
-  `system` 의 `rule`·`soft` 는 이 트리 어디에서도 쓰이지 않는다. (2026-11-02 전환 전 iOS 구현 기준으로는 「목업 없는 `ios/PocketAide/HelloWorldView.swift` 만 쓴다」였으나,
+  `system` 의 `rule`·`soft` 는 이 트리 어디에서도 쓰이지 않는다. (2026-11-02 전환 전 iOS 구현 기준으로는 목업 없는 진입 화면 하나만 이 슬롯을 썼으나,
   전환 뒤 안드로이드 구현은 하단 탭 바에 `system` 슬롯을 쓴다 — 2026-11-03 갱신.)
 - **해제 조건**: `tokens.md` §1.8·§1.9 가 이 슬롯들의 값을 정하면 `GeneratedPalettes.kt` 를 그 값에 맞추고 이 항목을 지운다.
 
@@ -37,7 +37,7 @@ last_updated: 2026-11-06
 - **사유**: `tokens.md` 는 음성 모드의 `--rule`·`--soft` 를 `—` 로(§1.9), AI 채팅·임시공간은 라이트 `--soft` 를 정의하지 않는다(§1.3·§1.4).
   T1 과 같은 이유(슬롯 전칭 API)로 에셋이 이웃 토큰 값 — AI 채팅은 채팅 버블 보더, 임시공간은 카드 배경, 음성은 AI 채팅 라이트 `--ink`·음성 `--card` — 을 빌렸다.
 - **렌더 영향**: 없음. `soft(.aiChat)` 는 쓰이지 않는다(2026-11-06 구현된 AI 채팅 화면 `chat/ChatScreen.kt` 도 `soft` 슬롯을 쓰지 않는다), 음성·임시공간 `soft`·`rule` 은 구현 어디에서도 쓰지 않는다.
-  (iOS 구현 기준의 근거 파일 `ios/PocketAide/HelloWorldView.swift` 는 2026-11-02 전환 뒤 이 모델의 구현이 아니다 — 2026-11-03 갱신.)
+  (전환 전 iOS 구현의 근거는 2026-11-02 전환 뒤 이 모델의 구현이 아니다 — 2026-11-03 갱신.)
 - **해제 조건**: `tokens.md` 가 해당 슬롯을 정의하거나, 그 슬롯을 쓰는 화면이 구현되면(그때는 목업 값에 맞춘 뒤) 지운다.
 
 ### T3 — 폰트 패밀리는 안드로이드 시스템 서체
@@ -60,6 +60,12 @@ last_updated: 2026-11-06
 
 ## 구조·수치
 
+> 2026-11-24 갱신 — `S2`·`S3`·`S7` 세 항목은 근거가 전환 전 iOS 구현 파일에 묶여 있던 항목이라, 안드로이드 구현을 근거로 다시 보아 사유가 성립하지 않아 지웠다.
+> `S2`(시트 그림자 spread) — `designsystem/components/Sheet.kt` 는 그림자·elevation 을 아예 그리지 않는다(목업의 `box-shadow:0 -8px 24px -4px rgba(28,38,36,.18)` 가 구현에 없다 — `불일치` 대상).
+> `S3`(반복 주기 세그먼트) — `routines/RoutineSheets.kt` 는 `FilterPills` 로 앱이 직접 그린다(시스템 컨트롤이 아니다).
+> `S7`(승인 게이트 설정의 뒤로 버튼) — `approvals/ApprovalParts.kt` 의 `ApprovalBackBar` 가 뒤로 버튼·글리프·강조색을 직접 그린다(시스템 내비게이션 바가 아니다).
+> 남은 항목(`S1`·`S4`·`S5`·`S6`·`S8`·`S9`)의 근거는 모두 안드로이드 구현 파일을 가리킨다.
+
 ### S1 — 시트 안 보조 텍스트 색은 영역 `ink` 55%
 
 - **대상**: `screen-affirmations-priority-edit` 시트 안의 흐린 글자 세 자리 — 비활성 pill 라벨 `text-stone-600`(`#57534E`), 도움말·취소 버튼 `text-stone-500`(`#78716C`)
@@ -71,61 +77,42 @@ last_updated: 2026-11-06
 - **렌더 영향**: 있음(작음). 라이트에서 세 자리의 회색이 목업보다 따뜻한 갈색 기로 그려진다. 크기·굵기·자리는 같다.
 - **해제 조건**: `tokens.md` 가 영역별 보조 텍스트 토큰(라이트·다크 값)을 정하면 구현을 그 값에 맞추고 이 항목을 지운다. 목업이 세 자리를 영역 `ink` 투명도로 바꿔도 지운다.
 
-### S2 — 시트 그림자의 spread 는 SwiftUI `.shadow` 에 대응 인자가 없다
 
-- **대상**: 시트 본체 `box-shadow:0 -8px 24px -4px rgba(28,38,36,.18)` 의 넷째 값 spread `-4px`
-  ↔ 구현 `Sheet.swift` 의 `.shadow(color:radius:x:y:)`(y −8 · radius 24 · 색 `rgb(28,38,36)` 18% 는 목업 값 그대로).
-- **사유**: CSS `box-shadow` 의 spread 는 흐리기 전에 그림자 도형을 늘이거나 줄이는 값인데 SwiftUI `.shadow` 는 색·반경·x·y 넷만 받는다.
-  spread 를 흉내 내려면 시트 본체와 별개의 축소 도형을 깔아 그림자만 그리게 해야 하고, 그 도형은 시트 높이를 따라가야 해 공용 컴포넌트의 레이아웃을 바꾼다.
-  음수 spread 4px 는 그림자의 좌우 끝을 4px 씩 안으로 들일 뿐이고 시트는 화면 폭 전체라 좌우 끝이 화면 밖이다.
-- **렌더 영향**: 있음(미미). 시트 위 가장자리 그림자가 목업보다 4pt 가량 넓게 번진다. 방향·흐림·색·불투명도는 같다.
-- **해제 조건**: 목업이 시트 그림자에서 spread 를 빼거나, 구현이 spread 를 반영한 그림자 도형을 갖추면 지운다.
 
-### S3 — 반복 주기 세그먼트는 iOS 시스템 컨트롤
-
-- **대상**: `screen-routines` 「새 루틴 시트」의 반복 주기 세그먼트(매일 · 특정 요일 · 매주 · 매월) — 목업이 그린 수치 11자리
-  (묶음 `gap-0.5`·`p-0.5`·`rounded-[9px]`·`bg-[var(--soft)]`·`text-[13px]`, 칸 `py-1.5`·`rounded-[7px]`, 선택된 칸 `bg-white`·`font-semibold`)
-  ↔ 구현 `RoutineSheets.swift` 의 `Picker(…).pickerStyle(.segmented)`(수식 없음 — 크기·라운드·색·굵기를 시스템이 정한다).
-- **사유**: 목업이 이 자리를 「세그먼트 컨트롤(iOS 시스템 컨트롤)」이라고 주석으로 적어 두었다 — 그려진 수치는 시스템 컨트롤의 모습을 옮긴 것이지 따로 정한 설계값이 아니다.
-  시스템 세그먼트 컨트롤은 칸 여백·라운드를 SwiftUI 수식으로 받지 않고, 같은 수치를 맞추려면 컨트롤을 직접 그려야 해 접근성·다크 모드·Dynamic Type 동작을 잃는다.
-- **렌더 영향**: 있음(작음). 컨트롤의 높이·라운드·바탕색이 OS 버전의 시스템 모양을 따른다. 칸 수·순서·선택 표시 방식은 같다.
-- **해제 조건**: 목업·`components.md` 가 이 세그먼트를 시스템 컨트롤이 아닌 고유 컴포넌트로 정하면(수치를 설계값으로 못박으면) 구현을 그 값에 맞추고 이 항목을 지운다.
-
-### S4 — 다짐·임시공간·투두 목록 행의 스와이프 삭제는 iOS 시스템 스와이프 액션
+### S4 — 다짐·임시공간·투두 목록 행의 스와이프 삭제는 Material3 스와이프 액션
 
 - **대상**: `screen-affirmations` 「목록」 프레임의 스와이프된 행 — 목업이 그린 수치 8자리
   (스와이프 행 틀 `rounded-2xl`, 삭제 패널 `w-[74px]`·`gap-1`·`text-white`, 휴지통 글리프 `18×18`, 「삭제」 라벨 `text-[12px]`·`font-semibold`)
-  ↔ 구현 `AffirmationsView.swift` 의 `.swipeActions(edge: .trailing, allowsFullSwipe: false) { Button(role: .destructive) { … } label: { Label("삭제", systemImage: "trash") } }`
-  (수식 없음 — 버튼 폭·라벨 배치·글자 크기·굵기·전경색·행 모서리를 시스템 `List` 가 정한다). 패널 채움색(다짐 `--destructive`)은 구현이 `.tint` 로 맞추므로 이 항목 밖이다.
-  `screen-scratchpad` 「목록」 프레임의 스와이프된 행도 같은 8자리(같은 클래스·같은 수치)를 그리고, 구현 `ScratchpadView.swift` 도 같은 `.swipeActions(edge: .trailing, allowsFullSwipe: false) { Button { … } label: { Label("삭제", systemImage: "trash") } }` 다
-  (패널 채움 `#9C3F2D` 는 `.tint(DesignTokens.Color.destructive(.scratchpad))` 로 `일치` — 이 항목 밖).
+  ↔ 구현 `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/SwipeToDelete.kt` 의 Material3 `SwipeToDismissBox`(`rememberSwipeToDismissBoxState()` — 수식 없음: 버튼 폭·라벨 배치·글자 크기·굵기·전경색·행 모서리를 Material3 가 정한다). 패널 채움색(다짐 `--destructive`)은 구현이 영역 색으로 맞추므로 이 항목 밖이다.
+  `screen-scratchpad` 「목록」 프레임의 스와이프된 행도 같은 8자리(같은 클래스·같은 수치)를 그리고, 구현 `designsystem/components/SwipeToDelete.kt` 도 같은 `SwipeToDismissBox` 다
+  (패널 채움 `#9C3F2D` 는 영역 `destructive` 로 `일치` — 이 항목 밖).
   `screen-todo-personal`·`screen-todo-work` 「목록」 프레임의 스와이프된 행도 같은 클래스·같은 수치를 그린다 — 개인은 같은 8자리, 회사는 카드가 각진 틀이라 행 틀 라운드가 없는 7자리다.
-  구현은 두 탭이 공유하는 `TodoListView.swift` 의 같은 `.swipeActions(edge: .trailing, allowsFullSwipe: false) { Button { … } label: { Label("삭제", systemImage: "trash") } }` 다
-  (패널 채움 개인 `#9E2B3C` · 회사 `#9C3F2D` 는 `.tint(DesignTokens.Color.destructive(tone))` 로 `일치` — 이 항목 밖). 두 투두 목업의 휴지통 글리프는 추가 버튼의 더하기 글리프와
+  구현은 두 탭이 공유하는 `designsystem/components/SwipeToDelete.kt` 다
+  (패널 채움 개인 `#9E2B3C` · 회사 `#9C3F2D` 는 영역 `destructive` 로 `일치` — 이 항목 밖). 두 투두 목업의 휴지통 글리프는 추가 버튼의 더하기 글리프와
   같은 `style` 문자열이라 표 E 의 한 요소(「글리프 18(추가 · 삭제)」)다. 이 항목은 그 요소의 휴지통 쪽 두 행만 가리킨다(더하기 쪽 두 행은 `일치`).
-- **사유**: 목업이 이 자리를 「구현 `.swipeActions` 의 「삭제」(왼쪽으로 밀면 드러남)」라고 주석으로 적어 두었다(네 화면 목업 모두) — 그려진 수치는 시스템 스와이프 액션의 모습을 옮긴 것이지 따로 정한 설계값이 아니다(`S3` 와 같은 사정).
-  `.swipeActions` 는 버튼 폭·라벨 배치·글자를 SwiftUI 수식으로 받지 않고, 같은 수치를 맞추려면 스와이프 제스처와 패널을 직접 그려야 해 시스템의 밀기 물리·전체 밀기 취소·VoiceOver 동작(「삭제」 커스텀 액션)을 잃는다.
-- **렌더 영향**: 있음(작음). 행을 밀었을 때 드러나는 패널의 폭·글리프·라벨 크기와 행 모서리가 OS 버전의 시스템 모양을 따른다. 위치(행 오른쪽)·채움색·라벨 문구·글리프 종류는 같다.
-- **해제 조건**: 목업·`components.md` 가 스와이프 패널을 시스템 스와이프 액션이 아닌 고유 컴포넌트로 정하면(수치를 설계값으로 못박으면) 구현을 그 값에 맞추고 이 항목을 지운다.
+- **사유**: 목업이 이 자리를 「구현 스와이프 액션의 「삭제」(왼쪽으로 밀면 드러남)」라고 주석으로 적어 두었다(네 화면 목업 모두) — 그려진 수치는 시스템 스와이프 액션의 모습을 옮긴 것이지 따로 정한 설계값이 아니다.
+  Material3 `SwipeToDismissBox` 는 버튼 폭·라벨 배치·글자를 컴포저블 수식으로 받지 않고, 같은 수치를 맞추려면 스와이프 제스처와 패널을 직접 그려야 해 시스템의 밀기 물리·전체 밀기 취소·접근성 동작을 잃는다.
+- **렌더 영향**: 있음(작음). 행을 밀었을 때 드러나는 패널의 폭·글리프·라벨 크기와 행 모서리가 Material3 버전의 시스템 모양을 따른다. 위치(행 오른쪽)·채움색·라벨 문구·글리프 종류는 같다.
+- **해제 조건**: 목업·`components.md` 가 스와이프 패널을 라이브러리 스와이프 액션이 아닌 고유 컴포넌트로 정하면(수치를 설계값으로 못박으면) 구현을 그 값에 맞추고 이 항목을 지운다.
 
 ### S5 — 다짐·임시공간·투두 탭 본체의 보조 텍스트 색은 영역 `ink` 투명도
 
 - **대상**: `screen-affirmations` 다짐 탭 본체의 흐린 글자 네 자리 — 히어로 메타 글자(「우선순위 높음 · …」) `text-stone-500`(`#78716C`), 범례 `text-stone-600`(`#57534E`),
   빈 상태 안내(「우상단 + 버튼으로 …」) `text-stone-500`(`#78716C`), 선택되지 않은 정렬 칩(「최신순」) `text-stone-500`(`#78716C`)
-  ↔ 구현 `AffirmationsView.swift` 의 `DesignTokens.Color.ink(.affirmations).opacity(0.55)`(메타 글자 · 빈 상태 안내 · 비선택 정렬 칩)·`.opacity(0.7)`(범례) — 다짐 라이트 `#2E251A` 55%·70%.
+  ↔ 구현 `android/app/src/main/java/com/dlddu/pocketaide/affirmations/AffirmationsScreen.kt` 의 `DesignTokens.Colors.ink(AREA).copy(alpha = 0.55f)`(메타 글자 `:278`·빈 상태 안내 `:344`·비선택 정렬 칩 `:392`)·`DesignTokens.Colors.ink(AREA).copy(alpha = 0.7f)`(범례 `:439`) — 다짐 라이트 `#2E251A` 55%·70%.
   `screen-scratchpad` 임시공간 탭 본체의 다섯 자리 — 부제(「캡처 부담 없이 …」) `text-stone-500`, 일자 라벨(「오늘」) `text-stone-500`, 일자 개수(「5 ITEMS」) `text-stone-400`, 카드 시각(「14:08」) `text-stone-400`,
-  빈 상태 안내(「분류할 메모가 없습니다. …」) `text-stone-500` ↔ 구현 `ScreenHeader.swift` 부제 분기 `ink(area).opacity(0.55)` · `ScratchpadView.swift` 의 `ink(.scratchpad)` `.opacity(0.7)`(일자 라벨)·`.opacity(0.5)`(일자 개수)·`.opacity(0.55)`(시각 · 빈 상태 안내) — 임시공간 라이트 `#2A2723`.
+  빈 상태 안내(「분류할 메모가 없습니다. …」) `text-stone-500` ↔ 구현 `android/app/src/main/java/com/dlddu/pocketaide/designsystem/components/ScreenHeader.kt` 부제 분기 `ink(area).copy(alpha = 0.55f)` · `scratchpad/ScratchpadScreen.kt` 의 `ink(.scratchpad)` `.copy(alpha = 0.7f)`(일자 라벨 `:268`)·`.copy(alpha = 0.5f)`(일자 개수 `:274`)·`.copy(alpha = 0.55f)`(시각·빈 상태 안내 `:154`·`:327`) — 임시공간 라이트 `#2A2723`.
   같은 화면의 탭 내 입력 출처 라벨 `text-stone-600` 은 다크 목업도 stone(`text-stone-400`)으로 그려 아래 사유가 서지 않으므로 대상이 아니다(`불일치` 로 남는다).
   `screen-todo-personal`·`screen-todo-work` 투두 탭 본체는 화면마다 여섯 자리다 — 요약 줄(「7개 남음 · 4개 완료」·「12 OPEN · 8 DONE · …」) `text-stone-500`, 검색 돋보기 글리프 `text-stone-400`, 검색 자리표시 글자(「개인 영역만 검색…」·「회사 영역만 검색…」) `text-stone-400`,
-  행 메타 줄 `text-stone-500`, 빈 상태 안내(「아직 할 일이 없습니다. …」) `text-stone-500`, 완료 섹션 제목(「완료 · 4」·「DONE · 8」) `text-stone-400` ↔ 구현 `ScreenHeader.swift` 부제 분기 `ink(area).opacity(0.55)` · `TodoListView.swift` 의
-  `ink(tone)` `.opacity(0.45)`(돋보기 · 검색 `TextField` 의 `prompt:`)·`.opacity(0.55)`(메타 줄 · 빈 상태 안내)·`.opacity(titleOpacity)` 의 완료 섹션 값 `0.45`(완료 섹션 제목) — 개인 라이트 `#3D2A22` · 회사 라이트 `#1E2A3A`.
-  개인 화면은 한 자리가 더 있다 — 완료 섹션 머리 오른쪽 「접기」(섹션 보조) `text-stone-400` ↔ 구현 `TodoListView.swift` `doneCollapseButton` 의 `ink(tone)` `.opacity(0.45)`.
+  행 메타 줄 `text-stone-500`, 빈 상태 안내(「아직 할 일이 없습니다. …」) `text-stone-500`, 완료 섹션 제목(「완료 · 4」·「DONE · 8」) `text-stone-400` ↔ 구현 `designsystem/components/ScreenHeader.kt` 부제 분기 `ink(area).copy(alpha = 0.55f)` · `todos/TodoListScreen.kt` 의
+  `ink(tone)` `.copy(alpha = 0.45f)`(돋보기 `:184`·검색 `prompt` `:193`)·`.copy(alpha = 0.55f)`(메타 줄 `:259`·빈 상태 안내)·완료 섹션 제목 자리(`:393`) — 개인 라이트 `#3D2A22` · 회사 라이트 `#1E2A3A`.
+  개인 화면은 한 자리가 더 있다 — 완료 섹션 머리 오른쪽 「접기」(섹션 보조) `text-stone-400` ↔ 구현 `todos/TodoListScreen.kt` 의 `ink(tone)` `.copy(alpha = 0.45f)`.
   두 투두 화면의 다른 stone 자리는 대상이 아니다(`불일치` 로 남는다). 회사 백로그 섹션 제목 `text-stone-500` 은 구현에 백로그 섹션이 없어
   (백로그 행도 열린 섹션 머리 아래에 그린다) 색이 아니라 섹션 구성의 차이이며, 회사 메타 구분점 `text-stone-300` 은 다크 목업도 stone 이다. 필터 칩·섹션 보조(열린 섹션 머리의 날짜 · 개수)·섹션 막대·분리 안내 상자는 구현에 요소가 없다.
 - **사유**: `S1` 과 같은 규약을 시트 밖 탭 본체에 적용한 것이다. `tokens.md` §2 끝은 「영역 토큰이 정의된 곳에서는 stone 팔레트보다 영역 토큰을 우선한다」고, §1.9 제약은
   「다크 변형에서도 stone 팔레트는 메타 영역에만 사용한다(영역 내부 텍스트는 영역 다크 토큰 사용)」고 정한다. 실제로 다크 목업(`mockups-dark.html` 의 `affirmations`)은
   같은 네 자리를 stone 이 아니라 다짐 영역 다크 톤 `#BFA890` 으로 그리고, `scratchpad` 는 같은 다섯 자리를 임시공간 다크 톤 `#BFAE91`(부제 · 일자 라벨 · 빈 상태 안내)·`#8C7F6A`(일자 개수 · 시각)로 그린다. 투두는 같은 여섯 자리를 개인 다크 톤 `#C9A595`(요약 줄 · 메타 줄 · 빈 상태 안내)·`#9C7A6A`(돋보기 · 검색 자리표시 글자 · 완료 섹션 제목 · 「접기」)로,
-  회사 다크 톤 `#A8B5C7`(요약 줄 · 메타 줄 · 빈 상태 안내)·`#7A8AA0`(돋보기 · 검색 자리표시 글자 · 완료 섹션 제목)으로 그린다. 라이트·다크를 한 SwiftUI 뷰가 그리는 구현은 고정 회색 stone 으로 두 목업을 함께 맞출 수 없어,
+  회사 다크 톤 `#A8B5C7`(요약 줄 · 메타 줄 · 빈 상태 안내)·`#7A8AA0`(돋보기 · 검색 자리표시 글자 · 완료 섹션 제목)으로 그린다. 라이트·다크를 한 Compose 컴포저블이 그리는 구현은 고정 회색 stone 으로 두 목업을 함께 맞출 수 없어,
   에셋의 다크 값을 그대로 받는 영역 `ink` 투명도를 쓴다(`_token-map.md` 표 C 「§2 stone 팔레트 — 목업 전용」 판정). §8 「영역 화면에서는 stone 팔레트를 본문 텍스트의 흐린 색에만 한정한다」는
   라이트 목업이 이 자리에 stone 을 쓸 수 있다는 범위이지 구현 값을 정하지 않는다.
 - **렌더 영향**: 있음(작음). 라이트에서 대상 자리의 회색이 목업보다 영역 ink 기(다짐은 따뜻한 갈색, 임시공간은 짙은 먹색, 개인 투두는 짙은 적갈색, 회사 투두는 짙은 남색)로 그려진다. 글자 크기·굵기·자리·문구는 같다.
@@ -135,38 +122,25 @@ last_updated: 2026-11-06
 
 - **대상**: `screen-approval` 「설정 — 자동 응답·호출자 키」·「키 발급 — 원문 1회 표시」 두 프레임의 stone 다섯 자리 — 키 행 메타 줄(「pak_7Hq2… · 발급 09/29 · …」)·폐기된 키 칩 글자(「old-ci」)·
   폐기 시각(「폐기됨 10/03」)·발급 시트 입력 라벨(「호출자 이름」·「키 원문」) `text-stone-500`(`#78716C`), 폐기된 키 칩 외곽선 `border-stone-300`(`#D6D3D1`)
-  ↔ 구현 `ApprovalKeysView.swift` 의 `DesignTokens.Color.ink(Self.area).opacity(0.55)`(글자 네 자리 — prMonitor 라이트 `#221F33` 55%)·`DesignTokens.Color.rule(Self.area)`(칩 외곽선 — 라이트 `#D8D5E4`).
-  두 프레임의 다른 불일치(시스템 시트·「자동 응답 모드」 미구현 등)는 대상이 아니다(`불일치` 로 남는다). 시스템 내비게이션 바 자리는 `S7` 이 가리킨다.
+  ↔ 구현 `android/app/src/main/java/com/dlddu/pocketaide/approvals/ApprovalKeysScreen.kt` 의 `DesignTokens.Colors.ink(area).copy(alpha = ApprovalMetrics.SECONDARY_OPACITY)`(글자 네 자리 `:222`·`:240` — 승인 영역 라이트 `#221F33` 55%)·`DesignTokens.Colors.rule(area)`(칩 외곽선 `:168`·`:176` — 라이트 `#D8D5E4`).
+  두 프레임의 다른 불일치(시스템 시트·「자동 응답 모드」 미구현 등)는 대상이 아니다(`불일치` 로 남는다). 뒤로 버튼 자리는 `ApprovalParts.kt` 의 `ApprovalBackBar` 가 직접 그리므로 이 항목 밖이다.
 - **사유**: `S1`·`S5` 와 같은 규약을 승인 영역 설정 화면(시트 포함)에 적용한 것이다. `tokens.md` §2 끝은 「영역 토큰이 정의된 곳에서는 stone 팔레트보다 영역 토큰을 우선한다」고, §1.9 제약은
   「다크 변형에서도 stone 팔레트는 메타 영역에만 사용한다(영역 내부 텍스트는 영역 다크 토큰 사용)」고 정한다. 실제로 다크 목업(`mockups-dark.html` 의 `approval`)은 같은 글자 네 자리를
-  stone 이 아니라 영역 다크 톤 `#A7A1BE` 로, 칩 외곽선을 `border-[var(--rule)]`(`#3F365B` — 구현 `rule` 에셋의 다크 값과 같다)로 그린다. 라이트·다크를 한 SwiftUI 뷰가 그리는 구현은
+  stone 이 아니라 영역 다크 톤 `#A7A1BE` 로, 칩 외곽선을 `border-[var(--rule)]`(`#3F365B` — 구현 `rule` 에셋의 다크 값과 같다)로 그린다. 라이트·다크를 한 Compose 컴포저블이 그리는 구현은
   고정 회색 stone 으로 두 목업을 함께 맞출 수 없어, 에셋의 다크 값을 그대로 받는 영역 `ink` 투명도·`rule` 을 쓴다(`_token-map.md` 표 C 「§2 stone 팔레트 — 목업 전용」 판정).
 - **렌더 영향**: 있음(작음). 라이트에서 글자 네 자리의 회색이 목업보다 승인 영역 ink 기(짙은 남보라)로, 칩 외곽선이 영역 `rule` 로 그려진다. 다크에서 글자 네 자리는 목업 톤(ink 약 70% 상당)보다
   조금 흐리다(구현 55% — 라이트 stone-500 의 밝기에 맞춘 `S1`·`S5` 와 같은 값). 글자 크기·굵기·자리·문구는 같다.
 - **해제 조건**: `S1` 과 같다 — `tokens.md` 가 영역별 보조 텍스트 토큰(라이트·다크 값)을 정하면 구현을 그 값에 맞추고 이 항목을 지운다. 목업이 대상 자리를 영역 토큰으로 바꾸면 그 자리를 대상에서 뺀다(전부 바뀌면 항목을 지운다).
 
-### S7 — 승인 게이트 설정의 뒤로 버튼은 iOS 시스템 내비게이션 바
-
-- **대상**: `screen-approval` 「설정 — 자동 응답·호출자 키」·「키 발급 — 원문 1회 표시」 두 프레임의 헤더 — 목업이 그린 수치 9자리
-  (헤더 `bg-[var(--bg)]/95`·`pt-3`·`pb-2`·`px-5`, 뒤로 버튼 `gap-1`·`text-[15px]`·`text-[var(--accent)]`, 뒤로 글리프 `10×16`)
-  ↔ 구현 `ApprovalKeysView.swift` 의 `.navigationBarTitleDisplayMode(.inline)` — 승인 탭 `ApprovalsView.swift` 의 `NavigationStack` 이 `.navigationDestination(isPresented: $showsSettings)` 로
-  이 화면을 푸시하고, 뒤로 버튼(글리프 · 앞 화면 제목 「승인」)과 그 바의 여백·바탕·글자 크기를 시스템 내비게이션 바가 그린다(수식 없음).
-  같은 헤더 아래의 본문 제목·섹션 머리·키 목록과 두 프레임의 다른 불일치(시스템 시트·「자동 응답 모드」 미구현 등)는 이 항목 밖이다.
-- **사유**: 목업이 그린 것은 iOS 푸시 화면의 뒤로 버튼 모양 그대로다 — 왼쪽 꺾쇠 글리프 + 앞 화면 제목(「승인」) + 강조색 한 줄이고, 디자인 시스템은 이 자리를 고유 컴포넌트로 정하지 않는다
-  (`components.md` §3 `ScreenHeader` 는 탭 화면 헤더의 슬롯만 정하고 뒤로 버튼 변형이 없으며, 같은 목업의 탭 프레임 헤더는 「백버튼 없음」이라 주석한다). 같은 수치를 맞추려면
-  `navigationBarBackButtonHidden` 으로 시스템 버튼을 숨기고 헤더를 직접 그려야 하는데, 그러면 시스템이 주는 화면 가장자리 밀어서 돌아가기 제스처를 잃는다(`S3`·`S4` 와 같은 사정).
-  색은 시스템이 환경 `tint`(`RootView.swift` 의 `activeTint` — 승인 탭이면 `accent(.prMonitor)`, 라이트 `#5B4DB8`)를 받아 그리지만, 판독 규약대로 구현 수식이 없는 자리라 `구현 값` 은 `시스템` 이다.
-- **렌더 영향**: 있음(작음). 뒤로 버튼의 글자 크기·글리프 모양·헤더 여백·바탕(스크롤 시 시스템 재질)이 OS 버전의 시스템 모양을 따른다. 자리(왼쪽 위)·문구(「승인」)·글리프 방향은 같다.
-- **해제 조건**: 목업·`components.md` 가 푸시 화면 헤더를 시스템 내비게이션 바가 아닌 고유 컴포넌트로 정하면(수치를 설계값으로 못박으면) 구현을 그 값에 맞추고 이 항목을 지운다.
 
 ### S8 — 회사 투두 탭 목록 끝 「N.B.」 상자는 목업의 설계 주석
 
 - **대상**: `screen-todo-work` 「목록」 프레임 맨 끝의 점선 상자(목업 주석 `separation guard rail (V3 reinforcement)`) — 상자 `mt-4`·`p-3`·`border`·`border-dashed`·`border-[var(--slate)]/40`·
   `rounded-md`·`text-[11.5px]`·`text-stone-500`·`leading-relaxed`, 머리 「N.B.」 `font-bold`·`text-[var(--slate)]` 의 수치 11자리와 표 S 19행(상자의 유무)
-  ↔ 구현 `TodoListView.swift` 에 대응 요소 없음(구현 열 `—`). 같은 프레임의 다른 불일치(기한별 섹션·급한 행 강조·메타 줄 등)는 이 항목 밖이다.
+  ↔ 구현 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt` 에 대응 요소 없음(구현 열 `—`). 같은 프레임의 다른 불일치(기한별 섹션·급한 행 강조·메타 줄 등)는 이 항목 밖이다.
 - **사유**: 상자의 문구 「N.B. 개인 영역과 분리된 별개 컬렉션입니다. 검색·필터·이력에 개인 항목이 노출되지 않습니다.」는 화면이 사용자에게 하는 말이 아니라
   `prd-todo.md` AC1(두 영역의 완전 분리 — 검색 결과에도 노출되지 않는다)을 목업 위에 다시 적은 설계 주석이다. `_copy-map.md` 표 B 는 같은 상자의 두 문구를
-  `목업 전용`(「프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다」)으로 이미 판정했고, `screen-pr-monitor-history` 의 같은 모양 상자(「N.B.」·「AC11 · AC12 · AC13.」)도 같은 판정이다.
+  → `목업 전용`(「프레임 안 설계 주석 박스(점선 테두리) — 앱 화면 요소가 아니다」)으로 이미 판정했고, `screen-pr-monitor-history` 의 같은 모양 상자(「N.B.」·「AC11 · AC12 · AC13.」)도 같은 판정이다.
   문구를 앱이 그리지 않으니 그 문구를 담는 상자의 수치도 구현 대상이 아니다 — 두 대응표가 같은 상자를 한쪽은 목업 전용, 한쪽은 구현 누락으로 읽던 어긋남을 여기서 맞춘다.
   분리 자체는 데이터·검색 동작(AC1)과 영역 색·라벨(AC3)이 보장하며, 이 상자가 없어도 AC 검증 방법이 바뀌지 않는다.
 - **렌더 영향**: 없음(앱이 그리도록 정해진 요소가 아니다). 목업과 나란히 놓으면 회사 탭 목록 끝의 점선 상자만큼 앱 화면이 짧다.
@@ -175,12 +149,12 @@ last_updated: 2026-11-06
 ### S9 — 투두 탭 헤더 묶음은 목록 위에 고정된 형제 스택
 
 - **대상**: 투두 두 탭 헤더 묶음의 구성 차이에서 나온 수치 2자리 — `screen-todo-personal` 필터 칩 줄 `-mx-5`(-20)와 `screen-todo-work` 헤더 `bg-[var(--bg)]/95`(회사 바탕 95%)
-  ↔ 구현 `TodoListView.swift` 의 `VStack(spacing: 0)` — 영역 띠 · `header`(`ScreenHeader`) · `searchField` · `TodoDueFilterChips`(개인) · `list` 가 스크롤 밖에 차례로 놓인 형제이고,
-  칩 줄은 `TodoDueFilterChips.swift` 의 가로 `ScrollView` 가 안쪽 내용에만 `.padding(.horizontal, DesignTokens.Spacing.xl)`(20)을 준다.
+  ↔ 구현 `android/app/src/main/java/com/dlddu/pocketaide/todos/TodoListScreen.kt:85-88` — `Box(Modifier.fillMaxSize().background(DesignTokens.Colors.surface(tone)))` 안의 `Column` 에 영역 띠(`Box`)·`ScreenHeader`·검색 필드·목록(`PullToRefreshBox` 안의 `LazyColumn`, `:220-225`)이 **형제**로 쌓여 있고,
+  칩 줄은 `todos/TodoRowParts.kt` 의 `TodoDueFilterChips` 가 안쪽 내용에만 가로 여백을 준다.
   같은 헤더 묶음의 다른 수치(제목·검색 필드·칩 크기 등)와 두 화면의 다른 불일치(기한별 섹션·섹션 보조 글자·급한 행 강조·stone 색 등)는 이 항목 밖이다.
 - **사유**: 목업은 헤더를 화면 위에 띄운 `absolute … z-20` 상자 하나(`px-5`)로 그리고 목록이 그 아래로 스크롤해 들어간다. 그래서 칩 줄은 그 상자의 `px-5` 를 `-mx-5` 로 되물려
   가장자리까지 넓힌 뒤 `px-5` 로 첫 칩을 다시 들이고, 회사 헤더는 아래로 지나가는 목록을 가리려고 바탕 95% 를 깐다. 구현은 헤더 묶음을 목록 **위의 고정 형제**로 쌓아
-  `List` 가 헤더 아래에서 시작하고 그 밑으로 들어가지 않는다 — 칩 줄은 처음부터 화면 폭이라 되물릴 바깥 여백이 없고(띠는 가장자리까지, 첫 칩은 20 안쪽 — 목업 실효와 같다),
+  `LazyColumn` 가 헤더 아래에서 시작하고 그 밑으로 들어가지 않는다 — 칩 줄은 처음부터 화면 폭이라 되물릴 바깥 여백이 없고(띠는 가장자리까지, 첫 칩은 20 안쪽 — 목업 실효와 같다),
   헤더 뒤에는 가릴 목록이 없어 바탕을 깔 대상이 없다(헤더 자리에 보이는 것은 화면 바탕 `surface` — 회사 라이트 `#EEF2F8`, 목업 95% 와 같은 hex).
   같은 수식을 쓰려면 칩 줄을 헤더 안쪽 여백 속으로 옮겨 음수 여백으로 상쇄하거나 헤더에 불투명도만 다른 같은 색 바탕을 덧대야 하는데, 어느 쪽도 화면에 보이는 것을 바꾸지 않는다.
 - **렌더 영향**: 정지 화면 없음(칩 띠의 폭·첫 칩 자리·헤더 자리의 색이 같다). 스크롤 중 목업은 회사 헤더 아래로 지나가는 행이 5% 비치고 구현은 행이 헤더 아래 끝에서 잘린다.
