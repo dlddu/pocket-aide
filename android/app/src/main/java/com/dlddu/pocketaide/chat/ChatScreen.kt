@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -111,6 +112,7 @@ fun ChatScreen(api: ApiClient) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val taskRequest by viewModel.taskRequest.collectAsStateWithLifecycle()
     val taskTurns by viewModel.taskTurns.collectAsStateWithLifecycle()
+    val taskMaterials by viewModel.taskMaterials.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     // The draft and the panel's open/closed choice survive a fold, a rotation
     // and a trip through the back stack, so neither is lost by the layout
@@ -170,6 +172,8 @@ fun ChatScreen(api: ApiClient) {
             turnsOpen = false
             viewModel.dismissTaskRequest()
             viewModel.clearTaskTurns()
+        viewModel.clearTaskMaterials()
+            viewModel.clearTaskMaterials()
         }
     }
 
@@ -216,12 +220,16 @@ fun ChatScreen(api: ApiClient) {
             turnsOpen = false
             viewModel.dismissTaskRequest()
             viewModel.clearTaskTurns()
+        viewModel.clearTaskMaterials()
+            viewModel.clearTaskMaterials()
         },
         onCloseTask = {
             openTaskId = null
             turnsOpen = false
             viewModel.dismissTaskRequest()
             viewModel.clearTaskTurns()
+        viewModel.clearTaskMaterials()
+            viewModel.clearTaskMaterials()
         },
         taskRequest = taskRequest,
         requestDraft = requestDraft,
@@ -254,6 +262,11 @@ fun ChatScreen(api: ApiClient) {
         onLoadTurns = { openTask?.let { viewModel.loadTaskTurns(it) } },
         onRetryTurns = { openTask?.let { viewModel.reloadTaskTurns(it) } },
         onLoadMoreTurns = viewModel::loadMoreTaskTurns,
+        materials = taskMaterials,
+        // One read for the one open task, skipped when the pane already holds
+        // this task's answer for the same exchange signal. Retry reads anyway.
+        onLoadMaterials = { openTask?.let { viewModel.loadTaskMaterials(it) } },
+        onRetryMaterials = { openTask?.let { viewModel.reloadTaskMaterials(it) } },
         // The draft is cleared only once the backend has stored the request,
         // and the next request gets a new key then; a failure leaves both as
         // they are, so the same words retry as the same request.
@@ -333,8 +346,15 @@ internal fun ChatPanes(
     onLoadTurns: () -> Unit,
     onRetryTurns: () -> Unit,
     onLoadMoreTurns: () -> Unit,
+    // What there is to review on the open task, read once for that task.
+    materials: ChatTaskMaterialsUiState,
+    onLoadMaterials: () -> Unit,
+    onRetryMaterials: () -> Unit,
     onStoreRequest: () -> Unit,
 ) {
+    // Opening a recorded address is the platform's own browser handoff — the
+    // app shows pull requests, it does not render them.
+    val uriHandler = LocalUriHandler.current
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -406,6 +426,15 @@ internal fun ChatPanes(
                             onLoadTurns = onLoadTurns,
                             onRetryTurns = onRetryTurns,
                             onLoadMoreTurns = onLoadMoreTurns,
+                            materials = materials,
+                            onLoadMaterials = onLoadMaterials,
+                            onRetryMaterials = onRetryMaterials,
+                            // A recorded address opens in the browser. A row
+                            // without one is not a tap at all, so nothing here
+                            // can navigate to a guessed address.
+                            onOpenArtifact = { artifact ->
+                                if (artifact.openable) uriHandler.openUri(artifact.url)
+                            },
                             // No reply gate: the request becomes the task's next
                             // turn, not part of the reply being written.
                             onStore = onStoreRequest,

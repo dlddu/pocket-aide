@@ -120,6 +120,11 @@ type Engine struct {
 
 	mu    sync.Mutex
 	turns map[int64]*Pending
+	// materials holds what has been folded of each task's turns for the review
+	// answer (task_materials.go), keyed by task id. In memory only and a saving
+	// rather than a source: a restart costs the next read one walk of the turns
+	// it would otherwise have resumed.
+	materials map[string]materialsFold
 	// retryAfter holds off the next dispatch of a message whose last one
 	// failed, so a platform that keeps refusing is not hammered once per
 	// poll. In memory only: a restart just means one earlier retry.

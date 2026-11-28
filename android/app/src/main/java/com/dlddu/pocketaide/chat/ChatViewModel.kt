@@ -125,6 +125,38 @@ data class ChatTaskTurnsUiState(
         this.taskId == taskId && signal == want && error == null && (hasLoaded || isLoading)
 }
 
+/**
+ * The review materials of the task whose pane is open.
+ *
+ * It is read when a task is opened and again when the task list says that
+ * task's exchanges moved — the same signal the exchanges themselves use, so
+ * nothing is asked of the session to find out whether something is worth
+ * asking for. Nothing reads this for a task nobody opened, and the task list
+ * carries none of it, so a panel of twenty rows still reads twenty rows.
+ *
+ * [signal] is what the task list said when this was read. Opening the same task
+ * again on the same signal reads nothing.
+ */
+data class ChatTaskMaterialsUiState(
+    val taskId: String = "",
+    val signal: ChatTaskHistorySignal = ChatTaskHistorySignal.none,
+    val materials: ChatTaskMaterials = ChatTaskMaterials(),
+    val isLoading: Boolean = false,
+    val hasLoaded: Boolean = false,
+    val error: ChatTaskMaterialsError? = null,
+) {
+    /** Read, and the records had nothing to review. */
+    val isEmpty: Boolean get() = hasLoaded && error == null && !materials.hasAny
+
+    /**
+     * Whether this already holds [taskId]'s materials as of [want]. A failure
+     * is not holding them: somebody who opens the task again is asking for
+     * another try.
+     */
+    fun holds(taskId: String, want: ChatTaskHistorySignal): Boolean =
+        this.taskId == taskId && signal == want && error == null && (hasLoaded || isLoading)
+}
+
 data class ChatTaskRequestUiState(
     val taskId: String = "",
     val isStoring: Boolean = false,
@@ -151,6 +183,9 @@ class ChatViewModel(
     private val _taskTurns = MutableStateFlow(ChatTaskTurnsUiState())
     val taskTurns: StateFlow<ChatTaskTurnsUiState> = _taskTurns.asStateFlow()
 
+    private val _taskMaterials = MutableStateFlow(ChatTaskMaterialsUiState())
+    val taskMaterials: StateFlow<ChatTaskMaterialsUiState> = _taskMaterials.asStateFlow()
+
     // The newest message id a read has delivered — not one appended by send,
     // which could be newer than a reply the polls have not fetched yet.
     private var cursor: Long? = null
@@ -172,6 +207,11 @@ class ChatViewModel(
     // taskReadSeq orders the panel's reads. A reply that is not the newest
     // read's is dropped, so a slow answer cannot overwrite a fresher one.
     private var taskReadSeq = 0L
+
+    // materialsReadSeq orders the review-material reads the same way, so an
+    // answer for a task the pane has left lands nowhere instead of appearing
+    // under whichever task is open by then.
+    private var materialsReadSeq = 0L
 
     // turnsReadSeq does the same for the exchanges, which are read per task and
     // only when somebody opens them. Switching tasks or closing the pane moves
@@ -389,6 +429,84 @@ class ChatViewModel(
                 isLoading = false,
                 hasLoaded = true,
                 error = ChatTaskTurnsError.from(e),
+            )
+            false
+        }
+    }
+
+    /**
+     * Reads [task]'s review materials, or does nothing when the pane already
+     * holds them for this signal. One call, for the one task that is open.
+     */
+    fun loadTaskMaterials(task: ChatTask) {
+        viewModelScope.launch { openTaskMaterials(task) }
+    }
+
+    /**
+     * Reading them, as one suspending step so it can be driven without a main
+     * looper. True when an answer was actually read — false is "the pane
+     * already holds this", which costs nothing.
+     */
+    internal suspend fun openTaskMaterials(task: ChatTask): Boolean {
+        val want = ChatTaskHistorySignal.of(task)
+        if (_taskMaterials.value.holds(task.id, want)) return false
+        return performTaskMaterials(task.id, want)
+    }
+
+    /** Reads them again whatever the pane holds — the retry. */
+    fun reloadTaskMaterials(task: ChatTask) {
+        viewModelScope.launch { performTaskMaterials(task.id, ChatTaskHistorySignal.of(task)) }
+    }
+
+    /** Forgets them once the pane is closed, and gives up on one in the air. */
+    fun clearTaskMaterials() {
+        materialsReadSeq++
+        _taskMaterials.value = ChatTaskMaterialsUiState()
+    }
+
+    internal suspend fun performTaskMaterials(
+        taskId: String,
+        signal: ChatTaskHistorySignal,
+    ): Boolean {
+        val current = _taskMaterials.value
+        if (current.isLoading && current.taskId == taskId && current.signal == signal) return false
+        val mine = ++materialsReadSeq
+        val sameTask = current.taskId == taskId
+        // What is already on screen stays there while a re-read runs. A re-read
+        // happens because a turn arrived, and blanking the pull requests
+        // somebody is reading to announce that there may now be more of them
+        // takes away the thing they opened the task for. Another task's
+        // materials are not kept: those are not this task's to show.
+        _taskMaterials.value = ChatTaskMaterialsUiState(
+            taskId = taskId,
+            signal = signal,
+            materials = if (sameTask) current.materials else ChatTaskMaterials(),
+            isLoading = true,
+            hasLoaded = sameTask && current.hasLoaded,
+        )
+        return try {
+            val answer = api.chatTaskMaterials(taskId)
+            // An answer that lost its race belongs to a task the pane has left.
+            if (mine != materialsReadSeq) return false
+            // An answer about another task is not this task's, however it got
+            // here: showing it would put one task's pull requests under
+            // another's name.
+            if (answer.taskId.isNotEmpty() && answer.taskId != taskId) return false
+            _taskMaterials.value = ChatTaskMaterialsUiState(
+                taskId = taskId,
+                signal = signal,
+                materials = answer,
+                hasLoaded = true,
+            )
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            if (mine != materialsReadSeq) return false
+            _taskMaterials.value = _taskMaterials.value.copy(
+                isLoading = false,
+                hasLoaded = true,
+                error = ChatTaskMaterialsError.from(e),
             )
             false
         }

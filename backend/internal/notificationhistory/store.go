@@ -228,6 +228,48 @@ func (s *Store) InsertBatchTx(ctx context.Context, userIDs []int64, evt Event) (
 	return ids, nil
 }
 
+// PRTitle is the newest recorded title for one repository's pull request,
+// scoped to userID — a title this user's own CI notifications already carried.
+//
+// It exists so a screen that has a pull request's repository and number can
+// show the title a person would recognise instead of a bare number, without
+// calling GitHub and without a token. Nothing is inferred: the row has to name
+// that exact repository and that exact number. A number alone never matches,
+// because the same number is a different pull request in every repository, and
+// titling by it would put another repository's work under this one's name.
+//
+// Not found is the ordinary case — the pull request may simply never have sent
+// this user a notification — and is answered as the empty string so the caller
+// shows the identifier it already has.
+func (s *Store) PRTitle(ctx context.Context, userID int64, repoFullName string, prNumber int) (string, error) {
+	if repoFullName == "" || prNumber <= 0 {
+		return "", nil
+	}
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT pr_title
+		FROM notification_history
+		WHERE user_id = ? AND repo_full_name = ? AND pr_number = ?
+		      AND pr_title IS NOT NULL AND pr_title <> ''
+		ORDER BY id DESC
+		LIMIT 1
+	`, userID, repoFullName, prNumber)
+	if err != nil {
+		return "", fmt.Errorf("pr title: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	if !rows.Next() {
+		if err := rows.Err(); err != nil {
+			return "", fmt.Errorf("rows err: %w", err)
+		}
+		return "", nil
+	}
+	var title sql.NullString
+	if err := rows.Scan(&title); err != nil {
+		return "", fmt.Errorf("scan pr title: %w", err)
+	}
+	return title.String, nil
+}
+
 // Get returns a single row by id, scoped to userID.
 func (s *Store) Get(ctx context.Context, userID, id int64) (Item, error) {
 	items, err := s.db.QueryContext(ctx, `

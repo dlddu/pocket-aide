@@ -147,6 +147,11 @@ class ChatTaskPanelInteractionTest {
                     onLoadTurns = { turnLoads++ },
                     onRetryTurns = { turnRetries++ },
                     onLoadMoreTurns = { turnMores++ },
+                    // 검토 자료는 자기 테스트가 본다. 여기서는 읽지 않은
+                    // 기본 상태로 둔다.
+                    materials = ChatTaskMaterialsUiState(),
+                    onLoadMaterials = {},
+                    onRetryMaterials = {},
                     onStoreRequest = {
                         stores++
                         sentPick = pickTurn
