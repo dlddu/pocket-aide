@@ -96,6 +96,9 @@ private val RULE_WIDTH = 1.dp
 private val DOT_SIZE = 6.dp
 private const val ME_MAX_FRACTION = 0.80f
 private const val AI_MAX_FRACTION = 0.82f
+// 대기(「입력 중」) 말풍선은 목업 `screen-chat-text.html` 의 `max-w-[78%]` 를 따른다
+// (답 말풍선은 `max-w-[82%]`).
+private const val AI_PENDING_MAX_FRACTION = 0.78f
 private const val COMPOSER_MAX_LINES = 6
 private const val AVATAR_FILL_OPACITY = 0.15f
 private const val MUTED_OPACITY = 0.55f
@@ -620,7 +623,7 @@ internal fun Messages(
             }
             state.pending?.let { pending ->
                 item(key = "pending") {
-                    AiBubble(pending.content, pending = true, Modifier.widthIn(max = width * AI_MAX_FRACTION))
+                    AiBubble(pending.content, pending = true, Modifier.widthIn(max = width * AI_PENDING_MAX_FRACTION))
                 }
             }
             state.queued?.let { queued ->
