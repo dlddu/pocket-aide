@@ -315,6 +315,40 @@ class ChatTasksTest {
         assertEquals(ChatTaskStatus.RUNNING, ChatTaskStatus.normalise("running"))
         assertEquals(ChatTaskStatus.UNKNOWN, ChatTaskStatus.normalise("deploying"))
         assertEquals(ChatTaskStatus.UNKNOWN, ChatTaskStatus.normalise(""))
+        // 기다리는 것은 물어보는 것이 아니다. 아직 세션에 넘기지 않은 일(승인된
+        // 슬롯이 나기를 기다리는 것도 여기다)은 「예정」에, 이미 도는 일은
+        // 「진행」에 남는다 — 사람에게 물을 것이 없으므로 「검토」로 올라오면
+        // 안 된다.
+        assertEquals(ChatTaskStatus.PLANNED, ChatTaskStatus.normalise("planned"))
+        assertEquals(ChatTaskStatus.PLANNED, ChatTaskStatus.normaliseFilter("planned"))
+        assertEquals(ChatTaskStatus.RUNNING, ChatTaskStatus.normaliseFilter("running"))
+    }
+
+    /**
+     * 기다리는 줄과 물어보는 줄은 화면에서 섞이지 않는다 — 「예정」·「진행」은
+     * 손댈 것으로 강조되지 않고, 검토 칩으로 좁혀도 끌려 들어오지 않는다.
+     * 승인된 슬롯 대기가 「검토」에 섞이면 사용자는 결정할 것이 없는 일을
+     * 결정하라는 줄로 읽는다.
+     */
+    @Test
+    fun waitingWorkIsNotDrawnAsSomethingToDecide() {
+        assertFalse(ChatTaskStatus.needsAttention(ChatTaskStatus.PLANNED))
+        assertFalse(ChatTaskStatus.needsAttention(ChatTaskStatus.RUNNING))
+        assertTrue(ChatTaskStatus.needsAttention(ChatTaskStatus.REVIEW))
+
+        val ledger = listOf(
+            ChatTask(id = "t-slot", status = ChatTaskStatus.normalise("planned")),
+            ChatTask(id = "t-run", status = ChatTaskStatus.normalise("running")),
+            ChatTask(id = "t-ask", status = ChatTaskStatus.normalise("blocked")),
+        )
+        assertEquals(
+            listOf("t-ask"),
+            ChatTaskFilter(ChatTaskStatus.REVIEW).select(ledger).map { it.id },
+        )
+        assertEquals(
+            listOf("t-slot"),
+            ChatTaskFilter(ChatTaskStatus.PLANNED).select(ledger).map { it.id },
+        )
     }
 
     /**

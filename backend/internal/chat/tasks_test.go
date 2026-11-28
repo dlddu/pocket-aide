@@ -688,6 +688,14 @@ func TestTasks_OnlyBlockedFolds(t *testing.T) {
 		row("t-pad", "  BLOCKED  "),
 		row("t-future", "awaiting_something"),
 		row("t-empty", ""),
+		// Work that is not anybody's decision. A task written down and not yet
+		// handed to a session waits under planned — including one waiting for an
+		// approved slot to come free, which nobody is being asked about — and
+		// work already under way, retries included, stays running. Neither is a
+		// question for a person, so neither may arrive under the status that
+		// means there is one.
+		row("t-waiting-for-a-slot", chat.TaskStatusPlanned),
+		row("t-under-way", chat.TaskStatusRunning),
 	}
 
 	list, err := engine.Tasks(context.Background(), 1)
@@ -702,7 +710,18 @@ func TestTasks_OnlyBlockedFolds(t *testing.T) {
 			t.Fatalf("%s status = %q, want %q — an unknown status is not a decision", id, got, chat.TaskStatusUnknown)
 		}
 	}
-	if list.Counts[chat.TaskStatusReview] != 1 || list.Counts[chat.TaskStatusUnknown] != 2 {
+	// The fold is one value wide in the other direction too: nothing but the
+	// records' second name for a judgment may land on the judgment status.
+	for id, want := range map[string]string{
+		"t-waiting-for-a-slot": chat.TaskStatusPlanned,
+		"t-under-way":          chat.TaskStatusRunning,
+	} {
+		if got := taskByID(t, list, id).Status; got != want {
+			t.Fatalf("%s status = %q, want %q — waiting is not a decision to make", id, got, want)
+		}
+	}
+	if list.Counts[chat.TaskStatusReview] != 1 || list.Counts[chat.TaskStatusUnknown] != 2 ||
+		list.Counts[chat.TaskStatusPlanned] != 1 || list.Counts[chat.TaskStatusRunning] != 1 {
 		t.Fatalf("counts = %v", list.Counts)
 	}
 }
