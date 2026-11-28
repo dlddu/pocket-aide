@@ -25,14 +25,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -243,14 +249,68 @@ private fun DetailHeader(task: ChatTask, onBack: () -> Unit) {
         }
         // The id is what the follow-up names, so it is on screen rather than
         // hidden inside the message.
-        Text(
-            "작업 ID ${task.id}",
-            style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
-            color = ink.copy(alpha = MUTED_OPACITY),
-            modifier = Modifier.testTag("chat.tasks.detail.id"),
-        )
+        //
+        // The copy sits on this row rather than beside the title: the title row
+        // already carries the status, and a title is allowed to wrap over as
+        // many lines as it needs — a button in that row would be pushed around
+        // by the very text it copies.
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "작업 ID ${task.id}",
+                style = DesignTokens.Typography.style(DesignTokens.Typography.caption2xs),
+                color = ink.copy(alpha = MUTED_OPACITY),
+                modifier = Modifier.weight(1f).testTag("chat.tasks.detail.id"),
+            )
+            CopyTitle(task)
+        }
     }
     Box(Modifier.fillMaxWidth().height(DesignTokens.Split.rule).background(DesignTokens.Colors.rule(DETAIL_AREA)))
+}
+
+/**
+ * The title, into the system clipboard.
+ *
+ * What goes is [ChatTask.title] as the task row holds it, never the text as it
+ * was laid out: the same title is drawn in a narrow pane and in the list beside
+ * it, where it wraps or is cut to fit, and copying what is visible would hand
+ * somebody a shortened title while telling them they have the whole one.
+ *
+ * A task whose title was never written has no button. The id stands in the
+ * title's place on screen, but it is a stand-in for reading, not a title — a
+ * 「제목 복사」 that yielded the id would pass off something unrecorded as
+ * recorded, and the id is already on this very row under its own name.
+ *
+ * The label becomes 「복사됨」 once tapped, as the approval key sheet's does:
+ * nothing else on screen moves when a copy succeeds, so the one word that
+ * changes is the only place the tap is acknowledged. Moving to another task —
+ * or this title changing under the pane — makes that word untrue, so it is
+ * remembered against both and goes back on its own.
+ */
+@Composable
+private fun CopyTitle(task: ChatTask) {
+    if (task.title.isBlank()) return
+    val clipboard = LocalClipboardManager.current
+    var copied by remember(task.id, task.title) { mutableStateOf(false) }
+    val accent = DesignTokens.Colors.accent(DETAIL_AREA)
+    val shape = RoundedCornerShape(DesignTokens.Radius.chip)
+    Text(
+        if (copied) "복사됨" else "제목 복사",
+        style = DesignTokens.Typography.style(DesignTokens.Typography.captionSm),
+        color = accent,
+        modifier = Modifier
+            .clip(shape)
+            .border(RULE, accent, shape)
+            .clickable(role = Role.Button) {
+                clipboard.setText(AnnotatedString(task.title))
+                copied = true
+            }
+            .padding(horizontal = DesignTokens.Spacing.md, vertical = DesignTokens.Spacing.xs)
+            .testTag("chat.tasks.detail.copyTitle"),
+    )
 }
 
 /** One ledger field. An unrecorded one says so — it is never left blank, and never filled in. */
