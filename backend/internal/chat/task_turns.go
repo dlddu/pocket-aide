@@ -105,7 +105,7 @@ func (e *Engine) TaskTurns(
 	if err != nil {
 		return out, err
 	}
-	if conv.platformSessionID == "" {
+	if conv.PlatformSessionID == "" {
 		return out, ErrNoConversation
 	}
 	query := url.Values{}
@@ -115,7 +115,7 @@ func (e *Engine) TaskTurns(
 	if limit > 0 {
 		query.Set("limit", strconv.Itoa(limit))
 	}
-	path := "/sessions/" + url.PathEscape(conv.platformSessionID) +
+	path := "/sessions/" + url.PathEscape(conv.PlatformSessionID) +
 		"/work/tasks/" + url.PathEscape(taskID) + "/turns"
 	if len(query) > 0 {
 		path += "?" + query.Encode()

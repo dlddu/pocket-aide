@@ -111,7 +111,7 @@ func (e *Engine) CreateTaskRequest(
 	if err != nil {
 		return out, err
 	}
-	if conv.platformSessionID == "" {
+	if conv.PlatformSessionID == "" {
 		// No session has answered this conversation yet, so there are no work
 		// records and no task to leave a request on.
 		return out, ErrNoConversation
@@ -128,7 +128,7 @@ func (e *Engine) CreateTaskRequest(
 	if err != nil {
 		return out, err
 	}
-	path := "/sessions/" + url.PathEscape(conv.platformSessionID) +
+	path := "/sessions/" + url.PathEscape(conv.PlatformSessionID) +
 		"/work/tasks/" + url.PathEscape(taskID) + "/requests"
 	status, raw, err := e.platform.Do(ctx, http.MethodPost, path, payload)
 	if err != nil {

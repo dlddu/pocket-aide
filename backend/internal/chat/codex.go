@@ -97,9 +97,15 @@ type Platform interface {
 }
 
 // Pending is a reply still being written.
+//
+// quiet marks a hold that is not a reply at all — an action that needs the
+// session to itself for a moment (ArchiveSession). Pending leaves those out,
+// because an app that drew one would show a reply being written where none is.
 type Pending struct {
 	Content   string `json:"content"`
 	StartedAt int64  `json:"started_at"`
+
+	quiet bool
 }
 
 // PluginRefresh is session-platform's answer to a plugin refresh.
@@ -168,20 +174,27 @@ func turnContext(ctx context.Context) context.Context {
 func (e *Engine) Pending(userID int64) *Pending {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	if p, ok := e.turns[userID]; ok {
+	if p, ok := e.turns[userID]; ok && !p.quiet {
 		copied := *p
 		return &copied
 	}
 	return nil
 }
 
-func (e *Engine) claim(userID int64) bool {
+func (e *Engine) claim(userID int64) bool { return e.hold(userID, false) }
+
+// claimQuiet takes the same one-at-a-time hold as claim for something that is
+// not a reply, so no turn can start under it and the apps are not told a reply
+// is being written.
+func (e *Engine) claimQuiet(userID int64) bool { return e.hold(userID, true) }
+
+func (e *Engine) hold(userID int64, quiet bool) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if _, busy := e.turns[userID]; busy {
 		return false
 	}
-	e.turns[userID] = &Pending{StartedAt: e.now().Unix()}
+	e.turns[userID] = &Pending{StartedAt: e.now().Unix(), quiet: quiet}
 	return true
 }
 
@@ -227,7 +240,7 @@ func (e *Engine) Send(ctx context.Context, userID int64, content string) (Messag
 	if err != nil {
 		return Message{}, err
 	}
-	sessionID, offset := conv.platformSessionID, conv.transcriptOffset
+	sessionID, offset := conv.PlatformSessionID, conv.transcriptOffset
 	if sessionID != "" {
 		// A turn this server lost track of (a restart mid-reply) is finished
 		// first, so the new prompt's reply is never attributed to it.
@@ -356,8 +369,8 @@ func (e *Engine) Queue(ctx context.Context, userID int64, content string) (Messa
 		return Message{}, nil, cErr
 	}
 	// The reply in progress may take the message and change course with it.
-	if conv.platformSessionID != "" {
-		applied, sErr := e.steer(ctx, conv.platformSessionID, content)
+	if conv.PlatformSessionID != "" {
+		applied, sErr := e.steer(ctx, conv.PlatformSessionID, content)
 		if sErr != nil {
 			e.logger.Warn("chat: mid-turn delivery failed; queueing instead", "user", userID, "err", sErr)
 		}
@@ -490,7 +503,7 @@ func (e *Engine) drainQueued(ctx context.Context, userID, convID int64) {
 		e.keepQueued(ctx, userID, convID, queued)
 		return
 	}
-	sessionID, offset := conv.platformSessionID, conv.transcriptOffset
+	sessionID, offset := conv.PlatformSessionID, conv.transcriptOffset
 	if sessionID == "" {
 		if sessionID, offset, err = e.openSession(ctx, userID, convID); err != nil {
 			e.logger.Error("chat: dequeue open session", "user", userID, "err", err)
@@ -716,7 +729,7 @@ func (e *Engine) RefreshPlugins(ctx context.Context, userID int64) (PluginRefres
 	if err != nil {
 		return PluginRefresh{}, err
 	}
-	if conv.platformSessionID == "" {
+	if conv.PlatformSessionID == "" {
 		return PluginRefresh{}, ErrNoConversation
 	}
 	if !e.claim(userID) {
@@ -724,7 +737,7 @@ func (e *Engine) RefreshPlugins(ctx context.Context, userID int64) (PluginRefres
 	}
 	defer e.release(userID)
 	status, raw, err := e.platform.Do(ctx, http.MethodPost,
-		"/sessions/"+url.PathEscape(conv.platformSessionID)+"/plugins/refresh", nil)
+		"/sessions/"+url.PathEscape(conv.PlatformSessionID)+"/plugins/refresh", nil)
 	if err != nil {
 		return PluginRefresh{}, err
 	}

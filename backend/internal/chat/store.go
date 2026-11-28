@@ -25,14 +25,21 @@ const titleRunes = 40
 var ErrNotFound = errors.New("chat session not found")
 
 // Session is one row of chat_sessions.
+//
+// PlatformSessionID is the codex session answering this conversation, and the
+// apps are told which one it is so an action on it can name the session it was
+// shown. Empty until the first message opens one. The transcript offset stays
+// unexported: it is this server's own cursor into the platform transcript and
+// means nothing to a screen.
 type Session struct {
 	ID        int64  `json:"id"`
 	Title     string `json:"title"`
 	CreatedAt int64  `json:"created_at"`
 	UpdatedAt int64  `json:"updated_at"`
 
-	platformSessionID string
-	transcriptOffset  int64
+	PlatformSessionID string `json:"session_id"`
+
+	transcriptOffset int64
 }
 
 // Message is one row of chat_messages.
@@ -63,7 +70,7 @@ const sessionColumns = `id, title, created_at, updated_at, platform_session_id, 
 
 func scanSession(row interface{ Scan(...any) error }) (Session, error) {
 	var out Session
-	err := row.Scan(&out.ID, &out.Title, &out.CreatedAt, &out.UpdatedAt, &out.platformSessionID, &out.transcriptOffset)
+	err := row.Scan(&out.ID, &out.Title, &out.CreatedAt, &out.UpdatedAt, &out.PlatformSessionID, &out.transcriptOffset)
 	return out, err
 }
 

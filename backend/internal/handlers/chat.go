@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +15,10 @@ import (
 )
 
 const maxChatMessageBytes = 16 * 1024
+
+// chatArchiveBodyLimit bounds the archive request's body. It carries one
+// session id, so anything larger is not a body this route has to read.
+const chatArchiveBodyLimit = 4 << 10
 
 // GetChat handles GET /api/chat: the user's one conversation, its messages,
 // and the reply still being written, if any — the apps poll this while a
@@ -203,6 +208,85 @@ func RefreshChatPlugins(engine *chat.Engine) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusOK, result)
+	}
+}
+
+// chatArchivePayload names the session the person confirmed. There is no user
+// field: the server derives whose conversation it is from the signed in user,
+// and the session from that conversation's own row.
+type chatArchivePayload struct {
+	SessionID string `json:"session_id"`
+}
+
+// ArchiveChatSession handles POST /api/chat/archive: hands back the
+// environment of the codex session answering the caller's own conversation and
+// has the platform keep its work (PRD-1 AC4).
+//
+// The chat history is not touched — it is this server's, not the session's —
+// and the conversation keeps pointing at the same session, so the next message
+// restores it and carries on. The body names the session so an archive cannot
+// land on one that took over between the confirmation and the tap; that
+// refusal is its own code, told apart from the others the app explains
+// differently: no session yet, a reply in progress, a message already waiting,
+// a session already gone, and archiving turned off on the platform — which is
+// not a failure and loses nothing.
+func ArchiveChatSession(engine *chat.Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, ok := auth.FromContext(r.Context())
+		if !ok {
+			http.Error(w, "no user in context", http.StatusInternalServerError)
+			return
+		}
+		var body chatArchivePayload
+		if err := json.NewDecoder(io.LimitReader(r.Body, chatArchiveBodyLimit)).Decode(&body); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{
+				"error": "body must be {session_id}", "code": "chat_archive_session_unnamed",
+			})
+			return
+		}
+		result, err := engine.ArchiveSession(r.Context(), u.ID, body.SessionID)
+		if err != nil {
+			writeChatArchiveError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	}
+}
+
+func writeChatArchiveError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, chat.ErrArchiveSessionUnnamed):
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(), "code": "chat_archive_session_unnamed",
+		})
+	case errors.Is(err, chat.ErrNoConversation):
+		writeJSON(w, http.StatusConflict, map[string]string{
+			"error": "send a message first", "code": "chat_archive_no_session",
+		})
+	case errors.Is(err, chat.ErrArchiveSessionChanged):
+		writeJSON(w, http.StatusConflict, map[string]string{
+			"error": err.Error(), "code": "chat_archive_session_changed",
+		})
+	case errors.Is(err, chat.ErrArchiveQueued):
+		writeJSON(w, http.StatusConflict, map[string]string{
+			"error": err.Error(), "code": "chat_archive_queued",
+		})
+	case errors.Is(err, chat.ErrBusy):
+		writeJSON(w, http.StatusConflict, map[string]string{
+			"error": err.Error(), "code": "chat_archive_busy",
+		})
+	case errors.Is(err, chat.ErrArchiveSessionGone):
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": err.Error(), "code": "chat_archive_session_gone",
+		})
+	case errors.Is(err, chat.ErrArchiveDisabled):
+		// Its own 503 code, so the app reads it as "this environment does not
+		// archive" and not as the platform being out of login slots.
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+			"error": err.Error(), "code": "chat_archive_disabled",
+		})
+	default:
+		writeChatError(w, err)
 	}
 }
 
