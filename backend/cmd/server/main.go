@@ -212,6 +212,7 @@ func main() {
 		p.Delete("/api/chat/queue", handlers.CancelQueuedChatMessage(chatEngine))
 		p.Post("/api/chat/tasks/{taskID}/requests", handlers.PostChatTaskRequest(chatEngine))
 		p.Get("/api/chat/tasks/{taskID}/turns", handlers.GetChatTaskTurns(chatEngine))
+		p.Get("/api/chat/tasks/{taskID}/materials", handlers.GetChatTaskMaterials(chatEngine, historyStore))
 		p.Post("/api/chat/refresh-plugins", handlers.RefreshChatPlugins(chatEngine))
 		p.Get("/api/sessions/config", handlers.SessionConfig(sessionsPlatform))
 		p.Get("/api/sessions", handlers.ListSessions(sessionsPlatform))
