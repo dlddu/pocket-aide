@@ -4,6 +4,7 @@ import com.dlddu.pocketaide.api.ApiClient
 import com.dlddu.pocketaide.auth.InMemoryTokenStore
 import com.dlddu.pocketaide.auth.TokenBundle
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher
@@ -550,6 +551,194 @@ class ChatViewModelTest {
     fun refreshNoticeWording() {
         assertEquals("스킬이 이미 최신이에요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "ready")))
         assertEquals("이 대화에는 새로 받을 스킬이 없어요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "unconfigured")))
+    }
+
+    /**
+     * Holds the send's POST until it is let go, answering every GET at once.
+     *
+     * This is what makes the race deterministic instead of a matter of timing:
+     * the POST is parked on the server's own thread, the poll runs and comes
+     * back while it is parked, and only then is the POST answered. No sleeps,
+     * no ordering by luck.
+     */
+    private class HeldSend(private val postBody: String, private val getBodies: List<String>) : Dispatcher() {
+        val postArrived = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        private val gets = AtomicInteger(0)
+        val getPaths = CopyOnWriteArrayList<String>()
+
+        override fun dispatch(request: RecordedRequest): MockResponse {
+            if (request.method == "POST") {
+                postArrived.countDown()
+                release.await(5, TimeUnit.SECONDS)
+                return MockResponse().setResponseCode(202).setBody(postBody)
+            }
+            getPaths += request.path ?: ""
+            return MockResponse().setBody(getBodies[minOf(gets.getAndIncrement(), getBodies.lastIndex)])
+        }
+    }
+
+    /**
+     * Runs [block] while the send's POST is parked, then releases it and waits
+     * for the send to finish. [block] is where the poll goes.
+     */
+    private suspend fun ChatViewModel.sendingWhile(
+        held: HeldSend,
+        content: String,
+        block: suspend () -> Unit,
+    ) = coroutineScope {
+        val sending = launch(start = CoroutineStart.UNDISPATCHED) { performSend(content) }
+        assertTrue("보내기의 POST 가 서버에 닿지 않았다", held.postArrived.await(5, TimeUnit.SECONDS))
+        block()
+        held.release.countDown()
+        sending.join()
+    }
+
+    // PRD-AI채팅.AC1·완료 기준 5: the server stores the sent message before it
+    // answers the send, so a poll can overtake that answer and come back with
+    // the message already in it — and with the reply to it, which has a larger
+    // id. The late answer must then add nothing: the message once, in id order,
+    // the reply still after it, and no 「입력 중」 bubble put back under an
+    // answer that has already arrived.
+    @Test
+    fun aLateSendAnswerDoesNotDuplicateReorderOrUndoTheFinishedReply() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "먼저"))))
+        vm.load()
+        server.takeRequest()
+
+        // The poll, while the POST is parked, brings back the sent message (2)
+        // and the finished reply to it (3) — with no reply in progress.
+        val held = HeldSend(
+            postBody = """{"message":${message(2, "user", "보낸 것")}}""",
+            getBodies = listOf(
+                chatJson(message(2, "user", "보낸 것") + "," + message(3, "assistant", "답")),
+            ),
+        )
+        server.dispatcher = held
+
+        vm.sendingWhile(held, "보낸 것") {
+            vm.load()
+            assertEquals(listOf(1L, 2L, 3L), vm.state.value.messages.map { it.id })
+            assertNull("폴링이 끝난 답을 들고 왔는데 진행 중으로 보인다", vm.state.value.pending)
+        }
+
+        // The poll in the middle of the race is still the incremental read —
+        // the race is not fixed by going back to reading the conversation whole
+        // (PRD-AI채팅.AC1 2026-11-27·11-28 개정).
+        assertEquals(listOf("/api/chat?after=1"), held.getPaths.toList())
+        val state = vm.state.value
+        // 진행 상태를 먼저 본다 — 목록과 따로 깨질 수 있는 사실이어서, 한쪽의
+        // 실패가 다른 쪽을 가리지 않게 한다.
+        assertNull("늦은 보내기 응답이 끝난 답 위에 「입력 중」을 다시 세웠다", state.pending)
+        assertEquals("보낸 메시지가 한 번, id 오름차순이어야 한다", listOf(1L, 2L, 3L), state.messages.map { it.id })
+        assertEquals(1, state.messages.count { it.id == 2L })
+        assertEquals("답이 그대로 남아야 한다", "답", state.messages.last().content)
+        assertFalse(state.isSending)
+        assertNull(state.error)
+    }
+
+    // The same race one step earlier: the poll brings back only the sent
+    // message, with no answer yet. Then the send's answer is still the only
+    // word that an answer is coming, so the 「입력 중」 bubble stays — the
+    // existing contract, unchanged.
+    @Test
+    fun aLateSendAnswerStillShowsTheReplyComingWhenNothingNewerWasRead() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "먼저"))))
+        vm.load()
+        server.takeRequest()
+
+        val held = HeldSend(
+            postBody = """{"message":${message(2, "user", "보낸 것")}}""",
+            getBodies = listOf(chatJson(message(2, "user", "보낸 것"))),
+        )
+        server.dispatcher = held
+
+        vm.sendingWhile(held, "보낸 것") { vm.load() }
+
+        val state = vm.state.value
+        assertEquals(listOf(1L, 2L), state.messages.map { it.id })
+        assertTrue("아직 아무 답도 읽지 않았는데 「입력 중」이 사라졌다", state.isReplying)
+    }
+
+    // A conversation replaced under a send: the message that comes back belongs
+    // to the conversation that has left, so it is not shown under the new one.
+    @Test
+    fun aLateSendAnswerFromAConversationTheScreenHasLeftIsDropped() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "옛 대화"))))
+        vm.load()
+        server.takeRequest()
+
+        // Both GETs answer with another conversation, so load() starts its
+        // newest page over on that one.
+        val other = """{"conversation":{"id":8,"title":"새","created_at":3,"updated_at":3},"messages":[${message(5, "user", "새 대화")}],"pending":null}"""
+        val held = HeldSend(
+            postBody = """{"message":${message(2, "user", "옛 대화에 보낸 것")}}""",
+            getBodies = listOf(other, other),
+        )
+        server.dispatcher = held
+
+        vm.sendingWhile(held, "옛 대화에 보낸 것") { vm.load() }
+
+        val state = vm.state.value
+        assertEquals(8L, state.conversation?.id)
+        assertEquals("옛 대화의 보낸 메시지가 새 대화에 섞였다", listOf(5L), state.messages.map { it.id })
+        assertNull(state.pending)
+    }
+
+    // A message held for after the reply, answered late: by the time the answer
+    // lands the poll has read past the turn that was in progress, so the server
+    // has already said whether anything is still waiting. The late answer must
+    // not put a waiting bubble back under the message's own sent bubble.
+    @Test
+    fun aLateQueuedAnswerDoesNotPutBackAMessageTheServerHasSent() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "먼저"), """{"content":"쓰는 중","started_at":1}""")))
+        vm.load()
+        server.takeRequest()
+        assertTrue(vm.state.value.isReplying)
+
+        // While the POST is parked the turn ends, the waiting message goes out
+        // and the poll brings both back with nothing waiting any more.
+        val held = HeldSend(
+            postBody = """{"queued":{"id":"q1","content":"대기한 것","queued_at":2}}""",
+            getBodies = listOf(
+                chatJson(message(2, "assistant", "답") + "," + message(3, "user", "대기한 것")),
+            ),
+        )
+        server.dispatcher = held
+
+        vm.sendingWhile(held, "대기한 것") {
+            vm.load()
+            assertNull(vm.state.value.queued)
+        }
+
+        val state = vm.state.value
+        assertEquals(listOf(1L, 2L, 3L), state.messages.map { it.id })
+        assertNull("서버가 이미 보낸 메시지를 늦은 응답이 대기로 되돌렸다", state.queued)
+        assertTrue(state.canSend)
+    }
+
+    // And with nothing read since the send, a queued answer is still the only
+    // word there is — the existing contract, unchanged.
+    @Test
+    fun aQueuedAnswerStillShowsTheWaitingMessageWhenNothingWasReadSince() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "먼저"), """{"content":"쓰는 중","started_at":1}""")))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(
+            MockResponse().setResponseCode(202)
+                .setBody("""{"queued":{"id":"q1","content":"대기한 것","queued_at":2}}"""),
+        )
+        assertTrue(vm.performSend("대기한 것"))
+        server.takeRequest()
+
+        assertEquals("대기한 것", vm.state.value.queued?.content)
+        assertFalse(vm.state.value.canSend)
     }
 
     // PRD-AI채팅.AC1 (2026-11-28 개정): entering the conversation reads one

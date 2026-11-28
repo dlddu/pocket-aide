@@ -747,13 +747,18 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             _state.update { it.copy(error = ChatError.TOO_LARGE) }
             return false
         }
+        // Which conversation this send belongs to, and how far the server had
+        // been read when it went out. Both are looked at again when the answer
+        // lands: the server stores the message *before* answering the send, so
+        // a poll in between comes back carrying this very message — and often
+        // the answer to it as well.
+        val sentTo = _state.value.conversation?.id
+        val readTo = cursor ?: 0L
         _state.update { it.copy(isSending = true, error = null, notice = null) }
         try {
             when (val outcome = api.sendChatMessage(text)) {
-                is ChatSendOutcome.Sent -> _state.update {
-                    it.copy(messages = it.messages + outcome.message, pending = it.pending ?: ChatPending())
-                }
-                is ChatSendOutcome.Queued -> _state.update { it.copy(queued = outcome.queued) }
+                is ChatSendOutcome.Sent -> applySent(outcome.message, sentTo)
+                is ChatSendOutcome.Queued -> applyQueued(outcome.queued, sentTo, readTo)
             }
             return true
         } catch (e: CancellationException) {
@@ -764,6 +769,64 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         } finally {
             _state.update { it.copy(isSending = false) }
         }
+    }
+
+    /**
+     * The message a send got back, put where it belongs on screen.
+     *
+     * Merged by id, not appended: the server stores the message before it
+     * answers the send, so a poll that overtakes the answer brings the same
+     * message back — and with it, often, the reply to it, which has a larger
+     * id. Appending then showed the message twice and out of order, the reply
+     * sitting above the question it answered.
+     */
+    private fun applySent(message: ChatMessage, sentTo: Long?) {
+        _state.update {
+            if (!stillOurs(it, sentTo)) return@update it
+            it.copy(
+                messages = it.messages.merging(listOf(message)),
+                // The «입력 중» bubble this puts up is a guess that an answer is
+                // coming, and it is only the app's to make while the server has
+                // said nothing newer than the message just sent. Once a read has
+                // got past it, what the server says about the answer — including
+                // that it is finished, so there is no reply in progress — is the
+                // word that holds, and guessing here would put the screen back to
+                // waiting for an answer that has already arrived.
+                pending = if (it.pending != null || (cursor ?: 0L) > message.id) it.pending else ChatPending(),
+            )
+        }
+    }
+
+    /**
+     * The message a send got held for after the reply in progress.
+     *
+     * [readTo] is the server-read cursor from when the send went out. A waiting
+     * message lives on the server, so only the server says whether it is still
+     * waiting — and if a read has delivered newer messages since this send,
+     * that read already carries the answer: by then the message may have been
+     * sent, which is a bubble in the list and nothing waiting. Putting this
+     * answer's queued back would show it waiting under its own sent bubble.
+     */
+    private fun applyQueued(queued: ChatQueued, sentTo: Long?, readTo: Long) {
+        _state.update {
+            when {
+                !stillOurs(it, sentTo) -> it
+                (cursor ?: 0L) > readTo -> it
+                else -> it.copy(queued = queued)
+            }
+        }
+    }
+
+    /**
+     * Whether an answer that was in the air is still this screen's to apply.
+     *
+     * The conversation can be replaced under a send — load() starts the newest
+     * page over when a read names a different one — and that send's message
+     * belongs to the conversation that has left, not to the one now on screen.
+     */
+    private fun stillOurs(state: ChatUiState, sentTo: Long?): Boolean {
+        val now = state.conversation?.id
+        return sentTo == null || now == null || now == sentTo
     }
 
     /** A 404 means the queued message was already dispatched just as the

@@ -236,6 +236,13 @@ final class ChatViewModel: ObservableObject {
             error = .tooLarge
             return false
         }
+        // Which conversation this send belongs to, and how far the server had
+        // been read when it went out. Both are looked at again when the answer
+        // lands: the server stores the message *before* answering the send, so
+        // a poll in between comes back carrying this very message — and often
+        // the answer to it as well.
+        let sentTo = conversation?.id
+        let readTo = cursor ?? 0
         isSending = true
         error = nil
         notice = nil
@@ -243,16 +250,49 @@ final class ChatViewModel: ObservableObject {
         do {
             switch try await api.sendChatMessage(text) {
             case .sent(let sent):
-                messages.append(sent)
-                if pending == nil { pending = ChatPending() }
+                guard stillOurs(sentTo) else { return true }
+                // Merged by id, not appended: a poll that overtakes the answer
+                // brings the same message back — and with it, often, the reply
+                // to it, which has a larger id. Appending then showed the
+                // message twice and out of order, the reply sitting above the
+                // question it answered.
+                messages = messages.merging([sent])
+                // The 「입력 중」 bubble this puts up is a guess that an answer
+                // is coming, and it is only the app's to make while the server
+                // has said nothing newer than the message just sent. Once a
+                // read has got past it, what the server says about the answer —
+                // including that it is finished, so there is no reply in
+                // progress — is the word that holds.
+                if pending == nil, (cursor ?? 0) <= sent.id {
+                    pending = ChatPending()
+                }
             case .queued(let held):
-                queued = held
+                guard stillOurs(sentTo) else { return true }
+                // A waiting message lives on the server, so only the server
+                // says whether it is still waiting. If a read has delivered
+                // newer messages since this send, that read already carries the
+                // answer: by then the message may have been sent, which is a
+                // bubble in the list and nothing waiting. Putting this answer's
+                // queued back would show it waiting under its own sent bubble.
+                if (cursor ?? 0) <= readTo {
+                    queued = held
+                }
             }
             return true
         } catch {
             self.error = ChatError(error)
             return false
         }
+    }
+
+    /// Whether an answer that was in the air is still this screen's to apply.
+    ///
+    /// The conversation can be replaced under a send — load() starts the newest
+    /// page over when a read names a different one — and that send's message
+    /// belongs to the conversation that has left, not to the one now on screen.
+    private func stillOurs(_ sentTo: Int64?) -> Bool {
+        guard let sentTo, let now = conversation?.id else { return true }
+        return now == sentTo
     }
 
     // Reads right away instead of waiting for the next poll tick, and reads the
