@@ -312,7 +312,9 @@ internal fun ChatPanes(
     onRefresh: () -> Unit,
     onDismissNotice: () -> Unit,
     onCancelQueued: () -> Unit,
-    onLoadOlder: () -> Unit,
+    // Defaulted like Messages' own callbacks, so a test about the task panel
+    // does not have to say anything about reading the conversation's past.
+    onLoadOlder: () -> Unit = {},
     listState: androidx.compose.foundation.lazy.LazyListState,
     panelOpen: Boolean,
     onTogglePanel: () -> Unit,

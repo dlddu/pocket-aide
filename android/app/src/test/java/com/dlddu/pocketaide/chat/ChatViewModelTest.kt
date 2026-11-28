@@ -647,7 +647,7 @@ class ChatViewModelTest {
 
         server.enqueue(MockResponse().setResponseCode(503))
         assertFalse(vm.performLoadOlder())
-        server.takeRequest()
+        val failed = server.takeRequest().path
         // The failure is the read's: the conversation and the cursor are as
         // they were, so the same tap retries the same page.
         assertEquals(listOf(11L), vm.state.value.messages.map { it.id })
@@ -656,15 +656,29 @@ class ChatViewModelTest {
         assertNull(vm.state.value.error)
         assertTrue(vm.state.value.canLoadOlder)
 
-        val page = pageJson(message(9, "user", "아홉째") + "," + message(10, "assistant", "열째"), page = older(9))
-        server.enqueue(MockResponse().setBody(page))
+        server.enqueue(
+            MockResponse().setBody(
+                pageJson(message(9, "user", "아홉째") + "," + message(10, "assistant", "열째"), page = older(9)),
+            ),
+        )
         assertTrue(vm.performLoadOlder())
-        server.takeRequest()
-        server.enqueue(MockResponse().setBody(page))
-        assertFalse(vm.performLoadOlder())
-
+        // The retry is the same request — the cursor did not move while the
+        // read was failing, so no message between the two can be skipped.
+        assertEquals(failed, server.takeRequest().path)
         assertEquals(listOf(9L, 10L, 11L), vm.state.value.messages.map { it.id })
         assertNull(vm.state.value.olderError)
+
+        // And a page that overlaps what is already held — the boundary message
+        // coming down twice — leaves each id once, in order.
+        server.enqueue(
+            MockResponse().setBody(
+                pageJson(message(8, "assistant", "여덟째") + "," + message(9, "user", "아홉째")),
+            ),
+        )
+        assertTrue(vm.performLoadOlder())
+        assertEquals("/api/chat/messages?before=9&limit=${ChatViewModel.CHAT_PAGE}", server.takeRequest().path)
+        assertEquals(listOf(8L, 9L, 10L, 11L), vm.state.value.messages.map { it.id })
+        assertFalse(vm.state.value.hasOlder)
     }
 
     // AC5: a reply landing while the past is being read keeps its place at the
