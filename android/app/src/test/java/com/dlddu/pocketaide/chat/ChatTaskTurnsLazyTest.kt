@@ -44,11 +44,17 @@ class ChatTaskTurnsLazyTest {
     private fun json(body: String) = MockResponse().setResponseCode(200)
         .setHeader("Content-Type", "application/json").setBody(body)
 
-    /** 한 작업의 턴 한 페이지. */
-    private fun page(taskId: String, turnId: Long, request: String, nextCursor: Long = 0) = json(
+    /** 한 작업의 턴 한 페이지. 최신 것부터 온다. */
+    private fun page(taskId: String, turnId: Long, request: String, nextCursor: Long = 0) =
+        pageOf(taskId, nextCursor, turnId to request)
+
+    /** 여러 턴이 든 한 페이지 — 준 순서 그대로(최신 것부터) 실린다. */
+    private fun pageOf(taskId: String, nextCursor: Long, vararg turns: Pair<Long, String>) = json(
         """{"task_id":"$taskId","task_version":1,"task":{"id":"$taskId"},""" +
-            """"turns":[{"id":$turnId,"request":"$request","choices":[],"artifacts":[],""" +
-            """"requested_at":"2026-11-19T00:00:00Z"}]""" +
+            turns.joinToString(",", prefix = """"turns":[""", postfix = "]") { (id, request) ->
+                """{"id":$id,"request":"$request","choices":[],"artifacts":[],""" +
+                    """"requested_at":"2026-11-19T00:00:00Z"}"""
+            } +
             (if (nextCursor > 0) ""","next_cursor":$nextCursor""" else "") +
             "}",
     )
@@ -118,7 +124,7 @@ class ChatTaskTurnsLazyTest {
 
         vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1")), more = false)
 
-        assertEquals(listOf("/api/chat/tasks/t1/turns?limit=20"), paths())
+        assertEquals(listOf("/api/chat/tasks/t1/turns?before_turn_id=0&limit=20"), paths())
         assertEquals("t1", vm.taskTurns.value.taskId)
         assertEquals(listOf(1L), vm.taskTurns.value.turns.map { it.id })
         assertTrue(vm.taskTurns.value.hasLoaded)
@@ -361,41 +367,136 @@ class ChatTaskTurnsLazyTest {
         assertEquals(1, server.requestCount)
     }
 
-    // 「이전 내용 더 보기」는 커서를 들고 같은 작업에 한 번 더 나가고, 받은
-    // 페이지는 오래된 것부터의 순서를 지켜 앞에 붙는다.
+    // 처음 펼치면 **최신 페이지**가 오고, 「이전 내용 더 보기」는 그 페이지의
+    // 가장 오래된 턴을 상한으로 들고 한 번 더 나가 **과거를 아래에** 붙인다.
     @Test
-    fun readingMoreKeepsTheOldestFirstOrder() = runTest {
+    fun theFirstPageIsTheNewestAndMoreAddsOlderBelow() = runTest {
         val vm = ChatViewModel(api())
         val row = task("t1")
-        server.enqueue(page("t1", 5, "먼저 온 말", nextCursor = 5))
+        server.enqueue(pageOf("t1", 7, 9L to "가장 최근 말", 7L to "그 앞의 말"))
         vm.performTaskTurns("t1", ChatTaskHistorySignal.of(row), more = false)
+        assertEquals(listOf(9L, 7L), vm.taskTurns.value.turns.map { it.id })
         assertTrue(vm.taskTurns.value.hasMore)
 
-        server.enqueue(page("t1", 6, "그다음 말"))
+        server.enqueue(pageOf("t1", 0, 5L to "더 앞의 말", 3L to "가장 먼저 한 말"))
         vm.performTaskTurns("t1", vm.taskTurns.value.signal, more = true)
 
-        assertEquals(listOf(5L, 6L), vm.taskTurns.value.turns.map { it.id })
+        assertEquals(listOf(9L, 7L, 5L, 3L), vm.taskTurns.value.turns.map { it.id })
         assertFalse(vm.taskTurns.value.hasMore)
         assertEquals(
-            listOf("/api/chat/tasks/t1/turns?limit=20", "/api/chat/tasks/t1/turns?after_turn_id=5&limit=20"),
+            listOf(
+                "/api/chat/tasks/t1/turns?before_turn_id=0&limit=20",
+                "/api/chat/tasks/t1/turns?before_turn_id=7&limit=20",
+            ),
             paths(),
         )
     }
 
-    // 첫 페이지를 다시 읽으면 커서도 처음으로 돌아간다 — 앞 읽기의 커서가 남아
-    // 아무도 쥐고 있지 않은 페이지의 「더 보기」를 내밀지 않는다.
+    // 페이지를 이어 붙이던 중에 새 기록이 도착해 최신 페이지를 다시 읽어도,
+    // 이미 받아 둔 과거 페이지는 사라지지 않고 같은 턴이 두 줄로 보이지도
+    // 않는다 — 그리고 그 과거로 이어 갈 커서도 그대로 남는다.
     @Test
-    fun rereadingTheFirstPageForgetsTheOldCursor() = runTest {
+    fun aNewRecordDuringPagingNeitherDuplicatesNorDropsWhatIsHeld() = runTest {
         val vm = ChatViewModel(api())
-        server.enqueue(page("t1", 5, "먼저 온 말", nextCursor = 5))
+        server.enqueue(pageOf("t1", 7, 9L to "최근 말", 7L to "그 앞의 말"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 4)), more = false)
+        server.enqueue(pageOf("t1", 3, 5L to "더 앞의 말", 3L to "그보다 앞의 말"))
+        vm.performTaskTurns("t1", vm.taskTurns.value.signal, more = true)
+        assertEquals(listOf(9L, 7L, 5L, 3L), vm.taskTurns.value.turns.map { it.id })
+
+        // 새 턴 11 이 도착했다 — 최신 페이지는 이제 11·9 다.
+        server.enqueue(pageOf("t1", 9, 11L to "방금 온 말", 9L to "최근 말"))
+        vm.openTaskTurns(task("t1", turnsTotal = 5))
+
+        assertEquals(listOf(11L, 9L, 7L, 5L, 3L), vm.taskTurns.value.turns.map { it.id })
+        assertEquals("같은 턴이 두 번 들어오지 않는다", 1, vm.taskTurns.value.turns.count { it.id == 9L })
+        assertEquals("과거로 이어 갈 자리를 잃지 않는다", 3L, vm.taskTurns.value.nextCursor)
+    }
+
+    // 같은 상한을 두 번 물어도(재시도) 같은 턴이 두 줄로 붙지 않는다.
+    @Test
+    fun retryingTheSameOlderPageAddsNothingTwice() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(pageOf("t1", 7, 9L to "최근 말", 7L to "그 앞의 말"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 4)), more = false)
+        server.enqueue(pageOf("t1", 3, 5L to "더 앞의 말", 3L to "그보다 앞의 말"))
+        vm.performTaskTurns("t1", vm.taskTurns.value.signal, more = true)
+        server.enqueue(pageOf("t1", 3, 5L to "더 앞의 말", 3L to "그보다 앞의 말"))
+        vm.performTaskTurns("t1", vm.taskTurns.value.signal, more = true)
+
+        assertEquals(listOf(9L, 7L, 5L, 3L), vm.taskTurns.value.turns.map { it.id })
+    }
+
+    // 부모는 턴을 제자리에서 채운다 — 결과·설명이 **같은 턴 ID 로** 늘어난다.
+    // 다시 읽으면 그 턴은 한 줄로 남고 값은 새로 읽은 것이 이긴다.
+    @Test
+    fun aTurnFilledInPlaceStaysOneRowWithTheNewerWords() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(pageOf("t1", 0, 9L to "요청만 있던 말"))
         vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 1)), more = false)
-        assertTrue(vm.taskTurns.value.hasMore)
+        assertEquals(listOf(9L), vm.taskTurns.value.turns.map { it.id })
 
-        server.enqueue(page("t1", 6, "새 말"))
-        vm.openTaskTurns(task("t1", turnsTotal = 2))
+        server.enqueue(pageOf("t1", 0, 9L to "이제 답까지 있는 말"))
+        vm.openTaskTurns(task("t1", turnsTotal = 1, status = ChatTaskStatus.REVIEW))
 
-        assertFalse("새 첫 페이지의 커서가 앞의 것을 물려받지 않는다", vm.taskTurns.value.hasMore)
-        assertEquals(listOf(6L), vm.taskTurns.value.turns.map { it.id })
+        assertEquals(listOf(9L), vm.taskTurns.value.turns.map { it.id })
+        assertEquals("이제 답까지 있는 말", vm.taskTurns.value.turns[0].request)
+    }
+
+    // 시각이 같아도 순서가 흔들리지 않는다. 원장의 턴 id 가 데이터베이스
+    // 전역에서 오르는 **그 자체로 안정 순번**이므로, 역순 정렬과 **페이지
+    // 경계**가 같은 키를 쓴다 — 같은 `requested_at` 을 든 턴들이 한 페이지
+    // 안에서도, 페이지를 넘어서도 id 역순 그대로 놓인다.
+    @Test
+    fun turnsSharingATimestampKeepTheLedgersOwnOrderAcrossAPageBoundary() = runTest {
+        val vm = ChatViewModel(api())
+        // 네 턴 모두 pageOf 의 같은 requested_at 을 든다.
+        server.enqueue(pageOf("t1", 7, 9L to "넷째", 7L to "셋째"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 4)), more = false)
+        server.enqueue(pageOf("t1", 0, 5L to "둘째", 3L to "첫째"))
+        vm.performTaskTurns("t1", vm.taskTurns.value.signal, more = true)
+
+        val turns = vm.taskTurns.value.turns
+        assertEquals(listOf(9L, 7L, 5L, 3L), turns.map { it.id })
+        assertEquals(
+            "같은 시각이라 시각으로는 가를 수 없다 — 그래서 id 가 순서다",
+            1,
+            turns.map { it.requestedAt }.distinct().size,
+        )
+    }
+
+    // 커서를 주지 않는 페이지는 **그 작업의 교환 전부**다(가장 오래된 것까지
+    // 닿았다는 뜻이므로). 그러면 들고 있던 것과 합치지 않고 그 페이지가
+    // 답이다 — 합치면 기록에 더는 없는 교환을 계속 보여 주게 된다.
+    @Test
+    fun aCompletePageIsTheRecordSoATurnItNoLongerListsStopsShowing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(pageOf("t1", 0, 2L to "둘째", 1L to "첫째"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 2)), more = false)
+        assertEquals(listOf(2L, 1L), vm.taskTurns.value.turns.map { it.id })
+
+        // 이제 그 작업의 교환은 2 하나뿐이라고 온다.
+        server.enqueue(pageOf("t1", 0, 2L to "둘째"))
+        vm.openTaskTurns(task("t1", turnsTotal = 1))
+
+        assertEquals("없어진 턴을 계속 들고 있지 않는다", listOf(2L), vm.taskTurns.value.turns.map { it.id })
+        assertFalse(vm.taskTurns.value.hasMore)
+    }
+
+    // 그 사이에 너무 많이 도착해 두 구간이 만나지 않으면, 구멍 난 목록을
+    // 말없이 보여 주는 대신 새 페이지에서 다시 시작한다.
+    @Test
+    fun aPageThatDoesNotMeetWhatIsHeldReplacesItRatherThanLeavingAHole() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(pageOf("t1", 7, 9L to "최근 말", 7L to "그 앞의 말"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 2)), more = false)
+
+        // 31·29 는 9 까지 내려오지 않는다 — 사이의 턴을 아무도 들고 있지 않다.
+        server.enqueue(pageOf("t1", 29, 31L to "훨씬 뒤의 말", 29L to "그 앞의 말"))
+        vm.openTaskTurns(task("t1", turnsTotal = 12))
+
+        assertEquals(listOf(31L, 29L), vm.taskTurns.value.turns.map { it.id })
+        assertEquals(29L, vm.taskTurns.value.nextCursor)
     }
 
     // 쥐고 있는지의 판정은 작업·신호·실패를 함께 본다. 아무것도 읽지 않은

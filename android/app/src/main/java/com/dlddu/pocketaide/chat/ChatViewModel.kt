@@ -99,8 +99,11 @@ data class ChatTaskTurnsUiState(
     val isEmpty: Boolean get() = hasLoaded && error == null && turns.isEmpty()
     val hasMore: Boolean get() = nextCursor > 0
 
-    /** The choices the latest turn offers, which are the only current ones. */
-    val offered: List<ChatTaskTurnChoice> get() = turns.lastOrNull()?.choices ?: emptyList()
+    /**
+     * The choices the latest turn offers, which are the only current ones. The
+     * turns are newest first, so the latest one is the first of them.
+     */
+    val offered: List<ChatTaskTurnChoice> get() = turns.firstOrNull()?.choices ?: emptyList()
 
     /**
      * Whether this already holds [taskId]'s exchanges as of [want], so opening
@@ -342,8 +345,13 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
         if (!more && current.isLoading && current.taskId == taskId && current.signal == signal) return false
         val mine = ++turnsReadSeq
         val sameTask = current.taskId == taskId
-        val after = if (more && sameTask) current.nextCursor else 0
-        val kept = if (more && sameTask) current.turns else emptyList()
+        // Paging goes backwards: the cursor is the oldest exchange on screen and
+        // the page it asks for is the ones before that. A read that is not
+        // paging has no bound, which is "from this task's latest exchange" —
+        // so the first thing a person sees is the newest page, not the oldest.
+        val before = if (more && sameTask) current.nextCursor else 0
+        val kept = if (sameTask) current.turns else emptyList()
+        val keptCursor = if (sameTask) current.nextCursor else 0
         // What is already on screen stays there until the new page replaces it.
         // A re-read happens while somebody is reading — a turn arrived on the
         // task whose section is open — and blanking a long exchange to a
@@ -355,9 +363,11 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             taskId = taskId,
             signal = signal,
             turns = shown,
-            // A first page is page one: the previous read's cursor is not this
-            // read's, and keeping it would offer "더 보기" for a page nobody has.
-            nextCursor = if (more) current.nextCursor else 0,
+            // The cursor stays with what is still on screen. A re-read of the
+            // latest page folds into those turns rather than replacing them, so
+            // the exchanges they can still page back to have not gone anywhere.
+            // Another task's cursor is not this task's.
+            nextCursor = if (sameTask) current.nextCursor else 0,
             isLoading = true,
             // A first page that never arrives leaves the pane unread rather
             // than holding an empty history it never read — unless something is
@@ -366,19 +376,23 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             error = null,
         )
         return try {
-            val page = api.chatTaskTurns(taskId, after, CHAT_TASK_TURNS_PAGE)
+            val page = api.chatTaskTurns(taskId, before, CHAT_TASK_TURNS_PAGE)
             // A page that lost its race belongs to a task the pane has left, or
             // to a pane that is closed. Showing it would put one task's
             // exchanges under another's name.
             if (mine != turnsReadSeq) return false
+            // Pages arrive newest first: a page asked for below what is on
+            // screen is appended under it, and a re-read of the latest page is
+            // folded into the top. [mergeChatTaskTurns] is what keeps a turn
+            // the parent filled in place from arriving twice, and what refuses
+            // to glue two runs that do not meet.
+            val merged = mergeChatTaskTurns(kept, keptCursor, page, more)
             _taskTurns.value = ChatTaskTurnsUiState(
                 taskId = taskId,
                 taskVersion = page.taskVersion,
                 signal = signal,
-                // Pages arrive oldest first and are appended in that order, so
-                // the pane reads top to bottom as it happened.
-                turns = kept + page.turns,
-                nextCursor = page.nextCursor,
+                turns = merged.turns,
+                nextCursor = merged.nextCursor,
                 hasLoaded = true,
             )
             true
@@ -386,10 +400,10 @@ class ChatViewModel(private val api: ApiClient) : ViewModel() {
             throw e
         } catch (e: Exception) {
             if (mine != turnsReadSeq) return false
-            // The platform's four answers stay four different things: a task
-            // this slot does not have, a session with no live pod, a
-            // deployment that keeps no work records, and anything else. None
-            // of them is "this task has no work".
+            // The platform's answers stay different things: a task this slot
+            // does not have, a session with no live pod, a deployment that
+            // keeps no work records, one that cannot read them latest-first
+            // yet, and anything else. None of them is "this task has no work".
             _taskTurns.value = _taskTurns.value.copy(
                 isLoading = false,
                 hasLoaded = true,

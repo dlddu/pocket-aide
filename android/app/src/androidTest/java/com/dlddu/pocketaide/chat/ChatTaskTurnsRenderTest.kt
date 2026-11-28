@@ -177,7 +177,7 @@ class ChatTaskTurnsRenderTest {
         startOnAPhone(
             ChatTaskTurnsUiState(
                 taskId = "t1",
-                turns = listOf(finished, asking),
+                turns = listOf(asking, finished),
                 hasLoaded = true,
             ),
         )
@@ -188,11 +188,12 @@ class ChatTaskTurnsRenderTest {
         compose.onNodeWithTag("chat.tasks.detail.turn.2.question").performScrollTo().assertIsDisplayed()
     }
 
-    // 턴이 많아도 마지막 턴까지 스크롤로 닿는다 — 긴 타임라인이 창을 넘겨도
-    // 아래쪽이 영원히 가려지지 않는다.
+    // 턴이 많아도 목록 끝까지 스크롤로 닿는다 — 긴 타임라인이 창을 넘겨도
+    // 아래쪽이 영원히 가려지지 않는다. 최신 것부터이므로 목록의 끝은 가장
+    // 오래된 턴이다.
     @Test
     fun aLongTimelineStaysReachableToItsLastTurn() {
-        val many = (1..12).map { n ->
+        val many = (12 downTo 1).map { n ->
             ChatTaskTurn(
                 id = n.toLong(),
                 request = "요청 " + n,
@@ -201,8 +202,32 @@ class ChatTaskTurnsRenderTest {
             )
         }
         startOnAPhone(ChatTaskTurnsUiState(taskId = "t1", turns = many, hasLoaded = true))
-        compose.onNodeWithTag("chat.tasks.detail.turn.12.request").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("chat.tasks.detail.turn.12.request").assertTextEquals("요청 " + 12)
+        compose.onNodeWithTag("chat.tasks.detail.turn.1.request").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("chat.tasks.detail.turn.1.request").assertTextEquals("요청 " + 1)
+    }
+
+    // 마지막 교환이 **위에** 보인다. 그리고 한 교환은 여전히 한 카드다 —
+    // 카드끼리의 순서가 뒤집혔을 뿐, 보낸 요청과 그에 대한 답이 서로 떨어져
+    // 다른 교환 사이에 끼어 들어가지 않는다.
+    @Test
+    fun theLatestExchangeIsOnTopAndEachExchangeStaysOneCard() {
+        start(
+            ChatTaskTurnsUiState(
+                taskId = "t1",
+                turns = listOf(asking, finished),
+                hasLoaded = true,
+            ),
+        )
+        val latest = topOf("chat.tasks.detail.turn.2.request")
+        val older = topOf("chat.tasks.detail.turn.1.request")
+        assertTrue("마지막 교환이 위에 있어야 한다: latest=$latest older=$older", latest < older)
+
+        // 한 교환의 보낸 요청과 그 세션의 답은 그 카드 안에서 이어지고, 최신
+        // 교환이 그 둘 사이로 끼어들지 않는다.
+        val olderQuestion = topOf("chat.tasks.detail.turn.2.question")
+        val olderResponse = topOf("chat.tasks.detail.turn.1.response")
+        assertTrue("한 교환의 요청과 답은 한 카드에 붙어 있다", older < olderResponse)
+        assertTrue("최신 교환은 그 카드 전체보다 위에 있다", olderQuestion < older)
     }
 
     // (1)(2) 각 부분이 자기 라벨 아래 구분되어 보이고, 세션의 원문과 부모의
@@ -212,7 +237,7 @@ class ChatTaskTurnsRenderTest {
         start(
             ChatTaskTurnsUiState(
                 taskId = "t1",
-                turns = listOf(finished, asking),
+                turns = listOf(asking, finished),
                 hasLoaded = true,
             ),
         )
@@ -434,7 +459,7 @@ class ChatTaskTurnsRenderTest {
         start(
             ChatTaskTurnsUiState(
                 taskId = "t-other",
-                turns = listOf(finished, asking),
+                turns = listOf(asking, finished),
                 hasLoaded = true,
             ),
         )
@@ -504,7 +529,7 @@ class ChatTaskTurnsRenderTest {
     fun aPartTheOfferingTurnDoesNotHaveIsNotFilledFromAnotherTurn() {
         start(
             // 이력을 펼쳐 둔다: 다른 턴들은 보낸 요청·설명·질문을 다 들고 있다.
-            ChatTaskTurnsUiState(taskId = "t1", turns = listOf(finished, asking), hasLoaded = true),
+            ChatTaskTurnsUiState(taskId = "t1", turns = listOf(asking, finished), hasLoaded = true),
             choices = listOf(ChatTaskChoice("둘 다", "둘 다 반영해 줘")),
             task = task.copy(
                 // 선택지를 올린 턴은 질문만 했다.

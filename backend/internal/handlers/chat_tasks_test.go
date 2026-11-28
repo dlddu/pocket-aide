@@ -3,6 +3,7 @@ package handlers_test
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -204,5 +205,101 @@ func TestGetChatTasks_IsTheCallersOwnConversation(t *testing.T) {
 	status, theirs := getTasks(t, router, 2)
 	if status != http.StatusOK || len(theirs.Tasks) != 0 || theirs.SessionID == mine.SessionID {
 		t.Fatalf("user 2 = %d %+v (user 1 session %q)", status, theirs, mine.SessionID)
+	}
+}
+
+// turnsBody is the detail pane's page as the app decodes it.
+type turnsBody struct {
+	TaskID string `json:"task_id"`
+	Turns  []struct {
+		ID int64 `json:"id"`
+	} `json:"turns"`
+	NextCursor int64  `json:"next_cursor"`
+	Order      string `json:"order"`
+	Code       string `json:"code"`
+}
+
+// The pane reads the latest exchanges first. before_turn_id — present even with
+// no value — is what says so, and it reaches the platform that way: without it
+// the slot answers the task's *oldest* turns, which is the opposite of what the
+// pane shows.
+func TestGetChatTaskTurns_ReadsTheNewestPageAndPagesBack(t *testing.T) {
+	router, platform, _ := newChatRouter(t)
+	openSession(t, router, 1)
+	platform.mu.Lock()
+	platform.work = `{"task_id":"t1","task_version":3,"task":{"id":"t1","title":"t","status":"blocked"},
+      "turns":[{"id":9},{"id":7}],"next_cursor":7,"order":"desc"}`
+	platform.workQueries = nil
+	platform.mu.Unlock()
+
+	read := func(query string) (int, turnsBody) {
+		t.Helper()
+		rec := chatDo(t, router, http.MethodGet, "/api/chat/tasks/t1/turns"+query, nil, 1)
+		var out turnsBody
+		if rec.Body.Len() > 0 {
+			_ = json.Unmarshal(rec.Body.Bytes(), &out)
+		}
+		return rec.Code, out
+	}
+
+	code, page := read("?before_turn_id=&limit=2")
+	if code != http.StatusOK || page.Order != "desc" || page.NextCursor != 7 {
+		t.Fatalf("newest page = %d %+v", code, page)
+	}
+	if len(page.Turns) != 2 || page.Turns[0].ID != 9 {
+		t.Fatalf("turns = %+v", page.Turns)
+	}
+	if code, _ = read("?before_turn_id=7&limit=2"); code != http.StatusOK {
+		t.Fatalf("paging back = %d", code)
+	}
+	platform.mu.Lock()
+	asked := append([]string{}, platform.workQueries...)
+	platform.mu.Unlock()
+	if len(asked) != 2 {
+		t.Fatalf("work queries = %v", asked)
+	}
+	// An empty value still goes out as a bound of its own: on the platform's
+	// route the parameter's presence is what picks the end.
+	if !strings.Contains(asked[0], "before_turn_id=0") || strings.Contains(asked[0], "after_turn_id") {
+		t.Fatalf("first page asked %q", asked[0])
+	}
+	if !strings.Contains(asked[1], "before_turn_id=7") {
+		t.Fatalf("second page asked %q", asked[1])
+	}
+
+	// Naming both ends is refused rather than resolved, and a bad bound is a
+	// refusal rather than a page from the wrong end.
+	for _, query := range []string{
+		"?after_turn_id=1&before_turn_id=2", "?before_turn_id=-1", "?before_turn_id=nope",
+	} {
+		if code, body := read(query); code != http.StatusBadRequest || body.Code != "task_request_invalid" {
+			t.Fatalf("%s = %d %+v", query, code, body)
+		}
+	}
+}
+
+// A slot that does not have the parameter answers the oldest turns and says
+// nothing about order. The pane must not be handed that page — it would show
+// the task's first exchange as its latest — so it is its own status and its own
+// code, distinct from "this session keeps no work records".
+func TestGetChatTaskTurns_APageFromTheWrongEndIsItsOwnAnswer(t *testing.T) {
+	router, platform, _ := newChatRouter(t)
+	openSession(t, router, 1)
+	platform.mu.Lock()
+	platform.work = `{"task_id":"t1","task_version":3,"task":{"id":"t1","title":"t","status":"blocked"},
+      "turns":[{"id":1},{"id":2}],"next_cursor":2}`
+	platform.mu.Unlock()
+
+	rec := chatDo(t, router, http.MethodGet, "/api/chat/tasks/t1/turns?before_turn_id=", nil, 1)
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("wrong-end page = %d %s", rec.Code, rec.Body)
+	}
+	var body turnsBody
+	_ = json.Unmarshal(rec.Body.Bytes(), &body)
+	if body.Code != "task_turns_order_unsupported" {
+		t.Fatalf("code = %q", body.Code)
+	}
+	if len(body.Turns) != 0 {
+		t.Fatalf("a refused page still carried turns: %+v", body.Turns)
 	}
 }

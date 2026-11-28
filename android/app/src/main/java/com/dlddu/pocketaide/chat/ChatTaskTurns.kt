@@ -102,7 +102,13 @@ data class ChatTaskTurnTask(
     @SerialName("updated_at") val updatedAt: String? = null,
 )
 
-/** One page of turns, oldest first, with the task they are about. */
+/**
+ * One page of turns, newest first, with the task they are about.
+ *
+ * [nextCursor] continues *backwards* — it is this page's oldest turn, to ask
+ * for as the next page's bound — so paging adds older exchanges below what is
+ * already on screen. Zero means this page reached the task's first exchange.
+ */
 @Serializable
 data class ChatTaskTurnPage(
     @SerialName("task_id") val taskId: String = "",
@@ -111,6 +117,71 @@ data class ChatTaskTurnPage(
     val turns: List<ChatTaskTurn> = emptyList(),
     @SerialName("next_cursor") val nextCursor: Long = 0,
 )
+
+/**
+ * What a freshly read newest-first page and what the pane already holds add up
+ * to, and where paging continues from.
+ *
+ * Re-reading the newest page is the ordinary case, not an edge: the panel's
+ * poll says a task's exchanges moved and the pane reads the latest page again
+ * while somebody is looking at it. Two things have to come out right.
+ *
+ * **No duplicates, and no stale copy.** The parent fills a turn in *place* —
+ * the result, the pull request and the explanation arrive under the **same turn
+ * id** as the request did. So a turn that is in both the page and what is held
+ * takes the page's copy: the page is the newer reading of that same exchange.
+ *
+ * **A page that offers no cursor is the whole record, so it is the answer.**
+ * A newest-first page whose cursor is zero reached the task's first exchange —
+ * there is nothing older to page back to, so those turns *are* the task's
+ * exchanges. Keeping anything held that it does not list would show an exchange
+ * the records no longer have. It replaces what is held outright.
+ *
+ * **No silent hole.** Otherwise what is held is one unbroken run of turns down
+ * from the newest one the pane has seen, and a re-read page is the newest turns
+ * there are now. If so many arrived that the page does not reach down to what is
+ * held, the two do not join, and gluing them together would show a list that
+ * skips exchanges without saying so — so there too the page replaces what is
+ * held and paging starts again from it. The pane is then short, which is honest,
+ * rather than wrong.
+ */
+data class ChatTaskTurnsMerge(val turns: List<ChatTaskTurn>, val nextCursor: Long)
+
+/**
+ * Folds a newest-first [page] into the [held] turns the pane is already showing
+ * (also newest first, with [heldCursor] the bound paging back would use next).
+ *
+ * [more] is a page asked for *below* what is held — the older exchanges — and
+ * is simply appended minus anything already there. Otherwise this is a re-read
+ * of the newest page, and the rules in [ChatTaskTurnsMerge] apply.
+ */
+fun mergeChatTaskTurns(
+    held: List<ChatTaskTurn>,
+    heldCursor: Long,
+    page: ChatTaskTurnPage,
+    more: Boolean,
+): ChatTaskTurnsMerge {
+    if (more) {
+        val have = held.mapTo(mutableSetOf()) { it.id }
+        return ChatTaskTurnsMerge(held + page.turns.filter { have.add(it.id) }, page.nextCursor)
+    }
+    // No cursor means the page reached the task's first exchange: it is the
+    // whole record, and what is held cannot hold anything outside it that is
+    // still there. Merging instead would keep a turn the records have lost.
+    if (page.nextCursor == 0L || held.isEmpty()) {
+        return ChatTaskTurnsMerge(page.turns, page.nextCursor)
+    }
+    // The page has more behind it, so it has to meet the run that is held. A
+    // page that offers a cursor and yet lists nothing is not a shape the slot
+    // produces; it is read as "nothing to fold in" rather than crashed on.
+    val oldestOnPage = page.turns.lastOrNull() ?: return ChatTaskTurnsMerge(held, heldCursor)
+    if (oldestOnPage.id > held.first().id) {
+        return ChatTaskTurnsMerge(page.turns, page.nextCursor)
+    }
+    val fresh = page.turns.associateBy { it.id }
+    val turns = page.turns + held.filter { it.id !in fresh.keys }
+    return ChatTaskTurnsMerge(turns.sortedByDescending { it.id }, heldCursor)
+}
 
 /**
  * Why a task's turns could not be read. Each is a different sentence because
@@ -126,6 +197,14 @@ enum class ChatTaskTurnsError(val message: String) {
     NOT_FOUND("이 작업이 목록에서 사라졌어요."),
     UNAVAILABLE("채팅 세션이 깨어 있지 않아 진행 내용을 읽지 못했어요."),
     UNSUPPORTED("이 대화의 세션은 작업 기록을 두지 않아요."),
+
+    /**
+     * The session's records are there, but it cannot yet serve them with the
+     * latest exchange first. Its own sentence because its own next move is:
+     * nothing is missing and nothing is broken, so trying again later works —
+     * unlike [UNSUPPORTED], which says this session keeps no work at all.
+     */
+    OUTDATED("이 대화의 세션이 아직 최신 순서로 읽지 못해요. 잠시 뒤 다시 시도해요."),
     UNREACHABLE("진행 내용을 불러오지 못했어요. 다시 시도해요."),
     ;
 
@@ -135,6 +214,7 @@ enum class ChatTaskTurnsError(val message: String) {
                 404 -> NOT_FOUND
                 409 -> UNAVAILABLE
                 501 -> UNSUPPORTED
+                502 -> OUTDATED
                 else -> UNREACHABLE
             }
             else -> UNREACHABLE
@@ -142,12 +222,18 @@ enum class ChatTaskTurnsError(val message: String) {
     }
 }
 
-/** One page of [taskId]'s turns, oldest first. */
-suspend fun ApiClient.chatTaskTurns(taskId: String, afterTurnId: Long, limit: Int): ChatTaskTurnPage {
+/**
+ * One page of [taskId]'s turns, newest first.
+ *
+ * [beforeTurnId] is the bound to page back from — zero for the latest page,
+ * which is where the pane starts. The parameter goes on the query even when it
+ * is zero: its presence is what asks for the newest-first page, and a request
+ * without it would be answered with the task's *oldest* exchanges.
+ */
+suspend fun ApiClient.chatTaskTurns(taskId: String, beforeTurnId: Long, limit: Int): ChatTaskTurnPage {
     val query = buildList {
-        if (afterTurnId > 0) add("after_turn_id=$afterTurnId")
+        add("before_turn_id=$beforeTurnId")
         if (limit > 0) add("limit=$limit")
     }.joinToString("&")
-    val path = "/api/chat/tasks/$taskId/turns" + if (query.isEmpty()) "" else "?$query"
-    return get(path, ChatTaskTurnPage.serializer())
+    return get("/api/chat/tasks/$taskId/turns?$query", ChatTaskTurnPage.serializer())
 }

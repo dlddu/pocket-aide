@@ -157,8 +157,10 @@ func GetChatTaskTurns(engine *chat.Engine) http.HandlerFunc {
 			http.Error(w, "no user in context", http.StatusInternalServerError)
 			return
 		}
-		after, limit := int64(0), 0
-		if raw := strings.TrimSpace(r.URL.Query().Get("after_turn_id")); raw != "" {
+		var cursor chat.TaskTurnCursor
+		limit := 0
+		query := r.URL.Query()
+		if raw := strings.TrimSpace(query.Get("after_turn_id")); raw != "" {
 			parsed, err := strconv.ParseInt(raw, 10, 64)
 			if err != nil || parsed < 0 {
 				writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -166,9 +168,33 @@ func GetChatTaskTurns(engine *chat.Engine) http.HandlerFunc {
 				})
 				return
 			}
-			after = parsed
+			cursor.After = parsed
 		}
-		if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+		// before_turn_id — present even with no value — is the pane's page: the
+		// turns before it, newest first, with nothing meaning "from the newest".
+		// Naming both ends is refused rather than resolved, because they are
+		// opposite ends of the record.
+		if query.Has("before_turn_id") {
+			if cursor.After != 0 {
+				writeJSON(w, http.StatusBadRequest, map[string]string{
+					"error": "after_turn_id and before_turn_id cannot be used together",
+					"code":  "task_request_invalid",
+				})
+				return
+			}
+			cursor.Newest = true
+			if raw := strings.TrimSpace(query.Get("before_turn_id")); raw != "" {
+				parsed, err := strconv.ParseInt(raw, 10, 64)
+				if err != nil || parsed < 0 {
+					writeJSON(w, http.StatusBadRequest, map[string]string{
+						"error": "before_turn_id must be a nonnegative number", "code": "task_request_invalid",
+					})
+					return
+				}
+				cursor.Before = parsed
+			}
+		}
+		if raw := strings.TrimSpace(query.Get("limit")); raw != "" {
 			parsed, err := strconv.Atoi(raw)
 			if err != nil || parsed < 1 || parsed > chat.TaskTurnPageLimitMax {
 				writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -178,7 +204,7 @@ func GetChatTaskTurns(engine *chat.Engine) http.HandlerFunc {
 			}
 			limit = parsed
 		}
-		page, err := engine.TaskTurns(r.Context(), u.ID, chi.URLParam(r, "taskID"), after, limit)
+		page, err := engine.TaskTurns(r.Context(), u.ID, chi.URLParam(r, "taskID"), cursor, limit)
 		if err != nil {
 			switch {
 			case errors.Is(err, chat.ErrTaskRequestInvalid):
@@ -189,6 +215,13 @@ func GetChatTaskTurns(engine *chat.Engine) http.HandlerFunc {
 				writeJSON(w, http.StatusConflict, map[string]string{"error": err.Error(), "code": "task_request_unavailable"})
 			case errors.Is(err, chat.ErrTaskRequestUnsupported):
 				writeJSON(w, http.StatusNotImplemented, map[string]string{"error": err.Error(), "code": "task_request_unsupported"})
+			case errors.Is(err, chat.ErrTaskTurnsOrderUnsupported):
+				// Its own status, because the pane's sentence is its own: the
+				// records are readable, just not yet from the end it needs, so
+				// trying again later is the move rather than giving up on them.
+				writeJSON(w, http.StatusBadGateway, map[string]string{
+					"error": err.Error(), "code": "task_turns_order_unsupported",
+				})
 			default:
 				writeChatError(w, err)
 			}
