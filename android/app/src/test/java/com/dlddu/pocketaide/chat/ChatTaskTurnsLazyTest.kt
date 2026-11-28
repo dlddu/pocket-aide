@@ -443,6 +443,28 @@ class ChatTaskTurnsLazyTest {
         assertEquals("이제 답까지 있는 말", vm.taskTurns.value.turns[0].request)
     }
 
+    // 시각이 같아도 순서가 흔들리지 않는다. 원장의 턴 id 가 데이터베이스
+    // 전역에서 오르는 **그 자체로 안정 순번**이므로, 역순 정렬과 **페이지
+    // 경계**가 같은 키를 쓴다 — 같은 `requested_at` 을 든 턴들이 한 페이지
+    // 안에서도, 페이지를 넘어서도 id 역순 그대로 놓인다.
+    @Test
+    fun turnsSharingATimestampKeepTheLedgersOwnOrderAcrossAPageBoundary() = runTest {
+        val vm = ChatViewModel(api())
+        // 네 턴 모두 pageOf 의 같은 requested_at 을 든다.
+        server.enqueue(pageOf("t1", 7, 9L to "넷째", 7L to "셋째"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 4)), more = false)
+        server.enqueue(pageOf("t1", 0, 5L to "둘째", 3L to "첫째"))
+        vm.performTaskTurns("t1", vm.taskTurns.value.signal, more = true)
+
+        val turns = vm.taskTurns.value.turns
+        assertEquals(listOf(9L, 7L, 5L, 3L), turns.map { it.id })
+        assertEquals(
+            "같은 시각이라 시각으로는 가를 수 없다 — 그래서 id 가 순서다",
+            1,
+            turns.map { it.requestedAt }.distinct().size,
+        )
+    }
+
     // 그 사이에 너무 많이 도착해 두 구간이 만나지 않으면, 구멍 난 목록을
     // 말없이 보여 주는 대신 새 페이지에서 다시 시작한다.
     @Test
