@@ -220,7 +220,7 @@ type chatArchivePayload struct {
 
 // ArchiveChatSession handles POST /api/chat/archive: hands back the
 // environment of the codex session answering the caller's own conversation and
-// has the platform keep its work (PRD-1 AC4).
+// has the platform keep its work (PRD-1 AC11).
 //
 // The chat history is not touched — it is this server's, not the session's —
 // and the conversation keeps pointing at the same session, so the next message

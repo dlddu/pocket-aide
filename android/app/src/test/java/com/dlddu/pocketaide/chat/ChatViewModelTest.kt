@@ -41,8 +41,14 @@ class ChatViewModelTest {
     private fun message(id: Long, role: String, content: String) =
         """{"id":$id,"role":"$role","content":"$content","created_at":1}"""
 
-    private fun chatJson(messages: String = "", pending: String = "null", queued: String = "null") =
-        """{"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2},"messages":[$messages],"pending":$pending,"queued":$queued}"""
+    private fun chatJson(
+        messages: String = "",
+        pending: String = "null",
+        queued: String = "null",
+        sessionId: String = "cx1",
+    ) =
+        """{"conversation":{"id":7,"title":"첫 질문","created_at":1,"updated_at":2,"session_id":"$sessionId"},""" +
+            """"messages":[$messages],"pending":$pending,"queued":$queued}"""
 
     @Test
     fun loadShowsTheConversation() = runTest {
@@ -534,5 +540,222 @@ class ChatViewModelTest {
     fun refreshNoticeWording() {
         assertEquals("스킬이 이미 최신이에요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "ready")))
         assertEquals("이 대화에는 새로 받을 스킬이 없어요.", ChatViewModel.refreshNotice(ChatPluginRefresh(state = "unconfigured")))
+    }
+
+    // PRD-1 AC11: 아카이브는 확인창이 지목한 세션 하나를 보내고, 성공하면 대화를
+    // 다시 읽는다 — 기록과 담당 세션은 그대로다.
+    @Test
+    fun archiveSendsTheConfirmedSessionAndKeepsTheConversation() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        server.takeRequest()
+        assertTrue(vm.state.value.canArchive)
+        assertEquals("cx1", vm.state.value.sessionId)
+
+        server.enqueue(
+            MockResponse().setBody(
+                """{"session_id":"cx1","state":"snapshot","archived":true,""" +
+                    """"checkpoint":{"createdAt":"2026-11-28T06:00:00Z","sizeBytes":2048}}""",
+            ),
+        )
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+
+        assertTrue(vm.performArchive("cx1"))
+
+        val archive = server.takeRequest()
+        assertEquals("/api/chat/archive", archive.path)
+        assertEquals("POST", archive.method)
+        assertTrue(archive.body.readUtf8().contains(""""session_id":"cx1""""))
+        // 성공 뒤 대화를 다시 읽는다.
+        assertEquals("/api/chat?after=1", server.takeRequest().path)
+
+        val state = vm.state.value
+        assertFalse(state.isArchiving)
+        assertNull(state.archiveError)
+        assertNotNull(state.notice)
+        assertTrue(state.notice!!.contains("아카이브됐어요"))
+        // 반납된 것은 환경이고 대화가 아니라는 것을 말한다.
+        assertTrue(state.notice!!.contains("복원"))
+        assertEquals(listOf("질문"), state.messages.map { it.content })
+        assertEquals("cx1", state.sessionId)
+    }
+
+    // 첫 메시지 전에는 맡은 세션이 없어 누를 수 없고, 아무것도 보내지 않는다.
+    @Test
+    fun archiveIsNotOfferedBeforeASessionAnswersTheConversation() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(sessionId = "")))
+        vm.load()
+        server.takeRequest()
+
+        assertFalse(vm.state.value.canArchive)
+        assertFalse(vm.performArchive(""))
+        // 읽기 한 번뿐 — 아카이브는 호출되지 않았다.
+        assertEquals(1, server.requestCount)
+    }
+
+    // 답이 진행 중이거나 대기 메시지가 있으면 서버도 받지 않으므로 앱도 보내지
+    // 않는다 — 보내기가 방금 아카이브한 세션을 복원해 버린다.
+    @Test
+    fun archiveIsHeldWhileAReplyIsInProgressOrAMessageWaits() = runTest {
+        val replying = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(pending = """{"content":"쓰는 중","started_at":1}""")))
+        replying.load()
+        server.takeRequest()
+        assertFalse(replying.state.value.canArchive)
+        assertFalse(replying.performArchive("cx1"))
+
+        val waiting = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(queued = """{"id":"q1","content":"대기","queued_at":1}""")))
+        waiting.load()
+        server.takeRequest()
+        assertFalse(waiting.state.value.canArchive)
+        assertFalse(waiting.performArchive("cx1"))
+
+        // 두 번의 읽기뿐 — 어느 쪽도 아카이브를 호출하지 않았다.
+        assertEquals(2, server.requestCount)
+    }
+
+    // 확인창을 띄운 뒤 담당이 바뀌면 서버가 거부하고, 앱은 그 거부를 따로 말한
+    // 뒤 담당 세션을 다시 읽는다.
+    @Test
+    fun archiveRefusedWhenAnotherSessionTookOverRereadsTheConversation() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(
+            MockResponse().setResponseCode(409)
+                .setBody("""{"error":"another session answers this conversation now","code":"chat_archive_session_changed"}"""),
+        )
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"), sessionId = "cx2")))
+
+        assertFalse(vm.performArchive("cx1"))
+
+        assertEquals("/api/chat/archive", server.takeRequest().path)
+        assertEquals("/api/chat?after=1", server.takeRequest().path)
+        assertEquals(ChatArchiveError.SESSION_CHANGED, vm.state.value.archiveError)
+        assertEquals("cx2", vm.state.value.sessionId)
+        assertNull(vm.state.value.notice)
+        assertEquals(listOf("질문"), vm.state.value.messages.map { it.content })
+
+        vm.dismissArchiveError()
+        assertNull(vm.state.value.archiveError)
+    }
+
+    // 거부마다 다른 말을 한다. 아카이브 꺼짐은 실패가 아니고(PRD-11 AC8), 로그인
+    // 슬롯 소진은 그와 다른 503 이다.
+    @Test
+    fun archiveRefusalsAreToldApart() = runTest {
+        data class Case(val status: Int, val body: String, val want: ChatArchiveError)
+        val cases = listOf(
+            Case(409, """{"code":"chat_archive_no_session"}""", ChatArchiveError.NO_SESSION),
+            Case(409, """{"code":"chat_archive_queued"}""", ChatArchiveError.QUEUED),
+            Case(409, """{"code":"chat_archive_busy"}""", ChatArchiveError.BUSY),
+            Case(503, """{"code":"chat_archive_disabled"}""", ChatArchiveError.DISABLED),
+            Case(503, """{"error":"auth pool exhausted","code":"auth_pool_exhausted"}""", ChatArchiveError.SLOTS_BUSY),
+            Case(500, """{"error":"nope"}""", ChatArchiveError.FAILED),
+        )
+        for (case in cases) {
+            val vm = ChatViewModel(api())
+            server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+            vm.load()
+            server.takeRequest()
+            server.enqueue(MockResponse().setResponseCode(case.status).setBody(case.body))
+
+            assertFalse(vm.performArchive("cx1"))
+            server.takeRequest()
+
+            assertEquals("${case.status} ${case.body}", case.want, vm.state.value.archiveError)
+            assertNull(vm.state.value.notice)
+        }
+        // 꺼짐 안내는 손실을 시사하지 않는다.
+        assertTrue(ChatArchiveError.DISABLED.message.contains("사라지지 않아요"))
+    }
+
+    // 세션이 이미 사라진 경우: 아카이브된 것은 없고 잃은 것도 없다 — 이력은
+    // 남고, 담당 세션을 다시 읽는다.
+    @Test
+    fun archiveOfAGoneSessionKeepsTheHistoryAndRereads() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(MockResponse().setResponseCode(404).setBody("""{"code":"chat_archive_session_gone"}"""))
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"), sessionId = "")))
+
+        assertFalse(vm.performArchive("cx1"))
+        server.takeRequest()
+        server.takeRequest()
+
+        assertEquals(ChatArchiveError.GONE, vm.state.value.archiveError)
+        assertEquals(listOf("질문"), vm.state.value.messages.map { it.content })
+        // 맡은 세션이 없어졌으니 버튼도 다시 꺼진다 — 다음 메시지가 새로 연다.
+        assertFalse(vm.state.value.canArchive)
+    }
+
+    // 플랫폼이 요청만 받고 레코드가 아직 아카이브로 읽히지 않을 때는 접수까지만
+    // 말한다 — 환경이 이미 반납됐다고 주장하지 않는다.
+    @Test
+    fun archiveNotYetConfirmedSaysOnlyThatItWasAccepted() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        server.takeRequest()
+
+        server.enqueue(MockResponse().setBody("""{"session_id":"cx1","archived":false}"""))
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+
+        assertTrue(vm.performArchive("cx1"))
+        server.takeRequest()
+        server.takeRequest()
+
+        val notice = vm.state.value.notice
+        assertNotNull(notice)
+        assertTrue(notice!!.contains("요청했어요"))
+        assertFalse(notice.contains("아카이브됐어요"))
+        assertNull(vm.state.value.archiveError)
+    }
+
+    // 연속 탭: 하나가 도는 동안 두 번째는 아무것도 보내지 않는다.
+    @Test
+    fun archiveDoesNotRunTwiceWhileOneIsInFlight() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(MockResponse().setBody(chatJson(message(1, "user", "질문"))))
+        vm.load()
+        server.takeRequest()
+
+        val arrived = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val archives = AtomicInteger()
+        val paths = CopyOnWriteArrayList<String>()
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                paths.add(request.path ?: "")
+                if (request.path == "/api/chat/archive") {
+                    archives.incrementAndGet()
+                    arrived.countDown()
+                    release.await(5, TimeUnit.SECONDS)
+                    return MockResponse().setBody("""{"session_id":"cx1","state":"snapshot","archived":true}""")
+                }
+                return MockResponse().setBody(chatJson(message(1, "user", "질문")))
+            }
+        }
+
+        val first = launch(start = CoroutineStart.UNDISPATCHED) { vm.performArchive("cx1") }
+        assertTrue("첫 아카이브가 서버에 닿아야 한다", arrived.await(5, TimeUnit.SECONDS))
+        assertTrue(vm.state.value.isArchiving)
+
+        // 도는 중의 두 번째 탭은 요청을 만들지 않는다.
+        assertFalse(vm.performArchive("cx1"))
+
+        release.countDown()
+        first.join()
+
+        assertEquals(1, archives.get())
+        assertFalse(vm.state.value.isArchiving)
     }
 }

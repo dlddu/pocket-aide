@@ -18,6 +18,12 @@ data class ChatConversation(
     val title: String = "",
     @SerialName("created_at") val createdAt: Long = 0,
     @SerialName("updated_at") val updatedAt: Long = 0,
+    /**
+     * The codex session answering this conversation, empty until the first
+     * message opens one. The screen names it when it archives (PRD-1 AC11),
+     * so the archive cannot land on a session that took over since.
+     */
+    @SerialName("session_id") val sessionId: String = "",
 )
 
 @Serializable
@@ -73,6 +79,29 @@ data class ChatPluginRefresh(
     val changedCount: Int get() = added.size + updated.size + removed.size
 }
 
+/**
+ * What became of the session, as the server read it back from the platform
+ * (PRD-1 AC11). [archived] is false when the platform took the request without
+ * the record reading archived yet — the request was accepted, and saying the
+ * environment is already handed back would be more than we know.
+ */
+@Serializable
+data class ChatArchiveResult(
+    @SerialName("session_id") val sessionId: String = "",
+    val state: String = "",
+    val archived: Boolean = false,
+    val checkpoint: ChatArchiveCheckpoint? = null,
+)
+
+@Serializable
+data class ChatArchiveCheckpoint(
+    val createdAt: String = "",
+    val sizeBytes: Long? = null,
+)
+
+@Serializable
+internal data class ChatArchivePayload(@SerialName("session_id") val sessionId: String)
+
 @Serializable
 internal data class ChatSendPayload(val content: String)
 
@@ -103,6 +132,49 @@ enum class ChatError(val message: String) {
             is ApiException.Transport -> UNREACHABLE
             else -> FAILED
         }
+    }
+}
+
+/**
+ * Why an archive did not happen (PRD-1 AC11). The server gives each refusal
+ * its own code because each is a different thing to say — and [DISABLED] is
+ * not a failure at all: the session stays up and nothing is lost.
+ */
+enum class ChatArchiveError(val message: String) {
+    NO_SESSION("아직 이 대화를 맡은 세션이 없어요. 먼저 메시지를 한 번 보내 주세요."),
+    SESSION_CHANGED("그 사이 다른 세션이 이 대화를 맡았어요. 지금 담당 세션을 다시 읽었으니 확인하고 다시 해 주세요."),
+    QUEUED("보낼 메시지가 기다리고 있어요. 그 메시지가 나간 뒤에 다시 해 주세요."),
+    BUSY("답을 쓰는 중이에요. 답이 끝난 뒤에 다시 해 주세요."),
+    GONE("이 대화를 맡았던 세션은 이미 사라졌어요. 대화 기록은 그대로이고, 다음 메시지가 새 세션을 열어요."),
+    DISABLED("이 환경에서는 아카이브가 꺼져 있어요. 세션은 그대로 유지되고 데이터는 사라지지 않아요."),
+    SLOTS_BUSY("로그인 슬롯이 모두 사용 중이에요. 다른 세션이 끝난 뒤 다시 시도해 주세요."),
+    UNREACHABLE("세션 플랫폼에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요."),
+    FAILED("아카이브하지 못했어요."),
+    ;
+
+    /** The refusal that means the screen's idea of the session is stale, so it reads the conversation again. */
+    val rereadsConversation: Boolean get() = this == SESSION_CHANGED || this == GONE
+
+    companion object {
+        fun from(e: Exception): ChatArchiveError = when (e) {
+            is ApiException.BadStatus -> when {
+                // Read by code, not by status: two of these share 409 and two
+                // share 503, and the app says something different for each.
+                e.hasCode("chat_archive_no_session") -> NO_SESSION
+                e.hasCode("chat_archive_session_changed") -> SESSION_CHANGED
+                e.hasCode("chat_archive_queued") -> QUEUED
+                e.hasCode("chat_archive_busy") -> BUSY
+                e.hasCode("chat_archive_session_gone") -> GONE
+                e.hasCode("chat_archive_disabled") -> DISABLED
+                e.isAuthPoolExhausted() -> SLOTS_BUSY
+                e.status == 502 || e.status == 503 || e.status == 504 -> UNREACHABLE
+                else -> FAILED
+            }
+            is ApiException.Transport -> UNREACHABLE
+            else -> FAILED
+        }
+
+        private fun ApiException.BadStatus.hasCode(code: String): Boolean = body.contains("\"$code\"")
     }
 }
 
@@ -175,6 +247,20 @@ suspend fun ApiClient.sendChatMessage(content: String): ChatSendOutcome {
 suspend fun ApiClient.cancelQueuedChatMessage(id: String) {
     delete("/api/chat/queue?id=" + URLEncoder.encode(id, "UTF-8"))
 }
+
+/**
+ * Hands back the environment of [sessionId] — the session the person was
+ * shown and confirmed (PRD-1 AC11). The server refuses if that is no longer
+ * the session answering this conversation, so a confirmation the screen drew
+ * before a handover cannot archive the one that took over.
+ */
+suspend fun ApiClient.archiveChatSession(sessionId: String): ChatArchiveResult =
+    post(
+        "/api/chat/archive",
+        ChatArchivePayload(sessionId),
+        ChatArchivePayload.serializer(),
+        ChatArchiveResult.serializer(),
+    )
 
 suspend fun ApiClient.refreshChatPlugins(): ChatPluginRefresh =
     post(

@@ -12,7 +12,7 @@ import (
 	"github.com/dlddu/pocket-aide/backend/internal/sessions"
 )
 
-// Archiving the conversation's codex session on demand (PRD-1 AC4). It is the
+// Archiving the conversation's codex session on demand (PRD-1 AC11). It is the
 // platform's own snapshot — the same `POST /sessions/{id}/snapshot` the
 // sessions tab calls (PRD-11 AC8) — called with the chat tab's tenant, because
 // a chat session is outside the sessions tab's tenant and that tab's proxy
