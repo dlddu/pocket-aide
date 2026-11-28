@@ -120,7 +120,7 @@ class ChatTaskRequestTest {
         // 원장에 없는 상태를 골랐다 — 숨김과는 무관하다.
         assertEquals(
             ChatTaskEmptiness.FILTERED,
-            ChatTaskFilter(ChatTaskStatus.PLANNED).emptiness(ledger),
+            ChatTaskFilter(ChatTaskStatus.UNKNOWN).emptiness(ledger),
         )
         // 완료를 숨겨서 비었다. 완료 칩까지 함께 걸린 경우도 같은 이유다 —
         // 행은 원장에 그대로 있다.
@@ -135,7 +135,7 @@ class ChatTaskRequestTest {
         // 없는 상태 + 완료 숨김은 숨김 탓이 아니다.
         assertEquals(
             ChatTaskEmptiness.FILTERED,
-            ChatTaskFilter(ChatTaskStatus.PLANNED, hideCompleted = true).emptiness(ledger),
+            ChatTaskFilter(ChatTaskStatus.UNKNOWN, hideCompleted = true).emptiness(ledger),
         )
     }
 
