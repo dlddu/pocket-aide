@@ -465,6 +465,24 @@ class ChatTaskTurnsLazyTest {
         )
     }
 
+    // 커서를 주지 않는 페이지는 **그 작업의 교환 전부**다(가장 오래된 것까지
+    // 닿았다는 뜻이므로). 그러면 들고 있던 것과 합치지 않고 그 페이지가
+    // 답이다 — 합치면 기록에 더는 없는 교환을 계속 보여 주게 된다.
+    @Test
+    fun aCompletePageIsTheRecordSoATurnItNoLongerListsStopsShowing() = runTest {
+        val vm = ChatViewModel(api())
+        server.enqueue(pageOf("t1", 0, 2L to "둘째", 1L to "첫째"))
+        vm.performTaskTurns("t1", ChatTaskHistorySignal.of(task("t1", turnsTotal = 2)), more = false)
+        assertEquals(listOf(2L, 1L), vm.taskTurns.value.turns.map { it.id })
+
+        // 이제 그 작업의 교환은 2 하나뿐이라고 온다.
+        server.enqueue(pageOf("t1", 0, 2L to "둘째"))
+        vm.openTaskTurns(task("t1", turnsTotal = 1))
+
+        assertEquals("없어진 턴을 계속 들고 있지 않는다", listOf(2L), vm.taskTurns.value.turns.map { it.id })
+        assertFalse(vm.taskTurns.value.hasMore)
+    }
+
     // 그 사이에 너무 많이 도착해 두 구간이 만나지 않으면, 구멍 난 목록을
     // 말없이 보여 주는 대신 새 페이지에서 다시 시작한다.
     @Test

@@ -131,12 +131,18 @@ data class ChatTaskTurnPage(
  * id** as the request did. So a turn that is in both the page and what is held
  * takes the page's copy: the page is the newer reading of that same exchange.
  *
- * **No silent hole.** What is held is one unbroken run of turns down from the
- * newest one the pane has seen. A re-read page is the newest turns there are
- * now. If so many arrived that the page does not reach down to what is held,
- * the two do not join, and gluing them together would show a list that skips
- * exchanges without saying so — so in that case the page replaces what is held
- * and paging starts again from it. The pane is then short, which is honest,
+ * **A page that offers no cursor is the whole record, so it is the answer.**
+ * A newest-first page whose cursor is zero reached the task's first exchange —
+ * there is nothing older to page back to, so those turns *are* the task's
+ * exchanges. Keeping anything held that it does not list would show an exchange
+ * the records no longer have. It replaces what is held outright.
+ *
+ * **No silent hole.** Otherwise what is held is one unbroken run of turns down
+ * from the newest one the pane has seen, and a re-read page is the newest turns
+ * there are now. If so many arrived that the page does not reach down to what is
+ * held, the two do not join, and gluing them together would show a list that
+ * skips exchanges without saying so — so there too the page replaces what is
+ * held and paging starts again from it. The pane is then short, which is honest,
  * rather than wrong.
  */
 data class ChatTaskTurnsMerge(val turns: List<ChatTaskTurn>, val nextCursor: Long)
@@ -159,16 +165,22 @@ fun mergeChatTaskTurns(
         val have = held.mapTo(mutableSetOf()) { it.id }
         return ChatTaskTurnsMerge(held + page.turns.filter { have.add(it.id) }, page.nextCursor)
     }
-    if (held.isEmpty()) return ChatTaskTurnsMerge(page.turns, page.nextCursor)
+    // No cursor means the page reached the task's first exchange: it is the
+    // whole record, and what is held cannot hold anything outside it that is
+    // still there. Merging instead would keep a turn the records have lost.
+    if (page.nextCursor == 0L || held.isEmpty()) {
+        return ChatTaskTurnsMerge(page.turns, page.nextCursor)
+    }
+    // The page has more behind it, so it has to meet the run that is held. A
+    // page that offers a cursor and yet lists nothing is not a shape the slot
+    // produces; it is read as "nothing to fold in" rather than crashed on.
+    val oldestOnPage = page.turns.lastOrNull() ?: return ChatTaskTurnsMerge(held, heldCursor)
+    if (oldestOnPage.id > held.first().id) {
+        return ChatTaskTurnsMerge(page.turns, page.nextCursor)
+    }
     val fresh = page.turns.associateBy { it.id }
-    // The page reached the task's first exchange, so it covers everything the
-    // pane could hold and there is nothing left to page back to.
-    val whole = page.nextCursor == 0L
-    val joins = whole || page.turns.isEmpty() ||
-        page.turns.last().id <= held.first().id
-    if (!joins) return ChatTaskTurnsMerge(page.turns, page.nextCursor)
     val turns = page.turns + held.filter { it.id !in fresh.keys }
-    return ChatTaskTurnsMerge(turns.sortedByDescending { it.id }, if (whole) 0 else heldCursor)
+    return ChatTaskTurnsMerge(turns.sortedByDescending { it.id }, heldCursor)
 }
 
 /**
